@@ -57,14 +57,14 @@ public class OfferAvailabilityProtocol {
         this.errorMessageHandler = errorMessageHandler;
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-            if (wireEnvelope instanceof OfferMessage) {
-                OfferMessage offerMessage = (OfferMessage) wireEnvelope;
+            NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+            if (networkEnvelop instanceof OfferMessage) {
+                OfferMessage offerMessage = (OfferMessage) networkEnvelop;
                 Validator.nonEmptyStringOf(offerMessage.offerId);
-                if (wireEnvelope instanceof OfferAvailabilityResponse
+                if (networkEnvelop instanceof OfferAvailabilityResponse
                         && model.offer.getId().equals(offerMessage.offerId)) {
-                    log.trace("handle OfferAvailabilityResponse = " + wireEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
-                    handle((OfferAvailabilityResponse) wireEnvelope);
+                    log.trace("handle OfferAvailabilityResponse = " + networkEnvelop.getClass().getSimpleName() + " from " + peersNodeAddress);
+                    handle((OfferAvailabilityResponse) networkEnvelop);
                 }
             }
         };

@@ -33,7 +33,13 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class OsData {
-    public enum OsType {Windows, Linux32, Linux64, Mac, Android}
+    public enum OsType {
+        Windows,
+        Linux32,
+        Linux64,
+        Mac,
+        Android
+    }
 
     private static OsType detectedType = null;
 

@@ -200,9 +200,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // Handler for incoming offer availability requests
         // We get an encrypted message but don't do the signature check as we don't know the peer yet.
         // A basic sig check is in done also at decryption time
-        NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-        if (wireEnvelope instanceof OfferAvailabilityRequest)
-            handleOfferAvailabilityRequest((OfferAvailabilityRequest) wireEnvelope, peerNodeAddress);
+        NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (networkEnvelop instanceof OfferAvailabilityRequest)
+            handleOfferAvailabilityRequest((OfferAvailabilityRequest) networkEnvelop, peerNodeAddress);
     }
 
 

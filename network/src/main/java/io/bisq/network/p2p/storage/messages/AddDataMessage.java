@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
 import com.google.protobuf.Message;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -15,6 +15,16 @@ public final class AddDataMessage extends BroadcastMessage {
     private final ProtectedStorageEntry protectedStorageEntry;
 
     public AddDataMessage(ProtectedStorageEntry protectedStorageEntry) {
+        this(protectedStorageEntry, Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private AddDataMessage(ProtectedStorageEntry protectedStorageEntry, int messageVersion) {
+        super(messageVersion);
         this.protectedStorageEntry = protectedStorageEntry;
     }
 
@@ -27,13 +37,13 @@ public final class AddDataMessage extends BroadcastMessage {
         else
             builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) message);
 
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setAddDataMessage(PB.AddDataMessage.newBuilder()
                         .setEntry(builder))
                 .build();
     }
 
-    public static AddDataMessage fromProto(PB.AddDataMessage proto, NetworkProtoResolver resolver) {
-        return new AddDataMessage((ProtectedStorageEntry) resolver.fromProto(proto.getEntry()));
+    public static AddDataMessage fromProto(PB.AddDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
+        return new AddDataMessage((ProtectedStorageEntry) resolver.fromProto(proto.getEntry()), messageVersion);
     }
 }

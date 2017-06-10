@@ -163,18 +163,18 @@ public class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (wireEnvelope instanceof GetDataResponse) {
-                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
+            if (networkEnvelop instanceof GetDataResponse) {
+                Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetDataResponse getDataResponse = (GetDataResponse) wireEnvelope;
+                    GetDataResponse getDataResponse = (GetDataResponse) networkEnvelop;
                     Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
                         if (storagePayload == null) {
-                            log.warn("StoragePayload was null: {}", wireEnvelope.toString());
+                            log.warn("StoragePayload was null: {}", networkEnvelop.toString());
                             return;
                         }
 

@@ -18,8 +18,8 @@
 package io.bisq.core.offer.messages;
 
 import io.bisq.common.app.Capabilities;
+import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import lombok.EqualsAndHashCode;
@@ -39,14 +39,26 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice) {
-        super(offerId);
+        this(offerId, pubKeyRing, takersTradePrice, Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private OfferAvailabilityRequest(String offerId,
+                                     PubKeyRing pubKeyRing,
+                                     long takersTradePrice,
+                                     int messageVersion) {
+        super(messageVersion, offerId);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)
                         .setPubKeyRing(pubKeyRing.toProtoMessage())
@@ -55,9 +67,10 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 .build();
     }
 
-    public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto) {
+    public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto, int messageVersion) {
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                proto.getTakersTradePrice());
+                proto.getTakersTradePrice(),
+                messageVersion);
     }
 }

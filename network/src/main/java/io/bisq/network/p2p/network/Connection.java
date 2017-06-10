@@ -247,9 +247,9 @@ public class Connection implements MessageListener {
         }
     }
 
-    public boolean isCapabilitySupported(NetworkEnvelope wireEnvelope) {
-        if (wireEnvelope instanceof AddDataMessage) {
-            final StoragePayload storagePayload = (((AddDataMessage) wireEnvelope).getProtectedStorageEntry()).getStoragePayload();
+    public boolean isCapabilitySupported(NetworkEnvelope networkEnvelop) {
+        if (networkEnvelop instanceof AddDataMessage) {
+            final StoragePayload storagePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload();
             if (storagePayload instanceof CapabilityRequiringPayload) {
                 final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
@@ -282,8 +282,8 @@ public class Connection implements MessageListener {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean isCapabilityRequired(NetworkEnvelope wireEnvelope) {
-        return wireEnvelope instanceof AddDataMessage && (((AddDataMessage) wireEnvelope).getProtectedStorageEntry()).getStoragePayload() instanceof CapabilityRequiringPayload;
+    public boolean isCapabilityRequired(NetworkEnvelope networkEnvelop) {
+        return networkEnvelop instanceof AddDataMessage && (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload() instanceof CapabilityRequiringPayload;
     }
 
     public List<Integer> getSupportedCapabilities() {
@@ -309,7 +309,7 @@ public class Connection implements MessageListener {
     }
 
     // TODO either use the argument or delete it
-    private boolean violatesThrottleLimit(NetworkEnvelope wireEnvelope) {
+    private boolean violatesThrottleLimit(NetworkEnvelope networkEnvelop) {
         long now = System.currentTimeMillis();
         boolean violated = false;
         //TODO remove message storage after network is tested stable
@@ -346,7 +346,7 @@ public class Connection implements MessageListener {
             messageTimeStamps.remove(0);
         }
 
-        messageTimeStamps.add(new Tuple2<>(now, wireEnvelope));
+        messageTimeStamps.add(new Tuple2<>(now, networkEnvelop));
         return violated;
     }
 
@@ -356,9 +356,9 @@ public class Connection implements MessageListener {
 
     // Only receive non - CloseConnectionMessage network_messages
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         checkArgument(connection.equals(this));
-        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(wireEnvelope, connection)));
+        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(networkEnvelop, connection)));
     }
 
 

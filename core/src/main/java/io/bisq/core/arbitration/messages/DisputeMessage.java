@@ -17,20 +17,20 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.app.Version;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.network.p2p.MailboxMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class DisputeMessage implements MailboxMessage {
-    protected final int messageVersion = Version.getP2PMessageVersion();
+public abstract class DisputeMessage extends NetworkEnvelope implements MailboxMessage {
     protected final String uid;
 
-    public DisputeMessage(String uid) {
+    public DisputeMessage(int messageVersion, String uid) {
+        super(messageVersion);
         this.uid = uid;
     }
 }

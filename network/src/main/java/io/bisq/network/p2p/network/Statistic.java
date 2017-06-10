@@ -85,8 +85,8 @@ public class Statistic {
     }
 
     // TODO would need msg inspection to get useful information...
-    public void addReceivedMessage(NetworkEnvelope wireEnvelope) {
-        String messageClassName = wireEnvelope.getClass().getSimpleName();
+    public void addReceivedMessage(NetworkEnvelope networkEnvelop) {
+        String messageClassName = networkEnvelop.getClass().getSimpleName();
         int counter = 1;
         if (receivedMessages.containsKey(messageClassName))
             counter = receivedMessages.get(messageClassName) + 1;
@@ -94,8 +94,8 @@ public class Statistic {
         receivedMessages.put(messageClassName, counter);
     }
 
-    public void addSentMessage(NetworkEnvelope wireEnvelope) {
-        String messageClassName = wireEnvelope.getClass().getSimpleName();
+    public void addSentMessage(NetworkEnvelope networkEnvelop) {
+        String messageClassName = networkEnvelop.getClass().getSimpleName();
         int counter = 1;
         if (sentMessages.containsKey(messageClassName))
             counter = sentMessages.get(messageClassName) + 1;

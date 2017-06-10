@@ -77,18 +77,18 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
+    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelop, Trade trade) {
         this.trade = trade;
 
-        if (wireEnvelope instanceof MailboxMessage) {
-            MailboxMessage mailboxMessage = (MailboxMessage) wireEnvelope;
+        if (networkEnvelop instanceof MailboxMessage) {
+            MailboxMessage mailboxMessage = (MailboxMessage) networkEnvelop;
             NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            if (wireEnvelope instanceof DepositTxPublishedMessage)
-                handle((DepositTxPublishedMessage) wireEnvelope, peerNodeAddress);
-            else if (wireEnvelope instanceof PayoutTxPublishedMessage)
-                handle((PayoutTxPublishedMessage) wireEnvelope, peerNodeAddress);
+            if (networkEnvelop instanceof DepositTxPublishedMessage)
+                handle((DepositTxPublishedMessage) networkEnvelop, peerNodeAddress);
+            else if (networkEnvelop instanceof PayoutTxPublishedMessage)
+                handle((PayoutTxPublishedMessage) networkEnvelop, peerNodeAddress);
             else
-                log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
+                log.error("We received an unhandled MailboxMessage" + networkEnvelop.toString());
         }
     }
 

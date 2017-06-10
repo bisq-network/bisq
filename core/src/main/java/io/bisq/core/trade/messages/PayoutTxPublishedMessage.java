@@ -18,7 +18,9 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
@@ -36,7 +38,24 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
                                     byte[] payoutTx,
                                     NodeAddress senderNodeAddress,
                                     String uid) {
-        super(tradeId);
+        this(tradeId,
+                payoutTx,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PayoutTxPublishedMessage(String tradeId,
+                                     byte[] payoutTx,
+                                     NodeAddress senderNodeAddress,
+                                     String uid,
+                                     int messageVersion) {
+        super(messageVersion, tradeId);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
@@ -44,7 +63,7 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setPayoutTx(ByteString.copyFrom(payoutTx))
@@ -53,10 +72,20 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.PayoutTxPublishedMessage proto) {
+    public static NetworkEnvelope fromProto(PB.PayoutTxPublishedMessage proto, int messageVersion) {
         return new PayoutTxPublishedMessage(proto.getTradeId(),
                 proto.getPayoutTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
+    }
+
+    @Override
+    public String toString() {
+        return "PayoutTxPublishedMessage{" +
+                "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                "\n} " + super.toString();
     }
 }

@@ -17,30 +17,20 @@
 
 package io.bisq.core.offer.messages;
 
-import io.bisq.common.app.Version;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.network.p2p.DirectMessage;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-import javax.annotation.concurrent.Immutable;
-
-@Immutable
-public abstract class OfferMessage implements DirectMessage {
-    private final int messageVersion = Version.getP2PMessageVersion();
+@EqualsAndHashCode(callSuper = true)
+@Getter
+@ToString
+public abstract class OfferMessage extends NetworkEnvelope implements DirectMessage {
     public final String offerId;
 
-    OfferMessage(String offerId) {
+    protected OfferMessage(int messageVersion, String offerId) {
+        super(messageVersion);
         this.offerId = offerId;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
-
-    @Override
-    public String toString() {
-        return "OfferMessage{" +
-                "messageVersion=" + messageVersion +
-                ", offerId='" + offerId + '\'' +
-                '}';
     }
 }

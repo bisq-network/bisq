@@ -60,17 +60,17 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
+    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelop, Trade trade) {
         this.trade = trade;
 
-        if (wireEnvelope instanceof MailboxMessage) {
-            NodeAddress peerNodeAddress = ((MailboxMessage) wireEnvelope).getSenderNodeAddress();
-            if (wireEnvelope instanceof PublishDepositTxRequest)
-                handle((PublishDepositTxRequest) wireEnvelope, peerNodeAddress);
-            else if (wireEnvelope instanceof FiatTransferStartedMessage)
-                handle((FiatTransferStartedMessage) wireEnvelope, peerNodeAddress);
+        if (networkEnvelop instanceof MailboxMessage) {
+            NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelop).getSenderNodeAddress();
+            if (networkEnvelop instanceof PublishDepositTxRequest)
+                handle((PublishDepositTxRequest) networkEnvelop, peerNodeAddress);
+            else if (networkEnvelop instanceof FiatTransferStartedMessage)
+                handle((FiatTransferStartedMessage) networkEnvelop, peerNodeAddress);
             else
-                log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
+                log.error("We received an unhandled MailboxMessage" + networkEnvelop.toString());
         }
     }
 

@@ -154,7 +154,7 @@ public class TestUtils {
             }
 
             @Override
-            public NetworkPayload fromProto(PB.StoragePayload storagePayload) {
+            public NetworkPayload fromProto(PB.StoragePayload proto) {
                 return null;
             }
 

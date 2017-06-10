@@ -122,7 +122,7 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
+                DisputeCommunicationMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
                 proto.getArbitratorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),

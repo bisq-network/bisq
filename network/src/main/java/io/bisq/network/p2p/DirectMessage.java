@@ -17,7 +17,5 @@
 
 package io.bisq.network.p2p;
 
-import io.bisq.common.proto.network.NetworkEnvelope;
-
-public interface DirectMessage extends NetworkEnvelope {
+public interface DirectMessage {
 }

@@ -1,6 +1,11 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.proto.network.NetworkEnvelope;
+import lombok.EqualsAndHashCode;
 
-public abstract class BroadcastMessage implements NetworkEnvelope {
+@EqualsAndHashCode(callSuper = true)
+public abstract class BroadcastMessage extends NetworkEnvelope {
+    protected BroadcastMessage(int messageVersion) {
+        super(messageVersion);
+    }
 }

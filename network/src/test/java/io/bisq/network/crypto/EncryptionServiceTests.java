@@ -119,10 +119,11 @@ public class EncryptionServiceTests {
         log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
     }*/
 
-    private static class MockMessage implements NetworkEnvelope {
+    private static class MockMessage extends NetworkEnvelope {
         public final int nonce;
 
         public MockMessage(int nonce) {
+            super(0);
             this.nonce = nonce;
         }
 

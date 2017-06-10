@@ -146,11 +146,11 @@ class PeerExchangeHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof GetPeersResponse) {
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof GetPeersResponse) {
             if (!stopped) {
-                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
-                GetPeersResponse getPeersResponse = (GetPeersResponse) wireEnvelope;
+                Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
+                GetPeersResponse getPeersResponse = (GetPeersResponse) networkEnvelop;
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 

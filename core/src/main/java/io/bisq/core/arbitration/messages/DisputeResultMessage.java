@@ -17,7 +17,7 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -35,14 +35,29 @@ public final class DisputeResultMessage extends DisputeMessage {
     public DisputeResultMessage(DisputeResult disputeResult,
                                 NodeAddress senderNodeAddress,
                                 String uid) {
-        super(uid);
+        this(disputeResult,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private DisputeResultMessage(DisputeResult disputeResult,
+                                 NodeAddress senderNodeAddress,
+                                 String uid,
+                                 int messageVersion) {
+        super(messageVersion, uid);
         this.disputeResult = disputeResult;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                         .setDisputeResult(disputeResult.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -50,10 +65,11 @@ public final class DisputeResultMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto) {
+    public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto, int messageVersion) {
         checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
         return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
     }
 }

@@ -1,14 +1,9 @@
 package io.bisq.common.app;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Capabilities {
-    private static final Logger log = LoggerFactory.getLogger(Capabilities.class);
-
     // We can define here special features the client is supporting. 
     // Useful for updates to new versions where a new data type would break backwards compatibility or to 
     // limit a node to certain behaviour and roles like the seed nodes.

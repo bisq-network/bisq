@@ -175,18 +175,18 @@ public class DisputeManager implements PersistedDataHost {
 
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-            log.debug("decryptedDirectMessageWithPubKeys.message " + wireEnvelope);
-            if (wireEnvelope instanceof DisputeMessage)
-                dispatchMessage((DisputeMessage) wireEnvelope);
+            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+            log.debug("decryptedDirectMessageWithPubKeys.message " + networkEnvelope);
+            if (networkEnvelope instanceof DisputeMessage)
+                dispatchMessage((DisputeMessage) networkEnvelope);
         });
         decryptedDirectMessageWithPubKeys.clear();
 
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-            log.debug("decryptedMessageWithPubKey.message " + wireEnvelope);
-            if (wireEnvelope instanceof DisputeMessage) {
-                dispatchMessage((DisputeMessage) wireEnvelope);
+            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+            log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
+            if (networkEnvelope instanceof DisputeMessage) {
+                dispatchMessage((DisputeMessage) networkEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });
