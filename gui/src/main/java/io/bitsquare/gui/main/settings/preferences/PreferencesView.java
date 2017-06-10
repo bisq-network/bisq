@@ -35,11 +35,13 @@ import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -54,6 +56,12 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatable> {
+    @FXML
+    GridPane root;
+    @FXML
+    Insets rootPadding;
+    @FXML
+    ColumnConstraints cc1, cc2, cc3, cc4;
 
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox; 
@@ -112,6 +120,18 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     @Override
     public void initialize() {
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+        cc1.setMinWidth(MainView.scale(140));
+        cc2.setMinWidth(MainView.scale(300));
+        cc3.setMinWidth(MainView.scale(140));
+        cc4.setMinWidth(MainView.scale(300));
+
         initializeDisplayCurrencies();
         initializeOtherOptions();
         initializeDisplayOptions();
@@ -173,9 +193,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setLayoutY(5);
+                        label.setLayoutY(MainView.scale(5));
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -204,7 +224,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display altcoins:");
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
-        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
+        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(20)));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
         GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
@@ -225,7 +245,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -340,7 +360,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with no. of offers/trades:", "").second;
-        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all 'Don't show again' flags:", "Reset", 0).second;
+        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all 'Don't show again' flags:", "Reset", MainView.scale(0)).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
@@ -38,6 +39,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
@@ -51,6 +53,10 @@ import java.util.stream.Collectors;
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
+    @FXML
+    GridPane root;
+    @FXML
+    Insets rootPadding, p2pPadding, p2pMargin, onionMargin, addressMargin;
     @FXML
     InputTextField btcNodes;
     @FXML
@@ -92,14 +98,39 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     public void initialize() {
-        GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+        p2pPadding = new Insets(MainView.scale(50), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        p2pMargin = new Insets(MainView.scale(30), MainView.scale(-10), MainView.scale(-10), MainView.scale(-10));
+        onionMargin = new Insets(MainView.scale(30), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        addressMargin = new Insets(MainView.scale(50), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        onionAddressColumn.setMinWidth(MainView.scale(220));
+        connectionTypeColumn.setMinWidth(MainView.scale(80));
+        connectionTypeColumn.setMaxWidth(MainView.scale(90));
+        creationDateColumn.setMinWidth(MainView.scale(180));
+        creationDateColumn.setMaxWidth(MainView.scale(180));
+        roundTripTimeColumn.setMinWidth(MainView.scale(80));
+        roundTripTimeColumn.setMaxWidth(MainView.scale(80));
+        sentBytesColumn.setMinWidth(MainView.scale(100));
+        sentBytesColumn.setMaxWidth(MainView.scale(120));
+        receivedBytesColumn.setMinWidth(MainView.scale(100));
+        receivedBytesColumn.setMaxWidth(MainView.scale(120));
+        peerTypeColumn.setMinWidth(MainView.scale(100));
+        peerTypeColumn.setMaxWidth(MainView.scale(100));
+
+        GridPane.setMargin(bitcoinPeersLabel, new Insets(MainView.scale(4), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
-        GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
+        GridPane.setMargin(p2PPeersLabel, new Insets(MainView.scale(4), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(10);
 
-        tableView.setMinHeight(230);
+        tableView.setMinHeight(MainView.scale(230));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No connections are available"));
         tableView.getSortOrder().add(creationDateColumn);

@@ -25,8 +25,11 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Layout;
+import javafx.fxml.FXML;
 import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 
 import javax.inject.Inject;
@@ -35,6 +38,10 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
+    @FXML
+    GridPane root;
+    @FXML
+    Insets rootPadding;
 
     private int gridRow = 0;
 
@@ -45,6 +52,14 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
     }
 
     public void initialize() {
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, "About Bitsquare");
         GridPane.setColumnSpan(titledGroupBg, 2);
         Label label = addLabel(root, gridRow, "Bitsquare is an open source project and a decentralized network of users who want to " +

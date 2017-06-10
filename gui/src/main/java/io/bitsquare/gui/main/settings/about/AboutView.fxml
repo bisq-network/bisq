@@ -25,7 +25,7 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
     <padding>
-        <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
+        <Insets fx:id="rootPadding" bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
     <columnConstraints>
