@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.overlays.windows;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
@@ -50,7 +51,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         if (headLine == null)
             headLine = "Wallet data";
 
-        width = 1200;
+        width = MainView.scale(1200);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -80,9 +81,9 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Wallet data:", "");
         TextArea textArea = labelTextAreaTuple2.second;
         Label label = labelTextAreaTuple2.first;
-        label.setMinWidth(150);
-        textArea.setPrefHeight(500);
-        textArea.setStyle("-fx-font-size: 10;");
+        label.setMinWidth(MainView.scale(150));
+        textArea.setPrefHeight(MainView.scale(500));
+        textArea.setStyle("-fx-font-size: " + MainView.scale(10) + ";");
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Include private keys:", "").second;
         isUpdateCheckBox.setSelected(false);
 

@@ -27,6 +27,7 @@ import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
@@ -46,7 +47,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
@@ -63,6 +66,8 @@ import java.util.stream.Collectors;
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
+    VBox root;
+    @FXML
     Button withdrawButton;
     @FXML
     TableView<WithdrawalListItem> tableView;
@@ -70,6 +75,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
+    @FXML
+    Insets rootPadding, gridPadding;
+    @FXML
+    GridPane gridPane;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -112,6 +121,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10));
+        selectColumn.setMinWidth(MainView.scale(60));
+        selectColumn.setMaxWidth(MainView.scale(60));
+        addressColumn.setMinWidth(MainView.scale(320));
+        balanceColumn.setMinWidth(MainView.scale(310));
+        balanceColumn.setMaxWidth(MainView.scale(310));
+        gridPane.setHgap(MainView.scale(5));
+        gridPane.setVgap(MainView.scale(5));
+        gridPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No funds are available for withdrawal"));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);

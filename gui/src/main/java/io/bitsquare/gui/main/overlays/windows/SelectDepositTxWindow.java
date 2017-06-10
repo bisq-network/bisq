@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -57,7 +58,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         if (headLine == null)
             headLine = "Select deposit transaction for dispute";
 
-        width = 700;
+        width = MainView.scale(700);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -92,9 +93,9 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
                         "visible in the list presented here. Once you found the correct transaction select that transaction here and continue.\n\n" +
                         "Sorry for the inconvenience but that error case should be happen very rare and in future we will try " +
                         "to find better ways to resolve it.",
-                10);
+                MainView.scale(10));
 
-        GridPane.setMargin(label, new Insets(0, 0, 10, 0));
+        GridPane.setMargin(label, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(10), MainView.scale(0)));
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, "Select deposit transaction");
         transactionsComboBox = tuple.second;

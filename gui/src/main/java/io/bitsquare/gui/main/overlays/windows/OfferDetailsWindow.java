@@ -92,7 +92,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.tradePrice = tradePrice;
 
         rowIndex = -1;
-        width = 950;
+        width = MainView.scale(950);
         createGridPane();
         addContent();
         display();
@@ -101,7 +101,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     public void show(Offer offer) {
         this.offer = offer;
         rowIndex = -1;
-        width = 950;
+        width = MainView.scale(950);
         createGridPane();
         addContent();
         display();
@@ -131,11 +131,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(MainView.scale(35), MainView.scale(40), MainView.scale(30), MainView.scale(40)));
         gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
+                "-fx-background-radius: " + MainView.scale(5) + " " + MainView.scale(5) + " " +
+                MainView.scale(5) + " " + MainView.scale(5) + ";" +
+                "-fx-effect: dropshadow(gaussian, #999, " + MainView.scale(10) + "," + MainView.scale(0) +
+                "," + MainView.scale(0) + "," + MainView.scale(0) + ";" +
+                "-fx-background-insets: " + MainView.scale(10) + ";"
         );
     }
 
@@ -161,15 +163,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         Offer.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
         } else if (placeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         }
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
@@ -260,8 +262,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", MainView.scale(Layout.GROUP_DISTANCE));
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(offer)));
@@ -275,13 +277,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 
         if (placeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, "I agree:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", MainView.scale(Layout.GROUP_DISTANCE));
+            addLabelTextField(gridPane, rowIndex, "I agree:", Offer.TAC_OFFERER, MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
             addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", MainView.scale(Layout.GROUP_DISTANCE));
+            addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
             addConfirmAndCancelButtons(false);
         } else {
@@ -306,10 +308,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         Tuple3<Button, BusyAnimation, Label> placeOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
-        button.setMinHeight(40);
-        button.setPadding(new Insets(0, 20, 0, 20));
+        button.setMinHeight(MainView.scale(40));
+        button.setPadding(new Insets(MainView.scale(0), MainView.scale(20), MainView.scale(0), MainView.scale(20)));
         button.setGraphic(iconView);
-        button.setGraphicTextGap(10);
+        button.setGraphicTextGap(MainView.scale(10));
         button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 

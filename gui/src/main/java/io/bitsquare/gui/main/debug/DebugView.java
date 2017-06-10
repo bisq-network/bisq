@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.debug;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
@@ -40,7 +41,11 @@ import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
@@ -51,7 +56,16 @@ public class DebugView extends InitializableView {
 
 
     @FXML
+    GridPane root;
+
+    @FXML
     ComboBox<Class> taskComboBox1, taskComboBox2;
+
+    @FXML
+    Insets rootPadding, selectMargin, combo1Margin, combo2Margin;
+
+    @FXML
+    ColumnConstraints ccSometimes, ccAlways;
 
     @Inject
     public DebugView() {
@@ -59,6 +73,19 @@ public class DebugView extends InitializableView {
 
     @Override
     public void initialize() {
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+        selectMargin = new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        combo1Margin = new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        combo2Margin = new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0));
+        ccSometimes.setMinWidth(200);
+        ccAlways.setMinWidth(300);
+
         final ObservableList<Class> items1 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         OfferAvailabilityProtocol.class,

@@ -113,7 +113,7 @@ public abstract class Overlay<T extends Overlay> {
     protected String message;
     protected String closeButtonText;
     protected String actionButtonText;
-    protected double width = DEFAULT_WIDTH;
+    protected double width;
     protected Pane owner;
     protected GridPane gridPane;
     protected Button closeButton;
@@ -132,7 +132,7 @@ public abstract class Overlay<T extends Overlay> {
     private Preferences preferences;
     protected ChangeListener<Number> positionListener;
     protected Timer centerTime;
-    protected double buttonDistance = 20;
+    protected double buttonDistance = MainView.scale(20);
     protected Type type = Type.Undefined;
     protected boolean hideCloseButton;
     protected boolean useAnimation = true;
@@ -144,6 +144,7 @@ public abstract class Overlay<T extends Overlay> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Overlay() {
+        width = MainView.scale(DEFAULT_WIDTH);
     }
 
     public void show() {
@@ -365,9 +366,9 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void createGridPane() {
         gridPane = new GridPane();
-        gridPane.setHgap(5);
-        gridPane.setVgap(5);
-        gridPane.setPadding(new Insets(30, 30, 30, 30));
+        gridPane.setHgap(MainView.scale(5));
+        gridPane.setVgap(MainView.scale(5));
+        gridPane.setPadding(new Insets(MainView.scale(30), MainView.scale(30), MainView.scale(30), MainView.scale(30)));
         gridPane.setPrefWidth(width);
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
@@ -581,7 +582,7 @@ public abstract class Overlay<T extends Overlay> {
             Window window = rootScene.getWindow();
             double titleBarHeight = window.getHeight() - rootScene.getHeight();
             if (Utilities.isWindows())
-                titleBarHeight -= 9;
+                titleBarHeight -= MainView.scale(9);
             stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
 
             if (type.animationType == AnimationType.SlideDownFromCenterTop)
@@ -613,7 +614,9 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void setModality() {
         stage.initOwner(owner.getScene().getWindow());
-        stage.initModality(Modality.WINDOW_MODAL);
+        // Setting stage to modal ruins the ability to resize. Need to figure how to restore after modal
+        // dialog is closed
+        //        stage.initModality(Modality.WINDOW_MODAL);
     }
 
     protected void removeEffectFromBackground() {
@@ -658,7 +661,7 @@ public abstract class Overlay<T extends Overlay> {
             messageLabel.setWrapText(true);
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
-            GridPane.setMargin(messageLabel, new Insets(3, 0, 0, 0));
+            GridPane.setMargin(messageLabel, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
             GridPane.setRowIndex(messageLabel, ++rowIndex);
             GridPane.setColumnIndex(messageLabel, 0);
             GridPane.setColumnSpan(messageLabel, 2);
@@ -673,7 +676,7 @@ public abstract class Overlay<T extends Overlay> {
                 "It will make debugging easier if you can attach the bitsquare.log file which you can find in the application directory.");
 
         Button githubButton = new Button("Report to Github issue tracker");
-        GridPane.setMargin(githubButton, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(githubButton, new Insets(MainView.scale(20), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setHalignment(githubButton, HPos.RIGHT);
         GridPane.setRowIndex(githubButton, ++rowIndex);
         GridPane.setColumnIndex(githubButton, 1);
@@ -732,20 +735,20 @@ public abstract class Overlay<T extends Overlay> {
 
             Pane spacer = new Pane();
             HBox hBox = new HBox();
-            hBox.setSpacing(10);
+            hBox.setSpacing(MainView.scale(10));
             hBox.getChildren().addAll(spacer, closeButton, actionButton);
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);
             GridPane.setRowIndex(hBox, ++rowIndex);
             GridPane.setColumnSpan(hBox, 2);
-            GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
+            GridPane.setMargin(hBox, new Insets(buttonDistance, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
             gridPane.getChildren().add(hBox);
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
             GridPane.setHalignment(closeButton, HPos.RIGHT);
             if (!showReportErrorButtons)
-                GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
+                GridPane.setMargin(closeButton, new Insets(buttonDistance, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
             GridPane.setRowIndex(closeButton, ++rowIndex);
             GridPane.setColumnIndex(closeButton, 1);
             gridPane.getChildren().add(closeButton);

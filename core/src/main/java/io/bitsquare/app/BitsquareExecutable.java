@@ -72,10 +72,12 @@ public abstract class BitsquareExecutable {
     protected void customizeOptionParsing(OptionParser parser) {
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
+        parser.accepts(CommonOptionKeys.FORCE_DPI, description("Force a dpi setting to be used", "0"))
+                .withRequiredArg();
 
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
                 .withRequiredArg();
-        parser.accepts(NetworkOptionKeys.MY_ADDRESS, description("My own onion address (used for botstrap nodes to exclude itself)", ""))
+        parser.accepts(NetworkOptionKeys.MY_ADDRESS, description("My own onion address (used for bootstrap nodes to exclude itself)", ""))
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
                 .withRequiredArg();

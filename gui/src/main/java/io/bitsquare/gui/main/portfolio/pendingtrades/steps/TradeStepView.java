@@ -23,6 +23,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
@@ -77,10 +78,10 @@ public abstract class TradeStepView extends AnchorPane {
 
         gridPane = addGridPane(this);
 
-        AnchorPane.setLeftAnchor(this, 0d);
-        AnchorPane.setRightAnchor(this, 0d);
-        AnchorPane.setTopAnchor(this, -10d);
-        AnchorPane.setBottomAnchor(this, 0d);
+        AnchorPane.setLeftAnchor(this, MainView.scale(0));
+        AnchorPane.setRightAnchor(this, MainView.scale(0));
+        AnchorPane.setTopAnchor(this, MainView.scale(-10));
+        AnchorPane.setBottomAnchor(this, MainView.scale(0));
 
         addContent();
 
@@ -166,7 +167,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected void addTradeInfoBlock() {
         tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
-        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
+        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -180,8 +181,8 @@ public abstract class TradeStepView extends AnchorPane {
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
-        timeLeftProgressBar.setMinHeight(9);
-        timeLeftProgressBar.setMaxHeight(9);
+        timeLeftProgressBar.setMinHeight(MainView.scale(9));
+        timeLeftProgressBar.setMaxHeight(MainView.scale(9));
         timeLeftProgressBar.setMaxWidth(Double.MAX_VALUE);
 
         GridPane.setRowIndex(timeLeftProgressBar, ++gridRow);
@@ -193,8 +194,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addInfoBlock() {
-        addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
-        addMultilineLabel(gridPane, gridRow, getInfoText(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), MainView.scale(Layout.GROUP_DISTANCE));
+        addMultilineLabel(gridPane, gridRow, getInfoText(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
     }
 
     protected String getInfoText() {

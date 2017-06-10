@@ -23,39 +23,36 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.debug.DebugView"
-          hgap="5.0" vgap="5.0"
-          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
     <padding>
-        <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
+        <Insets fx:id="rootPadding" bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
     <TitledGroupBg text="Intercept task" GridPane.rowSpan="8"/>
 
     <Label text="Select Task:" GridPane.rowIndex="0">
         <GridPane.margin>
-            <Insets top="10"/>
+            <Insets fx:id="selectMargin" top="10"/>
         </GridPane.margin>
     </Label>
     <ComboBox fx:id="taskComboBox1" onAction="#onSelectTask1" promptText="Select task" GridPane.rowIndex="0"
               GridPane.columnIndex="1">
         <GridPane.margin>
-            <Insets top="10"/>
+            <Insets fx:id="combo1Margin" top="10"/>
         </GridPane.margin>
     </ComboBox>
 
     <ComboBox fx:id="taskComboBox2" onAction="#onSelectTask2" promptText="Select task" GridPane.rowIndex="1"
               GridPane.columnIndex="1">
         <GridPane.margin>
-            <Insets top="10"/>
+            <Insets fx:id="combo2Margin" top="10"/>
         </GridPane.margin>
     </ComboBox>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
-        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+        <ColumnConstraints fx:id="ccSometimes" hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints fx:id="ccAlways" hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 
 </GridPane>

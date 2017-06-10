@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -88,7 +89,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, "Account name:", perfectMoneyAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(perfectMoneyAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);

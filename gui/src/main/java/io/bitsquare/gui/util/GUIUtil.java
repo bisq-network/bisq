@@ -24,6 +24,7 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
@@ -335,7 +336,7 @@ public class GUIUtil {
                 "Please use " + cxc + " only if you fulfill those requirements, " +
                 "otherwise it is very likely that the " + cxc + " transfer fails and the trade ends up in a dispute.\n" +
                 "If you have not fulfilled the above requirements you would lose your security deposit in such a case.")
-                .width(900)
+                .width(MainView.scale(900))
                 .closeButtonText("I confirm")
                 .dontShowAgainId(key, preferences)
                 .show();

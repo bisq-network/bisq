@@ -27,6 +27,8 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -73,8 +75,10 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
+
         headline = addTitledGroupBg(root, gridRow, 2, "");
-        passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
+        passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         passwordField.setValidator(passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
@@ -84,7 +88,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", MainView.scale(15));
         pwButton = tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;
@@ -144,12 +148,12 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             });
         });
 
-        addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, "Information", MainView.scale(Layout.GROUP_DISTANCE));
         addMultilineLabel(root, gridRow,
                 "With password protection you need to enter your password when" +
                         " withdrawing bitcoin out of your wallet or " +
                         "if you want to view or restore a wallet from seed words as well as at application startup.",
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
     }
 
     private void setText() {

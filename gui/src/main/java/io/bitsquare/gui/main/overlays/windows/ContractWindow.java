@@ -36,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Background;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -73,7 +74,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1100;
+        width = MainView.scale(1100);
         createGridPane();
         addContent();
         display();
@@ -86,11 +87,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(MainView.scale(35), MainView.scale(40), MainView.scale(30), MainView.scale(40)));
         gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
+                        "-fx-background-radius: " + MainView.scale(5) + " " + MainView.scale(5) + " " +
+                MainView.scale(5) + " " + MainView.scale(5) + ";" +
+                        "-fx-effect: dropshadow(gaussian, #999, " + MainView.scale(10) + "," + MainView.scale(0) +
+                "," + MainView.scale(0) + "," + MainView.scale(0) + ";" +
+                        "-fx-background-insets: " + MainView.scale(10) + ";"
         );
     }
 
@@ -116,7 +119,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Dispute details");
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(),
-                Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
+                MainView.scale(Layout.FIRST_ROW_DISTANCE)).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++rowIndex, "Offer date / Trade date:", formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
@@ -173,7 +176,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
         if (contract != null) {
-            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract in JSON format", 0).second;
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract in JSON format", MainView.scale(0)).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
@@ -181,10 +184,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(dispute.getContract().getBuyerMultiSigPubKey());
                 contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(dispute.getContract().getSellerMultiSigPubKey());
                 textArea.setText(contractAsJson);
-                textArea.setPrefHeight(50);
+                textArea.setPrefHeight(MainView.scale(50));
                 textArea.setEditable(false);
                 textArea.setWrapText(true);
-                textArea.setPrefSize(800, 600);
+                textArea.setPrefSize(MainView.scale(800), MainView.scale(600));
 
                 Scene viewContractScene = new Scene(textArea);
                 Stage viewContractStage = new Stage();
@@ -200,8 +203,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
                 Window window = rootScene.getWindow();
                 double titleBarHeight = window.getHeight() - rootScene.getHeight();
-                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
-                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + MainView.scale(200));
+                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + MainView.scale(50));
             });
         }
 

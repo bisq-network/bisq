@@ -78,7 +78,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         this.trade = trade;
 
         rowIndex = -1;
-        width = 850;
+        width = MainView.scale(850);
         createGridPane();
         addContent();
         display();
@@ -98,11 +98,13 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(MainView.scale(35), MainView.scale(40), MainView.scale(30), MainView.scale(40)));
         gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
+                "-fx-background-radius: " + MainView.scale(5) + " " + MainView.scale(5) + " " +
+                MainView.scale(5) + " " + MainView.scale(5) + ";" +
+                "-fx-effect: dropshadow(gaussian, #999, " + MainView.scale(10) + "," + MainView.scale(0) +
+                "," + MainView.scale(0) + "," + MainView.scale(0) + ";" +
+                "-fx-background-insets: " + MainView.scale(10) + ";"
         );
     }
 
@@ -117,11 +119,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String fiatDirectionInfo;
         String btcDirectionInfo;
         if (tradeManager.isBuyer(offer)) {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = " to spend:";
             btcDirectionInfo = " to receive:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = " to receive:";
             btcDirectionInfo = " to spend:";
         }
@@ -170,8 +172,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (trade.getTradingPeerNodeAddress() != null)
             rows++;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", MainView.scale(Layout.GROUP_DISTANCE));
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(offer)));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
@@ -204,7 +206,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Disputed payout transaction ID:", disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
-            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract", 0).second;
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract", MainView.scale(0)).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
@@ -213,10 +215,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
                 contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
                 textArea.setText(contractAsJson);
-                textArea.setPrefHeight(50);
+                textArea.setPrefHeight(MainView.scale(50));
                 textArea.setEditable(false);
                 textArea.setWrapText(true);
-                textArea.setPrefSize(800, 600);
+                textArea.setPrefSize(MainView.scale(800), MainView.scale(600));
 
                 Scene viewContractScene = new Scene(textArea);
                 Stage viewContractStage = new Stage();
@@ -232,8 +234,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
                 Window window = rootScene.getWindow();
                 double titleBarHeight = window.getHeight() - rootScene.getHeight();
-                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
-                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + MainView.scale(200));
+                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + MainView.scale(50));
             });
         }
 
@@ -250,7 +252,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     count.setValue(count.get() + newVal.intValue() + 10);
             };
             textArea.scrollTopProperty().addListener(changeListener);
-            textArea.setScrollTop(30);
+            textArea.setScrollTop(MainView.scale(30));
 
             TextField state = addLabelTextField(gridPane, ++rowIndex, "Trade state:").second;
             state.setText(trade.getState().getPhase().name());

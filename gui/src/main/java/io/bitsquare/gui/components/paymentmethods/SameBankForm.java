@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BankUtil;
@@ -83,7 +84,7 @@ public class SameBankForm extends BankForm {
     protected void addHolderNameAndIdForDisplayAccount() {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, "Account holder name:");
         TextField holderNameTextField = tuple.second;
-        holderNameTextField.setMinWidth(300);
+        holderNameTextField.setMinWidth(MainView.scale(300));
         holderNameTextField.setText(bankAccountContractData.getHolderName());
     }
 

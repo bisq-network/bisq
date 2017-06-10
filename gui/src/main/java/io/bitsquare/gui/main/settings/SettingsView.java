@@ -29,13 +29,19 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
+    TabPane root;
+    @FXML
     Tab preferencesTab, networkSettingsTab, aboutTab;
+    @FXML
+    ScrollPane prefScroll, networkScroll, aboutScroll;
+
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
@@ -49,6 +55,22 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        AnchorPane.setTopAnchor(prefScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(prefScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(prefScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(prefScroll, MainView.scale(0));
+        AnchorPane.setTopAnchor(networkScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(networkScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(networkScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(networkScroll, MainView.scale(0));
+        AnchorPane.setTopAnchor(aboutScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(aboutScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(aboutScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(aboutScroll, MainView.scale(0));
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
                 loadView(viewPath.tip());

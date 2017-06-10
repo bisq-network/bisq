@@ -104,6 +104,7 @@ public class BitsquareApp extends Application {
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
     }
+    public static int forceDPI = 0;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -115,6 +116,7 @@ public class BitsquareApp extends Application {
         Version.printVersion();
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        forceDPI = Integer.parseInt(env.getProperty(CommonOptionKeys.FORCE_DPI, "0"));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -179,12 +181,12 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1200, 700); //740
+            scene = new Scene(mainView.getRoot(), MainView.scale(1200), MainView.scale(700)); //740
 
-            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), MainView.scale(13));
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), MainView.scale(13));
+            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), MainView.scale(13));
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), MainView.scale(13));
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css",
@@ -231,8 +233,8 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1000); // 1190
-            primaryStage.setMinHeight(620);
+            primaryStage.setMinWidth(MainView.scale(1000)); // 1190
+            primaryStage.setMinHeight(MainView.scale(620));
 
             // on windows the title icon is also used as task bar icon in a larger size
             // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
@@ -297,7 +299,7 @@ public class BitsquareApp extends Application {
         if (!shutDownRequested) {
             if (scene == null) {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice.");
-                scene = new Scene(new StackPane(), 1000, 650);
+                scene = new Scene(new StackPane(), MainView.scale(1000), MainView.scale(650));
                 scene.getStylesheets().setAll(
                         "/io/bitsquare/gui/bitsquare.css",
                         "/io/bitsquare/gui/images.css");
@@ -345,7 +347,7 @@ public class BitsquareApp extends Application {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
+        stage.setX(primaryStage.getX() + primaryStage.getWidth() + MainView.scale(10));
         stage.setY(primaryStage.getY());
         stage.show();
     }
@@ -370,10 +372,10 @@ public class BitsquareApp extends Application {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
+        stage.setX(primaryStage.getX() + primaryStage.getWidth() + MainView.scale(10));
         stage.setY(primaryStage.getY());
-        stage.setWidth(200);
-        stage.setHeight(100);
+        stage.setWidth(MainView.scale(200));
+        stage.setHeight(MainView.scale(100));
         stage.show();
     }
 

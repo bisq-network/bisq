@@ -39,6 +39,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.AreaChart;
@@ -46,6 +47,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -61,6 +63,11 @@ import java.util.Collections;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
+    @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
+
     private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
     private NumberAxis xAxis, yAxis;
@@ -98,6 +105,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(20), MainView.scale(10), MainView.scale(20));
+
         changeListener = c -> updateChartData();
 
         currencyListItemsListener = c -> {
@@ -112,7 +126,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
-        currencyHBox.setPadding(new Insets(5, -20, -5, 20));
+        currencyHBox.setPadding(new Insets(MainView.scale(5), MainView.scale(-20), MainView.scale(-5), MainView.scale(20)));
         currencyHBox.setAlignment(Pos.CENTER_LEFT);
         currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
 
@@ -130,7 +144,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         sellOfferHeaderLabel = tupleSell.forth;
 
         bottomHBox = new HBox();
-        bottomHBox.setSpacing(20); //30
+        bottomHBox.setSpacing(MainView.scale(20)); //30
         bottomHBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
@@ -270,9 +284,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setLegendVisible(false);
         areaChart.setAnimated(false);
         areaChart.setId("charts");
-        areaChart.setMinHeight(300);
-        areaChart.setPrefHeight(300);
-        areaChart.setPadding(new Insets(0, 30, 0, 0));
+        areaChart.setMinHeight(MainView.scale(300));
+        areaChart.setPrefHeight(MainView.scale(300));
+        areaChart.setPadding(new Insets(MainView.scale(0), MainView.scale(30), MainView.scale(0), MainView.scale(0)));
         areaChart.getData().addAll(seriesBuy, seriesSell);
     }
 
@@ -286,15 +300,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(Offer.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
-        tableView.setMinHeight(109);
-        tableView.setPrefHeight(121);
-        tableView.setMinWidth(480); //530
+        tableView.setMinHeight(MainView.scale(109));
+        tableView.setPrefHeight(MainView.scale(121));
+        tableView.setMinWidth(MainView.scale(480)); //530
 
         // price
         TableColumn<OfferListItem, OfferListItem> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
-        priceColumn.setMinWidth(115); //130
-        priceColumn.setMaxWidth(115); //130
+        priceColumn.setMinWidth(MainView.scale(115)); //130
+        priceColumn.setMaxWidth(MainView.scale(115)); //130
         priceColumn.setSortable(false);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
@@ -337,7 +351,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // volume
         TableColumn<OfferListItem, OfferListItem> volumeColumn = new TableColumn<>();
-        volumeColumn.setMinWidth(115); //125
+        volumeColumn.setMinWidth(MainView.scale(115)); //125
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -382,7 +396,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // amount
         TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>("Amount in BTC");
-        amountColumn.setMinWidth(115); //125
+        amountColumn.setMinWidth(MainView.scale(115)); //125
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -404,7 +418,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // accumulated
         TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>("Sum in BTC");
-        accumulatedColumn.setMinWidth(100);//130
+        accumulatedColumn.setMinWidth(MainView.scale(100));//130
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         accumulatedColumn.setCellFactory(
@@ -442,7 +456,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tableView.setPlaceholder(placeholder);
 
         Label titleLabel = new Label();
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: " + MainView.scale(16) + "; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == Offer.Direction.SELL;
@@ -450,9 +464,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);
-        button.setGraphicTextGap(10);
+        button.setGraphicTextGap(MainView.scale(10));
         button.setText(isSellOffer ? "I want to buy bitcoin" : "I want to sell bitcoin");
-        button.setMinHeight(40);
+        button.setMinHeight(MainView.scale(40));
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {
             if (isSellOffer) {
@@ -465,9 +479,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         });
 
         VBox vBox = new VBox();
-        vBox.setSpacing(10);
+        vBox.setSpacing(MainView.scale(10));
         vBox.setFillWidth(true);
-        vBox.setMinHeight(190);
+        vBox.setMinHeight(MainView.scale(190));
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());

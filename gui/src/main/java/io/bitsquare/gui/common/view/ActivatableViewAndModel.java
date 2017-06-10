@@ -18,7 +18,13 @@
 package io.bitsquare.gui.common.view;
 
 import io.bitsquare.gui.common.model.Activatable;
+import io.bitsquare.gui.main.MainView;
+import javafx.geometry.HPos;
 import javafx.scene.Node;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

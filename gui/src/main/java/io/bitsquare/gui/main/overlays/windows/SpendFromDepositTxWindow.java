@@ -23,6 +23,7 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.scene.Scene;
@@ -55,7 +56,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         if (headLine == null)
             headLine = "Emergency MS payout tool";
 
-        width = 1000;
+        width = MainView.scale(1000);
         createGridPane();
         addHeadLine();
         addSeparator();

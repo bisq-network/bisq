@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.user.Preferences;
@@ -58,7 +59,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         if (headLine == null)
             headLine = "Protect your privacy";
 
-        width = 900;
+        width = MainView.scale(900);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -98,11 +99,11 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bitsquare.io/faq/#privacy_btc"));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
-        GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(-4)));
         GridPane.setHalignment(hyperlinkWithIcon, HPos.LEFT);
         gridPane.getChildren().add(hyperlinkWithIcon);
 
-        Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex, "Add custom Bitcoin nodes:", 20);
+        Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex, "Add custom Bitcoin nodes:", MainView.scale(20));
         InputTextField input = labelInputTextFieldTuple2.second;
         input.setPromptText("Add comma separated IP addresses");
         if (!preferences.getBitcoinNodes().isEmpty())

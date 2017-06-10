@@ -31,6 +31,7 @@
  */
 package io.bitsquare.gui.main.market.trades.charts.price;
 
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.gui.util.Layout;
 import javafx.geometry.HPos;
@@ -55,7 +56,7 @@ public class CandleTooltip extends GridPane {
     CandleTooltip(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
 
-        setHgap(Layout.GRID_GAP);
+        setHgap(MainView.scale(Layout.GRID_GAP));
 
         setVgap(2);
 

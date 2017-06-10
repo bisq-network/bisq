@@ -38,6 +38,7 @@ import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -59,6 +60,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -93,6 +95,9 @@ import java.util.concurrent.TimeUnit;
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
 public class TraderDisputeView extends ActivatableView<VBox, Void> {
+
+    @FXML
+    Insets rootPadding;
 
     private final DisputeManager disputeManager;
     protected final KeyRing keyRing;
@@ -158,8 +163,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+
         Label label = new Label("Filter list:");
-        HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        HBox.setMargin(label, new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         filterTextField = new InputTextField();
         filterTextField.setText("open");
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
@@ -173,7 +180,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.SOMETIMES);
-        tableView.setMinHeight(150);
+        tableView.setMinHeight(MainView.scale(150));
 
         root.getChildren().addAll(filterBox, tableView);
 
@@ -227,7 +234,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
             messagesInputBox.setVisible(!newValue);
             messagesInputBox.setManaged(!newValue);
-            AnchorPane.setBottomAnchor(messageListView, newValue ? 0d : 120d);
+            AnchorPane.setBottomAnchor(messageListView, newValue ? MainView.scale(0) : MainView.scale(120));
         };
 
         disputeDirectMessageListListener = c -> scrollToBottom();
@@ -290,7 +297,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 String message = stringBuilder.toString();
                 new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
                         .information(message)
-                        .width(1000)
+                        .width(MainView.scale(1000))
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
@@ -594,10 +601,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             tableGroupHeadline = new TableGroupHeadline();
             tableGroupHeadline.setText("Messages");
 
-            AnchorPane.setTopAnchor(tableGroupHeadline, 10d);
-            AnchorPane.setRightAnchor(tableGroupHeadline, 0d);
-            AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
-            AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
+            AnchorPane.setTopAnchor(tableGroupHeadline, MainView.scale(10));
+            AnchorPane.setRightAnchor(tableGroupHeadline, MainView.scale(0));
+            AnchorPane.setBottomAnchor(tableGroupHeadline, MainView.scale(0));
+            AnchorPane.setLeftAnchor(tableGroupHeadline, MainView.scale(0));
 
             disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
@@ -605,16 +612,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
 
-            messageListView.setMinHeight(150);
-            AnchorPane.setTopAnchor(messageListView, 30d);
-            AnchorPane.setRightAnchor(messageListView, 0d);
-            AnchorPane.setLeftAnchor(messageListView, 0d);
+            messageListView.setMinHeight(MainView.scale(150));
+            AnchorPane.setTopAnchor(messageListView, MainView.scale(30));
+            AnchorPane.setRightAnchor(messageListView, MainView.scale(0));
+            AnchorPane.setLeftAnchor(messageListView, MainView.scale(0));
 
             messagesAnchorPane = new AnchorPane();
             VBox.setVgrow(messagesAnchorPane, Priority.ALWAYS);
 
             inputTextArea = new TextArea();
-            inputTextArea.setPrefHeight(70);
+            inputTextArea.setPrefHeight(MainView.scale(70));
             inputTextArea.setWrapText(true);
 
             sendButton = new Button("Send");
@@ -637,13 +644,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel = new Label();
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
-            sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
+            sendMsgInfoLabel.setPadding(new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
             sendMsgBusyAnimation = new BusyAnimation(false);
 
             if (!selectedDispute.isClosed()) {
                 HBox buttonBox = new HBox();
-                buttonBox.setSpacing(10);
+                buttonBox.setSpacing(MainView.scale(10));
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
@@ -656,19 +663,19 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
 
                 messagesInputBox = new VBox();
-                messagesInputBox.setSpacing(10);
+                messagesInputBox.setSpacing(MainView.scale(10));
                 messagesInputBox.getChildren().addAll(inputTextArea, buttonBox);
                 VBox.setVgrow(buttonBox, Priority.ALWAYS);
 
-                AnchorPane.setRightAnchor(messagesInputBox, 0d);
-                AnchorPane.setBottomAnchor(messagesInputBox, 5d);
-                AnchorPane.setLeftAnchor(messagesInputBox, 0d);
+                AnchorPane.setRightAnchor(messagesInputBox, MainView.scale(0));
+                AnchorPane.setBottomAnchor(messagesInputBox, MainView.scale(5));
+                AnchorPane.setLeftAnchor(messagesInputBox, MainView.scale(0));
 
-                AnchorPane.setBottomAnchor(messageListView, 120d);
+                AnchorPane.setBottomAnchor(messageListView, MainView.scale(120));
 
                 messagesAnchorPane.getChildren().addAll(tableGroupHeadline, messageListView, messagesInputBox);
             } else {
-                AnchorPane.setBottomAnchor(messageListView, 0d);
+                AnchorPane.setBottomAnchor(messageListView, MainView.scale(0));
                 messagesAnchorPane.getChildren().addAll(tableGroupHeadline, messageListView);
             }
 
@@ -685,19 +692,19 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
                         final Label statusIcon = new Label();
-                        final double arrowWidth = 15d;
-                        final double attachmentsBoxHeight = 20d;
-                        final double border = 10d;
-                        final double bottomBorder = 25d;
-                        final double padding = border + 10d;
-                        final double msgLabelPaddingRight = padding + 20d;
+                        final double arrowWidth = MainView.scale(15);
+                        final double attachmentsBoxHeight = MainView.scale(20);
+                        final double border = MainView.scale(10);
+                        final double bottomBorder = MainView.scale(25);
+                        final double padding = border + MainView.scale(10);
+                        final double msgLabelPaddingRight = padding + MainView.scale(20);
 
                         {
-                            bg.setMinHeight(30);
+                            bg.setMinHeight(MainView.scale(30));
                             messageLabel.setWrapText(true);
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
-                            attachmentsBox.setSpacing(5);
-                            statusIcon.setStyle("-fx-font-size: 10;");
+                            attachmentsBox.setSpacing(MainView.scale(5));
+                            statusIcon.setStyle("-fx-font-size: " + MainView.scale(10) + ";");
                             Tooltip.install(copyIcon, new Tooltip("Copy to clipboard"));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
@@ -715,13 +722,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     messageAnchorPane.prefWidthProperty()
                                             .bind(messageListView.widthProperty().subtract(padding + GUIUtil.getScrollbarWidth(messageListView)));
 
-                                AnchorPane.setTopAnchor(bg, 15d);
+                                AnchorPane.setTopAnchor(bg, MainView.scale(15));
                                 AnchorPane.setBottomAnchor(bg, bottomBorder);
-                                AnchorPane.setTopAnchor(headerLabel, 0d);
-                                AnchorPane.setBottomAnchor(arrow, bottomBorder + 5d);
-                                AnchorPane.setTopAnchor(messageLabel, 25d);
-                                AnchorPane.setTopAnchor(copyIcon, 25d);
-                                AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
+                                AnchorPane.setTopAnchor(headerLabel, MainView.scale(0));
+                                AnchorPane.setBottomAnchor(arrow, bottomBorder + MainView.scale(5));
+                                AnchorPane.setTopAnchor(messageLabel, MainView.scale(25));
+                                AnchorPane.setTopAnchor(copyIcon, MainView.scale(25));
+                                AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + MainView.scale(10));
 
                                 boolean senderIsTrader = item.isSenderIsTrader();
                                 boolean isMyMsg = isTrader ? senderIsTrader : !senderIsTrader;
@@ -730,12 +737,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: 11;");
+                                    headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: " + MainView.scale(11) + ";");
                                     bg.setId("message-bubble-green");
                                     messageLabel.setStyle("-fx-text-fill: white;");
                                     copyIcon.setStyle("-fx-text-fill: white;");
                                 } else if (isMyMsg) {
-                                    headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: 11;");
+                                    headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: " + MainView.scale(11) + ";");
                                     bg.setId("message-bubble-blue");
                                     messageLabel.setStyle("-fx-text-fill: white;");
                                     copyIcon.setStyle("-fx-text-fill: white;");
@@ -765,7 +772,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     /*else if (sendMsgProgressIndicator.getProgress() == 0)
                                         showNotArrivedIcon();*/
                                 } else {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: 11;");
+                                    headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: " + MainView.scale(11) + ";");
                                     bg.setId("message-bubble-grey");
                                     messageLabel.setStyle("-fx-text-fill: black;");
                                     copyIcon.setStyle("-fx-text-fill: black;");
@@ -809,14 +816,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setLeftAnchor(statusIcon, padding);
                                 }
 
-                                AnchorPane.setBottomAnchor(statusIcon, 7d);
+                                AnchorPane.setBottomAnchor(statusIcon, MainView.scale(7));
                                 headerLabel.setText(formatter.formatDateTime(item.getDate()));
                                 messageLabel.setText(item.getMessage());
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments().size() > 0) {
-                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
+                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + MainView.scale(10));
                                     attachmentsBox.getChildren().add(new Label("Attachments: ") {{
-                                        setPadding(new Insets(0, 0, 3, 0));
+                                        setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(3), MainView.scale(0)));
                                         if (isMyMsg)
                                             setStyle("-fx-text-fill: white;");
                                         else
@@ -825,20 +832,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                     item.getAttachments().stream().forEach(attachment -> {
                                         final Label icon = new Label();
-                                        setPadding(new Insets(0, 0, 3, 0));
+                                        setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(3), MainView.scale(0)));
                                         if (isMyMsg)
                                             icon.getStyleClass().add("attachment-icon");
                                         else
                                             icon.getStyleClass().add("attachment-icon-black");
 
                                         AwesomeDude.setIcon(icon, AwesomeIcon.FILE_TEXT);
-                                        icon.setPadding(new Insets(-2, 0, 0, 0));
+                                        icon.setPadding(new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
                                         icon.setTooltip(new Tooltip(attachment.getFileName()));
                                         icon.setOnMouseClicked(event -> onOpenAttachment(attachment));
                                         attachmentsBox.getChildren().add(icon);
                                     });
                                 } else {
-                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + 10);
+                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + MainView.scale(10));
                                 }
 
                                 // Need to set it here otherwise style is not correct
@@ -908,8 +915,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getSelectColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Select") {
             {
-                setMinWidth(80);
-                setMaxWidth(80);
+                setMinWidth(MainView.scale(80));
+                setMaxWidth(MainView.scale(80));
                 setSortable(false);
             }
         };
@@ -952,7 +959,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getContractColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Details") {
             {
-                setMinWidth(80);
+                setMinWidth(MainView.scale(80));
                 setSortable(false);
             }
         };
@@ -990,7 +997,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getDateColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Date") {
             {
-                setMinWidth(180);
+                setMinWidth(MainView.scale(180));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1016,7 +1023,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Trade ID") {
             {
-                setMinWidth(110);
+                setMinWidth(MainView.scale(110));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1057,7 +1064,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC buyer address") {
             {
-                setMinWidth(170);
+                setMinWidth(MainView.scale(170));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1083,7 +1090,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC seller address") {
             {
-                setMinWidth(170);
+                setMinWidth(MainView.scale(170));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1136,7 +1143,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getMarketColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Market") {
             {
-                setMinWidth(130);
+                setMinWidth(MainView.scale(130));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1162,7 +1169,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getRoleColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Role") {
             {
-                setMinWidth(130);
+                setMinWidth(MainView.scale(130));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1192,7 +1199,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getStateColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("State") {
             {
-                setMinWidth(50);
+                setMinWidth(MainView.scale(50));
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));

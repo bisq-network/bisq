@@ -20,6 +20,7 @@ package io.bitsquare.gui.components.paymentmethods;
 import com.google.common.base.Joiner;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.payment.PaymentAccount;
@@ -58,7 +59,7 @@ public class SpecificBankForm extends BankForm {
         Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow, "Name of accepted bank:", "Add accepted bank");
         InputTextField addBankInputTextField = addBankTuple.second;
         Button addButton = addBankTuple.third;
-        addButton.setMinWidth(200);
+        addButton.setMinWidth(MainView.scale(200));
         addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(), addBankInputTextField.textProperty()));
 
         Tuple3<Label, TextField, Button> acceptedBanksTuple = addLabelTextFieldButton(gridPane, ++gridRow, "Accepted banks:", "Clear accepted banks");
@@ -67,7 +68,7 @@ public class SpecificBankForm extends BankForm {
         acceptedBanksTooltip = new Tooltip();
         acceptedBanksTextField.setTooltip(acceptedBanksTooltip);
         Button clearButton = acceptedBanksTuple.third;
-        clearButton.setMinWidth(200);
+        clearButton.setMinWidth(MainView.scale(200));
         clearButton.setDefaultButton(false);
         clearButton.disableProperty().bind(Bindings.createBooleanBinding(() -> acceptedBanksTextField.getText().isEmpty(), acceptedBanksTextField.textProperty()));
         addButton.setOnAction(e -> {

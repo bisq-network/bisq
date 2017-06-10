@@ -21,6 +21,7 @@ import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -28,6 +29,8 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.TradeManager;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
@@ -35,6 +38,9 @@ import javax.inject.Inject;
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
 public class ArbitratorDisputeView extends TraderDisputeView {
+
+    @FXML
+    Insets rootPadding;
 
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
@@ -47,6 +53,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     @Override
     public void initialize() {
         super.initialize();
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
 
         filterBox.setVisible(true);
         filterBox.setManaged(true);

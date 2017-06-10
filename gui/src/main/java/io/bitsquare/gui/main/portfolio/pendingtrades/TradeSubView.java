@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.util.Layout;
@@ -53,7 +54,7 @@ public abstract class TradeSubView extends HBox {
     public TradeSubView(PendingTradesViewModel model) {
         this.model = model;
 
-        setSpacing(Layout.PADDING_WINDOW);
+        setSpacing(MainView.scale(Layout.PADDING_WINDOW));
         buildViews();
     }
 
@@ -79,10 +80,10 @@ public abstract class TradeSubView extends HBox {
         addContentPane();
 
         leftGridPane = new GridPane();
-        leftGridPane.setPrefWidth(340);
-        leftGridPane.setHgap(Layout.GRID_GAP);
-        leftGridPane.setVgap(Layout.GRID_GAP);
-        VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
+        leftGridPane.setPrefWidth(MainView.scale(340));
+        leftGridPane.setHgap(MainView.scale(Layout.GRID_GAP));
+        leftGridPane.setVgap(MainView.scale(Layout.GRID_GAP));
+        VBox.setMargin(leftGridPane, new Insets(MainView.scale(0), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
         leftVBox.getChildren().add(leftGridPane);
 
         leftGridPaneRowIndex = 0;
@@ -90,8 +91,8 @@ public abstract class TradeSubView extends HBox {
 
         addWizards();
 
-        TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", Layout.GROUP_DISTANCE);
-        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", MainView.scale(Layout.GROUP_DISTANCE));
+        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         openDisputeButton = addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, "Open Dispute");
         GridPane.setColumnIndex(openDisputeButton, 0);
         openDisputeButton.setId("open-dispute-button");
@@ -142,7 +143,7 @@ public abstract class TradeSubView extends HBox {
 
     protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)
-            GridPane.setMargin(tradeWizardItem, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+            GridPane.setMargin(tradeWizardItem, new Insets(MainView.scale(Layout.FIRST_ROW_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         GridPane.setRowIndex(tradeWizardItem, leftGridPaneRowIndex++);
         leftGridPane.getChildren().add(tradeWizardItem);
@@ -166,8 +167,8 @@ public abstract class TradeSubView extends HBox {
 
     private void addLeftBox() {
         leftVBox = new VBox();
-        leftVBox.setSpacing(Layout.SPACING_V_BOX);
-        leftVBox.setMinWidth(290);
+        leftVBox.setSpacing(MainView.scale(Layout.SPACING_V_BOX));
+        leftVBox.setMinWidth(MainView.scale(290));
         getChildren().add(leftVBox);
     }
 

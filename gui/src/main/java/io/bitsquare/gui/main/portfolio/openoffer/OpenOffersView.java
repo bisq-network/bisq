@@ -32,6 +32,7 @@ import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
@@ -43,6 +44,10 @@ import javax.inject.Inject;
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
 
+    @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
     @FXML
     TableView<OpenOfferListItem> tableView;
     @FXML
@@ -63,6 +68,19 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        offerIdColumn.setMinWidth(MainView.scale(120));
+        offerIdColumn.setMaxWidth(MainView.scale(130));
+        dateColumn.setMinWidth(MainView.scale(200));
+        marketColumn.setMinWidth(MainView.scale(100));
+        priceColumn.setMinWidth(MainView.scale(160));
+        amountColumn.setMinWidth(MainView.scale(160));
+        volumeColumn.setMinWidth(MainView.scale(180));
+        directionColumn.setMinWidth(MainView.scale(100));
+        removeItemColumn.setMinWidth(MainView.scale(120));
+        removeItemColumn.setMaxWidth(MainView.scale(120));
+
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setMarketColumnCellFactory();

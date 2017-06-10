@@ -83,7 +83,8 @@ public class ArbitratorManager {
             "02b517c0cbc3a49548f448ddf004ed695c5a1c52ec110be1bfd65fa0ca0761c94b",
             "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
             "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
-            "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5"
+            "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5",
+            "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee"
     ));
 
 

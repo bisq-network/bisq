@@ -112,8 +112,8 @@ public class BuyerStep5View extends TradeStepView {
 
     @Override
     protected void addContent() {
-        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
-        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", MainView.scale(0));
+        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         btcTradeAmountLabel = btcTradeAmountPair.first;
 
         Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
@@ -123,22 +123,22 @@ public class BuyerStep5View extends TradeStepView {
 
         addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", MainView.scale(Layout.GROUP_DISTANCE));
+        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         useSavingsWalletButton = new Button("Move funds to Bitsquare wallet");
         useSavingsWalletButton.setDefaultButton(false);
         Label label = new Label("OR");
-        label.setPadding(new Insets(5, 0, 0, 0));
+        label.setPadding(new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         withdrawToExternalWalletButton = new Button("Withdraw to external wallet");
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(15, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(15), MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -80,9 +81,9 @@ public class OKPayForm extends PaymentMethodForm {
         Label label = addLabel(gridPane, ++gridRow, "Supported currencies:", 0);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
+        flowPane.setPadding(new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
+        flowPane.setVgap(MainView.scale(10));
+        flowPane.setHgap(MainView.scale(10));
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
@@ -94,7 +95,7 @@ public class OKPayForm extends PaymentMethodForm {
             CheckBox checkBox = new CheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setSelected(okPayAccount.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
+            checkBox.setMinWidth(MainView.scale(60));
             checkBox.setMaxWidth(checkBox.getMinWidth());
             checkBox.setTooltip(new Tooltip(e.getName()));
             checkBox.setOnAction(event -> {
@@ -126,7 +127,7 @@ public class OKPayForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(okPayAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Wallet ID:", okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);

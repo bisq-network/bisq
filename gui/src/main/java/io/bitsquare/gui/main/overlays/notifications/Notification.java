@@ -2,6 +2,7 @@ package io.bitsquare.gui.main.overlays.notifications;
 
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -25,7 +26,7 @@ public class Notification extends Overlay<Notification> {
     private Timer autoCloseTimer;
 
     public Notification() {
-        width = 345; // 320 visible bg because of insets
+        width = MainView.scale(345); // 320 visible bg because of insets
         NotificationCenter.add(this);
         type = Type.Notification;
     }
@@ -158,12 +159,12 @@ public class Notification extends Overlay<Notification> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(15, 15, 30, 30));
+        gridPane.setPadding(new Insets(MainView.scale(15), MainView.scale(15), MainView.scale(30), MainView.scale(30)));
     }
 
     @Override
     protected void addCloseButton() {
-        buttonDistance = 10;
+        buttonDistance = MainView.scale(10);
         super.addCloseButton();
     }
 

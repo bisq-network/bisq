@@ -105,7 +105,7 @@ bg color of non edit textFields: fafafa
 
 #footer-pane {
     -fx-background-color: #ddd;
-    -fx-font-size: 12;
+    -fx-font-size: 0.923076em;
     -fx-text-fill: #333;
 }
 
@@ -115,7 +115,7 @@ bg color of non edit textFields: fafafa
 
 #headline-label {
     -fx-font-weight: bold;
-    -fx-font-size: 18;
+    -fx-font-size: 1.384615em;
 }
 
 /* Main navigation */
@@ -125,28 +125,28 @@ bg color of non edit textFields: fafafa
 }
 
 #nav-button .text {
-    -fx-font-size: 10;
+    -fx-font-size: 0.769230em;
 }
 
 #nav-button:selected .text {
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
     -fx-font-weight: bold;
     -fx-fill: -fx-accent;
 }
 
 #nav-button-label {
-    -fx-font-size: 10;
+    -fx-font-size: 0.769230em;
 }
 
 #nav-balance-label {
-    -fx-font-size: 10;
+    -fx-font-size: 0.769230em;
     -fx-alignment: center;
 }
 
 #nav-alert-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
     -fx-text-fill: white;
 }
 
@@ -160,7 +160,7 @@ bg color of non edit textFields: fafafa
 }
 
 #feedback-text {
-    -fx-font-size: 10;
+    -fx-font-size: 0.769230em;
 }
 
 #label-url {
@@ -228,10 +228,10 @@ bg color of non edit textFields: fafafa
     -fx-background: white;
     -fx-text-fill: black;
     -fx-background-color: white;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 0.461538em;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 0.769230em, 0.0, 0, 0.230769em);
     -fx-font-size: 0.85em;
 }
 
@@ -239,8 +239,8 @@ bg color of non edit textFields: fafafa
 textfield */
 #label-with-background {
     -fx-background-color: #FAFAFA;
-    -fx-border-radius: 4;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0.307692em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
 }
 
 #address-text-field {
@@ -258,19 +258,19 @@ textfield */
 
 .hyperlink {
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .hyperlink .text {
     -fx-fill: white;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .hyperlink .text {
     -fx-fill: -fx-accent;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .hyperlink .text:hover,
@@ -278,7 +278,7 @@ textfield */
 .hyperlink .text:hover {
     -fx-fill: black;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .hyperlink:hover,
@@ -286,12 +286,12 @@ textfield */
 .hyperlink:hover:visited {
     -fx-underline: false;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .hyperlink:focused {
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 /*******************************************************************************
@@ -327,8 +327,8 @@ textfield */
 
 .table-view:focused {
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 1;
+    -fx-background-insets: 0, 0.076923em;
+    -fx-padding: 0.076923em;
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
@@ -355,13 +355,13 @@ textfield */
 .table-view .table-row-cell:selected .hyperlink .text {
     -fx-fill: white;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .table-view .table-row-cell .hyperlink .text {
     -fx-fill: -fx-accent;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .table-view .table-row-cell .hyperlink .text:hover,
@@ -369,7 +369,7 @@ textfield */
 .table-view .table-row-cell:selected .hyperlink .text:hover {
     -fx-fill: black;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .table-view .table-row-cell .hyperlink:hover,
@@ -377,12 +377,12 @@ textfield */
 .table-view .table-row-cell .hyperlink:hover:visited {
     -fx-underline: false;
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 .table-view .table-row-cell .hyperlink:focused {
     -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-border-width: 0em;
 }
 
 /*******************************************************************************
@@ -411,7 +411,7 @@ textfield */
  ******************************************************************************/
 
 .tab-pane .tab-label {
-    -fx-font-size: 15;
+    -fx-font-size: 1.153846em;
 }
 
 .tab-pane:focused {
@@ -428,7 +428,7 @@ textfield */
 
 #form-header-text {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
 }
 
 #form-title {
@@ -461,73 +461,73 @@ textfield */
     -fx-background-color: #cfcfcf,
     linear-gradient(#cfcfcf 0%, #b5b5b5 100%),
     linear-gradient(#d3d3d3 0%, -bs-bg-grey 100%);
-    -fx-background-insets: 0 0 0 0, 0, 1;
+    -fx-background-insets: 0 0 0 0, 0, 0.076923em;
 }
 
 #info-icon-label {
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #333000;
 }
 
 /* Offer book */
 #num-offers {
-    -fx-font-size: 12;
+    -fx-font-size: 0.923076em;
 }
 
 /* Create offer */
 #direction-icon-label {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: -bs-grey;
 }
 
 #input-description-label {
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
     -fx-alignment: center;
 }
 
 #create-offer-calc-label {
     -fx-font-weight: bold;
-    -fx-font-size: 20;
-    -fx-padding: 15 5 0 5;
+    -fx-font-size: 1.538461em;
+    -fx-padding: 1.153846em 0.384615em 0em 0.384615em;
 }
 
 #currency-info-label {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0em 0.307692em 0.307692em 0em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-background-color: #f6f6f6;
     -fx-border-color: #aaa;
     -fx-border-style: solid solid solid none;
-    -fx-border-insets: 0 0 0 -2;
+    -fx-border-insets: 0em 0em 0em -0.153846em;
 }
 
 #currency-info-label-disabled {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0em 0.307692em 0.307692em 0em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-background-color: #e0e0e0;
     -fx-border-color: #e0e0e0;
     -fx-border-style: solid solid solid none;
-    -fx-border-insets: 0 0 0 -2;
+    -fx-border-insets: 0em 0em 0em -0.153846em;
 }
 
 #toggle-price-left {
-    -fx-border-radius: 4 0 0 4;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0.307692em 0em 0em 0.307692em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-border-color: #aaa;
     -fx-border-style: solid none solid solid;
-    -fx-border-insets: 0 -2 0 0;
-    -fx-background-insets: 0 -2 0 0;
-    -fx-background-radius: 4 0 0 4;
+    -fx-border-insets: 0em -0.153846em 0em 0em;
+    -fx-background-insets: 0em -0.153846em 0em 0em;
+    -fx-background-radius: 0.307692em 0em 0em 0.307692em;
 }
 
 #toggle-price-right {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0em 0.307692em 0.307692em 0em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-border-color: #aaa;
     -fx-border-style: solid solid solid none;
-    -fx-border-insets: 0 0 0 -2;
-    -fx-background-insets: 0 0 0 -2;
-    -fx-background-radius: 0 4 4 0;
+    -fx-border-insets: 0em 0em 0em -0.153846em;
+    -fx-background-insets: 0em 0em 0em -0.153846em;
+    -fx-background-radius: 0em 0.307692em 0.307692em 0em;
 }
 
 #totals-separator {
@@ -541,19 +541,19 @@ textfield */
 /* Account setup */
 #wizard-title-deactivated {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #999999;
 }
 
 #wizard-title-active {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #333333;
 }
 
 #wizard-title-completed {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #333333;
 }
 
@@ -576,8 +576,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 #wizard-item-background-active {
@@ -587,8 +587,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 #wizard-item-background-completed {
@@ -598,26 +598,26 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 /* Account settings */
 #wizard-title-disabled {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #999999;
 }
 
 #wizard-title-active {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #333333;
 }
 
 #wizard-title-selected {
     -fx-font-weight: bold;
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: -fx-accent;
 }
 
@@ -628,8 +628,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 #account-settings-item-background-active {
@@ -639,8 +639,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 #account-settings-item-background-selected {
@@ -650,8 +650,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 /* Pending trades */
@@ -665,13 +665,13 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.076923em, 0.076923em, 0.076923em, 0.076923em;
 }
 
 #trade-wizard-item-background-active {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
     -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
     /* -fx-body-color: #e7f5f9;
@@ -680,8 +680,8 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.076923em, 0.076923em, 0.076923em, 0.076923em;
 }
 
 #trade-wizard-item-background-completed {
@@ -693,33 +693,33 @@ textfield */
     -fx-outer-border,
     -fx-inner-border,
     -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+    -fx-background-insets: 0em 0em -0.076923em 0em, 0em, 0.076923em, 0.153846em;
+    -fx-background-radius: 0.076923em, 0.076923em, 0.076923em, 0.076923em;
 }
 
 #open-support-button {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-base: -bs-warning;
 }
 
 #open-dispute-button {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-base: #dd0000;
 }
 
 /* TitledGroupBg */
 #titled-group-bg-label {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-text-fill: -bs-grey;
     -fx-background-color: -bs-content-bg-grey;
 }
 
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-text-fill: -fx-accent;
     -fx-background-color: -bs-content-bg-grey;
 }
@@ -732,7 +732,7 @@ textfield */
     -fx-inner-border,
     -fx-body-color;
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 #titled-group-bg-active {
@@ -743,14 +743,14 @@ textfield */
     -fx-inner-border,
     -fx-body-color;
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 /* TableGroupHeadline */
 #table-group-headline {
     -fx-background-color: -bs-content-bg-grey;
     -fx-background-insets: 10 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-background-radius: 0.230769em, 0.230769em, 0.153846em, 0.076923em;
 }
 
 /* copied form modena.css text-input */
@@ -760,9 +760,9 @@ textfield */
     -fx-highlight-text-fill: -fx-text-inner-color;
     -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
-    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
-    -fx-background-insets: 0, 1;
-    -fx-background-radius: 3, 2;
+    linear-gradient(from 0em 0em to 0em 0.384615em, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+    -fx-background-insets: 0em, 0.076923em;
+    -fx-background-radius: 0.230769em, 0.153846em;
     -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
 }
 
@@ -772,9 +772,9 @@ textfield */
     -fx-highlight-text-fill: -fx-text-inner-color;
     -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
-    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-very-light-grey);
-    -fx-background-insets: 0, 1;
-    -fx-background-radius: 3, 2;
+    linear-gradient(from 0em 0em to 0em 0.384615em, derive(-fx-control-inner-background, -9%), -bs-very-light-grey);
+    -fx-background-insets: 0em, 0.076923em;
+    -fx-background-radius: 0.230769em, 0.153846em;
     -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
 }
 
@@ -805,30 +805,30 @@ textfield */
 
 #message-list-view.list-view {
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 1;
+    -fx-background-insets: 0em, 0.076923em;
+    -fx-padding: 0.076923em;
 }
 
 #message-list-view.list-view:focused {
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 1;
+    -fx-background-insets: 0em, 0.076923em;
+    -fx-padding: 0.076923em;
 }
 
 /* bubble */
 #message-bubble-green {
     -fx-background-color: -bs-green;
-    -fx-background-radius: 10 10 10 10;
+    -fx-background-radius: 0.769230em 0.769230em 0.769230em 0.769230em;
 }
 
 #message-bubble-blue {
     -fx-background-color: -fx-accent;
-    -fx-background-radius: 10 10 10 10;
+    -fx-background-radius: 0.769230em 0.769230em 0.769230em 0.769230em;
 }
 
 #message-bubble-grey {
     -fx-background-color: -bs-light-grey;
-    -fx-background-radius: 10 10 10 10;
+    -fx-background-radius: 0.769230em 0.769230em 0.769230em 0.769230em;
 }
 
 .attachment-icon {
@@ -863,7 +863,7 @@ textfield */
  ********************************************************************************************************************/
 
 #charts .chart-legend {
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-alignment: center;
 }
 
@@ -900,7 +900,7 @@ textfield */
 }
 
 #charts .axis-label {
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-alignment: center;
 }
 
@@ -914,8 +914,8 @@ textfield */
     -fx-base: -bs-buy;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 15;
-    -fx-background-radius: 5;
+    -fx-font-size: 1.153846em;
+    -fx-background-radius: 0.384615em;
 }
 
 #buy-button-big:focused {
@@ -944,8 +944,8 @@ textfield */
     -fx-base: -bs-sell;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 15;
-    -fx-background-radius: 5;
+    -fx-font-size: 1.153846em;
+    -fx-background-radius: 0.384615em;
 }
 
 #sell-button-big:focused {
@@ -991,54 +991,54 @@ textfield */
  ********************************************************************************************************************/
 
 #popup-headline {
-    -fx-font-size: 16;
+    -fx-font-size: 1.230769em;
     -fx-text-fill: #333;
 }
 
 #popup-bg {
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-text-fill: #333;
     -fx-background-color: white;
-    -fx-background-radius: 10 10 10 10;
-    -fx-background-insets: 10;
+    -fx-background-radius: 0.769230em 0.769230em 0.769230em 0.769230em;
+    -fx-background-insets: 0.769230em;
     -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
 }
 
 #popup-bg-top {
-    -fx-font-size: 14;
+    -fx-font-size: 1.076923em;
     -fx-text-fill: #333;
     -fx-background-color: white;
-    -fx-background-radius: 0 0 10 10;
+    -fx-background-radius: 0em 0em 0.769230em 0.769230em;
     -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, #999, 0.769230em, 0em, 0em, 0em);
 }
 
 #notification-popup-headline {
-    -fx-font-size: 13;
+    -fx-font-size: 1em;
     -fx-font-weight: bold;
     -fx-text-fill: #333;
 }
 
 #notification-popup-bg {
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
     -fx-text-fill: #3c3c3c;
     -fx-background-color: linear-gradient(to bottom, #fcfcfc, #e5e5e5);
-    -fx-background-radius: 5 5 5 5;
-    -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
+    -fx-background-radius: 0.384615em 0.384615em 0.384615em 0.384615em;
+    -fx-background-insets: 0.384615em 0.384615em 20em 20em;
+    -fx-effect: dropshadow(gaussian, #666, 0.923076em, 0em, -0.076923em, 0.230769em);
 }
 
 #peer-info-popup-bg {
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
     -fx-text-fill: #3c3c3c;
     -fx-background-color: linear-gradient(to bottom, #fafafa, #f1f1f1);
-    -fx-background-radius: 3 3 3 3;
-    -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
+    -fx-background-radius: 0.230769em 0.230769em 0.230769em 0.230769em;
+    -fx-background-insets: 0.384615em 0.384615em 20em 20em;
+    -fx-effect: dropshadow(gaussian, #666, 0.923076em, 0em, -0.076923em, 0.230769em);
 }
 
 #peer-info-popup-headline {
-    -fx-font-size: 13;
+    -fx-font-size: 1em;
     -fx-font-weight: bold;
     -fx-text-fill: #333;
 }
@@ -1062,43 +1062,43 @@ textfield */
 }
 
 #popup-qr-code-info {
-    -fx-font-size: 11;
+    -fx-font-size: 0.846153em;
 }
 
 #ident-num-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
-    -fx-font-size: 10;
+    -fx-font-size: 0.769230em;
     -fx-text-fill: white;
 }
 
 #toggle-left {
-    -fx-border-radius: 4 0 0 4;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0.307692em 0em 0em 0.307692em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-border-color: #aaa;
     -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 -2 0 0;
-    -fx-background-insets: 0 -2 0 0;
-    -fx-background-radius: 4 0 0 4;
+    -fx-border-insets: 0em -0.153846em 0em 0em;
+    -fx-background-insets: 0em -0.153846em 0em 0em;
+    -fx-background-radius: 0.307692em 0em 0em 0.307692em;
 }
 
 #toggle-center {
-    -fx-border-radius: 0 0 0 0;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0em 0em 0em 0em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-border-color: #aaa;
     -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 0 0 0;
-    -fx-background-insets: 0 0 0 0;
-    -fx-background-radius: 0 0 0 0;
+    -fx-border-insets: 0em 0em 0em 0em;
+    -fx-background-insets: 0em 0em 0em 0em;
+    -fx-background-radius: 0em 0em 0em 0em;
 }
 
 #toggle-right {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
+    -fx-border-radius: 0em 0.307692em 0.307692em 0em;
+    -fx-padding: 0.307692em 0.307692em 0.307692em 0.307692em;
     -fx-border-color: #aaa;
     -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 0 0 -2;
-    -fx-background-insets: 0 0 0 -2;
-    -fx-background-radius: 0 4 4 0;
+    -fx-border-insets: 0em 0em 0em -0.153846em;
+    -fx-background-insets: 0em 0em 0em -0.153846em;
+    -fx-background-radius: 0em 0.307692em 0.307692em 0em;
 }
 

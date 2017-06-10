@@ -21,6 +21,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
@@ -38,15 +39,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import javax.inject.Inject;
@@ -61,6 +60,11 @@ import org.slf4j.LoggerFactory;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
+    @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
+
     private static final Logger log = LoggerFactory.getLogger(TradesChartsView.class);
 
     private final BSFormatter formatter;
@@ -105,13 +109,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(20), MainView.scale(10), MainView.scale(20));
+
         HBox toolBox = getToolBox();
         createCharts();
         createTable();
 
         nrOfTradeStatisticsLabel = new Label("");
         nrOfTradeStatisticsLabel.setId("num-offers");
-        nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
+        nrOfTradeStatisticsLabel.setPadding(new Insets(MainView.scale(-5), MainView.scale(0), MainView.scale(-10), MainView.scale(5)));
         root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView, nrOfTradeStatisticsLabel);
 
         timeUnitChangeListener = (observable, oldValue, newValue) -> {
@@ -279,9 +290,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        priceChart.setMinHeight(198);
-        priceChart.setPrefHeight(198);
-        priceChart.setMaxHeight(300);
+        priceChart.setMinHeight(MainView.scale(198));
+        priceChart.setPrefHeight(MainView.scale(198));
+        priceChart.setMaxHeight(MainView.scale(300));
         priceChart.setLegendVisible(false);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
@@ -322,9 +333,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setMinHeight(148);
-        volumeChart.setPrefHeight(148);
-        volumeChart.setMaxHeight(200);
+        volumeChart.setMinHeight(MainView.scale(148));
+        volumeChart.setPrefHeight(MainView.scale(148));
+        volumeChart.setMaxHeight(MainView.scale(200));
         volumeChart.setLegendVisible(false);
     }
 
@@ -343,11 +354,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void layoutChart() {
         UserThread.execute(() -> {
             if (volumeAxisYWidth > priceAxisYWidth) {
-                priceChart.setPadding(new Insets(0, 0, 0, volumeAxisYWidth - priceAxisYWidth));
-                volumeChart.setPadding(new Insets(0, 0, 0, 0));
+                priceChart.setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), volumeAxisYWidth - priceAxisYWidth));
+                volumeChart.setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
             } else if (volumeAxisYWidth < priceAxisYWidth) {
-                priceChart.setPadding(new Insets(0, 0, 0, 0));
-                volumeChart.setPadding(new Insets(0, 0, 0, priceAxisYWidth - volumeAxisYWidth));
+                priceChart.setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
+                volumeChart.setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), priceAxisYWidth - volumeAxisYWidth));
             }
         });
     }
@@ -379,7 +390,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private HBox getToolBox() {
         Label currencyLabel = new Label("Currency:");
-        currencyLabel.setPadding(new Insets(0, 4, 0, 0));
+        currencyLabel.setPadding(new Insets(MainView.scale(0), MainView.scale(4), MainView.scale(0), MainView.scale(0)));
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
@@ -389,7 +400,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label label = new Label("Interval:");
-        label.setPadding(new Insets(0, 4, 0, 0));
+        label.setPadding(new Insets(MainView.scale(0), MainView.scale(4), MainView.scale(0), MainView.scale(0)));
 
         toggleGroup = new ToggleGroup();
         ToggleButton year = getToggleButton("Year", TradesChartsViewModel.TickUnit.YEAR, toggleGroup, "toggle-left");
@@ -400,8 +411,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         ToggleButton minute10 = getToggleButton("10 Minutes", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
 
         HBox hBox = new HBox();
-        hBox.setSpacing(0);
-        hBox.setPadding(new Insets(5, 9, -10, 10));
+        hBox.setSpacing(MainView.scale(0));
+        hBox.setPadding(new Insets(MainView.scale(5), MainView.scale(9), MainView.scale(-10), MainView.scale(10)));
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, year, month, week, day, hour, minute10);
         return hBox;
@@ -409,7 +420,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private ToggleButton getToggleButton(String label, TradesChartsViewModel.TickUnit tickUnit, ToggleGroup toggleGroup, String style) {
         ToggleButton toggleButton = new ToggleButton(label);
-        toggleButton.setPadding(new Insets(0, 5, 0, 5));
+        toggleButton.setPadding(new Insets(MainView.scale(0), MainView.scale(5), MainView.scale(0), MainView.scale(5)));
         toggleButton.setUserData(tickUnit);
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId(style);
@@ -423,15 +434,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void createTable() {
         tableView = new TableView<>();
-        tableView.setMinHeight(140);
-        tableView.setPrefHeight(140);
+        tableView.setMinHeight(MainView.scale(140));
+        tableView.setPrefHeight(MainView.scale(140));
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
         TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<TradeStatistics, TradeStatistics>("Date/Time") {
             {
-                setMinWidth(190);
-                setMaxWidth(190);
+                setMinWidth(MainView.scale(190));
+                setMaxWidth(MainView.scale(190));
             }
         };
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -459,8 +470,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         // market
         marketColumn = new TableColumn<TradeStatistics, TradeStatistics>("Market") {
             {
-                setMinWidth(130);
-                setMaxWidth(130);
+                setMinWidth(MainView.scale(130));
+                setMaxWidth(MainView.scale(130));
             }
         };
         marketColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));

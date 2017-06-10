@@ -3,6 +3,7 @@ package io.bitsquare.gui.main.overlays.windows;
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ public class TacWindow extends Overlay<TacWindow> {
     public TacWindow(Preferences preferences) {
         this.preferences = preferences;
         type = Type.Attention;
-        width = 900;
+        width = MainView.scale(900);
     }
 
     public void showIfNeeded() {
@@ -54,7 +55,7 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        addHyperlinkWithIcon(gridPane, ++rowIndex, "Arbitration system", "https://bitsquare.io/arbitration_system.pdf", -6);
+        addHyperlinkWithIcon(gridPane, ++rowIndex, "Arbitration system", "https://bitsquare.io/arbitration_system.pdf", MainView.scale(-6));
     }
 
     @Override

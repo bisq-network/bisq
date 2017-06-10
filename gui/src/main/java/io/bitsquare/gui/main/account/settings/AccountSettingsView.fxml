@@ -21,17 +21,15 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane fx:id="root" prefHeight="660.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.main.account.settings.AccountSettingsView">
+<AnchorPane fx:id="root" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.main.account.settings.AccountSettingsView">
     <children>
    
-        <VBox fx:id="leftVBox" prefWidth="240" spacing="5" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15" AnchorPane.topAnchor="20" />
-       
-        <ScrollPane fx:id="scrollPane" 
-                    fitToWidth="true" hbarPolicy="NEVER" 
-                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="270.0" 
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <VBox fx:id="leftVBox" />
+
+        <ScrollPane fx:id="scrollPane"
+                    fitToWidth="true" hbarPolicy="NEVER">
             <content>
-                <AnchorPane fx:id="content" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                <AnchorPane fx:id="content" />
             </content>
         </ScrollPane>
          
