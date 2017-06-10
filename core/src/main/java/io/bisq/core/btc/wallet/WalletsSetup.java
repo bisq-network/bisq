@@ -68,7 +68,7 @@ public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
-    private static final String BTC_WALLET_FILE_NAME = "bisq_BTC.wallet";
+    private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
@@ -109,7 +109,9 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        WalletUtils.setBaseCurrencyNetwork(bisqEnvironment.getBaseCurrencyNetwork());
+        final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
+        WalletUtils.setBaseCurrencyNetwork(baseCurrencyNetwork);
+        btcWalletFileName = "bisq_" + baseCurrencyNetwork.getCurrency() + ".wallet";
         params = WalletUtils.getParameters();
         walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);
@@ -139,7 +141,7 @@ public class WalletsSetup {
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, BTC_WALLET_FILE_NAME,
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, btcWalletFileName,
                 BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
             @Override
             protected void onSetupCompleted() {
@@ -334,7 +336,7 @@ public class WalletsSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void backupWallets() {
-        FileUtil.rollingBackup(walletDir, BTC_WALLET_FILE_NAME, 20);
+        FileUtil.rollingBackup(walletDir, btcWalletFileName, 20);
         FileUtil.rollingBackup(walletDir, BSQ_WALLET_FILE_NAME, 20);
     }
 

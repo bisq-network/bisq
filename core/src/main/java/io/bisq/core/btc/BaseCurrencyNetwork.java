@@ -17,6 +17,7 @@
 
 package io.bisq.core.btc;
 
+import lombok.Getter;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -34,11 +35,14 @@ public enum BaseCurrencyNetwork {
     LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET"),
     LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST");
 
-    public static final BaseCurrencyNetwork DEFAULT = BTC_MAINNET;
+    public static final BaseCurrencyNetwork DEFAULT = LTC_MAINNET;
 
+    @Getter
     private final NetworkParameters parameters;
-    private String currency;
-    private String network;
+    @Getter
+    private final String currency;
+    @Getter
+    private final String network;
 
     BaseCurrencyNetwork(NetworkParameters parameters, String currency, String network) {
         this.parameters = parameters;

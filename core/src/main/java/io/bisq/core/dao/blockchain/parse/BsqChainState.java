@@ -26,7 +26,6 @@ import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -78,8 +77,13 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // block 450000 2017-01-25
 
     // REG TEST
-    private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
-    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+    // private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
+    // private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+
+    // LTC REG TEST
+    private static final String REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
+    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 105;
+
 
     // TEST NET
     // 0.5 BTC to grazcoin ms4ewGfJEv5RTnBD2moDoP5Kp1uJJwDGSX
@@ -128,15 +132,33 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
         snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
-        if (bisqEnvironment.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET) {
-            genesisTxId = GENESIS_TX_ID;
-            genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
-        } else if (bisqEnvironment.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST) {
-            genesisTxId = REG_TEST_GENESIS_TX_ID;
-            genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
-        } else {
-            genesisTxId = TEST_NET_GENESIS_TX_ID;
-            genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+        switch (bisqEnvironment.getBaseCurrencyNetwork()) {
+            case BTC_MAINNET:
+                genesisTxId = GENESIS_TX_ID;
+                genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
+                break;
+            case BTC_TESTNET:
+                genesisTxId = TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+                break;
+            case BTC_REGTEST:
+                genesisTxId = REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+                break;
+            case LTC_MAINNET:
+                genesisTxId = GENESIS_TX_ID;
+                genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
+                break;
+            case LTC_TESTNET:
+                genesisTxId = TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+                break;
+            case LTC_REGTEST:
+                genesisTxId = REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+                break;
+            default:
+                throw new RuntimeException("Currency network not supported " + bisqEnvironment.getBaseCurrencyNetwork());
         }
 
         lock = new FunctionalReadWriteLock(true);
