@@ -33,10 +33,10 @@
         <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="4"/>
+    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
 
-    <Label text="Select Network:" GridPane.rowIndex="0"/>
-    <ComboBox fx:id="netWorkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label fx:id="selectCurrencyNetworkLabel" GridPane.rowIndex="0"/>
+    <ComboBox fx:id="selectCurrencyNetworkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
     <Label fx:id="bitcoinPeersLabel" GridPane.rowIndex="1"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
@@ -60,7 +60,7 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label fx:id="onionAddressLabel" GridPane.rowIndex="4">
+    <Label fx:id="onionAddressLabel" GridPane.rowIndex="5">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
