@@ -78,10 +78,10 @@ public abstract class TradeStepView extends AnchorPane {
 
         gridPane = addGridPane(this);
 
-        AnchorPane.setLeftAnchor(this, 0d);
-        AnchorPane.setRightAnchor(this, 0d);
-        AnchorPane.setTopAnchor(this, -10d);
-        AnchorPane.setBottomAnchor(this, 0d);
+        AnchorPane.setLeftAnchor(this, MainView.scale(0));
+        AnchorPane.setRightAnchor(this, MainView.scale(0));
+        AnchorPane.setTopAnchor(this, MainView.scale(-10));
+        AnchorPane.setBottomAnchor(this, MainView.scale(0));
 
         addContent();
 
@@ -181,8 +181,8 @@ public abstract class TradeStepView extends AnchorPane {
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
-        timeLeftProgressBar.setMinHeight(9);
-        timeLeftProgressBar.setMaxHeight(9);
+        timeLeftProgressBar.setMinHeight(MainView.scale(9));
+        timeLeftProgressBar.setMaxHeight(MainView.scale(9));
         timeLeftProgressBar.setMaxWidth(Double.MAX_VALUE);
 
         GridPane.setRowIndex(timeLeftProgressBar, ++gridRow);

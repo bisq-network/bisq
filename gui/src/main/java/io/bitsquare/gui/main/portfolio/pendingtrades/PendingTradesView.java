@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.PeerInfoIcon;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
@@ -53,6 +54,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final BSFormatter formatter;
     private PrivateNotificationManager privateNotificationManager;
     @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
+    @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
@@ -81,6 +86,19 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(20));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10));
+        idColumn.setMinWidth(MainView.scale(100));
+        dateColumn.setMinWidth(MainView.scale(180));
+        marketColumn.setMinWidth(MainView.scale(90));
+        priceColumn.setMinWidth(MainView.scale(90));
+        tradeAmountColumn.setMinWidth(MainView.scale(130));
+        tradeVolumeColumn.setMinWidth(MainView.scale(130));
+        paymentMethodColumn.setMinWidth(MainView.scale(130));
+        roleColumn.setMinWidth(MainView.scale(150));
+        avatarColumn.setMinWidth(MainView.scale(40));
+        avatarColumn.setMaxWidth(MainView.scale(40));
+
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
@@ -93,7 +111,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No pending trades available"));
-        tableView.setMinHeight(100);
+        tableView.setMinHeight(MainView.scale(100));
 
         idColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
@@ -174,7 +192,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     selectedSubView = model.dataModel.tradeManager.isBuyer(model.dataModel.getOffer()) ?
                             new BuyerSubView(model) : new SellerSubView(model);
 
-                    selectedSubView.setMinHeight(430);
+                    selectedSubView.setMinHeight(MainView.scale(430));
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
                     if (root.getChildren().size() == 1)
                         root.getChildren().add(selectedSubView);
@@ -460,7 +478,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
                                     Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getTrade().getOffer());
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                    setPadding(new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(-2), MainView.scale(0)));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

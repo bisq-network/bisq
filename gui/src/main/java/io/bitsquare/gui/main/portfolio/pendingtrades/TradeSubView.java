@@ -80,10 +80,10 @@ public abstract class TradeSubView extends HBox {
         addContentPane();
 
         leftGridPane = new GridPane();
-        leftGridPane.setPrefWidth(340);
+        leftGridPane.setPrefWidth(MainView.scale(340));
         leftGridPane.setHgap(MainView.scale(Layout.GRID_GAP));
         leftGridPane.setVgap(MainView.scale(Layout.GRID_GAP));
-        VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
+        VBox.setMargin(leftGridPane, new Insets(MainView.scale(0), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
         leftVBox.getChildren().add(leftGridPane);
 
         leftGridPaneRowIndex = 0;
@@ -143,7 +143,7 @@ public abstract class TradeSubView extends HBox {
 
     protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)
-            GridPane.setMargin(tradeWizardItem, new Insets(MainView.scale(Layout.FIRST_ROW_DISTANCE), 0, 0, 0));
+            GridPane.setMargin(tradeWizardItem, new Insets(MainView.scale(Layout.FIRST_ROW_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         GridPane.setRowIndex(tradeWizardItem, leftGridPaneRowIndex++);
         leftGridPane.getChildren().add(tradeWizardItem);

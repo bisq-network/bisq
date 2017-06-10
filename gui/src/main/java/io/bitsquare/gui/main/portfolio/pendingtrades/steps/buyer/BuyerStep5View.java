@@ -112,7 +112,7 @@ public class BuyerStep5View extends TradeStepView {
 
     @Override
     protected void addContent() {
-        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
+        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", MainView.scale(0));
         Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         btcTradeAmountLabel = btcTradeAmountPair.first;
 
@@ -128,17 +128,17 @@ public class BuyerStep5View extends TradeStepView {
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         useSavingsWalletButton = new Button("Move funds to Bitsquare wallet");
         useSavingsWalletButton.setDefaultButton(false);
         Label label = new Label("OR");
-        label.setPadding(new Insets(5, 0, 0, 0));
+        label.setPadding(new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         withdrawToExternalWalletButton = new Button("Withdraw to external wallet");
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(15, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(15), MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {

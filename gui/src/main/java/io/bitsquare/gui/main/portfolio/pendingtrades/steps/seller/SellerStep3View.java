@@ -282,7 +282,7 @@ public class SellerStep3View extends TradeStepView {
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation(message)
-                        .width(700)
+                        .width(MainView.scale(700))
                         .actionButtonText("Yes, I have received the payment")
                         .onAction(this::confirmPaymentReceived)
                         .closeButtonText("Cancel")

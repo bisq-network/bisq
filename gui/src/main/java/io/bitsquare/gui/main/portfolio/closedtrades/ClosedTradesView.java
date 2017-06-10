@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.PeerInfoIcon;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
@@ -50,6 +51,10 @@ import javax.inject.Inject;
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
 
     @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
+    @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
@@ -76,6 +81,21 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        tradeIdColumn.setMinWidth(MainView.scale(120));
+        tradeIdColumn.setMaxWidth(MainView.scale(120));
+        dateColumn.setMinWidth(MainView.scale(180));
+        marketColumn.setMinWidth(MainView.scale(100));
+        priceColumn.setMinWidth(MainView.scale(100));
+        amountColumn.setMinWidth(MainView.scale(130));
+        volumeColumn.setMinWidth(MainView.scale(130));
+        directionColumn.setMinWidth(MainView.scale(80));
+        stateColumn.setMinWidth(MainView.scale(80));
+        avatarColumn.setMinWidth(MainView.scale(40));
+        avatarColumn.setMaxWidth(MainView.scale(40));
+
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No closed trades available"));
 
@@ -296,7 +316,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     Trade trade = (Trade) newItem.getTradable();
                                     String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().hostName : "";
                                     Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                    setPadding(new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(-2), MainView.scale(0)));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

@@ -299,7 +299,7 @@ public class BuyerStep2View extends TradeStepView {
             popup.headLine("Confirm that you have started the payment")
                     .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +
                             " payment to your trading partner?")
-                    .width(700)
+                    .width(MainView.scale(700))
                     .actionButtonText("Yes, I have started the payment")
                     .onAction(this::confirmPaymentStarted)
                     .closeButtonText("No")
