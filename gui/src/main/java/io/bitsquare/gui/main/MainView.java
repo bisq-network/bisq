@@ -128,17 +128,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @Override
     protected void initialize() {
         MainView.rootContainer = this.root;
-        // dpi testing
-        double dpi = BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI : Screen.getPrimary().getDpi();
+        // Uncomment to use automatic dpi recognition. Doesn't work for all environments.
+        //        double dpi = BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI : Screen.getPrimary().getDpi();
+        double dpi = BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI : 96;
         baseFontSize = Font.getDefault().getSize() * dpi / 96;
-        //        baseFontSize *= BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI / 96.0 : 1;
-        Screen s = Screen.getPrimary();
-        String s_log = " screen = " + s.toString();
-        log.info("dpi = " + dpi + s_log + " baseFontSize = " + baseFontSize);
-        String fontSize = "-fx-font-size: ";
-        fontSize += baseFontSize + ";";
-        root.setStyle(fontSize);
-        // end dpi testing
+        root.setStyle("-fx-font-size: " + baseFontSize + ";");
 
         ToggleButton marketButton = new NavButton(MarketView.class, "Market");
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
@@ -196,7 +190,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         root.widthProperty().addListener((observable, oldValue, newValue) -> {
             double w = (double) newValue;
-            log.info("width="+w);
             if (w > 0) {
                 Stage stage = (Stage) root.getScene().getWindow();
                 if (stage != null) {
@@ -208,7 +201,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
         root.heightProperty().addListener((observable, oldValue, newValue) -> {
             double h = (double) newValue;
-            log.info("height="+h);
             if (h > 0) {
                 Stage stage = (Stage) root.getScene().getWindow();
                 if (stage != null) {

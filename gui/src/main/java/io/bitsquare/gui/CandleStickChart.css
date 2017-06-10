@@ -35,30 +35,30 @@
     -fx-font-size: 0.75em;
     -fx-font-weight: bold;
     -fx-text-fill: #666666;
-    -fx-padding: 2 5 2 0;
+    -fx-padding: 0.153846em 0.384615em 0.153846em 0em;
 }
 
 .candlestick-average-line {
     -fx-stroke: #00b2ff;
-    -fx-stroke-width: 2px;
+    -fx-stroke-width: 0.153846em;
 }
 
 .candlestick-candle {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
+    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 0.153846em, 0.307692em);
 }
 
 .candlestick-line {
     -fx-stroke: #666666;
-    -fx-stroke-width: 3px;
+    -fx-stroke-width: 0.230769em;
 }
 
 .candlestick-bar {
-    -fx-padding: 5;
+    -fx-padding: 0.384615em;
     -demo-bar-fill: #e81a00;
     -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
     linear-gradient(derive(-demo-bar-fill, 100%), derive(-demo-bar-fill, 10%)),
     linear-gradient(derive(-demo-bar-fill, 30%), derive(-demo-bar-fill, -10%));
-    -fx-background-insets: 0, 1, 2;
+    -fx-background-insets: 0em, 0.076923em, 0.153846em;
 }
 
 .candlestick-bar.close-above-open {
@@ -74,20 +74,20 @@
 }
 
 .volume-bar {
-    -fx-padding: 5;
+    -fx-padding: 0.384615em;
     -demo-bar-fill: #91b1cc;
     -fx-background-color: #91b1cc;
-    -fx-background-insets: 0, 1, 2;
+    -fx-background-insets: 0em, 0.076923em, 0.153846em;
 }
 
 .volume-bar {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
+    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 0.153846em, 0.307692em);
 }
 
 .chart-alternative-row-fill {
     -fx-fill: transparent;
     -fx-stroke: transparent;
-    -fx-stroke-width: 0;
+    -fx-stroke-width: 0em;
 }
 
 .chart-plot-background {

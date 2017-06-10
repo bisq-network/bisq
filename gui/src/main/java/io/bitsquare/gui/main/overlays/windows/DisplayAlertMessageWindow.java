@@ -70,14 +70,14 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         addMultilineLabel(gridPane, ++rowIndex, alert.message, MainView.scale(10));
         if (alert.isUpdateInfo) {
             headLine = "Important update information!";
-            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: " + MainView.scale(22) + ";");
             String url = "https://bitsquare.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     "Download:", url, url).second;
             hyperlinkWithIcon.setMaxWidth(MainView.scale(550));
         } else {
             headLine = "Important information!";
-            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: " + MainView.scale(22) + ";");
         }
         closeButton = new Button("Close");
         closeButton.setOnAction(e -> {
