@@ -17,7 +17,7 @@ You can read about all of this and more in the [whitepaper](https://bisq.io/bisq
 Status
 ------
 bisq has released the beta version on the 27th of April 2016 after 3 months testing on mainnet.
-For the latest version checkout our [releases page](https://github.com/bisq/bisq/releases) at Github.
+For the latest version checkout our [releases page](https://github.com/bitsquare/bitsquare/releases) at Github.
 
 Building from source
 --------------------
@@ -33,7 +33,7 @@ Staying in Touch
 Contact the team and keep up to date using any of the following:
 
  - The [bisq Website](https://bisq.io)
- - GitHub [Issues](https://github.com/bisq/bisq/issues)
+ - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
  - The [bisq Forum]( https://forum.bisq.io)
  - The [#bisq](https://webchat.freenode.net/?channels=bisq) IRC channel on Freenode ([logs](https://botbot.me/freenode/bisq)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bisq)

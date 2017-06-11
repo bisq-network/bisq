@@ -52,9 +52,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         GridPane.setHalignment(label, HPos.LEFT);
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bisq.io");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://github.com/bisq/bisq");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://github.com/bitsquare/bitsquare");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://github.com/bisq/bisq/blob/master/LICENSE");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://github.com/bitsquare/bitsquare/blob/master/LICENSE");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
