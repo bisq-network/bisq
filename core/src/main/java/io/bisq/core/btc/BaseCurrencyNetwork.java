@@ -49,9 +49,4 @@ public enum BaseCurrencyNetwork {
         this.currency = currency;
         this.network = network;
     }
-
-    public NetworkParameters getParameters() {
-        return parameters;
-    }
-
 }

@@ -19,8 +19,11 @@ public class SeedNodesRepository {
     // - regtest uses port 8002
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
-            // v0.5.0
+            // BTC
             DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+
+            // LTC
+            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
 
             // local dev test
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
