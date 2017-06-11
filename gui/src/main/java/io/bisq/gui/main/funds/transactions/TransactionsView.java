@@ -133,10 +133,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setText(Res.get("shared.dateTime"));
         detailsColumn.setText(Res.get("shared.details"));
         addressColumn.setText(Res.get("shared.address"));
-        transactionColumn.setText(Res.get("shared.txId", "BTC"));
-        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
-        confidenceColumn.setText(Res.get("shared.confirmations", "BTC"));
-        revertTxColumn.setText(Res.get("shared.revert", "BTC"));
+        transactionColumn.setText(Res.get("shared.txId", Res.getBaseCurrencyCode()));
+        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        confidenceColumn.setText(Res.get("shared.confirmations", Res.getBaseCurrencyCode()));
+        revertTxColumn.setText(Res.get("shared.revert", Res.getBaseCurrencyCode()));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("funds.tx.noTxAvailable")));

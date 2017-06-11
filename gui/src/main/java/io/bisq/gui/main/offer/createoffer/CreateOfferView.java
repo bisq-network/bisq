@@ -479,14 +479,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        buyerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        sellerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
-        minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
         xLabel.setText("x");
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
@@ -530,16 +526,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void removeBindings() {
-        amountBtcLabel.textProperty().unbind();
-        buyerSecurityDepositBtcLabel.textProperty().unbind();
-        sellerSecurityDepositBtcLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         fixedPriceTextField.disableProperty().unbind();
         priceCurrencyLabel.disableProperty().unbind();
         marketBasedPriceTextField.disableProperty().unbind();
         marketBasedPriceLabel.disableProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
-        minAmountBtcLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
         xLabel.textProperty().unbind();
         volumeDescriptionLabel.textProperty().unbind();
@@ -934,7 +926,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         });
 
-        payFeeInBtcButton = new ToggleButton("BTC");
+        payFeeInBtcButton = new ToggleButton(Res.getBaseCurrencyCode());
         payFeeInBtcButton.setPrefWidth(payFeeInBsqButton.getPrefWidth());
         editOfferElements.add(payFeeInBtcButton);
         payFeeInBtcButton.setId("toggle-price-right");

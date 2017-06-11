@@ -93,7 +93,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         dateColumn.setText(Res.get("shared.dateTime"));
         detailsColumn.setText(Res.get("shared.details"));
         addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("funds.locked.noFunds")));

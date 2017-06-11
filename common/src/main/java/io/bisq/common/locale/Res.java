@@ -72,6 +72,14 @@ public class Res {
         baseCurrencyNameLowerCase = baseCurrencyName.toLowerCase();
     }
 
+    public static String getBaseCurrencyCode() {
+        return baseCurrencyCode;
+    }
+
+    public static String getBaseCurrencyName() {
+        return baseCurrencyName;
+    }
+
     // Capitalize first character
     public static String getWithCap(String key) {
         return StringUtils.capitalize(get(key));

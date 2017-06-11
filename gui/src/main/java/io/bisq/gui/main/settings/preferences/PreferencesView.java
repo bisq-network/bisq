@@ -78,7 +78,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
-    final ObservableList<String> btcDenominations = FXCollections.observableArrayList();
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<String> languageCodes;
     final ObservableList<Country> countries;
@@ -116,8 +115,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         allFiatCurrencies.removeAll(fiatCurrencies);
         allCryptoCurrencies.removeAll(cryptoCurrencies);
-
-        btcDenominations.setAll(preferences.getBtcDenominations());
     }
 
     @Override
@@ -421,11 +418,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
-
-    /* btcDenominationComboBox.setDisable(true);
-     btcDenominationComboBox.setItems(btcDenominations);
-     btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
-     btcDenominationComboBox.setOnAction(e -> onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));*/
 
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());

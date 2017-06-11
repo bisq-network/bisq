@@ -73,7 +73,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty offerWarning = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty spinnerInfoText = new SimpleStringProperty("");
     final StringProperty takerFee = new SimpleStringProperty();
     final StringProperty takerFeeCurrencyCode = new SimpleStringProperty();
@@ -244,7 +243,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private void applyTakerFee() {
         takerFee.set(getFormatter().formatCoin(dataModel.getTakerFee()));
-        takerFeeCurrencyCode.set(dataModel.isCurrencyForTakerFeeBtc() ? "BTC" : "BSQ");
+        takerFeeCurrencyCode.set(dataModel.isCurrencyForTakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -409,7 +408,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
         }
         totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
-        btcCode.bind(dataModel.btcCode);
     }
 
 
@@ -417,7 +415,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         volumeDescriptionLabel.unbind();
         volume.unbind();
         totalToPay.unbind();
-        btcCode.unbind();
     }
 
     private void createListeners() {

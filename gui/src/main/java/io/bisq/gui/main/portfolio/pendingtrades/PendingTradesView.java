@@ -86,7 +86,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     public void initialize() {
         priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         volumeColumn.setText(Res.get("shared.volume"));
         marketColumn.setText(Res.get("shared.market"));
         roleColumn.setText(Res.get("portfolio.pending.role"));

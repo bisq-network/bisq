@@ -40,15 +40,15 @@ public enum BaseCurrencyNetwork {
     @Getter
     private final NetworkParameters parameters;
     @Getter
-    private final String currency;
+    private final String currencyCode;
     @Getter
     private final String network;
     @Getter
     private String currencyName;
 
-    BaseCurrencyNetwork(NetworkParameters parameters, String currency, String network, String currencyName) {
+    BaseCurrencyNetwork(NetworkParameters parameters, String currencyCode, String network, String currencyName) {
         this.parameters = parameters;
-        this.currency = currency;
+        this.currencyCode = currencyCode;
         this.network = network;
         this.currencyName = currencyName;
     }

@@ -11,7 +11,10 @@ import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,7 +23,6 @@ import lombok.Setter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.MonetaryFormat;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -32,10 +34,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public final class Preferences implements PersistedDataHost {
-
-    // Deactivate mBit for now as most screens are not supporting it yet
-    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
 
     private static final ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_TEST_NET = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
@@ -72,9 +70,6 @@ public final class Preferences implements PersistedDataHost {
     private boolean initialReadDone = false;
     private BisqEnvironment bisqEnvironment;
 
-    // Observable wrappers
-    @Getter
-    private final StringProperty btcDenominationProperty = new SimpleStringProperty(prefPayload.getBtcDenomination());
     @Getter
     private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
     @Getter
@@ -120,7 +115,6 @@ public final class Preferences implements PersistedDataHost {
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
             checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"); // move to payload?
-            setBtcDenominationProperty(prefPayload.getBtcDenomination());
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
@@ -140,11 +134,6 @@ public final class Preferences implements PersistedDataHost {
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
 
-        btcDenominationProperty.addListener((ov) -> {
-            prefPayload.setBtcDenomination(btcDenominationProperty.get());
-            GlobalSettings.setBtcDenomination(prefPayload.getBtcDenomination());
-            persist();
-        });
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
@@ -180,10 +169,8 @@ public final class Preferences implements PersistedDataHost {
         prefPayload.setTradeChartsScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
         prefPayload.setBuyScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
         prefPayload.setSellScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setBtcDenomination(MonetaryFormat.CODE_BTC);
 
         // set all properties
-        btcDenominationProperty.set(prefPayload.getBtcDenomination());
         useAnimationsProperty.set(prefPayload.isUseAnimations());
         useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
         withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
@@ -225,10 +212,6 @@ public final class Preferences implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setBtcDenominationProperty(String btcDenomination) {
-        this.btcDenominationProperty.set(btcDenomination);
-    }
 
     public void setUseAnimations(boolean useAnimations) {
         this.useAnimationsProperty.set(useAnimations);
@@ -462,10 +445,6 @@ public final class Preferences implements PersistedDataHost {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public StringProperty btcDenominationProperty() {
-        return btcDenominationProperty;
-    }
-
     public BooleanProperty useAnimationsProperty() {
         return useAnimationsProperty;
     }
@@ -525,10 +504,6 @@ public final class Preferences implements PersistedDataHost {
 
     public boolean getPayFeeInBtc() {
         return prefPayload.isPayFeeInBtc();
-    }
-
-    public List<String> getBtcDenominations() {
-        return BTC_DENOMINATIONS;
     }
 
 

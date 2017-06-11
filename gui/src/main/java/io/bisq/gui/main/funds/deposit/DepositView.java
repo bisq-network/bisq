@@ -114,7 +114,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         selectColumn.setText(Res.get("shared.select"));
         addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
         confirmationsColumn.setText(Res.get("shared.confirmations"));
         usageColumn.setText(Res.get("shared.usage"));
 

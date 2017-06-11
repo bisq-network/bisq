@@ -430,7 +430,7 @@ public class BSFormatter {
 
     public String getDirectionWithCode(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
+            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyCurrency", Res.getBaseCurrencyCode()) : Res.get("shared.sellCurrency", Res.getBaseCurrencyCode());
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
@@ -603,7 +603,7 @@ public class BSFormatter {
 
     public String getDirectionBothSides(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            currencyCode = "BTC";
+            currencyCode = Res.getBaseCurrencyCode();
             return direction == OfferPayload.Direction.BUY ?
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
@@ -616,7 +616,7 @@ public class BSFormatter {
 
     public String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String code = "BTC";
+            String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
                     Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
                     Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
@@ -629,7 +629,7 @@ public class BSFormatter {
 
     public String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String code = "BTC";
+            String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
                     Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
                     Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
@@ -641,44 +641,43 @@ public class BSFormatter {
     }
 
     public String getDirectionForTakeOffer(OfferPayload.Direction direction, String currencyCode) {
+        String baseCurrencyCode = Res.getBaseCurrencyCode();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String btc = "BTC";
             return direction == OfferPayload.Direction.BUY ?
-                    Res.get("formatter.youAre", Res.get("shared.selling"), btc, Res.get("shared.buying"), currencyCode) :
-                    Res.get("formatter.youAre", Res.get("shared.buying"), btc, Res.get("shared.selling"), currencyCode);
+                    Res.get("formatter.youAre", Res.get("shared.selling"), baseCurrencyCode, Res.get("shared.buying"), currencyCode) :
+                    Res.get("formatter.youAre", Res.get("shared.buying"), baseCurrencyCode, Res.get("shared.selling"), currencyCode);
         } else {
-            String btc = "BTC";
+
             return direction == OfferPayload.Direction.SELL ?
-                    Res.get("formatter.youAre", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), btc) :
-                    Res.get("formatter.youAre", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), btc);
+                    Res.get("formatter.youAre", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), baseCurrencyCode) :
+                    Res.get("formatter.youAre", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), baseCurrencyCode);
         }
     }
 
     public String getOfferDirectionForCreateOffer(OfferPayload.Direction direction, String currencyCode) {
+        String baseCurrencyCode = Res.getBaseCurrencyCode();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String btc = "BTC";
             return direction == OfferPayload.Direction.BUY ?
-                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.buy"), btc) :
-                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.sell"), btc);
+                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.buy"), baseCurrencyCode) :
+                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.sell"), baseCurrencyCode);
         } else {
-            String btc = "BTC";
             return direction == OfferPayload.Direction.SELL ?
-                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.buy"), currencyCode, Res.get("shared.selling"), btc) :
-                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.sell"), currencyCode, Res.get("shared.buying"), btc);
+                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.buy"), currencyCode, Res.get("shared.selling"), baseCurrencyCode) :
+                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.sell"), currencyCode, Res.get("shared.buying"), baseCurrencyCode);
         }
     }
 
     public String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String btc = "BTC";
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
             if (isBuyerMakerAndSellerTaker)
                 return isMaker ?
-                        Res.get("formatter.asMaker", btc, Res.get("shared.buyer")) :
-                        Res.get("formatter.asTaker", btc, Res.get("shared.seller"));
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
             else
                 return isMaker ?
-                        Res.get("formatter.asMaker", btc, Res.get("shared.seller")) :
-                        Res.get("formatter.asTaker", btc, Res.get("shared.buyer"));
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
         } else {
             if (isBuyerMakerAndSellerTaker)
                 return isMaker ?
@@ -706,23 +705,23 @@ public class BSFormatter {
 
     public String getCurrencyPair(String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return "BTC/" + currencyCode;
+            return Res.getBaseCurrencyCode() + "/" + currencyCode;
         else
-            return currencyCode + "/BTC";
+            return currencyCode + "/" + Res.getBaseCurrencyCode();
     }
 
     public String getCounterCurrency(String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return currencyCode;
         else
-            return "BTC";
+            return Res.getBaseCurrencyCode();
     }
 
     public String getBaseCurrency(String currencyCode) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
             return currencyCode;
         else
-            return "BTC";
+            return Res.getBaseCurrencyCode();
     }
 
     public String getCounterCurrencyAndCurrencyPair(String currencyCode) {
@@ -735,9 +734,9 @@ public class BSFormatter {
 
     public String getPriceWithCurrencyCode(String currencyCode) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return Res.get("shared.priceInCurForCur", "BTC", currencyCode);
+            return Res.get("shared.priceInCurForCur", Res.getBaseCurrencyCode(), currencyCode);
         else
-            return Res.get("shared.priceInCurForCur", currencyCode, "BTC");
+            return Res.get("shared.priceInCurForCur", currencyCode, Res.getBaseCurrencyCode());
     }
 
     public Locale getLocale() {

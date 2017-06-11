@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.locale.Res;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -106,9 +107,9 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return "BTC wallet:\n" +
+        return Res.getBaseCurrencyCode() + " Wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
-                "bisq BTC address entry list:\n" +
+                "Bisq " + Res.getBaseCurrencyCode() + "address entry list:\n" +
                 sb.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();

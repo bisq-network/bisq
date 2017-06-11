@@ -75,7 +75,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private Offer offer;
 
     private AddressEntry addressEntry;
-    final StringProperty btcCode = new SimpleStringProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
@@ -122,7 +121,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // when leaving screen we reset state
         offer.setState(Offer.State.UNKNOWN);
 
-        addBindings();
         addListeners();
 
         updateBalance();
@@ -144,7 +142,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        removeBindings();
         removeListeners();
         if (offer != null)
             tradeManager.onCancelAvailabilityRequest(offer);
@@ -340,14 +337,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void addBindings() {
-        btcCode.bind(preferences.getBtcDenominationProperty());
-    }
-
-    private void removeBindings() {
-        btcCode.unbind();
-    }
 
     private void addListeners() {
         btcWalletService.addBalanceListener(balanceListener);

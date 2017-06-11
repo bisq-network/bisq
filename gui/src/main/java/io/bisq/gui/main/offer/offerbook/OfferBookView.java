@@ -303,14 +303,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String mirroredDirectionText = direction == OfferPayload.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()));
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") + " " +
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()) + " " +
                         (direction == OfferPayload.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
                                 Res.get("offerbook.sellForOtherCurrency", code)));
             else
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " BTC)");
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " " + Res.getBaseCurrencyCode() + ")");
         }
     }
 

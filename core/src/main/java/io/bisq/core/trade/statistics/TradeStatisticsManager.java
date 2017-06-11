@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
@@ -41,7 +42,6 @@ public class TradeStatisticsManager implements PersistedDataHost {
         this.statisticsStorage = statisticsStorage;
         this.p2PService = p2PService;
         this.dumpStatistics = dumpStatistics;
-
         jsonFileManager = new JsonFileManager(storageDir);
 
         this.statisticsStorage.setNumMaxBackupFiles(1);
@@ -64,7 +64,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
-            cryptoCurrencyList.add(0, new CurrencyTuple("BTC", "Bitcoin", 8));
+            cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
             jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
 

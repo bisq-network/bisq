@@ -92,7 +92,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private TradeCurrency tradeCurrency;
 
     private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    private final StringProperty btcCode = new SimpleStringProperty();
 
     private final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
     private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
@@ -188,7 +187,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        addBindings();
         addListeners();
 
         if (isTabSelected)
@@ -199,16 +197,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        removeBindings();
         removeListeners();
-    }
-
-    private void addBindings() {
-        btcCode.bind(preferences.getBtcDenominationProperty());
-    }
-
-    private void removeBindings() {
-        btcCode.unbind();
     }
 
     private void addListeners() {
@@ -307,8 +296,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // TODO use same precision for both in next release
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
-        String baseCurrencyCode = isCryptoCurrency ? currencyCode : "BTC";
-        String counterCurrencyCode = isCryptoCurrency ? "BTC" : currencyCode;
+        String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
+        String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
 
         double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
@@ -749,10 +738,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     ReadOnlyStringProperty getTradeCurrencyCode() {
         return tradeCurrencyCode;
-    }
-
-    ReadOnlyStringProperty getBtcCode() {
-        return btcCode;
     }
 
     ReadOnlyBooleanProperty getIsBtcWalletFunded() {

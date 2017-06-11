@@ -111,7 +111,7 @@ public class WalletsSetup {
 
         final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
         WalletUtils.setBaseCurrencyNetwork(baseCurrencyNetwork);
-        btcWalletFileName = "bisq_" + baseCurrencyNetwork.getCurrency() + ".wallet";
+        btcWalletFileName = "bisq_" + baseCurrencyNetwork.getCurrencyCode() + ".wallet";
         params = WalletUtils.getParameters();
         walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);

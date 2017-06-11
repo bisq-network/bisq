@@ -1095,10 +1095,9 @@ message PreferencesPayload {
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
     int64 buyer_security_deposit_as_long = 30;
-    string btc_denomination = 31;
-    bool use_animations = 32;
-    PaymentAccount selectedPayment_account_for_createOffer = 33;
-    bool pay_fee_in_Btc = 34;
+    bool use_animations = 31;
+    PaymentAccount selectedPayment_account_for_createOffer = 32;
+    bool pay_fee_in_Btc = 33;
 }
 
 

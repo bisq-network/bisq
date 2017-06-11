@@ -68,14 +68,16 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.donate"), "https://bisq.io/contribute/#donation");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);
+        final boolean isBtc = Res.getBaseCurrencyCode().equals("BTC");
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, isBtc ? 3 : 2, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, Res.get("setting.about.apis"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, Res.get(isBtc ? "setting.about.apisWithFee" : "setting.about.apis"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
         addLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders"));
-        addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), Res.get("setting.about.feeEstimation.val"));
+        if (isBtc)
+            addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), Res.get("setting.about.feeEstimation.val"));
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);

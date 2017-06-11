@@ -80,7 +80,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @Override
     public void initialize() {
         priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         volumeColumn.setText(Res.get("shared.volume"));
         marketColumn.setText(Res.get("shared.market"));
         directionColumn.setText(Res.get("shared.tradeType"));

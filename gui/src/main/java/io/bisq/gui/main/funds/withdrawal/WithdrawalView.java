@@ -122,13 +122,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        amountLabel.setText(Res.getWithCol("shared.amountWithCur", "BTC"));
-        fromLabel.setText(Res.getWithCol("funds.withdrawal.fromLabel", "BTC"));
-        toLabel.setText(Res.getWithCol("funds.withdrawal.toLabel", "BTC"));
+        amountLabel.setText(Res.getWithCol("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        fromLabel.setText(Res.getWithCol("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
+        toLabel.setText(Res.getWithCol("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
         withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
 
         addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
         selectColumn.setText(Res.get("shared.select"));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -242,7 +242,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     Coin amount = senderAmountAsCoinProperty.get();
                     Coin receiverAmount = amount.subtract(fee);
                     int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                    log.info("Fee for tx with size {}: {} BTC", txSize, fee.toPlainString());
+                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
                         if (DevEnv.DEV_MODE) {

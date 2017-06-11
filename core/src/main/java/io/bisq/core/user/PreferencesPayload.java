@@ -63,7 +63,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
     private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
-    private String btcDenomination = Preferences.BTC_DENOMINATIONS.get(0);
     private boolean useAnimations;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
@@ -113,7 +112,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .addAllIgnoreTradersList(ignoreTradersList)
                 .setDirectoryChooserPath(directoryChooserPath)
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
-                .setBtcDenomination(btcDenomination)
                 .setUseAnimations(useAnimations)
                 .setPayFeeInBtc(payFeeInBtc);
 
@@ -171,7 +169,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getIgnoreTradersListList(),
                 proto.getDirectoryChooserPath(),
                 proto.getBuyerSecurityDepositAsLong(),
-                proto.getBtcDenomination(),
                 proto.getUseAnimations(),
                 paymentAccount,
                 proto.getPayFeeInBtc());

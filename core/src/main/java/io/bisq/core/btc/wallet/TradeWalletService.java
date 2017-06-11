@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
+import io.bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
@@ -273,7 +274,7 @@ public class TradeWalletService {
         WalletService.checkWalletConsistency(wallet);
         WalletService.verifyTransaction(resultTx);
 
-        WalletService.printTx("BTC wallet: Signed tx", resultTx);
+        WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
         return resultTx;
     }
 

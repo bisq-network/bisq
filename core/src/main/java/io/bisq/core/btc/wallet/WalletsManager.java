@@ -20,6 +20,7 @@ package io.bisq.core.btc.wallet;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.Res;
 import io.bisq.core.crypto.ScryptUtil;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -67,7 +68,7 @@ public class WalletsManager {
     }
 
     public String getWalletsAsString(boolean includePrivKeys) {
-        return "BTC Wallet:\n" +
+        return Res.getBaseCurrencyCode() + " Wallet:\n" +
                 btcWalletService.getWalletAsString(includePrivKeys) +
                 "\n\nBSQ Wallet:\n" +
                 bsqWalletService.getWalletAsString(includePrivKeys);

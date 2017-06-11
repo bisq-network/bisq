@@ -325,7 +325,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel(Res.get("shared.volumeWithCur", "BTC"));
+        volumeAxisY.setLabel(Res.get("shared.volumeWithCur", Res.getBaseCurrencyCode()));
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -540,7 +540,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(priceColumn);
 
         // amount
-        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", "BTC"));
+        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,

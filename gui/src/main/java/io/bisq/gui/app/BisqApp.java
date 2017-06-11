@@ -165,7 +165,7 @@ public class BisqApp extends Application {
         Security.addProvider(new BouncyCastleProvider());
 
         final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
-        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrency());
+        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
 
         try {

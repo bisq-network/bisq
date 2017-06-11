@@ -1,6 +1,7 @@
 package io.bisq.core.offer;
 
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -80,7 +81,7 @@ public class OfferForJson {
             final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                 primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
-                currencyPair = currencyCode + "/" + "BTC";
+                currencyPair = currencyCode + "/" + Res.getBaseCurrencyCode();
 
                 // int precision = 8;
                 //decimalFormat.setMaximumFractionDigits(precision);
@@ -115,7 +116,7 @@ public class OfferForJson {
 
             } else {
                 primaryMarketDirection = direction;
-                currencyPair = "BTC/" + currencyCode;
+                currencyPair = Res.getBaseCurrencyCode() + "/" + currencyCode;
 
                 priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
                 primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
