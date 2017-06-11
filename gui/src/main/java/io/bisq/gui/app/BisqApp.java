@@ -39,6 +39,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
@@ -85,7 +86,6 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -100,7 +100,7 @@ public class BisqApp extends Application {
 
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
-    private static Environment env;
+    private static BisqEnvironment bisqEnvironment;
 
     private BisqAppModule bisqAppModule;
     private Injector injector;
@@ -114,8 +114,8 @@ public class BisqApp extends Application {
     public static Runnable shutDownHandler;
     private boolean shutDownRequested;
 
-    public static void setEnvironment(Environment env) {
-        BisqApp.env = env;
+    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+        BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -123,11 +123,11 @@ public class BisqApp extends Application {
     public void start(Stage stage) throws IOException {
         BisqApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -164,9 +164,13 @@ public class BisqApp extends Application {
 
         Security.addProvider(new BouncyCastleProvider());
 
+        final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
+        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrency());
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+
         try {
             // Guice
-            bisqAppModule = new BisqAppModule(env, primaryStage);
+            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 /*
@@ -283,7 +287,7 @@ public class BisqApp extends Application {
             });
 
             // configure the primary stage
-            primaryStage.setTitle(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+            primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(1020);
             primaryStage.setMinHeight(620);

@@ -55,6 +55,23 @@ public class Res {
         return StringUtils.capitalize(get(key)) + ":";
     }
 
+    public static ResourceBundle getResourceBundle() {
+        return resourceBundle;
+    }
+
+    private static String baseCurrencyCode;
+    private static String baseCurrencyName;
+    private static String baseCurrencyNameLowerCase;
+
+    public static void setBaseCurrencyCode(String baseCurrencyCode) {
+        Res.baseCurrencyCode = baseCurrencyCode;
+    }
+
+    public static void setBaseCurrencyName(String baseCurrencyName) {
+        Res.baseCurrencyName = baseCurrencyName;
+        baseCurrencyNameLowerCase = baseCurrencyName.toLowerCase();
+    }
+
     // Capitalize first character
     public static String getWithCap(String key) {
         return StringUtils.capitalize(get(key));
@@ -64,12 +81,16 @@ public class Res {
         return get(key, arguments) + ":";
     }
 
+    public static String get(String key, Object... arguments) {
+        return MessageFormat.format(Res.get(key), arguments);
+    }
+
     public static String get(String key) {
-        // TODO remove once translation done
-        // for testing missing translation strings
-        //if (true) return "#";
         try {
-            return resourceBundle.getString(key);
+            return resourceBundle.getString(key)
+                    .replace("BTC", baseCurrencyCode)
+                    .replace("Bitcoin", baseCurrencyName)
+                    .replace("bitcoin", baseCurrencyNameLowerCase);
         } catch (MissingResourceException e) {
             log.warn("Missing resource for key: " + key);
             if (DevEnv.DEV_MODE)
@@ -77,14 +98,6 @@ public class Res {
 
             return key;
         }
-    }
-
-    public static String get(String key, Object... arguments) {
-        return MessageFormat.format(Res.get(key), arguments);
-    }
-
-    public static ResourceBundle getResourceBundle() {
-        return resourceBundle;
     }
 }
 

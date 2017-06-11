@@ -27,13 +27,13 @@ import org.libdohj.params.LitecoinRegTestParams;
 import org.libdohj.params.LitecoinTestNet3Params;
 
 public enum BaseCurrencyNetwork {
-    BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET"),
-    BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET"),
-    BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST"),
+    BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
+    BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
+    BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"),
 
-    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET"),
-    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET"),
-    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST");
+    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
+    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
+    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin");
 
     public static final BaseCurrencyNetwork DEFAULT = LTC_MAINNET;
 
@@ -43,10 +43,13 @@ public enum BaseCurrencyNetwork {
     private final String currency;
     @Getter
     private final String network;
+    @Getter
+    private String currencyName;
 
-    BaseCurrencyNetwork(NetworkParameters parameters, String currency, String network) {
+    BaseCurrencyNetwork(NetworkParameters parameters, String currency, String network, String currencyName) {
         this.parameters = parameters;
         this.currency = currency;
         this.network = network;
+        this.currencyName = currencyName;
     }
 }
