@@ -68,30 +68,42 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
     // BLOCK_HEIGHT 411779
     // 411812 has 693 recursions
-    // MAIN NET
-    private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
-    private static final int GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
+
+    // BTC MAIN NET
+    private static final String BTC_GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
+    private static final int BTC_GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
+
+    // LTC MAIN NET
+    private static final String LTC_GENESIS_TX_ID = "44074e68c1168d67871b3e9af0e65d6d7c820b03ba15445df2c4089729985fb6";
+    private static final int LTC_GENESIS_BLOCK_HEIGHT = 1220170; // 2017-06-11
+    // 1186935
+
+    //1220127
     // block 300000 2014-05-10
     // block 350000 2015-03-30
     // block 400000 2016-02-25
     // block 450000 2017-01-25
 
     // REG TEST
-    // private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
-    // private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
 
     // LTC REG TEST
-    private static final String REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
-    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 105;
+    private static final String LTC_REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
+    private static final int LTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 105;
 
 
     // TEST NET
     // 0.5 BTC to grazcoin ms4ewGfJEv5RTnBD2moDoP5Kp1uJJwDGSX
     // 0.3 BTC to alice: myjn5JVuQLN9S4QwGzY4VrD86819Zc2uhj
     // 0.2BTC to bob: mx3xo655TAjC5r7ScuVEU8b6FMLomnKSeX
-    private static final String TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
-    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
 
+    private static final String LTC_TEST_NET_GENESIS_TX_ID = "not set";
+    private static final int LTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1;
+
+    
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
 
@@ -134,28 +146,28 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
         switch (bisqEnvironment.getBaseCurrencyNetwork()) {
             case BTC_MAINNET:
-                genesisTxId = GENESIS_TX_ID;
-                genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
+                genesisTxId = BTC_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
                 break;
             case BTC_TESTNET:
-                genesisTxId = TEST_NET_GENESIS_TX_ID;
-                genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+                genesisTxId = BTC_TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
                 break;
             case BTC_REGTEST:
-                genesisTxId = REG_TEST_GENESIS_TX_ID;
-                genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+                genesisTxId = BTC_REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
             case LTC_MAINNET:
-                genesisTxId = GENESIS_TX_ID;
-                genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
+                genesisTxId = LTC_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
                 break;
             case LTC_TESTNET:
-                genesisTxId = TEST_NET_GENESIS_TX_ID;
-                genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+                genesisTxId = LTC_TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
                 break;
             case LTC_REGTEST:
-                genesisTxId = REG_TEST_GENESIS_TX_ID;
-                genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+                genesisTxId = LTC_REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
             default:
                 throw new RuntimeException("Currency network not supported " + bisqEnvironment.getBaseCurrencyNetwork());

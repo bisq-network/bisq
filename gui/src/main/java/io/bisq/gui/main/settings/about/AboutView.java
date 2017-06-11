@@ -75,9 +75,12 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        addLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders"));
+        addLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
+                "BitcoinAverage (https://bitcoinaverage.com)",
+                "Poloniex (https://poloniex.com)",
+                "Coinmarketcap (https://coinmarketcap.com)"));
         if (isBtc)
-            addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), Res.get("setting.about.feeEstimation.val"));
+            addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "21 (https://bitcoinfees.21.co)");
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);

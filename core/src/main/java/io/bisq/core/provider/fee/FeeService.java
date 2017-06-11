@@ -40,9 +40,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
+    // TODO check min fee for LTC
+    // //0.001 (LTC) 0.00100000 
     public static final long MIN_TX_FEE = 40; // satoshi/byte
     public static final long MAX_TX_FEE = 1000;
-    public static final long DEFAULT_TX_FEE = 150;
+    public static final long DEFAULT_TX_FEE = 150; 
 
     private static final long MIN_MAKER_FEE_IN_BTC = 10_000;
     private static final long MIN_TAKER_FEE_IN_BTC = 10_000;
