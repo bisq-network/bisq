@@ -34,6 +34,7 @@ import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptChunk;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.*;
@@ -236,15 +237,19 @@ public abstract class WalletService {
             Transaction partialTx = propTx.partialTx;
             txIn = partialTx.getInput(index);
             if (txIn.getConnectedOutput() != null) {
-                try {
-                    // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
-                    // we sign missing pieces (to check this would require either assuming any signatures are signing
-                    // standard output types or a way to get processed signatures out of script execution)
-                    txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
-                    log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
-                    return;
-                } catch (ScriptException e) {
-                    // Expected.
+                // If we dont have a sig we don't do the check to avoid error reports of failed sig checks
+                final List<ScriptChunk> chunks = txIn.getConnectedOutput().getScriptPubKey().getChunks();
+                if (!chunks.isEmpty() && chunks.get(0).data != null && chunks.get(0).data.length > 0) {
+                    try {
+                        // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                        // we sign missing pieces (to check this would require either assuming any signatures are signing
+                        // standard output types or a way to get processed signatures out of script execution)
+                        txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+                        log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
+                        return;
+                    } catch (ScriptException e) {
+                        // Expected.
+                    }
                 }
 
                 redeemData = txIn.getConnectedRedeemData(maybeDecryptingKeyBag);
