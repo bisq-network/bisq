@@ -91,15 +91,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
-        amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.wallet.send.amount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Transaction.MIN_NONDUST_OUTPUT.value));
-        amountInputTextField.setValidator(bsqValidator);
 
-        receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("dao.wallet.send.receiverAddress")).second;
+        receiversAddressInputTextField = addLabelInputTextField(root, gridRow,
+                Res.get("dao.wallet.send.receiverAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
 
+        amountInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount")).second;
+        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Transaction.MIN_NONDUST_OUTPUT.value));
+        amountInputTextField.setValidator(bsqValidator);
+
+       
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 verifyInputs();
