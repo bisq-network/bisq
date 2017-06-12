@@ -41,8 +41,9 @@ public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
     // TODO check min fee for LTC
-    // //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
-    public static final long MIN_TX_FEE = 100; // satoshi/byte
+    // https://litecoin.info/Transaction_fees
+    //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
+    public static final long MIN_TX_FEE = 100; // satoshi/byte // 0.01 USD at LTC price 30 USD for a 300 byte tx
     public static final long MAX_TX_FEE = 400;
     public static final long DEFAULT_TX_FEE = 100;
 
@@ -53,15 +54,18 @@ public class FeeService {
     public static final long DEFAULT_TX_FEE = 150;
 */
 
-    private static final long MIN_MAKER_FEE_IN_BTC = 10_000;
-    private static final long MIN_TAKER_FEE_IN_BTC = 10_000;
-    private static final long DEFAULT_MAKER_FEE_IN_BTC = 30_000;
-    private static final long DEFAULT_TAKER_FEE_IN_BTC = 40_000;
 
-    private static final long MIN_MAKER_FEE_IN_MBSQ = 10;
-    private static final long MIN_TAKER_FEE_IN_MBSQ = 10;
-    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 30;
-    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 40;
+    // Dust limit for LTC is 100 000 sat
+    // https://litecoin.info/Transaction_fees
+    private static final long MIN_MAKER_FEE_IN_BASE_CUR = 100_000; // 0.03 USD at LTC price 30 USD
+    private static final long MIN_TAKER_FEE_IN_BASE_CUR = 100_000;
+    private static final long DEFAULT_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.10 USD at LTC price 30 USD
+    private static final long DEFAULT_TAKER_FEE_IN_BASE_CUR = 400_000; // 0.12 USD at LTC price 30 USD
+
+    private static final long MIN_MAKER_FEE_IN_MBSQ = 30; // 0.0003 bsq -> 0.003 USD -> 1% of MIN_MAKER_FEE_IN_BASE_CUR
+    private static final long MIN_TAKER_FEE_IN_MBSQ = 30;
+    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 90;
+    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 120;
 
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
@@ -136,20 +140,20 @@ public class FeeService {
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BTC) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_MBSQ);
+        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_MBSQ);
     }
 
     public static Coin getMinMakerFee(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BTC) : Coin.valueOf(MIN_MAKER_FEE_IN_MBSQ);
+        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_MAKER_FEE_IN_MBSQ);
     }
 
 
     public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BTC) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_MBSQ);
+        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_MBSQ);
     }
 
     public static Coin getMinTakerFee(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BTC) : Coin.valueOf(MIN_TAKER_FEE_IN_MBSQ);
+        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_TAKER_FEE_IN_MBSQ);
     }
 
 
