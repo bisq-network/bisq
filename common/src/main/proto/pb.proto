@@ -1126,7 +1126,7 @@ message UserPayload {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 message BsqChainState {
-    // TODO not impl yet
+    bytes serialized = 1;
 }
 
 message VoteItem {

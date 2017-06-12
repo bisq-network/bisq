@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -103,7 +104,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     private static final String LTC_TEST_NET_GENESIS_TX_ID = "not set";
     private static final int LTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1;
 
-    
+
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
 
@@ -125,9 +126,9 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     // transient
     transient private final boolean dumpBlockchainData;
-    transient private final Storage<BsqChainState> snapshotBsqChainStateStorage;
+    transient private final Storage<BsqChainState> storage;
     transient private BsqChainState snapshotCandidate;
-    final transient private FunctionalReadWriteLock lock;
+    transient final private FunctionalReadWriteLock lock;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +143,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                          @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.dumpBlockchainData = dumpBlockchainData;
 
-        snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        storage = new Storage<>(storageDir, persistenceProtoResolver);
 
         switch (bisqEnvironment.getBaseCurrencyNetwork()) {
             case BTC_MAINNET:
@@ -180,14 +181,16 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO not impl yet
+    // TODO only supports serialized data atm
     @Override
     public Message toProtoMessage() {
-        return null;
+        PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder();
+        builder.setSerialized(ByteString.copyFrom(Utilities.serialize(this)));
+        return PB.PersistableEnvelope.newBuilder().setBsqChainState(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.BsqChainState bsqChainState) {
-        return null;
+    public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
+        return Utilities.deserialize(proto.getSerialized().toByteArray());
     }
 
 
@@ -197,7 +200,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     public void applySnapshot() {
         lock.write(() -> {
-            BsqChainState snapshot = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
+            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState");
             blocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
@@ -437,7 +440,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
                     final BsqChainState cloned = Utilities.<BsqChainState>cloneObject(snapshotCandidate);
-                    snapshotBsqChainStateStorage.queueUpForSave(cloned);
+                    storage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!
                     log.info("Saved snapshotCandidate to Disc at height " + cloned.chainHeadHeight);
                 }
@@ -456,7 +459,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     private void printDetails() {
-        log.info("\nchainHeadHeight={}\n" +
+        log.debug("\nchainHeadHeight={}\n" +
                         "    blocks.size={}\n" +
                         "    txMap.size={}\n" +
                         "    unspentTxOutputsMap.size={}\n" +

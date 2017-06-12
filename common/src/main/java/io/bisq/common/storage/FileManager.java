@@ -188,7 +188,8 @@ public class FileManager<T extends PersistableEnvelope> {
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-
+            if (protoPersistable.toByteArray().length == 0)
+                log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
             // check if what we're saving can also be read in correctly
            /* if (DevEnv.DEV_MODE) {
                 if (protoPersistable != null) {
