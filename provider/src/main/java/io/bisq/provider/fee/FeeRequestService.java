@@ -19,7 +19,8 @@ package io.bisq.provider.fee;
 
 import io.bisq.common.util.Utilities;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.provider.fee.providers.BtcFeesProvider;
+import io.bisq.provider.fee.providers.FeesProvider;
+import io.bisq.provider.fee.providers.LtcFeesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +40,14 @@ public class FeeRequestService {
 
     private final Timer timerBitcoinFeesLocal = new Timer();
 
-    private final BtcFeesProvider btcFeesProvider;
+    private final FeesProvider feesProvider;
     private final Map<String, Long> allFeesMap = new ConcurrentHashMap<>();
     private long bitcoinFeesTs;
     private String json;
 
     public FeeRequestService() throws IOException {
-        btcFeesProvider = new BtcFeesProvider();
+        // feesProvider = new BtcFeesProvider();
+        feesProvider = new LtcFeesProvider();
 
         writeToJson();
         startRequests();
@@ -70,7 +72,7 @@ public class FeeRequestService {
 
     private void requestBitcoinFees() throws IOException {
         long ts = System.currentTimeMillis();
-        long result = btcFeesProvider.getFee();
+        long result = feesProvider.getFee();
         log.info("requestBitcoinFees took {} ms.", (System.currentTimeMillis() - ts));
         if (result < FeeService.MIN_TX_FEE) {
             log.warn("Response for fee is lower as min fee. Fee=" + result);

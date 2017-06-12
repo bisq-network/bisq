@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //TODO use protobuffer instead of json
-public class BtcFeesProvider {
+public class BtcFeesProvider implements FeesProvider {
     private static final Logger log = LoggerFactory.getLogger(BtcFeesProvider.class);
 
     private final HttpClient httpClient;
