@@ -36,7 +36,11 @@ public class BsqFormatter extends BSFormatter {
     @Inject
     private BsqFormatter() {
         super();
-        coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+        // LTC based BSQ
+        coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+
+        // BTC based BSQ
+        // coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
     }
 
     /**
