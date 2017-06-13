@@ -50,6 +50,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -138,20 +139,21 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         bitcoinPeersTextArea.setPrefRowCount(6);
 
-        ObservableList<BaseCurrencyNetwork> baseCurrencyNetworks = FXCollections.observableArrayList(BaseCurrencyNetwork.values());
+        List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
-            baseCurrencyNetworks = FXCollections.observableArrayList(baseCurrencyNetworks.stream()
+            baseCurrencyNetworks = baseCurrencyNetworks.stream()
                     .filter(e -> e.getNetwork().equals("MAINNET"))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
         selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
-        
+
         selectCurrencyNetworkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork());
         selectCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
         selectCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return Res.get(baseCurrencyNetwork.name());
+                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
+                        baseCurrencyNetwork.getCurrencyName();
             }
 
             @Override

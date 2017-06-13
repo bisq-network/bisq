@@ -49,8 +49,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class BisqEnvironment extends StandardEnvironment {
     private static final Logger log = LoggerFactory.getLogger(BisqEnvironment.class);
 
-    private static final String BITCOIN_NETWORK_PROP = "baseCryptoNetwork.properties";
-
     public static void setDefaultAppName(String defaultAppName) {
         DEFAULT_APP_NAME = defaultAppName;
     }

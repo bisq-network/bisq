@@ -35,6 +35,7 @@ import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.alert.PrivateNotificationPayload;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
@@ -60,12 +61,14 @@ import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
+import io.bisq.gui.main.overlays.windows.SelectBaseCurrencyWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
@@ -124,6 +127,7 @@ public class MainViewModel implements ViewModel {
     private final DaoManager daoManager;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
+    private final BisqEnvironment bisqEnvironment;
     private final BSFormatter formatter;
 
     // BTC network
@@ -189,7 +193,7 @@ public class MainViewModel implements ViewModel {
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, TradeStatisticsManager tradeStatisticsManager,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
-                         KeyRing keyRing,
+                         KeyRing keyRing, BisqEnvironment bisqEnvironment,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -214,6 +218,7 @@ public class MainViewModel implements ViewModel {
         this.daoManager = daoManager;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
+        this.bisqEnvironment = bisqEnvironment;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(WalletUtils.getBaseCurrencyNetwork().name()) +
@@ -235,10 +240,50 @@ public class MainViewModel implements ViewModel {
         checkCryptoSetup();
     }
 
+    private void showTacWindow() {
+        if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
+            UserThread.runAfter(() -> {
+                tacWindow.onAction(() -> {
+                    preferences.setTacAccepted(true);
+                    showSelectBaseCurrencyWindow();
+                }).show();
+            }, 2);
+        } else {
+            showSelectBaseCurrencyWindow();
+        }
+    }
+
+    private void showSelectBaseCurrencyWindow() {
+        String key = "showSelectBaseCurrencyWindowAtFistStartup";
+        if (preferences.showAgain(key)) {
+            new SelectBaseCurrencyWindow()
+                    .baseCurrencyNetwork(bisqEnvironment.getBaseCurrencyNetwork())
+                    .onSelect(baseCurrencyNetwork -> {
+                        bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
+                        preferences.dontShowAgain(key, true);
+                        new Popup().warning(Res.get("settings.net.needRestart"))
+                                .onAction(() -> {
+                                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                                })
+                                .actionButtonText(Res.get("shared.shutDown"))
+                                .hideCloseButton()
+                                .show();
+                    })
+                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", bisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
+                    .onAction(() -> {
+                        bisqEnvironment.saveBaseCryptoNetwork(bisqEnvironment.getBaseCurrencyNetwork());
+                        preferences.dontShowAgain(key, true);
+                        startBasicServices();
+                    })
+                    .hideCloseButton()
+                    .show();
+        } else {
+            startBasicServices();
+        }
+    }
+
     private void startBasicServices() {
         Log.traceCall();
-
-        UserThread.runAfter(tacWindow::showIfNeeded, 2);
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -632,7 +677,7 @@ public class MainViewModel implements ViewModel {
                         log.debug("Crypto test succeeded");
 
                         if (Security.getProvider("BC") != null) {
-                            UserThread.execute(MainViewModel.this::startBasicServices);
+                            UserThread.execute(MainViewModel.this::showTacWindow);
                         } else {
                             throw new CryptoException("Security provider BountyCastle is not available.");
                         }
