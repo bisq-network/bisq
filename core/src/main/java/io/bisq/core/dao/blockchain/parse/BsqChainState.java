@@ -158,10 +158,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 genesisTxId = BTC_REG_TEST_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
-            case LTC_MAINNET:
-                genesisTxId = LTC_GENESIS_TX_ID;
-                genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
-                break;
+
             case LTC_TESTNET:
                 genesisTxId = LTC_TEST_NET_GENESIS_TX_ID;
                 genesisBlockHeight = LTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
@@ -171,7 +168,10 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 genesisBlockHeight = LTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
             default:
-                throw new RuntimeException("Currency network not supported " + bisqEnvironment.getBaseCurrencyNetwork());
+                // LTC_MAINNET:
+                genesisTxId = LTC_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
+                break;
         }
 
         lock = new FunctionalReadWriteLock(true);

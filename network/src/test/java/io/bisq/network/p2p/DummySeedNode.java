@@ -149,7 +149,7 @@ public class DummySeedNode {
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
         createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhostForP2P,
-                Version.getCryptoNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+                Version.getBaseCurrencyNetwork(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting

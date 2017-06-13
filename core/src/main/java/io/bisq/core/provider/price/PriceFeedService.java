@@ -9,6 +9,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
@@ -16,9 +17,8 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -30,9 +30,8 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class PriceFeedService {
-    private static final Logger log = LoggerFactory.getLogger(PriceFeedService.class);
-
     private final HttpClient httpClient;
     private final ProvidersRepository providersRepository;
     private final Preferences preferences;
@@ -40,6 +39,7 @@ public class PriceFeedService {
     private static final long PERIOD_SEC = 60;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
+    private final String baseCurrencyCode;
     private PriceProvider priceProvider;
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
@@ -57,11 +57,15 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(@SuppressWarnings("SameParameterValue") HttpClient httpClient, @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository, @SuppressWarnings("SameParameterValue") Preferences preferences) {
+    public PriceFeedService(@SuppressWarnings("SameParameterValue") HttpClient httpClient,
+                            @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository,
+                            @SuppressWarnings("SameParameterValue") Preferences preferences,
+                            BisqEnvironment bisqEnvironment) {
         this.httpClient = httpClient;
         this.providersRepository = providersRepository;
         this.preferences = preferences;
         this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+        baseCurrencyCode = bisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
     }
 
 
@@ -206,7 +210,38 @@ public class PriceFeedService {
                     checkNotNull(result, "Result must not be null at requestAllPrices");
                     timeStampMap = result.first;
                     epochInSecondAtLastRequest = timeStampMap.get("btcAverageTs");
-                    cache.putAll(result.second);
+                    final Map<String, MarketPrice> priceMap = result.second;
+                    switch (baseCurrencyCode) {
+                        case "LTC":
+                            // apply conversion of btc based price to ltc based with btc/ltc price
+                            MarketPrice ltcPrice = priceMap.get("LTC");
+                            Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
+                            priceMap.entrySet().stream().forEach(e -> {
+                                final MarketPrice value = e.getValue();
+                                double convertedPrice = value.getPrice() * ltcPrice.getPrice();
+                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
+                            });
+                            cache.putAll(convertedPriceMap);
+                            break;
+                        case "BTC":
+                            // do nothing as we requrest btc based prices
+                            cache.putAll(priceMap);
+                            break;
+                        case "DOGE":
+                            // apply conversion of btc based price to doge based with btc/doge price
+                            MarketPrice dogePrice = priceMap.get("DOGE");
+                            convertedPriceMap = new HashMap<>();
+                            priceMap.entrySet().stream().forEach(e -> {
+                                final MarketPrice value = e.getValue();
+                                double convertedPrice = value.getPrice() * dogePrice.getPrice();
+                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
+                            });
+                            cache.putAll(convertedPriceMap);
+                            break;
+                        default:
+                            throw new RuntimeException("baseCurrencyCode not dfined. baseCurrencyCode=" + baseCurrencyCode);
+                    }
+
                     resultHandler.run();
                 });
             }

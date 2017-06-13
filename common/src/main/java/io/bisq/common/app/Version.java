@@ -85,18 +85,18 @@ public class Version {
     }
 
     // The version for the crypto network (BTC_Mainnet = 0, BTC_TestNet = 1, BTC_Regtest = 2, ...)
-    private static int CRYPTO_NETWORK_ID;
+    private static int BASE_CURRENCY_NETWORK;
 
     public static void setBaseCryptoNetworkId(int baseCryptoNetworkId) {
-        CRYPTO_NETWORK_ID = baseCryptoNetworkId;
+        BASE_CURRENCY_NETWORK = baseCryptoNetworkId;
 
         // CRYPTO_NETWORK_ID is ordinal of enum. We use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10
         // to not mix up networks:
-        p2pMessageVersion = CRYPTO_NETWORK_ID + 10 * P2P_NETWORK_VERSION;
+        p2pMessageVersion = BASE_CURRENCY_NETWORK + 10 * P2P_NETWORK_VERSION;
     }
 
-    public static int getCryptoNetworkId() {
-        return CRYPTO_NETWORK_ID;
+    public static int getBaseCurrencyNetwork() {
+        return BASE_CURRENCY_NETWORK;
     }
 
     public static void printVersion() {
@@ -105,7 +105,7 @@ public class Version {
                 ", P2P_NETWORK_VERSION=" + P2P_NETWORK_VERSION +
                 ", LOCAL_DB_VERSION=" + LOCAL_DB_VERSION +
                 ", TRADE_PROTOCOL_VERSION=" + TRADE_PROTOCOL_VERSION +
-                ", CRYPTO_NETWORK_ID=" + CRYPTO_NETWORK_ID +
+                ", BASE_CURRENCY_NETWORK=" + BASE_CURRENCY_NETWORK +
                 ", getP2PNetworkId()=" + getP2PMessageVersion() +
                 '}');
     }

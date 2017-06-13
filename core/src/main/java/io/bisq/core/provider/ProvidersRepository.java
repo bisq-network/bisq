@@ -3,16 +3,14 @@ package io.bisq.core.provider;
 import com.google.inject.Inject;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Random;
 
+@Slf4j
 public class ProvidersRepository {
-    private static final Logger log = LoggerFactory.getLogger(ProvidersRepository.class);
-
     private final String[] providerArray;
     private String baseUrl;
 

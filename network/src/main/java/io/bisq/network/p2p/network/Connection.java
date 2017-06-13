@@ -821,8 +821,13 @@ public class Connection implements MessageListener {
 
                         // Check P2P network ID
                         if (proto.getMessageVersion() != Version.getP2PMessageVersion()
-                                && reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID))
+                                && reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID)) {
+                            log.warn("RuleViolation.WRONG_NETWORK_ID. version of message={}, app version={}, " +
+                                            "proto.toTruncatedString={}", proto.getMessageVersion(),
+                                    Version.getP2PMessageVersion(),
+                                    Utilities.toTruncatedString(proto.toString()));
                             return;
+                        }
 
                         if (sharedModel.getSupportedCapabilities() == null && networkEnvelope instanceof SupportedCapabilitiesMessage)
                             sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());

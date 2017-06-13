@@ -3,15 +3,13 @@ package io.bisq.core.provider.price;
 import com.google.common.util.concurrent.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+@Slf4j
 public class PriceRequest {
-    private static final Logger log = LoggerFactory.getLogger(PriceRequest.class);
-
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("PriceRequest", 3, 5, 10 * 60);
 
     public PriceRequest() {

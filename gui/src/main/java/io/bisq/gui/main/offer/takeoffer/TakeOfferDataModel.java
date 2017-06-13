@@ -504,7 +504,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (isCurrencyForTakerFeeBtc())
             return txFeeFromFeeService.multiply(3);
         else
-            return txFeeFromFeeService.multiply(3).subtract(getTakerFee());
+            return txFeeFromFeeService.multiply(3).subtract(getTakerFee() != null ? getTakerFee() : Coin.ZERO);
     }
 
     public AddressEntry getAddressEntry() {

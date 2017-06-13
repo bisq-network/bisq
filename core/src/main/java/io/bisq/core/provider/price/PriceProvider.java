@@ -7,8 +7,7 @@ import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.HttpClientProvider;
 import io.bisq.network.http.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,9 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class PriceProvider extends HttpClientProvider {
-    private static final Logger log = LoggerFactory.getLogger(PriceProvider.class);
-
     public PriceProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl, false);
     }
