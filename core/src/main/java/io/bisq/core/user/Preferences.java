@@ -35,32 +35,45 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public final class Preferences implements PersistedDataHost {
 
-    private static final ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_TEST_NET = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
-            new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
-            new BlockChainExplorer("Blockr.io", "https://tbtc.blockr.io/tx/info/", "https://tbtc.blockr.io/address/info/"),
-            new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
-            new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
-            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_MAIN_NET = new ArrayList<>(Arrays.asList(
+    private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
-            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
-            new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
             new BlockChainExplorer("Blockonomics", "https://www.blockonomics.co/api/tx?txid=", "https://www.blockonomics.co/#/search?q="),
             new BlockChainExplorer("Chainflyer", "http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/"),
             new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
-            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
+            new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/")
+    ));
+    private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
+            new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
+            new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
+            new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
+            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/"),
+            new BlockChainExplorer("Blockr.io", "https://tbtc.blockr.io/tx/info/", "https://tbtc.blockr.io/address/info/")
     ));
 
-    // TODO ltc explorers
-    //https://chainz.cryptoid.info/ltc/
+    private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
+            new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
+            new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
+    ));
+
+    private static final ArrayList<BlockChainExplorer> LTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
+    ));
+
+    private static final ArrayList<BlockChainExplorer> DOGE_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/doge/", "https://chain.so/address/doge/")
+    ));
+    private static final ArrayList<BlockChainExplorer> DOGE_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/DOGETEST/", "https://chain.so/address/DOGETEST/")
+    ));
 
 
     // payload is initialized so the default values are available for Property initialization.
@@ -124,8 +137,24 @@ public final class Preferences implements PersistedDataHost {
 
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
-            setBlockChainExplorerTestNet(BLOCK_CHAIN_EXPLORERS_TEST_NET.get(0));
-            setBlockChainExplorerMainNet(BLOCK_CHAIN_EXPLORERS_MAIN_NET.get(0));
+
+            switch (WalletUtils.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
+                    setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
+                    break;
+                case "LTC":
+                    setBlockChainExplorerMainNet(LTC_MAIN_NET_EXPLORERS.get(0));
+                    setBlockChainExplorerTestNet(LTC_TEST_NET_EXPLORERS.get(0));
+                    break;
+                case "DOGE":
+                    setBlockChainExplorerMainNet(DOGE_MAIN_NET_EXPLORERS.get(0));
+                    setBlockChainExplorerTestNet(DOGE_TEST_NET_EXPLORERS.get(0));
+                    break;
+                default:
+                    throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + WalletUtils.getBaseCurrencyNetwork());
+            }
+
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
         }
 
@@ -254,7 +283,7 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
+        if (WalletUtils.getBaseCurrencyNetwork().isMainnet())
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -462,17 +491,29 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
+        if (WalletUtils.getBaseCurrencyNetwork().isMainnet())
             return prefPayload.getBlockChainExplorerMainNet();
         else
             return prefPayload.getBlockChainExplorerTestNet();
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
-            return BLOCK_CHAIN_EXPLORERS_MAIN_NET;
-        else
-            return BLOCK_CHAIN_EXPLORERS_TEST_NET;
+        switch (WalletUtils.getBaseCurrencyNetwork()) {
+            case BTC_MAINNET:
+                return BTC_MAIN_NET_EXPLORERS;
+            case BTC_TESTNET:
+                return BTC_TEST_NET_EXPLORERS;
+            case LTC_MAINNET:
+                return LTC_MAIN_NET_EXPLORERS;
+            case LTC_TESTNET:
+                return LTC_TEST_NET_EXPLORERS;
+            case DOGE_MAINNET:
+                return DOGE_MAIN_NET_EXPLORERS;
+            case DOGE_TESTNET:
+                return DOGE_TEST_NET_EXPLORERS;
+            default:
+                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + WalletUtils.getBaseCurrencyNetwork());
+        }
     }
 
     public boolean showAgain(String key) {
@@ -483,7 +524,7 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST)
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBaseCurrencyNetwork().isRegtest())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

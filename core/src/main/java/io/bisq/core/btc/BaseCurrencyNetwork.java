@@ -28,7 +28,7 @@ public enum BaseCurrencyNetwork {
     BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
     BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
     BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"),
-    
+
     LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
     LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
     LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
@@ -54,5 +54,13 @@ public enum BaseCurrencyNetwork {
         this.currencyCode = currencyCode;
         this.network = network;
         this.currencyName = currencyName;
+    }
+
+    public boolean isMainnet() {
+        return "MAINNET".equals(network);
+    }
+
+    public boolean isRegtest() {
+        return "REGTEST".equals(network);
     }
 }

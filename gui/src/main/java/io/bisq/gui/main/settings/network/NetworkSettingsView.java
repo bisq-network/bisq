@@ -143,7 +143,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.getNetwork().equals("MAINNET"))
+                    .filter(e -> e.isMainnet())
                     .collect(Collectors.toList());
         selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
 

@@ -96,7 +96,7 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.getNetwork().equals("MAINNET"))
+                    .filter(e -> e.isMainnet())
                     .collect(Collectors.toList());
         comboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
 
