@@ -118,8 +118,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                                 Address.fromBase58(DogecoinTestNet3Params.get(), input);
                                 break;
                             case "REGTEST":
-                                // TODO
-                                //Address.fromBase58(DogecoinRegTestParams.get(), input);
+                                Address.fromBase58(DogecoinRegTestParams.get(), input);
                                 break;
                         }
                         return new ValidationResult(true);

@@ -34,9 +34,8 @@ public enum BaseCurrencyNetwork {
     LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
 
     DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
-    DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin")/*,
-    // TODO
-    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin")*/;
+    DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
+    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin");
 
     public static final BaseCurrencyNetwork DEFAULT = LTC_MAINNET;
 

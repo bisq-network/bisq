@@ -502,14 +502,17 @@ public final class Preferences implements PersistedDataHost {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
             case BTC_TESTNET:
+            case BTC_REGTEST:
                 return BTC_TEST_NET_EXPLORERS;
             case LTC_MAINNET:
                 return LTC_MAIN_NET_EXPLORERS;
             case LTC_TESTNET:
+            case LTC_REGTEST:
                 return LTC_TEST_NET_EXPLORERS;
             case DOGE_MAINNET:
                 return DOGE_MAIN_NET_EXPLORERS;
             case DOGE_TESTNET:
+            case DOGE_REGTEST:
                 return DOGE_TEST_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + WalletUtils.getBaseCurrencyNetwork());
