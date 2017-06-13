@@ -93,6 +93,7 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     public static PaymentAccount fromProto(PB.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
         PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
+        account.getTradeCurrencies().clear();
         account.setId(proto.getId());
         account.setCreationDate(proto.getCreationDate());
         account.setAccountName(proto.getAccountName());

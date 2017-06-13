@@ -28,6 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -65,6 +66,7 @@ import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
+import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.network.p2p.P2PService;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -170,7 +172,11 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
 
         Restrictions.setBaseCurrencyNetwork(baseCurrencyNetwork);
-        
+
+        CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
+
+        AltCoinAddressValidator.setNetwork(baseCurrencyNetwork.getNetwork());
+
         try {
             // Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);

@@ -25,17 +25,29 @@ import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PivxParams;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.libdohj.params.*;
 
+@Slf4j
 public final class AltCoinAddressValidator extends InputValidator {
-    private static final Logger log = LoggerFactory.getLogger(AltCoinAddressValidator.class);
 
     private String currencyCode;
+    private static String network;
+
+    public static void setNetwork(String network) {
+        AltCoinAddressValidator.network = network;
+    }
+
+    public static String getNetwork() {
+        return network;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -62,6 +74,58 @@ public final class AltCoinAddressValidator extends InputValidator {
                     Res.get("validation.altcoin.wrongStructure", currencyCode));
 
             switch (currencyCode) {
+                case "BTC":
+                    try {
+                        switch (network) {
+                            case "MAINNET":
+                                Address.fromBase58(MainNetParams.get(), input);
+                                break;
+                            case "TESTNET":
+                                Address.fromBase58(TestNet3Params.get(), input);
+                                break;
+                            case "REGTEST":
+                                Address.fromBase58(RegTestParams.get(), input);
+                                break;
+                        }
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "LTC":
+                    try {
+                        switch (network) {
+                            case "MAINNET":
+                                Address.fromBase58(LitecoinMainNetParams.get(), input);
+                                break;
+                            case "TESTNET":
+                                Address.fromBase58(LitecoinTestNet3Params.get(), input);
+                                break;
+                            case "REGTEST":
+                                Address.fromBase58(LitecoinRegTestParams.get(), input);
+                                break;
+                        }
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "DOGE":
+                    try {
+                        switch (network) {
+                            case "MAINNET":
+                                Address.fromBase58(DogecoinMainNetParams.get(), input);
+                                break;
+                            case "TESTNET":
+                                Address.fromBase58(DogecoinTestNet3Params.get(), input);
+                                break;
+                            case "REGTEST":
+                                // TODO
+                                //Address.fromBase58(DogecoinRegTestParams.get(), input);
+                                break;
+                        }
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
@@ -69,22 +133,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                     // Example for BTC, though for BTC we use the BitcoinJ library address check
-                case "BTC":
-                    // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
-                    if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
-                        //noinspection ConstantConditions
-                        if (verifyChecksum(input))
-                            try {
-                                Address.fromBase58(MainNetParams.get(), input);
-                                return new ValidationResult(true);
-                            } catch (AddressFormatException e) {
-                                return new ValidationResult(false, getErrorMessage(e));
-                            }
-                        else
-                            return wrongChecksum;
-                    } else {
-                        return regexTestFailed;
-                    }
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions

@@ -436,14 +436,15 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (paymentAccount != null) {
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
-                currencyComboBox.setItems(FXCollections.observableArrayList(paymentAccount.getTradeCurrencies()));
+                final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+                currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
 
                 // we select comboBox following the user currency, if user currency not available in account, we select first
                 TradeCurrency tradeCurrency = model.getTradeCurrency();
-                if (paymentAccount.getTradeCurrencies().contains(tradeCurrency))
+                if (tradeCurrencies.contains(tradeCurrency))
                     currencyComboBox.getSelectionModel().select(tradeCurrency);
                 else
-                    currencyComboBox.getSelectionModel().select(paymentAccount.getTradeCurrencies().get(0));
+                    currencyComboBox.getSelectionModel().select(tradeCurrencies.get(0));
 
                 model.onPaymentAccountSelected(paymentAccount);
             } else {

@@ -25,13 +25,13 @@ import org.bitcoinj.params.TestNet3Params;
 import org.libdohj.params.*;
 
 public enum BaseCurrencyNetwork {
-    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
-    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
-    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
-
     BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
     BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
     BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"),
+    
+    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
+    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
+    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
 
     DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
     DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin")/*,
