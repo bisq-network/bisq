@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.util.CoinUtil;
@@ -74,7 +75,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
                         BsqFormatter bsqFormatter, BSFormatter btcFormatter, Navigation navigation,
-                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator,
+                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, 
                         BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -98,10 +99,10 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
 
         amountInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount")).second;
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Transaction.MIN_NONDUST_OUTPUT.value));
+        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Restrictions.getMinNonDustOutput().value));
         amountInputTextField.setValidator(bsqValidator);
 
-       
+
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 verifyInputs();

@@ -40,6 +40,7 @@ import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
@@ -168,6 +169,8 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
 
+        Restrictions.setBaseCurrencyNetwork(baseCurrencyNetwork);
+        
         try {
             // Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);

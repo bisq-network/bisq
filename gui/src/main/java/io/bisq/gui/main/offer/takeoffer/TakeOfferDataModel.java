@@ -24,6 +24,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -476,7 +477,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amount.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amount.get());
-            Coin dustAndFee = getTotalTxFee().add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = getTotalTxFee().add(Restrictions.getMinNonDustOutput());
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;

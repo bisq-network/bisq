@@ -223,7 +223,7 @@ public class BtcWalletService extends WalletService {
             // We might have the rare case that both inputs matched the required fees, so both did not require
             // a change output.
             // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
-            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
+            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Restrictions.getMinNonDustOutput() : Coin.ZERO;
 
             // add OP_RETURN output
             if (opReturnData != null)

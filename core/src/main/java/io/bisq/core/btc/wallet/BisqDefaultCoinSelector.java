@@ -17,6 +17,7 @@
 
 package io.bisq.core.btc.wallet;
 
+import io.bisq.core.btc.Restrictions;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.wallet.CoinSelection;
@@ -70,7 +71,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         for (TransactionOutput output : sortedOutputs) {
             if (total >= targetValue) {
                 long change = total - targetValue;
-                if (change == 0 || change >= Transaction.MIN_NONDUST_OUTPUT.value)
+                if (change == 0 || change >= Restrictions.getMinNonDustOutput().value)
                     break;
             }
 
@@ -94,7 +95,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
             throw new InsufficientMoneyException(Coin.valueOf(missing));
 
         long change = total - targetValue;
-        if (change > 0 && change < Transaction.MIN_NONDUST_OUTPUT.value)
+        if (change > 0 && change < Restrictions.getMinNonDustOutput().value)
             throw new ChangeBelowDustException(Coin.valueOf(change));
 
         return Coin.valueOf(change);
