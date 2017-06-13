@@ -18,6 +18,7 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.app.DevEnv;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -34,13 +35,24 @@ public class BsqFormatter extends BSFormatter {
     private final String prefix = "B";
 
     @Inject
-    private BsqFormatter() {
+    private BsqFormatter(BisqEnvironment bisqEnvironment) {
         super();
-        // LTC based BSQ
-        coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
 
-        // BTC based BSQ
-        // coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+        final String baseCurrencyCode = bisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        switch (baseCurrencyCode) {
+            case "BTC":
+                coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+                break;
+            case "LTC":
+                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+                break;
+            case "DOGE":
+                // TODO check
+                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+                break;
+            default:
+                throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
+        }
     }
 
     /**
