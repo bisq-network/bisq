@@ -28,6 +28,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Immutable
 public class PubKeyScript implements Serializable {
+    private static final long serialVersionUID = 1;
+
     private final int reqSigs;
     private final ScriptTypes type;
     private final ImmutableList<String> addresses;

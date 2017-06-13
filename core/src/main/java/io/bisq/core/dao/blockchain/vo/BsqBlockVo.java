@@ -27,6 +27,8 @@ import java.io.Serializable;
 @Value
 @Immutable
 public class BsqBlockVo implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     private final int height;
     private final String hash;
     private String previousBlockHash;

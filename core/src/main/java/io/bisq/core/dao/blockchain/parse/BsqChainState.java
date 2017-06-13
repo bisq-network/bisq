@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,6 +48,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
 public class BsqChainState implements PersistableEnvelope, Serializable {
+    private static final long serialVersionUID = 1;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -114,10 +118,10 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     // Persisted data
     private final LinkedList<BsqBlock> blocks = new LinkedList<>();
-    private final Map<String, Tx> txMap = new HashMap<>();
-    private final Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
-    private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
-    private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
+    private final HashMap<String, Tx> txMap = new HashMap<>();
+    private final HashMap<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
+    private final HashSet<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
+    private final HashSet<Tuple2<Long, Integer>> votingFees = new HashSet<>();
 
     private final String genesisTxId;
     private final int genesisBlockHeight;
@@ -128,7 +132,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     transient private final boolean dumpBlockchainData;
     transient private final Storage<BsqChainState> storage;
     transient private BsqChainState snapshotCandidate;
-    transient final private FunctionalReadWriteLock lock;
+    transient private FunctionalReadWriteLock lock;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -176,6 +180,16 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
         lock = new FunctionalReadWriteLock(true);
     }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            lock = new FunctionalReadWriteLock(true);
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

@@ -27,6 +27,8 @@ import java.io.Serializable;
 @Value
 @Immutable
 public class SpentInfo implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     private final long blockHeight;
     private final String txId;
     private final int inputIndex; // TODO not impl yet

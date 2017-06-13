@@ -28,6 +28,8 @@ import java.io.Serializable;
 @Value
 @Immutable
 public class TxVo implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String id;
     private final int blockHeight;

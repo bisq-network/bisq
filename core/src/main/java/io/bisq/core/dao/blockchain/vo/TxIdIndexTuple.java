@@ -27,6 +27,8 @@ import java.io.Serializable;
 @Value
 @Immutable
 public class TxIdIndexTuple implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     private final String txId;
     private final int index;
 

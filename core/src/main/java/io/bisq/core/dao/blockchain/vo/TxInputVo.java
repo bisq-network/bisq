@@ -27,6 +27,8 @@ import java.io.Serializable;
 @Value
 @Immutable
 public class TxInputVo implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     private final String txId;
     private final int txOutputIndex;
 
