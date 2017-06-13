@@ -17,15 +17,15 @@ public class FeeRequest {
     public FeeRequest() {
     }
 
-    public SettableFuture<Tuple2<Map<String, Long>, FeeData>> getFees(FeeProvider provider) {
-        final SettableFuture<Tuple2<Map<String, Long>, FeeData>> resultFuture = SettableFuture.create();
-        ListenableFuture<Tuple2<Map<String, Long>, FeeData>> future = executorService.submit(() -> {
+    public SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> getFees(FeeProvider provider) {
+        final SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> resultFuture = SettableFuture.create();
+        ListenableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = executorService.submit(() -> {
             Thread.currentThread().setName("FeeRequest-" + provider.toString());
             return provider.getFees();
         });
 
-        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, FeeData>>() {
-            public void onSuccess(Tuple2<Map<String, Long>, FeeData> feeData) {
+        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, Long>>>() {
+            public void onSuccess(Tuple2<Map<String, Long>, Map<String, Long>> feeData) {
                 log.debug("Received feeData of {}\nfrom provider {}", feeData, provider);
                 resultFuture.set(feeData);
             }

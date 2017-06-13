@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.network.http.HttpClient;
 import org.bitcoinj.core.Coin;
@@ -40,20 +41,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
-    // TODO check min fee for LTC
     // https://litecoin.info/Transaction_fees
     //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
-    public static final long MIN_TX_FEE = 100; // satoshi/byte // 0.01 USD at LTC price 30 USD for a 300 byte tx
-    public static final long MAX_TX_FEE = 400;
-    public static final long DEFAULT_TX_FEE = 100;
-
-   /* 
-   BTC
-   public static final long MIN_TX_FEE = 40; // satoshi/byte
-    public static final long MAX_TX_FEE = 1000;
-    public static final long DEFAULT_TX_FEE = 150;
-*/
-
+    public static final long LTC_DEFAULT_TX_FEE = 100;
+    public static final long BTC_DEFAULT_TX_FEE = 150;
+    public static final long DOGE_DEFAULT_TX_FEE = 100;
 
     // Dust limit for LTC is 100 000 sat
     // https://litecoin.info/Transaction_fees
@@ -73,8 +65,8 @@ public class FeeService {
     public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 10;
 
     private final FeeProvider feeProvider;
-    @Nullable
-    private FeeData feeData;
+    private final String baseCurrencyCode;
+    private long txFeePerByte;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
     private long lastRequest;
@@ -84,8 +76,23 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository) {
-        this.feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
+    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository, BisqEnvironment bisqEnvironment) {
+        baseCurrencyCode = bisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
+
+        switch (baseCurrencyCode) {
+            case "BTC":
+                txFeePerByte = BTC_DEFAULT_TX_FEE;
+                break;
+            case "LTC":
+                txFeePerByte = LTC_DEFAULT_TX_FEE;
+                break;
+            case "DOGE":
+                txFeePerByte = DOGE_DEFAULT_TX_FEE;
+                break;
+            default:
+                throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
+        }
     }
 
     public void onAllServicesInitialized() {
@@ -94,19 +101,20 @@ public class FeeService {
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
         long now = Instant.now().getEpochSecond();
-        if (feeData == null || now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
+        if (now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
             lastRequest = now;
             FeeRequest feeRequest = new FeeRequest();
-            SettableFuture<Tuple2<Map<String, Long>, FeeData>> future = feeRequest.getFees(feeProvider);
-            Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, FeeData>>() {
+            SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = feeRequest.getFees(feeProvider);
+            Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, Long>>>() {
                 @Override
-                public void onSuccess(@Nullable Tuple2<Map<String, Long>, FeeData> result) {
+                public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, Long>> result) {
                     UserThread.execute(() -> {
                         checkNotNull(result, "Result must not be null at getFees");
                         timeStampMap = result.first;
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
-                        feeData = result.second;
-                        log.info("Tx fee: txFeePerByte=" + feeData.txFeePerByte);
+                        final Map<String, Long> map = result.second;
+                        txFeePerByte = map.get(baseCurrencyCode);
+                        log.info("Tx fee: txFeePerByte={} for currency {}", txFeePerByte, baseCurrencyCode);
                         if (resultHandler != null)
                             resultHandler.run();
                     });
@@ -133,10 +141,7 @@ public class FeeService {
     }
 
     public Coin getTxFeePerByte() {
-        if (feeData != null)
-            return Coin.valueOf(feeData.txFeePerByte);
-        else
-            return Coin.valueOf(DEFAULT_TX_FEE);
+        return Coin.valueOf(txFeePerByte);
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
