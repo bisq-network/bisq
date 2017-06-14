@@ -19,6 +19,7 @@ package io.bisq.core.dao.vote;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableList;
@@ -92,9 +93,11 @@ public class VotingManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
-        if (persisted != null)
-            voteItemsLists.addAll(persisted.getList());
+        if (DevEnv.DAO_ACTIVATED) {
+            PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+            if (persisted != null)
+                voteItemsLists.addAll(persisted.getList());
+        }
     }
 
     public void onAllServicesInitialized() {

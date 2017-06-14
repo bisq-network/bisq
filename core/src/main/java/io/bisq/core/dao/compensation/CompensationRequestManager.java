@@ -19,6 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -81,33 +82,37 @@ public class CompensationRequestManager implements PersistedDataHost {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
+        if (DevEnv.DAO_ACTIVATED) {
+            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+                @Override
+                public void onAdded(ProtectedStorageEntry data) {
+                    final StoragePayload storagePayload = data.getStoragePayload();
+                    if (storagePayload instanceof CompensationRequestPayload)
+                        addToList((CompensationRequestPayload) storagePayload, true);
+                }
+
+                @Override
+                public void onRemoved(ProtectedStorageEntry data) {
+                    // TODO
+                }
+            });
+
+            // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+            p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+                final StoragePayload storagePayload = e.getStoragePayload();
                 if (storagePayload instanceof CompensationRequestPayload)
-                    addToList((CompensationRequestPayload) storagePayload, true);
-            }
-
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                // TODO
-            }
-        });
-
-        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
-        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
-            final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof CompensationRequestPayload)
-                addToList((CompensationRequestPayload) storagePayload, false);
-        });
+                    addToList((CompensationRequestPayload) storagePayload, false);
+            });
+        }
     }
 
     @Override
     public void readPersisted() {
-        PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
-        if (persisted != null)
-            model.setPersistedCompensationRequest(persisted.getList());
+        if (DevEnv.DAO_ACTIVATED) {
+            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+            if (persisted != null)
+                model.setPersistedCompensationRequest(persisted.getList());
+        }
     }
 
     public void onAllServicesInitialized() {

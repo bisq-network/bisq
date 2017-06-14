@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.DaoOptionKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,8 @@ public class BsqBlockchainManager {
     }
 
     public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
-        bsqNode.addBsqChainStateListener(bsqChainStateListener);
+        if (DevEnv.DAO_ACTIVATED)
+            bsqNode.addBsqChainStateListener(bsqChainStateListener);
     }
 
     public boolean isParseBlockchainComplete() {
@@ -50,6 +52,7 @@ public class BsqBlockchainManager {
     }
 
     public void removeBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
-        bsqNode.removeBsqChainStateListener(bsqChainStateListener);
+        if (DevEnv.DAO_ACTIVATED)
+            bsqNode.removeBsqChainStateListener(bsqChainStateListener);
     }
 }

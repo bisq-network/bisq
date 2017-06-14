@@ -143,6 +143,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
+        if (!DevEnv.DAO_ACTIVATED) {
+            daoButton.setVisible(false);
+            daoButton.setManaged(false);
+        }
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);

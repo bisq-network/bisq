@@ -18,6 +18,7 @@
 package io.bisq.core.dao;
 
 import com.google.inject.Inject;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
@@ -54,11 +55,13 @@ public class DaoManager {
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        daoPeriodService.onAllServicesInitialized();
-        bsqUtxoFeedService.onAllServicesInitialized();
-        voteManager.onAllServicesInitialized();
-        compensationRequestManager.onAllServicesInitialized();
-        bsqBlockchainManager.onAllServicesInitialized(errorMessageHandler);
+        if (DevEnv.DAO_ACTIVATED) {
+            daoPeriodService.onAllServicesInitialized();
+            bsqUtxoFeedService.onAllServicesInitialized();
+            voteManager.onAllServicesInitialized();
+            compensationRequestManager.onAllServicesInitialized();
+            bsqBlockchainManager.onAllServicesInitialized(errorMessageHandler);
+        }
     }
 
 

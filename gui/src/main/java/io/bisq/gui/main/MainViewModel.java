@@ -116,7 +116,7 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final PrivateNotificationManager privateNotificationManager;
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -143,12 +143,14 @@ public class MainViewModel implements ViewModel {
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
 
     private final StringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
 
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> p2PNetworkInfoBinding;
     final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
@@ -163,6 +165,7 @@ public class MainViewModel implements ViewModel {
     private final String btcNetworkAsString;
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
     final PriceFeedService priceFeedService;
     private final User user;
@@ -171,8 +174,9 @@ public class MainViewModel implements ViewModel {
     private Timer checkNumberOfP2pNetworkPeersTimer;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> marketPriceBinding;
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
@@ -241,6 +245,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void showTacWindow() {
+        //noinspection ConstantConditions,ConstantConditions
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
