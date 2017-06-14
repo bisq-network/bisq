@@ -20,22 +20,19 @@ package io.bisq.core.filter;
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
 import io.bisq.core.app.AppOptionKeys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
 
 public class FilterModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(FilterModule.class);
 
-    public FilterModule(Environment env) {
-        super(env);
+    public FilterModule(Environment environment) {
+        super(environment);
     }
 
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(AppOptionKeys.IGNORE_DEV_MSG_KEY)).to(env.getRequiredProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY));
+        bindConstant().annotatedWith(named(AppOptionKeys.IGNORE_DEV_MSG_KEY)).to(environment.getRequiredProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY));
     }
 }

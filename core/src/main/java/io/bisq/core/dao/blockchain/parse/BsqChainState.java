@@ -26,7 +26,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -141,15 +141,14 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqChainState(BisqEnvironment bisqEnvironment,
-                         PersistenceProtoResolver persistenceProtoResolver,
+    public BsqChainState(PersistenceProtoResolver persistenceProtoResolver,
                          @Named(Storage.STORAGE_DIR) File storageDir,
                          @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.dumpBlockchainData = dumpBlockchainData;
 
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
-        switch (bisqEnvironment.getBaseCurrencyNetwork()) {
+        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
             case BTC_MAINNET:
                 genesisTxId = BTC_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;

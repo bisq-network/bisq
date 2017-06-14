@@ -58,8 +58,8 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-            Address address = WalletUtils.getAddressFromOutput(output);
+        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+            Address address = WalletService.getAddressFromOutput(output);
             boolean containsAddress = addresses.contains(address);
             if (!containsAddress)
                 log.trace("addresses not containing address " + addresses + " / " + address);

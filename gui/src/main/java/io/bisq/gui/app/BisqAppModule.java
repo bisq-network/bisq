@@ -43,8 +43,6 @@ import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
@@ -52,18 +50,17 @@ import java.io.File;
 import static com.google.inject.name.Names.named;
 
 class BisqAppModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(BisqAppModule.class);
 
     private final Stage primaryStage;
 
-    public BisqAppModule(Environment env, Stage primaryStage) {
-        super(env);
+    public BisqAppModule(Environment environment, Stage primaryStage) {
+        super(environment);
         this.primaryStage = primaryStage;
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
         bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
@@ -73,10 +70,10 @@ class BisqAppModule extends AppModule {
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
 
-        File storageDir = new File(env.getRequiredProperty(Storage.STORAGE_DIR));
+        File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
+        File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
@@ -97,42 +94,42 @@ class BisqAppModule extends AppModule {
     }
 
     private TradeModule tradeModule() {
-        return new TradeModule(env);
+        return new TradeModule(environment);
     }
 
     private EncryptionServiceModule encryptionServiceModule() {
-        return new EncryptionServiceModule(env);
+        return new EncryptionServiceModule(environment);
     }
 
     private ArbitratorModule arbitratorModule() {
-        return new ArbitratorModule(env);
+        return new ArbitratorModule(environment);
     }
 
     private AlertModule alertModule() {
-        return new AlertModule(env);
+        return new AlertModule(environment);
     }
 
     private FilterModule filterModule() {
-        return new FilterModule(env);
+        return new FilterModule(environment);
     }
 
     private OfferModule offerModule() {
-        return new OfferModule(env);
+        return new OfferModule(environment);
     }
 
     private P2PModule torModule() {
-        return new P2PModule(env);
+        return new P2PModule(environment);
     }
 
     private BitcoinModule bitcoinModule() {
-        return new BitcoinModule(env);
+        return new BitcoinModule(environment);
     }
 
     private DaoModule daoModule() {
-        return new DaoModule(env);
+        return new DaoModule(environment);
     }
 
     private GuiModule guiModule() {
-        return new GuiModule(env, primaryStage);
+        return new GuiModule(environment, primaryStage);
     }
 }

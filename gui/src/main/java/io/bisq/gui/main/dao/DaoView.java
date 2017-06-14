@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.dao;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
@@ -56,9 +57,14 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        if (DevEnv.DAO_PHASE2_ACTIVATED) {
+            compensationTab = new Tab(Res.get("dao.tab.compensation"));
+            votingTab = new Tab(Res.get("dao.tab.voting"));
+            compensationTab.setClosable(false);
+            votingTab.setClosable(false);
+            root.getTabs().addAll(compensationTab, votingTab);
+        }
         bsqWalletTab.setText(Res.get("dao.tab.bsqWallet"));
-        compensationTab.setText(Res.get("dao.tab.compensation"));
-        votingTab.setText(Res.get("dao.tab.voting"));
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {

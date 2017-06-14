@@ -19,15 +19,11 @@ package io.bisq.core.arbitration;
 
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 public class ArbitratorModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorModule.class);
-
-    public ArbitratorModule(Environment env) {
-        super(env);
+    public ArbitratorModule(Environment environment) {
+        super(environment);
     }
 
     @Override

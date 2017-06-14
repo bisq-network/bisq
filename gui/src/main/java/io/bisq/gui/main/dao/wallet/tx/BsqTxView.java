@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.wallet.tx;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -122,7 +123,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
         chainSyncIndicator = new ProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        chainSyncIndicator.setProgress(-1);
+        if (DevEnv.DAO_ACTIVATED)
+            chainSyncIndicator.setProgress(-1);
+        else
+            chainSyncIndicator.setProgress(0);
         chainSyncIndicator.setPadding(new Insets(-6, 0, -10, 5));
 
         chainHeightLabel = FormBuilder.addLabel(root, ++gridRow, "");

@@ -23,17 +23,14 @@ import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
 
 public class TradeModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(TradeModule.class);
 
-    public TradeModule(Environment env) {
-        super(env);
+    public TradeModule(Environment environment) {
+        super(environment);
     }
 
     @Override
@@ -42,6 +39,6 @@ public class TradeModule extends AppModule {
         bind(TradeStatisticsManager.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(env.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
+        bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(environment.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
     }
 }

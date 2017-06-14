@@ -35,14 +35,15 @@ import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.alert.PrivateNotificationPayload;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
@@ -116,7 +117,7 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final PrivateNotificationManager privateNotificationManager;
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -143,12 +144,14 @@ public class MainViewModel implements ViewModel {
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
 
     private final StringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
 
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> p2PNetworkInfoBinding;
     final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
@@ -163,6 +166,7 @@ public class MainViewModel implements ViewModel {
     private final String btcNetworkAsString;
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
     final PriceFeedService priceFeedService;
     private final User user;
@@ -171,8 +175,9 @@ public class MainViewModel implements ViewModel {
     private Timer checkNumberOfP2pNetworkPeersTimer;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> marketPriceBinding;
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
@@ -221,7 +226,7 @@ public class MainViewModel implements ViewModel {
         this.bisqEnvironment = bisqEnvironment;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(WalletUtils.getBaseCurrencyNetwork().name()) +
+        btcNetworkAsString = Res.get(BaseCurrencyNetwork.getBaseCurrencyNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
@@ -241,6 +246,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void showTacWindow() {
+        //noinspection ConstantConditions,ConstantConditions
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
@@ -257,7 +263,7 @@ public class MainViewModel implements ViewModel {
         String key = "showSelectBaseCurrencyWindowAtFistStartup";
         if (preferences.showAgain(key)) {
             new SelectBaseCurrencyWindow()
-                    .baseCurrencyNetwork(bisqEnvironment.getBaseCurrencyNetwork())
+                    .baseCurrencyNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork())
                     .onSelect(baseCurrencyNetwork -> {
                         bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
                         preferences.dontShowAgain(key, true);
@@ -269,9 +275,9 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     })
-                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", bisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
+                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyName()))
                     .onAction(() -> {
-                        bisqEnvironment.saveBaseCryptoNetwork(bisqEnvironment.getBaseCurrencyNetwork());
+                        bisqEnvironment.saveBaseCryptoNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork());
                         preferences.dontShowAgain(key, true);
                         startBasicServices();
                     })
@@ -1077,5 +1083,9 @@ public class MainViewModel implements ViewModel {
             cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
             user.addPaymentAccount(cryptoCurrencyAccount);
         }
+    }
+
+    String getAppDateDir() {
+        return bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY);
     }
 }

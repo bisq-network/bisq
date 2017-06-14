@@ -29,17 +29,14 @@ import io.bisq.core.dao.compensation.CompensationRequestModel;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.dao.vote.VotingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
 
 public class DaoModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(DaoModule.class);
 
-    public DaoModule(Environment env) {
-        super(env);
+    public DaoModule(Environment environment) {
+        super(environment);
     }
 
     @Override
@@ -70,15 +67,15 @@ public class DaoModule extends AppModule {
         bind(DaoService.class).in(Singleton.class);
         bind(VotingDefaultValues.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(env.getRequiredProperty(DaoOptionKeys.RPC_USER));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
-        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PORT));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_PORT));
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
-                .to(env.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
+                .to(environment.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
         bindConstant().annotatedWith(named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA))
-                .to(env.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
+                .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
-                .to(env.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
+                .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
     }
 }
 

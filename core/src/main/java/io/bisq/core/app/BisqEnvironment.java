@@ -79,38 +79,6 @@ public class BisqEnvironment extends StandardEnvironment {
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
 
-    public BaseCurrencyNetwork getBaseCurrencyNetwork() {
-        return baseCurrencyNetwork;
-    }
-
-    public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
-        try {
-            Resource resource = getAppDirPropertiesResource();
-            File file = resource.getFile();
-            Properties properties = new Properties();
-            if (file.exists()) {
-                Object propertiesObject = getAppDirProperties().getSource();
-                if (propertiesObject instanceof Properties) {
-                    properties = (Properties) propertiesObject;
-                } else {
-                    log.warn("propertiesObject not instance of Properties");
-                }
-            }
-            properties.setProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK, baseCurrencyNetwork.name());
-
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                properties.store(fileOutputStream, null);
-            } catch (IOException e1) {
-                log.error(e1.getMessage());
-            }
-        } catch (Exception e2) {
-            e2.printStackTrace();
-        }
-    }
-
-    public String getAppDataDir() {
-        return appDataDir;
-    }
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -200,7 +168,7 @@ public class BisqEnvironment extends StandardEnvironment {
         try {
             propertySources.addLast(getAppDirProperties());
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK,
-                    BaseCurrencyNetwork.DEFAULT.name()).toUpperCase());
+                    BaseCurrencyNetwork.BASE_CURRENCY_NETWORK.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -212,6 +180,39 @@ public class BisqEnvironment extends StandardEnvironment {
         } catch (Exception ex) {
             throw new BisqException(ex);
         }
+    }
+
+    public BaseCurrencyNetwork getBaseCurrencyNetwork() {
+        return baseCurrencyNetwork;
+    }
+
+    public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
+        try {
+            Resource resource = getAppDirPropertiesResource();
+            File file = resource.getFile();
+            Properties properties = new Properties();
+            if (file.exists()) {
+                Object propertiesObject = getAppDirProperties().getSource();
+                if (propertiesObject instanceof Properties) {
+                    properties = (Properties) propertiesObject;
+                } else {
+                    log.warn("propertiesObject not instance of Properties");
+                }
+            }
+            properties.setProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK, baseCurrencyNetwork.name());
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+                properties.store(fileOutputStream, null);
+            } catch (IOException e1) {
+                log.error(e1.getMessage());
+            }
+        } catch (Exception e2) {
+            e2.printStackTrace();
+        }
+    }
+
+    public String getAppDataDir() {
+        return appDataDir;
     }
 
     private Resource getAppDirPropertiesResource() {

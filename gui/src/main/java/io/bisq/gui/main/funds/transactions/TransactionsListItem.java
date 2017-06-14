@@ -21,7 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -91,8 +91,8 @@ class TransactionsListItem {
                         txFeeForBsqPayment = true;
                     } else {
                         direction = Res.get("funds.tx.direction.sentTo");
-                        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                            addressString = WalletUtils.getAddressStringFromOutput(output);
+                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                            addressString = WalletService.getAddressStringFromOutput(output);
                             break;
                         }
                     }
@@ -104,8 +104,8 @@ class TransactionsListItem {
             received = true;
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (btcWalletService.isTransactionOutputMine(output) &&
-                        WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                    addressString = WalletUtils.getAddressStringFromOutput(output);
+                        WalletService.isOutputScriptConvertibleToAddress(output)) {
+                    addressString = WalletService.getAddressStringFromOutput(output);
                     break;
                 }
             }
@@ -119,8 +119,8 @@ class TransactionsListItem {
                         txFeeForBsqPayment = true;
                     } else {
                         outgoing = true;
-                        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                            addressString = WalletUtils.getAddressStringFromOutput(output);
+                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                            addressString = WalletService.getAddressStringFromOutput(output);
                             break;
                         }
                     }

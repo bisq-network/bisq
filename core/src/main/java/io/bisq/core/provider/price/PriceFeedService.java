@@ -25,7 +25,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
@@ -75,13 +75,12 @@ public class PriceFeedService {
     @Inject
     public PriceFeedService(@SuppressWarnings("SameParameterValue") HttpClient httpClient,
                             @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository,
-                            @SuppressWarnings("SameParameterValue") Preferences preferences,
-                            BisqEnvironment bisqEnvironment) {
+                            @SuppressWarnings("SameParameterValue") Preferences preferences) {
         this.httpClient = httpClient;
         this.providersRepository = providersRepository;
         this.preferences = preferences;
         this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-        baseCurrencyCode = bisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        baseCurrencyCode = BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyCode();
     }
 
 

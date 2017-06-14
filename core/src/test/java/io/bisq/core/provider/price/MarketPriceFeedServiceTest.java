@@ -13,7 +13,7 @@ public class MarketPriceFeedServiceTest {
 
     @Test
     public void testGetPrice() throws InterruptedException {
-        PriceFeedService priceFeedService = new PriceFeedService(null, null, null, null);
+        PriceFeedService priceFeedService = new PriceFeedService(null, null, null);
         priceFeedService.setCurrencyCode("EUR");
         priceFeedService.requestPriceFeed(tradeCurrency -> {
                     log.debug(tradeCurrency.toString());

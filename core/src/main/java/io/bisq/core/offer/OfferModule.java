@@ -25,8 +25,8 @@ import org.springframework.core.env.Environment;
 @Slf4j
 public class OfferModule extends AppModule {
 
-    public OfferModule(Environment env) {
-        super(env);
+    public OfferModule(Environment environment) {
+        super(environment);
     }
 
     @Override

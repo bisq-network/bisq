@@ -41,7 +41,6 @@ import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
-import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
@@ -66,7 +65,6 @@ import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
-import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.network.p2p.P2PService;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -168,14 +166,12 @@ public class BisqApp extends Application {
         Security.addProvider(new BouncyCastleProvider());
 
         final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork.setBaseCurrencyNetwork(baseCurrencyNetwork);
+                
         Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
 
-        Restrictions.setBaseCurrencyNetwork(baseCurrencyNetwork);
-
         CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
-
-        AltCoinAddressValidator.setNetwork(baseCurrencyNetwork.getNetwork());
 
         try {
             // Guice

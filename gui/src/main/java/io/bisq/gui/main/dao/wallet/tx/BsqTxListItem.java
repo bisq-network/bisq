@@ -21,7 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
@@ -115,10 +115,10 @@ class BsqTxListItem {
         for (TransactionOutput output : transaction.getOutputs()) {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
-                    WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                    WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can 
                 // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
+                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                 break;
             }
         }
@@ -128,8 +128,8 @@ class BsqTxListItem {
         String receivedWithAddress = Res.get("shared.na");
         if (sendToAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
-                if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
+                if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                     break;
                 }
             }

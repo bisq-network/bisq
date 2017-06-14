@@ -19,4 +19,7 @@ public class DevEnv {
     // offers are filled with default values. Intended to make dev testing faster.
     @SuppressWarnings("PointlessBooleanExpression")
     public static final boolean DEV_MODE = STRESS_TEST_MODE || true;
+
+    public static final boolean DAO_ACTIVATED = true;
+    public static final boolean DAO_PHASE2_ACTIVATED = false;
 }
