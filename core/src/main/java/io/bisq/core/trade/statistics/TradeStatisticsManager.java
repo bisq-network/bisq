@@ -86,12 +86,16 @@ public class TradeStatisticsManager implements PersistedDataHost {
         });
 
         // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
-        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+        final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
+        list.forEach(e -> {
             final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof TradeStatistics) {
+            if (storagePayload instanceof TradeStatistics)
                 add((TradeStatistics) storagePayload, false);
-            }
+
         });
+
+        statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
+        dump();
     }
 
     public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
@@ -101,10 +105,10 @@ public class TradeStatisticsManager implements PersistedDataHost {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
 
-                if (storeLocally)
+                if (storeLocally) {
                     statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
-
-                dump();
+                    dump();
+                }
             } else {
                 log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
             }
