@@ -46,7 +46,8 @@ public class ProvidersRepository {
                 //providers = "http://localhost:8080/, http://146.185.175.243:8080/";
                 // providers = "http://146.185.175.243:8080/";
             } else {
-                providers = "http://kijf4m2pqd54tbck.onion/";
+                //providers = "http://kijf4m2pqd54tbck.onion/";
+                providers = "http://51.15.47.83:8080/";
             }
         }
 
