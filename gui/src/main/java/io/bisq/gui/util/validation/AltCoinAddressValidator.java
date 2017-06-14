@@ -19,7 +19,7 @@ package io.bisq.gui.util.validation;
 
 
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
@@ -68,7 +68,7 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 case "BTC":
                     try {
-                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
                             case BTC_MAINNET:
                                 Address.fromBase58(MainNetParams.get(), input);
                                 break;
@@ -85,7 +85,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "LTC":
                     try {
-                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
                             case LTC_MAINNET:
                                 Address.fromBase58(LitecoinMainNetParams.get(), input);
                                 break;
@@ -102,7 +102,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "DOGE":
                     try {
-                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
                             case DOGE_MAINNET:
                                 Address.fromBase58(DogecoinMainNetParams.get(), input);
                                 break;

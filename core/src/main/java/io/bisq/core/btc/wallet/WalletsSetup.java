@@ -28,6 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.DnsLookupTor;
@@ -107,8 +108,8 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        btcWalletFileName = "bisq_" + BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
-        params = BaseCurrencyNetwork.getParams();
+        btcWalletFileName = "bisq_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
+        params = BisqEnvironment.getParameters();
         walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);
     }
@@ -387,6 +388,7 @@ public class WalletsSetup {
         return walletConfig.getBtcWallet();
     }
 
+    @Nullable
     public Wallet getBsqWallet() {
         return walletConfig.getBsqWallet();
     }

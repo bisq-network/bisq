@@ -18,7 +18,7 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -37,7 +37,7 @@ public class BsqFormatter extends BSFormatter {
     private BsqFormatter() {
         super();
 
-        final String baseCurrencyCode = BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyCode();
+        final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
             case "BTC":
                 coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
@@ -72,7 +72,7 @@ public class BsqFormatter extends BSFormatter {
             encoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return Address.fromBase58(BaseCurrencyNetwork.getParams(), encoded);
+            return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
         } catch (AddressFormatException e) {
             log.error(e.toString());
             e.printStackTrace();

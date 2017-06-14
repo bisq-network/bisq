@@ -165,8 +165,7 @@ public class BisqApp extends Application {
 
         Security.addProvider(new BouncyCastleProvider());
 
-        final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
-        BaseCurrencyNetwork.setBaseCurrencyNetwork(baseCurrencyNetwork);
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
                 
         Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
@@ -214,7 +213,7 @@ public class BisqApp extends Application {
                 }
             });
 
-            Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
+            Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
 
             if (Utilities.isLinux())

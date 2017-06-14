@@ -23,8 +23,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import io.bisq.core.btc.data.RawTransactionInput;
@@ -113,7 +113,7 @@ public class TradeWalletService {
     @Inject
     public TradeWalletService(WalletsSetup walletsSetup) {
         this.walletsSetup = walletsSetup;
-        this.params = BaseCurrencyNetwork.getParams();
+        this.params = BisqEnvironment.getParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();

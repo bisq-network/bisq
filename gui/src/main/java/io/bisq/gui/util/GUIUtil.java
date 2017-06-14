@@ -31,7 +31,7 @@ import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
@@ -391,7 +391,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BaseCurrencyNetwork.getParams(),
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
                         address), amount, label, null) :
                 "";
     }

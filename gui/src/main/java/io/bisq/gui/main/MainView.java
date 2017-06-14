@@ -22,6 +22,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
@@ -139,7 +140,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
-        if (!DevEnv.DAO_ACTIVATED) {
+        if (!BisqEnvironment.isBaseCurrencySupportingBsq()) {
             daoButton.setVisible(false);
             daoButton.setManaged(false);
         }

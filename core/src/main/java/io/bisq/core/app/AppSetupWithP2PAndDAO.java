@@ -31,14 +31,12 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
     private final BsqBlockchainManager bsqBlockchainManager;
 
     @Inject
-    public AppSetupWithP2PAndDAO(BisqEnvironment bisqEnvironment,
-                                 EncryptionService encryptionService,
+    public AppSetupWithP2PAndDAO(EncryptionService encryptionService,
                                  KeyRing keyRing,
                                  P2PService p2PService,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  BsqBlockchainManager bsqBlockchainManager) {
-        super(bisqEnvironment,
-                encryptionService,
+        super(encryptionService,
                 keyRing,
                 p2PService,
                 tradeStatisticsManager);

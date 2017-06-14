@@ -137,7 +137,7 @@ public final class Preferences implements PersistedDataHost {
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            final BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.getBaseCurrencyNetwork();
+            final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             switch (baseCurrencyNetwork.getCurrencyCode()) {
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
@@ -283,7 +283,7 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (BaseCurrencyNetwork.getBaseCurrencyNetwork().isMainnet())
+        if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -482,14 +482,14 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        if (BaseCurrencyNetwork.getBaseCurrencyNetwork().isMainnet())
+        if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
             return prefPayload.getBlockChainExplorerMainNet();
         else
             return prefPayload.getBlockChainExplorerTestNet();
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.getBaseCurrencyNetwork();
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
@@ -519,7 +519,7 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || BaseCurrencyNetwork.getBaseCurrencyNetwork().isRegtest())
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

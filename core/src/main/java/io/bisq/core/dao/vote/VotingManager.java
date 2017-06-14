@@ -19,13 +19,13 @@ package io.bisq.core.dao.vote;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
@@ -93,7 +93,7 @@ public class VotingManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (DevEnv.DAO_ACTIVATED) {
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
             if (persisted != null)
                 voteItemsLists.addAll(persisted.getList());

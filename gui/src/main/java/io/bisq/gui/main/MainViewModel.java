@@ -41,7 +41,6 @@ import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
@@ -226,7 +225,7 @@ public class MainViewModel implements ViewModel {
         this.bisqEnvironment = bisqEnvironment;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(BaseCurrencyNetwork.getBaseCurrencyNetwork().name()) +
+        btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
@@ -263,7 +262,6 @@ public class MainViewModel implements ViewModel {
         String key = "showSelectBaseCurrencyWindowAtFistStartup";
         if (preferences.showAgain(key)) {
             new SelectBaseCurrencyWindow()
-                    .baseCurrencyNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork())
                     .onSelect(baseCurrencyNetwork -> {
                         bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
                         preferences.dontShowAgain(key, true);
@@ -275,9 +273,9 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     })
-                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyName()))
+                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
                     .onAction(() -> {
-                        bisqEnvironment.saveBaseCryptoNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork());
+                        bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
                         preferences.dontShowAgain(key, true);
                         startBasicServices();
                     })

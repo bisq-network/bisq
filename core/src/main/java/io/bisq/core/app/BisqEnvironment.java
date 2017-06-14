@@ -19,6 +19,7 @@ package io.bisq.core.app;
 
 import ch.qos.logback.classic.Level;
 import io.bisq.common.CommonOptionKeys;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.Storage;
@@ -30,6 +31,7 @@ import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import joptsimple.OptionSet;
+import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.*;
@@ -73,7 +75,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel, providers;
-    private BaseCurrencyNetwork baseCurrencyNetwork;
+    private static BaseCurrencyNetwork baseCurrencyNetwork;
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
@@ -167,8 +169,8 @@ public class BisqEnvironment extends StandardEnvironment {
         propertySources.addFirst(commandLineProperties);
         try {
             propertySources.addLast(getAppDirProperties());
-            baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK,
-                    BaseCurrencyNetwork.BASE_CURRENCY_NETWORK.name()).toUpperCase());
+            baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
+                    BaseCurrencyNetwork.getDefaultBaseCurrencyNetwork().name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -182,11 +184,21 @@ public class BisqEnvironment extends StandardEnvironment {
         }
     }
 
-    public BaseCurrencyNetwork getBaseCurrencyNetwork() {
+    public static boolean isBaseCurrencySupportingBsq() {
+        return DevEnv.DAO_ACTIVATED && getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
+    }
+
+    public static NetworkParameters getParameters() {
+        return getBaseCurrencyNetwork().getParameters();
+    }
+
+    public static BaseCurrencyNetwork getBaseCurrencyNetwork() {
         return baseCurrencyNetwork;
     }
 
+
     public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
+        BisqEnvironment.baseCurrencyNetwork = baseCurrencyNetwork;
         try {
             Resource resource = getAppDirPropertiesResource();
             File file = resource.getFile();
@@ -199,15 +211,19 @@ public class BisqEnvironment extends StandardEnvironment {
                     log.warn("propertiesObject not instance of Properties");
                 }
             }
-            properties.setProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK, baseCurrencyNetwork.name());
+            properties.setProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK, baseCurrencyNetwork.name());
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                 properties.store(fileOutputStream, null);
             } catch (IOException e1) {
-                log.error(e1.getMessage());
+                log.error(e1.toString());
+                e1.printStackTrace();
+                throw new RuntimeException(e1);
             }
         } catch (Exception e2) {
+            log.error(e2.toString());
             e2.printStackTrace();
+            throw new RuntimeException(e2);
         }
     }
 
