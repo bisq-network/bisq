@@ -147,7 +147,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                     .collect(Collectors.toList());
         selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
 
-        selectCurrencyNetworkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork());
+        selectCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.getBaseCurrencyNetwork());
         selectCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
         selectCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
             @Override
@@ -276,7 +276,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     private void onSelectNetwork() {
-        if (selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != bisqEnvironment.getBaseCurrencyNetwork())
+        if (selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BaseCurrencyNetwork.getBaseCurrencyNetwork())
             selectNetwork();
     }
 
@@ -288,7 +288,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 })
                 .actionButtonText(Res.get("shared.shutDown"))
                 .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> selectCurrencyNetworkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork()))
+                .onClose(() -> selectCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.getBaseCurrencyNetwork()))
                 .show();
     }
 

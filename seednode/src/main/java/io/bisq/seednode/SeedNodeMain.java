@@ -89,8 +89,8 @@ public class SeedNodeMain extends BisqExecutable {
     @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
-        final BisqEnvironment environment = getBisqEnvironment(options);
-        SeedNode.setEnvironment(environment);
+        final BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
+        SeedNode.setEnvironment(bisqEnvironment);
 
         UserThread.execute(() -> {
             try {
@@ -119,7 +119,7 @@ public class SeedNodeMain extends BisqExecutable {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
+        String maxMemoryOption = bisqEnvironment.getProperty(AppOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
             try {
                 maxMemory = Integer.parseInt(maxMemoryOption);
@@ -145,7 +145,7 @@ public class SeedNodeMain extends BisqExecutable {
                 final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
                     if (finalUsedMemoryInMB > maxMemory)
-                        restart(environment);
+                        restart(bisqEnvironment);
                 }, 1);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
@@ -158,12 +158,12 @@ public class SeedNodeMain extends BisqExecutable {
         }
     }
 
-    private void restart(BisqEnvironment environment) {
+    private void restart(BisqEnvironment bisqEnvironment) {
         stopped = true;
         seedNode.gracefulShutDown(() -> {
             //noinspection finally
             try {
-                final String[] tokens = environment.getAppDataDir().split("_");
+                final String[] tokens = bisqEnvironment.getAppDataDir().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {

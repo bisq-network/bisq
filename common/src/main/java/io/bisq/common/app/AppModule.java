@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AppModule extends AbstractModule {
-    protected final Environment env;
+    protected final Environment environment;
 
     private final List<AppModule> modules = new ArrayList<>();
 
-    protected AppModule(Environment env) {
-        Preconditions.checkNotNull(env, "Environment must not be null");
-        this.env = env;
+    protected AppModule(Environment environment) {
+        Preconditions.checkNotNull(environment, "Environment must not be null");
+        this.environment = environment;
     }
 
     protected void install(AppModule module) {

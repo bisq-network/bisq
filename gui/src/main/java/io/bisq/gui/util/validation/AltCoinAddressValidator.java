@@ -19,6 +19,7 @@ package io.bisq.gui.util.validation;
 
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
@@ -38,15 +39,6 @@ import org.libdohj.params.*;
 public final class AltCoinAddressValidator extends InputValidator {
 
     private String currencyCode;
-    private static String network;
-
-    public static void setNetwork(String network) {
-        AltCoinAddressValidator.network = network;
-    }
-
-    public static String getNetwork() {
-        return network;
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,14 +68,14 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 case "BTC":
                     try {
-                        switch (network) {
-                            case "MAINNET":
+                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                            case BTC_MAINNET:
                                 Address.fromBase58(MainNetParams.get(), input);
                                 break;
-                            case "TESTNET":
+                            case BTC_TESTNET:
                                 Address.fromBase58(TestNet3Params.get(), input);
                                 break;
-                            case "REGTEST":
+                            case BTC_REGTEST:
                                 Address.fromBase58(RegTestParams.get(), input);
                                 break;
                         }
@@ -93,14 +85,14 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "LTC":
                     try {
-                        switch (network) {
-                            case "MAINNET":
+                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                            case LTC_MAINNET:
                                 Address.fromBase58(LitecoinMainNetParams.get(), input);
                                 break;
-                            case "TESTNET":
+                            case LTC_TESTNET:
                                 Address.fromBase58(LitecoinTestNet3Params.get(), input);
                                 break;
-                            case "REGTEST":
+                            case LTC_REGTEST:
                                 Address.fromBase58(LitecoinRegTestParams.get(), input);
                                 break;
                         }
@@ -110,14 +102,14 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "DOGE":
                     try {
-                        switch (network) {
-                            case "MAINNET":
+                        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+                            case DOGE_MAINNET:
                                 Address.fromBase58(DogecoinMainNetParams.get(), input);
                                 break;
-                            case "TESTNET":
+                            case DOGE_TESTNET:
                                 Address.fromBase58(DogecoinTestNet3Params.get(), input);
                                 break;
-                            case "REGTEST":
+                            case DOGE_REGTEST:
                                 Address.fromBase58(DogecoinRegTestParams.get(), input);
                                 break;
                         }

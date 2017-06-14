@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.listeners.AddressConfidenceListener;
@@ -318,8 +319,8 @@ public abstract class WalletService {
     protected TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx)
                 .stream()
-                .filter(WalletUtils::isOutputScriptConvertableToAddress)
-                .filter(output -> address != null && address.equals(WalletUtils.getAddressFromOutput(output)))
+                .filter(WalletService::isOutputScriptConvertibleToAddress)
+                .filter(output -> address != null && address.equals(getAddressFromOutput(output)))
                 .map(o -> tx.getConfidence())
                 .collect(Collectors.toList());
         return getMostRecentConfidence(transactionConfidenceList);
@@ -384,9 +385,9 @@ public abstract class WalletService {
     protected Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput output : transactionOutputs) {
-            if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+            if (isOutputScriptConvertibleToAddress(output) &&
                     address != null &&
-                    address.equals(WalletUtils.getAddressFromOutput(output)))
+                    address.equals(getAddressFromOutput(output)))
                 balance = balance.add(output.getValue());
         }
         return balance;
@@ -397,9 +398,9 @@ public abstract class WalletService {
         wallet.getTransactions(false).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
         int outputs = 0;
         for (TransactionOutput output : transactionOutputs) {
-            if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+            if (isOutputScriptConvertibleToAddress(output) &&
                     address != null &&
-                    address.equals(WalletUtils.getAddressFromOutput(output)))
+                    address.equals(getAddressFromOutput(output)))
                 outputs++;
         }
         return outputs;
@@ -570,6 +571,23 @@ public abstract class WalletService {
         log.info("\n" + tracePrefix + ":\n" + tx.toString());
     }
 
+    public static boolean isOutputScriptConvertibleToAddress(TransactionOutput output) {
+        return output.getScriptPubKey().isSentToAddress() ||
+                output.getScriptPubKey().isPayToScriptHash();
+    }
+
+    @Nullable
+    public static Address getAddressFromOutput(TransactionOutput output) {
+        return isOutputScriptConvertibleToAddress(output) ?
+                output.getScriptPubKey().getToAddress(BaseCurrencyNetwork.getParams()) : null;
+    }
+
+    @Nullable
+    public static String getAddressStringFromOutput(TransactionOutput output) {
+        return isOutputScriptConvertibleToAddress(output) ?
+                output.getScriptPubKey().getToAddress(BaseCurrencyNetwork.getParams()).toString() : null;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener

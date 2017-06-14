@@ -35,14 +35,15 @@ import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.alert.PrivateNotificationPayload;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
@@ -225,7 +226,7 @@ public class MainViewModel implements ViewModel {
         this.bisqEnvironment = bisqEnvironment;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(WalletUtils.getBaseCurrencyNetwork().name()) +
+        btcNetworkAsString = Res.get(BaseCurrencyNetwork.getBaseCurrencyNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
@@ -262,7 +263,7 @@ public class MainViewModel implements ViewModel {
         String key = "showSelectBaseCurrencyWindowAtFistStartup";
         if (preferences.showAgain(key)) {
             new SelectBaseCurrencyWindow()
-                    .baseCurrencyNetwork(bisqEnvironment.getBaseCurrencyNetwork())
+                    .baseCurrencyNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork())
                     .onSelect(baseCurrencyNetwork -> {
                         bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
                         preferences.dontShowAgain(key, true);
@@ -274,9 +275,9 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     })
-                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", bisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
+                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyName()))
                     .onAction(() -> {
-                        bisqEnvironment.saveBaseCryptoNetwork(bisqEnvironment.getBaseCurrencyNetwork());
+                        bisqEnvironment.saveBaseCryptoNetwork(BaseCurrencyNetwork.getBaseCurrencyNetwork());
                         preferences.dontShowAgain(key, true);
                         startBasicServices();
                     })
@@ -1082,5 +1083,9 @@ public class MainViewModel implements ViewModel {
             cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
             user.addPaymentAccount(cryptoCurrencyAccount);
         }
+    }
+
+    String getAppDateDir() {
+        return bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY);
     }
 }

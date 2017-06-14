@@ -33,20 +33,18 @@ public class Restrictions {
     public static final Coin SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.01");
 
     public static Coin getMinNonDustOutput() {
+        if (minNonDustOutput == null)
+            minNonDustOutput = BaseCurrencyNetwork.getBaseCurrencyNetwork().getParameters().getMinNonDustOutput();
         return minNonDustOutput;
     }
 
     private static Coin minNonDustOutput;
 
     public static boolean isAboveDust(Coin amount, Coin txFee) {
-        return amount != null && amount.compareTo(txFee.add(minNonDustOutput)) >= 0;
+        return amount != null && amount.compareTo(txFee.add(getMinNonDustOutput())) >= 0;
     }
 
     public static boolean isAboveDust(Coin amount) {
-        return amount != null && amount.compareTo(minNonDustOutput) >= 0;
-    }
-
-    public static void setBaseCurrencyNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
-        minNonDustOutput = baseCurrencyNetwork.getParameters().getMinNonDustOutput();
+        return amount != null && amount.compareTo(getMinNonDustOutput()) >= 0;
     }
 }

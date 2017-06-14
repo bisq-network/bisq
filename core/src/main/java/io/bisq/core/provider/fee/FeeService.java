@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.network.http.HttpClient;
 import org.bitcoinj.core.Coin;
@@ -76,8 +76,8 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository, BisqEnvironment bisqEnvironment) {
-        baseCurrencyCode = bisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository) {
+        baseCurrencyCode = BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyCode();
         feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
 
         switch (baseCurrencyCode) {

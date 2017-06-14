@@ -9,7 +9,6 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
-import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
@@ -138,7 +137,8 @@ public final class Preferences implements PersistedDataHost {
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            switch (WalletUtils.getBaseCurrencyNetwork().getCurrencyCode()) {
+            final BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.getBaseCurrencyNetwork();
+            switch (baseCurrencyNetwork.getCurrencyCode()) {
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
@@ -152,7 +152,7 @@ public final class Preferences implements PersistedDataHost {
                     setBlockChainExplorerTestNet(DOGE_TEST_NET_EXPLORERS.get(0));
                     break;
                 default:
-                    throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + WalletUtils.getBaseCurrencyNetwork());
+                    throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
 
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
@@ -283,7 +283,7 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (WalletUtils.getBaseCurrencyNetwork().isMainnet())
+        if (BaseCurrencyNetwork.getBaseCurrencyNetwork().isMainnet())
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -461,15 +461,6 @@ public final class Preferences implements PersistedDataHost {
         persist();
     }
 
-    public BaseCurrencyNetwork getBaseCrypteNetwork(BaseCurrencyNetwork baseCrypteNetwork) {
-        return bisqEnvironment.getBaseCurrencyNetwork();
-    }
-
-    public void setBaseCrypteNetwork(BaseCurrencyNetwork baseCrypteNetwork) {
-        if (bisqEnvironment.getBaseCurrencyNetwork() != baseCrypteNetwork)
-            bisqEnvironment.saveBaseCryptoNetwork(baseCrypteNetwork);
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -491,14 +482,15 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        if (WalletUtils.getBaseCurrencyNetwork().isMainnet())
+        if (BaseCurrencyNetwork.getBaseCurrencyNetwork().isMainnet())
             return prefPayload.getBlockChainExplorerMainNet();
         else
             return prefPayload.getBlockChainExplorerTestNet();
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        switch (WalletUtils.getBaseCurrencyNetwork()) {
+        final BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.getBaseCurrencyNetwork();
+        switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
             case BTC_TESTNET:
@@ -515,7 +507,7 @@ public final class Preferences implements PersistedDataHost {
             case DOGE_REGTEST:
                 return DOGE_TEST_NET_EXPLORERS;
             default:
-                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + WalletUtils.getBaseCurrencyNetwork());
+                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
     }
 
@@ -527,7 +519,7 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBaseCurrencyNetwork().isRegtest())
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || BaseCurrencyNetwork.getBaseCurrencyNetwork().isRegtest())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

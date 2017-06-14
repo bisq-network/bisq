@@ -22,8 +22,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
@@ -100,7 +98,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
-    private final BisqEnvironment environment;
     private final BSFormatter formatter;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
@@ -118,11 +115,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    BisqEnvironment environment, BSFormatter formatter) {
+                    BSFormatter formatter) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.environment = environment;
         this.formatter = formatter;
         MainView.transitions = transitions;
     }
@@ -245,7 +241,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                         new Popup<>()
                                 .warning(Res.get("popup.warning.incompatibleDB",
                                         persistedFilesCorrupted.toString(),
-                                        environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                                        model.getAppDateDir()))
                                 .useShutDownButton()
                                 .show();
                     } else {
