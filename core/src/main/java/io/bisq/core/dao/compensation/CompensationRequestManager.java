@@ -19,10 +19,10 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
@@ -82,7 +82,7 @@ public class CompensationRequestManager implements PersistedDataHost {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        if (DevEnv.DAO_ACTIVATED) {
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
@@ -108,7 +108,7 @@ public class CompensationRequestManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (DevEnv.DAO_ACTIVATED) {
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
             if (persisted != null)
                 model.setPersistedCompensationRequest(persisted.getList());

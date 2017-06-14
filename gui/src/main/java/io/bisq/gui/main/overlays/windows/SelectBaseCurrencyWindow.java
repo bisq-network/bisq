@@ -20,6 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.collections.FXCollections;
@@ -43,7 +44,6 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
 
     private ComboBox<BaseCurrencyNetwork> comboBox;
     private Optional<Consumer<BaseCurrencyNetwork>> selectHandlerOptional;
-    private BaseCurrencyNetwork baseCurrencyNetwork;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,18 +74,13 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         return this;
     }
 
-    public SelectBaseCurrencyWindow baseCurrencyNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
-        this.baseCurrencyNetwork = baseCurrencyNetwork;
-        return this;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
-        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.msg", baseCurrencyNetwork.getCurrencyName()), 10);
+        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.msg", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.select"));

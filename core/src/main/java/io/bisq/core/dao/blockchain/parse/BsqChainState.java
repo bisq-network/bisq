@@ -26,7 +26,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -148,7 +148,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
-        switch (BaseCurrencyNetwork.getBaseCurrencyNetwork()) {
+        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
             case BTC_MAINNET:
                 genesisTxId = BTC_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;

@@ -39,13 +39,11 @@ public class AppSetupWithP2P extends AppSetup {
     protected BooleanProperty p2pNetWorkReady;
 
     @Inject
-    public AppSetupWithP2P(BisqEnvironment bisqEnvironment,
-                           EncryptionService encryptionService,
+    public AppSetupWithP2P(EncryptionService encryptionService,
                            KeyRing keyRing,
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager) {
-        super(bisqEnvironment,
-                encryptionService,
+        super(encryptionService,
                 keyRing,
                 tradeStatisticsManager);
         this.p2PService = p2PService;

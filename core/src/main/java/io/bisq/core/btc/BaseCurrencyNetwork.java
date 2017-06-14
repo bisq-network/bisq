@@ -37,18 +37,8 @@ public enum BaseCurrencyNetwork {
     DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
     DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin");
 
-    public static BaseCurrencyNetwork BASE_CURRENCY_NETWORK = LTC_MAINNET;
-
-    public static BaseCurrencyNetwork getBaseCurrencyNetwork() {
-        return BASE_CURRENCY_NETWORK;
-    }
-
-    public static void setBaseCurrencyNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
-        BASE_CURRENCY_NETWORK = baseCurrencyNetwork;
-    }
-
-    public static NetworkParameters getParams() {
-        return BASE_CURRENCY_NETWORK.getParameters();
+    public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
+        return LTC_MAINNET;
     }
 
     @Getter

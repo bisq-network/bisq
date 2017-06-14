@@ -18,18 +18,14 @@
 package io.bisq.core.dao;
 
 import com.google.inject.Inject;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DaoManager {
-    private static final Logger log = LoggerFactory.getLogger(DaoManager.class);
-
     private final BsqBlockchainManager bsqBlockchainManager;
     private final DaoPeriodService daoPeriodService;
     private final BsqUtxoFeedService bsqUtxoFeedService;
@@ -52,10 +48,11 @@ public class DaoManager {
         this.bsqUtxoFeedService = bsqUtxoFeedService;
         this.voteManager = voteManager;
         this.compensationRequestManager = compensationRequestManager;
+
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        if (DevEnv.DAO_ACTIVATED) {
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             daoPeriodService.onAllServicesInitialized();
             bsqUtxoFeedService.onAllServicesInitialized();
             voteManager.onAllServicesInitialized();

@@ -134,8 +134,8 @@ public abstract class BisqExecutable {
                 .withRequiredArg();
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.BASE_CRYPTO_NETWORK,
-                description("Base crypto network", BaseCurrencyNetwork.BASE_CURRENCY_NETWORK.name()))
+        parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
+                description("Base currency network", BaseCurrencyNetwork.getDefaultBaseCurrencyNetwork().name()))
                 .withRequiredArg()
                 .ofType(String.class);
         //.withValuesConvertedBy(new EnumValueConverter(String.class));

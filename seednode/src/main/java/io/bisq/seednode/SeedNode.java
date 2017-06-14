@@ -75,8 +75,7 @@ public class SeedNode {
         }
         Security.addProvider(new BouncyCastleProvider());
 
-        final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
-        BaseCurrencyNetwork.setBaseCurrencyNetwork(baseCurrencyNetwork);
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
 
         Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());

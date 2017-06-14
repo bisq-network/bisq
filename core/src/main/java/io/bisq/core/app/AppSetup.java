@@ -32,8 +32,7 @@ public abstract class AppSetup {
     protected final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public AppSetup(BisqEnvironment bisqEnvironment,
-                    EncryptionService encryptionService,
+    public AppSetup(EncryptionService encryptionService,
                     KeyRing keyRing,
                     TradeStatisticsManager tradeStatisticsManager) {
         // we need to reference it so the seed node stores tradeStatistics
@@ -41,7 +40,7 @@ public abstract class AppSetup {
         this.keyRing = keyRing;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
-        Version.setBaseCryptoNetworkId(bisqEnvironment.getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
     }
 

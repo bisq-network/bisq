@@ -19,6 +19,7 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -76,56 +77,59 @@ public class BsqWalletService extends WalletService {
         this.bsqCoinSelector = bsqCoinSelector;
         this.bsqChainState = bsqChainState;
 
-        walletsSetup.addSetupCompletedHandler(() -> {
-            wallet = walletsSetup.getBsqWallet();
-            wallet.setCoinSelector(bsqCoinSelector);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+            walletsSetup.addSetupCompletedHandler(() -> {
+                wallet = walletsSetup.getBsqWallet();
+                if (wallet != null) {
+                    wallet.setCoinSelector(bsqCoinSelector);
+                    wallet.addEventListener(walletEventListener);
 
-            wallet.addEventListener(walletEventListener);
+                    //noinspection deprecation
+                    wallet.addEventListener(new AbstractWalletEventListener() {
+                        @Override
+                        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                            //TODO do we need updateWalletBsqTransactions(); here?
+                        }
 
-            //noinspection deprecation
-            wallet.addEventListener(new AbstractWalletEventListener() {
-                @Override
-                public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    //TODO do we need updateWalletBsqTransactions(); here?
+                        @Override
+                        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                            //TODO do we need updateWalletBsqTransactions(); here?
+                        }
+
+                        @Override
+                        public void onReorganize(Wallet wallet) {
+                            log.warn("onReorganize ");
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                        }
+
+                        @Override
+                        public void onKeysAdded(List<ECKey> keys) {
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onWalletChanged(Wallet wallet) {
+                            updateBsqWalletTransactions();
+                        }
+
+                    });
                 }
-
-                @Override
-                public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    //TODO do we need updateWalletBsqTransactions(); here?
-                }
-
-                @Override
-                public void onReorganize(Wallet wallet) {
-                    log.warn("onReorganize ");
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                }
-
-                @Override
-                public void onKeysAdded(List<ECKey> keys) {
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onWalletChanged(Wallet wallet) {
-                    updateBsqWalletTransactions();
-                }
-
             });
-        });
 
-        bsqBlockchainManager.addBsqChainStateListener(() -> {
-            updateBsqWalletTransactions();
-            updateBsqBalance();
-        });
+            bsqBlockchainManager.addBsqChainStateListener(() -> {
+                updateBsqWalletTransactions();
+                updateBsqBalance();
+            });
+        }
     }
 
 

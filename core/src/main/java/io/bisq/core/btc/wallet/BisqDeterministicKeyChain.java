@@ -29,8 +29,8 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.security.SecureRandom;
 
-class BsqDeterministicKeyChain extends DeterministicKeyChain {
-    private static final Logger log = LoggerFactory.getLogger(BsqDeterministicKeyChain.class);
+class BisqDeterministicKeyChain extends DeterministicKeyChain {
+    private static final Logger log = LoggerFactory.getLogger(BisqDeterministicKeyChain.class);
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
@@ -40,33 +40,33 @@ class BsqDeterministicKeyChain extends DeterministicKeyChain {
             new ChildNumber(142, true),
             ChildNumber.ZERO_HARDENED);
 
-    public BsqDeterministicKeyChain(SecureRandom random) {
+    public BisqDeterministicKeyChain(SecureRandom random) {
         super(random);
     }
 
-    public BsqDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
+    public BisqDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
         super(accountKey, isFollowingKey);
     }
 
-    public BsqDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
+    public BisqDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
         super(seed, crypter);
     }
 
-    public BsqDeterministicKeyChain(DeterministicSeed seed) {
+    public BisqDeterministicKeyChain(DeterministicSeed seed) {
         super(seed);
     }
 
 
     @Override
     public DeterministicKeyChain toEncrypted(KeyCrypter keyCrypter, KeyParameter aesKey) {
-        return new BsqDeterministicKeyChain(keyCrypter, aesKey, this);
+        return new BisqDeterministicKeyChain(keyCrypter, aesKey, this);
     }
 
     protected DeterministicKeyChain makeKeyChainFromSeed(DeterministicSeed seed) {
-        return new BsqDeterministicKeyChain(seed);
+        return new BisqDeterministicKeyChain(seed);
     }
 
-    protected BsqDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
+    protected BisqDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
         super(crypter, aesKey, chain);
     }
 

@@ -17,6 +17,7 @@
 
 package io.bisq.core.btc;
 
+import io.bisq.core.app.BisqEnvironment;
 import org.bitcoinj.core.Coin;
 
 public class Restrictions {
@@ -34,7 +35,7 @@ public class Restrictions {
 
     public static Coin getMinNonDustOutput() {
         if (minNonDustOutput == null)
-            minNonDustOutput = BaseCurrencyNetwork.getBaseCurrencyNetwork().getParameters().getMinNonDustOutput();
+            minNonDustOutput = BisqEnvironment.getBaseCurrencyNetwork().getParameters().getMinNonDustOutput();
         return minNonDustOutput;
     }
 

@@ -25,7 +25,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
@@ -80,7 +80,7 @@ public class PriceFeedService {
         this.providersRepository = providersRepository;
         this.preferences = preferences;
         this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-        baseCurrencyCode = BaseCurrencyNetwork.getBaseCurrencyNetwork().getCurrencyCode();
+        baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
     }
 
 

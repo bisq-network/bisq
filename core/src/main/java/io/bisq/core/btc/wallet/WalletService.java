@@ -21,7 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.listeners.AddressConfidenceListener;
@@ -579,13 +579,13 @@ public abstract class WalletService {
     @Nullable
     public static Address getAddressFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
-                output.getScriptPubKey().getToAddress(BaseCurrencyNetwork.getParams()) : null;
+                output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()) : null;
     }
 
     @Nullable
     public static String getAddressStringFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
-                output.getScriptPubKey().getToAddress(BaseCurrencyNetwork.getParams()).toString() : null;
+                output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()).toString() : null;
     }
     
 

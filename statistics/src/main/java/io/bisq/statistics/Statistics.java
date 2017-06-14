@@ -83,8 +83,7 @@ public class Statistics {
         }
         Security.addProvider(new BouncyCastleProvider());
 
-        final BaseCurrencyNetwork baseCurrencyNetwork = bisqEnvironment.getBaseCurrencyNetwork();
-        BaseCurrencyNetwork.setBaseCurrencyNetwork(baseCurrencyNetwork);
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
 
         Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
@@ -93,7 +92,7 @@ public class Statistics {
 
         statisticsModule = new StatisticsModule(bisqEnvironment);
         injector = Guice.createInjector(statisticsModule);
-        Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
         p2pService = injector.getInstance(P2PService.class);
         p2pService.start(new BootstrapListener() {
