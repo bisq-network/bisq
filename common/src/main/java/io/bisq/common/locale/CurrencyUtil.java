@@ -247,14 +247,18 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
+        result.add(new CryptoCurrency("GRC", "Gridcoin"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("SF", "Siafund"));
+        result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
+
         return result;
     }
 

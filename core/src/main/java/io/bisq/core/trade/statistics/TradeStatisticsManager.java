@@ -19,9 +19,7 @@ import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -96,6 +94,10 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
         dump();
+
+        // print all currencies sorted by nr. of trades
+        // printAllCurrencyStats();
+
     }
 
     public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
@@ -133,5 +135,41 @@ public class TradeStatisticsManager implements PersistedDataHost {
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
         }
+    }
+
+    private void printAllCurrencyStats() {
+        Map<String, Set<TradeStatistics>> map1 = new HashMap<>();
+        for (TradeStatistics tradeStatistics : tradeStatisticsSet) {
+            if (CurrencyUtil.isFiatCurrency(tradeStatistics.getCounterCurrency())) {
+                final String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
+                if (!map1.containsKey(counterCurrency))
+                    map1.put(counterCurrency, new HashSet<>());
+
+                map1.get(counterCurrency).add(tradeStatistics);
+            }
+        }
+
+        StringBuilder sb1 = new StringBuilder();
+        map1.entrySet().stream()
+                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+                .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+        log.error(sb1.toString());
+
+        Map<String, Set<TradeStatistics>> map2 = new HashMap<>();
+        for (TradeStatistics tradeStatistics : tradeStatisticsSet) {
+            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getCounterCurrency())) {
+                final String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
+                if (!map2.containsKey(counterCurrency))
+                    map2.put(counterCurrency, new HashSet<>());
+
+                map2.get(counterCurrency).add(tradeStatistics);
+            }
+        }
+
+        StringBuilder sb2 = new StringBuilder();
+        map2.entrySet().stream()
+                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+                .forEach(e -> sb2.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+        log.error(sb2.toString());
     }
 }
