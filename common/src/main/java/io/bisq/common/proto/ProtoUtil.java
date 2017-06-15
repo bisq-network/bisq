@@ -17,6 +17,7 @@
 
 package io.bisq.common.proto;
 
+import com.google.common.base.Enums;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.Proto;
@@ -59,11 +60,9 @@ public class ProtoUtil {
      * @return an enum
      */
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
-        E result = null;
-        try {
-            result = Enum.valueOf(enumType, name);
-        } catch (IllegalArgumentException err) {
-            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name, err);
+        E result = Enums.getIfPresent(enumType, name).orNull();
+        if(result == null) {
+            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
         }
 
         return result;
