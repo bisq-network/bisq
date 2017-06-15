@@ -20,11 +20,11 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 import com.google.inject.Inject;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
-import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeAlreadyOpenException;
 import io.bisq.core.arbitration.DisputeManager;
@@ -403,8 +403,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 log.debug("payoutTx is null at doOpenDispute");
             }
 
-            final Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress());
-            checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must no tbe null");
+            final PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
+            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
@@ -421,7 +421,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getContractAsJson(),
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
-                    acceptedArbitratorByAddress.getPubKeyRing(),
+                    arbitratorPubKeyRing,
                     isSupportTicket
             );
 

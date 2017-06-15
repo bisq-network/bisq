@@ -26,6 +26,7 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.proto.ProtoUtil;
@@ -290,11 +291,19 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     private NodeAddress arbitratorNodeAddress;
     @Nullable
+    @Setter
+    private byte[] arbitratorBtcPubKey;
+    @Nullable
+    @Getter
+    @Setter
+    private PubKeyRing arbitratorPubKeyRing;
+    @Nullable
     @Getter
     private NodeAddress mediatorNodeAddress;
     @Nullable
+    @Getter
     @Setter
-    private byte[] arbitratorBtcPubKey;
+    private PubKeyRing mediatorPubKeyRing;
     @Nullable
     @Getter
     @Setter
@@ -415,6 +424,8 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(arbitratorBtcPubKey).ifPresent(e -> builder.setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey)));
         Optional.ofNullable(takerPaymentAccountId).ifPresent(builder::setTakerPaymentAccountId);
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
+        Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
 
         return builder.build();
     }
@@ -438,6 +449,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
         trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
+        trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
+        trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         return trade;
     }
 
@@ -639,6 +652,8 @@ public abstract class Trade implements Tradable, Model {
             Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
             checkNotNull(arbitrator, "arbitrator must not be null");
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
+            persist();
         }
     }
 
@@ -648,6 +663,8 @@ public abstract class Trade implements Tradable, Model {
         if (processModel.getUser() != null) {
             Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
             checkNotNull(mediator, "mediator must not be null");
+            mediatorPubKeyRing = mediator.getPubKeyRing();
+            persist();
         }
     }
 
@@ -787,9 +804,13 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public byte[] getArbitratorBtcPubKey() {
-        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-        checkNotNull(arbitrator, "arbitrator must not be null");
-        arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+        // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade
+        // Only new trades cannot start without any arbitrator
+        if (arbitratorBtcPubKey == null) {
+            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+            checkNotNull(arbitrator, "arbitrator must not be null");
+            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+        }
 
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;
@@ -893,36 +914,8 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradeAmountProperty=" + tradeAmountProperty +
                 ",\n     tradeVolumeProperty=" + tradeVolumeProperty +
                 ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
+                ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
+                ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
                 "\n}";
     }
-
-   /* @Override
-    public String toString() {
-        return "Trade{" +
-                "\n\ttradeAmount=" + getTradeAmount() +
-                "\n\ttradingPeerNodeAddress=" + tradingPeerNodeAddress +
-                "\n\ttradeVolume=" + getTradeVolumeProperty().get() +
-                "\n\toffer=" + offer +
-                "\n\tprocessModel=" + processModel +
-                "\n\tdecryptedMsgWithPubKeySet=" + decryptedMessageWithPubKeySet +
-                "\n\ttakeOfferDate=" + getTakeOfferDate() +
-                "\n\tstate=" + getState() +
-                "\n\tdisputeState=" + getDisputeState() +
-                "\n\ttradePeriodState=" + getTradePeriodState() +
-                "\n\tdepositTx=" + getDepositTx() +
-                "\n\ttakeOfferFeeTxId=" + takerFeeTxId +
-                "\n\tcontract=" + contract +
-                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
-                takerContractSignature.hashCode() : "") + '\'' +
-                "\n\tmakerContractSignature.hashCode()='" + (makerContractSignature != null ?
-                makerContractSignature.hashCode() : "") + '\'' +
-                "\n\tpayoutTx=" + getPayoutTx() +
-                "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
-                "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
-                "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
-                "\n\ttxFee='" + getTxFee().toFriendlyString() + '\'' +
-                "\n\ttakeOfferFee='" + getTakerFee().toFriendlyString() + '\'' +
-                "\n\terrorMessage='" + errorMessage + '\'' +
-                '}';
-    }*/
 }

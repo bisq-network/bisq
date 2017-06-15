@@ -122,8 +122,12 @@ public class ArbitratorManager {
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator)
+                if (data.getStoragePayload() instanceof Arbitrator) {
                     updateArbitratorMap();
+                    final Arbitrator arbitrator = (Arbitrator) data.getStoragePayload();
+                    user.removeAcceptedArbitrator(arbitrator);
+                    user.removeAcceptedMediator(getMediator(arbitrator));
+                }
             }
         });
     }

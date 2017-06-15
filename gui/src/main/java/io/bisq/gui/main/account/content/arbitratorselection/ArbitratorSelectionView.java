@@ -85,6 +85,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
 
         tableView.setItems(model.arbitratorListItems);
+        // TODO should scale with stage resize
+        tableView.setPrefHeight(200);
+        
         autoSelectAllMatchingCheckBox.setSelected(model.getAutoSelectArbitrators());
     }
 
