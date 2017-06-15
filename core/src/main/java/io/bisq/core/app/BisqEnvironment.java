@@ -31,9 +31,8 @@ import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import joptsimple.OptionSet;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.NetworkParameters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.*;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
@@ -48,8 +47,12 @@ import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class BisqEnvironment extends StandardEnvironment {
-    private static final Logger log = LoggerFactory.getLogger(BisqEnvironment.class);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static 
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void setDefaultAppName(String defaultAppName) {
         DEFAULT_APP_NAME = defaultAppName;
@@ -64,9 +67,47 @@ public class BisqEnvironment extends StandardEnvironment {
 
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
-    public static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
-    public static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
     public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
+    private static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
+    private static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
+
+    private static BaseCurrencyNetwork baseCurrencyNetwork;
+
+    @SuppressWarnings("SameReturnValue")
+    public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
+        return BaseCurrencyNetwork.LTC_MAINNET;
+    }
+
+    public static boolean isBaseCurrencySupportingBsq() {
+        //noinspection ConstantConditions,PointlessBooleanExpression
+        return DevEnv.DAO_ACTIVATED && getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
+    }
+
+    public static NetworkParameters getParameters() {
+        return getBaseCurrencyNetwork().getParameters();
+    }
+
+    public static BaseCurrencyNetwork getBaseCurrencyNetwork() {
+        return baseCurrencyNetwork;
+    }
+
+    private static String defaultUserDataDir() {
+        if (Utilities.isWindows())
+            return System.getenv("APPDATA");
+        else if (Utilities.isOSX())
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
+        else // *nix
+            return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
+    }
+
+    private static String appDataDir(String userDataDir, String appName) {
+        return Paths.get(userDataDir, appName).toString();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -75,7 +116,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel, providers;
-    private static BaseCurrencyNetwork baseCurrencyNetwork;
+
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
@@ -170,7 +211,7 @@ public class BisqEnvironment extends StandardEnvironment {
         try {
             propertySources.addLast(getAppDirProperties());
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                    BaseCurrencyNetwork.getDefaultBaseCurrencyNetwork().name()).toUpperCase());
+                    getDefaultBaseCurrencyNetwork().name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -183,19 +224,6 @@ public class BisqEnvironment extends StandardEnvironment {
             throw new BisqException(ex);
         }
     }
-
-    public static boolean isBaseCurrencySupportingBsq() {
-        return DevEnv.DAO_ACTIVATED && getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
-    }
-
-    public static NetworkParameters getParameters() {
-        return getBaseCurrencyNetwork().getParameters();
-    }
-
-    public static BaseCurrencyNetwork getBaseCurrencyNetwork() {
-        return baseCurrencyNetwork;
-    }
-
 
     public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
         BisqEnvironment.baseCurrencyNetwork = baseCurrencyNetwork;
@@ -292,18 +320,5 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(KeyStorage.KEY_STORAGE_DIR, Paths.get(btcNetworkDir, "keys").toString());
             }
         });
-    }
-
-    public static String defaultUserDataDir() {
-        if (Utilities.isWindows())
-            return System.getenv("APPDATA");
-        else if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
-        else // *nix
-            return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
-    }
-
-    private static String appDataDir(String userDataDir, String appName) {
-        return Paths.get(userDataDir, appName).toString();
     }
 }
