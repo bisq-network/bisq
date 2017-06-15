@@ -286,6 +286,14 @@ public class ProcessModel implements Model, PersistablePayload {
                         .isPresent();
     }
 
+    public boolean isNodeBanned(NodeAddress nodeAddress) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().getBannedNodeAddress().stream()
+                        .filter(e -> e.equals(nodeAddress.getHostNameWithoutPostFix()))
+                        .findAny()
+                        .isPresent();
+    }
+
     public Coin getFundsNeededForTradeAsLong() {
         return Coin.valueOf(fundsNeededForTradeAsLong);
     }
