@@ -117,6 +117,37 @@ public final class Preferences implements PersistedDataHost {
         this.bisqEnvironment = bisqEnvironment;
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.useTorFlagFromOptions = useTorFlagFromOptions;
+
+        useAnimationsProperty.addListener((ov) -> {
+            prefPayload.setUseAnimations(useAnimationsProperty.get());
+            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+            persist();
+        });
+        fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            prefPayload.getFiatCurrencies().clear();
+            prefPayload.getFiatCurrencies().addAll(fiatCurrenciesAsObservable);
+            prefPayload.getFiatCurrencies().sort(TradeCurrency::compareTo);
+            persist();
+        });
+        cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            prefPayload.getCryptoCurrencies().clear();
+            prefPayload.getCryptoCurrencies().addAll(cryptoCurrenciesAsObservable);
+            prefPayload.getCryptoCurrencies().sort(TradeCurrency::compareTo);
+            persist();
+        });
+
+        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
+            prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFeeProperty.get());
+            persist();
+        });
+
+        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
+            prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytesProperty.get());
+            persist();
+        });
+
+        fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
+        cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
     }
 
     @Override
@@ -164,34 +195,6 @@ public final class Preferences implements PersistedDataHost {
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
 
-        useAnimationsProperty.addListener((ov) -> {
-            prefPayload.setUseAnimations(useAnimationsProperty.get());
-            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            persist();
-        });
-        fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
-            prefPayload.getFiatCurrencies().clear();
-            prefPayload.getFiatCurrencies().addAll(fiatCurrenciesAsObservable);
-            prefPayload.getFiatCurrencies().sort(TradeCurrency::compareTo);
-            persist();
-        });
-        cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
-            prefPayload.getCryptoCurrencies().clear();
-            prefPayload.getCryptoCurrencies().addAll(cryptoCurrenciesAsObservable);
-            prefPayload.getCryptoCurrencies().sort(TradeCurrency::compareTo);
-            persist();
-        });
-
-        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
-            prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFeeProperty.get());
-            persist();
-        });
-
-        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
-            prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytesProperty.get());
-            persist();
-        });
-
         GlobalSettings.setDefaultTradeCurrency(prefPayload.getPreferredTradeCurrency());
 
         // TODO why do we do this ???? Should this be in the null case instead?
@@ -205,8 +208,6 @@ public final class Preferences implements PersistedDataHost {
         useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
         withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
 
-        fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
-        cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
 
@@ -222,6 +223,7 @@ public final class Preferences implements PersistedDataHost {
             setBitcoinNodes(btcNodesFromOptions);
 
         initialReadDone = true;
+        persist();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

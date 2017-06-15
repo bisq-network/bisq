@@ -617,9 +617,9 @@ public class MainViewModel implements ViewModel {
             setupDevDummyPaymentAccounts();
         }
 
+        fillPriceFeedComboBoxItems();
         setupMarketPriceFeed();
         swapPendingOfferFundingEntries();
-        fillPriceFeedComboBoxItems();
 
         showAppScreen.set(true);
 
@@ -859,7 +859,6 @@ public class MainViewModel implements ViewModel {
     private void setupMarketPriceFeed() {
         priceFeedService.requestPriceFeed(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
-        marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
@@ -892,6 +891,8 @@ public class MainViewModel implements ViewModel {
                     selectedPriceFeedComboBoxItemProperty.get().setDisplayString(newValue);
             }
         });
+
+        marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeedService.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
 
