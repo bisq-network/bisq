@@ -18,7 +18,7 @@
 package io.bisq.core.arbitration.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
@@ -35,7 +35,24 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
                                                String tradeId,
                                                NodeAddress senderNodeAddress,
                                                String uid) {
-        super(uid);
+        this(transaction,
+                tradeId,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PeerPublishedDisputePayoutTxMessage(byte[] transaction,
+                                                String tradeId,
+                                                NodeAddress senderNodeAddress,
+                                                String uid,
+                                                int messageVersion) {
+        super(messageVersion, uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
         this.senderNodeAddress = senderNodeAddress;
@@ -43,7 +60,7 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setPeerPublishedDisputePayoutTxMessage(PB.PeerPublishedDisputePayoutTxMessage.newBuilder()
                         .setTransaction(ByteString.copyFrom(transaction))
                         .setTradeId(tradeId)
@@ -52,10 +69,11 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
                 .build();
     }
 
-    public static PeerPublishedDisputePayoutTxMessage fromProto(PB.PeerPublishedDisputePayoutTxMessage proto) {
+    public static PeerPublishedDisputePayoutTxMessage fromProto(PB.PeerPublishedDisputePayoutTxMessage proto, int messageVersion) {
         return new PeerPublishedDisputePayoutTxMessage(proto.getTransaction().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
     }
 }

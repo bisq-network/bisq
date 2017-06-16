@@ -66,6 +66,7 @@ public class ParameterViewItem {
         return instances.stream().filter(e -> e.voteItem.getVotingType() == selectedItem.getVotingType()).findAny().isPresent();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isEmpty() {
         return instances.isEmpty();
     }

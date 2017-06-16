@@ -54,7 +54,9 @@ public class EncryptionServiceTests {
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
         Security.addProvider(new BouncyCastleProvider());
         dir = File.createTempFile("temp_tests", "");
+        //noinspection ResultOfMethodCallIgnored
         dir.delete();
+        //noinspection ResultOfMethodCallIgnored
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
         keyRing = new KeyRing(keyStorage);
@@ -117,10 +119,11 @@ public class EncryptionServiceTests {
         log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
     }*/
 
-    private static class MockMessage implements NetworkEnvelope {
+    private static class MockMessage extends NetworkEnvelope {
         public final int nonce;
 
         public MockMessage(int nonce) {
+            super(0);
             this.nonce = nonce;
         }
 

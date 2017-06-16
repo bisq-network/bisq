@@ -23,6 +23,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -33,13 +35,13 @@ import java.util.stream.Collectors;
 public class SequenceNumberMap implements PersistableEnvelope {
     @Getter
     @Setter
-    private HashMap<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> hashMap = new HashMap<>();
+    private Map<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map = new ConcurrentHashMap<>();
 
     public SequenceNumberMap() {
     }
 
     public static SequenceNumberMap clone(SequenceNumberMap map) {
-        return new SequenceNumberMap(map.getHashMap());
+        return new SequenceNumberMap(map.getMap());
     }
 
 
@@ -47,15 +49,15 @@ public class SequenceNumberMap implements PersistableEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private SequenceNumberMap(HashMap<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> hashMap) {
-        this.hashMap = hashMap;
+    private SequenceNumberMap(Map<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map) {
+        this.map.putAll(map);
     }
 
     @Override
     public PB.PersistableEnvelope toProtoMessage() {
         return PB.PersistableEnvelope.newBuilder()
                 .setSequenceNumberMap(PB.SequenceNumberMap.newBuilder()
-                        .addAllSequenceNumberEntries(hashMap.entrySet().stream()
+                        .addAllSequenceNumberEntries(map.entrySet().stream()
                                 .map(entry -> PB.SequenceNumberEntry.newBuilder()
                                         .setBytes(entry.getKey().toProtoMessage())
                                         .setMapValue(entry.getValue().toProtoMessage())
@@ -66,9 +68,8 @@ public class SequenceNumberMap implements PersistableEnvelope {
 
     public static SequenceNumberMap fromProto(PB.SequenceNumberMap proto) {
         HashMap<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map = new HashMap<>();
-        proto.getSequenceNumberEntriesList().stream().forEach(entry -> {
-            map.put(P2PDataStorage.ByteArray.fromProto(entry.getBytes()), P2PDataStorage.MapValue.fromProto(entry.getMapValue()));
-        });
+        proto.getSequenceNumberEntriesList().stream()
+                .forEach(e -> map.put(P2PDataStorage.ByteArray.fromProto(e.getBytes()), P2PDataStorage.MapValue.fromProto(e.getMapValue())));
         return new SequenceNumberMap(map);
     }
 
@@ -79,18 +80,18 @@ public class SequenceNumberMap implements PersistableEnvelope {
 
     // Delegates
     public int size() {
-        return hashMap.size();
+        return map.size();
     }
 
     public boolean containsKey(P2PDataStorage.ByteArray key) {
-        return hashMap.containsKey(key);
+        return map.containsKey(key);
     }
 
     public P2PDataStorage.MapValue get(P2PDataStorage.ByteArray key) {
-        return hashMap.get(key);
+        return map.get(key);
     }
 
     public void put(P2PDataStorage.ByteArray key, P2PDataStorage.MapValue value) {
-        hashMap.put(key, value);
+        map.put(key, value);
     }
 }

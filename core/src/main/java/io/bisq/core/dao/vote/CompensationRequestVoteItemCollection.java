@@ -33,8 +33,10 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     @Getter
     private final List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
-    /** constructor */
-    public CompensationRequestVoteItemCollection(VotingType votingType) {
+    /**
+     * constructor
+     */
+    public CompensationRequestVoteItemCollection(@SuppressWarnings("SameParameterValue") VotingType votingType) {
         super(votingType, null, null);
     }
 

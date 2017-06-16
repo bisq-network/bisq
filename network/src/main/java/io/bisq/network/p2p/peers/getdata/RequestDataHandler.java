@@ -163,18 +163,18 @@ public class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (wireEnvelope instanceof GetDataResponse) {
-                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
+            if (networkEnvelop instanceof GetDataResponse) {
+                Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetDataResponse getDataResponse = (GetDataResponse) wireEnvelope;
+                    GetDataResponse getDataResponse = (GetDataResponse) networkEnvelop;
                     Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
                         if (storagePayload == null) {
-                            log.warn("StoragePayload was null: {}", wireEnvelope.toString());
+                            log.warn("StoragePayload was null: {}", networkEnvelop.toString());
                             return;
                         }
 
@@ -186,9 +186,14 @@ public class RequestDataHandler implements MessageListener {
                         payloadByClassName.get(className).add(storagePayload);
                     });
                     // Log different data types
-                    StringBuilder sb = new StringBuilder("Received data size: ").append(dataSet.size()).append(", data items: ");
-                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append(" items of ")
-                            .append(e.getKey()).append("; "));
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("\n#################################################################");
+                    sb.append("\nReceived ").append(dataSet.size()).append(" instances of storage payload\n");
+                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+                            .append(": ")
+                            .append(e.getValue().size())
+                            .append("\n"));
+                    sb.append("#################################################################");
                     log.info(sb.toString());
 
                     if (getDataResponse.getRequestNonce() == nonce) {

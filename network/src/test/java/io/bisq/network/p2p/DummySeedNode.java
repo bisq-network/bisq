@@ -26,6 +26,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Previously used seednode class, replaced now by bootstrap module. We keep it here as it was used in tests...
+@SuppressWarnings("ALL")
 public class DummySeedNode {
     private static final Logger log = LoggerFactory.getLogger(DummySeedNode.class);
     public static final int MAX_CONNECTIONS_LIMIT = 1000;
@@ -74,8 +75,8 @@ public class DummySeedNode {
     public void processArgs(String[] args) {
         int networkId = -1;
         try {
-            for (int i = 0; i < args.length; i++) {
-                String arg = args[i];
+            for (String arg1 : args) {
+                String arg = arg1;
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
                 if (arg.startsWith(NetworkOptionKeys.MY_ADDRESS)) {
@@ -89,7 +90,7 @@ public class DummySeedNode {
                     log.debug("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
-                    Version.setBtcNetworkId(networkId);
+                    Version.setBaseCryptoNetworkId(networkId);
                 } else if (arg.startsWith(NetworkOptionKeys.MAX_CONNECTIONS)) {
                     arg = arg.substring(NetworkOptionKeys.MAX_CONNECTIONS.length() + 1);
                     maxConnections = Integer.parseInt(arg);
@@ -148,7 +149,7 @@ public class DummySeedNode {
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
         createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhostForP2P,
-                Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+                Version.getBaseCurrencyNetwork(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting
@@ -156,7 +157,7 @@ public class DummySeedNode {
                                          int maxConnections,
                                          boolean useLocalhostForP2P,
                                          int networkId,
-                                         boolean useDetailedLogging,
+                                         @SuppressWarnings("UnusedParameters") boolean useDetailedLogging,
                                          @Nullable Set<NodeAddress> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Path appPath = Paths.get(defaultUserDataDir,

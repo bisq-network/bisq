@@ -36,9 +36,9 @@ public class TradableListTest {
     @Test
     public void protoTesting(@Mocked OfferPayload offerPayload) {
         Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
-        TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage,"filename");
+        TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         PB.PersistableEnvelope message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST) );
+        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
 
         // test adding an OpenOffer and convert toProto
         Offer offer = new Offer(offerPayload);
@@ -46,7 +46,7 @@ public class TradableListTest {
         //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
         message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST) );
+        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
         assertEquals(1, message.getTradableList().getTradableList().size());
     }
 }

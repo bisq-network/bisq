@@ -22,7 +22,9 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.ProxySocketFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.core.listeners.PeerDataEventListener;
@@ -37,8 +39,6 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.wallet.*;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -50,14 +50,12 @@ import java.nio.channels.FileLock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 // Derived from WalletAppKit
 // Does the basic wiring
+@Slf4j
 public class WalletConfig extends AbstractIdleService {
-    private static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -84,8 +82,10 @@ public class WalletConfig extends AbstractIdleService {
     private final BisqWalletFactory walletFactory;
 
     private volatile Wallet vBtcWallet;
+    @Nullable
     private volatile Wallet vBsqWallet;
     private volatile File vBtcWalletFile;
+    @Nullable
     private volatile File vBsqWalletFile;
     @Nullable
     private DeterministicSeed seed;
@@ -113,9 +113,9 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params,
                         Socks5Proxy socks5Proxy,
                         File directory,
-                        String btcWalletFileName,
-                        String bsqWalletFileName,
-                        String spvChainFileName) {
+                        @SuppressWarnings("SameParameterValue") String btcWalletFileName,
+                        @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
+                        @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -131,19 +131,25 @@ public class WalletConfig extends AbstractIdleService {
                 // We have already the chain here so we can use this to distinguish.
                 //TODO refactor, make it more explicit
                 List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
-                if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BsqDeterministicKeyChain)
+                if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BisqDeterministicKeyChain) {
+                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
+                            "called BisqWalletFactory.create with BisqDeterministicKeyChain");
                     return new BsqWallet(params, keyChainGroup);
-                else
+                } else {
                     return new Wallet(params, keyChainGroup);
+                }
             }
 
             @Override
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet) {
                 // This is called at first startup when we create the wallet
-                if (isBsqWallet)
+                if (isBsqWallet) {
+                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
+                            "called BisqWalletFactory.create with isBsqWallet=true");
                     return new BsqWallet(params, keyChainGroup);
-                else
+                } else {
                     return new Wallet(params, keyChainGroup);
+                }
             }
         };
 
@@ -249,7 +255,7 @@ public class WalletConfig extends AbstractIdleService {
      * potentially take a very long time. If false, then startup is considered complete once the network activity
      * begins and peer connections/block chain sync will continue in the background.
      */
-    public WalletConfig setBlockingStartup(boolean blockingStartup) {
+    public WalletConfig setBlockingStartup(@SuppressWarnings("SameParameterValue") boolean blockingStartup) {
         this.blockingStartup = blockingStartup;
         return this;
     }
@@ -363,14 +369,17 @@ public class WalletConfig extends AbstractIdleService {
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false, seed);
 
             vBtcWallet.allowSpendingUnconfirmedTransactions();
-           
-            // BSQ walelt
-            vBsqWalletFile = new File(directory, bsqWalletFileName);
+
             if (seed != null)
-                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false);
+                keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(seed), false);
             else
-                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
-            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
+                keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
+
+            // BSQ wallet
+            if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+                vBsqWalletFile = new File(directory, bsqWalletFileName);
+                vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
+            }
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -422,9 +431,13 @@ public class WalletConfig extends AbstractIdleService {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
             }
             vChain.addWallet(vBtcWallet);
-            vChain.addWallet(vBsqWallet);
             vPeerGroup.addWallet(vBtcWallet);
-            vPeerGroup.addWallet(vBsqWallet);
+
+            if (vBsqWallet != null) {
+                vChain.addWallet(vBsqWallet);
+                vPeerGroup.addWallet(vBsqWallet);
+            }
+
             onSetupCompleted();
 
             if (blockingStartup) {
@@ -495,8 +508,7 @@ public class WalletConfig extends AbstractIdleService {
 
     private Wallet loadWallet(File walletFile, boolean shouldReplayWallet, boolean useBitcoinDeterministicKeyChain) throws Exception {
         Wallet wallet;
-        FileInputStream walletStream = new FileInputStream(walletFile);
-        try {
+        try (FileInputStream walletStream = new FileInputStream(walletFile)) {
             List<WalletExtension> extensions = provideWalletExtensions();
             WalletExtension[] extArray = extensions.toArray(new WalletExtension[extensions.size()]);
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
@@ -510,8 +522,6 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
-        } finally {
-            walletStream.close();
         }
         return wallet;
     }
@@ -542,7 +552,8 @@ public class WalletConfig extends AbstractIdleService {
             Context.propagate(context);
             vPeerGroup.stop();
             vBtcWallet.saveToFile(vBtcWalletFile);
-            vBsqWallet.saveToFile(vBsqWalletFile);
+            if (vBsqWallet != null && vBsqWalletFile != null)
+                vBsqWallet.saveToFile(vBsqWalletFile);
             vStore.close();
 
             vPeerGroup = null;
@@ -574,6 +585,7 @@ public class WalletConfig extends AbstractIdleService {
         return vBtcWallet;
     }
 
+    @Nullable
     public Wallet getBsqWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
         return vBsqWallet;

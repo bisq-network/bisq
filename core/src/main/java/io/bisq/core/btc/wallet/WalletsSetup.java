@@ -68,7 +68,7 @@ public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
-    private static final String BTC_WALLET_FILE_NAME = "bisq_BTC.wallet";
+    private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
@@ -97,7 +97,6 @@ public class WalletsSetup {
                         AddressEntryList addressEntryList,
                         UserAgent userAgent,
                         Preferences preferences,
-                        BisqEnvironment bisqEnvironment,
                         Socks5ProxyProvider socks5ProxyProvider,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
@@ -109,9 +108,9 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        WalletUtils.setBitcoinNetwork(bisqEnvironment.getBitcoinNetwork());
-        params = WalletUtils.getParameters();
-        walletDir = new File(appDir, "bitcoin");
+        btcWalletFileName = "bisq_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
+        params = BisqEnvironment.getParameters();
+        walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 
@@ -139,7 +138,7 @@ public class WalletsSetup {
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, BTC_WALLET_FILE_NAME,
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, btcWalletFileName,
                 BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
             @Override
             protected void onSetupCompleted() {
@@ -334,7 +333,7 @@ public class WalletsSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void backupWallets() {
-        FileUtil.rollingBackup(walletDir, BTC_WALLET_FILE_NAME, 20);
+        FileUtil.rollingBackup(walletDir, btcWalletFileName, 20);
         FileUtil.rollingBackup(walletDir, BSQ_WALLET_FILE_NAME, 20);
     }
 
@@ -389,6 +388,7 @@ public class WalletsSetup {
         return walletConfig.getBtcWallet();
     }
 
+    @Nullable
     public Wallet getBsqWallet() {
         return walletConfig.getBsqWallet();
     }
@@ -421,7 +421,7 @@ public class WalletsSetup {
         return downloadListener.percentageProperty();
     }
 
-    public Set<Address> getAddressesByContext(AddressEntry.Context context) {
+    public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return ImmutableList.copyOf(addressEntryList.getList()).stream()
                 .filter(addressEntry -> addressEntry.getContext() == context)
                 .map(AddressEntry::getAddress)

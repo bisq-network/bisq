@@ -24,6 +24,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -75,7 +76,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private Offer offer;
 
     private AddressEntry addressEntry;
-    final StringProperty btcCode = new SimpleStringProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
@@ -114,7 +114,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
 
-        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
+        // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
     }
 
     @Override
@@ -122,7 +122,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // when leaving screen we reset state
         offer.setState(Offer.State.UNKNOWN);
 
-        addBindings();
         addListeners();
 
         updateBalance();
@@ -144,7 +143,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        removeBindings();
         removeListeners();
         if (offer != null)
             tradeManager.onCancelAvailabilityRequest(offer);
@@ -341,14 +339,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // Bindings, listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addBindings() {
-        btcCode.bind(preferences.getBtcDenominationProperty());
-    }
-
-    private void removeBindings() {
-        btcCode.unbind();
-    }
-
     private void addListeners() {
         btcWalletService.addBalanceListener(balanceListener);
     }
@@ -487,7 +477,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amount.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amount.get());
-            Coin dustAndFee = getTotalTxFee().add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = getTotalTxFee().add(Restrictions.getMinNonDustOutput());
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
@@ -514,7 +504,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (isCurrencyForTakerFeeBtc())
             return txFeeFromFeeService.multiply(3);
         else
-            return txFeeFromFeeService.multiply(3).subtract(getTakerFee());
+            return txFeeFromFeeService.multiply(3).subtract(getTakerFee() != null ? getTakerFee() : Coin.ZERO);
     }
 
     public AddressEntry getAddressEntry() {

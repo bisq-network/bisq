@@ -19,6 +19,7 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -51,7 +52,7 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 @Slf4j
 public class BsqWalletService extends WalletService {
     private final BsqCoinSelector bsqCoinSelector;
-    private BsqChainState bsqChainState;
+    private final BsqChainState bsqChainState;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -76,55 +77,59 @@ public class BsqWalletService extends WalletService {
         this.bsqCoinSelector = bsqCoinSelector;
         this.bsqChainState = bsqChainState;
 
-        walletsSetup.addSetupCompletedHandler(() -> {
-            wallet = walletsSetup.getBsqWallet();
-            wallet.setCoinSelector(bsqCoinSelector);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+            walletsSetup.addSetupCompletedHandler(() -> {
+                wallet = walletsSetup.getBsqWallet();
+                if (wallet != null) {
+                    wallet.setCoinSelector(bsqCoinSelector);
+                    wallet.addEventListener(walletEventListener);
 
-            wallet.addEventListener(walletEventListener);
+                    //noinspection deprecation
+                    wallet.addEventListener(new AbstractWalletEventListener() {
+                        @Override
+                        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                            //TODO do we need updateWalletBsqTransactions(); here?
+                        }
 
-            wallet.addEventListener(new AbstractWalletEventListener() {
-                @Override
-                public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    //TODO do we need updateWalletBsqTransactions(); here?
+                        @Override
+                        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                            //TODO do we need updateWalletBsqTransactions(); here?
+                        }
+
+                        @Override
+                        public void onReorganize(Wallet wallet) {
+                            log.warn("onReorganize ");
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                        }
+
+                        @Override
+                        public void onKeysAdded(List<ECKey> keys) {
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                            updateBsqWalletTransactions();
+                        }
+
+                        @Override
+                        public void onWalletChanged(Wallet wallet) {
+                            updateBsqWalletTransactions();
+                        }
+
+                    });
                 }
-
-                @Override
-                public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    //TODO do we need updateWalletBsqTransactions(); here?
-                }
-
-                @Override
-                public void onReorganize(Wallet wallet) {
-                    log.warn("onReorganize ");
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                }
-
-                @Override
-                public void onKeysAdded(List<ECKey> keys) {
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                    updateBsqWalletTransactions();
-                }
-
-                @Override
-                public void onWalletChanged(Wallet wallet) {
-                    updateBsqWalletTransactions();
-                }
-
             });
-        });
 
-        bsqBlockchainManager.addBsqChainStateListener(() -> {
-            updateBsqWalletTransactions();
-            updateBsqBalance();
-        });
+            bsqBlockchainManager.addBsqChainStateListener(() -> {
+                updateBsqWalletTransactions();
+                updateBsqBalance();
+            });
+        }
     }
 
 
@@ -261,7 +266,7 @@ public class BsqWalletService extends WalletService {
     // Broadcast tx 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
         Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
         printTx("BSQ broadcast Tx", tx);
     }
@@ -301,7 +306,7 @@ public class BsqWalletService extends WalletService {
     // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException,
+    public Transaction getPreparedBurnFeeTx(Coin fee) throws
             InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
 
@@ -320,7 +325,7 @@ public class BsqWalletService extends WalletService {
         return tx;
     }
 
-    protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {
+    protected Set<Address> getAllAddressesFromActiveKeys() {
         return wallet.getActiveKeychain().getLeafKeys().stream().
                 map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());

@@ -250,6 +250,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
+                        //noinspection unchecked
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     }).show();
         }
@@ -287,6 +288,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             model.dataModel.swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
             if (model.dataModel.getPreferences().showAgain(key)) {
+                //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -324,6 +326,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                             .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                             .onAction(() -> {
                                 navigation.setReturnPath(navigation.getCurrentPath());
+                                //noinspection unchecked
                                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
                             }).show();
                 }
@@ -346,6 +349,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
+            //noinspection unchecked
             new Popup<>().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
@@ -432,14 +436,15 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (paymentAccount != null) {
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
-                currencyComboBox.setItems(FXCollections.observableArrayList(paymentAccount.getTradeCurrencies()));
+                final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+                currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
 
                 // we select comboBox following the user currency, if user currency not available in account, we select first
                 TradeCurrency tradeCurrency = model.getTradeCurrency();
-                if (paymentAccount.getTradeCurrencies().contains(tradeCurrency))
+                if (tradeCurrencies.contains(tradeCurrency))
                     currencyComboBox.getSelectionModel().select(tradeCurrency);
                 else
-                    currencyComboBox.getSelectionModel().select(paymentAccount.getTradeCurrencies().get(0));
+                    currencyComboBox.getSelectionModel().select(tradeCurrencies.get(0));
 
                 model.onPaymentAccountSelected(paymentAccount);
             } else {
@@ -475,14 +480,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        buyerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        sellerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
-        minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
         xLabel.setText("x");
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
@@ -526,16 +527,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void removeBindings() {
-        amountBtcLabel.textProperty().unbind();
-        buyerSecurityDepositBtcLabel.textProperty().unbind();
-        sellerSecurityDepositBtcLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         fixedPriceTextField.disableProperty().unbind();
         priceCurrencyLabel.disableProperty().unbind();
         marketBasedPriceTextField.disableProperty().unbind();
         marketBasedPriceLabel.disableProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
-        minAmountBtcLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
         xLabel.textProperty().unbind();
         volumeDescriptionLabel.textProperty().unbind();
@@ -674,6 +671,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
+                                        //noinspection unchecked
                                         UserThread.runAfter(() ->
                                                         navigation.navigateTo(MainView.class, PortfolioView.class,
                                                                 OpenOffersView.class),
@@ -792,6 +790,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
+        //noinspection unchecked
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setMinWidth(300);
@@ -801,6 +800,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
         currencyComboBoxLabel = currencyComboBoxTuple.first;
         editOfferElements.add(currencyComboBoxLabel);
+        //noinspection unchecked
         currencyComboBox = currencyComboBoxTuple.second;
         editOfferElements.add(currencyComboBox);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
@@ -927,7 +927,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         });
 
-        payFeeInBtcButton = new ToggleButton("BTC");
+        payFeeInBtcButton = new ToggleButton(Res.getBaseCurrencyCode());
         payFeeInBtcButton.setPrefWidth(payFeeInBsqButton.getPrefWidth());
         editOfferElements.add(payFeeInBtcButton);
         payFeeInBtcButton.setId("toggle-price-right");

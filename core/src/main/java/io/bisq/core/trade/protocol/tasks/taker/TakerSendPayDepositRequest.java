@@ -17,6 +17,7 @@
 
 package io.bisq.core.trade.protocol.tasks.taker;
 
+import io.bisq.common.app.Version;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -54,7 +55,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
             checkNotNull(acceptedArbitratorAddresses, "acceptedArbitratorAddresses must not be null");
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
-            
+
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
@@ -85,7 +86,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     new ArrayList<>(acceptedMediatorAddresses),
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
-                    UUID.randomUUID().toString());
+                    UUID.randomUUID().toString(),
+                    Version.getP2PMessageVersion());
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
             processModel.getP2PService().sendEncryptedDirectMessage(

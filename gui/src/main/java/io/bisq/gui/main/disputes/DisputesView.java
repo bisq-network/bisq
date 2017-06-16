@@ -83,8 +83,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersDisputesTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
             else if (newValue == arbitratorsDisputesTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         };
 
@@ -119,12 +121,16 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         else
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
+        //noinspection UnusedAssignment
         String key = "supportInfo";
         if (!DevEnv.DEV_MODE)
+            //noinspection unchecked
             new Popup<>().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
                     .actionButtonTextWithGoTo("navigation.portfolio.pending")

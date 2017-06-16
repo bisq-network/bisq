@@ -26,9 +26,11 @@ import java.util.List;
 
 @Data
 public class BsqBlock implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     @Delegate
     private final BsqBlockVo bsqBlockVo;
-    
+
     private final List<Tx> txs;
 
     public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {

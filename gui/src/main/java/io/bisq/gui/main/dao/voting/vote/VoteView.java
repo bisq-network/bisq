@@ -20,7 +20,6 @@ package io.bisq.gui.main.dao.voting.vote;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -98,7 +97,6 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
-        BsqFormatter bsqFormatter1 = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
     }
@@ -107,6 +105,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         addTitledGroupBg(root, gridRow, 2, Res.get("dao.voting.addItems"));
 
+        //noinspection unchecked
         compensationRequestsComboBox = addLabelComboBox(root, gridRow, "", Layout.FIRST_ROW_DISTANCE).second;
         compensationRequestsComboBox.setPromptText(Res.get("dao.voting.addRequest"));
         compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
@@ -136,6 +135,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty());
         });
 
+        //noinspection unchecked
         parametersComboBox = addLabelComboBox(root, ++gridRow, "").second;
         parametersComboBox.setPromptText(Res.get("dao.voting.addParameter"));
         parametersComboBox.setConverter(new StringConverter<VoteItem>() {
@@ -224,37 +224,31 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                         (txSize / 1000d)))
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> {
-                                    try {
-                                        bsqWalletService.commitTx(txWithBtcFee);
-                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                        // if it gets committed 2 times
-                                        btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                        bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                            @Override
-                                            public void onSuccess(@Nullable Transaction transaction) {
-                                                checkNotNull(transaction, "Transaction must not be null at doSend callback.");
-                                                log.error("tx successful published" + transaction.getHashAsString());
-                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                                voteItemsList.setIsMyVote(true);
+                                    bsqWalletService.commitTx(txWithBtcFee);
+                                    // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                    // if it gets committed 2 times
+                                    btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                                    bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                        @Override
+                                        public void onSuccess(@Nullable Transaction transaction) {
+                                            checkNotNull(transaction, "Transaction must not be null at doSend callback.");
+                                            log.error("tx successful published" + transaction.getHashAsString());
+                                            new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                            voteItemsList.setIsMyVote(true);
 
-                                                //TODO send to P2P network
-                                            }
+                                            //TODO send to P2P network
+                                        }
 
-                                            @Override
-                                            public void onFailure(@NotNull Throwable t) {
-                                                new Popup<>().warning(t.toString()).show();
-                                            }
-                                        });
-                                    } catch (WalletException | TransactionVerificationException e) {
-                                        log.error(e.toString());
-                                        e.printStackTrace();
-                                        new Popup<>().warning(e.toString());
-                                    }
+                                        @Override
+                                        public void onFailure(@NotNull Throwable t) {
+                                            new Popup<>().warning(t.toString()).show();
+                                        }
+                                    });
                                 })
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
-                            ChangeBelowDustException | InsufficientFundsException e) {
+                            ChangeBelowDustException e) {
                         log.error(e.toString());
                         e.printStackTrace();
                         new Popup<>().warning(e.toString()).show();
@@ -271,6 +265,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         //TODO rename
         voteItemsList = voteManager.getActiveVoteItemsList();
+        //noinspection StatementWithEmptyBody
         if (voteItemsList != null) {
             CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItemsList.getCompensationRequestVoteItemCollection();
             ObservableList<CompensationRequestVoteItem> compensationRequestVoteItems = FXCollections.observableArrayList(compensationRequestVoteItemCollection.getCompensationRequestVoteItems());

@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 // Run it once then lookup for onion address at: tor/hiddenservice/hostname and use that for the NodeAddress param.
 
 // TODO deactivated because outdated
+@SuppressWarnings({"UnusedAssignment", "EmptyMethod"})
 @Ignore
 public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
@@ -40,6 +41,7 @@ public class PeerServiceTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
 
+        //noinspection ConstantConditions
         if (useLocalhostForP2P) {
             seedNodeAddresses.add(new NodeAddress("localhost:8001"));
             seedNodeAddresses.add(new NodeAddress("localhost:8002"));
@@ -450,35 +452,35 @@ public class PeerServiceTest {
         latch = new CountDownLatch(1);
         seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS,
                 useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-                latch.countDown();
-            }
+                    @Override
+                    public void onRequestingDataCompleted() {
+                        latch.countDown();
+                    }
 
-            @Override
-            public void onNoSeedNodeAvailable() {
-            }
+                    @Override
+                    public void onNoSeedNodeAvailable() {
+                    }
 
-            @Override
-            public void onTorNodeReady() {
-            }
+                    @Override
+                    public void onTorNodeReady() {
+                    }
 
-            @Override
-            public void onNoPeersAvailable() {
-            }
+                    @Override
+                    public void onNoPeersAvailable() {
+                    }
 
-            @Override
-            public void onBootstrapComplete() {
-            }
+                    @Override
+                    public void onBootstrapComplete() {
+                    }
 
-            @Override
-            public void onHiddenServicePublished() {
-            }
+                    @Override
+                    public void onHiddenServicePublished() {
+                    }
 
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-        });
+                    @Override
+                    public void onSetupFailed(Throwable throwable) {
+                    }
+                });
         latch.await();
         Thread.sleep(sleepTime);
         return seedNode;

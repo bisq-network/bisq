@@ -19,7 +19,6 @@ package io.bisq.provider.fee;
 
 import io.bisq.common.util.Utilities;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.fee.providers.BtcFeesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +37,24 @@ public class FeeRequestService {
 
     private static final long INTERVAL_BTC_FEES_MS = 600_000;      // 10 min  
 
+    public static final long BTC_MIN_TX_FEE = 40; // satoshi/byte
+    public static final long BTC_MAX_TX_FEE = 2000;
+    
     private final Timer timerBitcoinFeesLocal = new Timer();
 
     private final BtcFeesProvider btcFeesProvider;
-    private final Map<String, Long> allFeesMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> dataMap = new ConcurrentHashMap<>();
     private long bitcoinFeesTs;
     private String json;
 
     public FeeRequestService() throws IOException {
         btcFeesProvider = new BtcFeesProvider();
 
+        // For now we don't need a fee estimation for LTC so we set it fixed, but we keep it in the provider to 
+        // be flexible if fee pressure grows on LTC
+        dataMap.put("ltcTxFee", FeeService.LTC_DEFAULT_TX_FEE);
+        dataMap.put("dogeTxFee", FeeService.DOGE_DEFAULT_TX_FEE);
+        
         writeToJson();
         startRequests();
     }
@@ -58,7 +65,7 @@ public class FeeRequestService {
             public void run() {
                 try {
                     requestBitcoinFees();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -66,25 +73,20 @@ public class FeeRequestService {
         }, INTERVAL_BTC_FEES_MS, INTERVAL_BTC_FEES_MS);
 
 
-        try {
-            requestBitcoinFees();
-        } catch (HttpException e) {
-            log.warn(e.toString());
-            e.printStackTrace();
-        }
+        requestBitcoinFees();
     }
 
-    private void requestBitcoinFees() throws IOException, HttpException {
+    private void requestBitcoinFees() throws IOException {
         long ts = System.currentTimeMillis();
-        long result = btcFeesProvider.getFee();
+        long btcFee = btcFeesProvider.getFee();
         log.info("requestBitcoinFees took {} ms.", (System.currentTimeMillis() - ts));
-        if (result < FeeService.MIN_TX_FEE) {
-            log.warn("Response for fee is lower as min fee. Fee=" + result);
-        } else if (result > FeeService.MAX_TX_FEE) {
-            log.warn("Response for fee is larger as max fee. Fee=" + result);
+        if (btcFee < FeeRequestService.BTC_MIN_TX_FEE) {
+            log.warn("Response for fee is lower as min fee. Fee=" + btcFee);
+        } else if (btcFee > FeeRequestService.BTC_MAX_TX_FEE) {
+            log.warn("Response for fee is larger as max fee. Fee=" + btcFee);
         } else {
             bitcoinFeesTs = Instant.now().getEpochSecond();
-            allFeesMap.put("txFee", result);
+            dataMap.put("btcTxFee", btcFee);
             writeToJson();
         }
     }
@@ -92,7 +94,7 @@ public class FeeRequestService {
     private void writeToJson() {
         Map<String, Object> map = new HashMap<>();
         map.put("bitcoinFeesTs", bitcoinFeesTs);
-        map.put("data", allFeesMap);
+        map.put("dataMap", dataMap);
         json = Utilities.objectToJson(map);
     }
 

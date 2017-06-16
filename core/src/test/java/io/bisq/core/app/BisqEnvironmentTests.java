@@ -36,16 +36,16 @@ public class BisqEnvironmentTests {
                 .withProperty("key.x", "x.commandline");
 
         PropertySource filesystemProps = new MockPropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME)
-                .withProperty("key.x", "x.env")
-                .withProperty("key.y", "y.env");
+                .withProperty("key.x", "x.bisqEnvironment")
+                .withProperty("key.y", "y.bisqEnvironment");
 
-        ConfigurableEnvironment env = new BisqEnvironment(commandlineProps) {
+        ConfigurableEnvironment bisqEnvironment = new BisqEnvironment(commandlineProps) {
             @Override
-            PropertySource<?> appDirProperties() {
+            PropertySource<?> getAppDirProperties() {
                 return filesystemProps;
             }
         };
-        MutablePropertySources propertySources = env.getPropertySources();
+        MutablePropertySources propertySources = bisqEnvironment.getPropertySources();
 
         assertThat(propertySources.precedenceOf(named(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME)), equalTo(0));
         assertThat(propertySources.precedenceOf(named(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME)), equalTo(1));
@@ -58,9 +58,9 @@ public class BisqEnvironmentTests {
         assertThat(propertySources.precedenceOf(named(BISQ_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(5));*/
         assertThat(propertySources.size(), equalTo(4));
 
-        assertThat(env.getProperty("key.x"), equalTo("x.commandline")); // commandline value wins due to precedence
+        assertThat(bisqEnvironment.getProperty("key.x"), equalTo("x.commandline")); // commandline value wins due to precedence
 
         //TODO check why it fails
-        //assertThat(env.getProperty("key.y"), equalTo("y.env")); // env value wins because it's the only one available
+        //assertThat(bisqEnvironment.getProperty("key.y"), equalTo("y.bisqEnvironment")); // bisqEnvironment value wins because it's the only one available
     }
 }

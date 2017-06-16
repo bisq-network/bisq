@@ -28,6 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -39,8 +40,11 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
+import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
@@ -84,7 +88,6 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -99,7 +102,7 @@ public class BisqApp extends Application {
 
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
-    private static Environment env;
+    private static BisqEnvironment bisqEnvironment;
 
     private BisqAppModule bisqAppModule;
     private Injector injector;
@@ -113,8 +116,8 @@ public class BisqApp extends Application {
     public static Runnable shutDownHandler;
     private boolean shutDownRequested;
 
-    public static void setEnvironment(Environment env) {
-        BisqApp.env = env;
+    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+        BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -122,11 +125,11 @@ public class BisqApp extends Application {
     public void start(Stage stage) throws IOException {
         BisqApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -163,9 +166,16 @@ public class BisqApp extends Application {
 
         Security.addProvider(new BouncyCastleProvider());
 
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+                
+        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+
+        CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
+
         try {
             // Guice
-            bisqAppModule = new BisqAppModule(env, primaryStage);
+            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
             injector.getInstance(DropwizardApplication.class).run("server", "bitsquare-api.yml");
@@ -192,7 +202,9 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
             persistedDataHosts.add(injector.getInstance(DisputeManager.class));
             persistedDataHosts.add(injector.getInstance(P2PService.class));
-            
+            persistedDataHosts.add(injector.getInstance(VotingManager.class));
+            persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
+
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
                 try {
@@ -203,7 +215,7 @@ public class BisqApp extends Application {
                 }
             });
 
-            Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+            Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
 
             if (Utilities.isLinux())
@@ -281,7 +293,7 @@ public class BisqApp extends Application {
             });
 
             // configure the primary stage
-            primaryStage.setTitle(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+            primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(1020);
             primaryStage.setMinHeight(620);
@@ -301,6 +313,8 @@ public class BisqApp extends Application {
             // make the UI visible
             primaryStage.show();
 
+            // Used only for migrating old trade statistic to new data structure
+            // injector.getInstance(TradeStatisticsMigrationTool.class);
 
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();

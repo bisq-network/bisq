@@ -18,6 +18,7 @@
 package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.P2PService;
@@ -30,27 +31,43 @@ import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 
 @Slf4j
 public class AppSetupWithP2P extends AppSetup {
-    private final P2PService p2PService;
-    private BooleanProperty p2pNetWorkReady;
+    protected final P2PService p2PService;
+    protected BooleanProperty p2pNetWorkReady;
 
     @Inject
-    public AppSetupWithP2P(BisqEnvironment bisqEnvironment,
-                           EncryptionService encryptionService,
+    public AppSetupWithP2P(EncryptionService encryptionService,
                            KeyRing keyRing,
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager) {
-        super(bisqEnvironment,
-                encryptionService,
+        super(encryptionService,
                 keyRing,
                 tradeStatisticsManager);
         this.p2PService = p2PService;
     }
 
     @Override
-    protected void startBasicServices() {
+    public void initPersistedDataHosts() {
+        ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
+        persistedDataHosts.add(tradeStatisticsManager);
+        persistedDataHosts.add(p2PService);
+
+        // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
+        persistedDataHosts.stream().forEach(e -> {
+            try {
+                log.info("call readPersisted at " + e.getClass().getSimpleName());
+                e.readPersisted();
+            } catch (Throwable e1) {
+                log.error("readPersisted error", e1);
+            }
+        });
+    }
+
+    @Override
+    protected void initBasicServices() {
         p2pNetWorkReady = initP2PNetwork();
 
         p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
@@ -131,7 +148,7 @@ public class AppSetupWithP2P extends AppSetup {
         return p2pNetworkInitialized;
     }
 
-    private void onBasicServicesInitialized() {
+    protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
         p2PService.onAllServicesInitialized();
     }

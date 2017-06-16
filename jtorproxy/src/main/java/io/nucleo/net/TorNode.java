@@ -33,7 +33,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         log.debug("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
     }
-    
+
     public Socks5Proxy getSocksProxy() {
         return proxy;
     }

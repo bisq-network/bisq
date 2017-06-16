@@ -20,12 +20,12 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -39,11 +39,10 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode
 @Slf4j
-@ToString
 @Getter
 public final class Arbitrator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
-    
+
     private final NodeAddress nodeAddress;
     private final byte[] btcPubKey;
     private final String btcAddress;
@@ -135,5 +134,23 @@ public final class Arbitrator implements StoragePayload {
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
+    }
+
+
+    @Override
+    public String toString() {
+        return "Arbitrator{" +
+                "\n     nodeAddress=" + nodeAddress +
+                ",\n     btcPubKey=" + Utilities.bytesAsHexString(btcPubKey) +
+                ",\n     btcAddress='" + btcAddress + '\'' +
+                ",\n     pubKeyRing=" + pubKeyRing +
+                ",\n     languageCodes=" + languageCodes +
+                ",\n     registrationDate=" + registrationDate +
+                ",\n     registrationPubKey=" + Utilities.bytesAsHexString(registrationPubKey) +
+                ",\n     registrationSignature='" + registrationSignature + '\'' +
+                ",\n     emailAddress='" + emailAddress + '\'' +
+                ",\n     info='" + info + '\'' +
+                ",\n     extraDataMap=" + extraDataMap +
+                "\n}";
     }
 }

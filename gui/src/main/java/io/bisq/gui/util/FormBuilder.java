@@ -18,6 +18,7 @@
 package io.bisq.gui.util;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Tuple4;
@@ -946,7 +947,7 @@ public class FormBuilder {
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new Label();
+        Label currency = new Label(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label");
 
         HBox box = new HBox();
@@ -963,7 +964,7 @@ public class FormBuilder {
         textField.setEditable(false);
         textField.setFocusTraversable(false);
 
-        Label currency = new Label();
+        Label currency = new Label(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label-disabled");
 
         HBox box = new HBox();

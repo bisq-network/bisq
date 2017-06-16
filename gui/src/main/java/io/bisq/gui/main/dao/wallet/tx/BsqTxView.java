@@ -19,7 +19,9 @@ package io.bisq.gui.main.dao.wallet.tx;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -57,6 +59,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -120,7 +123,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
         chainSyncIndicator = new ProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        chainSyncIndicator.setProgress(-1);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            chainSyncIndicator.setProgress(-1);
+        else
+            chainSyncIndicator.setProgress(0);
         chainSyncIndicator.setPadding(new Insets(-6, 0, -10, 5));
 
         chainHeightLabel = FormBuilder.addLabel(root, ++gridRow, "");
@@ -140,9 +146,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
-            updateList();
-        };
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqChainStateListener = this::onChainHeightChanged;
     }
@@ -181,26 +185,28 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void onChainHeightChanged() {
-        if (bsqWalletService.getBestChainHeight() > 0) {
-            final boolean synced = bsqWalletService.getBestChainHeight() == bsqChainState.getChainHeadHeight();
-            chainSyncIndicator.setVisible(!synced);
-            chainSyncIndicator.setManaged(!synced);
-            if (bsqChainState.getChainHeadHeight() > 0)
-                chainSyncIndicator.setProgress((double) bsqChainState.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
+        UserThread.runAfter(() -> {
+            if (bsqWalletService.getBestChainHeight() > 0) {
+                final boolean synced = bsqWalletService.getBestChainHeight() == bsqChainState.getChainHeadHeight();
+                chainSyncIndicator.setVisible(!synced);
+                chainSyncIndicator.setManaged(!synced);
+                if (bsqChainState.getChainHeadHeight() > 0)
+                    chainSyncIndicator.setProgress((double) bsqChainState.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
 
-            if (synced)
-                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                        bsqChainState.getChainHeadHeight(),
-                        bsqWalletService.getBestChainHeight()));
-            else
+                if (synced)
+                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
+                            bsqChainState.getChainHeadHeight(),
+                            bsqWalletService.getBestChainHeight()));
+                else
+                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                            bsqChainState.getChainHeadHeight(),
+                            bsqWalletService.getBestChainHeight()));
+            } else {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
                         bsqChainState.getChainHeadHeight(),
                         bsqWalletService.getBestChainHeight()));
-        } else {
-            chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                    bsqChainState.getChainHeadHeight(),
-                    bsqWalletService.getBestChainHeight()));
-        }
+            }
+        }, 300, TimeUnit.MILLISECONDS);
     }
 
     private void updateList() {
@@ -209,14 +215,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         // copy list to avoid ConcurrentModificationException
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         Set<BsqTxListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                            return new BsqTxListItem(transaction,
-                                    bsqWalletService,
-                                    btcWalletService,
-                                    bsqChainState.getTxType(transaction.getHashAsString()),
-                                    bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
-                                    bsqFormatter);
-                        }
+                .map(transaction -> new BsqTxListItem(transaction,
+                                bsqWalletService,
+                                btcWalletService,
+                                bsqChainState.getTxType(transaction.getHashAsString()),
+                                bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqFormatter)
                 )
                 .collect(Collectors.toSet());
         observableList.setAll(items);

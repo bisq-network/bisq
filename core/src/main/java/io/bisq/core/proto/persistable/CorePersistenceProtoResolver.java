@@ -13,15 +13,14 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.VoteItemsList;
-import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.proto.CoreProtoResolver;
-import io.bisq.core.trade.*;
+import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.statistics.TradeStatisticsList;
 import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
-import io.bisq.network.p2p.storage.P2PDataStorage;
+import io.bisq.network.p2p.storage.PersistedEntryMap;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +51,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case SEQUENCE_NUMBER_MAP:
                     return SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
                 case PERSISTED_ENTRY_MAP:
-                    return P2PDataStorage.fromProto(proto.getPersistedEntryMap().getPersistedEntryMapMap(),
+                    return PersistedEntryMap.fromProto(proto.getPersistedEntryMap().getPersistedEntryMapMap(),
                             networkProtoResolver);
                 case PEER_LIST:
                     return PeerList.fromProto(proto.getPeerList());
@@ -87,28 +86,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
         } else {
             log.error("PersistableEnvelope.fromProto: PB.PersistableEnvelope is null");
             throw new ProtobufferException("PB.PersistableEnvelope is null");
-        }
-    }
-
-    public Tradable fromProto(PB.Tradable proto, Storage<TradableList<SellerAsMakerTrade>> storage) {
-        if (proto != null) {
-            switch (proto.getMessageCase()) {
-                case OPEN_OFFER:
-                    return OpenOffer.fromProto(proto.getOpenOffer());
-                case BUYER_AS_MAKER_TRADE:
-                    return BuyerAsMakerTrade.fromProto(proto.getBuyerAsMakerTrade(), storage, btcWalletService.get(), this);
-                case BUYER_AS_TAKER_TRADE:
-                    return BuyerAsTakerTrade.fromProto(proto.getBuyerAsTakerTrade(), storage, btcWalletService.get(), this);
-                case SELLER_AS_MAKER_TRADE:
-                    return SellerAsMakerTrade.fromProto(proto.getSellerAsMakerTrade(), storage, btcWalletService.get(), this);
-                case SELLER_AS_TAKER_TRADE:
-                    return SellerAsTakerTrade.fromProto(proto.getSellerAsTakerTrade(), storage, btcWalletService.get(), this);
-                default:
-                    throw new ProtobufferException("Unknown proto message case(PB.Tradable). messageCase=" + proto.getMessageCase());
-            }
-        } else {
-            log.error("PersistableEnvelope.fromProto: PB.Tradable is null");
-            throw new ProtobufferException("PB.Tradable is null");
         }
     }
 }

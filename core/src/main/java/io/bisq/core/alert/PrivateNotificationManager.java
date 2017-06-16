@@ -50,6 +50,7 @@ public class PrivateNotificationManager {
     private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global privateNotification message
+    @SuppressWarnings("ConstantConditions")
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
             DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
@@ -75,9 +76,9 @@ public class PrivateNotificationManager {
 
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
         this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
-        NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-        if (wireEnvelope instanceof PrivateNotificationMessage) {
-            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) wireEnvelope;
+        NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (networkEnvelop instanceof PrivateNotificationMessage) {
+            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) networkEnvelop;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
                 final PrivateNotificationPayload privateNotification = privateNotificationMessage.getPrivateNotificationPayload();

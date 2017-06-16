@@ -181,8 +181,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
-                Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
+        if (dispute.getContractHash() != null)
+            addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
+                    Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
         Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                 Res.get("shared.viewContractAsJson"), 0).second;

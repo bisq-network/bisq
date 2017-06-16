@@ -55,7 +55,7 @@ public class RpcService {
     private final String rpcPassword;
     private final String rpcPort;
     private final String rpcBlockPort;
-    private boolean dumpBlockchainData;
+    private final boolean dumpBlockchainData;
 
     private BtcdClient client;
     private BtcdDaemon daemon;

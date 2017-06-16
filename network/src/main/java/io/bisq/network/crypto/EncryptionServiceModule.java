@@ -23,8 +23,8 @@ import org.springframework.core.env.Environment;
 
 public class EncryptionServiceModule extends AppModule {
 
-    public EncryptionServiceModule(Environment env) {
-        super(env);
+    public EncryptionServiceModule(Environment environment) {
+        super(environment);
     }
 
     @Override

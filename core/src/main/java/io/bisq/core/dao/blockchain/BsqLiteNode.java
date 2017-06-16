@@ -47,7 +47,7 @@ import java.util.List;
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public class BsqLiteNode extends BsqNode {
-    private BsqLiteNodeExecutor bsqLiteNodeExecutor;
+    private final BsqLiteNodeExecutor bsqLiteNodeExecutor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,9 +134,9 @@ public class BsqLiteNode extends BsqNode {
     // so issue is on fullnode side...
     byte[] pastRequests;
 
-    private void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
-            GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) wireEnvelope;
+    private void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
+            GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             if (Arrays.equals(pastRequests, bsqBlocksBytes)) {
                 log.error("We got that message already. That should not happen.");
@@ -153,9 +153,7 @@ public class BsqLiteNode extends BsqNode {
                     genesisBlockHeight,
                     genesisTxId,
                     this::onNewBsqBlock,
-                    () -> {
-                        onParseBlockchainComplete(genesisBlockHeight, genesisTxId);
-                    }, throwable -> {
+                    () -> onParseBlockchainComplete(genesisBlockHeight, genesisTxId), throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
                             startReOrgFromLastSnapshot();
                         } else {
@@ -163,8 +161,8 @@ public class BsqLiteNode extends BsqNode {
                             throwable.printStackTrace();
                         }
                     });
-        } else if (parseBlockchainComplete && wireEnvelope instanceof NewBsqBlockBroadcastMessage) {
-            NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = (NewBsqBlockBroadcastMessage) wireEnvelope;
+        } else if (parseBlockchainComplete && networkEnvelop instanceof NewBsqBlockBroadcastMessage) {
+            NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = (NewBsqBlockBroadcastMessage) networkEnvelop;
             byte[] bsqBlockBytes = newBsqBlockBroadcastMessage.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             // Be safe and reset all mutable data in case the provider would not have done it
@@ -174,9 +172,7 @@ public class BsqLiteNode extends BsqNode {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                         genesisBlockHeight,
                         genesisTxId,
-                        () -> {
-                            onNewBsqBlock(bsqBlock);
-                        }, throwable -> {
+                        () -> onNewBsqBlock(bsqBlock), throwable -> {
                             if (throwable instanceof BlockNotConnectingException) {
                                 startReOrgFromLastSnapshot();
                             } else {

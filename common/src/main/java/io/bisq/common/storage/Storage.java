@@ -31,11 +31,7 @@ import java.io.IOException;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * That class handles the storage of a particular object to disk using Java serialisation.
- * To support evolving versions of the serialised data we need to take care that we don't break the object structure.
- * Java serialisation is tolerant with added fields, but removing or changing existing fields will break the backwards compatibility.
- * Alternative frameworks for serialisation like Kyro or mapDB have shown problems with version migration, so we stuck with plain Java
- * serialisation.
+ * That class handles the storage of a particular object to disk using Protobuffer.
  * <p>
  * For every data object we write a separate file to minimize the risk of corrupted files in case of inconsistency from newer versions.
  * In case of a corrupted file we backup the old file to a separate directory, so if it holds critical data it might be helpful for recovery.
@@ -78,18 +74,6 @@ public class Storage<T extends PersistableEnvelope> {
     public Storage(@Named(STORAGE_DIR) File dir, PersistenceProtoResolver persistenceProtoResolver) {
         this.dir = dir;
         this.persistenceProtoResolver = persistenceProtoResolver;
-    }
-
-    /*
-    public Storage(@Named(DIR_KEY) File dir) {
-        this.dir = dir;
-        this.protobufferResolver = protobufferResolver;
-    }
-*/
-    public void initWithFileName(String fileName) {
-        this.fileName = fileName;
-        storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300, persistenceProtoResolver);
     }
 
     @Nullable

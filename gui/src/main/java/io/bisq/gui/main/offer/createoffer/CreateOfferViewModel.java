@@ -100,7 +100,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty tradeAmount = new SimpleStringProperty();
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty waitingForFundsText = new SimpleStringProperty("");
 
@@ -244,14 +243,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 dataModel.getAmount()));
 
 
-        btcCode.bind(dataModel.getBtcCode());
         tradeCurrencyCode.bind(dataModel.getTradeCurrencyCode());
     }
 
     private void removeBindings() {
         totalToPay.unbind();
         tradeAmount.unbind();
-        btcCode.unbind();
         tradeCurrencyCode.unbind();
         volumeDescriptionLabel.unbind();
         volumePromptLabel.unbind();
@@ -437,7 +434,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void applyMakerFee() {
         makerFee.set(getFormatterForMakerFee().formatCoin(dataModel.getMakerFee()));
-        makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
+        makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
     }
 
     private void updateMarketPriceAvailable() {
@@ -593,6 +590,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
+            //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
@@ -764,6 +762,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void displayPriceOutOfRangePopup() {
         Popup popup = new Popup<>();
+        //noinspection unchecked
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 btcFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))

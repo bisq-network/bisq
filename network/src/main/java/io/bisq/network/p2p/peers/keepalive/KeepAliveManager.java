@@ -70,11 +70,11 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof Ping) {
-            Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof Ping) {
+            Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
-                Ping ping = (Ping) wireEnvelope;
+                Ping ping = (Ping) networkEnvelop;
 
                 // We get from peer last measured rrt
                 connection.getStatistic().setRoundTripTime(ping.getLastRoundTripTime());

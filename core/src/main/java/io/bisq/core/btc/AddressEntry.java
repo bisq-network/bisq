@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -170,7 +170,7 @@ public final class AddressEntry implements PersistablePayload {
     @Nullable
     public Address getAddress() {
         if (address == null && keyPair != null)
-            address = keyPair.toAddress(WalletUtils.getParameters());
+            address = keyPair.toAddress(BisqEnvironment.getParameters());
         return address;
     }
 

@@ -51,6 +51,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("NullableProblems")
     private PrivateNotificationPayload(String message, String signatureAsBase64, byte[] sigPublicKeyBytes) {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;

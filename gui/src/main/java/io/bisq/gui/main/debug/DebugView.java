@@ -211,6 +211,7 @@ public class DebugView extends InitializableView {
     void onSelectTask1() {
         Class item = taskComboBox1.getSelectionModel().getSelectedItem();
         if (!item.getSimpleName().contains("Protocol")) {
+            //noinspection unchecked
             Task.taskToIntercept = item;
         }
     }
@@ -219,6 +220,7 @@ public class DebugView extends InitializableView {
     void onSelectTask2() {
         Class item = taskComboBox2.getSelectionModel().getSelectedItem();
         if (!item.getSimpleName().contains("Protocol")) {
+            //noinspection unchecked
             Task.taskToIntercept = item;
         }
     }

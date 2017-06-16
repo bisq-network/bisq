@@ -1,6 +1,8 @@
 package io.bisq.core.offer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -42,6 +44,13 @@ public class OfferForJson {
     public long primaryMarketVolume;
     public long primaryMarketMinVolume;
 
+    @JsonIgnore
+    transient private final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
+    @JsonIgnore
+    transient private final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
+    @JsonIgnore
+    transient private final MonetaryFormat coinFormat = MonetaryFormat.BTC;
+
 
     public OfferForJson(OfferPayload.Direction direction,
                         String currencyCode,
@@ -70,17 +79,12 @@ public class OfferForJson {
         setDisplayStrings();
     }
 
-    protected final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
-    protected final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
-    protected final MonetaryFormat coinFormat = MonetaryFormat.BTC;
-    //protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
-
     private void setDisplayStrings() {
         try {
             final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                 primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
-                currencyPair = currencyCode + "/" + "BTC";
+                currencyPair = currencyCode + "/" + Res.getBaseCurrencyCode();
 
                 // int precision = 8;
                 //decimalFormat.setMaximumFractionDigits(precision);
@@ -98,24 +102,9 @@ public class OfferForJson {
                 primaryMarketMinVolume = getMinAmountAsCoin().getValue();
                 primaryMarketVolume = getAmountAsCoin().getValue();
 
-
-                //final double value = price.value != 0 ? price.value / 100000000D : 0;
-                // priceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
-                // primaryMarketMinAmountDisplayString = altcoinFormat.noCode().format(getMinVolume()).toString();
-                // primaryMarketAmountDisplayString = altcoinFormat.noCode().format(getVolume()).toString();
-                // primaryMarketMinVolumeDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
-                // primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
-
-
-                /*primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, precision));
-                primaryMarketMinAmount = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().longValue(), precision);
-                primaryMarketAmount = (long) MathUtils.scaleUpByPowerOf10(getVolume().longValue(), precision);
-                primaryMarketMinVolume = getMinAmountAsCoin().longValue();
-                primaryMarketVolume = getAmountAsCoin().longValue();*/
-
             } else {
                 primaryMarketDirection = direction;
-                currencyPair = "BTC/" + currencyCode;
+                currencyPair = Res.getBaseCurrencyCode() + "/" + currencyCode;
 
                 priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
                 primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
@@ -128,21 +117,6 @@ public class OfferForJson {
                 primaryMarketAmount = getAmountAsCoin().getValue();
                 primaryMarketMinVolume = getMinVolume().getValue();
                 primaryMarketVolume = getVolume().getValue();
-
-           /*
-                priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
-
-                primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
-                primaryMarketAmountDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
-                primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolume().getMonetary()).toString();
-                primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolume().getMonetary()).toString();
-
-                int precision = 4;
-                primaryMarketPrice = (long) MathUtils.scaleUpByPowerOf10(price.getValue(), precision);
-                primaryMarketMinAmount = getMinAmountAsCoin().getValue();
-                primaryMarketAmount = getAmountAsCoin().getValue();
-                primaryMarketMinVolume = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().getValue(), precision);
-                primaryMarketVolume = (long) MathUtils.scaleUpByPowerOf10(getVolume().getValue(), precision);*/
             }
 
         } catch (Throwable t) {

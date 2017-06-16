@@ -32,7 +32,8 @@ public class MediatorTest {
         Mediator Mediator = getMediatorMock();
 
 
-        Mediator newVo = Mediator.fromProto(Mediator.toProtoMessage().getMediator());
+        //noinspection AccessStaticViaInstance
+        Mediator.fromProto(Mediator.toProtoMessage().getMediator());
     }
 
     public static Mediator getMediatorMock() {

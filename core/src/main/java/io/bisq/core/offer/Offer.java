@@ -69,7 +69,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Getter
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
-    @Nullable @Setter
+    @Nullable
+    @Setter
     transient private PriceFeedService priceFeedService;
 
 
@@ -447,6 +448,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         Offer offer = (Offer) o;
 
         if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
+        //noinspection SimplifiableIfStatement
         if (getState() != offer.getState()) return false;
         return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
 

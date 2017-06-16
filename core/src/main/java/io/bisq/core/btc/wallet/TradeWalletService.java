@@ -22,15 +22,15 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
+import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.exceptions.SigningException;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -111,9 +111,9 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
+    public TradeWalletService(WalletsSetup walletsSetup) {
         this.walletsSetup = walletsSetup;
-        this.params = WalletUtils.getParameters();
+        this.params = BisqEnvironment.getParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();
@@ -204,7 +204,7 @@ public class TradeWalletService {
                                                Coin reservedFundsForOffer,
                                                boolean useSavingsWallet,
                                                Coin txFee) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException,
+            TransactionVerificationException, WalletException,
             InsufficientMoneyException, AddressFormatException {
 
         log.debug("preparedBsqTx " + preparedBsqTx.toString());
@@ -275,7 +275,7 @@ public class TradeWalletService {
         WalletService.checkWalletConsistency(wallet);
         WalletService.verifyTransaction(resultTx);
 
-        WalletService.printTx("BTC wallet: Signed tx", resultTx);
+        WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
         return resultTx;
     }
 
@@ -1070,6 +1070,7 @@ public class TradeWalletService {
     }
 
     public void commitTx(Transaction tx) {
+        checkNotNull(wallet);
         wallet.commitTx(tx);
     }
 

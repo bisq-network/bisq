@@ -3,7 +3,6 @@ package io.bisq.core.btc.provider.squ;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.HttpClientProvider;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.UTXO;
@@ -12,7 +11,6 @@ import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +25,7 @@ public class BsqUtxoFeedProvider extends HttpClientProvider {
         super(httpClient, baseUrl, false);
     }
 
-    public Tuple2<Map<String, Long>, BsqUtxoFeedData> getBsqUtxo() throws IOException, HttpException {
+    public Tuple2<Map<String, Long>, BsqUtxoFeedData> getBsqUtxo() {
       /*  String json = httpClient.requestWithGET("getBsqUtxo", "User-Agent", "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
         LinkedTreeMap<String, Object> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();

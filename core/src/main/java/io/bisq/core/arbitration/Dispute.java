@@ -218,7 +218,7 @@ public final class Dispute implements NetworkPayload {
                 proto.getIsSupportTicket());
 
         dispute.disputeCommunicationMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
-                .map(DisputeCommunicationMessage::fromProto)
+                .map(DisputeCommunicationMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
         dispute.openingDate = proto.getOpeningDate();
@@ -267,6 +267,7 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setDisputePayoutTxId(String disputePayoutTxId) {
         boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;

@@ -6,5 +6,5 @@ import io.bisq.network.p2p.NodeAddress;
 
 public interface DecryptedMailboxListener {
 
-    void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress);
+    void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, @SuppressWarnings("UnusedParameters") NodeAddress senderNodeAddress);
 }

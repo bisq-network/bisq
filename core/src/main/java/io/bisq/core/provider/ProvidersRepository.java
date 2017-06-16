@@ -1,18 +1,32 @@
+/*
+ * This file is part of bisq.
+ *
+ * bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
 package io.bisq.core.provider;
 
 import com.google.inject.Inject;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.Random;
 
+@Slf4j
 public class ProvidersRepository {
-    private static final Logger log = LoggerFactory.getLogger(ProvidersRepository.class);
-
     private final String[] providerArray;
     private String baseUrl;
 
@@ -28,11 +42,12 @@ public class ProvidersRepository {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
-                //providers = "http://localhost:8080/";
+                providers = "http://localhost:8080/";
                 //providers = "http://localhost:8080/, http://146.185.175.243:8080/";
-                providers = "http://146.185.175.243:8080/";
+                // providers = "http://146.185.175.243:8080/";
             } else {
-                providers = "http://kijf4m2pqd54tbck.onion/";
+                //providers = "http://kijf4m2pqd54tbck.onion/";
+                providers = "http://51.15.47.83:8080/";
             }
         }
 

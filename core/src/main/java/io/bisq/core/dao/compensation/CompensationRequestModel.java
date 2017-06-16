@@ -30,9 +30,9 @@ import java.util.Optional;
 
 @Slf4j
 public class CompensationRequestModel {
-    private BsqChainState bsqChainState;
-    private PeriodVerification periodVerification;
-    private VotingVerification votingVerification;
+    private final BsqChainState bsqChainState;
+    private final PeriodVerification periodVerification;
+    private final VotingVerification votingVerification;
     @Getter
     private final List<CompensationRequest> list = new ArrayList<>();
 

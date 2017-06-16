@@ -10,10 +10,13 @@ import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
@@ -28,7 +31,6 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
 
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +38,7 @@ import java.security.Security;
 
 public class Statistics {
     private static final Logger log = LoggerFactory.getLogger(Statistics.class);
-    private static Environment env;
+    private static BisqEnvironment bisqEnvironment;
     private final Injector injector;
     private final StatisticsModule statisticsModule;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -45,16 +47,16 @@ public class Statistics {
 
     private final P2PService p2pService;
 
-    public static void setEnvironment(Environment env) {
-        Statistics.env = env;
+    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+        Statistics.bisqEnvironment = bisqEnvironment;
     }
 
     public Statistics() {
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
@@ -81,10 +83,16 @@ public class Statistics {
         }
         Security.addProvider(new BouncyCastleProvider());
 
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
 
-        statisticsModule = new StatisticsModule(env);
+        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+
+        CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
+
+        statisticsModule = new StatisticsModule(bisqEnvironment);
         injector = Guice.createInjector(statisticsModule);
-        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
         p2pService = injector.getInstance(P2PService.class);
         p2pService.start(new BootstrapListener() {
@@ -116,18 +124,16 @@ public class Statistics {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
-                    injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            statisticsModule.close(injector);
-                            log.debug("Graceful shutdown completed");
-                            resultHandler.handleResult();
-                        });
-                        injector.getInstance(WalletsSetup.class).shutDown();
-                        injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(BsqWalletService.class).shutDown();
+                injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
+                    injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
+                        statisticsModule.close(injector);
+                        log.debug("Graceful shutdown completed");
+                        resultHandler.handleResult();
                     });
-                });
+                    injector.getInstance(WalletsSetup.class).shutDown();
+                    injector.getInstance(BtcWalletService.class).shutDown();
+                    injector.getInstance(BsqWalletService.class).shutDown();
+                }));
                 // we wait max 5 sec.
                 UserThread.runAfter(resultHandler::handleResult, 5);
             } else {

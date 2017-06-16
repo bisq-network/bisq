@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -26,7 +27,6 @@ import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +48,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
 public class BsqChainState implements PersistableEnvelope, Serializable {
-    
+    private static final long serialVersionUID = 1;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,24 +73,41 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
     // BLOCK_HEIGHT 411779
     // 411812 has 693 recursions
-    // MAIN NET
-    private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
-    private static final int GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
+
+    // BTC MAIN NET
+    private static final String BTC_GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
+    private static final int BTC_GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
+
+    // LTC MAIN NET
+    private static final String LTC_GENESIS_TX_ID = "44074e68c1168d67871b3e9af0e65d6d7c820b03ba15445df2c4089729985fb6";
+    private static final int LTC_GENESIS_BLOCK_HEIGHT = 1220170; // 2017-06-11
+    // 1186935
+
+    //1220127
     // block 300000 2014-05-10
     // block 350000 2015-03-30
     // block 400000 2016-02-25
     // block 450000 2017-01-25
 
     // REG TEST
-    private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
-    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+
+    // LTC REG TEST
+    private static final String LTC_REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
+    private static final int LTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 105;
+
 
     // TEST NET
     // 0.5 BTC to grazcoin ms4ewGfJEv5RTnBD2moDoP5Kp1uJJwDGSX
     // 0.3 BTC to alice: myjn5JVuQLN9S4QwGzY4VrD86819Zc2uhj
     // 0.2BTC to bob: mx3xo655TAjC5r7ScuVEU8b6FMLomnKSeX
-    private static final String TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
-    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
+
+    private static final String LTC_TEST_NET_GENESIS_TX_ID = "not set";
+    private static final int LTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1;
+
 
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
@@ -97,10 +118,10 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     // Persisted data
     private final LinkedList<BsqBlock> blocks = new LinkedList<>();
-    private final Map<String, Tx> txMap = new HashMap<>();
-    private final Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
-    private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
-    private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
+    private final HashMap<String, Tx> txMap = new HashMap<>();
+    private final HashMap<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
+    private final HashSet<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
+    private final HashSet<Tuple2<Long, Integer>> votingFees = new HashSet<>();
 
     private final String genesisTxId;
     private final int genesisBlockHeight;
@@ -109,7 +130,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     // transient
     transient private final boolean dumpBlockchainData;
-    transient private final Storage<BsqChainState> snapshotBsqChainStateStorage;
+    transient private final Storage<BsqChainState> storage;
     transient private BsqChainState snapshotCandidate;
     transient private FunctionalReadWriteLock lock;
 
@@ -120,40 +141,69 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqChainState(BisqEnvironment bisqEnvironment,
-                         PersistenceProtoResolver persistenceProtoResolver,
+    public BsqChainState(PersistenceProtoResolver persistenceProtoResolver,
                          @Named(Storage.STORAGE_DIR) File storageDir,
                          @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.dumpBlockchainData = dumpBlockchainData;
 
-        snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        storage = new Storage<>(storageDir, persistenceProtoResolver);
 
-        if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
-            genesisTxId = GENESIS_TX_ID;
-            genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
-        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST) {
-            genesisTxId = REG_TEST_GENESIS_TX_ID;
-            genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
-        } else {
-            genesisTxId = TEST_NET_GENESIS_TX_ID;
-            genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
+            case BTC_MAINNET:
+                genesisTxId = BTC_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
+                break;
+            case BTC_TESTNET:
+                genesisTxId = BTC_TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
+                break;
+            case BTC_REGTEST:
+                genesisTxId = BTC_REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
+                break;
+
+            case LTC_TESTNET:
+                genesisTxId = LTC_TEST_NET_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
+                break;
+            case LTC_REGTEST:
+                genesisTxId = LTC_REG_TEST_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
+                break;
+            default:
+                // LTC_MAINNET:
+                genesisTxId = LTC_GENESIS_TX_ID;
+                genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
+                break;
         }
 
         lock = new FunctionalReadWriteLock(true);
     }
 
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            lock = new FunctionalReadWriteLock(true);
+        } catch (Throwable t) {
+            log.trace("Cannot be deserialized." + t.getMessage());
+        }
+    }
+    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO not impl yet
+    // TODO only supports serialized data atm
     @Override
     public Message toProtoMessage() {
-        return null;
+        PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder();
+        builder.setSerialized(ByteString.copyFrom(Utilities.serialize(this)));
+        return PB.PersistableEnvelope.newBuilder().setBsqChainState(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.BsqChainState bsqChainState) {
-        return null;
+    public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
+        return Utilities.deserialize(proto.getSerialized().toByteArray());
     }
 
 
@@ -163,7 +213,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     public void applySnapshot() {
         lock.write(() -> {
-            BsqChainState snapshot = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
+            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState");
             blocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
@@ -186,15 +236,11 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     public void setCreateCompensationRequestFee(long fee, int blockHeight) {
-        lock.write(() -> {
-            compensationRequestFees.add(new Tuple2<>(fee, blockHeight));
-        });
+        lock.write(() -> compensationRequestFees.add(new Tuple2<>(fee, blockHeight)));
     }
 
     public void setVotingFee(long fee, int blockHeight) {
-        lock.write(() -> {
-            votingFees.add(new Tuple2<>(fee, blockHeight));
-        });
+        lock.write(() -> votingFees.add(new Tuple2<>(fee, blockHeight)));
     }
 
 
@@ -213,7 +259,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                         chainHeadHeight = block.getHeight();
                         maybeMakeSnapshot();
                         printDetails();
-                    } else if (!blocks.isEmpty()) {
+                    } else {
                         log.warn("addBlock called with a not connecting block:\n" +
                                         "height()={}, hash()={}, head.height()={}, head.hash()={}",
                                 block.getHeight(), block.getHash(), blocks.getLast().getHeight(), blocks.getLast().getHash());
@@ -234,9 +280,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     void addTxToMap(Tx tx) {
-        lock.write(() -> {
-            txMap.put(tx.getId(), tx);
-        });
+        lock.write(() -> txMap.put(tx.getId(), tx));
     }
 
     void addUnspentTxOutput(TxOutput txOutput) {
@@ -247,15 +291,11 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     void removeUnspentTxOutput(TxOutput txOutput) {
-        lock.write(() -> {
-            unspentTxOutputsMap.remove(txOutput.getTxIdIndexTuple());
-        });
+        lock.write(() -> unspentTxOutputsMap.remove(txOutput.getTxIdIndexTuple()));
     }
 
     void setGenesisTx(Tx tx) {
-        lock.write(() -> {
-            genesisTx = tx;
-        });
+        lock.write(() -> genesisTx = tx);
     }
 
 
@@ -268,35 +308,25 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     public int getGenesisBlockHeight() {
-        return lock.read(() -> {
-            return genesisBlockHeight;
-        });
+        return lock.read(() -> genesisBlockHeight);
     }
 
     public BsqChainState getClone() {
-        return lock.read(() -> {
-            return Utilities.<BsqChainState>cloneObject(this);
-        });
+        return lock.read(() -> Utilities.<BsqChainState>cloneObject(this));
     }
 
     public boolean containsBlock(BsqBlock bsqBlock) {
-        return lock.read(() -> {
-            return blocks.contains(bsqBlock);
-        });
+        return lock.read(() -> blocks.contains(bsqBlock));
     }
 
     Optional<TxOutput> getUnspentTxOutput(TxIdIndexTuple txIdIndexTuple) {
-        return lock.read(() -> {
-            return unspentTxOutputsMap.entrySet().stream()
-                    .filter(e -> e.getKey().equals(txIdIndexTuple))
-                    .map(Map.Entry::getValue).findAny();
-        });
+        return lock.read(() -> unspentTxOutputsMap.entrySet().stream()
+                .filter(e -> e.getKey().equals(txIdIndexTuple))
+                .map(Map.Entry::getValue).findAny());
     }
 
     public boolean isTxOutputSpendable(String txId, int index) {
-        return lock.read(() -> {
-            return getSpendableTxOutput(txId, index).isPresent();
-        });
+        return lock.read(() -> getSpendableTxOutput(txId, index).isPresent());
     }
 
     public byte[] getSerializedResettedBlocksFrom(int fromBlockHeight) {
@@ -310,34 +340,24 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     public boolean hasTxBurntFee(String txId) {
-        return lock.read(() -> {
-            return getTx(txId).map(Tx::getBurntFee).filter(fee -> fee > 0).isPresent();
-        });
+        return lock.read(() -> getTx(txId).map(Tx::getBurntFee).filter(fee -> fee > 0).isPresent());
     }
 
     public Optional<TxType> getTxType(String txId) {
-        return lock.read(() -> {
-            return getTx(txId).map(Tx::getTxType);
-        });
+        return lock.read(() -> getTx(txId).map(Tx::getTxType));
     }
 
     public boolean containsTx(String txId) {
-        return lock.read(() -> {
-            return getTx(txId).isPresent();
-        });
+        return lock.read(() -> getTx(txId).isPresent());
     }
 
     public int getChainHeadHeight() {
-        return lock.read(() -> {
-            return chainHeadHeight;
-        });
+        return lock.read(() -> chainHeadHeight);
     }
 
     // Only used for Json Exporter
     public Map<String, Tx> getTxMap() {
-        return lock.read(() -> {
-            return txMap;
-        });
+        return lock.read(() -> txMap);
     }
 
 
@@ -346,16 +366,12 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
-        return lock.read(() -> {
-            return getSpendableTxOutput(new TxIdIndexTuple(txId, index));
-        });
+        return lock.read(() -> getSpendableTxOutput(new TxIdIndexTuple(txId, index)));
     }
 
     Optional<TxOutput> getSpendableTxOutput(TxIdIndexTuple txIdIndexTuple) {
-        return lock.read(() -> {
-            return getUnspentTxOutput(txIdIndexTuple)
-                    .filter(this::isTxOutputMature);
-        });
+        return lock.read(() -> getUnspentTxOutput(txIdIndexTuple)
+                .filter(this::isTxOutputMature));
     }
 
     long getCreateCompensationRequestFee(int blockHeight) {
@@ -372,9 +388,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     //TODO not impl yet
     boolean isCompensationRequestPeriodValid(int blockHeight) {
-        return lock.read(() -> {
-            return true;
-        });
+        return lock.read(() -> true);
 
     }
 
@@ -392,36 +406,28 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     //TODO not impl yet
     boolean isVotingPeriodValid(int blockHeight) {
-        return lock.read(() -> {
-            return true;
-        });
+        return lock.read(() -> true);
     }
 
     boolean existsCompensationRequestBtcAddress(String btcAddress) {
-        return lock.read(() -> {
-            return getAllTxOutputs().stream()
-                    .filter(txOutput -> txOutput.isCompensationRequestBtcOutput() &&
-                            txOutput.getAddress().equals(btcAddress))
-                    .findAny()
-                    .isPresent();
-        });
+        return lock.read(() -> getAllTxOutputs().stream()
+                .filter(txOutput -> txOutput.isCompensationRequestBtcOutput() &&
+                        txOutput.getAddress().equals(btcAddress))
+                .findAny()
+                .isPresent());
     }
 
     Set<TxOutput> findSponsoringBtcOutputsWithSameBtcAddress(String btcAddress) {
-        return lock.read(() -> {
-            return getAllTxOutputs().stream()
-                    .filter(txOutput -> txOutput.isSponsoringBtcOutput() &&
-                            txOutput.getAddress().equals(btcAddress))
-                    .collect(Collectors.toSet());
-        });
+        return lock.read(() -> getAllTxOutputs().stream()
+                .filter(txOutput -> txOutput.isSponsoringBtcOutput() &&
+                        txOutput.getAddress().equals(btcAddress))
+                .collect(Collectors.toSet()));
     }
 
     //TODO
     // for genesis we dont need it and for issuance we need more implemented first
     boolean isTxOutputMature(TxOutput spendingTxOutput) {
-        return lock.read(() -> {
-            return true;
-        });
+        return lock.read(() -> true);
     }
 
 
@@ -430,9 +436,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Optional<Tx> getTx(String txId) {
-        return lock.read(() -> {
-            return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
-        });
+        return lock.read(() -> txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty());
     }
 
     private boolean isSnapshotHeight(int height) {
@@ -449,7 +453,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
                     final BsqChainState cloned = Utilities.<BsqChainState>cloneObject(snapshotCandidate);
-                    snapshotBsqChainStateStorage.queueUpForSave(cloned);
+                    storage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!
                     log.info("Saved snapshotCandidate to Disc at height " + cloned.chainHeadHeight);
                 }
@@ -468,7 +472,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     private void printDetails() {
-        log.info("\nchainHeadHeight={}\n" +
+        log.debug("\nchainHeadHeight={}\n" +
                         "    blocks.size={}\n" +
                         "    txMap.size={}\n" +
                         "    unspentTxOutputsMap.size={}\n" +

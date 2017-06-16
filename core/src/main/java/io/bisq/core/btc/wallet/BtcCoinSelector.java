@@ -48,7 +48,7 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
         this(addresses, true);
     }
 
-    BtcCoinSelector(Address address, boolean permitForeignPendingTx) {
+    BtcCoinSelector(Address address, @SuppressWarnings("SameParameterValue") boolean permitForeignPendingTx) {
         this(Sets.newHashSet(address), permitForeignPendingTx);
     }
 
@@ -58,8 +58,8 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-            Address address = WalletUtils.getAddressFromOutput(output);
+        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+            Address address = WalletService.getAddressFromOutput(output);
             boolean containsAddress = addresses.contains(address);
             if (!containsAddress)
                 log.trace("addresses not containing address " + addresses + " / " + address);

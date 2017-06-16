@@ -18,6 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -81,10 +82,11 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
     }
 
     private void addContent() {
-        Label label = addLabel(gridPane, ++rowIndex, "For the best protection of your privacy is it recommended that you run your own Bitcoin core node.\n" +
+        //TODO not added to resource  files
+        Label label = addLabel(gridPane, ++rowIndex, "For the best protection of your privacy is it recommended that you run your own " + Res.getBaseCurrencyName() + " core node.\n" +
                 "You can run it locally (127.0.0.1) or hosted on a VPS.\n" +
                 "You can edit that settings in \"Settings/Network info\".\n\n" +
-                "If you prefer to use the public Bitcoin network your Bitcoin transactions might get de-anonymized by chain analysis companies operating full nodes to spy on Bitcoin users.\n\n" +
+                "If you prefer to use the public " + Res.getBaseCurrencyName() + " network your Bitcoin transactions might get de-anonymized by chain analysis companies operating full nodes to spy on Bitcoin users.\n\n" +
                 "To learn more about that topic please read our FAQ on bisq.io.");
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -99,14 +101,14 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         gridPane.getChildren().add(hyperlinkWithIcon);
 
         Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex,
-                "Add custom Bitcoin nodes:", 20);
+                "Add custom " + Res.getBaseCurrencyName() + " nodes:", 20);
         InputTextField input = labelInputTextFieldTuple2.second;
         input.setPromptText("Add comma separated IP addresses");
         if (!preferences.getBitcoinNodes().isEmpty())
             input.setText(preferences.getBitcoinNodes());
 
         Tuple2<Button, Button> tuple = add2Buttons(gridPane, ++rowIndex, "Save",
-                "Ignore and use public Bitcoin network nodes");
+                "Ignore and use public " + Res.getBaseCurrencyName() + " network nodes");
         Button saveButton = tuple.first;
         saveButton.setOnAction(e -> {
             preferences.setBitcoinNodes(input.getText());

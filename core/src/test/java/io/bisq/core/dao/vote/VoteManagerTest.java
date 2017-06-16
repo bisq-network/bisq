@@ -26,6 +26,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
 
+@SuppressWarnings("UnusedAssignment")
 public class VoteManagerTest {
     private static final Logger log = LoggerFactory.getLogger(VoteManagerTest.class);
 

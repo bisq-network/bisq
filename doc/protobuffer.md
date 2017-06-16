@@ -93,7 +93,64 @@ Output is in target/generated-sources which avoids the temptation of checking in
 In order to support this, we need to use .writeDelimitedTo(outputstream) and parseDelimitedFrom(inputstream).
 The writeDelimited writes a length varint before the object, allowing the parseDelimited to know the extent of the message. 
               
+## Checklist and conventions
 
+### Code style
+* Use line breaks after each param in constructor and PB methods
+* Use line breaks at PB builders for best readability
+* Use after the constructor a comment separator with the PB stuff and after the PB stuff a comment separator with API
+* Use same order of fields as in main constructor and follow that order in the PB methods to make it easier to spot missing fields
+
+### Conventions
+* Try to use value objects for data which gets serialized with PB
+* Use toProto and a static fromProto in the class which gets serialized
+* Use proto as name for the PB param in the fromProto method
+* If a constructor is used only for PB make it private and put it to the PB section, so its clear it is used only in that context
+* Use same name for classes and fields in PB definition as in the java code base
+* Use final
+* Use Lombok Annotations
+* Annotate all nullable fields with @Nullable
+* If nullable fields must not be null at time of serialisation use checkNotNull with comment inside
+* Use ProtoUtil convenience methods (e.g. stringOrNullFromProto, byteArrayOrNullFromProto, collectionToProto, enumFromProto,..)
+* Use ProtoUtil.enumFromProto for all enums
+* Enum in PB definition file needs an additional first entry with PB_ERROR in case of multiple enums in one message add postfix of enum (PB_ERROR_REASON = 0;)
+* When serializing a custom type use the toProto and fromProto methods in the class of that type.
+* Use the ProtoResolver classes for switching between different message cases. Pass the reference to the resolver if needed in fromProto
+* For abstract super classes use a getBuilder method for handling the fields in that super class (e.g. PaymentAccountPayload) 
+* Use Payload as postfix for objects which are used in Envelopes or other Payloads if it helps to distinguish between the domain object and the value object (e.g. UserPayload)
+* Separate network and persistable domains if possible
+
+### Architecture
+* Envelope is the base interface for all objects carrying PB data (messages, persisted objects)
+* Payload is used inside Envelopes or other Payloads
+* Interface structure:
+    Proto: base has  Message toProtoMessage();
+        Envelope extends Proto: Marker interface for objects carrying PB data
+            NetworkEnvelope extends Envelope: Marker interface, has getDefaultBuilder for P2PMessageVersion
+            PersistableEnvelope extends Envelope: Marker interface
+        Payload extends Proto: Marker interface for objects used inside other Payload or Envelope objects
+            NetworkPayload extends Payload: Marker interface
+            PersistablePayload extends Payload: Marker interface
+    ProtoResolver: Base for resolver (switch message cases)
+        NetworkProtoResolver extends ProtoResolver: Marker interface
+            CoreNetworkProtoResolver implements NetworkProtoResolver: Implements switches for network messages
+        PersistableProtoResolver extends ProtoResolver: Marker interface
+            CorePersistableProtoResolver implements NetworkProtoResolver: Implements switches for persistable messages
+                    
+            
+        
+### Check list
+* Treat nullable fields correctly in the toProto and fromProto methods. 
+    PB does not support null values but use default implementation for not set fields.
+    Depending on the type there is: isEmpty (string, collections) or has[Propertyname] 
+* If using @EqualsAndHashCode or @Data/@Value make sure to use callSuper=true if the class is extending another class
+* If collections are modifiable take care to wrap the result of PB to a modifiable collection. PB delivers unmodifiable collections
+* For network envelopes use NetworkEnvelope.getDefaultBuilder() which includes the P2PMessageVersion. 
+    Store the messageVersion in all NetworkEnvelope instances
+
+
+
+// TODO update, outdated...
 ## Actually transformed subtypes of Message 
 
 ```

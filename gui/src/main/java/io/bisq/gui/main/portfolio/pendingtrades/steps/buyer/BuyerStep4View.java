@@ -175,6 +175,7 @@ public class BuyerStep4View extends TradeStepView {
         try {
             Transaction feeEstimationTransaction = walletService.getFeeEstimationTransaction(fromAddresses, toAddresses, amount, AddressEntry.Context.TRADE_PAYOUT);
             Coin fee = feeEstimationTransaction.getFee();
+            //noinspection UnusedAssignment
             Coin receiverAmount = amount.subtract(fee);
             if (balance.isZero()) {
                 new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
@@ -266,6 +267,7 @@ public class BuyerStep4View extends TradeStepView {
     private void handleTradeCompleted() {
         if (!DevEnv.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";
+            //noinspection unchecked
             new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
                     .actionButtonTextWithGoTo("navigation.funds.transactions")

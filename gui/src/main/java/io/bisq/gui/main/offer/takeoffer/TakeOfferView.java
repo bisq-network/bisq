@@ -220,6 +220,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
+            //noinspection unchecked
             new Popup<>().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
@@ -321,6 +322,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
+            //noinspection unchecked
             new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -364,6 +366,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                         .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
+                            //noinspection unchecked
                             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                                     ArbitratorSelectionView.class);
                         }).show();
@@ -467,17 +470,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        buyerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        sellerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
-        amountBtcLabel.textProperty().bind(model.btcCode);
         amountTextField.textProperty().bindBidirectional(model.amount);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + Res.getBaseCurrencyCode()));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
-        amountRangeBtcLabel.textProperty().bind(model.btcCode);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
         takerFeeTextField.textProperty().bind(model.takerFee);
         takerFeeCurrencyLabel.textProperty().bind(model.takerFeeCurrencyCode);
@@ -492,9 +491,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void removeBindings() {
-        buyerSecurityDepositBtcLabel.textProperty().unbind();
-        sellerSecurityDepositBtcLabel.textProperty().unbind();
-        amountBtcLabel.textProperty().unbind();
         amountTextField.textProperty().unbindBidirectional(model.amount);
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         totalToPayTextField.textProperty().unbind();
@@ -502,7 +498,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountTextField.validationResultProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         priceAsPercentageLabel.prefWidthProperty().unbind();
-        amountRangeBtcLabel.textProperty().unbind();
         nextButton.disableProperty().unbind();
         takerFeeTextField.textProperty().unbind();
         takerFeeCurrencyLabel.textProperty().unbind();
@@ -531,6 +526,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
                             close();
+                            //noinspection unchecked
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .onClose(() -> {
@@ -589,6 +585,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                 .actionButtonTextWithGoTo("navigation.portfolio.pending")
                                 .dontShowAgainId(key)
                                 .onAction(() -> {
+                                    //noinspection unchecked
                                     UserThread.runAfter(
                                             () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
                                             , 100, TimeUnit.MILLISECONDS);
@@ -685,6 +682,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
+        //noinspection unchecked
         paymentAccountsComboBox = tuple.second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {

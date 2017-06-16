@@ -28,6 +28,8 @@ import java.util.Optional;
 
 @Data
 public class Tx implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     @Delegate
     private final TxVo txVo;
 

@@ -86,10 +86,11 @@ public class StatisticsMain extends BisqExecutable {
         new StatisticsMain().execute(args);
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
-        final BisqEnvironment environment = getBisqEnvironment(options);
-        Statistics.setEnvironment(environment);
+        final BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
+        Statistics.setEnvironment(bisqEnvironment);
 
         UserThread.execute(() -> statistics = new Statistics());
 
@@ -112,7 +113,7 @@ public class StatisticsMain extends BisqExecutable {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
+        String maxMemoryOption = bisqEnvironment.getProperty(AppOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
             try {
                 maxMemory = Integer.parseInt(maxMemoryOption);
@@ -156,11 +157,12 @@ public class StatisticsMain extends BisqExecutable {
         }
     }
 
-    private void restart(BisqEnvironment environment) {
+    private void restart(BisqEnvironment bisqEnvironment) {
         stopped = true;
         statistics.gracefulShutDown(() -> {
+            //noinspection finally
             try {
-                final String[] tokens = environment.getAppDataDir().split("_");
+                final String[] tokens = bisqEnvironment.getAppDataDir().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
                 RestartUtil.restartApplication(logPath);
             } catch (IOException e) {

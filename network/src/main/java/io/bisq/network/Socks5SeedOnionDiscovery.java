@@ -41,7 +41,7 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
      * @param proxy  proxy the socks5 proxy to connect over.
      * @param params param to be used for seed and port information.
      */
-    public Socks5SeedOnionDiscovery(Socks5Proxy proxy, NetworkParameters params) {
+    public Socks5SeedOnionDiscovery(@SuppressWarnings("UnusedParameters") Socks5Proxy proxy, NetworkParameters params) {
         // We do this because NetworkParameters does not contain any .onion
         // seeds.  Perhaps someday...
         if (params == MainNetParams.get()) {

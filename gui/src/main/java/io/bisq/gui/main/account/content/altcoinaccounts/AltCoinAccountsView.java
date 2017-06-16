@@ -116,41 +116,43 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
-        String code = selectedTradeCurrency.getCode();
-        if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
-            String name = selectedTradeCurrency.getName();
-            new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
-                    selectedTradeCurrency.getCodeAndName(),
-                    name,
-                    name))
-                    .closeButtonText(Res.get("account.altcoin.popup.wallet.confirm"))
-                    .show();
-        }
+        if (selectedTradeCurrency != null) {
+            String code = selectedTradeCurrency.getCode();
+            if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
+                String name = selectedTradeCurrency.getName();
+                new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
+                        selectedTradeCurrency.getCodeAndName(),
+                        name,
+                        name))
+                        .closeButtonText(Res.get("account.altcoin.popup.wallet.confirm"))
+                        .show();
+            }
 
-        switch (code) {
-            case "XMR":
-                new Popup<>().information(Res.get("account.altcoin.popup.xmr.msg"))
-                        .useIUnderstandButton()
-                        .show();
-                break;
-            case "ZEC":
-                new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "ZEC"))
-                        .useIUnderstandButton()
-                        .show();
-                break;
-            case "XZC":
-                new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "XZC"))
-                        .useIUnderstandButton()
-                        .show();
-                break;
-        }
+            switch (code) {
+                case "XMR":
+                    new Popup<>().information(Res.get("account.altcoin.popup.xmr.msg"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
+                case "ZEC":
+                    new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "ZEC"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
+                case "XZC":
+                    new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "XZC"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
+            }
 
-        if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
-                e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
-            model.onSaveNewAccount(paymentAccount);
-            removeNewAccountForm();
-        } else {
-            new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
+                    e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
+                model.onSaveNewAccount(paymentAccount);
+                removeNewAccountForm();
+            } else {
+                new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            }
         }
     }
 
@@ -184,6 +186,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
+        //noinspection unchecked
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {

@@ -5,7 +5,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.PriceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +29,10 @@ public class CoinmarketcapProvider {
                 .collect(Collectors.toSet());
     }
 
-    public Map<String, PriceData> request() throws IOException, HttpException {
+    public Map<String, PriceData> request() throws IOException {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         String response = httpClient.requestWithGET("v1/ticker/?limit=200", "User-Agent", "");
+        //noinspection unchecked
         List<LinkedTreeMap<String, Object>> list = new Gson().fromJson(response, ArrayList.class);
         long ts = Instant.now().getEpochSecond();
         list.stream().forEach(treeMap -> {

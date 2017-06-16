@@ -70,12 +70,16 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == openOffersTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             else if (newValue == pendingTradesTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             else if (newValue == closedTradesTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
             else if (newValue == failedTradesTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
         };
     }
@@ -93,12 +97,16 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == openOffersTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
         else if (root.getSelectionModel().getSelectedItem() == pendingTradesTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == closedTradesTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == failedTradesTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
     }
 

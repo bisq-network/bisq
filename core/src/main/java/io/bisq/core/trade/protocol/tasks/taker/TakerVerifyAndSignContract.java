@@ -106,6 +106,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             trade.setTakerContractSignature(signature);
 
             try {
+                checkNotNull(maker.getPubKeyRing(), "maker.getPubKeyRing() must nto be null");
                 Sig.verify(maker.getPubKeyRing().getSignaturePubKey(),
                         contractAsJson,
                         maker.getContractSignature());

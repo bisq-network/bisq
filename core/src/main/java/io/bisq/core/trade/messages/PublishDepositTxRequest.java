@@ -18,7 +18,8 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -60,7 +61,38 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                    List<RawTransactionInput> makerInputs,
                                    NodeAddress senderNodeAddress,
                                    String uid) {
-        super(tradeId);
+        this(tradeId,
+                makerPaymentAccountPayload,
+                makerAccountId,
+                makerMultiSigPubKey,
+                makerContractAsJson,
+                makerContractSignature,
+                makerPayoutAddressString,
+                preparedDepositTx,
+                makerInputs,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PublishDepositTxRequest(String tradeId,
+                                    PaymentAccountPayload makerPaymentAccountPayload,
+                                    String makerAccountId,
+                                    byte[] makerMultiSigPubKey,
+                                    String makerContractAsJson,
+                                    String makerContractSignature,
+                                    String makerPayoutAddressString,
+                                    byte[] preparedDepositTx,
+                                    List<RawTransactionInput> makerInputs,
+                                    NodeAddress senderNodeAddress,
+                                    String uid,
+                                    int messageVersion) {
+        super(messageVersion, tradeId);
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.makerAccountId = makerAccountId;
         this.makerMultiSigPubKey = makerMultiSigPubKey;
@@ -75,7 +107,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setPublishDepositTxRequest(PB.PublishDepositTxRequest.newBuilder()
                         .setTradeId(tradeId)
                         .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
@@ -91,7 +123,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .build();
     }
 
-    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver) {
+    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
@@ -106,6 +138,24 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 proto.getPreparedDepositTx().toByteArray(),
                 makerInputs,
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
+    }
+
+
+    @Override
+    public String toString() {
+        return "PublishDepositTxRequest{" +
+                "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
+                ",\n     makerAccountId='" + makerAccountId + '\'' +
+                ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
+                ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
+                ",\n     makerContractSignature='" + makerContractSignature + '\'' +
+                ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
+                ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
+                ",\n     makerInputs=" + makerInputs +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                "\n} " + super.toString();
     }
 }

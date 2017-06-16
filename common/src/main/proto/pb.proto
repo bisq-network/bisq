@@ -42,20 +42,19 @@ message NetworkEnvelope {
         PublishDepositTxRequest publish_deposit_tx_request = 18;
         DepositTxPublishedMessage deposit_tx_published_message = 19;
         FiatTransferStartedMessage fiat_transfer_started_message = 20;
-        FinalizePayoutTxRequest finalize_payout_tx_request = 21;
-        PayoutTxPublishedMessage payout_tx_published_message = 22;
+        PayoutTxPublishedMessage payout_tx_published_message = 21;
 
-        OpenNewDisputeMessage open_new_dispute_message = 23;
-        PeerOpenedDisputeMessage peer_opened_dispute_message = 24;
-        DisputeCommunicationMessage dispute_communication_message = 25;
-        DisputeResultMessage dispute_result_message = 26;
-        PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 27;
+        OpenNewDisputeMessage open_new_dispute_message = 22;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
+        DisputeCommunicationMessage dispute_communication_message = 24;
+        DisputeResultMessage dispute_result_message = 25;
+        PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 26;
 
-        PrivateNotificationMessage private_notification_message = 28;
+        PrivateNotificationMessage private_notification_message = 27;
 
-        GetBsqBlocksRequest get_bsq_blocks_request = 29;
-        GetBsqBlocksResponse get_bsq_blocks_response = 30;
-        NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 31;
+        GetBsqBlocksRequest get_bsq_blocks_request = 28;
+        GetBsqBlocksResponse get_bsq_blocks_response = 29;
+        NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 30;
     }
 }
 
@@ -454,7 +453,7 @@ message TradeStatistics {
     int64 offer_min_amount = 12;
     string offer_id = 13;
     string deposit_tx_id = 14;
-    PubKeyRing pub_key_ring = 15;
+    bytes signature_pub_key_bytes = 15;
     map<string, string> extra_data = 16;
 }
 
@@ -1000,6 +999,8 @@ message Trade {
     bytes arbitrator_btc_pub_key = 23;
     string taker_payment_account_id = 24;
     string error_message = 25;
+    PubKeyRing arbitrator_pub_key_ring = 26;
+    PubKeyRing mediator_pub_key_ring = 27;
 }
 
 message BuyerAsMakerTrade {
@@ -1096,10 +1097,9 @@ message PreferencesPayload {
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
     int64 buyer_security_deposit_as_long = 30;
-    string btc_denomination = 31;
-    bool use_animations = 32;
-    PaymentAccount selectedPayment_account_for_createOffer = 33;
-    bool pay_fee_in_Btc = 34;
+    bool use_animations = 31;
+    PaymentAccount selectedPayment_account_for_createOffer = 32;
+    bool pay_fee_in_Btc = 33;
 }
 
 
@@ -1128,7 +1128,7 @@ message UserPayload {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 message BsqChainState {
-    // TODO not impl yet
+    bytes serialized = 1;
 }
 
 message VoteItem {

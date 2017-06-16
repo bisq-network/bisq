@@ -87,7 +87,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private OfferPayload.Direction direction;
 
-    private final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
 
     // If id is empty string we ignore filter (display all methods)
@@ -152,7 +151,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         applyPriceSortTypeProperty(code);
 
         fillAllTradeCurrencies();
-        btcCode.bind(preferences.getBtcDenominationProperty());
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         applyFilterPredicate();
@@ -161,7 +159,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Override
     protected void deactivate() {
-        btcCode.unbind();
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
@@ -190,6 +187,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             boolean showAllEntry = isShowAllEntry(code);
             showAllTradeCurrenciesProperty.set(showAllEntry);
             if (isEditEntry(code))
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (!showAllEntry) {
                 this.selectedTradeCurrency = tradeCurrency;
@@ -405,7 +403,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean hasPaymentAccountForCurrency() {
-        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) ||
+        return (showAllTradeCurrenciesProperty.get() &&
+                user.getPaymentAccounts() != null &&
+                !user.getPaymentAccounts().isEmpty()) ||
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 

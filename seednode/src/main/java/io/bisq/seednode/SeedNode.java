@@ -10,12 +10,12 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.AppSetup;
-import io.bisq.core.app.AppSetupWithP2P;
-import io.bisq.core.app.AppSetupWithP2PAndDAO;
+import io.bisq.core.app.*;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.core.env.Environment;
 
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -34,10 +33,10 @@ import java.security.Security;
 
 @Slf4j
 public class SeedNode {
-    private static Environment env;
+    private static BisqEnvironment bisqEnvironment;
 
-    public static void setEnvironment(Environment env) {
-        SeedNode.env = env;
+    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+        SeedNode.bisqEnvironment = bisqEnvironment;
     }
 
     private final Injector injector;
@@ -45,11 +44,11 @@ public class SeedNode {
     private final AppSetup appSetup;
 
     public SeedNode() {
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
@@ -76,8 +75,14 @@ public class SeedNode {
         }
         Security.addProvider(new BouncyCastleProvider());
 
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
 
-        seedNodeModule = new SeedNodeModule(env);
+        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+
+        CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
+
+        seedNodeModule = new SeedNodeModule(bisqEnvironment);
         injector = Guice.createInjector(seedNodeModule);
 
         Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
@@ -97,18 +102,16 @@ public class SeedNode {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
-                    injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            seedNodeModule.close(injector);
-                            log.debug("Graceful shutdown completed");
-                            resultHandler.handleResult();
-                        });
-                        injector.getInstance(WalletsSetup.class).shutDown();
-                        injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(BsqWalletService.class).shutDown();
+                injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
+                    injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
+                        seedNodeModule.close(injector);
+                        log.debug("Graceful shutdown completed");
+                        resultHandler.handleResult();
                     });
-                });
+                    injector.getInstance(WalletsSetup.class).shutDown();
+                    injector.getInstance(BtcWalletService.class).shutDown();
+                    injector.getInstance(BsqWalletService.class).shutDown();
+                }));
                 // we wait max 5 sec.
                 UserThread.runAfter(resultHandler::handleResult, 5);
             } else {

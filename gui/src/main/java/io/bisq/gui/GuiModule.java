@@ -41,8 +41,8 @@ public class GuiModule extends AppModule {
 
     private final Stage primaryStage;
 
-    public GuiModule(Environment env, Stage primaryStage) {
-        super(env);
+    public GuiModule(Environment environment, Stage primaryStage) {
+        super(environment);
         this.primaryStage = primaryStage;
     }
 
@@ -71,6 +71,6 @@ public class GuiModule extends AppModule {
 
         bind(Stage.class).toInstance(primaryStage);
 
-        bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
     }
 }

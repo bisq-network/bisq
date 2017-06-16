@@ -22,7 +22,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -172,37 +171,31 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                 (txSize / 1000d)))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
-                            try {
-                                bsqWalletService.commitTx(txWithBtcFee);
-                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                // if it gets committed 2 times
-                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                    @Override
-                                    public void onSuccess(@Nullable Transaction transaction) {
-                                        checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
-                                        compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
-                                        compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
-                                        compensationRequestDisplay.clearForm();
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    }
+                            bsqWalletService.commitTx(txWithBtcFee);
+                            // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                            // if it gets committed 2 times
+                            btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                            bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                @Override
+                                public void onSuccess(@Nullable Transaction transaction) {
+                                    checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
+                                    compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
+                                    compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
+                                    compensationRequestDisplay.clearForm();
+                                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                }
 
-                                    @Override
-                                    public void onFailure(@NotNull Throwable t) {
-                                        log.error(t.toString());
-                                        new Popup<>().warning(t.toString()).show();
-                                    }
-                                });
-                            } catch (WalletException | TransactionVerificationException e) {
-                                log.error(e.toString());
-                                e.printStackTrace();
-                                new Popup<>().warning(e.toString());
-                            }
+                                @Override
+                                public void onFailure(@NotNull Throwable t) {
+                                    log.error(t.toString());
+                                    new Popup<>().warning(t.toString()).show();
+                                }
+                            });
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
-            } catch (InsufficientFundsException | IOException |
-                    TransactionVerificationException | WalletException | InsufficientMoneyException | ChangeBelowDustException e) {
+            } catch (IOException | TransactionVerificationException | WalletException |
+                    InsufficientMoneyException | ChangeBelowDustException e) {
                 log.error(e.toString());
                 e.printStackTrace();
                 new Popup<>().warning(e.toString()).show();

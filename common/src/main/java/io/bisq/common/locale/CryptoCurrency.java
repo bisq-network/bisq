@@ -19,8 +19,10 @@ package io.bisq.common.locale;
 
 import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+@EqualsAndHashCode(callSuper = true)
 public final class CryptoCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";

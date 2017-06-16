@@ -249,7 +249,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void showRestoreScreen() {
-        Label headLine2Label = new Label(Res.get(Res.get("seed.restore.title")));
+        Label headLine2Label = new Label(Res.get("seed.restore.title"));
         headLine2Label.setId("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);
@@ -360,14 +360,15 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         walletsManager.restoreSeedWords(
                 seed,
                 () -> UserThread.execute(() -> {
-                    log.debug("Wallet restored with seed words");
+                    log.info("Wallet restored with seed words");
                     new Popup<>().feedback(Res.get("seed.restore.success"))
-                            .useShutDownButton();
+                            .useShutDownButton()
+                            .show();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
-                            throwable.getMessage())))
+                    new Popup<>().error(Res.get("seed.restore.error",
+                            Res.get("shared.errorMessageInline", throwable.getMessage())))
                             .show();
                 }));
     }

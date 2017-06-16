@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.locale.Res;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -106,9 +107,9 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return "BTC wallet:\n" +
+        return Res.getBaseCurrencyCode() + " Wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
-                "bisq BTC address entry list:\n" +
+                "Bisq " + Res.getBaseCurrencyCode() + "address entry list:\n" +
                 sb.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
@@ -126,7 +127,7 @@ public class BtcWalletService extends WalletService {
 
 
     public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, boolean isSendTx) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ receivers output
@@ -143,7 +144,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean useCustomTxFee, @Nullable byte[] opReturnData) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
@@ -222,7 +223,7 @@ public class BtcWalletService extends WalletService {
             // We might have the rare case that both inputs matched the required fees, so both did not require
             // a change output.
             // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
-            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
+            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Restrictions.getMinNonDustOutput() : Coin.ZERO;
 
             // add OP_RETURN output
             if (opReturnData != null)
@@ -279,7 +280,7 @@ public class BtcWalletService extends WalletService {
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
+    public Optional<AddressEntry> getAddressEntry(String offerId, @SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
@@ -668,7 +669,7 @@ public class BtcWalletService extends WalletService {
                             Coin receiverAmount,
                             Coin fee,
                             @Nullable KeyParameter aesKey,
-                            AddressEntry.Context context,
+                            @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);

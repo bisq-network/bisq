@@ -31,7 +31,7 @@ import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
@@ -86,7 +86,9 @@ public class GUIUtil {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
+        //noinspection UnusedAssignment
         String key = "miningFeeInfo";
+        //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
@@ -358,6 +360,7 @@ public class GUIUtil {
             }
         }
 
+        //noinspection unchecked
         return parent != null ? (T) parent : null;
     }
 
@@ -388,7 +391,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(WalletUtils.getParameters(),
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
                         address), amount, label, null) :
                 "";
     }

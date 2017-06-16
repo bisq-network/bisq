@@ -26,6 +26,8 @@ import java.io.Serializable;
 
 @Data
 public class TxOutput implements PersistablePayload, Serializable {
+    private static final long serialVersionUID = 1;
+
     @Delegate
     private final TxOutputVo txOutputVo;
 

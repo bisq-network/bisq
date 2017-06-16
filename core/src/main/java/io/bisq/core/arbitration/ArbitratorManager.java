@@ -61,6 +61,7 @@ public class ArbitratorManager {
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
+    @SuppressWarnings("ConstantConditions")
     private static final List<String> publicKeys = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
             new ArrayList<>(Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY)) :
             new ArrayList<>(Arrays.asList(
@@ -121,8 +122,12 @@ public class ArbitratorManager {
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator)
+                if (data.getStoragePayload() instanceof Arbitrator) {
                     updateArbitratorMap();
+                    final Arbitrator arbitrator = (Arbitrator) data.getStoragePayload();
+                    user.removeAcceptedArbitrator(arbitrator);
+                    user.removeAcceptedMediator(getMediator(arbitrator));
+                }
             }
         });
     }
@@ -172,7 +177,7 @@ public class ArbitratorManager {
 
         arbitratorsObservableMap.putAll(filtered);
         arbitratorsObservableMap.values().stream()
-                .filter(arbitrator -> persistedAcceptedArbitrators.contains(arbitrator))
+                .filter(persistedAcceptedArbitrators::contains)
                 .forEach(a -> {
                     user.addAcceptedArbitrator(a);
                     user.addAcceptedMediator(getMediator(a)

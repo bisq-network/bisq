@@ -7,7 +7,7 @@
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
     <version>0.5.0.0</version>
-    <description>bisq - The decentralized bitcoin exchange</description>
+    <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
     <organization>
@@ -24,13 +24,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bisq/bisq/issues</url>
+        <url>https://github.com/bitsquare/bitsquare/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bisq/bisq</connection>
-        <developerConnection>scm:git:https://github.com/bisq/bisq</developerConnection>
-        <url>scm:git:https://github.com/bisq/bisq</url>
+        <connection>scm:git:https://github.com/bitsquare/bitsquare</connection>
+        <developerConnection>scm:git:https://github.com/bitsquare/bitsquare</developerConnection>
+        <url>scm:git:https://github.com/bitsquare/bitsquare</url>
     </scm>
 
     <properties>
@@ -98,9 +98,9 @@
            See doc/build.md for further info
        -->
         <dependency>
-            <groupId>org.bitcoinj</groupId>
-            <artifactId>bitcoinj-core</artifactId>
-            <version>0.14.4.1</version>
+            <groupId>org.libdohj</groupId>
+            <artifactId>libdohj-core</artifactId>
+            <version>0.14.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>

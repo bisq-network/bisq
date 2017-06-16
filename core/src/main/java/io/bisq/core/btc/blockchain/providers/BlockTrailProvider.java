@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.bisq.common.app.Log;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,7 @@ public class BlockTrailProvider extends BlockchainTxProvider {
     }
 
     @Override
-    public Coin getFee(String transactionId) throws IOException, HttpException {
+    public Coin getFee(String transactionId) throws IOException {
         Log.traceCall("transactionId=" + transactionId);
         try {
             JsonObject asJsonObject = new JsonParser()

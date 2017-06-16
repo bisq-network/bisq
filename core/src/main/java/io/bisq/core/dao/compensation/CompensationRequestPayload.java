@@ -188,7 +188,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(30);
     }
-    
+
     public Date getStartDate() {
         return new Date(startDate);
     }

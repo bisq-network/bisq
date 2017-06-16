@@ -5,11 +5,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.ComboBox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SearchComboBox<T> extends ComboBox<T> {
-    private static final Logger log = LoggerFactory.getLogger(SearchComboBox.class);
+    @SuppressWarnings("CanBeFinal")
     private FilteredList<T> filteredList;
 
     public SearchComboBox() {

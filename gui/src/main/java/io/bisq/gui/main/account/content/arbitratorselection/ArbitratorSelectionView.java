@@ -85,6 +85,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
 
         tableView.setItems(model.arbitratorListItems);
+        // TODO should scale with stage resize
+        tableView.setPrefHeight(200);
+        
         autoSelectAllMatchingCheckBox.setSelected(model.getAutoSelectArbitrators());
     }
 
@@ -132,6 +135,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
+        //noinspection unchecked
         languagesListView = tuple.second;
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
         languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
@@ -165,6 +169,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             }
         });
 
+        //noinspection unchecked
         languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
@@ -315,6 +320,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     }
                 });
 
+        //noinspection unchecked
         tableView.getColumns().addAll(dateColumn, nameColumn, languagesColumn, selectionColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }

@@ -26,6 +26,4 @@
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="bsqWalletTab" closable="false"/>
-    <Tab fx:id="compensationTab" closable="false"/>
-    <Tab fx:id="votingTab" closable="false"/>
 </TabPane>

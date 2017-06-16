@@ -18,7 +18,6 @@
 package io.bisq.provider.price;
 
 import io.bisq.common.util.Utilities;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.providers.BtcAverageProvider;
 import io.bisq.provider.price.providers.CoinmarketcapProvider;
 import io.bisq.provider.price.providers.PoloniexProvider;
@@ -85,7 +84,7 @@ public class PriceRequestService {
                 } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -100,7 +99,7 @@ public class PriceRequestService {
                 } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -112,7 +111,7 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestPoloniexPrices();
-                } catch (IOException | HttpException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -124,26 +123,21 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestCoinmarketcapPrices();
-                } catch (IOException | HttpException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
             }
         }, INTERVAL_COIN_MARKET_CAP_MS, INTERVAL_COIN_MARKET_CAP_MS);
 
-        try {
-            requestBtcAverageLocalPrices();
-            requestBtcAverageGlobalPrices();
-            requestPoloniexPrices();
-            requestCoinmarketcapPrices();
-        } catch (HttpException e) {
-            log.warn(e.toString());
-            e.printStackTrace();
-        }
+        requestBtcAverageLocalPrices();
+        requestBtcAverageGlobalPrices();
+        requestPoloniexPrices();
+        requestCoinmarketcapPrices();
     }
 
 
-    private void requestCoinmarketcapPrices() throws IOException, HttpException {
+    private void requestCoinmarketcapPrices() throws IOException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = coinmarketcapProvider.request();
         log.info("requestCoinmarketcapPrices took {} ms.", (System.currentTimeMillis() - ts));
@@ -163,7 +157,7 @@ public class PriceRequestService {
     }
 
 
-    private void requestPoloniexPrices() throws IOException, HttpException {
+    private void requestPoloniexPrices() throws IOException {
         long ts = System.currentTimeMillis();
         poloniexMap = poloniexProvider.request();
         log.info("requestPoloniexPrices took {} ms.", (System.currentTimeMillis() - ts));
@@ -177,7 +171,7 @@ public class PriceRequestService {
         writeToJson();
     }
 
-    private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+    private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         long ts = System.currentTimeMillis();
         btcAverageLocalMap = btcAverageProvider.getLocal();
 
@@ -191,7 +185,7 @@ public class PriceRequestService {
         writeToJson();
     }
 
-    private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+    private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
 

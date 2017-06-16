@@ -26,8 +26,6 @@ import io.bisq.core.btc.wallet.*;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.network.http.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
@@ -35,28 +33,26 @@ import java.io.File;
 import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(BitcoinModule.class);
-
-    public BitcoinModule(Environment env) {
-        super(env);
+    public BitcoinModule(Environment environment) {
+        super(environment);
     }
 
     @Override
     protected void configure() {
-        bind(RegTestHost.class).toInstance(env.getProperty(BtcOptionKeys.REG_TEST_HOST, RegTestHost.class, RegTestHost.DEFAULT));
+        bind(RegTestHost.class).toInstance(environment.getProperty(BtcOptionKeys.REG_TEST_HOST, RegTestHost.class, RegTestHost.DEFAULT));
 
-        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
-        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
+        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(environment.getRequiredProperty(UserAgent.NAME_KEY));
+        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(environment.getRequiredProperty(UserAgent.VERSION_KEY));
         bind(UserAgent.class).in(Singleton.class);
 
-        File walletDir = new File(env.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
+        File walletDir = new File(environment.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
         bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
-        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_NODES));
-        bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
-        String socks5DiscoverMode = env.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
+        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
+        bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
+        String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
         bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
-        bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(env.getRequiredProperty(AppOptionKeys.PROVIDERS));
+        bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(environment.getRequiredProperty(AppOptionKeys.PROVIDERS));
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletsSetup.class).in(Singleton.class);
@@ -64,7 +60,7 @@ public class BitcoinModule extends AppModule {
         bind(BsqWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
         bind(BsqCoinSelector.class).in(Singleton.class);
-        
+
         bind(HttpClient.class).in(Singleton.class);
         bind(BsqUtxoFeedService.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);

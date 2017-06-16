@@ -17,8 +17,8 @@
 
 package io.bisq.core.btc;
 
+import io.bisq.core.app.BisqEnvironment;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 public class Restrictions {
 
@@ -33,11 +33,19 @@ public class Restrictions {
     // To make it editable would just increase complexity.
     public static final Coin SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.01");
 
+    public static Coin getMinNonDustOutput() {
+        if (minNonDustOutput == null)
+            minNonDustOutput = BisqEnvironment.getBaseCurrencyNetwork().getParameters().getMinNonDustOutput();
+        return minNonDustOutput;
+    }
+
+    private static Coin minNonDustOutput;
+
     public static boolean isAboveDust(Coin amount, Coin txFee) {
-        return amount != null && amount.compareTo(txFee.add(Transaction.MIN_NONDUST_OUTPUT)) >= 0;
+        return amount != null && amount.compareTo(txFee.add(getMinNonDustOutput())) >= 0;
     }
 
     public static boolean isAboveDust(Coin amount) {
-        return amount != null && amount.compareTo(Transaction.MIN_NONDUST_OUTPUT) >= 0;
+        return amount != null && amount.compareTo(getMinNonDustOutput()) >= 0;
     }
 }

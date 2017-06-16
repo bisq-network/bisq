@@ -72,7 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
-    private BsqWalletService bsqWalletService;
+    private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
@@ -92,7 +92,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private TradeCurrency tradeCurrency;
 
     private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    private final StringProperty btcCode = new SimpleStringProperty();
 
     private final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
     private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
@@ -181,16 +180,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         };
 
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
-            updateBalance();
-        };
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateBalance();
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
     }
 
     @Override
     protected void activate() {
-        addBindings();
         addListeners();
 
         if (isTabSelected)
@@ -201,16 +197,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        removeBindings();
         removeListeners();
-    }
-
-    private void addBindings() {
-        btcCode.bind(preferences.getBtcDenominationProperty());
-    }
-
-    private void removeBindings() {
-        btcCode.unbind();
     }
 
     private void addListeners() {
@@ -239,10 +226,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         PaymentAccount account;
         PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
-        if (lastSelectedPaymentAccount != null && user.getPaymentAccounts().contains(lastSelectedPaymentAccount))
+        if (lastSelectedPaymentAccount != null &&
+                user.getPaymentAccounts() != null &&
+                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
-        else
+        } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+        }
 
         if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
@@ -298,6 +288,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
         final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
         long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
@@ -305,8 +296,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // TODO use same precision for both in next release
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
-        String baseCurrencyCode = isCryptoCurrency ? currencyCode : "BTC";
-        String counterCurrencyCode = isCryptoCurrency ? "BTC" : currencyCode;
+        String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
+        String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
 
         double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
@@ -656,9 +647,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                .filter(this::isNotUSBankAccount)
-                .collect(Collectors.toSet()));
+        if (user.getPaymentAccounts() != null) {
+            paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                    .filter(this::isNotUSBankAccount)
+                    .collect(Collectors.toSet()));
+        }
     }
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
@@ -745,10 +738,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     ReadOnlyStringProperty getTradeCurrencyCode() {
         return tradeCurrencyCode;
-    }
-
-    ReadOnlyStringProperty getBtcCode() {
-        return btcCode;
     }
 
     ReadOnlyBooleanProperty getIsBtcWalletFunded() {

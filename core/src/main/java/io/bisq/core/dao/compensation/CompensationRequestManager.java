@@ -20,7 +20,9 @@ package io.bisq.core.dao.compensation;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.proto.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
@@ -39,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class CompensationRequestManager {
+public class CompensationRequestManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
@@ -80,37 +82,43 @@ public class CompensationRequestManager {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
-        if (persisted != null)
-            model.setPersistedCompensationRequest(persisted.getList());
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+                @Override
+                public void onAdded(ProtectedStorageEntry data) {
+                    final StoragePayload storagePayload = data.getStoragePayload();
+                    if (storagePayload instanceof CompensationRequestPayload)
+                        addToList((CompensationRequestPayload) storagePayload, true);
+                }
 
+                @Override
+                public void onRemoved(ProtectedStorageEntry data) {
+                    // TODO
+                }
+            });
 
-        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
+            // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+            p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+                final StoragePayload storagePayload = e.getStoragePayload();
                 if (storagePayload instanceof CompensationRequestPayload)
-                    addToList((CompensationRequestPayload) storagePayload, true);
-            }
+                    addToList((CompensationRequestPayload) storagePayload, false);
+            });
+        }
+    }
 
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                // TODO
-            }
-        });
-
-        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
-        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
-            final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof CompensationRequestPayload)
-                addToList((CompensationRequestPayload) storagePayload, false);
-        });
+    @Override
+    public void readPersisted() {
+        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+            if (persisted != null)
+                model.setPersistedCompensationRequest(persisted.getList());
+        }
     }
 
     public void onAllServicesInitialized() {
-        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
+        /*if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
 
-        }
+        }*/
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {

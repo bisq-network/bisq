@@ -53,7 +53,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Direction {
-        BUY, SELL;
+        BUY,
+        SELL;
 
         public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
             return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
@@ -93,7 +94,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final String paymentMethodId;
     private final String makerPaymentAccountId;
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private String offerFeePaymentTxId;
     @Nullable
     private final String countryCode;
@@ -216,7 +218,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.extraDataMap = extraDataMap;
         this.protocolVersion = protocolVersion;
     }
-//38
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

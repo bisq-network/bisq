@@ -30,6 +30,7 @@ public final class ViewPath extends ArrayList<Class<? extends View>> {
         super(c);
     }
 
+    @SafeVarargs
     public static ViewPath to(Class<? extends View>... elements) {
         ViewPath path = new ViewPath();
         List<Class<? extends View>> list = Arrays.asList(elements);

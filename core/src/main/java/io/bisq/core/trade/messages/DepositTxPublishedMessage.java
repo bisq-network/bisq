@@ -18,7 +18,8 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
@@ -36,15 +37,32 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
                                      byte[] depositTx,
                                      NodeAddress senderNodeAddress,
                                      String uid) {
-        super(tradeId);
+        this(tradeId,
+                depositTx,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private DepositTxPublishedMessage(String tradeId,
+                                      byte[] depositTx,
+                                      NodeAddress senderNodeAddress,
+                                      String uid,
+                                      int messageVersion) {
+        super(messageVersion, tradeId);
         this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
     }
 
+
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setDepositTx(ByteString.copyFrom(depositTx))
@@ -53,10 +71,21 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
                 .build();
     }
 
-    public static DepositTxPublishedMessage fromProto(PB.DepositTxPublishedMessage proto) {
+    public static DepositTxPublishedMessage fromProto(PB.DepositTxPublishedMessage proto, int messageVersion) {
         return new DepositTxPublishedMessage(proto.getTradeId(),
                 proto.getDepositTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
+    }
+
+
+    @Override
+    public String toString() {
+        return "DepositTxPublishedMessage{" +
+                "\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                "\n} " + super.toString();
     }
 }

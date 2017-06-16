@@ -310,6 +310,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setPrefHeight(198);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
+        //noinspection unchecked
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
 
@@ -324,7 +325,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel(Res.get("shared.volumeWithCur", "BTC"));
+        volumeAxisY.setLabel(Res.get("shared.volumeWithCur", Res.getBaseCurrencyCode()));
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -348,6 +349,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
+        //noinspection unchecked
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
         volumeChart.setMinHeight(148);
         volumeChart.setPrefHeight(148);
@@ -364,6 +366,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().setAll(model.priceItems);
         priceChart.getData().clear();
+        //noinspection unchecked
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
     }
 
@@ -537,7 +540,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(priceColumn);
 
         // amount
-        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", "BTC"));
+        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,

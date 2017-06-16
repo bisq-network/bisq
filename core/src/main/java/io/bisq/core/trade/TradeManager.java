@@ -136,12 +136,12 @@ public class TradeManager implements PersistedDataHost {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peerNodeAddress) {
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
+                NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
 
                 // Handler for incoming initial network_messages from taker
-                if (wireEnvelope instanceof PayDepositRequest) {
-                    log.trace("Received PayDepositRequest: " + wireEnvelope);
-                    handleInitialTakeOfferRequest((PayDepositRequest) wireEnvelope, peerNodeAddress);
+                if (networkEnvelop instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + networkEnvelop);
+                    handleInitialTakeOfferRequest((PayDepositRequest) networkEnvelop, peerNodeAddress);
                 }
             }
         });
@@ -152,10 +152,10 @@ public class TradeManager implements PersistedDataHost {
             public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
                 log.debug("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-                if (wireEnvelope instanceof TradeMessage) {
-                    log.trace("Received TradeMessage: " + wireEnvelope);
-                    String tradeId = ((TradeMessage) wireEnvelope).getTradeId();
+                NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+                if (networkEnvelop instanceof TradeMessage) {
+                    log.trace("Received TradeMessage: " + networkEnvelop);
+                    String tradeId = ((TradeMessage) networkEnvelop).getTradeId();
                     Optional<Trade> tradeOptional = tradableList.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
@@ -219,11 +219,9 @@ public class TradeManager implements PersistedDataHost {
                 }
         );
 
-        for (Trade trade : addTradeToFailedTradesList)
-            addTradeToFailedTrades(trade);
+        addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
 
-        for (Trade trade : removePreparedTradeList)
-            removePreparedTrade(trade);
+        removePreparedTradeList.forEach(this::removePreparedTrade);
 
         tradesForStatistics.addAll(closedTradableManager.getClosedTrades().stream()
                 .filter(tradable -> tradable instanceof Trade).map(tradable -> (Trade) tradable)
@@ -244,7 +242,7 @@ public class TradeManager implements PersistedDataHost {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    keyRing.getPubKeyRing());
+                    keyRing.getPubKeyRing().getSignaturePubKeyBytes());
             tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days

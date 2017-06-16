@@ -188,9 +188,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof GetDataRequest) {
-            Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof GetDataRequest) {
+            Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -218,7 +218,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             });
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetDataRequest) wireEnvelope, connection);
+                    getDataRequestHandler.handle((GetDataRequest) networkEnvelop, connection);
                 } else {
                     log.warn("We have already a GetDataRequestHandler for that connection started. " +
                             "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
@@ -364,7 +364,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 .collect(Collectors.toList())
                 .stream()
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
-                .map(e -> e.getNodeAddress())
+                .map(Peer::getNodeAddress)
                 .collect(Collectors.toList());
     }
 

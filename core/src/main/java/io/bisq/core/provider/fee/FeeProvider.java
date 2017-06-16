@@ -1,3 +1,19 @@
+/*
+ * This file is part of bisq.
+ *
+ * bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
 package io.bisq.core.provider.fee;
 
 import com.google.gson.Gson;
@@ -6,7 +22,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.HttpClientProvider;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,15 +37,30 @@ public class FeeProvider extends HttpClientProvider {
         super(httpClient, baseUrl, false);
     }
 
-    public Tuple2<Map<String, Long>, FeeData> getFees() throws IOException, HttpException {
+    public Tuple2<Map<String, Long>, Map<String, Long>> getFees() throws IOException {
         String json = httpClient.requestWithGET("getFees", "User-Agent", "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
+        //noinspection unchecked
         LinkedTreeMap<String, Object> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("bitcoinFeesTs", ((Double) linkedTreeMap.get("bitcoinFeesTs")).longValue());
 
-        LinkedTreeMap<String, Double> dataMap = (LinkedTreeMap<String, Double>) linkedTreeMap.get("data");
-        FeeData feeData = new FeeData(dataMap.get("txFee").longValue());
-        return new Tuple2<>(tsMap, feeData);
+        Map<String, Long> map = new HashMap<>();
+
+        try {
+            //noinspection unchecked
+            LinkedTreeMap<String, Double> dataMap = (LinkedTreeMap<String, Double>) linkedTreeMap.get("dataMap");
+            Long btcTxFee = dataMap.get("btcTxFee").longValue();
+            Long ltcTxFee = dataMap.get("ltcTxFee").longValue();
+            Long dogeTxFee = dataMap.get("dogeTxFee").longValue();
+
+            map.put("BTC", btcTxFee);
+            map.put("LTC", ltcTxFee);
+            map.put("DOGE", dogeTxFee);
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+        }
+        return new Tuple2<>(tsMap, map);
     }
 
     @Override

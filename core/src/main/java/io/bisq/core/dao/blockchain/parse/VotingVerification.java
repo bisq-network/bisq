@@ -29,8 +29,8 @@ import javax.inject.Inject;
 
 @Slf4j
 public class VotingVerification {
-    private BsqChainState bsqChainState;
-    private PeriodVerification periodVerification;
+    private final BsqChainState bsqChainState;
+    private final PeriodVerification periodVerification;
 
     @Inject
     public VotingVerification(BsqChainState bsqChainState,

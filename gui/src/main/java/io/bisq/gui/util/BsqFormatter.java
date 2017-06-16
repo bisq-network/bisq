@@ -18,7 +18,7 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.app.BisqEnvironment;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -29,13 +29,29 @@ import javax.inject.Inject;
 
 public class BsqFormatter extends BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BsqFormatter.class);
+    @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
-    private String prefix = "B";
+    private final String prefix = "B";
 
     @Inject
     private BsqFormatter() {
         super();
-        coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+
+        final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        switch (baseCurrencyCode) {
+            case "BTC":
+                coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+                break;
+            case "LTC":
+                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+                break;
+            case "DOGE":
+                // TODO check
+                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+                break;
+            default:
+                throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
+        }
     }
 
     /**
@@ -52,11 +68,11 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public Address getAddressFromBsqAddress(String encoded) {
-        if (useBsqAddressFormat) 
+        if (useBsqAddressFormat)
             encoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return Address.fromBase58(WalletUtils.getParameters(), encoded);
+            return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
         } catch (AddressFormatException e) {
             log.error(e.toString());
             e.printStackTrace();

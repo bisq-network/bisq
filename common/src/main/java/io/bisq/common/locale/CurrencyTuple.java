@@ -17,6 +17,9 @@
 
 package io.bisq.common.locale;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode
 public class CurrencyTuple {
     public final String code;
     public final String name;

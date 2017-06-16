@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 
@@ -36,7 +35,8 @@ import java.util.concurrent.TimeUnit;
 public class SeedPeersSocks5Dns implements PeerDiscovery {
     private final Socks5Proxy proxy;
     private final NetworkParameters params;
-    private InetSocketAddress[] seedAddrs;
+    private final InetSocketAddress[] seedAddrs;
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private InetSocketAddress[] seedAddrsIP;
     private int pnseedIndex;
 
@@ -46,7 +46,6 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
 
     /**
      * Supports finding peers by hostname over a socks5 proxy.
-     *
      */
     public SeedPeersSocks5Dns(Socks5Proxy proxy, NetworkParameters params) {
 
@@ -66,7 +65,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
 
         //TODO seedAddrsIP is never written; not used method...
         seedAddrsResolved = new InetSocketAddress[seedAddrs.length];
-        System.arraycopy(seedAddrsIP, seedAddrs.length - seedAddrs.length, seedAddrsResolved,
+        System.arraycopy(seedAddrsIP, seedAddrs.length, seedAddrsResolved,
                 seedAddrs.length, seedAddrsResolved.length - seedAddrs.length);
     }
 
@@ -81,7 +80,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
     public InetSocketAddress getPeer() throws PeerDiscoveryException {
         try {
             return nextPeer();
-        } catch (UnknownHostException e) {
+        } catch (PeerDiscoveryException e) {
             throw new PeerDiscoveryException(e);
         }
     }
@@ -90,7 +89,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
      * worker for getPeer()
      */
     @Nullable
-    private InetSocketAddress nextPeer() throws UnknownHostException, PeerDiscoveryException {
+    private InetSocketAddress nextPeer() throws PeerDiscoveryException {
         if (seedAddrs == null || seedAddrs.length == 0) {
             throw new PeerDiscoveryException("No IP address seeds configured; unable to find any peers");
         }
@@ -113,17 +112,13 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
     public InetSocketAddress[] getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
         if (services != 0)
             throw new PeerDiscoveryException("DNS seeds cannot filter by services: " + services);
-        try {
-            return allPeers();
-        } catch (UnknownHostException e) {
-            throw new PeerDiscoveryException(e);
-        }
+        return allPeers();
     }
 
     /**
      * returns all seed peers, performs hostname lookups if necessary.
      */
-    private InetSocketAddress[] allPeers() throws UnknownHostException {
+    private InetSocketAddress[] allPeers() {
         for (int i = 0; i < seedAddrsResolved.length; ++i) {
             if (seedAddrsResolved[i] == null) {
                 seedAddrsResolved[i] = lookup(proxy, seedAddrs[i]);

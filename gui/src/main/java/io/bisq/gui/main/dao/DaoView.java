@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.dao;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
@@ -56,13 +57,19 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        if (DevEnv.DAO_PHASE2_ACTIVATED) {
+            compensationTab = new Tab(Res.get("dao.tab.compensation"));
+            votingTab = new Tab(Res.get("dao.tab.voting"));
+            compensationTab.setClosable(false);
+            votingTab.setClosable(false);
+            root.getTabs().addAll(compensationTab, votingTab);
+        }
         bsqWalletTab.setText(Res.get("dao.tab.bsqWallet"));
-        compensationTab.setText(Res.get("dao.tab.compensation"));
-        votingTab.setText(Res.get("dao.tab.voting"));
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (compensationTab == null && viewPath.get(2).equals(CompensationView.class))
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
                     loadView(viewPath.tip());
@@ -73,12 +80,16 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             if (newValue == bsqWalletTab) {
                 Class<? extends View> selectedViewClass = bsqWalletView.getSelectedViewClass();
                 if (selectedViewClass == null)
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
             } else if (newValue == compensationTab) {
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             } else if (newValue == votingTab) {
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             }
         };
@@ -92,10 +103,13 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == bsqWalletTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == compensationTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             else if (selectedItem == votingTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
         }
     }

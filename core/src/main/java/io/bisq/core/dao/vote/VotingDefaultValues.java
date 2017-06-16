@@ -49,9 +49,10 @@ public class VotingDefaultValues {
     public static final long QUORUM_FOR_COMPENSATION_REQUEST_VOTING_AT_GENESIS = 500; // 5%
     public static final long QUORUM_FOR_PARAMETER_VOTING_AT_GENESIS = 500; // 5%
 
-    public static final long MIN_BTC_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS = 20_000_000; // 0.2 BTC
-    public static final long MAX_BTC_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS = 2_000_000_000; // 20 btc
+    public static final long MIN_BSQ_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS = 20; // TODO hard to estimate....
+    public static final long MAX_BSQ_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS = 20_000; // TODO hard to estimate....
 
+    //TODO remove
     public static final long CONVERSION_RATE_AT_GENESIS = 1000; //0.000001; // how many btc you get for 1 squ (e.g. 1 000 000 squ = 1 btc)
     public static final String ERROR_MSG_INVALID_VALUE = Res.get("dao.voting.error.invalidValue");
 
@@ -75,8 +76,8 @@ public class VotingDefaultValues {
     private long quorumForCompensationRequestVoting = QUORUM_FOR_COMPENSATION_REQUEST_VOTING_AT_GENESIS;
     private long quorumForParameterVoting = QUORUM_FOR_PARAMETER_VOTING_AT_GENESIS;
 
-    private long minBtcAmountCompensationRequest = MIN_BTC_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS;
-    private long maxBtcAmountCompensationRequest = MAX_BTC_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS;
+    private long minBtcAmountCompensationRequest = MIN_BSQ_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS;
+    private long maxBtcAmountCompensationRequest = MAX_BSQ_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS;
 
     private long conversionRate = CONVERSION_RATE_AT_GENESIS;
 

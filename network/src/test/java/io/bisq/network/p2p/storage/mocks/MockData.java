@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.Map;
 
+@SuppressWarnings("ALL")
 public class MockData implements StoragePayload {
     public final String msg;
     public final PublicKey publicKey;

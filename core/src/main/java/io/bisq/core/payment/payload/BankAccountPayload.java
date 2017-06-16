@@ -52,6 +52,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("NullableProblems")
     protected BankAccountPayload(String paymentMethodName,
                                  String id,
                                  long maxTradePeriod,

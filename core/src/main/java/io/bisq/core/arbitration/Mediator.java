@@ -119,7 +119,7 @@ public final class Mediator implements StoragePayload {
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(10);
     }
-    
+
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();

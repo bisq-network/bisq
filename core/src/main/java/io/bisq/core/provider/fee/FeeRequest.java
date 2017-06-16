@@ -1,3 +1,19 @@
+/*
+ * This file is part of bisq.
+ *
+ * bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
 package io.bisq.core.provider.fee;
 
 import com.google.common.util.concurrent.*;
@@ -17,15 +33,15 @@ public class FeeRequest {
     public FeeRequest() {
     }
 
-    public SettableFuture<Tuple2<Map<String, Long>, FeeData>> getFees(FeeProvider provider) {
-        final SettableFuture<Tuple2<Map<String, Long>, FeeData>> resultFuture = SettableFuture.create();
-        ListenableFuture<Tuple2<Map<String, Long>, FeeData>> future = executorService.submit(() -> {
+    public SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> getFees(FeeProvider provider) {
+        final SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> resultFuture = SettableFuture.create();
+        ListenableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = executorService.submit(() -> {
             Thread.currentThread().setName("FeeRequest-" + provider.toString());
             return provider.getFees();
         });
 
-        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, FeeData>>() {
-            public void onSuccess(Tuple2<Map<String, Long>, FeeData> feeData) {
+        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, Long>>>() {
+            public void onSuccess(Tuple2<Map<String, Long>, Map<String, Long>> feeData) {
                 log.debug("Received feeData of {}\nfrom provider {}", feeData, provider);
                 resultFuture.set(feeData);
             }

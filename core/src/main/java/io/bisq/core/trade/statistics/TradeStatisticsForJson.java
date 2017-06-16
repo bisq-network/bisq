@@ -1,6 +1,7 @@
 package io.bisq.core.trade.statistics;
 
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
@@ -55,12 +56,11 @@ public final class TradeStatisticsForJson {
         this.tradeDate = tradeStatistics.getTradeDate().getTime();
         this.depositTxId = tradeStatistics.getDepositTxId();
 
-
         try {
             final Price tradePrice = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
                 primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
-                currencyPair = currency + "/" + "BTC";
+                currencyPair = currency + "/" + Res.getBaseCurrencyCode();
 
                 primaryMarketTradePrice = tradePrice.getValue();
 
@@ -68,7 +68,7 @@ public final class TradeStatisticsForJson {
                 primaryMarketTradeVolume = getTradeAmount().getValue();
             } else {
                 primaryMarketDirection = direction;
-                currencyPair = "BTC/" + currency;
+                currencyPair = Res.getBaseCurrencyCode() + "/" + currency;
 
                 // we use precision 4 for fiat based price but on the markets api we use precision 8 so we scale up by 10000
                 primaryMarketTradePrice = (long) MathUtils.scaleUpByPowerOf10(tradePrice.getValue(), 4);

@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+@SuppressWarnings("ALL")
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
@@ -153,7 +154,7 @@ public class TestUtils {
             }
 
             @Override
-            public NetworkPayload fromProto(PB.StoragePayload storagePayload) {
+            public NetworkPayload fromProto(PB.StoragePayload proto) {
                 return null;
             }
 

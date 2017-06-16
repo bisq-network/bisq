@@ -22,6 +22,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.UUID;
 
+@SuppressWarnings("UnusedAssignment")
 @Slf4j
 public class AddDataMessageTest {
     private KeyRing keyRing1;
@@ -32,7 +33,9 @@ public class AddDataMessageTest {
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         Security.addProvider(new BouncyCastleProvider());
         dir1 = File.createTempFile("temp_tests1", "");
+        //noinspection ResultOfMethodCallIgnored
         dir1.delete();
+        //noinspection ResultOfMethodCallIgnored
         dir1.mkdir();
         keyRing1 = new KeyRing(new KeyStorage(dir1));
     }

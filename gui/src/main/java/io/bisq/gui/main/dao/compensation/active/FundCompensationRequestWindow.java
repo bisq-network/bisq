@@ -84,7 +84,7 @@ public class FundCompensationRequestWindow extends Overlay<FundCompensationReque
 
     private void addContent() {
         TextField info = addLabelTextField(gridPane, ++rowIndex, "Request ID:").second;
-        amount = addLabelInputTextField(gridPane, ++rowIndex, "Amount in BTC:").second;
+        amount = addLabelInputTextField(gridPane, ++rowIndex, "Amount in " + Res.getBaseCurrencyCode() + ":").second;
 
         info.setText(compensationRequest.getShortId());
     }

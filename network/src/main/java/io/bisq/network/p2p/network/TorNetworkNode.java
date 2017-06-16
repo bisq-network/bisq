@@ -134,21 +134,25 @@ public class TorNetworkNode extends NetworkNode {
 
     private BooleanProperty torNetworkNodeShutDown() {
         final BooleanProperty done = new SimpleBooleanProperty();
-        executorService.submit(() -> {
-            Utilities.setThreadName("torNetworkNodeShutDown");
-            long ts = System.currentTimeMillis();
-            log.debug("Shutdown torNetworkNode");
-            try {
-                if (torNetworkNode != null)
-                    torNetworkNode.shutdown();
-                log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
-            } catch (Throwable e) {
-                log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                UserThread.execute(() -> done.set(true));
-            }
-        });
+        if (executorService != null) {
+            executorService.submit(() -> {
+                Utilities.setThreadName("torNetworkNodeShutDown");
+                long ts = System.currentTimeMillis();
+                log.debug("Shutdown torNetworkNode");
+                try {
+                    if (torNetworkNode != null)
+                        torNetworkNode.shutdown();
+                    log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
+                } catch (Throwable e) {
+                    log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    UserThread.execute(() -> done.set(true));
+                }
+            });
+        } else {
+            done.set(true);
+        }
         return done;
     }
 

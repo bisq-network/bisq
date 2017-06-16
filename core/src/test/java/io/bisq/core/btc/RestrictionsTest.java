@@ -18,12 +18,12 @@
 package io.bisq.core.btc;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("ConstantConditions")
 public class RestrictionsTest {
     @Test
     public void testIsMinSpendableAmount() {
@@ -37,13 +37,13 @@ public class RestrictionsTest {
         amount = txFee;
         assertFalse(Restrictions.isAboveDust(amount, txFee));
 
-        amount = Transaction.MIN_NONDUST_OUTPUT;
+        amount = Restrictions.getMinNonDustOutput();
         assertFalse(Restrictions.isAboveDust(amount, txFee));
 
-        amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT);
+        amount = txFee.add(Restrictions.getMinNonDustOutput());
         assertTrue(Restrictions.isAboveDust(amount, txFee));
 
-        amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
+        amount = txFee.add(Restrictions.getMinNonDustOutput()).add(Coin.valueOf(1));
         assertTrue(Restrictions.isAboveDust(amount, txFee));
     }
 }

@@ -79,7 +79,7 @@ public final class MailboxStoragePayload implements StoragePayload {
 
     public static MailboxStoragePayload fromProto(PB.MailboxStoragePayload proto) {
         return new MailboxStoragePayload(
-                PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage()),
+                PrefixedSealedAndSignedMessage.fromPayloadProto(proto.getPrefixedSealedAndSignedMessage()),
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());

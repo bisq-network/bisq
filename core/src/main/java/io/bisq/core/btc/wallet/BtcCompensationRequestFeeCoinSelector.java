@@ -18,6 +18,7 @@
 package io.bisq.core.btc.wallet;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.bisq.core.btc.Restrictions;
 import org.bitcoinj.core.*;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
@@ -63,7 +64,7 @@ class BtcCompensationRequestFeeCoinSelector {
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
-        long dust = Transaction.MIN_NONDUST_OUTPUT.value;
+        long dust = Restrictions.getMinNonDustOutput().value;
         long targetValue = target.value;
         for (TransactionOutput output : sortedOutputs) {
             if (total >= targetValue) {

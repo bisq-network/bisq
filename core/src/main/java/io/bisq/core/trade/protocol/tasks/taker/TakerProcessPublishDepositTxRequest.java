@@ -23,6 +23,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -55,6 +56,13 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
                 return;
             }
 
+            final NodeAddress tempTradingPeerNodeAddress = processModel.getTempTradingPeerNodeAddress();
+            if (tempTradingPeerNodeAddress != null && processModel.isNodeBanned(tempTradingPeerNodeAddress)) {
+                failed("Other trader is banned by his node address.\n" +
+                        "tradingPeerNodeAddress=" + tempTradingPeerNodeAddress);
+                return;
+            }
+
             processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
             processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
             processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
@@ -68,7 +76,7 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
             trade.setState(Trade.State.TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST);
-            
+
             complete();
         } catch (Throwable t) {
             failed(t);

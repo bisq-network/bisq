@@ -211,6 +211,6 @@ public class OfferBookService {
                 })
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics.json");
+        jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics");
     }
 }

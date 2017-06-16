@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,7 +61,7 @@ public final class User implements PersistedDataHost {
     private UserPayload userPayload = new UserPayload();
 
     @Inject
-    public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
+    public User(Storage<UserPayload> storage, KeyRing keyRing) {
         this.storage = storage;
         this.keyRing = keyRing;
     }
