@@ -3,7 +3,7 @@ package io.bisq.api.service;
 import com.google.inject.Inject;
 import io.bisq.api.BitsquareProxy;
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -17,7 +17,7 @@ import io.dropwizard.setup.Environment;
 
 public class DropwizardApplication extends Application<ApiConfiguration> {
     @Inject
-    WalletService walletService;
+    BtcWalletService walletService;
 
     @Inject
     TradeManager tradeManager;

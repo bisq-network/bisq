@@ -82,7 +82,7 @@ public class Api {
 
         apiModule = new ApiModule(env);
         injector = Guice.createInjector(apiModule);
-        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         walletService = injector.getInstance(WalletService.class);
