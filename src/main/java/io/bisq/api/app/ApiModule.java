@@ -45,8 +45,8 @@ import static com.google.inject.name.Names.named;
 @Slf4j
 public class ApiModule extends AppModule {
 
-    public ApiModule(Environment env) {
-        super(env);
+    public ApiModule(Environment environment) {
+        super(environment);
     }
 
     @Override
@@ -58,13 +58,13 @@ public class ApiModule extends AppModule {
         bind(Clock.class).in(Singleton.class);
         bind(DropwizardApplication.class).in(Singleton.class);
 
-        File storageDir = new File(env.getRequiredProperty(Storage.STORAGE_DIR));
+        File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
+        File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
         // ordering is used for shut down sequence
         install(tradeModule());
@@ -78,34 +78,34 @@ public class ApiModule extends AppModule {
     }
 
     private TradeModule tradeModule() {
-        return new TradeModule(env);
+        return new TradeModule(environment);
     }
 
     private EncryptionServiceModule encryptionServiceModule() {
-        return new EncryptionServiceModule(env);
+        return new EncryptionServiceModule(environment);
     }
 
     private ArbitratorModule arbitratorModule() {
-        return new ArbitratorModule(env);
+        return new ArbitratorModule(environment);
     }
 
     private AlertModule alertModule() {
-        return new AlertModule(env);
+        return new AlertModule(environment);
     }
 
     private FilterModule filterModule() {
-        return new FilterModule(env);
+        return new FilterModule(environment);
     }
 
     private OfferModule offerModule() {
-        return new OfferModule(env);
+        return new OfferModule(environment);
     }
 
     private P2PModule torModule() {
-        return new P2PModule(env);
+        return new P2PModule(environment);
     }
 
     private BitcoinModule bitcoinModule() {
-        return new BitcoinModule(env);
+        return new BitcoinModule(environment);
     }
 }
