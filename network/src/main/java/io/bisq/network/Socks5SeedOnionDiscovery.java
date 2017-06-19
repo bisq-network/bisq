@@ -26,6 +26,7 @@ import org.bitcoinj.params.TestNet3Params;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+
 import org.libdohj.params.AbstractLitecoinParams;
 
 
@@ -46,7 +47,7 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
         // We do this because NetworkParameters does not contain any .onion
         // seeds.  Perhaps someday...
         String[] seedAddresses = {};
-        switch(params.getId()) {
+        switch (params.getId()) {
             case NetworkParameters.ID_MAINNET:
                 seedAddresses = mainNetSeeds();
                 break;
@@ -119,12 +120,11 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
         };
     }
 
-     /**
+    /**
      * returns .onion nodes available on mainnet
      */
     private String[] LitecoinMainNetSeeds() {
         return new String[]{
-                "UNKNOWN.onion"
         };
     }
 
@@ -133,7 +133,6 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
      */
     private String[] LitecoinTestNet4Seeds() {
         return new String[]{
-                "UNKNOWN.onion"
         };
     }
 
