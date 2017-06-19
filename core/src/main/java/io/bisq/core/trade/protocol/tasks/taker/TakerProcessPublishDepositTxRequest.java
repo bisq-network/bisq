@@ -23,6 +23,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,6 +53,13 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
                 failed("Other trader is banned by his trading account data.\n" +
                         "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
+                return;
+            }
+
+            final NodeAddress tempTradingPeerNodeAddress = processModel.getTempTradingPeerNodeAddress();
+            if (tempTradingPeerNodeAddress != null && processModel.isNodeBanned(tempTradingPeerNodeAddress)) {
+                failed("Other trader is banned by his node address.\n" +
+                        "tradingPeerNodeAddress=" + tempTradingPeerNodeAddress);
                 return;
             }
 

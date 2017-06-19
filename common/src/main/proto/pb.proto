@@ -999,6 +999,8 @@ message Trade {
     bytes arbitrator_btc_pub_key = 23;
     string taker_payment_account_id = 24;
     string error_message = 25;
+    PubKeyRing arbitrator_pub_key_ring = 26;
+    PubKeyRing mediator_pub_key_ring = 27;
 }
 
 message BuyerAsMakerTrade {

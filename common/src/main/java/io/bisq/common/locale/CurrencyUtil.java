@@ -94,7 +94,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
-        result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        // result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
@@ -238,7 +238,7 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        //  result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -247,14 +247,18 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
+        result.add(new CryptoCurrency("GRC", "Gridcoin"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("SF", "Siafund"));
+        result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
+
         return result;
     }
 
