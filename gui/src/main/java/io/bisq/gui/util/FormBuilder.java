@@ -972,6 +972,20 @@ public class FormBuilder {
         return new Tuple3<>(box, textField, currency);
     }
 
+    public static Tuple3<HBox, InputTextField, Label> getAmountCurrencyBox(String promptText) {
+        InputTextField input = new InputTextField();
+        input.setPrefWidth(190);
+        input.setAlignment(Pos.CENTER_RIGHT);
+        input.setId("text-input-with-currency-text-field");
+        input.setPromptText(promptText);
+
+        Label currency = new Label(Res.getBaseCurrencyCode());
+        currency.setId("currency-info-label");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(input, currency);
+        return new Tuple3<>(box, input, currency);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade: Label, VBox
