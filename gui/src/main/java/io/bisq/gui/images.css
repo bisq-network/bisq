@@ -4,11 +4,6 @@
     -fx-image: url("../../../images/logo_splash.png");
 }
 
-/* notification */
-#notification-logo {
-    -fx-image: url("../../../images/notification_logo.png");
-}
-
 /* shared*/
 #image-info {
     -fx-image: url("../../../images/info.png");
