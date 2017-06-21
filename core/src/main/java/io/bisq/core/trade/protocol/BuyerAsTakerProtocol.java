@@ -26,6 +26,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -120,6 +121,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 TakerProcessPublishDepositTxRequest.class,
+                CheckIfPeerIsBanned.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
@@ -150,6 +152,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         handleTaskRunnerFault(errorMessage);
                     });
             taskRunner.addTasks(
+                    CheckIfPeerIsBanned.class,
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     BuyerAsMakerSignPayoutTx.class,

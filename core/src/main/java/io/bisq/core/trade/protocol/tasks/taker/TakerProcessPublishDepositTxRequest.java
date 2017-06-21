@@ -18,12 +18,9 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.core.filter.PaymentAccountFilter;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,23 +44,7 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), publishDepositTxRequest);
             checkNotNull(publishDepositTxRequest);
 
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload());
-            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
-            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
-                failed("Other trader is banned by his trading account data.\n" +
-                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
-                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
-                return;
-            }
-
-            final NodeAddress tempTradingPeerNodeAddress = processModel.getTempTradingPeerNodeAddress();
-            if (tempTradingPeerNodeAddress != null && processModel.isNodeBanned(tempTradingPeerNodeAddress)) {
-                failed("Other trader is banned by his node address.\n" +
-                        "tradingPeerNodeAddress=" + tempTradingPeerNodeAddress);
-                return;
-            }
-
-            processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
+            processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload()));
             processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
             processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
             processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));

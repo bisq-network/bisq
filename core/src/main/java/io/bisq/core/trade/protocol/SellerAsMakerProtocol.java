@@ -27,6 +27,7 @@ import io.bisq.core.trade.messages.DepositTxPublishedMessage;
 import io.bisq.core.trade.messages.FiatTransferStartedMessage;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
@@ -101,6 +102,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
+                CheckIfPeerIsBanned.class,
                 MakerVerifyArbitratorSelection.class,
                 MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
@@ -175,6 +177,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
+                    CheckIfPeerIsBanned.class,
                     MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,

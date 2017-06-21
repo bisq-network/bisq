@@ -19,12 +19,9 @@ package io.bisq.core.trade.protocol.tasks.maker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
-import io.bisq.core.filter.PaymentAccountFilter;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
@@ -49,23 +46,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             checkNotNull(payDepositRequest);
             checkTradeId(processModel.getOfferId(), payDepositRequest);
 
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(payDepositRequest.getTakerPaymentAccountPayload());
-            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
-            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
-                failed("Other trader is banned by his trading account data.\n" +
-                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
-                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
-                return;
-            }
-
-            final NodeAddress tempTradingPeerNodeAddress = processModel.getTempTradingPeerNodeAddress();
-            if (tempTradingPeerNodeAddress != null && processModel.isNodeBanned(tempTradingPeerNodeAddress)) {
-                failed("Other trader is banned by his node address.\n" +
-                        "tradingPeerNodeAddress=" + tempTradingPeerNodeAddress);
-                return;
-            }
-            
-            processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
+            processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(payDepositRequest.getTakerPaymentAccountPayload()));
 
             processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
             checkArgument(payDepositRequest.getRawTransactionInputs().size() > 0);
@@ -99,7 +80,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             checkArgument(payDepositRequest.getTradeAmount() > 0);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.getTradeAmount()));
 
-            trade.setTradingPeerNodeAddress(tempTradingPeerNodeAddress);
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.removeMailboxMessageAfterProcessing(trade);
 
