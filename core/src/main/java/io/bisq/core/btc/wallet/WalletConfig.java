@@ -471,10 +471,11 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
-                                      BisqKeyChainGroup keyChainGroup, boolean isBsqWallet, DeterministicSeed seed)
+                                      BisqKeyChainGroup keyChainGroup, boolean isBsqWallet, DeterministicSeed restoreFromSeed)
             throws Exception {
 
-        maybeMoveOldWalletOutOfTheWay(walletFile, seed);
+        if (restoreFromSeed != null)
+            maybeMoveOldWalletOutOfTheWay(walletFile);
 
         Wallet wallet;
         if (walletFile.exists()) {
@@ -490,15 +491,16 @@ public class WalletConfig extends AbstractIdleService {
         return wallet;
     }
 
-    private void maybeMoveOldWalletOutOfTheWay(File vWalletFile, DeterministicSeed restoreFromSeed) {
-        if (restoreFromSeed == null) return;
+    private void maybeMoveOldWalletOutOfTheWay(File vWalletFile) {
         if (!vWalletFile.exists()) return;
+
         int counter = 1;
         File newName;
         do {
             newName = new File(vWalletFile.getParent(), "Backup " + counter + " for " + vWalletFile.getName());
             counter++;
         } while (newName.exists());
+
         log.info("Renaming old wallet file {} to {}", vWalletFile, newName);
         if (!vWalletFile.renameTo(newName)) {
             // This should not happen unless something is really messed up.

@@ -94,7 +94,6 @@ public class BtcWalletService extends WalletService {
     @Override
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
-
         addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())

@@ -124,125 +124,58 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // av. price June 2017: 2500 EUR/BTC
                     maxTradeLimitMidRisk = Coin.parseCoin("0.5");
                     maxTradeLimitLowRisk = Coin.parseCoin("1");
-                    ALL_VALUES = new ArrayList<>(Arrays.asList(
-                            // EUR
-                            SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
-
-                            // Global
-                            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-
-                            // Trans national
-                            OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
-                            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // UK
-                            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
-
-                            // Canada
-                            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
-
-                            // US
-                            //  CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
-
-                            // Sweden
-                            SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
-
-                            // China
-                            ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // Altcoins
-                            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitLowRisk)
-                    ));
                     break;
                 case "LTC":
                     // av. price June 2017: 40 EUR/LTC
                     maxTradeLimitMidRisk = Coin.parseCoin("30");
                     maxTradeLimitLowRisk = Coin.parseCoin("60");
-                    ALL_VALUES = new ArrayList<>(Arrays.asList(
-                            // EUR
-                            SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
 
-                            // Global
-                            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-
-                            // Trans national
-                            OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
-                            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // UK
-                            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
-
-                            // Canada
-                            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
-
-                            // US
-                            //  CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
-
-                            // Sweden
-                            SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
-
-                            // China
-                            ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // Altcoins
-                            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitLowRisk)
-                    ));
                     break;
                 case "DOGE":
                     // av. price June 2017: 0.002850 EUR/DOGE
                     maxTradeLimitMidRisk = Coin.parseCoin("500000");
                     maxTradeLimitLowRisk = Coin.parseCoin("1000000");
-                    ALL_VALUES = new ArrayList<>(Arrays.asList(
-                            // EUR
-                            SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
-
-                            // Global
-                            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-
-                            // Trans national
-                            OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
-                            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // UK
-                            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
-
-                            // Canada
-                            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
-
-                            // US
-                            // CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
-
-                            // Sweden
-                            SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
-
-                            // China
-                            ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
-
-                            // Altcoins
-                            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitLowRisk)
-                    ));
                     break;
 
                 default:
                     log.error("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
                     throw new RuntimeException("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
-
             }
+
+            ALL_VALUES = new ArrayList<>(Arrays.asList(
+                    // EUR
+                    SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
+
+                    // Global
+                    NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
+                    SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
+
+                    // Trans national
+                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
+                    PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
+
+                    // UK
+                    FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
+
+                    // Canada
+                    INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
+
+                    // US
+                    //  CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
+                    US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
+
+                    // Sweden
+                    SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
+
+                    // China
+                    ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
+
+                    // Altcoins
+                    BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitLowRisk)
+            ));
         }
         return ALL_VALUES;
     }

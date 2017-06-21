@@ -94,7 +94,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
                 } else {
-                    log.warn("Key from addressEntry not found in that wallet " + addressEntry.toString());
+                    log.error("Key from addressEntry not found in that wallet " + addressEntry.toString());
                 }
             });
         } else {

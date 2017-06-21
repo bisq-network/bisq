@@ -41,11 +41,13 @@ public class ScryptUtil {
                     } catch (Throwable t) {
                         t.printStackTrace();
                         log.error("Executing task failed. " + t.getMessage());
+                        throw t;
                     }
                 });
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
+                throw t;
             }
         });
     }
