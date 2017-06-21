@@ -160,7 +160,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     ));
                     break;
                 case "LTC":
-                    // av. price June 2017: 40 EUR/BTC
+                    // av. price June 2017: 40 EUR/LTC
                     maxTradeLimitMidRisk = Coin.parseCoin("30");
                     maxTradeLimitLowRisk = Coin.parseCoin("60");
                     ALL_VALUES = new ArrayList<>(Arrays.asList(
@@ -199,7 +199,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     ));
                     break;
                 case "DOGE":
-                    // av. price June 2017: 0.002850 EUR/BTC
+                    // av. price June 2017: 0.002850 EUR/DOGE
                     maxTradeLimitMidRisk = Coin.parseCoin("500000");
                     maxTradeLimitLowRisk = Coin.parseCoin("1000000");
                     ALL_VALUES = new ArrayList<>(Arrays.asList(

@@ -19,10 +19,10 @@ package io.bisq.gui.util.validation;
 
 import javax.inject.Inject;
 
-public class FiatValidator extends MonetaryValidator {
+public class FiatPriceValidator extends MonetaryValidator {
     @Override
     protected double getMinValue() {
-        return 0.01;
+        return 0.0001;
     }
 
     @Override
@@ -32,6 +32,6 @@ public class FiatValidator extends MonetaryValidator {
     }
 
     @Inject
-    public FiatValidator() {
+    public FiatPriceValidator() {
     }
 }

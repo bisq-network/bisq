@@ -69,7 +69,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
-    private final FiatValidator fiatValidator;
+    private final FiatVolumeValidator fiatVolumeValidator;
+    private final FiatPriceValidator fiatPriceValidator;
     private final AltcoinValidator altcoinValidator;
 
     private String amountDescription;
@@ -151,7 +152,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel,
-                                FiatValidator fiatValidator,
+                                FiatVolumeValidator fiatVolumeValidator,
+                                FiatPriceValidator fiatPriceValidator,
                                 AltcoinValidator altcoinValidator,
                                 BtcValidator btcValidator,
                                 BsqValidator bsqValidator,
@@ -164,7 +166,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 BsqFormatter bsqFormatter) {
         super(dataModel);
 
-        this.fiatValidator = fiatValidator;
+        this.fiatVolumeValidator = fiatVolumeValidator;
+        this.fiatPriceValidator = fiatPriceValidator;
         this.altcoinValidator = altcoinValidator;
         this.btcValidator = btcValidator;
         this.bsqValidator = bsqValidator;
@@ -917,15 +920,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
-        return getPriceValidator().validate(input);
+        return getFiatPriceValidator().validate(input);
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
         return getVolumeValidator().validate(input);
     }
 
-    private MonetaryValidator getPriceValidator() {
-        return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatValidator;
+    private MonetaryValidator getFiatPriceValidator() {
+        return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatPriceValidator;
     }
 
     private MonetaryValidator getVolumeValidator() {
@@ -933,7 +936,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (CurrencyUtil.isCryptoCurrency(code)) {
             return code.equals("BSQ") ? bsqValidator : altcoinValidator;
         } else {
-            return fiatValidator;
+            return fiatVolumeValidator;
         }
     }
 
