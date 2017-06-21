@@ -26,6 +26,7 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -835,7 +836,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takerFeeRowHBox = new HBox();
         takerFeeRowHBox.setSpacing(5);
         takerFeeRowHBox.setAlignment(Pos.CENTER_LEFT);
-        takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+        else
+            takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);
 
         GridPane.setRowIndex(takerFeeRowHBox, gridRow);
         GridPane.setColumnIndex(takerFeeRowHBox, 1);
