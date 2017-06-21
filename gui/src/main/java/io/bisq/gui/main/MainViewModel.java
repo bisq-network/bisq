@@ -52,6 +52,7 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -562,6 +563,8 @@ public class MainViewModel implements ViewModel {
         Log.traceCall();
 
         clock.start();
+
+        PaymentMethod.onAllServicesInitialized();
 
         // disputeManager
         disputeManager.onAllServicesInitialized();
