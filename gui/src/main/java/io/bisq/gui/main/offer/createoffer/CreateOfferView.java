@@ -944,7 +944,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         makerFeeRowHBox.setSpacing(5);
         makerFeeRowHBox.setAlignment(Pos.CENTER_LEFT);
 
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
         else
             makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);

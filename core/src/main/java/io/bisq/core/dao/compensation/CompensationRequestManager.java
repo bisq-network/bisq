@@ -82,7 +82,7 @@ public class CompensationRequestManager implements PersistedDataHost {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
@@ -108,7 +108,7 @@ public class CompensationRequestManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
             if (persisted != null)
                 model.setPersistedCompensationRequest(persisted.getList());

@@ -52,7 +52,7 @@ public class DaoManager {
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             daoPeriodService.onAllServicesInitialized();
             bsqUtxoFeedService.onAllServicesInitialized();
             voteManager.onAllServicesInitialized();

@@ -123,7 +123,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
         chainSyncIndicator = new ProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             chainSyncIndicator.setProgress(-1);
         else
             chainSyncIndicator.setProgress(0);

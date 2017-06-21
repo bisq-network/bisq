@@ -78,9 +78,13 @@ public class BisqEnvironment extends StandardEnvironment {
         return BaseCurrencyNetwork.LTC_MAINNET;
     }
 
-    public static boolean isBaseCurrencySupportingBsq() {
+    public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
         //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.DAO_ACTIVATED && getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
+        return DevEnv.DAO_ACTIVATED && isBaseCurrencySupportingBsq();
+    }
+
+    public static boolean isBaseCurrencySupportingBsq() {
+        return getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
     }
 
     public static NetworkParameters getParameters() {

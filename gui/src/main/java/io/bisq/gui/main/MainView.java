@@ -46,6 +46,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
@@ -126,7 +130,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @Override
     protected void initialize() {
-        MainView.rootContainer = this.root;
+        MainView.rootContainer = root;
 
         ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market"));
         ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc"));
@@ -140,10 +144,21 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
-        if (!BisqEnvironment.isBaseCurrencySupportingBsq()) {
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             daoButton.setVisible(false);
             daoButton.setManaged(false);
         }
+
+        // TODO can be removed once DAo is released
+        UserThread.runAfter(() -> {
+            root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+                if (new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                    daoButton.setVisible(true);
+                    daoButton.setManaged(true);
+                }
+            });
+        }, 1);
+        
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);

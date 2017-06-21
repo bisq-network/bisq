@@ -837,7 +837,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takerFeeRowHBox.setSpacing(5);
         takerFeeRowHBox.setAlignment(Pos.CENTER_LEFT);
 
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
         else
             takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);
