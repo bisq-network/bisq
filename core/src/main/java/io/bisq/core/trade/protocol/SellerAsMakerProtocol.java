@@ -122,12 +122,14 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
-        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess("DepositTxPublishedMessage"),
+                () -> {
+                    stopTimeout();
+                    handleTaskRunnerSuccess("DepositTxPublishedMessage");
+                },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(MakerProcessDepositTxPublishedMessage.class,

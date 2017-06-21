@@ -131,12 +131,14 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
-        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                () -> handleTaskRunnerSuccess("handle DepositTxPublishedMessage"),
+                () -> {
+                    stopTimeout();
+                    handleTaskRunnerSuccess("handle DepositTxPublishedMessage");
+                },
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(MakerProcessDepositTxPublishedMessage.class,
                 MakerVerifyTakerAccount.class,

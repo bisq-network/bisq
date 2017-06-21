@@ -112,12 +112,14 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
-        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("PublishDepositTxRequest"),
+                () -> {
+                    stopTimeout();
+                    handleTaskRunnerSuccess("PublishDepositTxRequest");
+                },
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 TakerProcessPublishDepositTxRequest.class,
