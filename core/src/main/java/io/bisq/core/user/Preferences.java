@@ -158,7 +158,10 @@ public final class Preferences implements PersistedDataHost {
             prefPayload = persisted;
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"); // move to payload?
+            setPreferredTradeCurrency(checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"));
+            setFiatCurrencies(prefPayload.getFiatCurrencies());
+            setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());

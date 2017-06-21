@@ -43,6 +43,7 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         super();
     }
 
+    @Override
     public void initialize() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, Res.get("setting.about.aboutBisq"));
         GridPane.setColumnSpan(titledGroupBg, 2);
