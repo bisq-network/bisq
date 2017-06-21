@@ -131,7 +131,7 @@ public class NotificationCenter {
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public String getSelectedTradeId() {
         return selectedTradeId;
     }

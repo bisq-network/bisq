@@ -316,7 +316,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             list.stream().filter(e -> e.getTrade().getId().equals(tradeId)).findAny().ifPresent(this::doSelectItem);
     }
 
-    private void doSelectItem(PendingTradesListItem item) {
+    private void doSelectItem(@Nullable PendingTradesListItem item) {
         if (selectedTrade != null)
             selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
 

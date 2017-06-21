@@ -72,6 +72,7 @@ public class SellerStep3View extends TradeStepView {
                     case SELLER_PUBLISHED_PAYOUT_TX:
                     case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
                         busyAnimation.play();
+                        confirmButton.setDisable(true);
                         statusLabel.setText(Res.get("shared.sendingConfirmation"));
                         break;
                     case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
@@ -82,6 +83,8 @@ public class SellerStep3View extends TradeStepView {
                         break;
                     case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
                         // We get a popup and the trade closed, so we dont need to show anything here
+                        confirmButton.setDisable(false);
+                        statusLabel.setText("");
                         break;
                 }
             }
