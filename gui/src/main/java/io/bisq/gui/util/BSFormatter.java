@@ -70,8 +70,7 @@ public class BSFormatter {
 
     @Inject
     public BSFormatter() {
-        coinFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 3); //MonetaryFormat.BTC;
-        coinFormat.code(0, BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
+        coinFormat = BisqEnvironment.getParameters().getMonetaryFormat();
     }
 
 

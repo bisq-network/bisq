@@ -20,6 +20,7 @@ package io.bisq.core.offer;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.proto.ProtoUtil;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
@@ -73,6 +74,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final String id;
     private final long date;
     private final NodeAddress ownerNodeAddress;
+    @JsonExclude
     private final PubKeyRing pubKeyRing;
     private final Direction direction;
     // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0

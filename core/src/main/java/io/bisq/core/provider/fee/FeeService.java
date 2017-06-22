@@ -43,9 +43,9 @@ public class FeeService {
 
     // https://litecoin.info/Transaction_fees
     //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
-    public static final long LTC_DEFAULT_TX_FEE = 100;
-    public static final long BTC_DEFAULT_TX_FEE = 150;
-    public static final long DOGE_DEFAULT_TX_FEE = 100;
+    public static final long LTC_DEFAULT_TX_FEE = 500; // min fee is 0.001 LTC 200 bytes with 500 -> 100000
+    public static final long BTC_DEFAULT_TX_FEE = 200;
+    public static final long DOGE_DEFAULT_TX_FEE = 500000; // min tx size is about 200 bytes -> 1 DOGE
 
     // Dust limit for LTC is 100 000 sat
     // https://litecoin.info/Transaction_fees

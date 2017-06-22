@@ -799,8 +799,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox makerFeeValueCurrencyBox = makerFeeValueCurrencyBoxTuple.first;
         takerFeeTextField = makerFeeValueCurrencyBoxTuple.second;
         takerFeeCurrencyLabel = makerFeeValueCurrencyBoxTuple.third;
-        takerFeeCurrencyLabel.setMinWidth(38);
-        takerFeeCurrencyLabel.setMaxWidth(38);
 
         ToggleGroup feeToggleGroup = new ToggleGroup();
         payFeeInBsqButton = new ToggleButton("BSQ");

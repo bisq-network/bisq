@@ -232,8 +232,8 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
                 ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
-                ",\n     BuyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
-                ",\n     SellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
+                ",\n     buyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
+                ",\n     sellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
                 "\n}";
     }
 }
