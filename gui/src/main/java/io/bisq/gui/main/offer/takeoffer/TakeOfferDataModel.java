@@ -23,6 +23,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
@@ -332,7 +333,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
-        return getTakerFee(false) != null && bsqWalletService.getAvailableBalance() != null && !bsqWalletService.getAvailableBalance().subtract(getTakerFee(false)).isNegative();
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                getTakerFee(false) != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                getTakerFee(false) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(false)).isNegative();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
