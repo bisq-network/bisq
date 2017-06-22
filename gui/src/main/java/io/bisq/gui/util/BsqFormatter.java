@@ -46,8 +46,8 @@ public class BsqFormatter extends BSFormatter {
                 coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
                 break;
             case "DOGE":
-                // TODO check
-                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
+                // BSQ for DOGE not used/supported
+                coinFormat = new MonetaryFormat().shift(3).code(3, "???").minDecimals(5);
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);

@@ -25,6 +25,7 @@ import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.network.p2p.NodeAddress;
@@ -69,43 +70,9 @@ public class BSFormatter {
 
     @Inject
     public BSFormatter() {
-        coinFormat = MonetaryFormat.BTC;
-
-      /*  if (user.tradeCurrencyProperty().get() == null)
-            setFiatCurrencyCode(CurrencyUtil.getDefaultFiatCurrencyAsCode());
-        else if (user.tradeCurrencyProperty().get() != null)
-            setFiatCurrencyCode(user.tradeCurrencyProperty().get().getCode());
-
-        user.tradeCurrencyProperty().addListener((ov, oldValue, newValue) -> {
-            if (newValue != null)
-                setFiatCurrencyCode(newValue.getCode());
-        });*/
+        coinFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 3); //MonetaryFormat.BTC;
+        coinFormat.code(0, BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Config
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public void useMilliBitFormat(boolean useMilliBit) {
-        this.useMilliBit = useMilliBit;
-        coinFormat = getMonetaryFormat();
-        scale = useMilliBit ? 0 : 3;
-    }
-
-
-    protected MonetaryFormat getMonetaryFormat() {
-        if (useMilliBit)
-            return MonetaryFormat.MBTC;
-        else
-            return MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
-    }
-
-  /*  public void setFiatCurrencyCode(String currencyCode) {
-        this.currencyCode = currencyCode;
-        fiatFormat.code(0, currencyCode);
-    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

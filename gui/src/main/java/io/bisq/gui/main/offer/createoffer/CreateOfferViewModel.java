@@ -193,9 +193,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void activate() {
         if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("0.001");
+                amount.set("500000");
                 minAmount.set(amount.get());
-                price.set("2500");
+                price.set("0.0029");
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
                 updateButtonDisableState();

@@ -70,7 +70,10 @@ public class SeedNodesRepository {
             new NodeAddress("localhost:2003"),
 
             // regtest
-            new NodeAddress("localhost:2005")
+            new NodeAddress("localhost:2005"),
+
+            // DOGE regtest
+            new NodeAddress("localhost:2008")
     );
     private NodeAddress nodeAddressToExclude;
 

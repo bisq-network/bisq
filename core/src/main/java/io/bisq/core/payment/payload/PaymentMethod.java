@@ -127,14 +127,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     break;
                 case "LTC":
                     // av. price June 2017: 40 EUR/LTC
-                    maxTradeLimitMidRisk = Coin.parseCoin("30");
-                    maxTradeLimitLowRisk = Coin.parseCoin("60");
+                    maxTradeLimitMidRisk = Coin.parseCoin("25");
+                    maxTradeLimitLowRisk = Coin.parseCoin("50");
 
                     break;
                 case "DOGE":
                     // av. price June 2017: 0.002850 EUR/DOGE
-                    maxTradeLimitMidRisk = Coin.parseCoin("500000");
-                    maxTradeLimitLowRisk = Coin.parseCoin("1000000");
+                    maxTradeLimitMidRisk = Coin.parseCoin("250000");
+                    maxTradeLimitLowRisk = Coin.parseCoin("500000");
                     break;
 
                 default:

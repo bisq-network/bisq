@@ -904,8 +904,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         makerFeeTextField = makerFeeValueCurrencyBoxTuple.second;
         makerFeeTextField.setPrefWidth(170);
         makerFeeCurrencyLabel = makerFeeValueCurrencyBoxTuple.third;
-        makerFeeCurrencyLabel.setMinWidth(38);
-        makerFeeCurrencyLabel.setMaxWidth(38);
 
         ToggleGroup feeToggleGroup = new ToggleGroup();
         payFeeInBsqButton = new ToggleButton("BSQ");

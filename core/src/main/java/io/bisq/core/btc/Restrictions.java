@@ -56,10 +56,10 @@ public class Restrictions {
                     MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0.25 EUR cent @ 2500 EUR/BTC 
                     break;
                 case "LTC":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(600_000); // 0.24 EUR cent @ 40 EUR/BTC 
+                    MIN_TRADE_AMOUNT = Coin.valueOf(12_000); // 0.24 EUR cent @ 40 EUR/BTC  
                     break;
                 case "DOGE":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(80_000_000_000L);// 0.24 USD at DOGE price 0.003 USD
+                    MIN_TRADE_AMOUNT = Coin.valueOf(8_000_000_000L);// 0.24 USD at DOGE price 0.003 USD;
                     break;
             }
         return MIN_TRADE_AMOUNT;

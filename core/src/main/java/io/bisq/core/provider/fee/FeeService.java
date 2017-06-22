@@ -96,10 +96,10 @@ public class FeeService {
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
-                MIN_MAKER_FEE_IN_BASE_CUR = 80_000_000_000L; // 0.24 USD at DOGE price 0.003 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 80_000_000_000L;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 800_000_000_000L; // 2.4 USD at DOGE price 0.003 USD 
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 1_200_000_000_000L; // 3.6 USD at DOGE price 0.003 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 16_000; // 0.24 USD at DOGE price 0.003 USD 80_000_000_000L
+                MIN_TAKER_FEE_IN_BASE_CUR = 16_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 160_000; // 2.4 USD at DOGE price 0.003 USD  800_000_000_000L
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 240_000; // 3.6 USD at DOGE price 0.003 USD 1_200_000_000_000L
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             default:
