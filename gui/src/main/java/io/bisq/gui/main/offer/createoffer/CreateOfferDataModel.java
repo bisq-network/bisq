@@ -699,7 +699,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
             if (marketPriceAvailable) {
-                makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
+                if (marketPriceMargin > 0)
+                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
+                else
+                    makerFeeAsDouble = 0;
                 // For BTC we round so min value change is 100 satoshi
                 if (isCurrencyForMakerFeeBtc)
                     makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;

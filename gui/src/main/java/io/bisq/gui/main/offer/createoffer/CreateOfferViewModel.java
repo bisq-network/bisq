@@ -309,6 +309,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 marketPriceMargin.set(btcFormatter.formatToPercent(percentage));
+                                applyMakerFee();
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
                                 new Popup<>().warning(Res.get("validation.NaN")).show();
@@ -335,7 +336,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                             if (marketPrice != null && marketPrice.isValid()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
-                                dataModel.setMarketPriceMargin(percentage);
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
                                 final OfferPayload.Direction compareDirection = isCryptoCurrency ?
@@ -352,9 +352,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 price.set(btcFormatter.formatRoundedDoubleWithPrecision(targetPrice, precision));
                                 ignorePriceStringListener = false;
                                 setPriceToModel();
+                                dataModel.setMarketPriceMargin(percentage);
                                 dataModel.calculateVolume();
                                 dataModel.calculateTotalToPay();
                                 updateButtonDisableState();
+                                applyMakerFee();
                             } else {
                                 new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
@@ -683,6 +685,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 ignorePriceStringListener = false;
                 dataModel.calculateVolume();
                 dataModel.calculateAmount();
+                applyMakerFee();
             }
         }
     }
