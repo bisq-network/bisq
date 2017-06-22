@@ -62,7 +62,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String bitcoinNodes = "";
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
-    private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
+    private long buyerSecurityDepositAsLong = Restrictions.getDefaultBuyerSecurityDeposit().value;
     private boolean useAnimations;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;

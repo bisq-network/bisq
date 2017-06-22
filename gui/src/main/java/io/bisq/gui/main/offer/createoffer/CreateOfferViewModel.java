@@ -712,7 +712,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             InputValidator.ValidationResult result = securityDepositValidator.validate(buyerSecurityDeposit.get());
             buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
-                Coin defaultSecurityDeposit = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT;
+                Coin defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDeposit();
                 String key = "buyerSecurityDepositLowerAsDefault";
                 if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {

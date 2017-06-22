@@ -59,22 +59,22 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
 
             checkCoinNotNullOrZero(offer.getBuyerSecurityDeposit(), "buyerSecurityDeposit");
             checkCoinNotNullOrZero(offer.getSellerSecurityDeposit(), "sellerSecurityDeposit");
-            checkArgument(offer.getBuyerSecurityDeposit().value >= Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
+            checkArgument(offer.getBuyerSecurityDeposit().value >= Restrictions.getMinBuyerSecurityDeposit().value,
                     "buyerSecurityDeposit must not be less than Restrictions.MIN_BUYER_SECURITY_DEPOSIT. " +
                             "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
-            checkArgument(offer.getBuyerSecurityDeposit().value <= Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
+            checkArgument(offer.getBuyerSecurityDeposit().value <= Restrictions.getMaxBuyerSecurityDeposit().value,
                     "buyerSecurityDeposit must not be larger than Restrictions.MAX_BUYER_SECURITY_DEPOSIT. " +
                             "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
 
-            checkArgument(offer.getSellerSecurityDeposit().value == Restrictions.SELLER_SECURITY_DEPOSIT.value,
+            checkArgument(offer.getSellerSecurityDeposit().value == Restrictions.getSellerSecurityDeposit().value,
                     "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
                             "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());
             checkCoinNotNullOrZero(offer.getTxFee(), "txFee");
             checkCoinNotNullOrZero(offer.getMaxTradeLimit(), "MaxTradeLimit");
 
-            checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
+            checkArgument(offer.getMinAmount().compareTo(Restrictions.getMinTradeAmount()) >= 0,
                     "MinAmount is less then "
-                            + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
+                            + Restrictions.getMinTradeAmount().toFriendlyString());
             Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin()) <= 0,
                     "Amount is larger then "
                             + offer.getPaymentMethod().getMaxTradeLimitAsCoin().toFriendlyString());

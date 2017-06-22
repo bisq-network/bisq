@@ -150,7 +150,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
         buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsCoin());
-        sellerSecurityDeposit = Restrictions.SELLER_SECURITY_DEPOSIT;
+        sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit();
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -345,12 +345,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         HashMap<String, String> extraDataMap = null;
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
-        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MAX_BUYER_SECURITY_DEPOSIT) <= 0,
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
                 "securityDeposit must be not exceed " +
-                        Restrictions.MAX_BUYER_SECURITY_DEPOSIT.toFriendlyString());
-        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MIN_BUYER_SECURITY_DEPOSIT) >= 0,
+                        Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
                 "securityDeposit must be not be less than " +
-                        Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
+                        Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
         //TODO add createOfferFeeAsBsq
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),

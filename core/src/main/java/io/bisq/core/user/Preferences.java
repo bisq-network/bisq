@@ -416,8 +416,8 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
-                Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
+        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
+                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
                         buyerSecurityDepositAsLong)));
         persist();
     }

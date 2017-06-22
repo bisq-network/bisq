@@ -22,16 +22,16 @@ import org.bitcoinj.core.Coin;
 
 public class Restrictions {
 
-    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
+    private static Coin MIN_TRADE_AMOUNT;
 
-    public static final Coin MAX_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.2");
-    public static final Coin MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001");
-    public static final Coin DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.03");
+    private static Coin MAX_BUYER_SECURITY_DEPOSIT;
+    private static Coin MIN_BUYER_SECURITY_DEPOSIT;
+    private static Coin DEFAULT_BUYER_SECURITY_DEPOSIT;
 
-    //TODO maybe move to separate class for constant values whcih might be changed in future by DAO voting?
+    //TODO maybe move to separate class for constant values which might be changed in future by DAO voting?
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
-    public static final Coin SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.01");
+    private static Coin SELLER_SECURITY_DEPOSIT;
 
     public static Coin getMinNonDustOutput() {
         if (minNonDustOutput == null)
@@ -47,5 +47,45 @@ public class Restrictions {
 
     public static boolean isAboveDust(Coin amount) {
         return amount != null && amount.compareTo(getMinNonDustOutput()) >= 0;
+    }
+
+    public static Coin getMinTradeAmount() {
+        if (MIN_TRADE_AMOUNT == null)
+            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0.25 EUR cent @ 2500 EUR/BTC 
+                    break;
+                case "LTC":
+                    MIN_TRADE_AMOUNT = Coin.valueOf(600_000); // 0.24 EUR cent @ 40 EUR/BTC 
+                    break;
+                case "DOGE":
+                    MIN_TRADE_AMOUNT = Coin.valueOf(80_000_000_000L);// 0.24 USD at DOGE price 0.003 USD
+                    break;
+            }
+        return MIN_TRADE_AMOUNT;
+    }
+
+    public static Coin getMaxBuyerSecurityDeposit() {
+        if (MAX_BUYER_SECURITY_DEPOSIT == null)
+            MAX_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(2000); // about 500 EUR
+        return MAX_BUYER_SECURITY_DEPOSIT;
+    }
+
+    public static Coin getMinBuyerSecurityDeposit() {
+        if (MIN_BUYER_SECURITY_DEPOSIT == null)
+            MIN_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(10); // about 2.5 eur
+        return MIN_BUYER_SECURITY_DEPOSIT;
+    }
+
+    public static Coin getDefaultBuyerSecurityDeposit() {
+        if (DEFAULT_BUYER_SECURITY_DEPOSIT == null)
+            DEFAULT_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(300); // about 75 eur
+        return DEFAULT_BUYER_SECURITY_DEPOSIT;
+    }
+
+    public static Coin getSellerSecurityDeposit() {
+        if (SELLER_SECURITY_DEPOSIT == null)
+            SELLER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(100); // about 25 eur
+        return SELLER_SECURITY_DEPOSIT;
     }
 }

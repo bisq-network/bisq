@@ -29,7 +29,7 @@ public class SecurityDepositValidator extends BtcValidator {
     @Inject
     public SecurityDepositValidator(BSFormatter formatter) {
         super(formatter);
-        setMaxValue(Restrictions.MAX_BUYER_SECURITY_DEPOSIT);
+        setMaxValue(Restrictions.getMaxBuyerSecurityDeposit());
     }
 
 
@@ -56,7 +56,7 @@ public class SecurityDepositValidator extends BtcValidator {
     protected ValidationResult validateIfNotTooLowBtcValue(String input) {
         try {
             final Coin coin = Coin.parseCoin(input);
-            Coin minSecurityDeposit = Restrictions.MIN_BUYER_SECURITY_DEPOSIT;
+            Coin minSecurityDeposit = Restrictions.getMinBuyerSecurityDeposit();
             if (coin.compareTo(minSecurityDeposit) < 0)
                 return new ValidationResult(false,
                         Res.get("validation.securityDeposit.toSmall", formatter.formatCoinWithCode(minSecurityDeposit)));
