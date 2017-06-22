@@ -48,12 +48,25 @@ public class Version {
     }
 
     static boolean isNewVersion(String newVersion, String currentVersion) {
-        return getMajorVersion(newVersion) > getMajorVersion(currentVersion) ||
-                getMinorVersion(newVersion) > getMinorVersion(currentVersion) ||
-                getPatchVersion(newVersion) > getPatchVersion(currentVersion);
+        if (newVersion.equals(currentVersion))
+            return false;
+        else if (getMajorVersion(newVersion) > getMajorVersion(currentVersion))
+            return true;
+        else if (getMajorVersion(newVersion) < getMajorVersion(currentVersion))
+            return false;
+        else if (getMinorVersion(newVersion) > getMinorVersion(currentVersion))
+            return true;
+        else if (getMinorVersion(newVersion) < getMinorVersion(currentVersion))
+            return false;
+        else if (getPatchVersion(newVersion) > getPatchVersion(currentVersion))
+            return true;
+        else if (getPatchVersion(newVersion) < getPatchVersion(currentVersion))
+            return false;
+        else
+            return false;
     }
 
-    static int getSubVersion(String version, int index) {
+    private static int getSubVersion(String version, int index) {
         final String[] split = version.split("\\.");
         checkArgument(split.length == 3, "Version number must be in semantic version format (contain 2 '.'). version=" + version);
         return Integer.parseInt(split[index]);
