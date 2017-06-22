@@ -1,7 +1,6 @@
 package io.bisq.network.p2p.seed;
 
 import com.google.common.collect.Sets;
-import io.bisq.common.app.DevEnv;
 import io.bisq.network.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,29 +18,28 @@ public class SeedNodesRepository {
     // - regtest uses port 8002
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
-            // BTC
-            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+            // BTC mainnet
+            new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
 
-            // LTC
-            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
-
-            // local dev test
-            // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
-
-            // testnet
-          /*  new NodeAddress("7qib4qu7h3qcox2r.onion:8001"),*/
+            // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
 
-            // regtest
+            // BTC regtest
             // For development you need to change that to your local onion addresses
             // 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=8002 --myAddress=rxdkppp3vicnbgqt:8002 --appName=bisq_seed_node_rxdkppp3vicnbgqt.onion_8002
             // 2. Find your local onion address in bisq_seed_node_rxdkppp3vicnbgqt.onion_8002/regtest/tor/hiddenservice/hostname
             // 3. Shut down the seed node
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
-            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("mfla72c4igh5ta2t.onion:8002")
+            new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
+            new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
+            new NodeAddress("mfla72c4igh5ta2t.onion:8002"),
+
+            // LTC mainnet
+            new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
+
+            // DOGE mainnet
+            new NodeAddress("iouuvpjnqjw4t3mp.onion:8006")
     );
 
     // Addresses are used if the last digit of their port match the network id:
