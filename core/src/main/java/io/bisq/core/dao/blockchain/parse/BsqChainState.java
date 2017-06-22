@@ -170,8 +170,8 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 genesisTxId = LTC_REG_TEST_GENESIS_TX_ID;
                 genesisBlockHeight = LTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
+            case LTC_MAINNET:
             default:
-                // LTC_MAINNET:
                 genesisTxId = LTC_GENESIS_TX_ID;
                 genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
                 break;

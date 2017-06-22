@@ -336,6 +336,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         // reserved for future use cases
         // Use null values if not set
+        boolean supportsDirectContact = true;
         boolean isPrivateOffer = false;
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
@@ -382,6 +383,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 sellerSecurityDeposit.value,
                 maxTradeLimit,
                 maxTradePeriod,
+                supportsDirectContact,
                 useAutoClose,
                 useReOpenAfterAutoClose,
                 upperClosePrice,

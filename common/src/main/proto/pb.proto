@@ -502,14 +502,15 @@ message OfferPayload {
     int64 seller_security_deposit = 28;
     int64 max_trade_limit = 29;
     int64 max_trade_period = 30;
-    bool use_auto_close = 31;
-    bool use_re_open_after_auto_close = 32;
-    int64 lower_close_price = 33;
-    int64 upper_close_price = 34;
-    bool is_private_offer = 35;
-    string hash_of_challenge = 36;
-    map<string, string> extra_data = 37;
-    int32 protocol_version = 38;
+    bool supportsDirectContact = 31;
+    bool use_auto_close = 32;
+    bool use_re_open_after_auto_close = 33;
+    int64 lower_close_price = 34;
+    int64 upper_close_price = 35;
+    bool is_private_offer = 36;
+    string hash_of_challenge = 37;
+    map<string, string> extra_data = 38;
+    int32 protocol_version = 39;
 }
 
 // TODO not fully verified as impl. is not completed
@@ -1100,6 +1101,7 @@ message PreferencesPayload {
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
+    bool supportsDirectContact = 34;
 }
 
 

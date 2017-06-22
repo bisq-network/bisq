@@ -116,6 +116,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
+    private final boolean supportsDirectContact;
 
     // reserved for future use cases
     // Close offer when certain price is reached
@@ -173,6 +174,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         long sellerSecurityDeposit,
                         long maxTradeLimit,
                         long maxTradePeriod,
+                        boolean supportsDirectContact,
                         boolean useAutoClose,
                         boolean useReOpenAfterAutoClose,
                         long lowerClosePrice,
@@ -211,6 +213,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.sellerSecurityDeposit = sellerSecurityDeposit;
         this.maxTradeLimit = maxTradeLimit;
         this.maxTradePeriod = maxTradePeriod;
+        this.supportsDirectContact = supportsDirectContact;
         this.useAutoClose = useAutoClose;
         this.useReOpenAfterAutoClose = useReOpenAfterAutoClose;
         this.lowerClosePrice = lowerClosePrice;
@@ -257,6 +260,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setMaxTradeLimit(maxTradeLimit)
                 .setMaxTradePeriod(maxTradePeriod)
+                .setSupportsDirectContact(supportsDirectContact)
                 .setUseAutoClose(useAutoClose)
                 .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
                 .setLowerClosePrice(lowerClosePrice)
@@ -320,6 +324,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getSellerSecurityDeposit(),
                 proto.getMaxTradeLimit(),
                 proto.getMaxTradePeriod(),
+                proto.getSupportsDirectContact(),
                 proto.getUseAutoClose(),
                 proto.getUseReOpenAfterAutoClose(),
                 proto.getLowerClosePrice(),
