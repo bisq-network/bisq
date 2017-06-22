@@ -29,6 +29,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
@@ -202,14 +203,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private void addListeners() {
         btcWalletService.addBalanceListener(btcBalanceListener);
-        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
         btcWalletService.removeBalanceListener(btcBalanceListener);
-        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
@@ -530,7 +533,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
-        return getMakerFee(false) != null && bsqWalletService.getAvailableBalance() != null && !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false)).isNegative();
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                getMakerFee(false) != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                getMakerFee(false) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false)).isNegative();
     }
 
 
@@ -692,7 +699,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
             if (marketPriceAvailable) {
-                makerFeeAsDouble = makerFeeAsDouble * marketPriceMargin * 100;
+                makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
                 // For BTC we round so min value change is 100 satoshi
                 if (isCurrencyForMakerFeeBtc)
                     makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
