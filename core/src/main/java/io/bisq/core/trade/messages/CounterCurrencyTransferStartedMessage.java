@@ -26,23 +26,30 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
+public final class CounterCurrencyTransferStartedMessage extends TradeMessage implements MailboxMessage {
     private final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
     private final byte[] buyerSignature;
+    @Nullable
+    private final String counterCurrencyTxId;
 
-    public FiatTransferStartedMessage(String tradeId,
-                                      String buyerPayoutAddress,
-                                      NodeAddress senderNodeAddress,
-                                      byte[] buyerSignature,
-                                      String uid) {
+    public CounterCurrencyTransferStartedMessage(String tradeId,
+                                                 String buyerPayoutAddress,
+                                                 NodeAddress senderNodeAddress,
+                                                 byte[] buyerSignature,
+                                                 @Nullable String counterCurrencyTxId,
+                                                 String uid) {
         this(tradeId,
                 buyerPayoutAddress,
                 senderNodeAddress,
                 buyerSignature,
+                counterCurrencyTxId,
                 uid,
                 Version.getP2PMessageVersion());
     }
@@ -52,36 +59,41 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private FiatTransferStartedMessage(String tradeId,
-                                       String buyerPayoutAddress,
-                                       NodeAddress senderNodeAddress,
-                                       byte[] buyerSignature,
-                                       String uid,
-                                       int messageVersion) {
+    private CounterCurrencyTransferStartedMessage(String tradeId,
+                                                  String buyerPayoutAddress,
+                                                  NodeAddress senderNodeAddress,
+                                                  byte[] buyerSignature,
+                                                  @Nullable String counterCurrencyTxId,
+                                                  String uid,
+                                                  int messageVersion) {
         super(messageVersion, tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
         this.buyerSignature = buyerSignature;
+        this.counterCurrencyTxId = counterCurrencyTxId;
         this.uid = uid;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setFiatTransferStartedMessage(PB.FiatTransferStartedMessage.newBuilder()
-                        .setTradeId(tradeId)
-                        .setBuyerPayoutAddress(buyerPayoutAddress)
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setBuyerSignature(ByteString.copyFrom(buyerSignature))
-                        .setUid(uid))
-                .build();
+        final PB.CounterCurrencyTransferStartedMessage.Builder builder = PB.CounterCurrencyTransferStartedMessage.newBuilder();
+        builder.setTradeId(tradeId)
+                .setBuyerPayoutAddress(buyerPayoutAddress)
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setBuyerSignature(ByteString.copyFrom(buyerSignature))
+                .setUid(uid);
+
+        Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
+
+        return getNetworkEnvelopeBuilder().setCounterCurrencyTransferStartedMessage(builder).build();
     }
 
-    public static FiatTransferStartedMessage fromProto(PB.FiatTransferStartedMessage proto, int messageVersion) {
-        return new FiatTransferStartedMessage(proto.getTradeId(),
+    public static CounterCurrencyTransferStartedMessage fromProto(PB.CounterCurrencyTransferStartedMessage proto, int messageVersion) {
+        return new CounterCurrencyTransferStartedMessage(proto.getTradeId(),
                 proto.getBuyerPayoutAddress(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getBuyerSignature().toByteArray(),
+                proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId(),
                 proto.getUid(),
                 messageVersion);
     }
@@ -89,9 +101,10 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
 
     @Override
     public String toString() {
-        return "FiatTransferStartedMessage{" +
+        return "CounterCurrencyTransferStartedMessage{" +
                 "\n     buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     counterCurrencyTxId=" + counterCurrencyTxId +
                 ",\n     uid='" + uid + '\'' +
                 ",\n     buyerSignature=" + Utilities.bytesAsHexString(buyerSignature) +
                 "\n} " + super.toString();

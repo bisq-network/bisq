@@ -28,7 +28,7 @@ import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
-import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
@@ -158,7 +158,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     BuyerAsMakerSignPayoutTx.class,
-                    BuyerSendFiatTransferStartedMessage.class,
+                    BuyerSendCounterCurrencyTransferStartedMessage.class,
                     BuyerSetupPayoutTxListener.class
             );
             taskRunner.run();

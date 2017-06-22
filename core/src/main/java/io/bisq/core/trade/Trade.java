@@ -310,7 +310,10 @@ public abstract class Trade implements Tradable, Model {
     private String takerPaymentAccountId;
     @Nullable
     private String errorMessage;
-
+    @Getter
+    @Setter
+    @Nullable
+    private String counterCurrencyTxId;
 
     // Transient
     // Immutable
@@ -426,6 +429,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
 
         return builder.build();
     }
@@ -451,6 +455,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
+        trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         return trade;
     }
 

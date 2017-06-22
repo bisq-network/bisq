@@ -94,8 +94,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage(), messageVersion);
                 case PUBLISH_DEPOSIT_TX_REQUEST:
                     return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
-                case FIAT_TRANSFER_STARTED_MESSAGE:
-                    return FiatTransferStartedMessage.fromProto(proto.getFiatTransferStartedMessage(), messageVersion);
+                case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
+                    return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
                 case PAYOUT_TX_PUBLISHED_MESSAGE:
                     return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage(), messageVersion);
 

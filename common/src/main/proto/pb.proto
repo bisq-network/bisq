@@ -41,7 +41,7 @@ message NetworkEnvelope {
         PayDepositRequest pay_deposit_request = 17;
         PublishDepositTxRequest publish_deposit_tx_request = 18;
         DepositTxPublishedMessage deposit_tx_published_message = 19;
-        FiatTransferStartedMessage fiat_transfer_started_message = 20;
+        CounterCurrencyTransferStartedMessage counter_currency_transfer_started_message = 20;
         PayoutTxPublishedMessage payout_tx_published_message = 21;
 
         OpenNewDisputeMessage open_new_dispute_message = 22;
@@ -209,12 +209,13 @@ message DepositTxPublishedMessage {
     string uid = 4;
 }
 
-message FiatTransferStartedMessage {
+message CounterCurrencyTransferStartedMessage {
     string trade_id = 1;
     string buyer_payout_address = 2;
     NodeAddress sender_node_address = 3;
     bytes buyer_signature = 4;
-    string uid = 5;
+    string counter_currency_tx_id = 5;
+    string uid = 6;
 }
 
 message FinalizePayoutTxRequest {
@@ -1002,6 +1003,7 @@ message Trade {
     string error_message = 25;
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
+    string counter_currency_tx_id = 28;
 }
 
 message BuyerAsMakerTrade {

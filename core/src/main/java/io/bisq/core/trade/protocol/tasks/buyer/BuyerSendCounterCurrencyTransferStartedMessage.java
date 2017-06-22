@@ -21,7 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.UUID;
 
 @Slf4j
-public class BuyerSendFiatTransferStartedMessage extends TradeTask {
+public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BuyerSendFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerSendCounterCurrencyTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -43,11 +43,12 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
             final String id = processModel.getOfferId();
             AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT);
-            final FiatTransferStartedMessage message = new FiatTransferStartedMessage(
+            final CounterCurrencyTransferStartedMessage message = new CounterCurrencyTransferStartedMessage(
                     id,
                     payoutAddressEntry.getAddressString(),
                     processModel.getMyNodeAddress(),
                     processModel.getPayoutTxSignature(),
+                    trade.getCounterCurrencyTxId(),
                     UUID.randomUUID().toString()
             );
             log.info("Send message to peer. tradeId={}, message{}", id, message);

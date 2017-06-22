@@ -30,10 +30,10 @@ import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
-import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.trade.protocol.tasks.maker.*;
-import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
@@ -100,7 +100,7 @@ public class DebugView extends InitializableView {
                         MakerProcessDepositTxPublishedMessage.class,
 
                         MakerVerifyTakerFeePayment.class,
-                        BuyerSendFiatTransferStartedMessage.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
 
                         Boolean.class, /* used as separator*/
                         
@@ -119,7 +119,7 @@ public class DebugView extends InitializableView {
                         SellerAsTakerSignAndPublishDepositTx.class,
                         TakerSendDepositTxPublishedMessage.class,
 
-                        SellerProcessFiatTransferStartedMessage.class,
+                        SellerProcessCounterCurrencyTransferStartedMessage.class,
 
                         TakerVerifyMakerFeePayment.class,
 
@@ -142,7 +142,7 @@ public class DebugView extends InitializableView {
                         TakerSendDepositTxPublishedMessage.class,
 
                         TakerVerifyMakerFeePayment.class,
-                        BuyerSendFiatTransferStartedMessage.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
 
                         Boolean.class, /* used as separator*/
                         
@@ -159,7 +159,7 @@ public class DebugView extends InitializableView {
 
                         MakerProcessDepositTxPublishedMessage.class,
 
-                        SellerProcessFiatTransferStartedMessage.class,
+                        SellerProcessCounterCurrencyTransferStartedMessage.class,
 
                         MakerVerifyTakerFeePayment.class,
 
