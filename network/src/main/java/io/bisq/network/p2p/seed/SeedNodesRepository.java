@@ -39,7 +39,8 @@ public class SeedNodesRepository {
             new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
 
             // DOGE mainnet
-            new NodeAddress("iouuvpjnqjw4t3mp.onion:8006")
+            new NodeAddress("iouuvpjnqjw4t3mp.onion:8006"),
+            new NodeAddress("6kdjei7twxj45j43.onion:8006")
     );
 
     // Addresses are used if the last digit of their port match the network id:
