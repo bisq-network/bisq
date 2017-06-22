@@ -49,10 +49,10 @@ public class FeeService {
 
     // Dust limit for LTC is 100 000 sat
     // https://litecoin.info/Transaction_fees
-    private static final long MIN_MAKER_FEE_IN_BASE_CUR = 100_000; // 0.03 USD at LTC price 30 USD
-    private static final long MIN_TAKER_FEE_IN_BASE_CUR = 100_000;
-    private static final long DEFAULT_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.10 USD at LTC price 30 USD
-    private static final long DEFAULT_TAKER_FEE_IN_BASE_CUR = 400_000; // 0.12 USD at LTC price 30 USD
+    private static long MIN_MAKER_FEE_IN_BASE_CUR;
+    private static long MIN_TAKER_FEE_IN_BASE_CUR;
+    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR;
+    private static long DEFAULT_TAKER_FEE_IN_BASE_CUR;
 
     private static final long MIN_MAKER_FEE_IN_MBSQ = 30; // 0.0003 bsq -> 0.003 USD -> 1% of MIN_MAKER_FEE_IN_BASE_CUR
     private static final long MIN_TAKER_FEE_IN_MBSQ = 30;
@@ -82,12 +82,24 @@ public class FeeService {
 
         switch (baseCurrencyCode) {
             case "BTC":
+                MIN_MAKER_FEE_IN_BASE_CUR = 10_000; // 0.25 USD at BTC price 2500 USD 
+                MIN_TAKER_FEE_IN_BASE_CUR = 10_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 100_000; // 2.50 USD at BTC price 2500 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 150_000; // 3.25 USD at BTC price 2500 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
+                MIN_MAKER_FEE_IN_BASE_CUR = 600_000; // 0.24 USD at LTC price 40 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 600_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 6_000_000; // 2.4 USD at LTC price 40 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 9_000_000; // 3.6 USD at LTC price 40 USD
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
+                MIN_MAKER_FEE_IN_BASE_CUR = 80_000_000_000L; // 0.24 USD at DOGE price 0.003 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 80_000_000_000L;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 800_000_000_000L; // 2.4 USD at DOGE price 0.003 USD 
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 1_200_000_000_000L; // 3.6 USD at DOGE price 0.003 USD
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             default:
