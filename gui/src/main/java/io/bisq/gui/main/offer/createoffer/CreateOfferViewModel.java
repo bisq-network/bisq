@@ -27,6 +27,7 @@ import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -193,9 +194,22 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void activate() {
         if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("500000");
+                switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                    case "BTC":
+                        amount.set("1");
+                        price.set("2500");
+                        break;
+                    case "LTC":
+                        amount.set("50");
+                        price.set("40");
+                        break;
+                    case "DOGE":
+                        amount.set("800000");
+                        price.set("0.003");
+                        break;
+                }
+
                 minAmount.set(amount.get());
-                price.set("0.0029");
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
                 updateButtonDisableState();
