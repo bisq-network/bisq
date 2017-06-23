@@ -26,6 +26,7 @@ import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PivxParams;
+import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -67,6 +68,7 @@ public final class AltCoinAddressValidator extends InputValidator {
 
             switch (currencyCode) {
                 case "BTC":
+                    // TODO add BTC validator when LTC is base currency
                     try {
                         switch (BisqEnvironment.getBaseCurrencyNetwork()) {
                             case BTC_MAINNET:
@@ -78,6 +80,18 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case BTC_REGTEST:
                                 Address.fromBase58(RegTestParams.get(), input);
                                 break;
+                            case LTC_MAINNET:
+                            case LTC_TESTNET:
+                            case LTC_REGTEST:
+                            case DOGE_MAINNET:
+                            case DOGE_TESTNET:
+                            case DOGE_REGTEST:
+                                try {
+                                    Address.fromBase58(BtcMainNetParams.get(), input);
+                                    return new ValidationResult(true);
+                                } catch (AddressFormatException e) {
+                                    return new ValidationResult(false, getErrorMessage(e));
+                                }
                         }
                         return new ValidationResult(true);
                     } catch (AddressFormatException e) {
