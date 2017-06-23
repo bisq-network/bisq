@@ -89,7 +89,7 @@ public class GUIUtil {
         //noinspection UnusedAssignment
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
                     .onClose(runnable::run)

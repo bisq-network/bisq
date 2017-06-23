@@ -27,7 +27,6 @@ import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
@@ -129,7 +128,6 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     private Tx genesisTx;
 
     // transient
-    transient private final boolean dumpBlockchainData;
     transient private final Storage<BsqChainState> storage;
     transient private BsqChainState snapshotCandidate;
     transient private FunctionalReadWriteLock lock;
@@ -142,9 +140,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqChainState(PersistenceProtoResolver persistenceProtoResolver,
-                         @Named(Storage.STORAGE_DIR) File storageDir,
-                         @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.dumpBlockchainData = dumpBlockchainData;
+                         @Named(Storage.STORAGE_DIR) File storageDir) {
 
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 

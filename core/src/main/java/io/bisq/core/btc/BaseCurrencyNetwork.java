@@ -60,4 +60,12 @@ public enum BaseCurrencyNetwork {
     public boolean isRegtest() {
         return "REGTEST".equals(network);
     }
+
+    public boolean isBitcoin() {
+        return "BTC".equals(currencyCode);
+    }
+
+    public boolean isLitecoin() {
+        return "LTC".equals(currencyCode);
+    }
 }
