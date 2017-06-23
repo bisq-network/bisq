@@ -62,13 +62,13 @@
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 
-    <!-- <logger name="org.bitcoinj" level="DEBUG"/>
-   <logger name="org.bitcoinj.core.Peer" level="ERROR"/>
+    <logger name="org.bitcoinj" level="WARN"/>
+    <logger name="org.bitcoinj.core.Peer" level="ERROR"/>
     <logger name="org.bitcoinj.core.PeerGroup" level="ERROR"/>
     <logger name="org.bitcoinj.net.ConnectionHandler" level="ERROR"/>
     <logger name="org.bitcoinj.core.PeerSocketHandler" level="ERROR"/>
     <logger name="org.bitcoinj.net.NioClientManager" level="ERROR"/>
-    <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="ERROR"/>-->
+    <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="ERROR"/>
     
     <!-- <logger name="org.bitcoinj.core.Peer" level="TRACE"/>-->
 

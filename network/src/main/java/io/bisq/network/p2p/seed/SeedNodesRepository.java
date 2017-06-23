@@ -38,8 +38,8 @@ public class SeedNodesRepository {
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-            new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            new NodeAddress("mfla72c4igh5ta2t.onion:8002"),
+           /* new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
+            new NodeAddress("mfla72c4igh5ta2t.onion:8002"),*/
 
             // LTC mainnet
             new NodeAddress("acyvotgewx46pebw.onion:8003"),
