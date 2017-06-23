@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
@@ -225,28 +226,22 @@ public class PriceFeedService {
                     epochInSecondAtLastRequest = timeStampMap.get("btcAverageTs");
                     final Map<String, MarketPrice> priceMap = result.second;
                     switch (baseCurrencyCode) {
+                        case "BTC":
+                            // do nothing as we request btc based prices
+                            cache.putAll(priceMap);
+                            break;
                         case "LTC":
-                            // apply conversion of btc based price to ltc based with btc/ltc price
-                            MarketPrice ltcPrice = priceMap.get("LTC");
+                        case "DOGE":
+                            // apply conversion of btc based price to baseCurrencyCode based with btc/baseCurrencyCode price
+                            MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
                             Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
                             priceMap.entrySet().stream().forEach(e -> {
                                 final MarketPrice value = e.getValue();
-                                double convertedPrice = value.getPrice() * ltcPrice.getPrice();
-                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
-                            });
-                            cache.putAll(convertedPriceMap);
-                            break;
-                        case "BTC":
-                            // do nothing as we requrest btc based prices
-                            cache.putAll(priceMap);
-                            break;
-                        case "DOGE":
-                            // apply conversion of btc based price to doge based with btc/doge price
-                            MarketPrice dogePrice = priceMap.get("DOGE");
-                            convertedPriceMap = new HashMap<>();
-                            priceMap.entrySet().stream().forEach(e -> {
-                                final MarketPrice value = e.getValue();
-                                double convertedPrice = value.getPrice() * dogePrice.getPrice();
+                                double convertedPrice;
+                                if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                    convertedPrice = value.getPrice() / baseCurrencyPrice.getPrice();
+                                else
+                                    convertedPrice = value.getPrice() * baseCurrencyPrice.getPrice();
                                 convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
                             });
                             cache.putAll(convertedPriceMap);
