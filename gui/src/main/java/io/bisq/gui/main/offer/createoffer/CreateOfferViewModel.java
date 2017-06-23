@@ -424,7 +424,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
             if (newValue != null)
-                volume.set(btcFormatter.formatVolumeWithMinPrecision(newValue));
+                volume.set(btcFormatter.formatVolume(newValue));
             else
                 volume.set("");
 
@@ -704,7 +704,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 setVolumeToModel();
                 ignoreVolumeStringListener = true;
                 if (dataModel.getVolume().get() != null)
-                    volume.set(btcFormatter.formatVolumeWithMinPrecision(dataModel.getVolume().get()));
+                    volume.set(btcFormatter.formatVolume(dataModel.getVolume().get()));
                 ignoreVolumeStringListener = false;
 
                 dataModel.calculateAmount();

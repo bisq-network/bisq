@@ -62,8 +62,8 @@ public class BSFormatter {
 
     //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
-    protected final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
-    protected final MonetaryFormat fiatFormatWithMinPrecision = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
     protected final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
     protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
@@ -156,14 +156,6 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // FIAT
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String formatFiat(Fiat fiat) {
-        return formatFiat(fiat, fiatFormat, false);
-    }
-
-    public String formatFiatWithCode(Fiat fiat) {
-        return formatFiat(fiat, fiatFormat, true);
-    }
 
     public String formatFiat(Fiat fiat, MonetaryFormat format, boolean appendCurrencyCode) {
         if (fiat != null) {
@@ -258,24 +250,19 @@ public class BSFormatter {
     // Volume
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public String formatVolume(Volume volume) {
-        return formatVolume(volume, fiatFormat, false);
-    }
-
-    public String formatVolumeWithMinPrecision(Volume volume) {
-        return formatVolume(volume, fiatFormatWithMinPrecision, false);
+        return formatVolume(volume, fiatVolumeFormat, false);
     }
 
     public String formatVolumeWithCode(Volume volume) {
-        return formatVolume(volume, fiatFormat, true);
+        return formatVolume(volume, fiatVolumeFormat, true);
     }
 
-    public String formatVolume(Volume volume, MonetaryFormat fiatFormat, boolean appendCurrencyCode) {
+    public String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
         if (volume != null) {
             Monetary monetary = volume.getMonetary();
             if (monetary instanceof Fiat)
-                return formatFiat((Fiat) monetary, fiatFormat, appendCurrencyCode);
+                return formatFiat((Fiat) monetary, fiatVolumeFormat, appendCurrencyCode);
             else
                 return formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
         } else {
@@ -337,11 +324,11 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String formatPrice(Price price, MonetaryFormat fiatFormat, boolean appendCurrencyCode) {
+    public String formatPrice(Price price, MonetaryFormat fiatPriceFormat, boolean appendCurrencyCode) {
         if (price != null) {
             Monetary monetary = price.getMonetary();
             if (monetary instanceof Fiat)
-                return formatFiat((Fiat) monetary, fiatFormat, appendCurrencyCode);
+                return formatFiat((Fiat) monetary, fiatPriceFormat, appendCurrencyCode);
             else
                 return formatAltcoin((Altcoin) monetary, appendCurrencyCode);
         } else {
@@ -349,18 +336,14 @@ public class BSFormatter {
         }
     }
 
-    public String formatPriceWithMinPrecision(Price price) {
-        return formatPrice(price, fiatFormatWithMinPrecision, false);
-    }
-
     public String formatPrice(Price price) {
-        return formatPrice(price, fiatFormat, false);
+        return formatPrice(price, fiatPriceFormat, false);
     }
 
     public String formatPriceWithCode(Price price) {
         Monetary monetary = price.getMonetary();
         if (monetary instanceof Fiat)
-            return formatFiatWithCode((Fiat) monetary);
+            return formatFiat((Fiat) monetary, fiatPriceFormat, true);
         else {
             return formatAltcoinWithCode((Altcoin) monetary);
         }

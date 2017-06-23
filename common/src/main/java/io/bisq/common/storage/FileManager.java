@@ -184,81 +184,39 @@ public class FileManager<T extends PersistableEnvelope> {
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
-        PB.PersistableEnvelope protoPersistable = null;
         try {
-            protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-            if (protoPersistable.toByteArray().length == 0)
-                log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
-            // check if what we're saving can also be read in correctly
-           /* if (DevEnv.DEV_MODE) {
-                if (protoPersistable != null) {
-                    log.debug("Checking that the saved Persistable can be read again...");
-                    PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-                    if (object == null) {
-                        log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
-                        persistenceProtoResolver.fromProto(protoPersistable);
-                    } else {
-                        log.debug("Check on saved Persistable complete: {} ", object);
-                    }
-                } else {
-                    log.debug("protoPersistable is null ");
-                    //protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-                }
-            }*/
-        } catch (Throwable e) {
-            log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), storageFile);
-            e.printStackTrace();
-            //  protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-            //noinspection UnusedAssignment
-            //PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-        }
-
-        try {
+            log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
+            PB.PersistableEnvelope protoPersistable;
+            try {
+                protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+                if (protoPersistable.toByteArray().length == 0)
+                    log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
+            } catch (Throwable e) {
+                log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), storageFile);
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+            
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
             tempFile.deleteOnExit();
-            if (protoPersistable != null) {
-                fileOutputStream = new FileOutputStream(tempFile);
+            fileOutputStream = new FileOutputStream(tempFile);
 
-                log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
-                writeLock.lock();
-                protoPersistable.writeDelimitedTo(fileOutputStream);
+            log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
+            writeLock.lock();
+            protoPersistable.writeDelimitedTo(fileOutputStream);
 
-                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
-                // to not write through to physical media for at least a few seconds, but this is the best we can do.
-                fileOutputStream.flush();
-                fileOutputStream.getFD().sync();
-                writeLock.unlock();
+            // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+            // to not write through to physical media for at least a few seconds, but this is the best we can do.
+            fileOutputStream.flush();
+            fileOutputStream.getFD().sync();
+            writeLock.unlock();
 
-                // Close resources before replacing file with temp file because otherwise it causes problems on windows
-                // when rename temp file
-                fileOutputStream.close();
-            } else {
-                log.warn("Could not persist: {},{}", persistable.getClass(), persistable.toString());
-                /*
-                // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
-                // and we need to close it
-                // manually before replacing file with temp file
-                fileOutputStream = new FileOutputStream(tempFile);
-                objectOutputStream = new ObjectOutputStream(fileOutputStream);
-
-                writeLock.lock();
-                objectOutputStream.writeObject(persistable);
-                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
-                // to not write through to physical media for at least a few seconds, but this is the best we can do.
-                fileOutputStream.flush();
-                fileOutputStream.getFD().sync();
-                writeLock.unlock();
-
-                // Close resources before replacing file with temp file because otherwise it causes problems on windows
-                // when rename temp file
-                fileOutputStream.close();
-                objectOutputStream.close();
-                */
-            }
+            // Close resources before replacing file with temp file because otherwise it causes problems on windows
+            // when rename temp file
+            fileOutputStream.close();
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
             log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
