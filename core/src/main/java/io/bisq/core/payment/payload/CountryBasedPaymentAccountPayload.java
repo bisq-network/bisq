@@ -43,12 +43,12 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
         this.countryCode = countryCode;
     }
 
-    protected PB.CountryBasedPaymentAccountPayload.Builder getCountryBasedPaymentAccountPayloadBuilder() {
+    @Override
+    protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         PB.CountryBasedPaymentAccountPayload.Builder builder = PB.CountryBasedPaymentAccountPayload.newBuilder()
                 .setCountryCode(countryCode);
-        return getPaymentAccountPayloadBuilder()
-                .setCountryBasedPaymentAccountPayload(builder)
-                .getCountryBasedPaymentAccountPayloadBuilder();
+        return super.getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(builder);
     }
 
 

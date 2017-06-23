@@ -74,8 +74,18 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     public Message toProtoMessage() {
         final PB.SpecificBanksAccountPayload.Builder builder = PB.SpecificBanksAccountPayload.newBuilder()
                 .addAllAcceptedBanks(acceptedBanks);
-        return getBankAccountPayloadBuilder()
-                .setSpecificBanksAccountPayload(builder)
+
+        PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .getBankAccountPayloadBuilder()
+                .setSpecificBanksAccountPayload(builder);
+
+        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setBankAccountPayload(bankAccountPayloadBuilder);
+
+        return getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
                 .build();
     }
 
@@ -88,12 +98,12 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getHolderName(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBranchId(),
-                bankAccountPayload.getAccountNr(),
-                bankAccountPayload.getAccountType(),
-                bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId(),
+                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
+                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
         );
     }

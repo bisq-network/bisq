@@ -63,8 +63,17 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        return getBankAccountPayloadBuilder()
-                .setNationalBankAccountPayload(PB.NationalBankAccountPayload.newBuilder())
+        PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .getBankAccountPayloadBuilder()
+                .setNationalBankAccountPayload(PB.NationalBankAccountPayload.newBuilder());
+
+        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setBankAccountPayload(bankAccountPayloadBuilder);
+
+        return getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
                 .build();
     }
 
@@ -76,12 +85,12 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                 proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getHolderName(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBranchId(),
-                bankAccountPayload.getAccountNr(),
-                bankAccountPayload.getAccountType(),
+                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId());
+                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId());
     }
 
     @Override
