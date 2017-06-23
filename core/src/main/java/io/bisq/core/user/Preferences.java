@@ -153,12 +153,13 @@ public final class Preferences implements PersistedDataHost {
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("Preferences");
-
+        TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            setPreferredTradeCurrency(checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"));
+            preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
+            setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
 
@@ -167,8 +168,9 @@ public final class Preferences implements PersistedDataHost {
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
             prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            prefPayload.setPreferredTradeCurrency(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code));
-
+            preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
+                    "preferredTradeCurrency must not be null");
+            prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
@@ -191,6 +193,11 @@ public final class Preferences implements PersistedDataHost {
             }
 
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
+
+            prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
 
@@ -198,13 +205,7 @@ public final class Preferences implements PersistedDataHost {
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
 
-        GlobalSettings.setDefaultTradeCurrency(prefPayload.getPreferredTradeCurrency());
-
-        // TODO why do we do this ???? Should this be in the null case instead?
-        prefPayload.setOfferBookChartScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setTradeChartsScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setBuyScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setSellScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
 
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
