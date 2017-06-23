@@ -432,9 +432,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void onPaymentAccountsComboBoxSelected() {
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
-        maybeShowClearXchangeWarning(paymentAccount);
-
         if (paymentAccount != null) {
+            maybeShowClearXchangeWarning(paymentAccount);
+            
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
@@ -946,7 +946,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
         else
             makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);
-        
+
         GridPane.setRowIndex(makerFeeRowHBox, gridRow);
         GridPane.setColumnIndex(makerFeeRowHBox, 1);
         GridPane.setMargin(makerFeeRowHBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
