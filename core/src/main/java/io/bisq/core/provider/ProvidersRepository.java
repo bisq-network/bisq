@@ -46,7 +46,7 @@ public class ProvidersRepository {
                 // providers = "http://localhost:8080/, http://37.139.14.34:8080/";
                 providers = "http://37.139.14.34:8080/";
             } else {
-                providers = "http://44mgyoe2b6oqiytt.onion/";
+                providers = "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/";
             }
         }
 
