@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.5.0.0
+version=0.5.0
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/bisq-$version.jar"
 

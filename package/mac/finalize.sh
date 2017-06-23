@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.5.0.0"
+version="0.5.0"
 
 target_dir="/Users/dev/Documents/__bisq/_releases/$version"
 src_dir="/Users/dev/Documents/intellij/bisq"
