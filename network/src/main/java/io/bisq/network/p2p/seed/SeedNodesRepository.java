@@ -19,7 +19,13 @@ public class SeedNodesRepository {
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // BTC mainnet
-            new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
+            new NodeAddress("723ljisnynbtdohi.onion:8000"),
+            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
+
+            // local dev
+            // new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
@@ -36,11 +42,20 @@ public class SeedNodesRepository {
             new NodeAddress("mfla72c4igh5ta2t.onion:8002"),
 
             // LTC mainnet
-            new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
+            new NodeAddress("acyvotgewx46pebw.onion:8003"),
+            new NodeAddress("bolqw3hs55uii7ku.onion:8003"),
+            new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
+            new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
+
+            // local dev
+            // new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
 
             // DOGE mainnet
-            new NodeAddress("iouuvpjnqjw4t3mp.onion:8006"),
-            new NodeAddress("6kdjei7twxj45j43.onion:8006")
+            new NodeAddress("t6bwuj75mvxswavs.onion:8006")
+
+            // local dev
+            //new NodeAddress("iouuvpjnqjw4t3mp.onion:8006"),
+            //new NodeAddress("6kdjei7twxj45j43.onion:8006")
     );
 
     // Addresses are used if the last digit of their port match the network id:
