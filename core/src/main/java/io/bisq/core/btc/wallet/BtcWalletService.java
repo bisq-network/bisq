@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.locale.Res;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -106,11 +105,11 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return Res.getBaseCurrencyCode() + " Wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
-                "Bisq " + Res.getBaseCurrencyCode() + "address entry list:\n" +
+        return "Address entry list:\n" +
                 sb.toString() +
-                "All pubkeys as hex:\n" +
+                "\n\n" +
+                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
 
@@ -361,6 +360,8 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> context == e.getContext())
                 .findAny();
         addressEntryOptional.ifPresent(e -> {
+            log.info("swap addressEntry with address {} and offerId {} from context {} to available",
+                    e.getAddressString(), e.getOfferId(), context);
             addressEntryList.swapToAvailable(e);
             saveAddressEntryList();
         });
