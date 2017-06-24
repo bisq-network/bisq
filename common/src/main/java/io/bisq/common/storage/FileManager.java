@@ -110,7 +110,7 @@ public class FileManager<T extends PersistableEnvelope> {
 
     @SuppressWarnings("unchecked")
     public synchronized T read(File file) {
-        log.info("Read from disc: {}", file.getAbsolutePath());
+        log.info("Read from disc: {}", file.getName());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             PB.PersistableEnvelope persistable = PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
@@ -185,7 +185,7 @@ public class FileManager<T extends PersistableEnvelope> {
         PrintWriter printWriter = null;
 
         try {
-            log.info("Write to disc: {}", storageFile.getAbsolutePath());
+            log.info("Write to disc: {}", storageFile.getName());
             PB.PersistableEnvelope protoPersistable;
             try {
                 protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();

@@ -12,64 +12,24 @@
 
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
 
+    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 
-    <!-- <logger name="io.bisq.storage.Storage" level="WARN"/>
-     <logger name="io.bisq.storage.FileManager" level="WARN"/>
-     <logger name="io.bisq.locale.BSResources" level="ERROR"/>
- 
-     &lt;!&ndash;<logger name="io.bisq.p2p" level="WARN"/>&ndash;&gt;
-     <logger name="io.bisq.btc.pricefeed" level="WARN"/>
- 
- 
-     <logger name="io.bisq.storage.Storage" level="WARN"/>
-     <logger name="io.bisq.storage.FileManager" level="WARN"/>
- 
-     <logger name="io.bisq.p2p.peers" level="WARN"/>
-     <logger name="io.bisq.p2p.peers.getdata" level="WARN"/>
-     <logger name="io.bisq.p2p.peers.keepalive" level="WARN"/>
-     <logger name="io.bisq.p2p.peers.peerexchange" level="WARN"/>-->
+    <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
+    <logger name="org.bitcoinj.net.BlockingClient" level="WARN"/>
+    <logger name="org.bitcoinj.core.PeerGroup" level="WARN"/>
+    <logger name="org.bitcoinj.core.Peer" level="WARN"/>
+    <logger name="org.bitcoinj.core.Context" level="WARN"/>
+    <logger name="org.bitcoinj.wallet.WalletFiles" level="WARN"/>
+    <logger name="org.bitcoinj.core.listeners.DownloadProgressTracker" level="WARN"/>
+    <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
+    <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
 
-    <!--<logger name="io.bisq.p2p.network" level="WARN"/>-->
-    <!-- <logger name="io.bisq.p2p.P2PService" level="WARN"/>-->
-
-
-    <!-- <logger name="io.bisq.p2p.peers.PeerGroup" level="TRACE"/>
-    
-    
-
-     <logger name="io.bisq.p2p.P2PService" level="TRACE"/>
-     <logger name="io.bisq.p2p.storage.ProtectedExpirableDataStorage" level="TRACE"/>
-     <logger name="io.bisq.p2p.network.LocalhostNetworkNode" level="TRACE"/>
-     <logger name="io.bisq.p2p.network.TorNetworkNode" level="TRACE"/>
-     <logger name="io.bisq.p2p.network.NetworkNode" level="TRACE"/>-->
-
-
-    <!-- <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
- 
-     <logger name="io.bisq.btc.AddressBasedCoinSelector" level="WARN"/>
-     <logger name="io.bisq.storage.Storage" level="WARN"/>
- 
-     <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
-     <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
-     <logger name="io.bisq.storage.FileManager" level="WARN"/>
- 
-     <logger name="org.bitcoinj" level="WARN"/>
- 
-     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
-     <logger name="org.bitcoinj.core.Peer" level="WARN"/>
-     <logger name="org.bitcoinj.core.HeadersMessage" level="WARN"/>
-     <logger name="org.bitcoinj.core.AbstractBlockChain" level="ERROR"/>-->
-
-    <!-- <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
- -->
-    <!-- <logger name="org.bitcoinj" level="WARN"/>
-     <logger name="org.bitcoinj.core.Peer" level="WARN"/>
-     <logger name="org.bitcoinj.core.PeerGroup" level="WARN"/>
+    <!-- 
      <logger name="org.bitcoinj.net.ConnectionHandler" level="WARN"/>
-     <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
-     <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
-     <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="WARN"/>-->
     
-    <!-- <logger name="org.bitcoinj.core.Peer" level="TRACE"/>-->
+    
+     <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="WARN"/>
+     
+     -->
 
 </configuration>
