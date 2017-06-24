@@ -17,13 +17,13 @@
 
 package io.bisq.gui.main;
 
+import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
 import io.bisq.common.Clock;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
@@ -98,6 +98,9 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.security.Security;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -287,8 +290,30 @@ public class MainViewModel implements ViewModel {
         }
     }
 
+    private void checkIfLocalHostNodeIsRunning() {
+        Socket socket = null;
+        try {
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
+                    BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
+            log.info("Localhost peer detected.");
+            bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
+        } catch (IOException e) {
+            log.info("Localhost peer not detected.");
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+    }
+
     private void startBasicServices() {
-        Log.traceCall();
+        log.info("startBasicServices");
+
+        checkIfLocalHostNodeIsRunning();
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -307,7 +332,7 @@ public class MainViewModel implements ViewModel {
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ())
+        if (!preferences.getUseTorForBitcoinJ() || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             initWalletService();
 
         // need to store it to not get garbage collected
@@ -346,7 +371,8 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BooleanProperty initP2PNetwork() {
-        Log.traceCall();
+        log.info("initP2PNetwork");
+
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
@@ -400,6 +426,7 @@ public class MainViewModel implements ViewModel {
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
+                log.info("onTorNodeReady");
                 bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
 
@@ -409,12 +436,14 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onHiddenServicePublished() {
+                log.info("onHiddenServicePublished");
                 hiddenServicePublished.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.hiddenServicePublished"));
             }
 
             @Override
             public void onRequestingDataCompleted() {
+                log.info("onRequestingDataCompleted");
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
                 splashP2PNetworkAnimationVisible.set(false);
@@ -423,6 +452,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoSeedNodeAvailable() {
+                log.info("onNoSeedNodeAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0)
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noSeedNodesAvailable"));
                 else
@@ -434,6 +464,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoPeersAvailable() {
+                log.info("onNoPeersAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.noNodesAvailable"));
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noNodesAvailable"));
@@ -448,12 +479,14 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onBootstrapComplete() {
+                log.info("onBootstrapComplete");
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+                log.warn("onSetupFailed");
                 p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
@@ -465,7 +498,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private void initWalletService() {
-        Log.traceCall();
+        log.info("initWalletService");
+
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(), walletsSetup.numPeersProperty(), walletServiceException,
                 (downloadPercentage, numPeers, exception) -> {
@@ -530,6 +564,7 @@ public class MainViewModel implements ViewModel {
 
         walletsSetup.initialize(null,
                 () -> {
+                    log.info("walletsSetup.onInitialized");
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
                     // We only check one as we apply encryption to all or none
@@ -560,7 +595,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void onBasicServicesInitialized() {
-        Log.traceCall();
+        log.info("onBasicServicesInitialized");
 
         clock.start();
 

@@ -583,7 +583,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Trade state={}, id={}", state, getShortId());
+        log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
             boolean changed = this.state != state;
             this.state = state;

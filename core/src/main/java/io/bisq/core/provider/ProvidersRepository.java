@@ -54,7 +54,7 @@ public class ProvidersRepository {
 
         int index = new Random().nextInt(providerArray.length);
         baseUrl = providerArray[index];
-        log.info("baseUrl for PriceFeedService: " + baseUrl);
+        log.debug("baseUrl: " + baseUrl);
     }
 
     public String getBaseUrl() {

@@ -81,7 +81,6 @@ public final class Preferences implements PersistedDataHost {
     @Delegate(excludes = ExcludesDelegateMethods.class)
     private PreferencesPayload prefPayload = new PreferencesPayload();
     private boolean initialReadDone = false;
-    private BisqEnvironment bisqEnvironment;
 
     @Getter
     private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
@@ -95,6 +94,7 @@ public final class Preferences implements PersistedDataHost {
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
     private final Storage<PreferencesPayload> storage;
+    private final BisqEnvironment bisqEnvironment;
     private final String btcNodesFromOptions;
     private final String useTorFlagFromOptions;
     private boolean autoSelectArbitrators;
@@ -152,7 +152,7 @@ public final class Preferences implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("Preferences");
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload");
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -526,7 +526,9 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty()
+                || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+                || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

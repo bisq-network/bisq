@@ -21,8 +21,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
 import io.bisq.core.btc.wallet.*;
+import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.provider.fee.FeeProvider;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.network.http.HttpClient;
@@ -62,7 +63,8 @@ public class BitcoinModule extends AppModule {
         bind(BsqCoinSelector.class).in(Singleton.class);
 
         bind(HttpClient.class).in(Singleton.class);
-        bind(BsqUtxoFeedService.class).in(Singleton.class);
+        bind(ProvidersRepository.class).in(Singleton.class);
+        bind(FeeProvider.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);
         bind(FeeService.class).in(Singleton.class);
     }

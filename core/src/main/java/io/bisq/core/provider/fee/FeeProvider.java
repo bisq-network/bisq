@@ -18,23 +18,24 @@ package io.bisq.core.provider.fee;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.inject.Inject;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.HttpClientProvider;
+import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.network.http.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO use protobuffer instead of json
+@Slf4j
 public class FeeProvider extends HttpClientProvider {
-    private static final Logger log = LoggerFactory.getLogger(FeeProvider.class);
 
-    public FeeProvider(HttpClient httpClient, String baseUrl) {
-        super(httpClient, baseUrl, false);
+    @Inject
+    public FeeProvider(HttpClient httpClient, ProvidersRepository providersRepository) {
+        super(httpClient, providersRepository.getBaseUrl(), false);
     }
 
     public Tuple2<Map<String, Long>, Map<String, Long>> getFees() throws IOException {

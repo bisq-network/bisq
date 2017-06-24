@@ -205,7 +205,7 @@ public class BisqApp extends Application {
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
                 try {
-                    log.info("call readPersisted at " + e.getClass().getSimpleName());
+                    log.debug("call readPersisted at " + e.getClass().getSimpleName());
                     e.readPersisted();
                 } catch (Throwable e1) {
                     log.error("readPersisted error", e1);

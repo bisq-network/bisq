@@ -25,8 +25,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.provider.ProvidersRepository;
-import io.bisq.network.http.HttpClient;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -76,9 +74,9 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository) {
+    public FeeService(FeeProvider feeProvider) {
+        this.feeProvider = feeProvider;
         baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
 
         switch (baseCurrencyCode) {
             case "BTC":
@@ -127,7 +125,7 @@ public class FeeService {
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
                         txFeePerByte = map.get(baseCurrencyCode);
-                        log.info("Tx fee: txFeePerByte={} for currency {}", txFeePerByte, baseCurrencyCode);
+                        log.info("{} tx fee: txFeePerByte={}", baseCurrencyCode, txFeePerByte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });

@@ -77,6 +77,7 @@ public class WalletsSetup {
     private final UserAgent userAgent;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
+    private final BisqEnvironment bisqEnvironment;
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
@@ -98,6 +99,7 @@ public class WalletsSetup {
                         UserAgent userAgent,
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
+                        BisqEnvironment bisqEnvironment,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
@@ -105,6 +107,7 @@ public class WalletsSetup {
         this.userAgent = userAgent;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
+        this.bisqEnvironment = bisqEnvironment;
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
@@ -138,7 +141,7 @@ public class WalletsSetup {
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, btcWalletFileName,
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, bisqEnvironment, btcWalletFileName,
                 BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
             @Override
             protected void onSetupCompleted() {

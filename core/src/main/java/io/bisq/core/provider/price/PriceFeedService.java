@@ -80,7 +80,10 @@ public class PriceFeedService {
         this.httpClient = httpClient;
         this.providersRepository = providersRepository;
         this.preferences = preferences;
+
+        // Do not use Guice for PriceProvider as we might create multiple instances
         this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+
         baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
     }
 

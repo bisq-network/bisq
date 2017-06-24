@@ -659,9 +659,9 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
+        log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
+        log.info("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
         Transaction preparedPayoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,

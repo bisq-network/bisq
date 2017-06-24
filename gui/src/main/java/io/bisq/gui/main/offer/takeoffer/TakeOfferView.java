@@ -721,9 +721,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         directionLabel = new Label();
         directionLabel.setAlignment(Pos.CENTER);
         directionLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
-        imageVBox.setSpacing(6);
+        imageVBox.setSpacing(12);
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);

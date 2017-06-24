@@ -110,7 +110,7 @@ public class FileManager<T extends PersistableEnvelope> {
 
     @SuppressWarnings("unchecked")
     public synchronized T read(File file) {
-        log.info("Reading file:{}", file.getAbsolutePath());
+        log.info("Read from disc: {}", file.getAbsolutePath());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             PB.PersistableEnvelope persistable = PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
@@ -185,7 +185,7 @@ public class FileManager<T extends PersistableEnvelope> {
         PrintWriter printWriter = null;
 
         try {
-            log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
+            log.info("Write to disc: {}", storageFile.getAbsolutePath());
             PB.PersistableEnvelope protoPersistable;
             try {
                 protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
@@ -196,7 +196,7 @@ public class FileManager<T extends PersistableEnvelope> {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-            
+
             if (!dir.exists() && !dir.mkdir())
                 log.warn("make dir failed");
 

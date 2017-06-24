@@ -834,7 +834,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
-        imageVBox.setSpacing(6);
+        imageVBox.setSpacing(12);
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);

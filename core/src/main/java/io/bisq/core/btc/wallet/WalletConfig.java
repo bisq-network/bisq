@@ -80,6 +80,7 @@ public class WalletConfig extends AbstractIdleService {
     private final String spvChainFileName;
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
+    private final BisqEnvironment bisqEnvironment;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -113,9 +114,11 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params,
                         Socks5Proxy socks5Proxy,
                         File directory,
+                        BisqEnvironment bisqEnvironment,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
+        this.bisqEnvironment = bisqEnvironment;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -185,16 +188,19 @@ public class WalletConfig extends AbstractIdleService {
 
             int CONNECT_TIMEOUT_MSEC = 60 * 1000;  // same value used in bitcoinj.
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
-            BlockingClientManager mgr = new BlockingClientManager(proxySocketFactory);
-            PeerGroup peerGroup = new PeerGroup(params, vChain, mgr);
+            // we dont use tor mode if we have a local node running
+            BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
+                    new BlockingClientManager() :
+                    new BlockingClientManager(proxySocketFactory);
 
-            mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
+            PeerGroup peerGroup = new PeerGroup(params, vChain, blockingClientManager);
+
+            blockingClientManager.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
             peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
 
             return peerGroup;
         }
     }
-
 
     /**
      * Will only connect to the given addresses. Cannot be called after startup.
@@ -315,8 +321,8 @@ public class WalletConfig extends AbstractIdleService {
      * or block chain download is started. You can tweak the objects configuration here.
      */
     void onSetupCompleted() {
-        if (!params.equals(RegTestParams.get()))
-            peerGroup().setMaxConnections(11);
+       /* if (!params.equals(RegTestParams.get()))
+            peerGroup().setMaxConnections(11);*/
     }
 
     /**
@@ -353,7 +359,7 @@ public class WalletConfig extends AbstractIdleService {
                 throw new IOException("Could not create directory " + directory.getAbsolutePath());
             }
         }
-        log.info("Starting up with directory = {}", directory);
+        log.info("Wallet directory: {}", directory);
         try {
             File chainFile = new File(directory, spvChainFileName);
             boolean chainFileExists = chainFile.exists();

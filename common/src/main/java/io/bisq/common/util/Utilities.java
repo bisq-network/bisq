@@ -143,12 +143,14 @@ public class Utilities {
     }
 
     public static void printSysInfo() {
-        log.info("os.name: " + System.getProperty("os.name"));
-        log.info("os.version: " + System.getProperty("os.version"));
-        log.info("os.arch: " + System.getProperty("os.arch"));
-        log.info("sun.arch.data.model: " + getJVMArchitecture());
-        log.info("JRE: " + System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")");
-        log.info("JVM: " + System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")");
+        log.info("System info: os.name={}; os.version={}; os.arch={}; sun.arch.data.model={}; JRE={}; JVM={}",
+                System.getProperty("os.name"),
+                System.getProperty("os.version"),
+                System.getProperty("os.arch"),
+                getJVMArchitecture(),
+                (System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")"),
+                (System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")")
+        );
     }
 
     public static String getJVMArchitecture() {

@@ -17,7 +17,9 @@
 package io.bisq.core.provider;
 
 import io.bisq.network.http.HttpClient;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class HttpClientProvider {
     protected final HttpClient httpClient;
 
@@ -27,7 +29,7 @@ public abstract class HttpClientProvider {
 
     public HttpClientProvider(HttpClient httpClient, String baseUrl, @SuppressWarnings("SameParameterValue") boolean ignoreSocks5Proxy) {
         this.httpClient = httpClient;
-
+        log.info("{} with baseUrl {}", this.getClass().getSimpleName(), baseUrl);
         httpClient.setBaseUrl(baseUrl);
 
         httpClient.setIgnoreSocks5Proxy(ignoreSocks5Proxy);
