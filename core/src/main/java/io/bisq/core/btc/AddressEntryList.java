@@ -121,18 +121,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
     public void swapTradeToSavings(String offerId) {
         list.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId()))
-                .findAny().ifPresent(addressEntry -> {
-            boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
-            boolean changed2 = remove(addressEntry);
-            if (changed1 || changed2)
-                persist();
-        });
+                .findAny().ifPresent(this::swapToAvailable);
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
-        remove(addressEntry);
-        boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
         boolean changed2 = remove(addressEntry);
+        boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
         if (changed1 || changed2)
             persist();
     }
