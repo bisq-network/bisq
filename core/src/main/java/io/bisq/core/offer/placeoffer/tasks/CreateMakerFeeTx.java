@@ -52,19 +52,21 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     @Override
     protected void run() {
         Offer offer = model.getOffer();
+
         try {
             runInterceptHook();
 
+            String id = offer.getId();
+            BtcWalletService walletService = model.getWalletService();
+            
             NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUser().getAcceptedArbitratorAddresses(),
                     model.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = model.getUser().getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
-            BtcWalletService walletService = model.getWalletService();
-            String id = offer.getId();
+
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
-            Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
             final TradeWalletService tradeWalletService = model.getTradeWalletService();
@@ -84,6 +86,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 // tx malleability
                 offer.setOfferFeePaymentTxId(btcTransaction.getHashAsString());
                 model.setTransaction(btcTransaction);
+                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                 complete();
             } else {
@@ -110,7 +113,8 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
-
+                            walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                           
                             complete();
                             log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                         }

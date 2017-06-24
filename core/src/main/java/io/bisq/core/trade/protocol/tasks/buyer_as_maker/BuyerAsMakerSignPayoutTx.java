@@ -74,14 +74,6 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     trade.getArbitratorBtcPubKey());
-
-          /*  
-            DeterministicKey multiSigKeyPair,
-            byte[] buyerPubKey,
-            byte[] sellerPubKey,
-            byte[] arbitratorPubKey
-            */
-
             processModel.setPayoutTxSignature(payoutTxSignature);
 
             complete();

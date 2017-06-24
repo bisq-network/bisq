@@ -30,6 +30,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -66,8 +67,9 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
             final byte[] buyerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
 
-            checkArgument(Arrays.equals(sellerMultiSigPubKey,
-                            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
+            Optional<AddressEntry> MultiSigAddressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(MultiSigAddressEntryOptional.isPresent() && Arrays.equals(sellerMultiSigPubKey,
+                            MultiSigAddressEntryOptional.get().getPubKey()),
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, sellerMultiSigPubKey);
@@ -86,6 +88,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
+            walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.MULTI_SIG);
 
             complete();
         } catch (Throwable t) {

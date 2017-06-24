@@ -212,8 +212,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     trades.stream()
                             .filter(Trade::isPayoutPublished)
                             .forEach(trade -> {
-                                if (walletService.getBalanceForAddress(walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddress()).isZero())
-                                    tradeManager.addTradeToClosedTrades(trade);
+                                walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                        .ifPresent(addressEntry -> {
+                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                tradeManager.addTradeToClosedTrades(trade);
+                                        });
                             });
                 }
 

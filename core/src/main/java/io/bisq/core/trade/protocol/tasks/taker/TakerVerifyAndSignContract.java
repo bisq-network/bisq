@@ -110,11 +110,11 @@ public class TakerVerifyAndSignContract extends TradeTask {
                 Sig.verify(maker.getPubKeyRing().getSignaturePubKey(),
                         contractAsJson,
                         maker.getContractSignature());
+
+                complete();
             } catch (Throwable t) {
                 failed("Signature verification failed. " + t.getMessage());
             }
-
-            complete();
         } catch (Throwable t) {
             failed(t);
         }

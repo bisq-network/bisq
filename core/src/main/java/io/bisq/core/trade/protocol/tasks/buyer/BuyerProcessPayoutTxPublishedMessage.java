@@ -18,6 +18,7 @@
 package io.bisq.core.trade.protocol.tasks.buyer;
 
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
@@ -55,6 +56,7 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
+            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
 
             complete();
         } catch (Throwable t) {

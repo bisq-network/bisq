@@ -1044,9 +1044,15 @@ public class MainViewModel implements ViewModel {
     private void updateReservedBalance() {
         Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
                 .map(openOffer -> {
-                    Address address = btcWalletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-                    return btcWalletService.getBalanceForAddress(address);
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    if (addressEntryOptional.isPresent()) {
+                        Address address = addressEntryOptional.get().getAddress();
+                        return btcWalletService.getBalanceForAddress(address);
+                    } else {
+                        return null;
+                    }
                 })
+                .filter(e -> e != null)
                 .mapToLong(Coin::getValue)
                 .sum());
 
@@ -1056,8 +1062,11 @@ public class MainViewModel implements ViewModel {
     private void updateLockedBalance() {
         Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
                 .mapToLong(trade -> {
-                    Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getCoinLockedInMultiSig();
-                    return lockedTradeAmount.getValue();
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                    if (addressEntryOptional.isPresent())
+                        return addressEntryOptional.get().getCoinLockedInMultiSig().getValue();
+                    else
+                        return 0;
                 })
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));

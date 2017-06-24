@@ -43,21 +43,24 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
 
     @Override
     protected void run() {
+
         try {
             runInterceptHook();
             if (!trade.isPayoutPublished()) {
                 BtcWalletService walletService = processModel.getBtcWalletService();
-                Address address = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
-                        AddressEntry.Context.TRADE_PAYOUT).getAddress();
-
+                final String id = processModel.getOffer().getId();
+                Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddress();
                 if (isInNetwork(walletService.getConfidenceForAddress(address))) {
                     trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+                    swapMultiSigEntry();
                 } else {
                     listener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isInNetwork(confidence))
+                            if (isInNetwork(confidence)) {
                                 trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+                                swapMultiSigEntry();
+                            }
                         }
                     };
                     walletService.addAddressConfidenceListener(listener);
@@ -66,6 +69,7 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
                         log.debug("BuyerSetupListenerForPayoutTx tradeStateSubscription tradeState=" + newValue);
                         if (trade.isPayoutPublished()) {
                             walletService.removeAddressConfidenceListener(listener);
+                            swapMultiSigEntry();
                             // hack to remove tradeStateSubscription at callback
                             UserThread.execute(this::unSubscribe);
                         }
@@ -78,6 +82,10 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    private void swapMultiSigEntry() {
+        processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {

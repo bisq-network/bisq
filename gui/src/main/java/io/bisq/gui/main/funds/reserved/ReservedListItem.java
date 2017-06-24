@@ -28,20 +28,22 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import java.util.Optional;
+
 class ReservedListItem {
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final OpenOffer openOffer;
     private final AddressEntry addressEntry;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final BSFormatter formatter;
     private final String addressString;
     private Coin balance;
 
-    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService walletService, BSFormatter formatter) {
+    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService btcWalletService, BSFormatter formatter) {
         this.openOffer = openOffer;
         this.addressEntry = addressEntry;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
 
@@ -53,19 +55,21 @@ class ReservedListItem {
                 updateBalance();
             }
         };
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
         updateBalance();
     }
 
     public void cleanup() {
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance() {
-        Address address = walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-        balance = walletService.getBalanceForAddress(address);
-        if (balance != null)
-            balanceLabel.setText(formatter.formatCoin(this.balance));
+        final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        addressEntryOptional.ifPresent(addressEntry -> {
+            balance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
+            if (balance != null)
+                balanceLabel.setText(formatter.formatCoin(balance));
+        });
     }
 
     private Address getAddress() {

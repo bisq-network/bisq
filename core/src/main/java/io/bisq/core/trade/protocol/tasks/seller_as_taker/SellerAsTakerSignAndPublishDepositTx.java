@@ -81,6 +81,8 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
             Timer timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+               
                 complete();
             }, 5);
 
@@ -101,7 +103,8 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                                 log.trace("takerSignAndPublishTx succeeded " + transaction);
                                 trade.setDepositTx(transaction);
                                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-
+                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+                                
                                 complete();
                             } else {
                                 log.warn("We got the callback called after the timeout has been triggered a complete().");

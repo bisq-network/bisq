@@ -136,7 +136,7 @@ public abstract class TradeProtocol {
 
     private void cleanupTradableOnFault() {
         final Trade.State state = trade.getState();
-        log.debug("cleanupTradable tradeState=" + state);
+        log.warn("cleanupTradableOnFault tradeState=" + state);
         TradeManager tradeManager = processModel.getTradeManager();
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list

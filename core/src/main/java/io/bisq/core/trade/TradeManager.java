@@ -533,8 +533,7 @@ public class TradeManager implements PersistedDataHost {
         Stream<AddressEntry> available = Stream.concat(availableOrPayout,
                 btcWalletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
         available = Stream.concat(available, btcWalletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
-        return available
-                .filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
+        return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
     public Stream<Trade> getLockedTradeStream() {

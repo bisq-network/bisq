@@ -60,11 +60,11 @@ public class CreateTakerFeeTx extends TradeTask {
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateTakeOfferFeeTx");
+
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
-            AddressEntry reservedForTradeAddressEntry = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.RESERVED_FOR_TRADE);
+            AddressEntry reservedForTradeAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
             AddressEntry changeAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
             Address fundingAddress = addressEntry.getAddress();
             Address reservedForTradeAddress = reservedForTradeAddressEntry.getAddress();
@@ -84,6 +84,7 @@ public class CreateTakerFeeTx extends TradeTask {
                 //TODO use handler for broadcastTx success
                 processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
                 trade.setTakerFeeTxId(createTakeOfferFeeTx.getHashAsString());
+                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                 complete();
             } else {
@@ -109,6 +110,8 @@ public class CreateTakerFeeTx extends TradeTask {
                     log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                     trade.setTakerFeeTxId(signedTx.getHashAsString());
                     processModel.setTakeOfferFeeTx(signedTx);
+                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                    
                     complete();
                 }, 5);
 
@@ -118,12 +121,13 @@ public class CreateTakerFeeTx extends TradeTask {
                         if (!completed) {
                             timeoutTimer.stop();
                             if (transaction != null) {
+                                log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                                 checkArgument(transaction.equals(signedTx));
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
+                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                                 complete();
-                                log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                             }
                         } else {
                             log.warn("We got the callback called after the timeout has been triggered a complete().");

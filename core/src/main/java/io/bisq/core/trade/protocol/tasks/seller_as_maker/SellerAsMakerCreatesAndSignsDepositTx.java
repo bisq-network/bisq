@@ -79,18 +79,11 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(offer.getBuyerSecurityDeposit());
 
             final List<RawTransactionInput> takerRawTransactionInputs = tradingPeer.getRawTransactionInputs();
-
             final long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-
             final String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
-
-            final Address makerAddress = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-
+            final Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             final Address makerChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-
             final byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
-
             final byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerPubKey,
                             makerMultiSigAddressEntry.getPubKey()),
