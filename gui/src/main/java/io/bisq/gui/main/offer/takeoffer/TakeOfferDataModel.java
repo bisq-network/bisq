@@ -200,7 +200,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(400);
+        txFeeFromFeeService = feeService.getTxFee(600);
 
         calculateVolume();
         calculateTotalToPay();
@@ -244,7 +244,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(400);
+            txFeeFromFeeService = feeService.getTxFee(600);
             calculateTotalToPay();
         }, null);
     }

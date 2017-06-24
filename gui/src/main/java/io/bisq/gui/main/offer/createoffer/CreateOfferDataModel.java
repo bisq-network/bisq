@@ -260,7 +260,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         requestTxFee();
 
         // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs).
-        // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
+        // A typical trade fee tx has about 226 bytes (if one input). We use 600 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
         // fee for getting the funds needed.
         // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required
@@ -272,7 +272,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(400);
+        txFeeFromFeeService = feeService.getTxFee(600);
 
         calculateVolume();
         calculateTotalToPay();
@@ -463,7 +463,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(400);
+            txFeeFromFeeService = feeService.getTxFee(600);
             calculateTotalToPay();
         }, null);
     }
