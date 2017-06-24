@@ -29,6 +29,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
+    -BjvmOptions=-Xss1280k \
     -outfile bisq
      
 # when we have support for security manager we use that     
