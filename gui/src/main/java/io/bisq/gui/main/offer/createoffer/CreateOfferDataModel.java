@@ -268,7 +268,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // As we use the best fee estimation (for 1 confirmation) that risk should not be too critical as long there are
         // not too many inputs.
 
-        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)
+        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs) (148 byte per input)
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.

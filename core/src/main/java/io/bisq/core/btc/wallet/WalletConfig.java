@@ -418,8 +418,9 @@ public class WalletConfig extends AbstractIdleService {
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
 
-            if (this.userAgent != null)
-                vPeerGroup.setUserAgent(userAgent, version);
+            // protect privacy and don't send agent info
+            /*if (this.userAgent != null)
+                vPeerGroup.setUserAgent(userAgent, version);*/
 
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.

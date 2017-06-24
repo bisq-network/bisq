@@ -88,7 +88,7 @@ public class BsqValidator extends AltcoinValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(3);
         if (satoshis.scale() > 0)
-            return new ValidationResult(false, Res.get("validation.btc.toSmall"));
+            return new ValidationResult(false, Res.get("validation.btc.fraction"));
         else
             return new ValidationResult(true);
     }

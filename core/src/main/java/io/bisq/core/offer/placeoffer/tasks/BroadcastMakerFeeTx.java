@@ -18,6 +18,8 @@
 package io.bisq.core.offer.placeoffer.tasks;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
@@ -42,59 +44,77 @@ public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            model.getTradeWalletService().broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    log.debug("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
+            final Transaction transaction = model.getTransaction();
+            Timer timeoutTimer = UserThread.runAfter(() -> {
+                log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
+                complete();
+            }, 5);
 
-                    if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                        model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
-                        // No tx malleability happened after broadcast (still not in blockchain)
-                        complete();
-                    } else {
-                        log.warn("Tx malleability happened after broadcast. We publish the changed offer to the P2P network again.");
-                        // Tx malleability happened after broadcast. We first remove the malleable offer.
-                        // Then we publish the changed offer to the P2P network again after setting the new TxId.
-                        // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
-                                () -> {
-                                    log.debug("We store now the changed txID to the offer and add that again.");
-                                    // We store now the changed txID to the offer and add that again.
-                                    model.getOffer().setOfferFeePaymentTxId(transaction.getHashAsString());
-                                    model.setTransaction(transaction);
-                                    model.getOfferBookService().addOffer(model.getOffer(),
-                                            BroadcastMakerFeeTx.this::complete,
+            model.getTradeWalletService().broadcastTx(model.getTransaction(),
+                    new FutureCallback<Transaction>() {
+                        @Override
+                        public void onSuccess(Transaction tx) {
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                log.debug("Broadcast of offer fee payment succeeded: transaction = " + tx.toString());
+
+                                if (transaction.getHashAsString().equals(tx.getHashAsString())) {
+                                    model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
+                                    // No tx malleability happened after broadcast (still not in blockchain)
+                                    complete();
+                                } else {
+                                    log.warn("Tx malleability happened after broadcast. We publish the changed offer to the P2P network again.");
+                                    // Tx malleability happened after broadcast. We first remove the malleable offer.
+                                    // Then we publish the changed offer to the P2P network again after setting the new TxId.
+                                    // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
+                                    model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
+                                            () -> {
+                                                log.debug("We store now the changed txID to the offer and add that again.");
+                                                // We store now the changed txID to the offer and add that again.
+                                                model.getOffer().setOfferFeePaymentTxId(tx.getHashAsString());
+                                                model.setTransaction(tx);
+                                                model.getOfferBookService().addOffer(model.getOffer(),
+                                                        BroadcastMakerFeeTx.this::complete,
+                                                        errorMessage -> {
+                                                            log.error("addOffer failed");
+                                                            addOfferFailed = true;
+                                                            updateStateOnFault();
+                                                            model.getOffer().setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
+                                                                    "Error message:\n"
+                                                                    + errorMessage);
+                                                            failed(errorMessage);
+                                                        });
+                                            },
                                             errorMessage -> {
-                                                log.error("addOffer failed");
-                                                addOfferFailed = true;
+                                                log.error("removeOffer failed");
+                                                removeOfferFailed = true;
                                                 updateStateOnFault();
-                                                model.getOffer().setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
+                                                model.getOffer().setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
                                                         "Error message:\n"
                                                         + errorMessage);
                                                 failed(errorMessage);
                                             });
-                                },
-                                errorMessage -> {
-                                    log.error("removeOffer failed");
-                                    removeOfferFailed = true;
-                                    updateStateOnFault();
-                                    model.getOffer().setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
-                                            "Error message:\n"
-                                            + errorMessage);
-                                    failed(errorMessage);
-                                });
-                    }
-                }
+                                }
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
+                        }
 
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    updateStateOnFault();
-                    model.getOffer().setErrorMessage("An error occurred.\n" +
-                            "Error message:\n"
-                            + t.getMessage());
-                    failed(t);
-                }
-            });
+                        @Override
+                        public void onFailure(@NotNull Throwable t) {
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                updateStateOnFault();
+                                model.getOffer().setErrorMessage("An error occurred.\n" +
+                                        "Error message:\n"
+                                        + t.getMessage());
+                                failed(t);
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
+                        }
+                    });
         } catch (Throwable t) {
             model.getOffer().setErrorMessage("An error occurred.\n" +
                     "Error message:\n"

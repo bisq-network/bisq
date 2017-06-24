@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.seller_as_taker;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
@@ -75,6 +77,13 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
             walletService.saveAddressEntryList();
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
+
+            Timer timeoutTimer = UserThread.runAfter(() -> {
+                log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                complete();
+            }, 5);
+
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,
                     contractHash,
@@ -87,17 +96,26 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.trace("takerSignAndPublishTx succeeded " + transaction);
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                log.trace("takerSignAndPublishTx succeeded " + transaction);
+                                trade.setDepositTx(transaction);
+                                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
 
-                            trade.setDepositTx(transaction);
-                            trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-
-                            complete();
+                                complete();
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            failed(t);
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                failed(t);
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
                     });
             trade.setDepositTx(depositTx);

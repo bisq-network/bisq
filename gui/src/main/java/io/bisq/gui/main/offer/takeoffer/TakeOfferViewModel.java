@@ -182,6 +182,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         errorMessage.set(offer.getErrorMessage());
 
         btcValidator.setMaxValue(offer.getAmount());
+        btcValidator.setMinValue(offer.getMinAmount());
     }
 
 
@@ -208,8 +209,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
-        if (offer != null)
-            btcValidator.setMaxValue(offer.getAmount());
     }
 
     public void onShowPayFundsScreen() {

@@ -76,11 +76,10 @@ public class SeedNode {
         Security.addProvider(new BouncyCastleProvider());
 
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-
-        Res.setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
+        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
+        Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
-
-        CurrencyUtil.setBaseCurrencyNetwork(baseCurrencyNetwork.getCurrencyCode());
+        CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
         seedNodeModule = new SeedNodeModule(bisqEnvironment);
         injector = Guice.createInjector(seedNodeModule);

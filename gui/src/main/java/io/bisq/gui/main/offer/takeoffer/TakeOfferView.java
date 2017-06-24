@@ -410,8 +410,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     model.getTakerFee(),
                     model.getTxFee()
             );
-            //TODO remove
-            log.error(message);
             key = "takeOfferFundWalletInfo";
             new Popup<>().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)

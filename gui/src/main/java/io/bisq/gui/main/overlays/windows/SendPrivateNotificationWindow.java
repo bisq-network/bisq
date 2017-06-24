@@ -130,20 +130,21 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.trace("PrivateNotificationMessage arrived at peer.");
+                                log.info("PrivateNotificationMessage arrived at peer.");
                                 new Popup<>().feedback(Res.get("shared.messageArrived"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.trace("PrivateNotificationMessage was stored in mailbox.");
+                                log.info("PrivateNotificationMessage was stored in mailbox.");
                                 new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
+                                log.error("sendEncryptedMailboxMessage failed. message=" + message);
                                 new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }

@@ -521,6 +521,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
 
+        btcValidator.setMinValue(Restrictions.getMinTradeAmount());
+
         final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
         directionLabel = isBuy ? Res.get("shared.buyBitcoin") : Res.get("shared.sellBitcoin");
         amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
@@ -733,9 +735,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 String key = "buyerSecurityDepositLowerAsDefault";
                 if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
+                    final String postfix = dataModel.isBuyOffer() ?
+                            Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
+                            Res.get("createOffer.tooLowSecDeposit.makerIsSeller");
                     new Popup<>()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
-                                    btcFormatter.formatCoinWithCode(defaultSecurityDeposit)))
+                                    btcFormatter.formatCoinWithCode(defaultSecurityDeposit)) + "\n\n" + postfix)
                             .width(800)
                             .actionButtonText(Res.get("createOffer.resetToDefault"))
                             .onAction(() -> {

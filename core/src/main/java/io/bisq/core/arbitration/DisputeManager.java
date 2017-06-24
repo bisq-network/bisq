@@ -241,19 +241,21 @@ public class DisputeManager implements PersistedDataHost {
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
+                                log.info("Message arrived at peer. tradeId={}", disputeCommunicationMessage.getTradeId());
                                 disputeCommunicationMessage.setArrived(true);
                                 resultHandler.handleResult();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
+                                log.info("Message stored in mailbox. tradeId={}", disputeCommunicationMessage.getTradeId());
                                 disputeCommunicationMessage.setStoredInMailbox(true);
                                 resultHandler.handleResult();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                log.error("sendEncryptedMessage failed");
+                                log.error("sendEncryptedMailboxMessage failed. disputeCommunicationMessage=" + disputeCommunicationMessage);
                                 faultHandler.handleFault("Sending dispute message failed: " + errorMessage, new MessageDeliveryFailedException());
                             }
                         }
@@ -329,17 +331,19 @@ public class DisputeManager implements PersistedDataHost {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
+                            log.info("Message arrived at peer. tradeId={}", disputeCommunicationMessage.getTradeId());
                             disputeCommunicationMessage.setArrived(true);
                         }
 
                         @Override
                         public void onStoredInMailbox() {
+                            log.info("Message stored in mailbox. tradeId={}", disputeCommunicationMessage.getTradeId());
                             disputeCommunicationMessage.setStoredInMailbox(true);
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.error("sendEncryptedMessage failed");
+                            log.error("sendEncryptedMailboxMessage failed. disputeCommunicationMessage=" + disputeCommunicationMessage);
                         }
                     }
             );
@@ -391,17 +395,19 @@ public class DisputeManager implements PersistedDataHost {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
+                            log.info("Message arrived at peer. tradeId={}", disputeCommunicationMessage.getTradeId());
                             disputeCommunicationMessage.setArrived(true);
                         }
 
                         @Override
                         public void onStoredInMailbox() {
+                            log.info("Message stored in mailbox. tradeId={}", disputeCommunicationMessage.getTradeId());
                             disputeCommunicationMessage.setStoredInMailbox(true);
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            log.error("sendEncryptedMessage failed");
+                            log.error("sendEncryptedMailboxMessage failed. disputeCommunicationMessage=" + disputeCommunicationMessage);
                         }
                     }
             );
@@ -441,17 +447,19 @@ public class DisputeManager implements PersistedDataHost {
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
+                        log.info("Message arrived at peer. tradeId={}", disputeCommunicationMessage.getTradeId());
                         disputeCommunicationMessage.setArrived(true);
                     }
 
                     @Override
                     public void onStoredInMailbox() {
+                        log.info("Message stored in mailbox. tradeId={}", disputeCommunicationMessage.getTradeId());
                         disputeCommunicationMessage.setStoredInMailbox(true);
                     }
 
                     @Override
                     public void onFault(String errorMessage) {
-                        log.error("sendEncryptedMessage failed");
+                        log.error("sendEncryptedMailboxMessage failed. disputeCommunicationMessage=" + disputeCommunicationMessage);
                     }
                 }
         );
@@ -462,26 +470,27 @@ public class DisputeManager implements PersistedDataHost {
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peerNodeAddress);
+        final PeerPublishedDisputePayoutTxMessage message = new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
+                dispute.getTradeId(),
+                p2PService.getAddress(),
+                UUID.randomUUID().toString());
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 peersPubKeyRing,
-                new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
-                        dispute.getTradeId(),
-                        p2PService.getAddress(),
-                        UUID.randomUUID().toString()),
+                message,
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
-
+                        log.info("Message arrived at peer. tradeId={}", message.getTradeId());
                     }
 
                     @Override
                     public void onStoredInMailbox() {
-
+                        log.info("Message stored in mailbox. tradeId={}", message.getTradeId());
                     }
 
                     @Override
                     public void onFault(String errorMessage) {
-                        log.error("sendEncryptedMessage failed");
+                        log.error("sendEncryptedMailboxMessage failed. message=" + message);
                     }
                 }
         );

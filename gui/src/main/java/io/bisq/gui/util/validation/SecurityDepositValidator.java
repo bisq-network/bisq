@@ -30,6 +30,7 @@ public class SecurityDepositValidator extends BtcValidator {
     public SecurityDepositValidator(BSFormatter formatter) {
         super(formatter);
         setMaxValue(Restrictions.getMaxBuyerSecurityDeposit());
+        setMinValue(Restrictions.getMinBuyerSecurityDeposit());
     }
 
 

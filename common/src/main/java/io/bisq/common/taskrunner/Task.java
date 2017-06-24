@@ -28,6 +28,7 @@ public abstract class Task<T extends Model> {
     private final TaskRunner taskHandler;
     protected final T model;
     protected String errorMessage = "An error occurred at task: " + getClass().getSimpleName();
+    protected boolean completed;
 
     public Task(TaskRunner taskHandler, T model) {
         this.taskHandler = taskHandler;
@@ -53,6 +54,7 @@ public abstract class Task<T extends Model> {
     }
 
     protected void complete() {
+        completed = true;
         taskHandler.handleComplete();
     }
 

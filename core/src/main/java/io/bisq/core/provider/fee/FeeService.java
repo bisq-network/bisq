@@ -89,10 +89,11 @@ public class FeeService {
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 12_500; // 0.25 USD at LTC price 40 USD for 50 LTC
-                MIN_TAKER_FEE_IN_BASE_CUR = 12_500;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 125_000; // 2.5 USD at LTC price 40 USD
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 187_500; // 3.6 USD at LTC price 40 USD
+                // > 0.00 100 000
+                MIN_MAKER_FEE_IN_BASE_CUR = 600_000; // 0.25 USD at LTC price 40 USD for 50 LTC
+                MIN_TAKER_FEE_IN_BASE_CUR = 600_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 120_000; // 2.5 USD at LTC price 40 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 180_000; // 3.6 USD at LTC price 40 USD
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":

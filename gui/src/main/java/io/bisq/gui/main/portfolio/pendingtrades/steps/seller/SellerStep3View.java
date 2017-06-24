@@ -130,7 +130,7 @@ public class SellerStep3View extends TradeStepView {
             if (myPaymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
                 myPaymentDetails = ((CryptoCurrencyAccountPayload) myPaymentAccountPayload).getAddress();
                 peersPaymentDetails = ((CryptoCurrencyAccountPayload) peersPaymentAccountPayload).getAddress();
-                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress");
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", nameByCode);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
                 isBlockChain = true;
             } else {
@@ -276,7 +276,7 @@ public class SellerStep3View extends TradeStepView {
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
                 //noinspection UnusedAssignment
-                message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
+                message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
         }
         //noinspection ConstantConditions

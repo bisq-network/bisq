@@ -387,8 +387,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     model.getMakerFee(),
                     model.getTxFee()
             );
-            //TODO remove
-            log.error(message);
             new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)

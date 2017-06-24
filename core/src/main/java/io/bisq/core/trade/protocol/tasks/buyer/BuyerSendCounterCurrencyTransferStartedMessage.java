@@ -60,20 +60,21 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
+                            log.info("Message arrived at peer. tradeId={}", id);
                             trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
+                            log.info("Message stored in mailbox. tradeId={}", id);
                             trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
+                            log.error("sendEncryptedMailboxMessage failed. message=" + message);
                             trade.setState(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed(errorMessage);

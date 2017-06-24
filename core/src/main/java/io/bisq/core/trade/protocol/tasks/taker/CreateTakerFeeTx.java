@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.btc.AddressEntry;
@@ -102,27 +104,45 @@ public class CreateTakerFeeTx extends TradeTask {
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception 
                 // if it gets committed 2 times 
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
+
+                Timer timeoutTimer = UserThread.runAfter(() -> {
+                    log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                    trade.setTakerFeeTxId(signedTx.getHashAsString());
+                    processModel.setTakeOfferFeeTx(signedTx);
+                    complete();
+                }, 5);
+
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
-                        if (transaction != null) {
-                            checkArgument(transaction.equals(signedTx));
-                            trade.setTakerFeeTxId(transaction.getHashAsString());
-                            processModel.setTakeOfferFeeTx(transaction);
+                        if (!completed) {
+                            timeoutTimer.stop();
+                            if (transaction != null) {
+                                checkArgument(transaction.equals(signedTx));
+                                trade.setTakerFeeTxId(transaction.getHashAsString());
+                                processModel.setTakeOfferFeeTx(transaction);
 
-                            complete();
-                            log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+                                complete();
+                                log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+                            }
+                        } else {
+                            log.warn("We got the callback called after the timeout has been triggered a complete().");
                         }
                     }
 
                     @Override
                     public void onFailure(@NotNull Throwable t) {
-                        log.error(t.toString());
-                        t.printStackTrace();
-                        trade.setErrorMessage("An error occurred.\n" +
-                                "Error message:\n"
-                                + t.getMessage());
-                        failed(t);
+                        if (!completed) {
+                            timeoutTimer.stop();
+                            log.error(t.toString());
+                            t.printStackTrace();
+                            trade.setErrorMessage("An error occurred.\n" +
+                                    "Error message:\n"
+                                    + t.getMessage());
+                            failed(t);
+                        } else {
+                            log.warn("We got the callback called after the timeout has been triggered a complete().");
+                        }
                     }
                 });
             }

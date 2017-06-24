@@ -57,10 +57,10 @@ public final class Preferences implements PersistedDataHost {
     ));
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
             new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
+            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
             new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
     ));
 

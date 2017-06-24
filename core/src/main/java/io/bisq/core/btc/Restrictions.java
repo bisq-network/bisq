@@ -21,14 +21,10 @@ import io.bisq.core.app.BisqEnvironment;
 import org.bitcoinj.core.Coin;
 
 public class Restrictions {
-
     private static Coin MIN_TRADE_AMOUNT;
-
     private static Coin MAX_BUYER_SECURITY_DEPOSIT;
     private static Coin MIN_BUYER_SECURITY_DEPOSIT;
     private static Coin DEFAULT_BUYER_SECURITY_DEPOSIT;
-
-    //TODO maybe move to separate class for constant values which might be changed in future by DAO voting?
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
     private static Coin SELLER_SECURITY_DEPOSIT;
@@ -53,13 +49,13 @@ public class Restrictions {
         if (MIN_TRADE_AMOUNT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0.25 EUR cent @ 2500 EUR/BTC 
+                    MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0.25 EUR @ 2500 EUR/BTC 
                     break;
                 case "LTC":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(625_000); // 0.25 EUR cent @ 40 EUR/LTC  
+                    MIN_TRADE_AMOUNT = Coin.valueOf(100_000); // 0.04 EUR @ 40 EUR/LTC  
                     break;
                 case "DOGE":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(8_000_000_000L);// 0.24 USD at DOGE price 0.003 USD;
+                    MIN_TRADE_AMOUNT = Coin.valueOf(1_000_000_000L); // 0.03 EUR at DOGE price 0.003 EUR;
                     break;
             }
         return MIN_TRADE_AMOUNT;
@@ -67,25 +63,66 @@ public class Restrictions {
 
     public static Coin getMaxBuyerSecurityDeposit() {
         if (MAX_BUYER_SECURITY_DEPOSIT == null)
-            MAX_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(2000); // about 500 EUR
+            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(20_000_000); // 500 EUR @ 2500 EUR/BTC 
+                    break;
+                case "LTC":
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_200_000_000); // 500 EUR @ 40 EUR/LTC  
+                    break;
+                case "DOGE":
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(20_000_000_000_000L); // 500 EUR @ 0.0025 EUR/DOGE;
+                    break;
+            }
+
         return MAX_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getMinBuyerSecurityDeposit() {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
-            MIN_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(10); // about 2.5 eur
+            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(100_000); // 2.5 EUR @ 2500 EUR/BTC 
+                    break;
+                case "LTC":
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(6_000_000); // 2.5 EUR @ 40 EUR/LTC  
+                    break;
+                case "DOGE":
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(100_000_000_000L); // 2.5 EUR @ 0.0025 EUR/DOGE;
+                    break;
+            }
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getDefaultBuyerSecurityDeposit() {
         if (DEFAULT_BUYER_SECURITY_DEPOSIT == null)
-            DEFAULT_BUYER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(300); // about 75 eur
+            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(3_000_000); // 75 EUR @ 2500 EUR/BTC 
+                    break;
+                case "LTC":
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(200_000_000); // 75 EUR @ 40 EUR/LTC  
+                    break;
+                case "DOGE":
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(3_000_000_000_000L); // 75 EUR @ 0.0025 EUR/DOGE;
+                    break;
+            }
         return DEFAULT_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getSellerSecurityDeposit() {
         if (SELLER_SECURITY_DEPOSIT == null)
-            SELLER_SECURITY_DEPOSIT = getMinTradeAmount().multiply(100); // about 25 eur
+            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                case "BTC":
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 25 EUR @ 2500 EUR/BTC 
+                    break;
+                case "LTC":
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(60_000_000); // 25 EUR @ 40 EUR/LTC  
+                    break;
+                case "DOGE":
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000_000_000L); // 25 EUR @ 0.0025 EUR/DOGE;
+                    break;
+            }
         return SELLER_SECURITY_DEPOSIT;
     }
 }
