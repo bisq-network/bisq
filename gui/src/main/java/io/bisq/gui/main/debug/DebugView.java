@@ -18,48 +18,48 @@
 package io.bisq.gui.main.debug;
 
 import io.bisq.common.taskrunner.Task;
-import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
-import io.bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
-import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
-import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
-import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
-import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
+import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.maker.*;
+import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
+import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.InitializableView;
 import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.util.FormBuilder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 import java.util.Arrays;
 
 @FxmlView
-public class DebugView extends InitializableView {
-
+public class DebugView extends InitializableView<GridPane, Void> {
 
     @FXML
     TitledGroupBg titledGroupBg;
-    @FXML
-    Label label;
-    @FXML
-    ComboBox<Class> taskComboBox1, taskComboBox2;
+    private int rowIndex = 0;
 
     @Inject
     public DebugView() {
@@ -68,116 +68,142 @@ public class DebugView extends InitializableView {
     //TODO not updated yes with new protocol!
     @Override
     public void initialize() {
-        titledGroupBg.setText("Intercept task");
-        label.setText("Select Task:");
-        final ObservableList<Class> items1 = FXCollections.observableArrayList(Arrays.asList(
-                        /*---- Protocol ----*/
-                        OfferAvailabilityProtocol.class,
-                        SendOfferAvailabilityRequest.class,
-                        ProcessOfferAvailabilityResponse.class,
-                        Boolean.class, /* used as separator*/
 
-                        
-                        /*---- Protocol ----*/
-                        PlaceOfferProtocol.class,
-                        ValidateOffer.class,
-                        CreateMakerFeeTx.class,
-                        AddOfferToRemoteOfferBook.class,
-                        BroadcastMakerFeeTx.class,
-                        Boolean.class, /* used as separator*/
+        addGroup("OfferAvailabilityProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                SendOfferAvailabilityRequest.class,
+                                ProcessOfferAvailabilityResponse.class)
+                ));
 
-                        
-                        /*---- Protocol ----*/
-                        BuyerAsMakerProtocol.class,
-                        MakerProcessPayDepositRequest.class,
-                        MakerVerifyArbitratorSelection.class,
-                        MakerVerifyTakerAccount.class,
-                        MakerCreateAndSignContract.class,
-                        BuyerAsMakerCreatesAndSignsDepositTx.class,
-                        MakerSetupDepositTxListener.class,
-                        MakerSendPublishDepositTxRequest.class,
+        addGroup("PlaceOfferProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                ValidateOffer.class,
+                                CreateMakerFeeTx.class,
+                                AddOfferToRemoteOfferBook.class,
+                                BroadcastMakerFeeTx.class)
+                ));
 
-                        MakerProcessDepositTxPublishedMessage.class,
+        addGroup("BuyerAsMakerProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                MakerProcessPayDepositRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                MakerVerifyArbitratorSelection.class,
+                                MakerVerifyMediatorSelection.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
+                                MakerCreateAndSignContract.class,
+                                BuyerAsMakerCreatesAndSignsDepositTx.class,
+                                MakerSetupDepositTxListener.class,
+                                MakerSendPublishDepositTxRequest.class,
 
-                        MakerVerifyTakerFeePayment.class,
-                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+                                MakerProcessDepositTxPublishedMessage.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
+                                MakerPublishTradeStatistics.class,
 
-                        Boolean.class, /* used as separator*/
-                        
+                                CheckIfPeerIsBanned.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
+                                BuyerAsMakerSignPayoutTx.class,
+                                BuyerSendCounterCurrencyTransferStartedMessage.class,
+                                BuyerSetupPayoutTxListener.class)
+                ));
+        addGroup("SellerAsTakerProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                TakerSelectArbitrator.class,
+                                TakerSelectMediator.class,
+                                CreateTakerFeeTx.class,
+                                TakerPublishTakerFeeTx.class,
+                                SellerAsTakerCreatesDepositTxInputs.class,
+                                TakerSendPayDepositRequest.class,
 
-                        /*---- Protocol ----*/
-                        SellerAsTakerProtocol.class,
-                        TakerSelectArbitrator.class,
-                        CreateTakerFeeTx.class,
-                        TakerPublishTakerFeeTx.class,
-                        SellerAsTakerCreatesDepositTxInputs.class,
-                        TakerSendPayDepositRequest.class,
+                                TakerProcessPublishDepositTxRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                TakerVerifyAndSignContract.class,
+                                SellerAsTakerSignAndPublishDepositTx.class,
+                                TakerSendDepositTxPublishedMessage.class,
 
-                        TakerProcessPublishDepositTxRequest.class,
-                        TakerVerifyMakerAccount.class,
-                        TakerVerifyAndSignContract.class,
-                        SellerAsTakerSignAndPublishDepositTx.class,
-                        TakerSendDepositTxPublishedMessage.class,
+                                SellerProcessCounterCurrencyTransferStartedMessage.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
 
-                        SellerProcessCounterCurrencyTransferStartedMessage.class,
+                                CheckIfPeerIsBanned.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                SellerSignAndFinalizePayoutTx.class,
+                                SellerBroadcastPayoutTx.class,
+                                SellerSendPayoutTxPublishedMessage.class)
+                ));
+        addGroup("BuyerAsTakerProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                TakerSelectArbitrator.class,
+                                TakerSelectMediator.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                CreateTakerFeeTx.class,
+                                TakerPublishTakerFeeTx.class,
+                                BuyerAsTakerCreatesDepositTxInputs.class,
+                                TakerSendPayDepositRequest.class,
 
-                        TakerVerifyMakerFeePayment.class,
+                                TakerProcessPublishDepositTxRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                TakerVerifyAndSignContract.class,
+                                BuyerAsTakerSignAndPublishDepositTx.class,
+                                TakerSendDepositTxPublishedMessage.class,
 
-                        Boolean.class /* used as separator*/
-                )
-        );
-        final ObservableList<Class> items2 = FXCollections.observableArrayList(Arrays.asList(
-                        /*---- Protocol ----*/
-                        BuyerAsTakerProtocol.class,
-                        TakerSelectArbitrator.class,
-                        CreateTakerFeeTx.class,
-                        TakerPublishTakerFeeTx.class,
-                        SellerAsTakerCreatesDepositTxInputs.class,
-                        TakerSendPayDepositRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                TakerVerifyMakerAccount.class,
+                                TakerVerifyMakerFeePayment.class,
+                                BuyerAsMakerSignPayoutTx.class,
+                                BuyerSendCounterCurrencyTransferStartedMessage.class,
+                                BuyerSetupPayoutTxListener.class)
+                ));
+        addGroup("SellerAsMakerProtocol: ",
+                FXCollections.observableArrayList(Arrays.asList(
+                                MakerProcessPayDepositRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                MakerVerifyArbitratorSelection.class,
+                                MakerVerifyMediatorSelection.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
+                                MakerCreateAndSignContract.class,
+                                SellerAsMakerCreatesAndSignsDepositTx.class,
+                                MakerSetupDepositTxListener.class,
+                                MakerSendPublishDepositTxRequest.class,
 
-                        TakerProcessPublishDepositTxRequest.class,
-                        TakerVerifyMakerAccount.class,
-                        TakerVerifyAndSignContract.class,
-                        SellerAsTakerSignAndPublishDepositTx.class,
-                        TakerSendDepositTxPublishedMessage.class,
+                                MakerProcessDepositTxPublishedMessage.class,
+                                MakerPublishTradeStatistics.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
 
-                        TakerVerifyMakerFeePayment.class,
-                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+                                SellerProcessCounterCurrencyTransferStartedMessage.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
 
-                        Boolean.class, /* used as separator*/
-                        
-                        
-                         /*---- Protocol ----*/
-                        SellerAsMakerProtocol.class,
-                        MakerProcessPayDepositRequest.class,
-                        MakerVerifyArbitratorSelection.class,
-                        MakerVerifyTakerAccount.class,
-                        MakerCreateAndSignContract.class,
-                        BuyerAsMakerCreatesAndSignsDepositTx.class,
-                        MakerSetupDepositTxListener.class,
-                        MakerSendPublishDepositTxRequest.class,
+                                CheckIfPeerIsBanned.class,
+                                MakerVerifyTakerAccount.class,
+                                MakerVerifyTakerFeePayment.class,
+                                SellerSignAndFinalizePayoutTx.class,
+                                SellerBroadcastPayoutTx.class,
+                                SellerSendPayoutTxPublishedMessage.class)
+                ));
+    }
 
-                        MakerProcessDepositTxPublishedMessage.class,
-
-                        SellerProcessCounterCurrencyTransferStartedMessage.class,
-
-                        MakerVerifyTakerFeePayment.class,
-
-                        Boolean.class /* used as separator*/
-                )
-        );
-
-        taskComboBox1.setVisibleRowCount(items1.size());
-        taskComboBox1.setItems(items1);
-        taskComboBox1.setConverter(new StringConverter<Class>() {
+    private void addGroup(String title, ObservableList<Class> list) {
+        ComboBox<Class> comboBox = FormBuilder.addLabelComboBox(root, ++rowIndex, title).second;
+        comboBox.setVisibleRowCount(list.size());
+        comboBox.setItems(list);
+        comboBox.setPromptText("Select task to intercept");
+        comboBox.setConverter(new StringConverter<Class>() {
             @Override
             public String toString(Class item) {
-                if (item.getSimpleName().contains("Protocol"))
-                    return "--- " + item.getSimpleName() + " ---";
-                else if (item.getSimpleName().contains("Boolean"))
-                    return "";
-                else
-                    return item.getSimpleName();
+                return item.getSimpleName();
             }
 
             @Override
@@ -185,46 +211,7 @@ public class DebugView extends InitializableView {
                 return null;
             }
         });
-
-
-        taskComboBox2.setVisibleRowCount(items2.size());
-        taskComboBox2.setItems(items2);
-        taskComboBox2.setConverter(new StringConverter<Class>() {
-            @Override
-            public String toString(Class item) {
-                if (item.getSimpleName().contains("Protocol"))
-                    return "--- " + item.getSimpleName() + " ---";
-                else if (item.getSimpleName().contains("Boolean"))
-                    return "";
-                else
-                    return item.getSimpleName();
-            }
-
-            @Override
-            public Class fromString(String s) {
-                return null;
-            }
-        });
+        comboBox.setOnAction(event -> Task.taskToIntercept = comboBox.getSelectionModel().getSelectedItem());
     }
-
-    @FXML
-    void onSelectTask1() {
-        Class item = taskComboBox1.getSelectionModel().getSelectedItem();
-        if (!item.getSimpleName().contains("Protocol")) {
-            //noinspection unchecked
-            Task.taskToIntercept = item;
-        }
-    }
-
-    @FXML
-    void onSelectTask2() {
-        Class item = taskComboBox2.getSelectionModel().getSelectedItem();
-        if (!item.getSimpleName().contains("Protocol")) {
-            //noinspection unchecked
-            Task.taskToIntercept = item;
-        }
-    }
-
-
 }
 
