@@ -141,14 +141,11 @@ public abstract class TradeProtocol {
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);
-            processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         } else if (!trade.isFundsLockedIn()) {
             if (trade.isTakerFeePublished())
                 tradeManager.addTradeToFailedTrades(trade);
             else
                 tradeManager.addTradeToClosedTrades(trade);
-
-            processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         }
     }
 }

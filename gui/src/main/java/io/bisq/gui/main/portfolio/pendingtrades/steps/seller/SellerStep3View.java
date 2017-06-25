@@ -67,25 +67,30 @@ public class SellerStep3View extends TradeStepView {
                 showPopup();
             } else if (trade.isFiatReceived()) {
                 busyAnimation.stop();
-                switch (state) {
-                    case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                    case SELLER_PUBLISHED_PAYOUT_TX:
-                    case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                        busyAnimation.play();
-                        confirmButton.setDisable(true);
-                        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-                        break;
-                    case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
-                        statusLabel.setText(Res.get("shared.messageArrived"));
-                        break;
-                    case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
-                        statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                        break;
-                    case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                        // We get a popup and the trade closed, so we dont need to show anything here
-                        confirmButton.setDisable(false);
-                        statusLabel.setText("");
-                        break;
+                if (!trade.hasFailed()) {
+                    switch (state) {
+                        case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                        case SELLER_PUBLISHED_PAYOUT_TX:
+                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.play();
+                            confirmButton.setDisable(true);
+                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                            break;
+                        case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                            statusLabel.setText(Res.get("shared.messageArrived"));
+                            break;
+                        case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                            break;
+                        case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                            // We get a popup and the trade closed, so we dont need to show anything here
+                            confirmButton.setDisable(false);
+                            statusLabel.setText("");
+                            break;
+                    }
+                } else {
+                    confirmButton.setDisable(true);
+                    statusLabel.setText("");
                 }
             }
         });

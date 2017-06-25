@@ -189,6 +189,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tryOpenDispute(true);
     }
 
+    public void onMoveToFailedTrades() {
+        tradeManager.addTradeToFailedTrades(getTrade());
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

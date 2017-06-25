@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -68,9 +69,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     @Override
     public Message toProtoMessage() {
+        ArrayList<T> clonedList = new ArrayList<>(this.list);
         return PB.PersistableEnvelope.newBuilder()
                 .setTradableList(PB.TradableList.newBuilder()
-                        .addAllTradable(ProtoUtil.collectionToProto(list)))
+                        .addAllTradable(ProtoUtil.collectionToProto(clonedList)))
                 .build();
     }
 

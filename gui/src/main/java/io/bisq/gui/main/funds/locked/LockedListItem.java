@@ -20,6 +20,7 @@ package io.bisq.gui.main.funds.locked;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
 import io.bisq.gui.util.BSFormatter;
@@ -27,27 +28,34 @@ import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 class LockedListItem {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final Trade trade;
     private final AddressEntry addressEntry;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final BSFormatter formatter;
     private final String addressString;
+    @Nullable
+    private final Address address;
     private Coin balance;
 
-    public LockedListItem(Trade trade, AddressEntry addressEntry, BtcWalletService walletService, BSFormatter formatter) {
+    public LockedListItem(Trade trade, AddressEntry addressEntry, BtcWalletService btcWalletService, BSFormatter formatter) {
         this.trade = trade;
         this.addressEntry = addressEntry;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.formatter = formatter;
-        addressString = addressEntry.getAddressString();
+
+        if (trade.getDepositTx() != null && !trade.getDepositTx().getOutputs().isEmpty()) {
+            address = WalletService.getAddressFromOutput(trade.getDepositTx().getOutput(0));
+            addressString = address.toBase58();
+        } else {
+            address = null;
+            addressString = "";
+        }
 
         // balance
         balanceLabel = new Label();
@@ -57,12 +65,12 @@ class LockedListItem {
                 updateBalance();
             }
         };
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
         updateBalance();
     }
 
     public void cleanup() {
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance() {
@@ -70,8 +78,9 @@ class LockedListItem {
         balanceLabel.setText(formatter.formatCoin(this.balance));
     }
 
+    @Nullable
     private Address getAddress() {
-        return addressEntry.getAddress();
+        return address;
     }
 
     public AddressEntry getAddressEntry() {

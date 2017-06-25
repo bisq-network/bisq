@@ -66,24 +66,29 @@ public class BuyerStep2View extends TradeStepView {
                     showPopup();
                 } else if (state.ordinal() <= Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
                     busyAnimation.stop();
-                    switch (state) {
-                        case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
-                        case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                            busyAnimation.play();
-                            confirmButton.setDisable(true);
-                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
-                            break;
-                        case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
-                            statusLabel.setText(Res.get("shared.messageArrived"));
-                            break;
-                        case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
-                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                            break;
-                        case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
-                            // We get a popup and the trade closed, so we dont need to show anything here
-                            confirmButton.setDisable(false);
-                            statusLabel.setText("");
-                            break;
+                    if (!trade.hasFailed()) {
+                        switch (state) {
+                            case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
+                            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.play();
+                                confirmButton.setDisable(true);
+                                statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                                break;
+                            case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
+                                statusLabel.setText(Res.get("shared.messageArrived"));
+                                break;
+                            case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
+                                statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                                break;
+                            case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
+                                // We get a popup and the trade closed, so we dont need to show anything here
+                                confirmButton.setDisable(false);
+                                statusLabel.setText("");
+                                break;
+                        }
+                    } else {
+                        confirmButton.setDisable(true);
+                        statusLabel.setText("");
                     }
                 }
             });

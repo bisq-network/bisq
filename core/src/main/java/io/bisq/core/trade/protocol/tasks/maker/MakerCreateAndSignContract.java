@@ -60,11 +60,13 @@ public class MakerCreateAndSignContract extends TradeTask {
                     processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
-            AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+
             checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
                     "addressEntry must not be set here.");
             AddressEntry makerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
+
+            AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),

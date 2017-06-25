@@ -283,7 +283,7 @@ public class BisqApp extends Application {
                             showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
                         } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
                             showFPSWindow();
-                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
                             showDebugWindow();
                         }
                     }

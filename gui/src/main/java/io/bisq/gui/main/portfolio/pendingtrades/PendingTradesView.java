@@ -148,6 +148,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(popup::hide)
                         .show();
+            } else if (Utilities.isAltPressed(KeyCode.Y, keyEvent)) {
+                new Popup<>().warning(Res.get("portfolio.pending.removeFailedTrade"))
+                        .onAction(model.dataModel::onMoveToFailedTrades)
+                        .show();
             }
         };
     }

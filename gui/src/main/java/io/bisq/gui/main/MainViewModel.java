@@ -691,33 +691,6 @@ public class MainViewModel implements ViewModel {
         allBasicServicesInitialized = true;
     }
 
-    private void checkForLockedUpFunds() {
-        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
-                .filter(Trade::hasFailed)
-                .map(Trade::getId)
-                .collect(Collectors.toSet());
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
-                .map(e -> {
-                    log.warn("We found a closed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
-                })
-                .collect(Collectors.toSet()));
-
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
-                .forEach(e -> {
-                    final Coin balance = e.getCoinLockedInMultiSig();
-                    final String message = Res.get("popup.warning.lockedUpFunds",
-                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                    log.warn(message);
-                    new Popup<>().warning(message).show();
-                });
-    }
-
     private void showFirstPopupIfResyncSPVRequested() {
         Popup firstPopup = new Popup<>();
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
@@ -1117,6 +1090,34 @@ public class MainViewModel implements ViewModel {
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));
     }
+
+    private void checkForLockedUpFunds() {
+        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
+                .filter(Trade::hasFailed)
+                .map(Trade::getId)
+                .collect(Collectors.toSet());
+        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
+                .map(Trade::getId)
+                .collect(Collectors.toSet()));
+        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+                .map(e -> {
+                    log.warn("We found a closed trade with locked up funds. " +
+                            "That should never happen. trade ID=" + e.getId());
+                    return e.getId();
+                })
+                .collect(Collectors.toSet()));
+
+        btcWalletService.getAddressEntriesForTrade().stream()
+                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
+                .forEach(e -> {
+                    final Coin balance = e.getCoinLockedInMultiSig();
+                    final String message = Res.get("popup.warning.lockedUpFunds",
+                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                    log.warn(message);
+                    new Popup<>().warning(message).show();
+                });
+    }
+
 
     private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {
