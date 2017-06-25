@@ -22,8 +22,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -348,6 +347,19 @@ public class Utilities {
 
     public static byte[] decodeFromHex(String encoded) {
         return Utils.HEX.decode(encoded);
+    }
+
+    public static boolean isAltOrCtrlPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return isAltPressed(keyCode, keyEvent) || isCtrlPressed(keyCode, keyEvent);
+    }
+
+    public static boolean isCtrlPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
+                new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN).match(keyEvent);
+    }
+
+    public static boolean isAltPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {

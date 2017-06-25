@@ -141,15 +141,14 @@ public abstract class TradeProtocol {
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);
-        } else {
-            // we have either as taker the fee paid or as maker the publishDepositTx request sent,
-            // so the maker has his offer closed and therefor its for both a failed trade
-            if (trade.isTakerFeePublished() && !trade.isWithdrawn())
+            processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+        } else if (!trade.isFundsLockedIn()) {
+            if (trade.isTakerFeePublished())
                 tradeManager.addTradeToFailedTrades(trade);
+            else
+                tradeManager.addTradeToClosedTrades(trade);
 
-            // if we have not the deposit already published we swap reserved funds to available funds
-            if (!trade.isDepositPublished())
-                processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+            processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         }
     }
 }

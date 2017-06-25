@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.io.File;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
@@ -80,5 +81,10 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public Optional<Trade> getTradeById(String id) {
         return failedTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
+
+    public Stream<Trade> getLockedTradesStream() {
+        return failedTrades.stream()
+                .filter(Trade::isFundsLockedIn);
     }
 }

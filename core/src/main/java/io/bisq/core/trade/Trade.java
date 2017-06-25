@@ -722,6 +722,10 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
+    public boolean isFundsLockedIn() {
+        return isDepositPublished() && !isPayoutPublished() && disputeState != DisputeState.DISPUTE_CLOSED;
+    }
+
     public boolean isDepositConfirmed() {
         return getState().getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
@@ -804,6 +808,7 @@ public abstract class Trade implements Tradable, Model {
         return payoutTx;
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessageProperty.get();
     }

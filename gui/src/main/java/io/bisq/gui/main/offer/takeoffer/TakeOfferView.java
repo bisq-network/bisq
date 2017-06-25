@@ -460,6 +460,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void close() {
+        model.dataModel.onClose();
         if (closeHandler != null)
             closeHandler.close();
     }

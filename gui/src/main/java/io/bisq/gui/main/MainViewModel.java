@@ -58,6 +58,8 @@ import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.closed.ClosedTradableManager;
+import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
@@ -106,6 +108,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class MainViewModel implements ViewModel {
@@ -132,6 +135,8 @@ public class MainViewModel implements ViewModel {
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
+    private final FailedTradesManager failedTradesManager;
+    private final ClosedTradableManager closedTradableManager;
     private final BSFormatter formatter;
 
     // BTC network
@@ -185,6 +190,7 @@ public class MainViewModel implements ViewModel {
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
+    private boolean allBasicServicesInitialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +207,8 @@ public class MainViewModel implements ViewModel {
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, TradeStatisticsManager tradeStatisticsManager,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
-                         KeyRing keyRing, BisqEnvironment bisqEnvironment,
+                         KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
+                         ClosedTradableManager closedTradableManager,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -227,6 +234,8 @@ public class MainViewModel implements ViewModel {
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
+        this.failedTradesManager = failedTradesManager;
+        this.closedTradableManager = closedTradableManager;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
@@ -514,6 +523,9 @@ public class MainViewModel implements ViewModel {
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
                                     btcNetworkAsString);
                             btcSplashSyncIconId.set("image-connection-synced");
+
+                            if (allBasicServicesInitialized)
+                                checkForLockedUpFunds();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
@@ -672,6 +684,38 @@ public class MainViewModel implements ViewModel {
         });
 
         checkIfOpenOffersMatchTradeProtocolVersion();
+
+        if (walletsSetup.downloadPercentageProperty().get() == 1)
+            checkForLockedUpFunds();
+
+        allBasicServicesInitialized = true;
+    }
+
+    private void checkForLockedUpFunds() {
+        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
+                .filter(Trade::hasFailed)
+                .map(Trade::getId)
+                .collect(Collectors.toSet());
+        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
+                .map(Trade::getId)
+                .collect(Collectors.toSet()));
+        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+                .map(e -> {
+                    log.warn("We found a closed trade with locked up funds. " +
+                            "That should never happen. trade ID=" + e.getId());
+                    return e.getId();
+                })
+                .collect(Collectors.toSet()));
+
+        btcWalletService.getAddressEntriesForTrade().stream()
+                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
+                .forEach(e -> {
+                    final Coin balance = e.getCoinLockedInMultiSig();
+                    final String message = Res.get("popup.warning.lockedUpFunds",
+                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                    log.warn(message);
+                    new Popup<>().warning(message).show();
+                });
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
@@ -1060,7 +1104,9 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateLockedBalance() {
-        Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
+        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
+        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
+        Coin sum = Coin.valueOf(lockedTrades
                 .mapToLong(trade -> {
                     final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                     if (addressEntryOptional.isPresent())

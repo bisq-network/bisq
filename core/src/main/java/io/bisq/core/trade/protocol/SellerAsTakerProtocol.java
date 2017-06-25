@@ -141,9 +141,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(SellerProcessCounterCurrencyTransferStartedMessage.class,
+        taskRunner.addTasks(
+                SellerProcessCounterCurrencyTransferStartedMessage.class,
                 TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class);
+                TakerVerifyMakerFeePayment.class
+        );
         taskRunner.run();
     }
 

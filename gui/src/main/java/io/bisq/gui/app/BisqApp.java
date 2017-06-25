@@ -73,8 +73,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -254,36 +252,41 @@ public class BisqApp extends Application {
                 stop();
             });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.W, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+                Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
+                if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
+                        Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
                     stop();
-                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    stop();
-                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
-                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    // BSQ empty wallet not public yet
-                    showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
-                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showSendAlertMessagePopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
-                    if (walletsManager.areWalletsAvailable())
-                        new ShowWalletDataWindow(walletsManager).show();
-                    else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                    BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
-                    if (walletService.isWalletReady())
-                        new SpendFromDepositTxWindow(tradeWalletService).show();
-                    else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showFPSWindow();
-                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
-                    showDebugWindow();
+                } else {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
+                        showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
+                        showSendAlertMessagePopup();
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
+                        showFilterPopup();
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
+                        WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+                        if (walletsManager.areWalletsAvailable())
+                            new ShowWalletDataWindow(walletsManager).show();
+                        else
+                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
+                        TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
+                        BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
+                        if (walletService.isWalletReady())
+                            new SpendFromDepositTxWindow(tradeWalletService).show();
+                        else
+                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                    } else if (DevEnv.DEV_MODE) {
+                        // dev ode only
+                        if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
+                            // BSQ empty wallet not public yet
+                            showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
+                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
+                            showFPSWindow();
+                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                            showDebugWindow();
+                        }
+                    }
                 }
             });
 

@@ -66,10 +66,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -211,7 +208,7 @@ public class TradeManager implements PersistedDataHost {
                                 trade.getProcessModel().getFundsNeededForTradeAsLong());
                         trade.updateDepositTxFromWallet();
                         tradesForStatistics.add(trade);
-                    } else if (trade.isTakerFeePublished()) {
+                    } else if (trade.isTakerFeePublished() && !trade.isFundsLockedIn()) {
                         addTradeToFailedTradesList.add(trade);
                     } else {
                         removePreparedTradeList.add(trade);
@@ -223,15 +220,34 @@ public class TradeManager implements PersistedDataHost {
 
         removePreparedTradeList.forEach(this::removePreparedTrade);
 
-        tradesForStatistics.addAll(closedTradableManager.getClosedTrades().stream()
-                .filter(tradable -> tradable instanceof Trade).map(tradable -> (Trade) tradable)
-                .collect(Collectors.toList()));
+        cleanUpAddressEntries();
 
         // We start later to have better connectivity to the network
         UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
                 90, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);
+    }
+
+    public void cleanUpAddressEntries() {
+        Set<String> tradesIdSet = getLockedTradesStream()
+                .map(Trade::getId)
+                .collect(Collectors.toSet());
+
+        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
+                .map(Trade::getId)
+                .collect(Collectors.toSet()));
+
+        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+                .map(Tradable::getId)
+                .collect(Collectors.toSet()));
+
+        btcWalletService.getAddressEntriesForTrade().stream()
+                .filter(e -> !tradesIdSet.contains(e.getOfferId()))
+                .forEach(e -> {
+                    log.warn("We found an outdated addressEntry for trade {}", e.getOfferId());
+                    btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
+                });
     }
 
     private void publishTradeStatistics(List<Trade> trades) {
@@ -462,6 +478,8 @@ public class TradeManager implements PersistedDataHost {
     public void addTradeToClosedTrades(Trade trade) {
         removeTrade(trade);
         closedTradableManager.add(trade);
+
+        cleanUpAddressEntries();
     }
 
     // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
@@ -469,20 +487,20 @@ public class TradeManager implements PersistedDataHost {
     public void addTradeToFailedTrades(Trade trade) {
         removeTrade(trade);
         failedTradesManager.add(trade);
+
+        cleanUpAddressEntries();
     }
 
     // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
     // we just remove the trade from our list. We don't store those trades.
     public void removePreparedTrade(Trade trade) {
         removeTrade(trade);
+
+        cleanUpAddressEntries();
     }
 
     private void removeTrade(Trade trade) {
         tradableList.remove(trade);
-
-        // we only swap if we have not an open offer (in case the removeTrade happened at the trade preparation phase)
-        if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
-            btcWalletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
 
 
@@ -536,8 +554,8 @@ public class TradeManager implements PersistedDataHost {
         return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
-    public Stream<Trade> getLockedTradeStream() {
+    public Stream<Trade> getLockedTradesStream() {
         return getTradableList().stream()
-                .filter(trade -> trade.isDepositPublished() && !trade.isPayoutPublished());
+                .filter(Trade::isFundsLockedIn);
     }
 }

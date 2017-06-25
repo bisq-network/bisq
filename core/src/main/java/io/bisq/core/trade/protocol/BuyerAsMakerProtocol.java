@@ -140,10 +140,12 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                     handleTaskRunnerSuccess("handle DepositTxPublishedMessage");
                 },
                 this::handleTaskRunnerFault);
-        taskRunner.addTasks(MakerProcessDepositTxPublishedMessage.class,
+        taskRunner.addTasks(
+                MakerProcessDepositTxPublishedMessage.class,
                 MakerVerifyTakerAccount.class,
                 MakerVerifyTakerFeePayment.class,
-                MakerPublishTradeStatistics.class);
+                MakerPublishTradeStatistics.class
+        );
         taskRunner.run();
     }
 

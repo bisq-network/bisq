@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -37,8 +38,6 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -139,8 +138,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
 
         // we use a hidden emergency shortcut to open support ticket
-        keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event) || new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN).match(event)) {
+        keyEventEventHandler = keyEvent -> {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.O, keyEvent)) {
                 Popup popup = new Popup<>();
                 popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
                         .message(Res.get("portfolio.pending.openSupportTicket.msg"))

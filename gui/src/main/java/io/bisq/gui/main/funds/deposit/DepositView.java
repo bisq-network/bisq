@@ -168,7 +168,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountLabel = amountTuple.first;
         amountTextField = amountTuple.second;
         if (DevEnv.DEV_MODE)
-            amountTextField.setText("10");
+            amountTextField.setText("1000");
 
         titledGroupBg.setVisible(false);
         titledGroupBg.setManaged(false);

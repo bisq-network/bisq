@@ -22,6 +22,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
@@ -47,8 +48,6 @@ import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -152,13 +151,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // TODO can be removed once DAo is released
         UserThread.runAfter(() -> {
             root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
                     daoButton.setVisible(true);
                     daoButton.setManaged(true);
                 }
             });
         }, 1);
-        
+
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);

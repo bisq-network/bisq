@@ -19,6 +19,7 @@ package io.bisq.gui.main.account;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Utilities;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -33,8 +34,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
 import javax.inject.Inject;
@@ -77,7 +76,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         };
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event) &&
+            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
                     arbitratorRegistrationTab == null) {
                 arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration"));
                 arbitratorRegistrationTab.setClosable(false);

@@ -255,6 +255,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
+    public void onClose() {
+        btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

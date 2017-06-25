@@ -58,7 +58,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -76,7 +78,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final KeyRing keyRing;
     private final User user;
     private final P2PService p2PService;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
@@ -97,7 +99,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public OpenOfferManager(KeyRing keyRing,
                             User user,
                             P2PService p2PService,
-                            BtcWalletService walletService,
+                            BtcWalletService btcWalletService,
                             TradeWalletService tradeWalletService,
                             BsqWalletService bsqWalletService,
                             OfferBookService offerBookService,
@@ -109,7 +111,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
@@ -144,6 +146,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 }
             });
         }
+
+        cleanUpAddressEntries();
+    }
+
+    public void cleanUpAddressEntries() {
+        Set<String> openTradesIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
+        btcWalletService.getAddressEntriesForOpenOffer().stream()
+                .filter(e -> !openTradesIdSet.contains(e.getOfferId()))
+                .forEach(e -> {
+                    log.warn("We found an outdated addressEntry for openOffer {}", e.getOfferId());
+                    btcWalletService.resetAddressEntriesForOpenOffer(e.getOfferId());
+                });
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -276,7 +290,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                walletService,
+                btcWalletService,
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
@@ -323,8 +337,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);

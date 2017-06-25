@@ -132,10 +132,12 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 },
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(MakerProcessDepositTxPublishedMessage.class,
+        taskRunner.addTasks(
+                MakerProcessDepositTxPublishedMessage.class,
                 MakerPublishTradeStatistics.class,
                 MakerVerifyTakerAccount.class,
-                MakerVerifyTakerFeePayment.class);
+                MakerVerifyTakerFeePayment.class
+        );
         taskRunner.run();
     }
 
@@ -152,9 +154,11 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(SellerProcessCounterCurrencyTransferStartedMessage.class,
+        taskRunner.addTasks(
+                SellerProcessCounterCurrencyTransferStartedMessage.class,
                 MakerVerifyTakerAccount.class,
-                MakerVerifyTakerFeePayment.class);
+                MakerVerifyTakerFeePayment.class
+        );
         taskRunner.run();
     }
 

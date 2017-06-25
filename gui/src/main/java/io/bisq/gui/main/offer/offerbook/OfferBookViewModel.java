@@ -476,7 +476,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     int getNumPastTrades(Offer offer) {
-        return closedTradableManager.getClosedTrades().stream()
+        return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&

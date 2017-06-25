@@ -295,7 +295,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public int getNumPastTrades(Trade trade) {
-        return closedTradableManager.getClosedTrades().stream()
+        return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     if (e instanceof Trade) {
                         Trade t = (Trade) e;
