@@ -35,10 +35,9 @@ Contact the team and keep up to date using any of the following:
  - The [bisq Website](https://bisq.io)
  - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
  - The [bisq Forum]( https://forum.bisq.io)
- - The [#bisq](https://webchat.freenode.net/?channels=bisq) IRC channel on Freenode ([logs](https://botbot.me/freenode/bisq)) 
- - Our [mailing list](https://groups.google.com/forum/#!forum/bisq)
- - [@bisq_](https://twitter.com/bisq_) on Twitter
- - Get in [contact](https://bisq.io/contact/) with us
+ - The [#bisq](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
+ - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
+ - [@bisq_](https://twitter.com/bitsquare_) on Twitter
 
 
 License
