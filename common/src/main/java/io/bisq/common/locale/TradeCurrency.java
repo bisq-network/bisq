@@ -26,9 +26,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-import java.util.Optional;
-
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -36,17 +33,10 @@ import java.util.Optional;
 public abstract class TradeCurrency implements PersistablePayload, Comparable<TradeCurrency> {
     protected final String code;
     protected final String name;
-    @Nullable
-    protected String symbol;
 
-    protected TradeCurrency(String code, String name) {
-        this(code, name, null);
-    }
-
-    public TradeCurrency(String code, String name, @Nullable String symbol) {
+    public TradeCurrency(String code, String name) {
         this.code = code;
         this.name = name;
-        this.symbol = symbol;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,11 +55,9 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
     }
 
     public PB.TradeCurrency.Builder getTradeCurrencyBuilder() {
-        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
+        return PB.TradeCurrency.newBuilder()
                 .setCode(code)
                 .setName(name);
-        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
-        return builder;
     }
 
 

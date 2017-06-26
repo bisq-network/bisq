@@ -36,7 +36,6 @@ import java.util.Optional;
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
-@Getter
 @ToString
 @Slf4j
 public final class PaymentMethod implements PersistablePayload, Comparable {
@@ -93,7 +92,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Getter
     private final String id;
+    @Getter
     private final long maxTradePeriod;
     private final long maxTradeLimit;
 
@@ -219,8 +220,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             return new PaymentMethod(Res.get("shared.na"));
     }
 
-    public Coin getMaxTradeLimitAsCoin() {
-        return Coin.valueOf(maxTradeLimit);
+    // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
+    public Coin getMaxTradeLimitAsCoin(String currencyCode) {
+        if (currencyCode.equals("SF"))
+            return Coin.valueOf(maxTradeLimit).multiply(5);
+        else
+            return Coin.valueOf(maxTradeLimit);
     }
 
     @Override

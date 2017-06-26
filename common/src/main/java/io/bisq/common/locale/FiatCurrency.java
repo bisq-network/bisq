@@ -47,7 +47,7 @@ public final class FiatCurrency extends TradeCurrency {
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency, Locale locale) {
-        super(currency.getCurrencyCode(), currency.getDisplayName(locale), currency.getSymbol());
+        super(currency.getCurrencyCode(), currency.getDisplayName(locale));
         this.currency = currency;
     }
 

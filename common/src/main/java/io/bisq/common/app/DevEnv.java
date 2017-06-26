@@ -22,5 +22,4 @@ public class DevEnv {
 
     public static final boolean DAO_ACTIVATED = false;
     public static final boolean DAO_PHASE2_ACTIVATED = false;
-
 }

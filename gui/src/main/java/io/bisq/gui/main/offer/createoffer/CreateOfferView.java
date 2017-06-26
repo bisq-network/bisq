@@ -451,7 +451,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 if (singleTradeCurrency != null)
                     currencyTextField.setText(singleTradeCurrency.getNameAndCode());
                 model.onPaymentAccountSelected(paymentAccount);
-                model.onCurrencySelected(paymentAccount.getSingleTradeCurrency());
+                model.onCurrencySelected(model.dataModel.getTradeCurrency());
             }
         } else {
             currencyComboBox.setVisible(false);

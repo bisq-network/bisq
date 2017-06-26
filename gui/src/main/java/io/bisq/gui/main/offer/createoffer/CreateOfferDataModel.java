@@ -224,6 +224,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // called before activate()
     boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
+        this.tradeCurrency = tradeCurrency;
 
         fillPaymentAccounts();
 
@@ -233,26 +234,26 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 user.getPaymentAccounts() != null &&
                 user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
+            setTradeCurrencyFromPaymentAccount(account);
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+            setTradeCurrencyFromPaymentAccount(account);
         }
 
         if (account != null && isNotUSBankAccount(account)) {
-            paymentAccount = account;
-            this.tradeCurrency = tradeCurrency;
+            this.paymentAccount = account;
         } else {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
-                paymentAccount = paymentAccountOptional.get();
-                this.tradeCurrency = paymentAccount.getSingleTradeCurrency();
+                this.paymentAccount = paymentAccountOptional.get();
+                setTradeCurrencyFromPaymentAccount(paymentAccount);
             } else {
                 log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
             }
         }
 
-        if (this.tradeCurrency != null)
-            tradeCurrencyCode.set(this.tradeCurrency.getCode());
+        tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
@@ -331,7 +332,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
 
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit();
+        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
@@ -417,7 +418,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
             marketPriceMargin = 0;
             preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
+
+            setTradeCurrencyFromPaymentAccount(paymentAccount);
         }
+    }
+
+    private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
+        if (paymentAccount.getSingleTradeCurrency() != null)
+            tradeCurrency = paymentAccount.getSingleTradeCurrency();
+        else if (paymentAccount.getSelectedTradeCurrency() != null)
+            tradeCurrency = paymentAccount.getSelectedTradeCurrency();
+        else if (!paymentAccount.getTradeCurrencies().isEmpty())
+            tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
+
+        checkNotNull(tradeCurrency, "tradeCurrency must not be null");
+        tradeCurrencyCode.set(tradeCurrency.getCode());
     }
 
     void onCurrencySelected(TradeCurrency tradeCurrency) {
@@ -429,7 +444,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
 
             this.tradeCurrency = tradeCurrency;
-            final String code = tradeCurrency.getCode();
+            final String code = this.tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
 
             if (paymentAccount != null)
@@ -742,10 +757,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void setDirection(OfferPayload.Direction direction) {
         this.direction = direction;
-    }
-
-    void setTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrency = tradeCurrency;
     }
 
     ReadOnlyStringProperty getTradeCurrencyCode() {

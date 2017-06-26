@@ -133,10 +133,20 @@ public abstract class PaymentMethodForm {
     protected void addAllowedPeriod() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
 
+        final TradeCurrency tradeCurrency;
+        if (paymentAccount.getSingleTradeCurrency() != null)
+            tradeCurrency = paymentAccount.getSingleTradeCurrency();
+        else if (paymentAccount.getSelectedTradeCurrency() != null)
+            tradeCurrency = paymentAccount.getSelectedTradeCurrency();
+        else if (!paymentAccount.getTradeCurrencies().isEmpty())
+            tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
+        else
+            tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"),
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
-                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin())));
+                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(tradeCurrency.getCode()))));
     }
 
     abstract protected void autoFillNameTextField();

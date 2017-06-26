@@ -1230,10 +1230,9 @@ message Currency {
 message TradeCurrency {
     string code = 1;
     string name = 2;
-    string symbol = 3;
     oneof message {
-        CryptoCurrency crypto_currency = 4;
-        FiatCurrency fiat_currency = 5;
+        CryptoCurrency crypto_currency = 3;
+        FiatCurrency fiat_currency = 4;
     }
 }
 
