@@ -77,7 +77,7 @@ public class BsqParser {
                        int genesisBlockHeight,
                        String genesisTxId) {
         int blockHeight = bsqBlock.getHeight();
-        log.debug("Parse block at height={} ", blockHeight);
+        log.info("Parse block at height={} ", blockHeight);
         List<Tx> txList = new ArrayList<>(bsqBlock.getTxs());
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         bsqBlock.getTxs().stream()
@@ -111,7 +111,7 @@ public class BsqParser {
 
                 bsqChainState.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
-                log.debug("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
+                log.info("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
                         System.currentTimeMillis() - startTs, blockHeight, bsqTxsInBlock.size());
             }
         } catch (BlockNotConnectingException e) {
@@ -127,6 +127,7 @@ public class BsqParser {
                                        int genesisBlockHeight,
                                        String genesisTxId)
             throws BsqBlockchainException {
+
         int blockHeight = btcdBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
 
@@ -135,12 +136,14 @@ public class BsqParser {
         // We use a list as we want to maintain sorting of tx intra-block dependency
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         // We add all transactions to the block
+        long startTs = System.currentTimeMillis();
         for (String txId : btcdBlock.getTx()) {
             final Tx tx = rpcService.requestTransaction(txId, blockHeight);
             txList.add(tx);
             checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
         }
-
+        log.info("Requesting {} transactions took {} ms",
+                btcdBlock.getTx().size(), System.currentTimeMillis() - startTs);
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.

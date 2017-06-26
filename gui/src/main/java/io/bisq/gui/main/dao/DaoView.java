@@ -74,10 +74,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (compensationTab == null && viewPath.get(2).equals(BsqWalletView.class))
                     //noinspection unchecked
-                    if (DevEnv.DAO_ACTIVATED)
-                        navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
-                    else
-                        navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
+                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
                 else
                     loadView(viewPath.tip());
             }
@@ -111,10 +108,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == bsqWalletTab)
                 //noinspection unchecked
-                if (DevEnv.DAO_ACTIVATED)
-                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
-                else
-                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
+                navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == compensationTab)
                 //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
