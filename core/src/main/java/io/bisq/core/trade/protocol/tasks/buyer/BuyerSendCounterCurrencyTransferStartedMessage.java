@@ -39,6 +39,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             BtcWalletService walletService = processModel.getBtcWalletService();
             final String id = processModel.getOfferId();
             AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,

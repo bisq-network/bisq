@@ -17,6 +17,8 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
@@ -46,6 +48,7 @@ public class BuyerStep2View extends TradeStepView {
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
+    private Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,13 +62,19 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     public void activate() {
         super.activate();
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+        
         //TODO we get called twice, check why
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
+                if (timeoutTimer != null)
+                    timeoutTimer.stop();
+
                 if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
                     showPopup();
                 } else if (state.ordinal() <= Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-                    busyAnimation.stop();
                     if (!trade.hasFailed()) {
                         switch (state) {
                             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
@@ -73,17 +82,32 @@ public class BuyerStep2View extends TradeStepView {
                                 busyAnimation.play();
                                 confirmButton.setDisable(true);
                                 statusLabel.setText(Res.get("shared.sendingConfirmation"));
+
+                                timeoutTimer = UserThread.runAfter(() -> {
+                                    busyAnimation.stop();
+                                    confirmButton.setDisable(false);
+                                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                                }, 10);
                                 break;
                             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.stop();
                                 statusLabel.setText(Res.get("shared.messageArrived"));
                                 break;
                             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
+                                busyAnimation.stop();
                                 statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
                                 break;
                             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
                                 // We get a popup and the trade closed, so we dont need to show anything here
+                                busyAnimation.stop();
                                 confirmButton.setDisable(false);
                                 statusLabel.setText("");
+                                break;
+                            default:
+                                log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
+                                busyAnimation.stop();
+                                confirmButton.setDisable(false);
+                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                                 break;
                         }
                     } else {
@@ -100,6 +124,9 @@ public class BuyerStep2View extends TradeStepView {
         super.deactivate();
 
         busyAnimation.stop();
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
 
         if (tradeStatePropertySubscription != null) {
             tradeStatePropertySubscription.unsubscribe();
@@ -276,6 +303,11 @@ public class BuyerStep2View extends TradeStepView {
 
     private void confirmPaymentStarted() {
         confirmButton.setDisable(true);
+        busyAnimation.play();
+        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+        if (trade.isFiatSent())
+            trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
+
         model.dataModel.onPaymentStarted(() -> {
             // In case the first send failed we got the support button displayed.
             // If it succeeds at a second try we remove the support button again.

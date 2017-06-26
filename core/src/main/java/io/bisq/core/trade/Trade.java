@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
@@ -584,24 +583,22 @@ public abstract class Trade implements Tradable, Model {
 
     public void setState(State state) {
         log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
-        if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
-            boolean changed = this.state != state;
-            this.state = state;
-            stateProperty.set(state);
-            statePhaseProperty.set(state.getPhase());
-
-            if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
-                tradeProtocol.completed();
-
-            if (changed)
-                persist();
-        } else {
-            final String message = "we got a state change to a previous phase. that is likely a bug.\n" +
-                    "old state is: " + this.state + ". New state is: " + state;
-            log.error(message);
-            if (DevEnv.DEV_MODE)
-                throw new RuntimeException(message);
+        if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
+            final String message = "We got a state change to a previous phase.\n" +
+                    "Old state is: " + this.state + ". New state is: " + state;
+            log.warn(message);
         }
+
+        boolean changed = this.state != state;
+        this.state = state;
+        stateProperty.set(state);
+        statePhaseProperty.set(state.getPhase());
+
+        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
+            tradeProtocol.completed();
+
+        if (changed)
+            persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {

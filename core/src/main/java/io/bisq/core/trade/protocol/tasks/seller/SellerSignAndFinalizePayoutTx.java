@@ -88,6 +88,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
+
             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.MULTI_SIG);
 
             complete();
