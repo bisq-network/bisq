@@ -10,7 +10,7 @@ import java.net.*;
 /**
  * SOCKS4 and SOCKS5 proxy, handles both protocols simultaniously. Implements
  * all SOCKS commands, including UDP relaying.
- * <p>
+ * <p/>
  * In order to use it you will need to implement ServerAuthenticator interface.
  * There is an implementation of this interface which does no authentication
  * ServerAuthenticatorNone, but it is very dangerous to use, as it will give
@@ -74,7 +74,7 @@ public class ProxyServer implements Runnable {
 
     /**
      * Set proxy.
-     * <p>
+     * <p/>
      * Allows Proxy chaining so that one Proxy server is connected to another
      * and so on. If proxy supports SOCKSv4, then only some SOCKSv5 requests can
      * be handled, UDP would not work, however CONNECT and BIND will be

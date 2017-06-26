@@ -12,10 +12,10 @@ import java.net.Socket;
 /**
  * An implementation of ServerAuthenticator, which does <b>not</b> do any
  * authentication.
- * <p>
+ * <p/>
  * <FONT size="+3" color ="FF0000"> Warning!!</font><br>
  * Should not be used on machines which are not behind the firewall.
- * <p>
+ * <p/>
  * It is only provided to make implementing other authentication schemes easier.
  * <br>
  * For Example: <tt><pre>
@@ -25,7 +25,7 @@ import java.net.Socket;
  * if(!checkHost(s.getInetAddress()) return null;
  * return super.startSession(s);
  * }
- * <p>
+ * <p/>
  * boolean checkHost(java.net.Inetaddress addr){
  * boolean allow;
  * //Do it somehow
@@ -136,7 +136,7 @@ public abstract class ServerAuthenticatorBase implements ServerAuthenticator {
 
     /**
      * Convinience routine for selecting SOCKSv5 authentication.
-     * <p>
+     * <p/>
      * This method reads in authentication methods that client supports, checks
      * wether it supports given method. If it does, the notification method is
      * written back to client, that this method have been chosen for

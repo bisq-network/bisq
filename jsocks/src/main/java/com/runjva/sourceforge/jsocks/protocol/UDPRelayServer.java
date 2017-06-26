@@ -130,7 +130,7 @@ class UDPRelayServer implements Runnable {
 
     /**
      * Stops Relay server.
-     * <p>
+     * <p/>
      * Does not close control connection, does not interrupt master_thread.
      */
     public synchronized void stop() {

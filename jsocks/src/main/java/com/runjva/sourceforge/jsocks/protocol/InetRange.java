@@ -11,7 +11,7 @@ import java.util.Vector;
  * Class InetRange provides the means of defining the range of inetaddresses.
  * It's used by Proxy class to store and look up addresses of machines, that
  * should be contacted directly rather then through the proxy.
- * <p>
+ * <p/>
  * InetRange provides several methods to add either standalone addresses, or
  * ranges (e.g. 100.200.300.0:100.200.300.255, which covers all addresses on on
  * someones local network). It also provides methods for checking wether given
@@ -39,16 +39,16 @@ public class InetRange implements Cloneable {
      * Adds another host or range to this range. The String can be one of those:
      * <UL>
      * <li>Host name. eg.(Athena.myhost.com or 45.54.56.65)
-     * <p>
+     * <p/>
      * <li>Range in the form .myhost.net.au <BR>
      * In which case anything that ends with .myhost.net.au will be considered
      * in the range.
-     * <p>
+     * <p/>
      * <li>Range in the form ddd.ddd.ddd. <BR>
      * This will be treated as range ddd.ddd.ddd.0 to ddd.ddd.ddd.255. It is not
      * necessary to specify 3 first bytes you can use just one or two. For
      * example 130. will cover address between 130.0.0.0 and 13.255.255.255.
-     * <p>
+     * <p/>
      * <li>Range in the form host_from[: \t\n\r\f]host_to. <br>
      * That is two hostnames or ips separated by either whitespace or colon.
      * </UL>
@@ -153,7 +153,7 @@ public class InetRange implements Cloneable {
 
     /**
      * Checks wether the given host is in the range.
-     * <p>
+     * <p/>
      * Algorithm: <BR>
      * <ol>
      * <li>Look up if the hostname is in the range (in the Hashtable).

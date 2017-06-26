@@ -255,7 +255,7 @@ public abstract class SocksProxyBase {
     /**
      * Parses strings in the form: host[:port:user:password], and creates proxy
      * from information obtained from parsing.
-     * <p>
+     * <p/>
      * Defaults: port = 1080.<br>
      * If user specified but not password, creates Socks4Proxy, if user not
      * specified creates Socks5Proxy, if both user and password are speciefied

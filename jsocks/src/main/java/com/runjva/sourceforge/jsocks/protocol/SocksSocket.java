@@ -18,9 +18,9 @@ import java.net.UnknownHostException;
  * which will be used by all Socks aware sockets. You can also create either
  * Socks4Proxy or Socks5Proxy, and use them by passing to the appropriate
  * constructors.
- * <p>
+ * <p/>
  * Using Socks package can be as easy as that:
- * <p>
+ * <p/>
  * <pre>
  * &lt;tt&gt;
  *
@@ -44,7 +44,7 @@ import java.net.UnknownHostException;
  *
  * &lt;/tt&gt;
  * </pre>
- * <p>
+ * <p/>
  * However if the need exist for more control, like resolving addresses
  * remotely, or using some non-trivial authentication schemes, it can be done.
  */
@@ -82,7 +82,7 @@ public class SocksSocket extends Socket {
      * @param port Port to which to connect.
      * @throws UnknownHostException If one of the following happens:
      *                              <ol>
-     *                              <p>
+     *                              <p/>
      *                              <li>Proxy settings say that address should be resolved
      *                              locally, but this fails.
      *                              <li>Proxy settings say that the host should be contacted

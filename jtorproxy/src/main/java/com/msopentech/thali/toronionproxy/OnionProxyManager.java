@@ -50,11 +50,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Note that you will most likely need to actually call into the
  * AndroidOnionProxyManager or JavaOnionProxyManager in order to create the
  * right bindings for your environment.
- * <p>
+ * <p/>
  * This class is thread safe but that's mostly because we hit everything over
  * the head with 'synchronized'. Given the way this class is used there
  * shouldn't be any performance implications of this.
- * <p>
+ * <p/>
  * This class began life as TorPlugin from the Briar Project
  */
 public abstract class OnionProxyManager {

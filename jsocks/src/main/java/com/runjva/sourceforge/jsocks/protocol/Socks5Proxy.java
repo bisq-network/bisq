@@ -82,7 +82,7 @@ public class Socks5Proxy extends SocksProxyBase implements Cloneable {
 
     /**
      * Wether to resolve address locally or to let proxy do so.
-     * <p>
+     * <p/>
      * SOCKS5 protocol allows to send host names rather then IPs in the
      * requests, this option controls wether the hostnames should be send to the
      * proxy server as names, or should they be resolved locally.

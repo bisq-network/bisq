@@ -12,7 +12,7 @@ public class SocksException extends java.io.IOException {
 
     /**
      * Construct a SocksException with given errorcode.
-     * <p>
+     * <p/>
      * Tries to look up message which corresponds to this error code.
      *
      * @param errCode Error code for this exception.

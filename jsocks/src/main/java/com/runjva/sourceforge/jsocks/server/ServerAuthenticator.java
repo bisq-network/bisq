@@ -17,7 +17,7 @@ public interface ServerAuthenticator {
 
     /**
      * This method is called when a new connection accepted by the server.
-     * <p>
+     * <p/>
      * At this point no data have been extracted from the connection. It is
      * responsibility of this method to ensure that the next byte in the stream
      * after this method have been called is the first byte of the socks request
@@ -25,7 +25,7 @@ public interface ServerAuthenticator {
      * in the stream is part of the request. With SOCKSv5 however there is an
      * authentication data first. It is expected that implementaions will
      * process this authentication data.
-     * <p>
+     * <p/>
      * If authentication was successful an instance of ServerAuthentication
      * should be returned, it later will be used by the server to perform
      * authorization and some other things. If authentication fails null should
@@ -40,10 +40,10 @@ public interface ServerAuthenticator {
     /**
      * This method should return input stream which should be used on the
      * accepted socket.
-     * <p>
+     * <p/>
      * SOCKSv5 allows to have multiple authentication methods, and these methods
      * might require some kind of transformations being made on the data.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      */
@@ -52,10 +52,10 @@ public interface ServerAuthenticator {
     /**
      * This method should return output stream to use to write to the accepted
      * socket.
-     * <p>
+     * <p/>
      * SOCKSv5 allows to have multiple authentication methods, and these methods
      * might require some kind of transformations being made on the data.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      */
@@ -64,10 +64,10 @@ public interface ServerAuthenticator {
     /**
      * This method should return UDPEncapsulation, which should be used on the
      * datagrams being send in/out.
-     * <p>
+     * <p/>
      * If no transformation should be done on the datagrams, this method should
      * return null.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      */
@@ -76,11 +76,11 @@ public interface ServerAuthenticator {
 
     /**
      * This method is called when a request have been read.
-     * <p>
+     * <p/>
      * Implementation should decide wether to grant request or not. Returning
      * true implies granting the request, false means request should be
      * rejected.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      *
@@ -91,7 +91,7 @@ public interface ServerAuthenticator {
 
     /**
      * This method is called when datagram is received by the server.
-     * <p>
+     * <p/>
      * Implementaions should decide wether it should be forwarded or dropped. It
      * is expecteed that implementation will use datagram address and port
      * information to make a decision, as well as anything else. Address and
@@ -99,10 +99,10 @@ public interface ServerAuthenticator {
      * either destination or source address. If out is true address is
      * destination address, else it is a source address, address of the machine
      * from which datagram have been received for the client.
-     * <p>
+     * <p/>
      * Implementaions should return true if the datagram is to be forwarded, and
      * false if the datagram should be dropped.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      *
@@ -115,7 +115,7 @@ public interface ServerAuthenticator {
     /**
      * This method is called when session is completed. Either due to normal
      * termination or due to any error condition.
-     * <p>
+     * <p/>
      * This method is called on the object returned from the startSession
      * function.
      */
