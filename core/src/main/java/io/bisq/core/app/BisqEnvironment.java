@@ -77,7 +77,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @SuppressWarnings("SameReturnValue")
     public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
-        return BaseCurrencyNetwork.LTC_MAINNET;
+        return BaseCurrencyNetwork.BTC_MAINNET;
     }
 
     public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
