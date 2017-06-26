@@ -10,29 +10,29 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
-    <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
+    <!--  <logger name="io.bisq.core.storage.Storage" level="WARN"/>
+      <logger name="io.bisq.core.storage.FileManager" level="WARN"/>
+      <logger name="io.bisq.locale.BSResources" level="ERROR"/>-->
 
-    <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="TRACE"/>
+    <!-- <logger name="io.bisq.p2p.peers.PeerGroup" level="TRACE"/>
     
     
 
-     <logger name="io.bitsquare.p2p.P2PService" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.storage.ProtectedExpirableDataStorage" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.network.LocalhostNetworkNode" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.network.TorNetworkNode" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.network.NetworkNode" level="TRACE"/>-->
+     <logger name="io.bisq.p2p.P2PService" level="TRACE"/>
+     <logger name="io.bisq.p2p.storage.ProtectedExpirableDataStorage" level="TRACE"/>
+     <logger name="io.bisq.p2p.network.LocalhostNetworkNode" level="TRACE"/>
+     <logger name="io.bisq.p2p.network.TorNetworkNode" level="TRACE"/>
+     <logger name="io.bisq.p2p.network.NetworkNode" level="TRACE"/>-->
 
 
     <!-- <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
  
-     <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="WARN"/>
-     <logger name="io.bitsquare.storage.Storage" level="WARN"/>
+     <logger name="io.bisq.btc.AddressBasedCoinSelector" level="WARN"/>
+     <logger name="io.bisq.storage.Storage" level="WARN"/>
  
-     <logger name="io.bitsquare.gui.util.Profiler" level="ERROR"/>
-     <logger name="io.bitsquare.temp.storage.RemoteStorage" level="WARN"/>
-     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+     <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
+     <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
+     <logger name="io.bisq.storage.FileManager" level="WARN"/>
  
      <logger name="org.bitcoinj" level="WARN"/>
  
@@ -41,7 +41,7 @@
      <logger name="org.bitcoinj.core.HeadersMessage" level="WARN"/>
      <logger name="org.bitcoinj.core.AbstractBlockChain" level="ERROR"/>-->
 
-    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
-    <logger name="org.bitcoinj" level="WARN"/>
+    <!--  <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
+      <logger name="org.bitcoinj" level="WARN"/>-->
 
 </configuration>

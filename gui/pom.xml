@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ This file is part of Bitsquare.
+  ~ This file is part of bisq.
   ~
-  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ bisq is free software: you can redistribute it and/or modify it
   ~ under the terms of the GNU Affero General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or (at
   ~ your option) any later version.
   ~
-  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ bisq is distributed in the hope that it will be useful, but WITHOUT
   ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
   ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
   ~ License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  ~ along with bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -21,8 +21,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>parent</artifactId>
-        <groupId>io.bitsquare</groupId>
-        <version>0.4.9.9.3</version>
+        <groupId>io.bisq</groupId>
+        <version>0.5.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -59,7 +59,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.app.BitsquareAppMain</mainClass>
+                            <mainClass>io.bisq.gui.app.BisqAppMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>
@@ -67,6 +67,7 @@
                             <!-- exclude signatures, the bundling process breaks them for some reason -->
                             <artifact>*:*</artifact>
                             <excludes>
+                                <exclude>META-INF/maven/**/pom.properties</exclude>
                                 <exclude>META-INF/*.SF</exclude>
                                 <exclude>META-INF/*.DSA</exclude>
                                 <exclude>META-INF/*.RSA</exclude>
@@ -135,9 +136,6 @@
                                         </urn>
                                         <urn>
                                             com.google.inject:guice:3.0:jar:null:compile:9d84f15fe35e2c716a02979fb62f50a29f38aefa
-                                        </urn>
-                                        <urn>
-                                            com.google.protobuf:protobuf-java:2.5.0:jar:null:compile:a10732c76bfacdbd633a7eb0f7968b1059a65dfa
                                         </urn>
                                         <urn>
                                             com.google.zxing:core:2.0:jar:null:compile:001a5b8ccf93ca2fb7c40a94417f8485e3c8b4a6
@@ -264,6 +262,9 @@
                                         <urn>
                                             org.springframework:spring-test:4.1.1.RELEASE:jar:null:test:406ce9c05253f7dd75ac3f31170c71cca7419d8a
                                         </urn>
+                                        <urn>
+                                            com.google.protobuf:protobuf-java:3.2.0:jar:null:compile:62ccf171a106ff6791507f2d5364c275f9a3131d
+                                        </urn>
 
                                         <!-- A check for the rules themselves -->
                                         <urn>
@@ -293,7 +294,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.bitsquare</groupId>
+            <groupId>io.bisq</groupId>
             <artifactId>core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -315,12 +316,6 @@
             <artifactId>fontawesomefx</artifactId>
             <version>8.0.0</version>
         </dependency>
-
-        <!-- <dependency>
-             <groupId>org.fxmisc.richtext</groupId>
-             <artifactId>richtextfx</artifactId>
-             <version>0.4.1</version>
-         </dependency>-->
 
         <dependency>
             <groupId>com.googlecode.jcsv</groupId>

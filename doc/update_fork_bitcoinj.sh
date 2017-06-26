@@ -16,7 +16,7 @@ git commit -am"Qualify pom version for publication"
 
 mvn clean install -DskipTests
 
-git tag bitsquare-published-$COMMITHASH published
+git tag bisq-published-$COMMITHASH published
 git push -f origin published
 git push --tags
 
