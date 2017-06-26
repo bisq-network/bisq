@@ -234,10 +234,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 user.getPaymentAccounts() != null &&
                 user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
-            setTradeCurrencyFromPaymentAccount(account);
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-            setTradeCurrencyFromPaymentAccount(account);
         }
 
         if (account != null && isNotUSBankAccount(account)) {
@@ -246,13 +244,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
                 this.paymentAccount = paymentAccountOptional.get();
-                setTradeCurrencyFromPaymentAccount(paymentAccount);
+
             } else {
                 log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
             }
         }
 
+        setTradeCurrencyFromPaymentAccount(paymentAccount);
         tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         priceFeedService.setCurrencyCode(tradeCurrencyCode.get());

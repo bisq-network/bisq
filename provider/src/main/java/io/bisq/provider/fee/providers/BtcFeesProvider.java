@@ -17,6 +17,7 @@ public class BtcFeesProvider {
 
     private final HttpClient httpClient;
 
+    // other: https://estimatefee.com/n/2
     public BtcFeesProvider() {
         this.httpClient = new HttpClient("https://bitcoinfees.21.co/api/v1/fees/");
     }

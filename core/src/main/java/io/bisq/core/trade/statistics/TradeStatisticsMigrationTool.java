@@ -30,7 +30,7 @@ public class TradeStatisticsMigrationTool {
 
         // We use blocking to be sure to not start reading the persistedTradeStatisticsList before we have set it.
         // just for migrating the stats....
-        Object fromDisc = jsonFileManager.readJsonFromDisc("trade_statistics1");
+        Object fromDisc = jsonFileManager.readJsonFromDisc("trade_statistics");
         List<TradeStatistics> persistedTradeStatisticsList = new ArrayList<>();
         if (fromDisc instanceof JSONArray) {
             JSONArray array = (JSONArray) fromDisc;

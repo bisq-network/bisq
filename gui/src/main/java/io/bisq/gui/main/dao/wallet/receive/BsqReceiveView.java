@@ -17,36 +17,30 @@
 
 package io.bisq.gui.main.dao.wallet.receive;
 
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BsqAddressTextField;
-import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.scene.layout.GridPane;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 
-import static io.bisq.gui.util.FormBuilder.*;
+import static io.bisq.gui.util.FormBuilder.addLabelBsqAddressTextField;
+import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     private BsqAddressTextField addressTextField;
-    private InputTextField amountTextField;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
-    private int gridRow = 0;
-
     private final String paymentLabelString;
-    private Subscription amountTextFieldSubscription;
+    private int gridRow = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,30 +59,23 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 
         addressTextField = addLabelBsqAddressTextField(root, gridRow, Res.getWithCol("shared.address"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         addressTextField.setPaymentLabel(paymentLabelString);
-
-        amountTextField = addLabelInputTextField(root, ++gridRow, Res.getWithCol("dao.wallet.receive.amountOptional")).second;
-        if (DevEnv.DEV_MODE)
-            amountTextField.setText("10");
     }
 
     @Override
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> addressTextField.setAmountAsCoin(bsqFormatter.parseToCoin(t)));
         addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-
-        amountTextFieldSubscription.unsubscribe();
     }
 }
 

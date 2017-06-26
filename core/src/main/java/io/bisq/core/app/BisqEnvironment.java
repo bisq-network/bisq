@@ -86,7 +86,7 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     public static boolean isBaseCurrencySupportingBsq() {
-        return getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
+        return getBaseCurrencyNetwork().getCurrencyCode().equals("BTC");
     }
 
     public static NetworkParameters getParameters() {

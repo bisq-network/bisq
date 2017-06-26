@@ -312,7 +312,7 @@ public class BisqApp extends Application {
             primaryStage.show();
 
             // Used only for migrating old trade statistic to new data structure
-            // injector.getInstance(TradeStatisticsMigrationTool.class);
+            //injector.getInstance(TradeStatisticsMigrationTool.class);
 
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();
