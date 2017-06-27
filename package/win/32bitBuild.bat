@@ -22,7 +22,6 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -appclass io.bisq.gui.app.BisqAppMain ^
 -srcfiles %outdir%\Bisq.jar ^
 -outfile Bisq ^
--Bicon=package\win\Bisq.ico ^
 -Bruntime="%JAVA_HOME%\jre"
  
 :: when we have support for security manager we use that 
