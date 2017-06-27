@@ -26,7 +26,6 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir gui/deploy \
     -srcfiles $jarFile:$jdkfixFile \
-    -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
@@ -37,6 +36,7 @@ $JAVA_HOME/bin/javapackager \
 #    -BjvmOptions=-Djava.security.manager \
 #    -BjvmOptions=-Djava.security.debug=failure \
 #    -BjvmOptions=-Djava.security.policy=file:bisq.policy
+#     -srcfiles "core/src/main/resources/bisq.policy" \
 
 
 # uncomment because the build VM does not support alien
