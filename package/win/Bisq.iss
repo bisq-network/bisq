@@ -27,11 +27,11 @@ OutputBaseFilename=Bisq
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
-SetupIconFile=Bisq.ico
-UninstallDisplayIcon=Bisq.ico
+SetupIconFile={app}\Bisq.ico
+UninstallDisplayIcon={app}\Bisq.ico
 UninstallDisplayName=Bisq
 WizardImageStretch=No
-WizardSmallImageFile=Bisq-setup-icon.bmp
+WizardSmallImageFile={app}\Bisq-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
 ChangesAssociations=Yes
 
