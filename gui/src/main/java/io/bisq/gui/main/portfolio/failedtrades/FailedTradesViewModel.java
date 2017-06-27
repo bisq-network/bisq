@@ -77,16 +77,6 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getState(FailedTradesListItem item) {
-        if (item != null) {
-            //Trade trade = item.getTrade();
-            //TODO
-            //if (trade.isFailedState())
-            return Res.get("portfolio.failed.Failed");
-           /* else {
-                log.error("Wrong state " + trade.getTradeState());
-                return trade.getTradeState().toString();
-            }*/
-        }
-        return "";
+        return item != null ? Res.get("portfolio.failed.Failed") : "";
     }
 }

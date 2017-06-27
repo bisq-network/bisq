@@ -227,7 +227,6 @@ public class WalletsSetup {
     // Initialize methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO add tests
     @VisibleForTesting
     private int evaluateMode(String socks5DiscoverModeString) {
         String[] socks5DiscoverModes = StringUtils.deleteWhitespace(socks5DiscoverModeString).split(",");

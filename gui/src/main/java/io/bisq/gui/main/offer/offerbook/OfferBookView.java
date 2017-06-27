@@ -696,9 +696,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
                                                             hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned);
                                             });
-
-                                            //TODO
-                                            //tableRow.setTooltip(new Tooltip(""));
                                         }
                                     }
 

@@ -132,7 +132,6 @@ public class WalletConfig extends AbstractIdleService {
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
                 // This is called when we load an existing wallet
                 // We have already the chain here so we can use this to distinguish.
-                //TODO refactor, make it more explicit
                 List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
                 if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BisqDeterministicKeyChain) {
                     checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
@@ -452,7 +451,6 @@ public class WalletConfig extends AbstractIdleService {
                 // Make sure we shut down cleanly.
                 installShutdownHook();
 
-                // TODO: Be able to use the provided download listener when doing a blocking startup.
                 final DownloadProgressTracker listener = new DownloadProgressTracker();
                 vPeerGroup.startBlockChainDownload(listener);
                 listener.await();

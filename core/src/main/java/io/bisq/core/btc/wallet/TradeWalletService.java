@@ -1183,7 +1183,7 @@ public class TradeWalletService {
             // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
             // So it will not change the wallet balance.
             checkNotNull(wallet, "wallet must not be null");
-            // TODO we got here exceptions with missing funds
+            // TODO we got here exceptions with missing funds. Not reproducable but leave log for better debugging.
             log.info("print tx before wallet.completeTx: " + sendRequest.tx.toString());
             wallet.completeTx(sendRequest);
         } catch (Throwable t) {

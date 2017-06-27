@@ -319,7 +319,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         log.debug("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");
-        // TODO what is first valid state for trade?
 
         switch (tradeState) {
             // #################### Phase PREPARATION 

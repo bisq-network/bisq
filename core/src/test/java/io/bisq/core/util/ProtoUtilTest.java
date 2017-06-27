@@ -32,7 +32,7 @@ public class ProtoUtilTest {
 //TODO CoreProtobufferResolver is not accessible here
 // We should refactor it so that the classes themselves know how to deserialize 
 // so we don't get dependencies from core objects here
-
+// -> use the base classes or interfaces instead (ProtoResolver, CoreProtoResolver)
     @Test
     public void testEnum() {
         OfferPayload.Direction direction = OfferPayload.Direction.SELL;

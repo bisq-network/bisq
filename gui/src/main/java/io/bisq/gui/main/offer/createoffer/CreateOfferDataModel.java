@@ -295,8 +295,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     Offer createAndGetOffer() {
         final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
         long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
-        // We use precision 8 in AltcoinPrice but in OfferPayload we use Fiat with precision 4. Will be refactored once in a bigger update....
-        // TODO use same precision for both in next release
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
@@ -351,7 +349,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
                 "securityDeposit must be not be less than " +
                         Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
-        //TODO add createOfferFeeAsBsq
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
@@ -580,7 +577,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !volume.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                //TODO check for altcoins
                 amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
                 calculateTotalToPay();
             } catch (Throwable t) {

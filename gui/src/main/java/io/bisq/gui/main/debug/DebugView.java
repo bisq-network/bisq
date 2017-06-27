@@ -65,7 +65,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
     public DebugView() {
     }
 
-    //TODO not updated yes with new protocol!
     @Override
     public void initialize() {
 

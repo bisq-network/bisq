@@ -169,8 +169,6 @@ public class BuyerStep4View extends TradeStepView {
         String fromAddresses = fromAddressesEntry.getAddressString();
         String toAddresses = withdrawAddressTextField.getText();
 
-        // TODO at some error situation it can be that the funds are already paid out and we get stuck here
-        // need handling to remove the trade (planned for next release)
         Coin balance = walletService.getBalanceForAddress(fromAddressesEntry.getAddress());
         try {
             Transaction feeEstimationTransaction = walletService.getFeeEstimationTransaction(fromAddresses, toAddresses, amount, AddressEntry.Context.TRADE_PAYOUT);
