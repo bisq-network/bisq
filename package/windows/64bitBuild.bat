@@ -15,9 +15,9 @@ SET outdir=\\VBOXSVR\vm_shared_windows
 call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^
 -native exe ^
--name bisq ^
--title bisq ^
--vendor bisq ^
+-name Bisq ^
+-title Bisq ^
+-vendor Bisq ^
 -outdir %outdir% ^
 -appclass io.bisq.gui.app.BisqAppMain ^
 -srcfiles %outdir%\bisq.jar ^

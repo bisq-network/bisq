@@ -21,9 +21,9 @@ $JAVA_HOME/bin/javapackager \
     -BlicenseFile=LICENSE \
     -Bicon=package/linux/icon.png \
     -native deb \
-    -name bisq \
-    -title bisq \
-    -vendor bisq \
+    -name Bisq \
+    -title Bisq \
+    -vendor Bisq \
     -outdir gui/deploy \
     -srcfiles $jarFile:$jdkfixFile \
     -srcfiles "core/src/main/resources/bisq.policy" \
