@@ -22,7 +22,7 @@ $JAVA_HOME/bin/javapackager \
     -BappVersion=$version \
     -Bmac.CFBundleIdentifier=io.bisq \
     -Bmac.CFBundleName=Bisq \
-    -Bicon=package/mac/Bisq.icns \
+    -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bisq \

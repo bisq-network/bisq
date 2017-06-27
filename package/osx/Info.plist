@@ -9,13 +9,13 @@
         <key>CFBundleAllowMixedLocalizations</key>
         <true/>
         <key>CFBundleExecutable</key>
-        <string>bisq</string>
+        <string>Bisq</string>
         <key>CFBundleIconFile</key>
-        <string>package/mac/bisq.icns</string>
+        <string>package/osx/Bisq.icns</string>
         <key>CFBundleName</key>
-        <string>bisq</string>
+        <string>Bisq</string>
         <key>CFBundleIdentifier</key>
-        <string>io.bisq.bisq</string>
+        <string>io.bisq.Bisq</string>
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundlePackageType</key>
