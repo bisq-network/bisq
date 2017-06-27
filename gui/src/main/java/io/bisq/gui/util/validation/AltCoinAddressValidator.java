@@ -68,7 +68,6 @@ public final class AltCoinAddressValidator extends InputValidator {
 
             switch (currencyCode) {
                 case "BTC":
-                    // TODO add BTC validator when LTC is base currency
                     try {
                         switch (BisqEnvironment.getBaseCurrencyNetwork()) {
                             case BTC_MAINNET:
@@ -86,12 +85,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DOGE_MAINNET:
                             case DOGE_TESTNET:
                             case DOGE_REGTEST:
-                                try {
-                                    Address.fromBase58(BtcMainNetParams.get(), input);
-                                    return new ValidationResult(true);
-                                } catch (AddressFormatException e) {
-                                    return new ValidationResult(false, getErrorMessage(e));
-                                }
+                                Address.fromBase58(BtcMainNetParams.get(), input);
+                                return new ValidationResult(true);
                         }
                         return new ValidationResult(true);
                     } catch (AddressFormatException e) {
@@ -100,6 +95,12 @@ public final class AltCoinAddressValidator extends InputValidator {
                 case "LTC":
                     try {
                         switch (BisqEnvironment.getBaseCurrencyNetwork()) {
+                            case BTC_MAINNET:
+                            case BTC_TESTNET:
+                            case BTC_REGTEST:
+                            case DOGE_MAINNET:
+                            case DOGE_TESTNET:
+                            case DOGE_REGTEST:
                             case LTC_MAINNET:
                                 Address.fromBase58(LitecoinMainNetParams.get(), input);
                                 break;
@@ -117,6 +118,12 @@ public final class AltCoinAddressValidator extends InputValidator {
                 case "DOGE":
                     try {
                         switch (BisqEnvironment.getBaseCurrencyNetwork()) {
+                            case BTC_MAINNET:
+                            case BTC_TESTNET:
+                            case BTC_REGTEST:
+                            case LTC_MAINNET:
+                            case LTC_TESTNET:
+                            case LTC_REGTEST:
                             case DOGE_MAINNET:
                                 Address.fromBase58(DogecoinMainNetParams.get(), input);
                                 break;
@@ -191,22 +198,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, Res.get("validation.altcoin.zAddressesNotSupported"));
-
-                    // TODO test not successful
-                /*case "XTO":
-                    if (input.matches("^[T2][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
-                        if (verifyChecksum(input))
-                            try {
-                                Address.fromBase58(MainNetParams.get(), input);
-                                return new ValidationResult(true);
-                            } catch (AddressFormatException e) {
-                                return new ValidationResult(false, getErrorMessage(e));
-                            }
-                        else
-                            return wrongChecksum;
-                    } else {
-                        return regexTestFailed;
-                    }*/
                 case "GBYTE":
                     return ByteballAddressValidator.validate(input);
                 case "NXT":
