@@ -216,8 +216,6 @@ abstract class BankForm extends PaymentMethodForm {
 
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addEmailForDisplayAccount();
-
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
@@ -625,8 +623,5 @@ abstract class BankForm extends PaymentMethodForm {
     }
 
     public void addAcceptedBanksForDisplayAccount() {
-    }
-
-    public void addEmailForDisplayAccount() {
     }
 }

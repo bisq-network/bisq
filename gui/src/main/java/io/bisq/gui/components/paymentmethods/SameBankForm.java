@@ -92,11 +92,6 @@ public class SameBankForm extends BankForm {
     }
 
     @Override
-    public void addEmailForDisplayAccount() {
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail()).second.setMouseTransparent(false);
-    }
-
-    @Override
     protected void addHolderNameAndIdForDisplayAccount() {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;

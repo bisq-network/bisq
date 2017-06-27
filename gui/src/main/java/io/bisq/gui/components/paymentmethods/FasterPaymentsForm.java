@@ -117,7 +117,6 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), fasterPaymentsAccount.getEmail());
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
@@ -125,6 +124,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), fasterPaymentsAccount.getEmail());
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);

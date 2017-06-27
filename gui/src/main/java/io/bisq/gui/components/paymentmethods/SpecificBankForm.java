@@ -101,11 +101,6 @@ public class SpecificBankForm extends BankForm {
     }
 
     @Override
-    public void addEmailForDisplayAccount() {
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail()).second.setMouseTransparent(false);
-    }
-
-    @Override
     public void updateAllInputsValid() {
         super.updateAllInputsValid();
         allInputsValid.set(allInputsValid.get() && inputValidator.validate(acceptedBanksTextField.getText()).isValid);
