@@ -20,9 +20,9 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -vendor Bisq ^
 -outdir %outdir% ^
 -appclass io.bisq.gui.app.BisqAppMain ^
--srcfiles %outdir%\bisq.jar ^
--outfile bisq ^
--Bicon=package\windows\bisq.ico ^
+-srcfiles %outdir%\Bisq.jar ^
+-outfile Bisq ^
+-Bicon=package\windows\Bisq.ico ^
 -Bruntime="%JAVA_HOME%\jre"
  
 :: when we have support for security manager we use that 
