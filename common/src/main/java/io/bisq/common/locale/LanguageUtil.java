@@ -28,15 +28,15 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
+            "el", // Greek
             "es", // Spanish
+            "pt", // Portuguese / Brazil
             "sr"  // Serbian
             
             /*
             // not translated yet
             "zh", // Chinese
-            "pt", // Portuguese
             "it", // Italian
-            "el", // Greek
             "fr", // French
             "ja", // Japanese
             "iw", // Hebrew
