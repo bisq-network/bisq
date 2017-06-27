@@ -30,10 +30,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
-import io.bisq.gui.util.validation.AccountNrValidator;
-import io.bisq.gui.util.validation.BankIdValidator;
-import io.bisq.gui.util.validation.BranchIdValidator;
-import io.bisq.gui.util.validation.InputValidator;
+import io.bisq.gui.util.validation.*;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -47,24 +44,6 @@ import org.slf4j.LoggerFactory;
 
 public class CashDepositForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(CashDepositForm.class);
-
-    protected final CashDepositAccountPayload cashDepositAccountPayload;
-    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
-    private Label holderIdLabel;
-    protected InputTextField holderNameInputTextField, holderEmailInputTextField;
-    private Label bankIdLabel;
-    private Label branchIdLabel;
-    private Label accountNrLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple;
-    private Tuple2<Label, InputTextField> accountNrTuple;
-    private Tuple2<Label, InputTextField> branchIdTuple;
-    private Tuple2<Label, InputTextField> bankNameTuple;
-    private Tuple2<Label, ComboBox> accountTypeTuple;
-    private Label accountTypeLabel;
-    private ComboBox<String> accountTypeComboBox;
-    private boolean validatorsApplied;
-    private boolean useHolderID;
-    private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         CashDepositAccountPayload data = (CashDepositAccountPayload) paymentAccountPayload;
@@ -212,10 +191,32 @@ public class CashDepositForm extends PaymentMethodForm {
         return gridRow;
     }
 
+    protected final CashDepositAccountPayload cashDepositAccountPayload;
+    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
+    private Label holderIdLabel;
+    protected InputTextField holderNameInputTextField, emailInputTextField;
+    private Label bankIdLabel;
+    private Label branchIdLabel;
+    private Label accountNrLabel;
+    private Tuple2<Label, InputTextField> bankIdTuple;
+    private Tuple2<Label, InputTextField> accountNrTuple;
+    private Tuple2<Label, InputTextField> branchIdTuple;
+    private Tuple2<Label, InputTextField> bankNameTuple;
+    private Tuple2<Label, ComboBox> accountTypeTuple;
+    private Label accountTypeLabel;
+    private ComboBox<String> accountTypeComboBox;
+    private boolean validatorsApplied;
+    private boolean useHolderID;
+    private ComboBox<TradeCurrency> currencyComboBox;
+    private final EmailValidator emailValidator;
+    
+  
     public CashDepositForm(PaymentAccount paymentAccount, InputValidator inputValidator,
                            GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccount.paymentAccountPayload;
+
+        emailValidator = new EmailValidator();
     }
 
     @Override
@@ -234,7 +235,7 @@ public class CashDepositForm extends PaymentMethodForm {
                 nameAndCode);
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.owner.email"),
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 cashDepositAccountPayload.getHolderEmail());
 
         if (BankUtil.isBankNameRequired(countryCode))
@@ -349,7 +350,7 @@ public class CashDepositForm extends PaymentMethodForm {
                     accountNrInputTextField.setValidator(null);
                 }
                 holderNameInputTextField.resetValidation();
-                holderEmailInputTextField.resetValidation();
+                emailInputTextField.resetValidation();
                 bankNameInputTextField.resetValidation();
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
@@ -540,13 +541,13 @@ public class CashDepositForm extends PaymentMethodForm {
         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
         holderNameInputTextField.setValidator(inputValidator);
 
-        holderEmailInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.owner.email")).second;
-        holderEmailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+        emailInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.email")).second;
+        emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             cashDepositAccountPayload.setHolderEmail(newValue);
             updateFromInputs();
         });
-        holderEmailInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
-        holderEmailInputTextField.setValidator(inputValidator);
+        emailInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
+        emailInputTextField.setValidator(emailValidator);
 
         useHolderID = true;
         holderIdLabel = tuple.third;
@@ -601,7 +602,7 @@ public class CashDepositForm extends PaymentMethodForm {
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
                 && holderNameInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderName()).isValid
-                && holderEmailInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderEmail()).isValid;
+                && emailInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderEmail()).isValid;
 
         String countryCode = cashDepositAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {

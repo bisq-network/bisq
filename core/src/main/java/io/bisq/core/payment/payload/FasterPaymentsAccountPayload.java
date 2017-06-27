@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     private String sortCode;
     private String accountNr;
+    private String email;
 
     public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -47,11 +48,13 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          String id,
                                          long maxTradePeriod,
                                          String sortCode,
-                                         String accountNr) {
+                                         String accountNr,
+                                         String email) {
         this(paymentMethod, id, maxTradePeriod);
 
         this.sortCode = sortCode;
         this.accountNr = accountNr;
+        this.email = email;
     }
 
     @Override
@@ -59,7 +62,8 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
         return getPaymentAccountPayloadBuilder()
                 .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
                         .setSortCode(sortCode)
-                        .setAccountNr(accountNr))
+                        .setAccountNr(accountNr)
+                        .setEmail(email))
                 .build();
     }
 
@@ -68,7 +72,8 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 proto.getFasterPaymentsAccountPayload().getSortCode(),
-                proto.getFasterPaymentsAccountPayload().getAccountNr());
+                proto.getFasterPaymentsAccountPayload().getAccountNr(),
+                proto.getFasterPaymentsAccountPayload().getEmail());
     }
 
 
@@ -78,12 +83,13 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "FasterPayments - UK Sort code: " + sortCode + ", Account number: " + accountNr;
+        return "FasterPayments - UK Sort code: " + sortCode + ", Account number: " + accountNr + ", Email: " + email;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
-                "Account number: " + accountNr;
+                "Account number: " + accountNr + "\n" +
+                "Email: " + email;
     }
 }

@@ -43,4 +43,12 @@ public final class SameBankAccount extends CountryBasedPaymentAccount implements
     public String getCountryCode() {
         return getCountry() != null ? getCountry().code : "";
     }
+
+    public void setEmail(String value) {
+        ((BankAccountPayload) paymentAccountPayload).setEmail(value);
+    }
+
+    public String getEmail() {
+        return ((BankAccountPayload) paymentAccountPayload).getEmail();
+    }
 }

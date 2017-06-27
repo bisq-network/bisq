@@ -20,6 +20,7 @@ package io.bisq.core.payment.payload;
 import com.google.protobuf.Message;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -154,9 +155,11 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
         String requirementsString = requirements != null && !requirements.isEmpty() ?
                 ("Extra requirements: " + requirements + "\n") : "";
+        String emailString = holderEmail != null ?
+                (Res.get("payment.email") + " " + holderEmail + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
-                "Holder email: " + holderEmail + "\n" +
+                emailString +
                 bankName +
                 bankId +
                 branchId +

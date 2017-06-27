@@ -21,9 +21,8 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
-import io.bisq.core.payment.ClearXchangeAccount;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.PaymentAccountFactory;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -144,12 +143,31 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
-        if (paymentAccount instanceof ClearXchangeAccount) {
-            new Popup<>().information(Res.get("payment.clearXchange.info"))
-                    .width(900)
+        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+        if (paymentAccount instanceof SepaAccount ||
+                paymentAccount instanceof BankAccount ||
+                paymentAccount instanceof ClearXchangeAccount ||
+                paymentAccount instanceof FasterPaymentsAccount ||
+                paymentAccount instanceof ChaseQuickPayAccount ||
+                paymentAccount instanceof InteracETransferAccount) {
+            new Popup<>().information(Res.get("payment.chargeback.info", currencyName))
+                    .width(800)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iConfirm"))
-                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .onAction(() -> {
+                        if (paymentAccount instanceof ClearXchangeAccount) {
+                            UserThread.runAfter(() -> {
+                                new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                                        .width(900)
+                                        .closeButtonText(Res.get("shared.cancel"))
+                                        .actionButtonText(Res.get("shared.iConfirm"))
+                                        .onAction(() -> doSaveNewAccount(paymentAccount))
+                                        .show();
+                            }, 1);
+                        } else {
+                            doSaveNewAccount(paymentAccount);
+                        }
+                    })
                     .show();
         } else {
             doSaveNewAccount(paymentAccount);

@@ -29,10 +29,7 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.gui.util.validation.AccountNrValidator;
-import io.bisq.gui.util.validation.BankIdValidator;
-import io.bisq.gui.util.validation.BranchIdValidator;
-import io.bisq.gui.util.validation.InputValidator;
+import io.bisq.gui.util.validation.*;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -48,38 +45,21 @@ import static io.bisq.gui.util.FormBuilder.*;
 abstract class BankForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(BankForm.class);
 
-    protected final BankAccountPayload bankAccountPayload;
-    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
-    private Label holderIdLabel;
-    protected InputTextField holderNameInputTextField;
-    private Label bankIdLabel;
-    private Label branchIdLabel;
-    private Label accountNrLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple;
-    private Tuple2<Label, InputTextField> accountNrTuple;
-    private Tuple2<Label, InputTextField> branchIdTuple;
-    private Tuple2<Label, InputTextField> bankNameTuple;
-    private Tuple2<Label, ComboBox> accountTypeTuple;
-    private Label accountTypeLabel;
-    private ComboBox<String> accountTypeComboBox;
-    private boolean validatorsApplied;
-    private boolean useHolderID;
-    private final Runnable closeHandler;
-    private ComboBox<TradeCurrency> currencyComboBox;
-
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         BankAccountPayload data = (BankAccountPayload) paymentAccountPayload;
         String countryCode = ((BankAccountPayload) paymentAccountPayload).getCountryCode();
 
-        if (data.getHolderTaxId() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    Res.get("payment.account.name.holderId", BankUtil.getHolderIdLabel(countryCode)),
-                    data.getHolderName() + " / " + data.getHolderTaxId());
-        else
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                    data.getHolderName());
+        if (data.getHolderTaxId() != null) {
+            final String title = Res.get("payment.account.owner") + " / " + Res.get("payment.email") + " / " + BankUtil.getHolderIdLabelShort(countryCode);
+            final String value = data.getHolderName() + " / " + data.getEmail() + " / " + data.getHolderTaxId();
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+        } else {
+            final String title = Res.get("payment.account.owner") + " / " + Res.get("payment.email");
+            final String value = data.getHolderName() + " / " + data.getEmail();
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+        }
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(countryCode));
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
@@ -200,11 +180,33 @@ abstract class BankForm extends PaymentMethodForm {
         return gridRow;
     }
 
+    protected final BankAccountPayload bankAccountPayload;
+    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
+    private Label holderIdLabel;
+    protected InputTextField holderNameInputTextField;
+    private Label bankIdLabel;
+    private Label branchIdLabel;
+    private Label accountNrLabel;
+    private Tuple2<Label, InputTextField> bankIdTuple;
+    private Tuple2<Label, InputTextField> accountNrTuple;
+    private Tuple2<Label, InputTextField> branchIdTuple;
+    private Tuple2<Label, InputTextField> bankNameTuple;
+    private Tuple2<Label, ComboBox> accountTypeTuple;
+    private Label accountTypeLabel;
+    private ComboBox<String> accountTypeComboBox;
+    private boolean validatorsApplied;
+    private boolean useHolderID;
+    private final Runnable closeHandler;
+    private ComboBox<TradeCurrency> currencyComboBox;
+    protected final EmailValidator emailValidator;
+
     BankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
              GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.closeHandler = closeHandler;
         this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
+
+        emailValidator = new EmailValidator();
     }
 
     @Override
@@ -214,6 +216,8 @@ abstract class BankForm extends PaymentMethodForm {
 
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addEmailForDisplayAccount();
+
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
@@ -339,7 +343,7 @@ abstract class BankForm extends PaymentMethodForm {
                     boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                     if (requiresHolderId) {
                         holderNameInputTextField.minWidthProperty().unbind();
-                        holderNameInputTextField.setMinWidth(300);
+                        holderNameInputTextField.setMinWidth(250);
                     } else {
                         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
                     }
@@ -507,7 +511,7 @@ abstract class BankForm extends PaymentMethodForm {
         Tuple4<Label, InputTextField, Label, InputTextField> tuple = addLabelInputTextFieldLabelInputTextField(gridPane,
                 ++gridRow, Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.second;
-        holderNameInputTextField.setMinWidth(300);
+        holderNameInputTextField.setMinWidth(250);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
@@ -527,6 +531,14 @@ abstract class BankForm extends PaymentMethodForm {
             bankAccountPayload.setHolderTaxId(newValue);
             updateFromInputs();
         });
+
+        InputTextField emailTextField = addLabelInputTextField(gridPane,
+                ++gridRow, Res.get("payment.email")).second;
+        emailTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            bankAccountPayload.setEmail(newValue);
+            updateFromInputs();
+        });
+        emailTextField.setValidator(emailValidator);
     }
 
     @Override
@@ -567,7 +579,8 @@ abstract class BankForm extends PaymentMethodForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(bankAccountPayload.getHolderName()).isValid;
+                && holderNameInputTextField.getValidator().validate(bankAccountPayload.getHolderName()).isValid
+                && emailValidator.validate(bankAccountPayload.getEmail()).isValid;
 
         String countryCode = bankAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {
@@ -599,16 +612,21 @@ abstract class BankForm extends PaymentMethodForm {
                     Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
-            holderNameTextField.setMinWidth(300);
+            holderNameTextField.setMinWidth(250);
             tuple.forth.setText(bankAccountPayload.getHolderTaxId());
         } else {
             addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), bankAccountPayload.getHolderName());
         }
+
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail());
     }
 
     protected void addAcceptedBanksForAddAccount() {
     }
 
     public void addAcceptedBanksForDisplayAccount() {
+    }
+
+    public void addEmailForDisplayAccount() {
     }
 }

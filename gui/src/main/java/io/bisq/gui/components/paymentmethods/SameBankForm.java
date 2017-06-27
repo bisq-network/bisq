@@ -56,12 +56,21 @@ public class SameBankForm extends BankForm {
             bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
+
+        InputTextField emailTextField = addLabelInputTextField(gridPane,
+                ++gridRow, Res.get("payment.email")).second;
+        emailTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            bankAccountPayload.setEmail(newValue);
+            updateFromInputs();
+        });
+        emailTextField.setValidator(emailValidator);
     }
 
     @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && inputValidator.validate(bankAccountPayload.getHolderName()).isValid
+                && emailValidator.validate(bankAccountPayload.getEmail()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
                 && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
 
@@ -83,11 +92,18 @@ public class SameBankForm extends BankForm {
     }
 
     @Override
+    public void addEmailForDisplayAccount() {
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail()).second.setMouseTransparent(false);
+    }
+
+    @Override
     protected void addHolderNameAndIdForDisplayAccount() {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
         holderNameTextField.setText(bankAccountPayload.getHolderName());
+
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail());
     }
 
 }

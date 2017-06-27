@@ -32,14 +32,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class SpecificBankForm extends BankForm {
-    private static final Logger log = LoggerFactory.getLogger(SpecificBankForm.class);
-
     private final SpecificBanksAccountPayload specificBanksAccountPayload;
     private TextField acceptedBanksTextField;
     private Tooltip acceptedBanksTooltip;
@@ -102,6 +98,11 @@ public class SpecificBankForm extends BankForm {
     public void addAcceptedBanksForDisplayAccount() {
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.banks"),
                 Joiner.on(", ").join(specificBanksAccountPayload.getAcceptedBanks())).second.setMouseTransparent(false);
+    }
+
+    @Override
+    public void addEmailForDisplayAccount() {
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail()).second.setMouseTransparent(false);
     }
 
     @Override

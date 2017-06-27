@@ -28,6 +28,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
+import io.bisq.gui.util.validation.EmailValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -35,15 +36,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
-import static io.bisq.gui.util.FormBuilder.addLabelTextField;
+import static io.bisq.gui.util.FormBuilder.*;
 
 public class FasterPaymentsForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(FasterPaymentsForm.class);
-
-    private final FasterPaymentsAccount fasterPaymentsAccount;
-    private InputTextField accountNrInputTextField;
-    private InputTextField sortCodeInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -52,13 +48,23 @@ public class FasterPaymentsForm extends PaymentMethodForm {
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
+                ((FasterPaymentsAccountPayload) paymentAccountPayload).getEmail());
         return gridRow;
     }
+
+
+    private final FasterPaymentsAccount fasterPaymentsAccount;
+    private InputTextField accountNrInputTextField;
+    private InputTextField sortCodeInputTextField;
+    private final EmailValidator emailValidator;
 
     public FasterPaymentsForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane,
                               int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.fasterPaymentsAccount = (FasterPaymentsAccount) paymentAccount;
+
+        emailValidator = new EmailValidator();
     }
 
     @Override
@@ -79,6 +85,14 @@ public class FasterPaymentsForm extends PaymentMethodForm {
             fasterPaymentsAccount.setAccountNr(newValue);
             updateFromInputs();
         });
+
+        InputTextField emailTextField = addLabelInputTextField(gridPane,
+                ++gridRow, Res.get("payment.email")).second;
+        emailTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            fasterPaymentsAccount.setEmail(newValue);
+            updateFromInputs();
+        });
+        emailTextField.setValidator(emailValidator);
 
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
@@ -103,6 +117,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), fasterPaymentsAccount.getEmail());
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
@@ -119,6 +134,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
+                && emailValidator.validate(fasterPaymentsAccount.getEmail()).isValid
                 && sortCodeInputTextField.getValidator().validate(fasterPaymentsAccount.getSortCode()).isValid
                 && accountNrInputTextField.getValidator().validate(fasterPaymentsAccount.getAccountNr()).isValid
                 && fasterPaymentsAccount.getTradeCurrencies().size() > 0);

@@ -47,7 +47,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                    String accountNr,
                                    String accountType,
                                    String holderTaxId,
-                                   String bankId) {
+                                   String bankId,
+                                   String email) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -58,7 +59,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 accountNr,
                 accountType,
                 holderTaxId,
-                bankId);
+                bankId,
+                email);
     }
 
     @Override
@@ -90,7 +92,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId());
+                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
+                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
