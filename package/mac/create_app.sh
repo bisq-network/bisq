@@ -32,7 +32,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "gui/deploy/bisq-$version.jar" \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -appclass io.bisq.gui.app.BisqAppMain \
-    -outfile bisq
+    -outfile Bisq
  
 # when we have support for security manager we use that     
 #     \
@@ -43,7 +43,7 @@ $JAVA_HOME/bin/javapackager \
 rm "gui/deploy/bisq.html"
 rm "gui/deploy/bisq.jnlp"
 
-mv "gui/deploy/bundles/bisq-$version.dmg" "gui/deploy/bisq-$version.dmg"
+mv "gui/deploy/bundles/Bisq-$version.dmg" "gui/deploy/Bisq-$version.dmg"
 rm -r "gui/deploy/bundles"
 
 cd package/mac
