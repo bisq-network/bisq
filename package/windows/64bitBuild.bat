@@ -21,7 +21,6 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -outdir %outdir% ^
 -appclass io.bisq.gui.app.BisqAppMain ^
 -srcfiles %outdir%\bisq.jar ^
--srcfiles "core/src/main/resources/bisq.policy" ^
 -outfile bisq ^
 -Bicon=package\windows\bisq.ico ^
 -Bruntime="%JAVA_HOME%\jre"
@@ -30,3 +29,5 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 :: -BjvmOptions=-Djava.security.manager ^
 :: -BjvmOptions=-Djava.security.debug=failure ^
 :: -BjvmOptions=-Djava.security.policy=file:bisq.policy ^
+
+:: -srcfiles "core/src/main/resources/bisq.policy" ^
