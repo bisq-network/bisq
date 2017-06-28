@@ -9,7 +9,7 @@ install:
 
 notifications:
   irc:
-    channels: chat.freenode.net#bitsquare
+    channels: chat.freenode.net#bisq
     template:
       - '%{message} (%{repository}#%{build_number}, %{duration})'
       - '%{repository}/%{branch} %{commit} %{author}: %{commit_message}'

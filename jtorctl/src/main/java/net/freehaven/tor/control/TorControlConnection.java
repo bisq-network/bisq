@@ -236,8 +236,8 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Sets <b>w</b> as the PrintWriter for debugging output,
-     * which writes out all messages passed between Tor and the controller.
-     * Outgoing messages are preceded by "\>\>" and incoming messages are preceded
+     * which writes out all network_messages passed between Tor and the controller.
+     * Outgoing network_messages are preceded by "\>\>" and incoming network_messages are preceded
      * by "\<\<"
      */
     public void setDebugging(PrintWriter w) {
@@ -246,8 +246,8 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Sets <b>s</b> as the PrintStream for debugging output,
-     * which writes out all messages passed between Tor and the controller.
-     * Outgoing messages are preceded by "\>\>" and incoming messages are preceded
+     * which writes out all network_messages passed between Tor and the controller.
+     * Outgoing network_messages are preceded by "\>\>" and incoming network_messages are preceded
      * by "\<\<"
      */
     public void setDebugging(PrintStream s) {
@@ -344,20 +344,20 @@ public class TorControlConnection implements TorControlCommands {
      * Changes the values of the configuration options stored in
      * <b>kvList</b>.  Each list element in <b>kvList</b> is expected to be
      * String of the format "key value".
-     * <p>
+     * <p/>
      * Tor behaves as though it had just read each of the key-value pairs
      * from its configuration file.  Keywords with no corresponding values have
      * their configuration values reset to their defaults.  setConf is
      * all-or-nothing: if there is an error in any of the configuration settings,
      * Tor sets none of them.
-     * <p>
+     * <p/>
      * When a configuration option takes multiple values, or when multiple
      * configuration keys form a context-sensitive group (see getConf below), then
      * setting any of the options in a setConf command is taken to reset all of
      * the others.  For example, if two ORBindAddress values are configured, and a
      * command arrives containing a single ORBindAddress value, the new
      * command's value replaces the two old values.
-     * <p>
+     * <p/>
      * To remove all settings for a given option entirely (and go back to its
      * default value), include a String in <b>kvList</b> containing the key and no value.
      */
@@ -405,10 +405,10 @@ public class TorControlConnection implements TorControlCommands {
     /**
      * Requests the values of the configuration variables listed in <b>keys</b>.
      * Results are returned as a list of ConfigEntry objects.
-     * <p>
+     * <p/>
      * If an option appears multiple times in the configuration, all of its
      * key-value pairs are returned in order.
-     * <p>
+     * <p/>
      * Some options are context-sensitive, and depend on other options with
      * different keywords.  These cannot be fetched directly.  Currently there
      * is only one such option: clients should use the "HiddenServiceOptions"
@@ -441,7 +441,7 @@ public class TorControlConnection implements TorControlCommands {
      * Each element of <b>events</b> is one of the following Strings:
      * ["CIRC" | "STREAM" | "ORCONN" | "BW" | "DEBUG" |
      * "INFO" | "NOTICE" | "WARN" | "ERR" | "NEWDESC" | "ADDRMAP"] .
-     * <p>
+     * <p/>
      * Any events not listed in the <b>events</b> are turned off; thus, calling
      * setEvents with an empty <b>events</b> argument turns off all event reporting.
      */
@@ -456,20 +456,20 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Authenticates the controller to the Tor server.
-     * <p>
+     * <p/>
      * By default, the current Tor implementation trusts all local users, and
      * the controller can authenticate itself by calling authenticate(new byte[0]).
-     * <p>
+     * <p/>
      * If the 'CookieAuthentication' option is true, Tor writes a "magic cookie"
      * file named "control_auth_cookie" into its data directory.  To authenticate,
      * the controller must send the contents of this file in <b>auth</b>.
-     * <p>
+     * <p/>
      * If the 'HashedControlPassword' option is set, <b>auth</b> must contain the salted
      * hash of a secret password.  The salted hash is computed according to the
      * S2K algorithm in RFC 2440 (OpenPGP), and prefixed with the s2k specifier.
      * This is then encoded in hexadecimal, prefixed by the indicator sequence
      * "16:".
-     * <p>
+     * <p/>
      * You can generate the salt of a password by calling
      * 'tor --hash-password <password>'
      * or by using the provided PasswordDigest class.
@@ -530,7 +530,7 @@ public class TorControlConnection implements TorControlCommands {
      * addresses should be replaced with connections to the specified replacement
      * addresses.  Each element of <b>kvLines</b> is a String of the form
      * "old-address new-address".  This function returns the new address mapping.
-     * <p>
+     * <p/>
      * The client may decline to provide a body for the original address, and
      * instead send a special null address ("0.0.0.0" for IPv4, "::0" for IPv6, or
      * "." for hostname), signifying that the server should choose the original
@@ -538,12 +538,12 @@ public class TorControlConnection implements TorControlCommands {
      * should ensure that it returns an element of address space that is unlikely
      * to be in actual use.  If there is already an address mapped to the
      * destination address, the server may reuse that mapping.
-     * <p>
+     * <p/>
      * If the original address is already mapped to a different address, the old
      * mapping is removed.  If the original address and the destination address
      * are the same, the server removes any mapping in place for the original
      * address.
-     * <p>
+     * <p/>
      * Mappings set by the controller last until the Tor process exits:
      * they never expire. If the controller wants the mapping to last only
      * a certain time, then it must explicitly un-map the address when that
@@ -588,7 +588,7 @@ public class TorControlConnection implements TorControlCommands {
     /**
      * Queries the Tor server for keyed values that are not stored in the torrc
      * configuration file.  Returns a map of keys to values.
-     * <p>
+     * <p/>
      * Recognized keys include:
      * <ul>
      * <li>"version" : The version of the server's software, including the name
@@ -658,7 +658,7 @@ public class TorControlConnection implements TorControlCommands {
      * to the specified path, or the <b>circID</b> is nonzero, in which case it is a
      * request for the server to extend an existing circuit with that ID according
      * to the specified <b>path</b>.
-     * <p>
+     * <p/>
      * If successful, returns the Circuit ID of the (maybe newly created) circuit.
      */
     public String extendCircuit(String circID, String path) throws IOException {
@@ -670,16 +670,16 @@ public class TorControlConnection implements TorControlCommands {
     /**
      * Informs the Tor server that the stream specified by <b>streamID</b> should be
      * associated with the circuit specified by <b>circID</b>.
-     * <p>
+     * <p/>
      * Each stream may be associated with
      * at most one circuit, and multiple streams may share the same circuit.
      * Streams can only be attached to completed circuits (that is, circuits that
      * have sent a circuit status "BUILT" event or are listed as built in a
      * getInfo circuit-status request).
-     * <p>
+     * <p/>
      * If <b>circID</b> is 0, responsibility for attaching the given stream is
      * returned to Tor.
-     * <p>
+     * <p/>
      * By default, Tor automatically attaches streams to
      * circuits itself, unless the configuration variable
      * "__LeaveStreamsUnattached" is set to "1".  Attempting to attach streams
@@ -693,7 +693,7 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Tells Tor about the server descriptor in <b>desc</b>.
-     * <p>
+     * <p/>
      * The descriptor, when parsed, must contain a number of well-specified
      * fields, including fields for its nickname and identity.
      */
@@ -707,7 +707,7 @@ public class TorControlConnection implements TorControlCommands {
     /**
      * Tells Tor to change the exit address of the stream identified by <b>streamID</b>
      * to <b>address</b>. No remapping is performed on the new provided address.
-     * <p>
+     * <p/>
      * To be sure that the modified address will be used, this event must be sent
      * after a new stream event is received, and before attaching this stream to
      * a circuit.
@@ -735,7 +735,7 @@ public class TorControlConnection implements TorControlCommands {
      * <li>12 -- REASON_CONNRESET      (Connection was unexpectedly reset)</li>
      * <li>13 -- REASON_TORPROTOCOL    (Sent when closing connection because of Tor protocol violations)</li>
      * </ul>
-     * <p>
+     * <p/>
      * Tor may hold the stream open for a while to flush any data that is pending.
      */
     public void closeStream(String streamID, byte reason)

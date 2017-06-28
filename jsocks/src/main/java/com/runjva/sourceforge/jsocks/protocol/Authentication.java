@@ -8,8 +8,8 @@ public interface Authentication {
     /**
      * This method is called when SOCKS5 server have selected a particular
      * authentication method, for whch an implementaion have been registered.
-     * <p>
-     * <p>
+     * <p/>
+     * <p/>
      * This method should return an array {inputstream,outputstream
      * [,UDPEncapsulation]}. The reason for that is that SOCKS5 protocol allows
      * to have method specific encapsulation of data on the socket for purposes

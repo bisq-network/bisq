@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ This file is part of Bitsquare.
+  ~ This file is part of Bisq.
   ~
-  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ Bisq is free software: you can redistribute it and/or modify it
   ~ under the terms of the GNU Affero General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or (at
   ~ your option) any later version.
   ~
-  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
   ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
   ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
   ~ License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <configuration>
@@ -27,24 +27,24 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+    <logger name="io.bisq.common.storage.Storage" level="WARN"/>
+    <logger name="io.bisq.common.storage.FileManager" level="WARN"/>
 
-    <!-- <logger name="io.bitsquare.p2p.peers" level="WARN"/>
-     <logger name="io.bitsquare.p2p.peers.getdata" level="WARN"/>
-     <logger name="io.bitsquare.p2p.peers.keepalive" level="WARN"/>
-     <logger name="io.bitsquare.p2p.peers.peerexchange" level="WARN"/>
+    <!-- <logger name="io.bisq.p2p.peers" level="WARN"/>
+     <logger name="io.bisq.p2p.peers.getdata" level="WARN"/>
+     <logger name="io.bisq.p2p.peers.keepalive" level="WARN"/>
+     <logger name="io.bisq.p2p.peers.peerexchange" level="WARN"/>
  
-     <logger name="io.bitsquare.p2p.network" level="WARN"/>
-     <logger name="io.bitsquare.p2p.P2PService" level="WARN"/>-->
+     <logger name="io.bisq.p2p.network" level="WARN"/>
+     <logger name="io.bisq.p2p.P2PService" level="WARN"/>-->
 
 
-    <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="INFO"/>
-     <logger name="io.bitsquare.p2p.P2PService" level="INFO"/>
-     <logger name="io.bitsquare.p2p.storage.ProtectedExpirableDataStorage" level="INFO"/>
-     <logger name="io.bitsquare.p2p.network.LocalhostNetworkNode" level="INFO"/>
-     <logger name="io.bitsquare.p2p.network.TorNetworkNode" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.network.NetworkNode" level="TRACE"/>-->
+    <!-- <logger name="io.bisq.p2p.peers.PeerGroup" level="INFO"/>
+     <logger name="io.bisq.p2p.P2PService" level="INFO"/>
+     <logger name="io.bisq.p2p.storage.ProtectedExpirableDataStorage" level="INFO"/>
+     <logger name="io.bisq.p2p.network.LocalhostNetworkNode" level="INFO"/>
+     <logger name="io.bisq.p2p.network.TorNetworkNode" level="TRACE"/>
+     <logger name="io.bisq.p2p.network.NetworkNode" level="TRACE"/>-->
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 

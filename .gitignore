@@ -2,8 +2,9 @@
 /log
 /bin
 /out
+**/target
 .idea
-!.idea/copyright/Bitsquare_Affero_GPLv3.xml
+!.idea/copyright/bisq_Affero_GPLv3.xml
 !.idea/copyright/profiles_settings.xml
 !.idea/codeStyleSettings.xml
 *.iml
@@ -21,11 +22,9 @@ build
 *.java.hsp
 *.~ava
 /bundles
-/Bitsquare*
+/bisq*
 /xchange
 desktop.ini
-*.bat
-!package/windows/*bit*.bat
 */target/*
 *.class
 /gui/deploy/*

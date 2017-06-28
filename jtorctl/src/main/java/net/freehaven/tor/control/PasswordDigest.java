@@ -9,7 +9,7 @@ import java.security.SecureRandom;
 /**
  * A hashed digest of a secret password (used to set control connection
  * security.)
- * <p>
+ * <p/>
  * For the actual hashing algorithm, see RFC2440's secret-to-key conversion.
  */
 public class PasswordDigest {

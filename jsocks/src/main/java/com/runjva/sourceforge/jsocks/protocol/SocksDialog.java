@@ -42,11 +42,11 @@ public class SocksDialog extends Dialog implements WindowListener,
 
     /**
      * Wether to resolve addresses in separate thread.
-     * <p>
+     * <p/>
      * Default value is true, however on some JVMs, namely one from the
      * Microsoft, it doesn't want to work properly, separate thread can't close
      * the dialog opened in GUI thread, and everuthing else is then crashes.
-     * <p>
+     * <p/>
      * When setting this variable to false, SocksDialog will block while trying
      * to look up proxy host, and if this takes considerable amount of time it
      * might be annoying to user.
@@ -103,7 +103,7 @@ public class SocksDialog extends Dialog implements WindowListener,
 
     /**
      * Displays SOCKS configuartion dialog.
-     * <p>
+     * <p/>
      * Returns initialised proxy object, or null if user cancels dialog by
      * either pressing Cancel or closing the dialog window.
      */
@@ -117,7 +117,7 @@ public class SocksDialog extends Dialog implements WindowListener,
     /**
      * Initialises dialog to given proxy and displays SOCKS configuartion
      * dialog.
-     * <p>
+     * <p/>
      * Returns initialised proxy object, or null if user cancels dialog by
      * either pressing Cancel or closing the dialog window.
      */

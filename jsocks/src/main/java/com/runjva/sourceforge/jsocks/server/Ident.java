@@ -14,7 +14,7 @@ import java.util.StringTokenizer;
 /**
  * Class Ident provides means to obtain user name of the owner of the socket on
  * remote machine, providing remote machine runs identd daemon.
- * <p>
+ * <p/>
  * To use it: <tt><pre>
  * Socket s = ss.accept();
  * Ident id = new Ident(s);
@@ -85,13 +85,13 @@ public class Ident {
      * socket, and retrieve user name of the owner of given socket connection on
      * remote machine. After constructor returns public fields are initialised
      * to whatever the server returned.
-     * <p>
+     * <p/>
      * If user name was successfully retrieved successful is set to true, and
      * userName and hostType are set to whatever server returned. If however for
      * some reason user name was not obtained, successful is set to false and
      * errorCode contains the code explaining the reason of failure, and
      * errorMessage contains human readable explanation.
-     * <p>
+     * <p/>
      * Constructor may block, for a while.
      *
      * @param s Socket whose ownership on remote end should be obtained.
