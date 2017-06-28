@@ -110,7 +110,10 @@ public class CreateTakerFeeTx extends TradeTask {
                     log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                     trade.setTakerFeeTxId(signedTx.getHashAsString());
                     processModel.setTakeOfferFeeTx(signedTx);
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
+                    // TODO cehck
+                    // Don't call that as it caused in some cased a InsufficientMoneyException
+                    // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                     complete();
                 }, 5);
@@ -125,7 +128,10 @@ public class CreateTakerFeeTx extends TradeTask {
                                 checkArgument(transaction.equals(signedTx));
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
-                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
+                                // TODO cehck
+                                // Don't call that as it caused in some cased a InsufficientMoneyException
+                                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                                 complete();
                             }
