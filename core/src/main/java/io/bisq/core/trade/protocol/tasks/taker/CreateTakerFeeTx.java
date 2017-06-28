@@ -84,7 +84,9 @@ public class CreateTakerFeeTx extends TradeTask {
                 //TODO use handler for broadcastTx success
                 processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
                 trade.setTakerFeeTxId(createTakeOfferFeeTx.getHashAsString());
-                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                // TODO cehck
+                // Don't call that as it caused in some cased a InsufficientMoneyException
+                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                 complete();
             } else {
