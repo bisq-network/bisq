@@ -18,8 +18,8 @@ cp "$target_dir/../F379A1C6.asc" "$target_dir/"
 mac="Bisq-$version.dmg"
 cp "$src_dir/gui/deploy/$mac" "$target_dir/"
 
-cp "$src_dir/seednode/target/SeedNode.jar" "$target_dir/SeedNode-$version.jar"
-cp "$src_dir/pricefeed/target/Pricefeed.jar" "$target_dir/Pricefeed-$version.jar"
+cp "$src_dir/seednode/target/SeedNode.jar" "$target_dir/SeedNode.jar"
+cp "$src_dir/provider/target/provider.jar" "$target_dir/provider.jar"
 
 deb32="Bisq-32bit-$version.deb"
 cp "/Users/dev/vm_shared_ubuntu14_32bit/$deb32" "$target_dir/"
