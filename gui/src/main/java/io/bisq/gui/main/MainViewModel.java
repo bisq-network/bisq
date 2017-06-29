@@ -324,7 +324,7 @@ public class MainViewModel implements ViewModel {
 
         checkIfLocalHostNodeIsRunning();
 
-        final String storageFileName = "PersistedEntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         p2PService.readPersistedEntryMap(storageFileName);
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
