@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.gui.main.overlays.windows;
@@ -87,12 +87,12 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
                 "You can run it locally (127.0.0.1) or hosted on a VPS.\n" +
                 "You can edit that settings in \"Settings/Network info\".\n\n" +
                 "If you prefer to use the public " + Res.getBaseCurrencyName() + " network your Bitcoin transactions might get de-anonymized by chain analysis companies operating full nodes to spy on Bitcoin users.\n\n" +
-                "To learn more about that topic please read our FAQ on bisq.io.");
+                "To learn more about that topic please read our FAQ on Bisq.io.");
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
 
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open Bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc"));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);

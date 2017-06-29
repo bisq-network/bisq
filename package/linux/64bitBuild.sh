@@ -21,17 +21,17 @@ $JAVA_HOME/bin/javapackager \
     -BlicenseFile=LICENSE \
     -Bicon=package/linux/icon.png \
     -native deb \
-    -name bisq \
-    -title bisq \
-    -vendor bisq \
+    -name Bisq \
+    -title Bisq \
+    -vendor Bisq \
     -outdir gui/deploy \
     -srcfiles $jarFile:$jdkfixFile \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
     -outfile bisq
-     
-# when we have support for security manager we use that     
+
+# when we have support for security manager we use that
 #     \
 #    -BjvmOptions=-Djava.security.manager \
 #    -BjvmOptions=-Djava.security.debug=failure \

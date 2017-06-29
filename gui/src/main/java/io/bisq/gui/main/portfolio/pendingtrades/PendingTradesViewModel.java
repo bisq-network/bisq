@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.gui.main.portfolio.pendingtrades;
@@ -323,7 +323,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
-            // #################### Phase PREPARATION 
+            // #################### Phase PREPARATION
             case PREPARATION:
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);
@@ -331,7 +331,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             // At first part maker/taker have different roles
             // taker perspective
-            // #################### Phase TAKER_FEE_PAID 
+            // #################### Phase TAKER_FEE_PAID
             case TAKER_PUBLISHED_TAKER_FEE_TX:
 
                 // PUBLISH_DEPOSIT_TX_REQUEST
@@ -349,7 +349,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
 
-            // #################### Phase DEPOSIT_PAID 
+            // #################### Phase DEPOSIT_PAID
             case TAKER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG
@@ -381,7 +381,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG sent
                 // We don't switch the UI before we got the feedback of the msg delivery
 
-                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // Though at startup if we closed before shutdown so fast that we did not get one of the
                 // following 3 states we need to set BuyerState.STEP3
                 if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED)
                     buyerState.set(BuyerState.STEP3);
@@ -395,7 +395,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 } else {
                     // We delay the UI switch to give a chance to see the delivery result
                     UserThread.runAfter(() -> {
-                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // We might get a higher state set quickly (startup - stored state, then new state)
                         // and then we don't want to switch back
                         if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
                             buyerState.set(BuyerState.STEP3);
@@ -414,7 +414,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG sent
                 // We don't switch the UI before we got the feedback of the msg delivery
 
-                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // Though at startup if we closed before shutdown so fast that we did not get one of the
                 // following 3 states we need to set SellerState.STEP4
                 if (sellerState.get() == null || sellerState.get() == UNDEFINED)
                     sellerState.set(SellerState.STEP4);
@@ -428,7 +428,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 } else {
                     // We delay the UI switch to give a chance to see the delivery result
                     UserThread.runAfter(() -> {
-                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // We might get a higher state set quickly (startup - stored state, then new state)
                         // and then we don't want to switch back
                         if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
                             sellerState.set(SellerState.STEP4);

@@ -25,4 +25,4 @@ Copyright
 ---------
 
 By contributing to this repository, you agree to license your work under the AGPL license. 
-Please include the bisq license header into your files.
+Please include the Bisq license header into your files.

@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.common.crypto;
@@ -69,10 +69,10 @@ public class PGP {
                                     RSAPublicKeySpec specRSA = new RSAPublicKeySpec(bcRSA.getModulus(), bcRSA.getPublicExponent());
                                     PublicKey jceKey = KeyFactory.getInstance("RSA").generatePublic(specRSA);
                                     // if you want to use the key in JCE, use jceKey
-                                    // if you want to write "X.509" (SPKI) DER format to a file: 
+                                    // if you want to write "X.509" (SPKI) DER format to a file:
                                     //Files.write(new File(pubKeyAsString).toPath(), jceKey.getEncoded());
-                                    // if you want to write in PEM, bouncycastle can do that 
-                                    // or you can just do base64 and add BEGIN/END lines 
+                                    // if you want to write in PEM, bouncycastle can do that
+                                    // or you can just do base64 and add BEGIN/END lines
                                     // return pubKeyAsString; // assume only one key; if need to handle multiple keys
                                     // or select other than the first, specify more clearly
                                 }

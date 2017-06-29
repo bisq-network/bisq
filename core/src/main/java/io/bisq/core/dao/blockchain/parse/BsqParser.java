@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.dao.blockchain.parse;
@@ -144,9 +144,9 @@ public class BsqParser {
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
-        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
+        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
-        // Lately there is a patter with 24 iterations observed 
+        // Lately there is a patter with 24 iterations observed
         recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
 
         return bsqTxsInBlock;
@@ -154,7 +154,7 @@ public class BsqParser {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Parse when requested from new block arrived handler (rpc) 
+    // Parse when requested from new block arrived handler (rpc)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     BsqBlock parseBlock(Block btcdBlock, int genesisBlockHeight, String genesisTxId)
@@ -173,7 +173,7 @@ public class BsqParser {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Generic 
+    // Generic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkForGenesisTx(int genesisBlockHeight,
@@ -195,8 +195,8 @@ public class BsqParser {
         }
     }
 
-    // Performance-wise the recursion does not hurt (e.g. 5-20 ms). 
-    // The RPC requestTransaction is the bottleneck.  
+    // Performance-wise the recursion does not hurt (e.g. 5-20 ms).
+    // The RPC requestTransaction is the bottleneck.
     private void recursiveFindBsqTxs(List<Tx> bsqTxsInBlock,
                                      List<Tx> transactions,
                                      int blockHeight,
@@ -227,7 +227,7 @@ public class BsqParser {
                 "txsWithInputsFromSameBlock.size + txsWithoutInputsFromSameBlock.size != transactions.size");
 
         // Usual values is up to 25
-        // There are some blocks where it seems devs have tested graphs of many depending txs, but even 
+        // There are some blocks where it seems devs have tested graphs of many depending txs, but even
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
@@ -247,7 +247,7 @@ public class BsqParser {
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");
 
         // we check if we have any valid BSQ utxo from that tx set
-        // We might have InputsFromSameBlock which are BTC only but not BSQ, so we cannot 
+        // We might have InputsFromSameBlock which are BTC only but not BSQ, so we cannot
         // optimize here and need to iterate further.
         if (!txsWithInputsFromSameBlock.isEmpty()) {
             if (recursionCounter < maxRecursions) {

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Report by email failing connections to bisq seed nodes.
+# Report by email failing connections to Bisq seed nodes.
 #
 # Exit with status 2 if unreachable nodes were detected.
 #
@@ -37,15 +37,15 @@ for sn in $SEED_NODES; do
 done
 
 if [ "$failing_seed_nodes" ]; then
-    cat <<- EOF | mail -s "Failing bisq seed nodes" -- $REPORT_TO_EMAILS
-	The following bisq seed nodes failed to accept a new connection:
+    cat <<- EOF | mail -s "Failing Bisq seed nodes" -- $REPORT_TO_EMAILS
+	The following Bisq seed nodes failed to accept a new connection:
 
 	$(echo $failing_seed_nodes | tr ' ' '\n' | sed 's/^/    /')
 
 	Please check if they have issues, thank you.
 
-	-- 
-	The bisq seed monitor running at $(hostname -f)
+	--
+	The Bisq seed monitor running at $(hostname -f)
 	EOF
 	exit 2
 fi
