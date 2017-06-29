@@ -25,6 +25,7 @@ import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PerfectMoneyAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
@@ -89,7 +90,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), perfectMoneyAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(perfectMoneyAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);

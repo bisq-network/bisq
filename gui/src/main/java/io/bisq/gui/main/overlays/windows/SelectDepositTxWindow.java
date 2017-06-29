@@ -19,6 +19,7 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -59,7 +60,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         if (headLine == null)
             headLine = Res.get("selectDepositTxWindow.headline");
 
-        width = 700;
+        width = MainView.scale(700);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -84,8 +85,8 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
-        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"), 10);
-        GridPane.setMargin(label, new Insets(0, 0, 10, 0));
+        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"),  MainView.scale(10));
+        GridPane.setMargin(label, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(10), MainView.scale(0)));
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
         //noinspection unchecked

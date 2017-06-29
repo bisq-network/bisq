@@ -50,6 +50,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
+import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -57,6 +58,7 @@ import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
@@ -71,6 +73,10 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
+    @FXML
+    GridPane root;
+    @FXML
+    ColumnConstraints cc;
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -110,12 +116,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     public void initialize() {
-        root.setPadding(new Insets(20, 25, 5, 25));
+        root.setPadding(new Insets(MainView.scale(20), MainView.scale(25), MainView.scale(5), MainView.scale(25)));
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        cc.setMinWidth(MainView.scale(200));
 
         addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
         //noinspection unchecked
-        currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
+        currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
@@ -146,7 +155,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setRowIndex(tableView, ++gridRow);
         GridPane.setColumnIndex(tableView, 0);
         GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(10, -10, -10, -10));
+        GridPane.setMargin(tableView, new Insets(MainView.scale(10), MainView.scale(-10), MainView.scale(-10), MainView.scale(-10)));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
 
@@ -191,14 +200,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setValignment(nrOfOffersLabel, VPos.TOP);
         GridPane.setRowIndex(nrOfOffersLabel, ++gridRow);
         GridPane.setColumnIndex(nrOfOffersLabel, 0);
-        GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, -5));
+        GridPane.setMargin(nrOfOffersLabel, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(-5)));
         root.getChildren().add(nrOfOffersLabel);
 
         createOfferButton = addButton(root, gridRow, "");
-        createOfferButton.setMinHeight(40);
-        createOfferButton.setPadding(new Insets(0, 20, 0, 20));
-        createOfferButton.setGraphicTextGap(10);
-        GridPane.setMargin(createOfferButton, new Insets(15, 0, 0, 0));
+        createOfferButton.setMinHeight(MainView.scale(40));
+        createOfferButton.setPadding(new Insets(MainView.scale(0), MainView.scale(20), MainView.scale(0), MainView.scale(20)));
+        createOfferButton.setGraphicTextGap(MainView.scale(10));
+        GridPane.setMargin(createOfferButton, new Insets(MainView.scale(15), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setHalignment(createOfferButton, HPos.RIGHT);
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
@@ -444,7 +453,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax")) {
             {
-                setMinWidth(150);
+                setMinWidth(MainView.scale(150));
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -472,7 +481,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
-                setMinWidth(120);
+                setMinWidth(MainView.scale(120));
                 // setMaxWidth(130);
             }
         };
@@ -503,7 +512,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(120);
+                setMinWidth(MainView.scale(120));
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -553,7 +562,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(125);
+                setMinWidth(MainView.scale(125));
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -602,7 +611,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
             {
-                setMinWidth(125);
+                setMinWidth(MainView.scale(125));
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -637,7 +646,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.wantTo")) {
             {
-                setMinWidth(80);
+                setMinWidth(MainView.scale(80));
                 setSortable(false);
             }
         };
@@ -656,9 +665,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                             {
                                 button.setGraphic(iconView);
-                                button.setMinWidth(130);
-                                button.setMaxWidth(130);
-                                button.setGraphicTextGap(10);
+                                button.setMinWidth(MainView.scale(130));
+                                button.setMaxWidth(MainView.scale(130));
+                                button.setGraphicTextGap(MainView.scale(10));
                             }
 
                             @Override
@@ -745,8 +754,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
-                setMinWidth(40);
-                setMaxWidth(40);
+                setMinWidth(MainView.scale(40));
+                setMaxWidth(MainView.scale(40));
                 setSortable(true);
             }
         };
@@ -771,7 +780,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
                                     Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
                                             privateNotificationManager, newItem.getOffer(), model.preferences);
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                    setPadding(new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(-2), MainView.scale(0)));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

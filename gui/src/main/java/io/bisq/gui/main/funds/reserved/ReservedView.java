@@ -31,6 +31,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
@@ -41,6 +42,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -54,9 +56,13 @@ import java.util.stream.Collectors;
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
+    VBox root;
+    @FXML
     TableView<ReservedListItem> tableView;
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
+    @FXML
+    Insets rootPadding;
 
     private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
@@ -90,6 +96,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        dateColumn.setMinWidth(MainView.scale(180));
+        dateColumn.setMaxWidth(MainView.scale(180));
+        detailsColumn.setMinWidth(MainView.scale(320));
+        addressColumn.setMinWidth(MainView.scale(320));
+        balanceColumn.setMinWidth(MainView.scale(110));
         dateColumn.setText(Res.get("shared.dateTime"));
         detailsColumn.setText(Res.get("shared.details"));
         addressColumn.setText(Res.get("shared.address"));

@@ -26,6 +26,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
@@ -74,7 +75,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         addTradeCurrencyComboBox();
-        currencyComboBox.setPrefWidth(250);
+        currencyComboBox.setPrefWidth(MainView.scale(250));
         Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
         addressLabel = tuple2.first;
@@ -114,7 +115,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                cryptoCurrencyAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow,
@@ -144,7 +145,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     protected void addTradeCurrencyComboBox() {
         //noinspection unchecked
         currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));

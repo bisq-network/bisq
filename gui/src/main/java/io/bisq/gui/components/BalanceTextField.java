@@ -17,6 +17,7 @@
 
 package io.bisq.gui.components;
 
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
@@ -30,8 +31,8 @@ public class BalanceTextField extends AnchorPane {
 
     private Coin targetAmount;
     private final TextField textField;
-    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
-    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
+    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
+    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
     private BSFormatter formatter;
 
 
@@ -44,8 +45,8 @@ public class BalanceTextField extends AnchorPane {
         textField.setFocusTraversable(false);
         textField.setEditable(false);
 
-        AnchorPane.setRightAnchor(textField, 0.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(textField, MainView.scale(0));
+        AnchorPane.setLeftAnchor(textField, MainView.scale(0));
 
         getChildren().addAll(textField);
     }

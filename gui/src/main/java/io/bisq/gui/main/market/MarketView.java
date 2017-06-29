@@ -30,11 +30,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
+    @FXML
+    TabPane root;
+    @FXML
+    ScrollPane chartsScroll, statsScroll;
     @FXML
     Tab offerBookTab, tradesTab, spreadTab;
     private final ViewLoader viewLoader;
@@ -50,6 +55,18 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        AnchorPane.setTopAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setTopAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(statsScroll, MainView.scale(0));
         offerBookTab.setText(Res.get("market.tabs.offerBook"));
         spreadTab.setText(Res.get("market.tabs.spread"));
         tradesTab.setText(Res.get("market.tabs.trades"));

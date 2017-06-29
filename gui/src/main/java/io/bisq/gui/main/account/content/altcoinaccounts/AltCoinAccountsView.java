@@ -31,6 +31,8 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.components.paymentmethods.CryptoCurrencyForm;
 import io.bisq.gui.components.paymentmethods.PaymentMethodForm;
+import io.bisq.gui.main.MainView;
+import io.bisq.gui.main.account.content.ContentSettings;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
@@ -39,6 +41,7 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -56,6 +59,8 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCoinAccountsViewModel> {
+    @FXML
+    GridPane root;
 
     private ListView<PaymentAccount> paymentAccountsListView;
 
@@ -83,6 +88,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 160);
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -184,11 +190,11 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         GridPane.setValignment(tuple.first, VPos.TOP);
         //noinspection unchecked
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        paymentAccountsListView.setPrefHeight(MainView.scale(2 * Layout.LIST_ROW_HEIGHT + 14));
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
@@ -199,9 +205,9 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setLayoutY(5);
+                        label.setLayoutY(MainView.scale(5));
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -231,7 +237,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), MainView.scale(Layout.GROUP_DISTANCE));
 
         if (paymentMethodForm != null) {
             FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
@@ -254,7 +260,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), MainView.scale(Layout.GROUP_DISTANCE));
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         paymentMethodForm.addFormForDisplayAccount();
         gridRow = paymentMethodForm.getGridRow();

@@ -24,6 +24,7 @@ import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.control.Label;
@@ -86,7 +87,7 @@ public class SameBankForm extends BankForm {
     protected void addHolderNameAndIdForDisplayAccount() {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;
-        holderNameTextField.setMinWidth(300);
+        holderNameTextField.setMinWidth(MainView.scale(300));
         holderNameTextField.setText(bankAccountPayload.getHolderName());
     }
 

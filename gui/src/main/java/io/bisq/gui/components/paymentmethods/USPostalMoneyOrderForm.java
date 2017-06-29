@@ -24,6 +24,7 @@ import io.bisq.core.payment.USPostalMoneyOrderAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
@@ -48,7 +49,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
-        textArea.setPrefHeight(60);
+        textArea.setPrefHeight(MainView.scale(60));
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
         textArea.setText(((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getPostalAddress());
@@ -77,7 +78,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
 
         postalAddressTextArea = addLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.postal.address"), "").second;
-        postalAddressTextArea.setPrefHeight(60);
+        postalAddressTextArea.setPrefHeight(MainView.scale(60));
         //postalAddressTextArea.setValidator(usPostalMoneyOrderValidator);
         postalAddressTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             usPostalMoneyOrderAccount.setPostalAddress(newValue);
@@ -107,14 +108,14 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                usPostalMoneyOrderAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 usPostalMoneyOrderAccount.getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());
-        textArea.setPrefHeight(60);
+        textArea.setPrefHeight(MainView.scale(60));
         textArea.setEditable(false);
         TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";

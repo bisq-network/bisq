@@ -17,6 +17,7 @@
 
 package io.bisq.gui.components;
 
+import io.bisq.gui.main.MainView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -34,14 +35,14 @@ public class TitledGroupBg extends Pane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TitledGroupBg() {
-        GridPane.setMargin(this, new Insets(-10, -10, -10, -10));
+        GridPane.setMargin(this, new Insets(MainView.scale(-10), MainView.scale(-10), MainView.scale(-10), MainView.scale(-10)));
         GridPane.setColumnSpan(this, 2);
 
         label = new Label();
         label.textProperty().bind(text);
-        label.setLayoutX(8);
-        label.setLayoutY(-8);
-        label.setPadding(new Insets(0, 7, 0, 5));
+        label.setLayoutX(MainView.scale(8));
+        label.setLayoutY(MainView.scale(-8));
+        label.setPadding(new Insets(MainView.scale(0), MainView.scale(7), MainView.scale(0), MainView.scale(5)));
         setActive();
         getChildren().add(label);
     }

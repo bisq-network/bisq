@@ -25,6 +25,7 @@ import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.Transitions;
@@ -96,7 +97,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private WalletPasswordWindow(WalletsManager walletsManager) {
         this.walletsManager = walletsManager;
         type = Type.Attention;
-        width = 800;
+        width = MainView.scale(800);
     }
 
 
@@ -167,11 +168,11 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private void addInputFields() {
         Label label = new Label(Res.get("password.enterPassword"));
         label.setWrapText(true);
-        GridPane.setMargin(label, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(label, ++rowIndex);
 
         passwordTextField = new PasswordTextField();
-        GridPane.setMargin(passwordTextField, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(passwordTextField, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(passwordTextField, rowIndex);
         GridPane.setColumnIndex(passwordTextField, 1);
         PasswordValidator passwordValidator = new PasswordValidator();
@@ -228,8 +229,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         });
 
         HBox hBox = new HBox();
-        hBox.setMinWidth(560);
-        hBox.setSpacing(10);
+        hBox.setMinWidth(MainView.scale(560));
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.setAlignment(Pos.CENTER_LEFT);
@@ -255,7 +256,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         GridPane.setHalignment(headLine2Label, HPos.LEFT);
         GridPane.setRowIndex(headLine2Label, ++rowIndex);
         GridPane.setColumnSpan(headLine2Label, 2);
-        GridPane.setMargin(headLine2Label, new Insets(30, 0, 0, 0));
+        GridPane.setMargin(headLine2Label, new Insets(MainView.scale(30), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(headLine2Label);
 
         Separator separator = new Separator();
@@ -270,7 +271,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
-        seedWordsTextArea.setPrefHeight(60);
+        seedWordsTextArea.setPrefHeight(MainView.scale(60));
         seedWordsTextArea.setStyle("-fx-border-color: #ddd;");
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
@@ -278,7 +279,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         restoreDatePicker = labelDatePickerTuple2.second;
         restoreButton = addButton(gridPane, ++rowIndex, Res.get("seed.restore"));
         restoreButton.setDefaultButton(true);
-        stage.setHeight(340);
+        stage.setHeight(MainView.scale(340));
 
 
         // wallet creation date is not encrypted

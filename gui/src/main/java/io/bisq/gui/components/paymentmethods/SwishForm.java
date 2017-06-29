@@ -24,6 +24,7 @@ import io.bisq.core.payment.SwishAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.SwishAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
@@ -101,7 +102,7 @@ public class SwishForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                swishAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(swishAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),

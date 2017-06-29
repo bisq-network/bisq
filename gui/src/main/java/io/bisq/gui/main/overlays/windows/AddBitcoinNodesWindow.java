@@ -23,6 +23,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.GUIUtil;
 import javafx.geometry.HPos;
@@ -55,7 +56,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         if (headLine == null)
             headLine = "Protect your privacy";
 
-        width = 900;
+        width = MainView.scale(900);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -96,12 +97,12 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc"));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
-        GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(-4)));
         GridPane.setHalignment(hyperlinkWithIcon, HPos.LEFT);
         gridPane.getChildren().add(hyperlinkWithIcon);
 
         Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex,
-                "Add custom " + Res.getBaseCurrencyName() + " nodes:", 20);
+                "Add custom " + Res.getBaseCurrencyName() + " nodes:", MainView.scale(20));
         InputTextField input = labelInputTextFieldTuple2.second;
         input.setPromptText("Add comma separated IP addresses");
         if (!preferences.getBitcoinNodes().isEmpty())

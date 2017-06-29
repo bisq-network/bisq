@@ -20,6 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.Alert;
 import io.bisq.gui.components.HyperlinkWithIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
 import javafx.geometry.Insets;
@@ -44,7 +45,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     }
 
     public void show() {
-        width = 700;
+        width = MainView.scale(700);
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = Res.get("displayAlertMessageWindow.headline");
         createGridPane();
@@ -66,17 +67,17 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
+        FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), MainView.scale(10));
         if (alert.isUpdateInfo()) {
             headLine = Res.get("displayAlertMessageWindow.update.headline");
-            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: " + MainView.scale(22) + ";");
             String url = "https://bisq.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     Res.get("displayAlertMessageWindow.update.download"), url, url).second;
-            hyperlinkWithIcon.setMaxWidth(550);
+            hyperlinkWithIcon.setMaxWidth(MainView.scale(550));
         } else {
             headLine = Res.get("displayAlertMessageWindow.headline");
-            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: " + MainView.scale(22) + ";");
         }
         closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
@@ -87,7 +88,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         GridPane.setRowIndex(closeButton, ++rowIndex);
         GridPane.setColumnIndex(closeButton, 1);
         gridPane.getChildren().add(closeButton);
-        GridPane.setMargin(closeButton, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(closeButton, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 
 

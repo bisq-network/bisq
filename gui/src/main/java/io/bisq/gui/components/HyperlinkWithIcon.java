@@ -2,6 +2,7 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.gui.main.MainView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -31,9 +32,9 @@ public class HyperlinkWithIcon extends HBox {
         icon = new Label();
         icon.getStyleClass().add("external-link-icon");
         AwesomeDude.setIcon(icon, awesomeIcon);
-        icon.setMinWidth(20);
+        icon.setMinWidth(MainView.scale(20));
         icon.setOpacity(0.7);
-        HBox.setMargin(icon, new Insets(awesomeIcon == AwesomeIcon.INFO_SIGN ? 2 : 3, 0, 0, 0));
+        HBox.setMargin(icon, new Insets(awesomeIcon == AwesomeIcon.INFO_SIGN ? MainView.scale(2) : MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         if (isCentered) {
             Pane spacer1 = new Pane();

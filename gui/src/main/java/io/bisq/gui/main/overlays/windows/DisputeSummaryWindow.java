@@ -30,6 +30,7 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Contract;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -106,7 +107,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1050;
+        width = MainView.scale(850);
         createGridPane();
         addContent();
         display();
@@ -151,11 +152,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(MainView.scale(35), MainView.scale(40), MainView.scale(30), MainView.scale(40)));
         gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
+                "-fx-background-radius: " + MainView.scale(5) + " " + MainView.scale(5) + " " +
+                MainView.scale(5) + " " + MainView.scale(5) + ";" +
+                "-fx-effect: dropshadow(gaussian, #999, " + MainView.scale(10) + "," + MainView.scale(0) +
+                "," + MainView.scale(0) + "," + MainView.scale(0) + ";" +
+                "-fx-background-insets: " + MainView.scale(10) + ";"
         );
     }
 
@@ -231,7 +234,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addInfoPane() {
         Contract contract = dispute.getContract();
         addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
-        addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
@@ -254,7 +257,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addCheckboxes() {
-        Label evidenceLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.evidence"), 10);
+        Label evidenceLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.evidence"), MainView.scale(10));
         GridPane.setValignment(evidenceLabel, VPos.TOP);
         CheckBox tamperProofCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.tamperProof"));
         CheckBox idVerificationCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.id"));
@@ -265,17 +268,17 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         screenCastCheckBox.selectedProperty().bindBidirectional(disputeResult.screenCastProperty());
 
         FlowPane checkBoxPane = new FlowPane();
-        checkBoxPane.setHgap(20);
-        checkBoxPane.setVgap(5);
+        checkBoxPane.setHgap(MainView.scale(20));
+        checkBoxPane.setVgap(MainView.scale(5));
         checkBoxPane.getChildren().addAll(tamperProofCheckBox, idVerificationCheckBox, screenCastCheckBox);
         GridPane.setRowIndex(checkBoxPane, rowIndex);
         GridPane.setColumnIndex(checkBoxPane, 1);
-        GridPane.setMargin(checkBoxPane, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(checkBoxPane, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(checkBoxPane);
     }
 
     private void addTradeAmountPayoutControls() {
-        Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), 10);
+        Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), MainView.scale(10));
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
         buyerGetsTradeAmountRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
@@ -289,13 +292,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         customRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.custom"));
         VBox radioButtonPane = new VBox();
-        radioButtonPane.setSpacing(10);
+        radioButtonPane.setSpacing(MainView.scale(10));
         radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsAllRadioButton,
                 sellerGetsTradeAmountRadioButton, sellerGetsAllRadioButton,
                 customRadioButton);
         GridPane.setRowIndex(radioButtonPane, rowIndex);
         GridPane.setColumnIndex(radioButtonPane, 1);
-        GridPane.setMargin(radioButtonPane, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(radioButtonPane, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(radioButtonPane);
 
         tradeAmountToggleGroup = new ToggleGroup();
@@ -393,7 +396,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addReasonControls() {
-        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.reason"), 10);
+        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.reason"), MainView.scale(10));
         GridPane.setValignment(label, VPos.TOP);
         reasonWasBugRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bug"));
         reasonWasUsabilityIssueRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.usability"));
@@ -405,13 +408,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         //TODO add banks as reason
 
         HBox feeRadioButtonPane = new HBox();
-        feeRadioButtonPane.setSpacing(20);
+        feeRadioButtonPane.setSpacing(MainView.scale(20));
         feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
                 reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
                 reasonWasBankRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton);
         GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
         GridPane.setColumnIndex(feeRadioButtonPane, 1);
-        GridPane.setMargin(feeRadioButtonPane, new Insets(10, 0, 10, 0));
+        GridPane.setMargin(feeRadioButtonPane, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(10), MainView.scale(0)));
         gridPane.getChildren().add(feeRadioButtonPane);
 
         reasonToggleGroup = new ToggleGroup();
@@ -471,13 +474,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addSummaryNotes() {
-        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.summaryNotes"), 0);
+        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.summaryNotes"), MainView.scale(0));
         GridPane.setValignment(label, VPos.TOP);
 
         summaryNotesTextArea = new TextArea();
         summaryNotesTextArea.setPromptText(Res.get("disputeSummaryWindow.addSummaryNotes"));
         summaryNotesTextArea.setWrapText(true);
-        summaryNotesTextArea.setPrefHeight(50);
+        summaryNotesTextArea.setPrefHeight(MainView.scale(50));
         summaryNotesTextArea.textProperty().bindBidirectional(disputeResult.summaryNotesProperty());
         GridPane.setRowIndex(summaryNotesTextArea, rowIndex);
         GridPane.setColumnIndex(summaryNotesTextArea, 1);

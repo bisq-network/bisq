@@ -26,6 +26,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
@@ -213,7 +214,7 @@ abstract class BankForm extends PaymentMethodForm {
         String countryCode = bankAccountPayload.getCountryCode();
 
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                paymentAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
@@ -339,7 +340,7 @@ abstract class BankForm extends PaymentMethodForm {
                     boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                     if (requiresHolderId) {
                         holderNameInputTextField.minWidthProperty().unbind();
-                        holderNameInputTextField.setMinWidth(300);
+                        holderNameInputTextField.setMinWidth(MainView.scale(300));
                     } else {
                         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
                     }
@@ -507,7 +508,7 @@ abstract class BankForm extends PaymentMethodForm {
         Tuple4<Label, InputTextField, Label, InputTextField> tuple = addLabelInputTextFieldLabelInputTextField(gridPane,
                 ++gridRow, Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.second;
-        holderNameInputTextField.setMinWidth(300);
+        holderNameInputTextField.setMinWidth(MainView.scale(300));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
@@ -599,7 +600,7 @@ abstract class BankForm extends PaymentMethodForm {
                     Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
-            holderNameTextField.setMinWidth(300);
+            holderNameTextField.setMinWidth(MainView.scale(300));
             tuple.forth.setText(bankAccountPayload.getHolderTaxId());
         } else {
             addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), bankAccountPayload.getHolderName());

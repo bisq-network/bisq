@@ -38,6 +38,7 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
@@ -299,7 +300,7 @@ public class GUIUtil {
                     break;
             }
 
-            txConfidenceIndicator.setPrefSize(24, 24);
+            txConfidenceIndicator.setPrefSize(MainView.scale(24), MainView.scale(24));
         }
     }
 
@@ -372,7 +373,7 @@ public class GUIUtil {
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
         new Popup<>().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
-                .width(900)
+                .width(MainView.scale(900))
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)
                 .show();

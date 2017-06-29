@@ -26,6 +26,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
@@ -201,9 +202,9 @@ public class CashDepositForm extends PaymentMethodForm {
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
 
         if (showRequirements) {
-            TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
-            textArea.setMinHeight(45);
-            textArea.setMaxHeight(45);
+            TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, "Extra requirements:", "").second;
+            textArea.setMinHeight(MainView.scale(45));
+            textArea.setMaxHeight(MainView.scale(45));
             textArea.setEditable(false);
             textArea.setId("text-area-disabled");
             textArea.setText(requirements);
@@ -223,7 +224,7 @@ public class CashDepositForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         String countryCode = cashDepositAccountPayload.getCountryCode();
 
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
@@ -261,8 +262,8 @@ public class CashDepositForm extends PaymentMethodForm {
         boolean showRequirements = requirements != null && !requirements.isEmpty();
         if (showRequirements) {
             TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
-            textArea.setMinHeight(30);
-            textArea.setMaxHeight(30);
+            textArea.setMinHeight(MainView.scale(30));
+            textArea.setMaxHeight(MainView.scale(30));
             textArea.setEditable(false);
             textArea.setId("text-area-disabled");
             textArea.setText(requirements);
@@ -358,7 +359,7 @@ public class CashDepositForm extends PaymentMethodForm {
                 boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                 if (requiresHolderId) {
                     holderNameInputTextField.minWidthProperty().unbind();
-                    holderNameInputTextField.setMinWidth(300);
+                    holderNameInputTextField.setMinWidth(MainView.scale(300));
                 } else {
                     holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
                 }
@@ -508,8 +509,8 @@ public class CashDepositForm extends PaymentMethodForm {
         });
 
         TextArea requirementsTextArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
-        requirementsTextArea.setMinHeight(30);
-        requirementsTextArea.setMaxHeight(30);
+        requirementsTextArea.setMinHeight(MainView.scale(30));
+        requirementsTextArea.setMaxHeight(MainView.scale(30));
         requirementsTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             cashDepositAccountPayload.setRequirements(newValue);
             updateFromInputs();
@@ -532,7 +533,7 @@ public class CashDepositForm extends PaymentMethodForm {
         Tuple4<Label, InputTextField, Label, InputTextField> tuple = FormBuilder.addLabelInputTextFieldLabelInputTextField(gridPane,
                 ++gridRow, Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.second;
-        holderNameInputTextField.setMinWidth(300);
+        holderNameInputTextField.setMinWidth(MainView.scale(300));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             cashDepositAccountPayload.setHolderName(newValue);
             updateFromInputs();
@@ -633,7 +634,7 @@ public class CashDepositForm extends PaymentMethodForm {
                     Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(cashDepositAccountPayload.getHolderName());
-            holderNameTextField.setMinWidth(300);
+            holderNameTextField.setMinWidth(MainView.scale(300));
             tuple.forth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
             FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),

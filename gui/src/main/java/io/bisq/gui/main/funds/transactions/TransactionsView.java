@@ -38,6 +38,7 @@ import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
 import io.bisq.gui.components.HyperlinkWithIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
@@ -49,6 +50,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -75,11 +77,15 @@ import java.util.stream.Stream;
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @FXML
+    VBox root;
+    @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
     @FXML
     Button exportButton;
+    @FXML
+    Insets rootPadding;
 
     private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
@@ -128,6 +134,20 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        dateColumn.setMinWidth(MainView.scale(180));
+        dateColumn.setMaxWidth(MainView.scale(180));
+        detailsColumn.setMinWidth(MainView.scale(220));
+        detailsColumn.setMaxWidth(MainView.scale(220));
+        addressColumn.setMinWidth(MainView.scale(260));
+        transactionColumn.setMinWidth(MainView.scale(180));
+        amountColumn.setMinWidth(MainView.scale(130));
+        amountColumn.setMaxWidth(MainView.scale(130));
+        confidenceColumn.setMinWidth(MainView.scale(130));
+        confidenceColumn.setMaxWidth(MainView.scale(130));
+        revertTxColumn.setMinWidth(MainView.scale(110));
+        revertTxColumn.setMaxWidth(MainView.scale(110));
         dateColumn.setText(Res.get("shared.dateTime"));
         detailsColumn.setText(Res.get("shared.details"));
         addressColumn.setText(Res.get("shared.address"));

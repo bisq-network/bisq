@@ -28,6 +28,8 @@ import io.bisq.gui.main.market.MarketView;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class Navigation implements PersistedDataHost {
+    private static final Logger log = LoggerFactory.getLogger(Navigation.class);
+
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
     public interface Listener {

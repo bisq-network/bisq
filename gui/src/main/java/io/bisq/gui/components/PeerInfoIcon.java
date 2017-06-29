@@ -4,6 +4,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -62,11 +63,11 @@ public class PeerInfoIcon extends Group {
         color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
         double SIZE = 26;
-        Canvas background = new Canvas(SIZE, SIZE);
+        Canvas background = new Canvas(MainView.scale(SIZE), MainView.scale(SIZE));
         GraphicsContext gc = background.getGraphicsContext2D();
         gc.setFill(color);
-        gc.fillOval(0, 0, SIZE, SIZE);
-        background.setLayoutY(1);
+        gc.fillOval(MainView.scale(0), MainView.scale(0), MainView.scale(SIZE), MainView.scale(SIZE));
+        background.setLayoutY(MainView.scale(1));
 
 
         ImageView avatarImageView = new ImageView();
@@ -74,22 +75,22 @@ public class PeerInfoIcon extends Group {
         avatarImageView.setScaleX(intValue % 2 == 0 ? 1d : -1d);
 
         numTradesPane = new Pane();
-        numTradesPane.relocate(18, 14);
+        numTradesPane.relocate(MainView.scale(18), MainView.scale(14));
         numTradesPane.setMouseTransparent(true);
         ImageView numTradesCircle = new ImageView();
         numTradesCircle.setId("image-green_circle");
         numTradesLabel = new Label();
-        numTradesLabel.relocate(5, 1);
+        numTradesLabel.relocate(MainView.scale(5), MainView.scale(1));
         numTradesLabel.setId("ident-num-label");
         numTradesPane.getChildren().addAll(numTradesCircle, numTradesLabel);
 
         tagPane = new Pane();
-        tagPane.relocate(18, -2);
+        tagPane.relocate(MainView.scale(18), MainView.scale(-2));
         tagPane.setMouseTransparent(true);
         ImageView tagCircle = new ImageView();
         tagCircle.setId("image-blue_circle");
         tagLabel = new Label();
-        tagLabel.relocate(5, 1);
+        tagLabel.relocate(MainView.scale(5), MainView.scale(1));
         tagLabel.setId("ident-num-label");
         tagPane.getChildren().addAll(tagCircle, tagLabel);
 
@@ -100,7 +101,7 @@ public class PeerInfoIcon extends Group {
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
                 .hostName(hostName)
                 .numTrades(numTrades)
-                .position(localToScene(new Point2D(0, 0)))
+                .position(localToScene(new Point2D(MainView.scale(0), MainView.scale(0))))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(hostName, newTag);
                     updatePeerInfoIcon();

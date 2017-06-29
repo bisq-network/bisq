@@ -23,6 +23,7 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.geometry.HPos;
@@ -71,7 +72,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
-        width = 900;
+        width = MainView.scale(900);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -108,7 +109,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), MainView.scale(10)).second;
         if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
@@ -166,7 +167,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (sendFilterMessageHandler.handle(new Filter(offerIds, nodes, paymentAccountFilters), keyInputTextField.getText()))
                 hide();
             else
-                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup<>().warning(Res.get("shared.invalidKey")).width(MainView.scale(300)).onClose(this::blurAgain).show();
         });
 
         Button removeFilterMessageButton = new Button(Res.get("filterWindow.remove"));
@@ -175,7 +176,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(MainView.scale(300)).onClose(this::blurAgain).show();
             }
         });
 
@@ -186,11 +187,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
         });
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 }

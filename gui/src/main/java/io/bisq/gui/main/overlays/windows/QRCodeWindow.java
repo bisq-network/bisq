@@ -1,6 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -33,7 +34,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         qrCodeImageView = new ImageView(qrImage);
 
         type = Type.Information;
-        width = 400;
+        width = MainView.scale(400);
         headLine(Res.get("qRCodeWindow.headline"));
         message(Res.get("qRCodeWindow.msg"));
     }
@@ -57,7 +58,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         infoLabel.setId("popup-qr-code-info");
         GridPane.setHalignment(infoLabel, HPos.CENTER);
         GridPane.setHgrow(infoLabel, Priority.ALWAYS);
-        GridPane.setMargin(infoLabel, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(infoLabel, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(infoLabel, ++rowIndex);
         GridPane.setColumnIndex(infoLabel, 0);
         GridPane.setColumnSpan(infoLabel, 2);

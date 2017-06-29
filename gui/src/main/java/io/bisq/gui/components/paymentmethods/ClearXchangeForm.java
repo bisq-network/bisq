@@ -24,6 +24,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
@@ -97,7 +98,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                clearXchangeAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(clearXchangeAccount.getPaymentMethod().getId()));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),

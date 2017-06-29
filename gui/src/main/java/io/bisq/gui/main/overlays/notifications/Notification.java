@@ -2,6 +2,7 @@ package io.bisq.gui.main.overlays.notifications;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.gui.main.MainView;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.animation.Interpolator;
@@ -26,7 +27,7 @@ public class Notification extends Overlay<Notification> {
     private Timer autoCloseTimer;
 
     public Notification() {
-        width = 345; // 320 visible bg because of insets
+        width = MainView.scale(345); // 320 visible bg because of insets
         NotificationCenter.add(this);
         type = Type.Notification;
     }
@@ -159,12 +160,12 @@ public class Notification extends Overlay<Notification> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(15, 15, 30, 30));
+        gridPane.setPadding(new Insets(MainView.scale(15), MainView.scale(15), MainView.scale(30), MainView.scale(30)));
     }
 
     @Override
     protected void addCloseButton() {
-        buttonDistance = 10;
+        buttonDistance = MainView.scale(10);
         super.addCloseButton();
     }
 

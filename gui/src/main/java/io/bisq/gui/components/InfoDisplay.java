@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.gui.main.MainView;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
@@ -65,7 +66,7 @@ public class InfoDisplay extends Parent {
         icon.visibleProperty().bind(visibleProperty());
 
         GridPane.setValignment(icon, VPos.TOP);
-        GridPane.setMargin(icon, new Insets(-2, 0, 0, 0));
+        GridPane.setMargin(icon, new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowSpan(icon, 2);
 
         label = new Label();
@@ -75,7 +76,8 @@ public class InfoDisplay extends Parent {
         label.setVisible(false);
 
         link = new Hyperlink(Res.get("shared.readMore"));
-        link.setPadding(new Insets(0, 0, 0, -2));
+        link.setPadding(new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(-2)));
+
 
         // We need that to know if we have a wrapping or not.
         // Did not find a way to get that from the API.
@@ -96,7 +98,7 @@ public class InfoDisplay extends Parent {
         ChangeListener<Number> listener = (ov2, oldValue2, windowWidth) -> {
             if (label.prefWidthProperty().isBound())
                 label.prefWidthProperty().unbind();
-            label.setPrefWidth((double) windowWidth - localToScene(0, 0).getX() - 35);
+            label.setPrefWidth((double) windowWidth - localToScene(MainView.scale(0), MainView.scale(0)).getX() - MainView.scale(35));
         };
 
 
@@ -131,7 +133,7 @@ public class InfoDisplay extends Parent {
                 UserThread.execute(() -> {
                     label.setVisible(true);
                     label.prefWidthProperty().unbind();
-                    label.setPrefWidth(newValue.getWindow().getWidth() - localToScene(0, 0).getX() - 35);
+                    label.setPrefWidth(newValue.getWindow().getWidth() - localToScene(MainView.scale(0), MainView.scale(0)).getX() - MainView.scale(35));
                 });
             }
         });
@@ -148,7 +150,7 @@ public class InfoDisplay extends Parent {
             if (getScene() != null) {
                 label.setVisible(true);
                 label.prefWidthProperty().unbind();
-                label.setPrefWidth(getScene().getWindow().getWidth() - localToScene(0, 0).getX() - 35);
+                label.setPrefWidth(getScene().getWindow().getWidth() - localToScene(MainView.scale(0), MainView.scale(0)).getX() - MainView.scale(35));
             }
         });
     }

@@ -1025,7 +1025,7 @@ public class MainViewModel implements ViewModel {
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
         new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.getMessage())
-                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: " + MainView.scale(16) + ";")
                 .onClose(privateNotificationManager::removePrivateNotification)
                 .useIUnderstandButton()
                 .show();

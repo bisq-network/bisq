@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.pendingtrades.steps;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.Colors;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -37,8 +38,8 @@ public class TradeWizardItem extends Button {
 
         setMouseTransparent(true);
         setText(title);
-        setPrefHeight(40);
-        setPrefWidth(360);
+        setPrefHeight(MainView.scale(40));
+        setPrefWidth(MainView.scale(360));
         setAlignment(Pos.CENTER_LEFT);
         setDisabled();
     }
@@ -46,7 +47,7 @@ public class TradeWizardItem extends Button {
     public void setDisabled() {
         setId("trade-wizard-item-background-disabled");
         Label icon = new Label();
-        icon.setPadding(new Insets(-3, 6, 0, 0));
+        icon.setPadding(new Insets(MainView.scale(-3), MainView.scale(6), MainView.scale(0), MainView.scale(0)));
         icon.setTextFill(Colors.LIGHT_GREY);
         AwesomeDude.setIcon(icon, AwesomeIcon.SPINNER);
         setGraphic(icon);
@@ -55,7 +56,7 @@ public class TradeWizardItem extends Button {
     public void setActive() {
         setId("trade-wizard-item-background-active");
         Label icon = new Label();
-        icon.setPadding(new Insets(-3, 6, 0, 0));
+        icon.setPadding(new Insets(MainView.scale(-3), MainView.scale(6), MainView.scale(0), MainView.scale(0)));
         icon.setTextFill(Colors.BLUE);
         AwesomeDude.setIcon(icon, AwesomeIcon.ARROW_RIGHT);
         setGraphic(icon);
@@ -64,7 +65,7 @@ public class TradeWizardItem extends Button {
     public void setCompleted() {
         setId("trade-wizard-item-background-completed");
         Label icon = new Label();
-        icon.setPadding(new Insets(-3, 6, 0, 0));
+        icon.setPadding(new Insets(MainView.scale(-3), MainView.scale(6), MainView.scale(0), MainView.scale(0)));
         icon.setTextFill(Colors.GREEN);
         AwesomeDude.setIcon(icon, AwesomeIcon.OK);
         setGraphic(icon);
