@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.btc;
@@ -22,7 +22,7 @@ import org.bitcoinj.core.Coin;
 
 public class Restrictions {
 
-    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC
+    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
 
     public static final Coin MAX_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.2");
     public static final Coin MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001");

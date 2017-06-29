@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.app;
@@ -120,7 +120,7 @@ public abstract class BisqExecutable {
                 description("Application data directory", BisqEnvironment.DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                description("If set to true all signed network_messages from Bisq developers are ignored " +
+                description("If set to true all signed network_messages from bisq developers are ignored " +
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);

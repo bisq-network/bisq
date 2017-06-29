@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.dao.vote;
@@ -212,8 +212,8 @@ public class VotingDefaultValues {
     }
 
     // Interger value of byte values in java are split in 1 half positive and second half negative:
-    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255.
-    // So we add 256 for values after 127 to get a continuous 0-255 range.
+    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255. 
+    // So we add 256 for values after 127 to get a continuous 0-255 range. 
     public long getAdjustedValue(long originalValue, Byte change) {
         int intValue = change.intValue();
         if (intValue < 0)

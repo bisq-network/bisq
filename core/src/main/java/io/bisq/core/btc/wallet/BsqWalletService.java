@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.btc.wallet;
@@ -232,7 +232,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Sign tx
+    // Sign tx 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
@@ -253,7 +253,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Commit tx
+    // Commit tx 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx) {
@@ -263,7 +263,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Broadcast tx
+    // Broadcast tx 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
@@ -311,7 +311,7 @@ public class BsqWalletService extends WalletService {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
-        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a
+        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a 
         // non dust BTC output.
 
         // TODO check dust output

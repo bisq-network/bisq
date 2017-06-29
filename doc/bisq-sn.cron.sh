@@ -1,5 +1,5 @@
 #!/bin/sh
-# Restart Bisq seed node daemons whose resident memory (RSS)
+# Restart bisq seed node daemons whose resident memory (RSS)
 # is over MAX_RSS_MiB.
 #
 # Scripts in the INITDIR must contain a ``SN_ADDRESS=<host:port>``

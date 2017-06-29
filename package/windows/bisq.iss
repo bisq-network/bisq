@@ -1,5 +1,5 @@
 ;This file will be executed next to the application bundle image
-;I.e. current directory will contain folder Bisq with application files
+;I.e. current directory will contain folder bisq with application files
 [Setup]
 AppId={{bisq}}
 AppName=bisq
@@ -51,7 +51,7 @@ Filename: "{app}\bisq.exe"; Description: "{cm:LaunchProgram,bisq}"; Flags: nowai
 Filename: "{app}\bisq.exe"; Parameters: "-install -svcName ""bisq"" -svcDesc ""bisq"" -mainExe ""bisq.exe""  "; Check: returnFalse()
 
 [UninstallRun]
-Filename: "{app}\bisq.exe "; Parameters: "-uninstall -svcName Bisq -stopOnUninstall"; Check: returnFalse()
+Filename: "{app}\bisq.exe "; Parameters: "-uninstall -svcName bisq -stopOnUninstall"; Check: returnFalse()
 
 [Code]
 function returnTrue(): Boolean;

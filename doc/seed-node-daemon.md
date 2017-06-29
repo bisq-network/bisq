@@ -1,16 +1,16 @@
 # Running a seed node as a daemon
 
-This document presents some steps to be able to run a Bisq seed node as
+This document presents some steps to be able to run a bisq seed node as
 an unattended daemon in a GNU/Linux server with a traditional System V init.
 
 ## Before you start
 
-We assume that you have already configured a Bisq seed node to run in a
+We assume that you have already configured a bisq seed node to run in a
 computer.  You will need to upload the seed node code and configuration to the
 server:
 
   - The code is contained in the ``SeedNode.jar`` file which is usually left
-    under ``seednode/target`` after building Bisq.
+    under ``seednode/target`` after building bisq.
   - The seed node configuration is the ``bisq_seed_node_HOST_PORT``
     directory under ``~/.local/share`` (Unix), ``%APPDATA%`` (Windows) or
     ``~/Library/Application Support`` (Mac OS X).

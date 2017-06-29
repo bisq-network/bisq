@@ -1,7 +1,7 @@
 ﻿Building From Source
 ====================
 
-This guide will walk you through the process of building Bisq from source.
+This guide will walk you through the process of building bisq from source.
 
 > _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
@@ -10,7 +10,7 @@ There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq)
 System requirements
 -------------
 
-The prerequisite for building Bisq is installing the Java Development Kit (JDK), version 8u121 or better (as well as maven and git).
+The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u121 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
     $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
@@ -109,7 +109,7 @@ It is not needed for a normal user to run such a "full node" but for the build i
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
 
-Prepare Bisq build
+Prepare bisq build
 -----------------
 ### 4. Install Protobuffer
 Install Protobuffer as binary or build from source.
@@ -128,9 +128,9 @@ Build from source:
     $ sudo ldconfig
     $ protoc --version
 
-### 5. Get Bisq source code and build a preliminary Bisq version (don't run the jar, it wont work)
+### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
 
-We need to get the Bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
+We need to get the bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bisq
@@ -139,7 +139,7 @@ We need to get the Bisq dependencies resolved first as we need to copy the Bounc
 ### 6. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
-This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bisq client.
+This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
@@ -162,9 +162,9 @@ In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/
 Build bisq
 -----------------
 
-### 9. Build final Bisq jar
+### 9. Build final bisq jar
 
-Now we have all prepared to build the correct Bisq jar.
+Now we have all prepared to build the correct bisq jar.
 
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
@@ -182,7 +182,7 @@ If you want to build the binaries check out the build scripts under the package 
 DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
-use dedicated program arguments for the Bisq node.
+use dedicated program arguments for the bisq node.
 See the rpc.md doc in the same directory.
 
 

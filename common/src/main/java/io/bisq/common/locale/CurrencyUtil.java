@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.common.locale;
@@ -81,7 +81,7 @@ public class CurrencyUtil {
         return allSortedCryptoCurrencies;
     }
 
-    // Don't make a PR for adding a coin but follow the steps described here:
+    // Don't make a PR for adding a coin but follow the steps described here: 
     // https://forum.bisq.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
@@ -223,7 +223,7 @@ public class CurrencyUtil {
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
-        /*
+        /* 
         StringBuilder sb = new StringBuilder();
         result.stream().forEach(e -> sb.append("<li>\"")
                 .append(e.getCode())

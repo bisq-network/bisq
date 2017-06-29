@@ -1,18 +1,18 @@
 /*
- * This file is part of Bisq.
+ * This file is part of bisq.
  *
- * Bisq is free software: you can redistribute it and/or modify it
+ * bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.provider.fee;
@@ -35,11 +35,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FeeRequestService {
     private static final Logger log = LoggerFactory.getLogger(FeeRequestService.class);
 
-    private static final long INTERVAL_BTC_FEES_MS = 600_000;      // 10 min
+    private static final long INTERVAL_BTC_FEES_MS = 600_000;      // 10 min  
 
     public static final long BTC_MIN_TX_FEE = 40; // satoshi/byte
     public static final long BTC_MAX_TX_FEE = 2000;
-
+    
     private final Timer timerBitcoinFeesLocal = new Timer();
 
     private final BtcFeesProvider btcFeesProvider;
@@ -50,11 +50,11 @@ public class FeeRequestService {
     public FeeRequestService() throws IOException {
         btcFeesProvider = new BtcFeesProvider();
 
-        // For now we don't need a fee estimation for LTC so we set it fixed, but we keep it in the provider to
+        // For now we don't need a fee estimation for LTC so we set it fixed, but we keep it in the provider to 
         // be flexible if fee pressure grows on LTC
         dataMap.put("ltcTxFee", FeeService.LTC_DEFAULT_TX_FEE);
         dataMap.put("dogeTxFee", FeeService.DOGE_DEFAULT_TX_FEE);
-
+        
         writeToJson();
         startRequests();
     }
