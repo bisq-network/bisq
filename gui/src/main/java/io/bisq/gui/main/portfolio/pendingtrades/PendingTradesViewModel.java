@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.gui.main.portfolio.pendingtrades;
@@ -322,7 +322,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
-            // #################### Phase PREPARATION 
+            // #################### Phase PREPARATION
             case PREPARATION:
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);
@@ -330,7 +330,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             // At first part maker/taker have different roles
             // taker perspective
-            // #################### Phase TAKER_FEE_PAID 
+            // #################### Phase TAKER_FEE_PAID
             case TAKER_PUBLISHED_TAKER_FEE_TX:
 
                 // PUBLISH_DEPOSIT_TX_REQUEST
@@ -348,7 +348,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
 
-            // #################### Phase DEPOSIT_PAID 
+            // #################### Phase DEPOSIT_PAID
             case TAKER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG

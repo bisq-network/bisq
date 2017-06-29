@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.common.locale;
@@ -30,7 +30,7 @@ public class LanguageUtil {
             "de", // German
             "es", // Spanish
             "sr"  // Serbian
-            
+
             /*
             // not translated yet
             "zh", // Chinese
@@ -82,7 +82,7 @@ public class LanguageUtil {
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
-        // Filter duplicate locale entries 
+        // Filter duplicate locale entries
         Set<String> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().isEmpty() &&
                 !locale.getDisplayLanguage().isEmpty())
                 .map(Locale::getLanguage)

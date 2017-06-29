@@ -38,7 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * bisq network stress tests.
+ * Bisq network stress tests.
  * <p>
  * You can invoke this class directly from the command line.
  * If the name of a single test is given as an argument, only that test is run.

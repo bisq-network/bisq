@@ -7,7 +7,7 @@ There are a number of reasons why protobuffer was chosen, here are some of them:
 * smaller in size than java serialisation (less network usage)
 * All P2P network messages are described in a clear protobuffer schema
 * allows to evolve your schema in a backward compatible way
-* can generate code in many languages, making alternative bisq clients or monitoring tools easier
+* can generate code in many languages, making alternative Bisq clients or monitoring tools easier
 
 ## Which classes are transformed to protobuffer?
 

@@ -1,18 +1,18 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bisq.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.core.arbitration.messages;
@@ -140,7 +140,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
-        // We have the case that an envelope got wrapped into a payload. 
+        // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads dont have a message version and are also used for persistence
         // We set the value to -1 to indicate it is set but irrelevant

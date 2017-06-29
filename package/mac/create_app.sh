@@ -25,16 +25,16 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=package/mac/bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
-    -name bisq \
-    -title bisq \
-    -vendor bisq \
+    -name Bisq \
+    -title Bisq \
+    -vendor Bisq \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/bisq-$version.jar" \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -appclass io.bisq.gui.app.BisqAppMain \
     -outfile bisq
- 
-# when we have support for security manager we use that     
+
+# when we have support for security manager we use that
 #     \
 #    -BjvmOptions=-Djava.security.manager \
 #    -BjvmOptions=-Djava.security.debug=failure \
