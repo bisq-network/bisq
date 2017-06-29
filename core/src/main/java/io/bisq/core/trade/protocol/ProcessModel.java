@@ -23,6 +23,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -298,9 +299,13 @@ public class ProcessModel implements Model, PersistablePayload {
         return Coin.valueOf(fundsNeededForTradeAsLong);
     }
 
-    public Transaction getTakeOfferFeeTx() {
-        if (takeOfferFeeTx == null)
-            takeOfferFeeTx = bsqWalletService.getTransaction(Sha256Hash.wrap(takeOfferFeeTxId));
+    public Transaction resolveTakeOfferFeeTx(Trade trade) {
+        if (takeOfferFeeTx == null) {
+            if (BisqEnvironment.isBaseCurrencySupportingBsq() && !trade.isCurrencyForTakerFeeBtc())
+                takeOfferFeeTx = bsqWalletService.getTransaction(Sha256Hash.wrap(takeOfferFeeTxId));
+            else
+                takeOfferFeeTx = btcWalletService.getTransaction(Sha256Hash.wrap(takeOfferFeeTxId));
+        }
         return takeOfferFeeTx;
     }
 

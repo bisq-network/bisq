@@ -48,18 +48,20 @@ public class MakerSetupDepositTxListener extends TradeTask {
             runInterceptHook();
             if (trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED) {
                 BtcWalletService walletService = processModel.getBtcWalletService();
-                Address address = walletService.getOrCreateAddressEntry(trade.getId(),
-                        AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+                final String id = trade.getId();
+                Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
 
                 if (walletService.getBalanceForAddress(address).isZero()) {
                     trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
+                    swapReservedForTradeEntry();
                 } else {
                     listener = new BalanceListener(address) {
                         @Override
                         public void onBalanceChanged(Coin balance, Transaction tx) {
-                            // dont store trade.getState().getPhase() as variable as we need it volatile!
-                            if (balance.isZero() && trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED)
+                            if (balance.isZero() && trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED) {
                                 trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
+                                swapReservedForTradeEntry();
+                            }
                         }
                     };
                     walletService.addBalanceListener(listener);
@@ -68,6 +70,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
                         log.error("MakerSetupDepositTxListener tradeStateSubscription tradeState=" + newValue);
                         if (newValue.getPhase() != Trade.Phase.TAKER_FEE_PUBLISHED) {
                             walletService.removeBalanceListener(listener);
+                            swapReservedForTradeEntry();
                             // hack to remove tradeStateSubscription at callback
                             UserThread.execute(this::unSubscribe);
                         }
@@ -81,6 +84,10 @@ public class MakerSetupDepositTxListener extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    private void swapReservedForTradeEntry() {
+        processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
     private void unSubscribe() {

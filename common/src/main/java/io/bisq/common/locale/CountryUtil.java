@@ -77,6 +77,10 @@ public class CountryUtil {
         return new Country(getLocale().getCountry(), getLocale().getDisplayCountry(), region);
     }
 
+    public static Optional<Country> findCountryByCode(String countryCode) {
+        return getAllCountries().stream().filter(e -> e.code.equals(countryCode)).findAny();
+    }
+
     public static String getNameByCode(String countryCode) {
         return new Locale(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
     }

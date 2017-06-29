@@ -20,6 +20,7 @@ package io.bisq.core.offer;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.proto.ProtoUtil;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
@@ -73,6 +74,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final String id;
     private final long date;
     private final NodeAddress ownerNodeAddress;
+    @JsonExclude
     private final PubKeyRing pubKeyRing;
     private final Direction direction;
     // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
@@ -114,6 +116,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
+    private final boolean supportsDirectContact;
 
     // reserved for future use cases
     // Close offer when certain price is reached
@@ -171,6 +174,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         long sellerSecurityDeposit,
                         long maxTradeLimit,
                         long maxTradePeriod,
+                        boolean supportsDirectContact,
                         boolean useAutoClose,
                         boolean useReOpenAfterAutoClose,
                         long lowerClosePrice,
@@ -209,6 +213,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.sellerSecurityDeposit = sellerSecurityDeposit;
         this.maxTradeLimit = maxTradeLimit;
         this.maxTradePeriod = maxTradePeriod;
+        this.supportsDirectContact = supportsDirectContact;
         this.useAutoClose = useAutoClose;
         this.useReOpenAfterAutoClose = useReOpenAfterAutoClose;
         this.lowerClosePrice = lowerClosePrice;
@@ -255,6 +260,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setMaxTradeLimit(maxTradeLimit)
                 .setMaxTradePeriod(maxTradePeriod)
+                .setSupportsDirectContact(supportsDirectContact)
                 .setUseAutoClose(useAutoClose)
                 .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
                 .setLowerClosePrice(lowerClosePrice)
@@ -318,6 +324,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getSellerSecurityDeposit(),
                 proto.getMaxTradeLimit(),
                 proto.getMaxTradePeriod(),
+                proto.getSupportsDirectContact(),
                 proto.getUseAutoClose(),
                 proto.getUseReOpenAfterAutoClose(),
                 proto.getLowerClosePrice(),

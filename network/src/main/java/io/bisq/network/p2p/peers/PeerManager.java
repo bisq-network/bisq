@@ -58,7 +58,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private final NetworkNode networkNode;
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<PeerList> dbStorage;
+    private final Storage<PeerList> storage;
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
     private final Clock.Listener listener;
@@ -85,7 +85,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
-        dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        storage = new Storage<>(storageDir, persistenceProtoResolver);
 
 
         // we check if app was idle for more then 5 sec.
@@ -125,7 +125,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PeerList persistedPeerList = dbStorage.initAndGetPersistedWithFileName("PeerList");
+        PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList");
         if (persistedPeerList != null)
             this.persistedPeers.addAll(persistedPeerList.getList());
     }
@@ -389,8 +389,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
-            if (dbStorage != null)
-                dbStorage.queueUpForSave(new PeerList(new ArrayList<>(persistedPeers)), 2000);
+            if (storage != null)
+                storage.queueUpForSave(new PeerList(new ArrayList<>(persistedPeers)), 2000);
 
             printReportedPeers();
         } else {
@@ -455,8 +455,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
 
-            if (dbStorage != null)
-                dbStorage.queueUpForSave(new PeerList(new ArrayList<>(persistedPeers)), 2000);
+            if (storage != null)
+                storage.queueUpForSave(new PeerList(new ArrayList<>(persistedPeers)), 2000);
 
             return true;
         } else {

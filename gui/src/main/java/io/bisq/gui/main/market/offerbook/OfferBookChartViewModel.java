@@ -246,9 +246,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b)
-                        return a < b ? 1 : -1;
-                    return 0;
+                    if (a != b) {
+                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
+                            return a > b ? 1 : -1;
+                        else
+                            return a < b ? 1 : -1;
+                    } else {
+                        return 0;
+                    }
                 })
                 .collect(Collectors.toList());
 
@@ -262,9 +267,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
-                    if (a != b)
-                        return a > b ? 1 : -1;
-                    return 0;
+                    if (a != b) {
+                        if (CurrencyUtil.isCryptoCurrency(o1.getCurrencyCode()))
+                            return a < b ? 1 : -1;
+                        else
+                            return a > b ? 1 : -1;
+                    } else {
+                        return 0;
+                    }
                 })
                 .collect(Collectors.toList());
 

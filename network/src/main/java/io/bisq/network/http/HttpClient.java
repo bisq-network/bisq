@@ -54,7 +54,6 @@ public class HttpClient {
     }
 
     public void setBaseUrl(String baseUrl) {
-        log.info("baseUrl for HttpClient: " + baseUrl);
         this.baseUrl = baseUrl;
     }
 

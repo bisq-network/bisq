@@ -31,6 +31,8 @@ public class BtcValidator extends NumberValidator {
 
     protected final BSFormatter formatter;
 
+    @Nullable
+    protected Coin minValue;
 
     @Nullable
     protected Coin maxValue;
@@ -38,6 +40,10 @@ public class BtcValidator extends NumberValidator {
     @Inject
     public BtcValidator(BSFormatter formatter) {
         this.formatter = formatter;
+    }
+
+    public void setMinValue(@NotNull Coin minValue) {
+        this.minValue = minValue;
     }
 
     public void setMaxValue(@NotNull Coin maxValue) {
@@ -57,6 +63,7 @@ public class BtcValidator extends NumberValidator {
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input))
+                    .and(validateIfNotUnderMinValue(input))
                     .and(validateIfAboveDust(input));
         }
 
@@ -75,7 +82,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
-            return new ValidationResult(false, Res.get("validation.btc.toSmall"));
+            return new ValidationResult(false, Res.get("validation.btc.fraction"));
         else
             return new ValidationResult(true);
     }
@@ -85,6 +92,18 @@ public class BtcValidator extends NumberValidator {
             final Coin coin = Coin.parseCoin(input);
             if (maxValue != null && coin.compareTo(maxValue) > 0)
                 return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValue)));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    protected ValidationResult validateIfNotUnderMinValue(String input) {
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (minValue != null && coin.compareTo(minValue) < 0)
+                return new ValidationResult(false, Res.get("validation.btc.toSmall", formatter.formatCoinWithCode(minValue)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

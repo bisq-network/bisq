@@ -74,10 +74,14 @@ public class BtcAverageProvider {
                 //noinspection unchecked
                 LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
                 String currencyCode = e.getKey().substring(3);
-                marketPriceMap.put(currencyCode,
-                        new PriceData(currencyCode,
-                                (double) data.get("last"),
-                                ts));
+                // We ignore venezuelan currency as the official exchange rate is wishful thinking only....
+                // We should use that api with a custom provider: http://api.bitcoinvenezuela.com/1
+                if (!("VEF".equals(currencyCode))) {
+                    marketPriceMap.put(currencyCode,
+                            new PriceData(currencyCode,
+                                    (double) data.get("last"),
+                                    ts));
+                }
             }
         });
         return marketPriceMap;

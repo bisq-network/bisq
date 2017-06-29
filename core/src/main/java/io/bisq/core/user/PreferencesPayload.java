@@ -62,11 +62,12 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String bitcoinNodes = "";
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
-    private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
+    private long buyerSecurityDepositAsLong = Restrictions.getDefaultBuyerSecurityDeposit().value;
     private boolean useAnimations;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBtc = true;
+    private boolean supportsDirectContact = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +114,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setDirectoryChooserPath(directoryChooserPath)
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
                 .setUseAnimations(useAnimations)
-                .setPayFeeInBtc(payFeeInBtc);
+                .setPayFeeInBtc(payFeeInBtc)
+                .setSupportsDirectContact(supportsDirectContact);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
@@ -171,6 +173,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsLong(),
                 proto.getUseAnimations(),
                 paymentAccount,
-                proto.getPayFeeInBtc());
+                proto.getPayFeeInBtc(),
+                proto.getSupportsDirectContact());
     }
 }

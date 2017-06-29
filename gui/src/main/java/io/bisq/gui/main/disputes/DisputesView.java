@@ -30,8 +30,6 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.portfolio.PortfolioView;
-import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
@@ -133,8 +131,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             //noinspection unchecked
             new Popup<>().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
-                    .actionButtonTextWithGoTo("navigation.portfolio.pending")
-                    .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))
                     .dontShowAgainId(key)
                     .show();
     }

@@ -65,7 +65,6 @@ public class ArbitratorManager {
     private static final List<String> publicKeys = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
             new ArrayList<>(Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY)) :
             new ArrayList<>(Arrays.asList(
-                    "03697a499d24f497b3c46bf716318231e46c4e6a685a4e122d8e2a2b229fa1f4b8",
                     "0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
                     "031c502a60f9dbdb5ae5e438a79819e4e1f417211dd537ac12c9bc23246534c4bd",
                     "02c1e5a242387b6d5319ce27246cea6edaaf51c3550591b528d2578a4753c56c2c",

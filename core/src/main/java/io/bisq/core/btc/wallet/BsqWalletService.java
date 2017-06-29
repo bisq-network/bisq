@@ -139,9 +139,8 @@ public class BsqWalletService extends WalletService {
 
     @Override
     String getWalletAsString(boolean includePrivKeys) {
-        return "BSQ wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
-                "All pubkeys as hex:\n" +
+        return wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
 

@@ -26,6 +26,7 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -386,8 +387,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     model.getMakerFee(),
                     model.getTxFee()
             );
-            //TODO remove
-            log.error(message);
             new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)
@@ -431,9 +430,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void onPaymentAccountsComboBoxSelected() {
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
-        maybeShowClearXchangeWarning(paymentAccount);
-
         if (paymentAccount != null) {
+            maybeShowClearXchangeWarning(paymentAccount);
+            
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
@@ -452,7 +451,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 if (singleTradeCurrency != null)
                     currencyTextField.setText(singleTradeCurrency.getNameAndCode());
                 model.onPaymentAccountSelected(paymentAccount);
-                model.onCurrencySelected(paymentAccount.getSingleTradeCurrency());
+                model.onCurrencySelected(model.dataModel.getTradeCurrency());
             }
         } else {
             currencyComboBox.setVisible(false);
@@ -835,7 +834,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
-        imageVBox.setSpacing(6);
+        imageVBox.setSpacing(12);
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
@@ -903,8 +902,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         makerFeeTextField = makerFeeValueCurrencyBoxTuple.second;
         makerFeeTextField.setPrefWidth(170);
         makerFeeCurrencyLabel = makerFeeValueCurrencyBoxTuple.third;
-        makerFeeCurrencyLabel.setMinWidth(38);
-        makerFeeCurrencyLabel.setMaxWidth(38);
 
         ToggleGroup feeToggleGroup = new ToggleGroup();
         payFeeInBsqButton = new ToggleButton("BSQ");
@@ -942,7 +939,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         makerFeeRowHBox = new HBox();
         makerFeeRowHBox.setSpacing(5);
         makerFeeRowHBox.setAlignment(Pos.CENTER_LEFT);
-        makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+        else
+            makerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);
 
         GridPane.setRowIndex(makerFeeRowHBox, gridRow);
         GridPane.setColumnIndex(makerFeeRowHBox, 1);

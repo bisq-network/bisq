@@ -659,9 +659,9 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
+        log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
+        log.info("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
         Transaction preparedPayoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
@@ -1183,6 +1183,8 @@ public class TradeWalletService {
             // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
             // So it will not change the wallet balance.
             checkNotNull(wallet, "wallet must not be null");
+            // TODO we got here exceptions with missing funds
+            log.info("print tx before wallet.completeTx: " + sendRequest.tx.toString());
             wallet.completeTx(sendRequest);
         } catch (Throwable t) {
             throw new WalletException(t);

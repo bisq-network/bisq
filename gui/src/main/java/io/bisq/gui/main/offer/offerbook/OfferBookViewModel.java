@@ -256,7 +256,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     ObservableList<PaymentMethod> getPaymentMethods() {
-        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
+        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getAllValues());
         list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;
     }
@@ -476,7 +476,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     int getNumPastTrades(Offer offer) {
-        return closedTradableManager.getClosedTrades().stream()
+        return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&

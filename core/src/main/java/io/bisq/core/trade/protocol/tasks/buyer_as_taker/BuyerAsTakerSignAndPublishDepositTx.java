@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
@@ -40,6 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
+
     @SuppressWarnings({"WeakerAccess", "unused"})
     public BuyerAsTakerSignAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -75,6 +78,15 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
+
+            Timer timeoutTimer = UserThread.runAfter(() -> {
+                log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+                
+                complete();
+            }, 5);
+
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     false,
                     contractHash,
@@ -87,17 +99,27 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.trace("takerSignAndPublishTx succeeded " + transaction);
-
-                            trade.setDepositTx(transaction);
-                            trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-
-                            complete();
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                log.trace("takerSignAndPublishTx succeeded " + transaction);
+                                trade.setDepositTx(transaction);
+                                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+                           
+                                complete();
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            failed(t);
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                failed(t);
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
                     });
             trade.setDepositTx(depositTx);

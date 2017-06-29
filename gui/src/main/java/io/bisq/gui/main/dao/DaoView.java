@@ -57,20 +57,24 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        if (DevEnv.DAO_PHASE2_ACTIVATED) {
-            compensationTab = new Tab(Res.get("dao.tab.compensation"));
-            votingTab = new Tab(Res.get("dao.tab.voting"));
-            compensationTab.setClosable(false);
-            votingTab.setClosable(false);
-            root.getTabs().addAll(compensationTab, votingTab);
+        compensationTab = new Tab(Res.get("dao.tab.compensation"));
+        votingTab = new Tab(Res.get("dao.tab.voting"));
+        compensationTab.setClosable(false);
+        votingTab.setClosable(false);
+        root.getTabs().addAll(compensationTab, votingTab);
+
+        if (!DevEnv.DAO_PHASE2_ACTIVATED) {
+            votingTab.setDisable(true);
+            compensationTab.setDisable(true);
         }
+
         bsqWalletTab.setText(Res.get("dao.tab.bsqWallet"));
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
-                if (compensationTab == null && viewPath.get(2).equals(CompensationView.class))
+                if (compensationTab == null && viewPath.get(2).equals(BsqWalletView.class))
                     //noinspection unchecked
-                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
+                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
                 else
                     loadView(viewPath.tip());
             }

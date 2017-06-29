@@ -3,6 +3,7 @@ package io.bisq.network.p2p;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
     private final String hostName;
     private final int port;
 
+    @JsonExclude
     private byte[] addressPrefixHash;
 
     public NodeAddress(String hostName, int port) {
@@ -70,5 +72,4 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
     public String toString() {
         return getFullAddress();
     }
-
 }

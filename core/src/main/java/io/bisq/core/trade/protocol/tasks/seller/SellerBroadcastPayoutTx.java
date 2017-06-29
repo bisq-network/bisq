@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.seller;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
@@ -50,20 +52,36 @@ public class SellerBroadcastPayoutTx extends TradeTask {
                 trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
                 complete();
             } else {
-                processModel.getTradeWalletService().broadcastTx(payoutTx, new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(Transaction transaction) {
-                        log.debug("BroadcastTx succeeded. Transaction:" + transaction);
-                        trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
-                        complete();
-                    }
+                Timer timeoutTimer = UserThread.runAfter(() -> {
+                    log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                    trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
+                    complete();
+                }, 5);
+                processModel.getTradeWalletService().broadcastTx(payoutTx,
+                        new FutureCallback<Transaction>() {
+                            @Override
+                            public void onSuccess(Transaction transaction) {
+                                if (!completed) {
+                                    timeoutTimer.stop();
+                                    log.debug("BroadcastTx succeeded. Transaction:" + transaction);
+                                    trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
+                                    complete();
+                                } else {
+                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                }
+                            }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        log.error("BroadcastTx failed. Error:" + t.getMessage());
-                        failed(t);
-                    }
-                });
+                            @Override
+                            public void onFailure(@NotNull Throwable t) {
+                                if (!completed) {
+                                    timeoutTimer.stop();
+                                    log.error("BroadcastTx failed. Error:" + t.getMessage());
+                                    failed(t);
+                                } else {
+                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                }
+                            }
+                        });
             }
         } catch (Throwable t) {
             failed(t);

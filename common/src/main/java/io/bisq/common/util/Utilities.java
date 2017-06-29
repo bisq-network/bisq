@@ -22,8 +22,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -143,12 +142,14 @@ public class Utilities {
     }
 
     public static void printSysInfo() {
-        log.info("os.name: " + System.getProperty("os.name"));
-        log.info("os.version: " + System.getProperty("os.version"));
-        log.info("os.arch: " + System.getProperty("os.arch"));
-        log.info("sun.arch.data.model: " + getJVMArchitecture());
-        log.info("JRE: " + System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")");
-        log.info("JVM: " + System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")");
+        log.info("System info: os.name={}; os.version={}; os.arch={}; sun.arch.data.model={}; JRE={}; JVM={}",
+                System.getProperty("os.name"),
+                System.getProperty("os.version"),
+                System.getProperty("os.arch"),
+                getJVMArchitecture(),
+                (System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")"),
+                (System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")")
+        );
     }
 
     public static String getJVMArchitecture() {
@@ -346,6 +347,19 @@ public class Utilities {
 
     public static byte[] decodeFromHex(String encoded) {
         return Utils.HEX.decode(encoded);
+    }
+
+    public static boolean isAltOrCtrlPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return isAltPressed(keyCode, keyEvent) || isCtrlPressed(keyCode, keyEvent);
+    }
+
+    public static boolean isCtrlPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
+                new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN).match(keyEvent);
+    }
+
+    public static boolean isAltPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {

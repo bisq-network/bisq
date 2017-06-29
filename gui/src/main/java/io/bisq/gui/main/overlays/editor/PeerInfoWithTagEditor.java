@@ -2,6 +2,7 @@ package io.bisq.gui.main.overlays.editor;
 
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
@@ -23,8 +24,6 @@ import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.transform.Rotate;
@@ -149,7 +148,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         inputTextField.setText(tag);
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
                 new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress())
                         .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                         .show();

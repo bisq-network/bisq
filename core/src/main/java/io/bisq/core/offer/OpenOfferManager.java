@@ -58,7 +58,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -76,7 +78,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final KeyRing keyRing;
     private final User user;
     private final P2PService p2PService;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
@@ -97,7 +99,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public OpenOfferManager(KeyRing keyRing,
                             User user,
                             P2PService p2PService,
-                            BtcWalletService walletService,
+                            BtcWalletService btcWalletService,
                             TradeWalletService tradeWalletService,
                             BsqWalletService bsqWalletService,
                             OfferBookService offerBookService,
@@ -109,7 +111,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
@@ -144,6 +146,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 }
             });
         }
+
+        cleanUpAddressEntries();
+    }
+
+    public void cleanUpAddressEntries() {
+        Set<String> openTradesIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
+        btcWalletService.getAddressEntriesForOpenOffer().stream()
+                .filter(e -> !openTradesIdSet.contains(e.getOfferId()))
+                .forEach(e -> {
+                    log.warn("We found an outdated addressEntry for openOffer {}", e.getOfferId());
+                    btcWalletService.resetAddressEntriesForOpenOffer(e.getOfferId());
+                });
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -276,7 +290,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                walletService,
+                btcWalletService,
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
@@ -323,8 +337,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);
@@ -373,77 +387,80 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, NodeAddress sender) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + sender);
-        if (!stopped) {
-            try {
-                Validator.nonEmptyStringOf(message.offerId);
-                checkNotNull(message.getPubKeyRing());
-            } catch (Throwable t) {
-                log.warn("Invalid message " + message.toString());
-                return;
-            }
+        if (p2PService.isBootstrapped()) {
+            if (!stopped) {
+                try {
+                    Validator.nonEmptyStringOf(message.offerId);
+                    checkNotNull(message.getPubKeyRing());
+                } catch (Throwable t) {
+                    log.warn("Invalid message " + message.toString());
+                    return;
+                }
 
-            Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
-            AvailabilityResult availabilityResult;
-            if (openOfferOptional.isPresent()) {
-                if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-                    final Offer offer = openOfferOptional.get().getOffer();
-                    if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
-                        availabilityResult = AvailabilityResult.AVAILABLE;
+                Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
+                AvailabilityResult availabilityResult;
+                if (openOfferOptional.isPresent()) {
+                    if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
+                        final Offer offer = openOfferOptional.get().getOffer();
+                        if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
+                            availabilityResult = AvailabilityResult.AVAILABLE;
 
-                        // TODO mediators not impl yet
-                        List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
-                        if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                            // losses and therefore an outdated market price.
-                            try {
-                                offer.checkTradePriceTolerance(message.getTakersTradePrice());
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Throwable e) {
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            // TODO mediators not impl yet
+                            List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
+                            if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
+                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                                // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                                // losses and therefore an outdated market price.
+                                try {
+                                    offer.checkTradePriceTolerance(message.getTakersTradePrice());
+                                } catch (TradePriceOutOfToleranceException e) {
+                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                                } catch (MarketPriceNotAvailableException e) {
+                                    log.warn(e.getMessage());
+                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                                } catch (Throwable e) {
+                                    log.warn("Trade price check failed. " + e.getMessage());
+                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                }
+                            } else {
+                                log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
+                                availabilityResult = AvailabilityResult.NO_ARBITRATORS;
                             }
                         } else {
-                            log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
-                            availabilityResult = AvailabilityResult.NO_ARBITRATORS;
+                            availabilityResult = AvailabilityResult.USER_IGNORED;
                         }
                     } else {
-                        availabilityResult = AvailabilityResult.USER_IGNORED;
+                        availabilityResult = AvailabilityResult.OFFER_TAKEN;
                     }
                 } else {
+                    log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
                     availabilityResult = AvailabilityResult.OFFER_TAKEN;
                 }
+                try {
+                    p2PService.sendEncryptedDirectMessage(sender,
+                            message.getPubKeyRing(),
+                            new OfferAvailabilityResponse(message.offerId, availabilityResult),
+                            new SendDirectMessageListener() {
+                                @Override
+                                public void onArrived() {
+                                    log.trace("OfferAvailabilityResponse successfully arrived at peer");
+                                }
+
+                                @Override
+                                public void onFault() {
+                                    log.debug("Sending OfferAvailabilityResponse failed.");
+                                }
+                            });
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    log.debug("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
+                }
             } else {
-                log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
-                availabilityResult = AvailabilityResult.OFFER_TAKEN;
-            }
-
-            try {
-                p2PService.sendEncryptedDirectMessage(sender,
-                        message.getPubKeyRing(),
-                        new OfferAvailabilityResponse(message.offerId, availabilityResult),
-                        new SendDirectMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.trace("OfferAvailabilityResponse successfully arrived at peer");
-                            }
-
-                            @Override
-                            public void onFault() {
-                                log.debug("Sending OfferAvailabilityResponse failed.");
-                            }
-                        });
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.debug("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
+                log.debug("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
             }
         } else {
-            log.debug("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
+            log.info("We got a handleOfferAvailabilityRequest but we have not bootstrapped yet.");
         }
     }
 

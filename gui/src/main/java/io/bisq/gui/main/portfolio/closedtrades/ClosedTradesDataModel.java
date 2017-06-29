@@ -45,12 +45,12 @@ class ClosedTradesDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         applyList();
-        closedTradableManager.getClosedTrades().addListener(tradesListChangeListener);
+        closedTradableManager.getClosedTradables().addListener(tradesListChangeListener);
     }
 
     @Override
     protected void deactivate() {
-        closedTradableManager.getClosedTrades().removeListener(tradesListChangeListener);
+        closedTradableManager.getClosedTradables().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<ClosedTradableListItem> getList() {
@@ -64,7 +64,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(closedTradableManager.getClosedTrades().stream().map(ClosedTradableListItem::new).collect(Collectors.toList()));
+        list.addAll(closedTradableManager.getClosedTradables().stream().map(ClosedTradableListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTradable().getDate().compareTo(o1.getTradable().getDate()));

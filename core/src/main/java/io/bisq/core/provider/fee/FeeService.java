@@ -25,8 +25,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.provider.ProvidersRepository;
-import io.bisq.network.http.HttpClient;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -43,16 +41,16 @@ public class FeeService {
 
     // https://litecoin.info/Transaction_fees
     //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
-    public static final long LTC_DEFAULT_TX_FEE = 100;
-    public static final long BTC_DEFAULT_TX_FEE = 150;
-    public static final long DOGE_DEFAULT_TX_FEE = 100;
+    public static final long LTC_DEFAULT_TX_FEE = 500; // min fee is 0.001 LTC 200 bytes with 500 -> 100000
+    public static final long BTC_DEFAULT_TX_FEE = 200;
+    public static final long DOGE_DEFAULT_TX_FEE = 500000; // min tx size is about 200 bytes -> 1 DOGE
 
     // Dust limit for LTC is 100 000 sat
     // https://litecoin.info/Transaction_fees
-    private static final long MIN_MAKER_FEE_IN_BASE_CUR = 100_000; // 0.03 USD at LTC price 30 USD
-    private static final long MIN_TAKER_FEE_IN_BASE_CUR = 100_000;
-    private static final long DEFAULT_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.10 USD at LTC price 30 USD
-    private static final long DEFAULT_TAKER_FEE_IN_BASE_CUR = 400_000; // 0.12 USD at LTC price 30 USD
+    private static long MIN_MAKER_FEE_IN_BASE_CUR;
+    private static long MIN_TAKER_FEE_IN_BASE_CUR;
+    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR;
+    private static long DEFAULT_TAKER_FEE_IN_BASE_CUR;
 
     private static final long MIN_MAKER_FEE_IN_MBSQ = 30; // 0.0003 bsq -> 0.003 USD -> 1% of MIN_MAKER_FEE_IN_BASE_CUR
     private static final long MIN_TAKER_FEE_IN_MBSQ = 30;
@@ -76,18 +74,30 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository) {
+    public FeeService(FeeProvider feeProvider) {
+        this.feeProvider = feeProvider;
         baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
 
         switch (baseCurrencyCode) {
             case "BTC":
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD for 1 BTC
+                MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at BTC price 2500 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at BTC price 2500 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
+                MIN_MAKER_FEE_IN_BASE_CUR = 1_200_000; // 0.5 USD at LTC price 40 USD for 50 LTC
+                MIN_TAKER_FEE_IN_BASE_CUR = 1_200_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 240_000; // 5 USD at LTC price 40 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 360_000; // 7.5 USD at LTC price 40 USD
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
+                MIN_MAKER_FEE_IN_BASE_CUR = 32_000; // 0.5 USD at DOGE price 0.003 USD 80_000_000_000L
+                MIN_TAKER_FEE_IN_BASE_CUR = 32_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 320_000; // 5 USD at DOGE price 0.003 USD  800_000_000_000L
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 480_000; // 7.5 USD at DOGE price 0.003 USD 1_200_000_000_000L
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             default:
@@ -114,7 +124,7 @@ public class FeeService {
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
                         txFeePerByte = map.get(baseCurrencyCode);
-                        log.info("Tx fee: txFeePerByte={} for currency {}", txFeePerByte, baseCurrencyCode);
+                        log.info("{} tx fee: txFeePerByte={}", baseCurrencyCode, txFeePerByte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });

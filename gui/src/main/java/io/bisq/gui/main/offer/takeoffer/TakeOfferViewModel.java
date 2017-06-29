@@ -45,6 +45,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -182,6 +183,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         errorMessage.set(offer.getErrorMessage());
 
         btcValidator.setMaxValue(offer.getAmount());
+        btcValidator.setMinValue(offer.getMinAmount());
     }
 
 
@@ -208,8 +210,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
-        if (offer != null)
-            btcValidator.setMaxValue(offer.getAmount());
     }
 
     public void onShowPayFundsScreen() {
@@ -332,7 +332,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateButtonDisableState();
     }
 
-    private void applyTradeErrorMessage(String errorMessage) {
+    private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg = "";
             switch (trade.getState().getPhase()) {

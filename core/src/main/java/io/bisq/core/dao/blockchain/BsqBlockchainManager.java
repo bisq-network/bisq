@@ -43,7 +43,7 @@ public class BsqBlockchainManager {
     }
 
     public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             bsqNode.addBsqChainStateListener(bsqChainStateListener);
     }
 
@@ -52,7 +52,7 @@ public class BsqBlockchainManager {
     }
 
     public void removeBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             bsqNode.removeBsqChainStateListener(bsqChainStateListener);
     }
 }

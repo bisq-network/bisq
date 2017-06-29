@@ -18,6 +18,7 @@
 package io.bisq.core.trade.protocol.tasks.maker;
 
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.DepositTxPublishedMessage;
@@ -59,6 +60,7 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 
             complete();
         } catch (Throwable t) {

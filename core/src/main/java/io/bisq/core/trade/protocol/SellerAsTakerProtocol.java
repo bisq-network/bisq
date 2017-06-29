@@ -23,11 +23,12 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
-import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
@@ -67,8 +68,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelop).getSenderNodeAddress();
             if (networkEnvelop instanceof PublishDepositTxRequest)
                 handle((PublishDepositTxRequest) networkEnvelop, peerNodeAddress);
-            else if (networkEnvelop instanceof FiatTransferStartedMessage)
-                handle((FiatTransferStartedMessage) networkEnvelop, peerNodeAddress);
+            else if (networkEnvelop instanceof CounterCurrencyTransferStartedMessage)
+                handle((CounterCurrencyTransferStartedMessage) networkEnvelop, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + networkEnvelop.toString());
         }
@@ -105,17 +106,19 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
-        log.debug("handle RequestPayDepositMessage");
-        stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("PayDepositRequest"),
+                () -> {
+                    stopTimeout();
+                    handleTaskRunnerSuccess("PublishDepositTxRequest");
+                },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
                 TakerProcessPublishDepositTxRequest.class,
+                CheckIfPeerIsBanned.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
@@ -130,17 +133,19 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMessage tradeMessage, NodeAddress sender) {
+    private void handle(CounterCurrencyTransferStartedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
+                () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(SellerProcessFiatTransferStartedMessage.class,
+        taskRunner.addTasks(
+                SellerProcessCounterCurrencyTransferStartedMessage.class,
                 TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class);
+                TakerVerifyMakerFeePayment.class
+        );
         taskRunner.run();
     }
 
@@ -165,6 +170,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
+                    CheckIfPeerIsBanned.class,
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,
@@ -188,8 +194,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
-        } else if (tradeMessage instanceof FiatTransferStartedMessage) {
-            handle((FiatTransferStartedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
+            handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

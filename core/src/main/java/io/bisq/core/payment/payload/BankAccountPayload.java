@@ -36,12 +36,17 @@ import java.util.Optional;
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
     protected String holderName;
+    @Nullable
     protected String bankName;
+    @Nullable
     protected String branchId;
+    @Nullable
     protected String accountNr;
+    @Nullable
     protected String accountType;
     @Nullable
     protected String holderTaxId;
+    @Nullable
     protected String bankId;
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
@@ -74,18 +79,22 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         this.bankId = bankId;
     }
 
-    public PB.BankAccountPayload.Builder getBankAccountPayloadBuilder() {
+    @Override
+    public PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         PB.BankAccountPayload.Builder builder =
                 PB.BankAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setBankName(bankName)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setAccountType(accountType)
-                        .setBankId(bankId);
+                        .setHolderName(holderName);
         Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
-        return getCountryBasedPaymentAccountPayloadBuilder().setBankAccountPayload(builder)
-                .getBankAccountPayload().toBuilder();
+        Optional.ofNullable(bankName).ifPresent(builder::setBankName);
+        Optional.ofNullable(branchId).ifPresent(builder::setBranchId);
+        Optional.ofNullable(accountNr).ifPresent(builder::setAccountNr);
+        Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
+        Optional.ofNullable(bankId).ifPresent(builder::setBankId);
+        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = super.getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setBankAccountPayload(builder);
+        return super.getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder);
     }
 
 

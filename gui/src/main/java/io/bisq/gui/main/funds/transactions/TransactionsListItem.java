@@ -18,6 +18,7 @@
 package io.bisq.gui.main.funds.transactions;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -87,7 +88,7 @@ class TransactionsListItem {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (!btcWalletService.isTransactionOutputMine(output)) {
                     received = false;
-                    if (bsqWalletService.isTransactionOutputMine(output)) {
+                    if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
                         txFeeForBsqPayment = true;
                     } else {
                         direction = Res.get("funds.tx.direction.sentTo");
@@ -114,7 +115,7 @@ class TransactionsListItem {
             boolean outgoing = false;
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (!btcWalletService.isTransactionOutputMine(output)) {
-                    if (bsqWalletService.isTransactionOutputMine(output)) {
+                    if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
                         outgoing = false;
                         txFeeForBsqPayment = true;
                     } else {

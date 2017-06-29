@@ -58,7 +58,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<LockedListItem, LockedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
 
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
@@ -77,9 +77,9 @@ public class LockedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private LockedView(BtcWalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
+    private LockedView(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
                        BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
@@ -133,7 +133,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedList);
         updateList();
 
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         tradeManager.getTradableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(LockedListItem::cleanup);
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
     }
 
 
@@ -152,11 +152,19 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(LockedListItem::cleanup);
-        observableList.setAll(tradeManager.getLockedTradeStream()
-                .map(trade -> new LockedListItem(trade,
-                        walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG),
-                        walletService,
-                        formatter))
+        observableList.setAll(tradeManager.getLockedTradesStream()
+                .map(trade -> {
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                    if (addressEntryOptional.isPresent()) {
+                        return new LockedListItem(trade,
+                                addressEntryOptional.get(),
+                                btcWalletService,
+                                formatter);
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(e -> e != null)
                 .collect(Collectors.toList()));
     }
 

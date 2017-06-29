@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -67,9 +66,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
-            AddressEntry takerMultiSigAddressEntry = addressEntryOptional.get();
+            AddressEntry takerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(takerMultiSigPubKey,
                             takerMultiSigAddressEntry.getPubKey()),
@@ -110,11 +107,11 @@ public class TakerVerifyAndSignContract extends TradeTask {
                 Sig.verify(maker.getPubKeyRing().getSignaturePubKey(),
                         contractAsJson,
                         maker.getContractSignature());
+
+                complete();
             } catch (Throwable t) {
                 failed("Signature verification failed. " + t.getMessage());
             }
-
-            complete();
         } catch (Throwable t) {
             failed(t);
         }

@@ -48,12 +48,25 @@ public class Version {
     }
 
     static boolean isNewVersion(String newVersion, String currentVersion) {
-        return getMajorVersion(newVersion) > getMajorVersion(currentVersion) ||
-                getMinorVersion(newVersion) > getMinorVersion(currentVersion) ||
-                getPatchVersion(newVersion) > getPatchVersion(currentVersion);
+        if (newVersion.equals(currentVersion))
+            return false;
+        else if (getMajorVersion(newVersion) > getMajorVersion(currentVersion))
+            return true;
+        else if (getMajorVersion(newVersion) < getMajorVersion(currentVersion))
+            return false;
+        else if (getMinorVersion(newVersion) > getMinorVersion(currentVersion))
+            return true;
+        else if (getMinorVersion(newVersion) < getMinorVersion(currentVersion))
+            return false;
+        else if (getPatchVersion(newVersion) > getPatchVersion(currentVersion))
+            return true;
+        else if (getPatchVersion(newVersion) < getPatchVersion(currentVersion))
+            return false;
+        else
+            return false;
     }
 
-    static int getSubVersion(String version, int index) {
+    private static int getSubVersion(String version, int index) {
         final String[] split = version.split("\\.");
         checkArgument(split.length == 3, "Version number must be in semantic version format (contain 2 '.'). version=" + version);
         return Integer.parseInt(split[index]);
@@ -61,17 +74,17 @@ public class Version {
 
     // The version no. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
-    // VERSION = 0.5.0.0 -> P2P_NETWORK_VERSION = 1
+    // VERSION = 0.5.0 -> P2P_NETWORK_VERSION = 1
     @SuppressWarnings("ConstantConditions")
     public static final int P2P_NETWORK_VERSION = DevEnv.STRESS_TEST_MODE ? 100 : 1;
 
     // The version no. of the serialized data stored to disc. A change will break the serialization of old objects.
-    // VERSION = 0.5.0.0 -> LOCAL_DB_VERSION = 1
+    // VERSION = 0.5.0 -> LOCAL_DB_VERSION = 1
     public static final int LOCAL_DB_VERSION = 1;
 
     // The version no. of the current protocol. The offer holds that version.
     // A taker will check the version of the offers to see if his version is compatible.
-    // VERSION = 0.5.0.0 -> TRADE_PROTOCOL_VERSION = 1
+    // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
     public static final int TRADE_PROTOCOL_VERSION = 1;
     private static int p2pMessageVersion;
 

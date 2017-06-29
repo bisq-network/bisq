@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.generated.protobuffer.PB;
@@ -36,15 +37,21 @@ import java.util.Optional;
 @Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
     private String holderName;
+    @Nullable
     private String holderEmail;
+    @Nullable
     private String bankName;
+    @Nullable
     private String branchId;
+    @Nullable
     private String accountNr;
+    @Nullable
     private String accountType;
     @Nullable
     private String requirements;
     @Nullable
     private String holderTaxId;
+    @Nullable
     private String bankId;
 
     public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
@@ -61,14 +68,14 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       long maxTradePeriod,
                                       String countryCode,
                                       String holderName,
-                                      String holderEmail,
-                                      String bankName,
-                                      String branchId,
-                                      String accountNr,
-                                      String accountType,
+                                      @SuppressWarnings("NullableProblems") String holderEmail,
+                                      @SuppressWarnings("NullableProblems") String bankName,
+                                      @SuppressWarnings("NullableProblems") String branchId,
+                                      @SuppressWarnings("NullableProblems") String accountNr,
+                                      @SuppressWarnings("NullableProblems") String accountType,
                                       @SuppressWarnings("NullableProblems") String requirements,
                                       @SuppressWarnings("NullableProblems") String holderTaxId,
-                                      String bankId) {
+                                      @SuppressWarnings("NullableProblems") String bankId) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;
         this.holderEmail = holderEmail;
@@ -82,21 +89,25 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     }
 
     @Override
-    public PB.CashDepositAccountPayload toProtoMessage() {
+    public Message toProtoMessage() {
         PB.CashDepositAccountPayload.Builder builder =
                 PB.CashDepositAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setHolderEmail(holderEmail)
-                        .setBankName(bankName)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setAccountType(accountType)
-                        .setBankId(bankId);
-        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
+                        .setHolderName(holderName);
+        Optional.ofNullable(holderEmail).ifPresent(builder::setHolderEmail);
+        Optional.ofNullable(bankName).ifPresent(builder::setBankName);
+        Optional.ofNullable(branchId).ifPresent(builder::setBranchId);
+        Optional.ofNullable(accountNr).ifPresent(builder::setAccountNr);
+        Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
         Optional.ofNullable(requirements).ifPresent(builder::setRequirements);
-        return getCountryBasedPaymentAccountPayloadBuilder().setCashDepositAccountPayload(builder)
-                .build()
-                .getCashDepositAccountPayload();
+        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
+        Optional.ofNullable(bankId).ifPresent(builder::setBankId);
+
+        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setCashDepositAccountPayload(builder);
+        return getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload)
+                .build();
     }
 
     public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
@@ -107,14 +118,14 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 cashDepositAccountPayload.getHolderName(),
-                cashDepositAccountPayload.getHolderEmail(),
-                cashDepositAccountPayload.getBankName(),
-                cashDepositAccountPayload.getBranchId(),
-                cashDepositAccountPayload.getAccountNr(),
-                cashDepositAccountPayload.getAccountType(),
+                cashDepositAccountPayload.getHolderEmail().isEmpty() ? null : cashDepositAccountPayload.getHolderEmail(),
+                cashDepositAccountPayload.getBankName().isEmpty() ? null : cashDepositAccountPayload.getBankName(),
+                cashDepositAccountPayload.getBranchId().isEmpty() ? null : cashDepositAccountPayload.getBranchId(),
+                cashDepositAccountPayload.getAccountNr().isEmpty() ? null : cashDepositAccountPayload.getAccountNr(),
+                cashDepositAccountPayload.getAccountType().isEmpty() ? null : cashDepositAccountPayload.getAccountType(),
                 cashDepositAccountPayload.getRequirements().isEmpty() ? null : cashDepositAccountPayload.getRequirements(),
                 cashDepositAccountPayload.getHolderTaxId().isEmpty() ? null : cashDepositAccountPayload.getHolderTaxId(),
-                cashDepositAccountPayload.getBankId());
+                cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId());
     }
 
 

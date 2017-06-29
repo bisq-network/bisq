@@ -46,14 +46,6 @@ public final class CryptoCurrency extends TradeCurrency {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CryptoCurrency(String currencyCode,
-                           String name,
-                           String symbol,
-                           boolean isAsset) {
-        super(currencyCode, name, symbol);
-        this.isAsset = isAsset;
-    }
-
     @Override
     public Message toProtoMessage() {
         return getTradeCurrencyBuilder()
@@ -65,7 +57,6 @@ public final class CryptoCurrency extends TradeCurrency {
     public static CryptoCurrency fromProto(PB.TradeCurrency proto) {
         return new CryptoCurrency(proto.getCode(),
                 proto.getName(),
-                proto.getSymbol(),
                 proto.getCryptoCurrency().getIsAsset());
     }
 

@@ -17,12 +17,15 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.seller;
 
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
+import io.bisq.core.trade.Trade;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -48,6 +51,7 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
+    private Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,27 +66,55 @@ public class SellerStep3View extends TradeStepView {
     public void activate() {
         super.activate();
 
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
+            if (timeoutTimer != null)
+                timeoutTimer.stop();
+
             if (trade.isFiatSent() && !trade.isFiatReceived()) {
                 showPopup();
             } else if (trade.isFiatReceived()) {
-                busyAnimation.stop();
-                switch (state) {
-                    case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                    case SELLER_PUBLISHED_PAYOUT_TX:
-                    case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                        busyAnimation.play();
-                        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-                        break;
-                    case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
-                        statusLabel.setText(Res.get("shared.messageArrived"));
-                        break;
-                    case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
-                        statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                        break;
-                    case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                        // We get a popup and the trade closed, so we dont need to show anything here
-                        break;
+                if (!trade.hasFailed()) {
+                    switch (state) {
+                        case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                        case SELLER_PUBLISHED_PAYOUT_TX:
+                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.play();
+                            confirmButton.setDisable(true);
+                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+
+                            timeoutTimer = UserThread.runAfter(() -> {
+                                busyAnimation.stop();
+                                confirmButton.setDisable(false);
+                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                            }, 10);
+                            break;
+                        case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.stop();
+                            statusLabel.setText(Res.get("shared.messageArrived"));
+                            break;
+                        case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                            busyAnimation.stop();
+                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                            break;
+                        case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                            // We get a popup and the trade closed, so we dont need to show anything here
+                            busyAnimation.stop();
+                            confirmButton.setDisable(false);
+                            statusLabel.setText("");
+                            break;
+                        default:
+                            log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
+                            busyAnimation.stop();
+                            confirmButton.setDisable(false);
+                            statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                            break;
+                    }
+                } else {
+                    confirmButton.setDisable(true);
+                    statusLabel.setText("");
                 }
             }
         });
@@ -96,7 +128,11 @@ public class SellerStep3View extends TradeStepView {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
         }
+
         busyAnimation.stop();
+
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
     }
 
 
@@ -127,7 +163,7 @@ public class SellerStep3View extends TradeStepView {
             if (myPaymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
                 myPaymentDetails = ((CryptoCurrencyAccountPayload) myPaymentAccountPayload).getAddress();
                 peersPaymentDetails = ((CryptoCurrencyAccountPayload) peersPaymentAccountPayload).getAddress();
-                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress");
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", nameByCode);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
                 isBlockChain = true;
             } else {
@@ -273,7 +309,7 @@ public class SellerStep3View extends TradeStepView {
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
                 //noinspection UnusedAssignment
-                message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
+                message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
         }
         //noinspection ConstantConditions
@@ -287,6 +323,10 @@ public class SellerStep3View extends TradeStepView {
 
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
+        busyAnimation.play();
+        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+        if (trade.isPayoutPublished())
+            trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.

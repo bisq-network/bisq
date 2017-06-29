@@ -33,6 +33,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -89,7 +90,7 @@ public class GUIUtil {
         //noinspection UnusedAssignment
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
                     .onClose(runnable::run)
@@ -104,10 +105,12 @@ public class GUIUtil {
                                       Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-            paymentAccountsStorage.initAndGetPersisted(new PersistableList<>(accounts), fileName);
-            paymentAccountsStorage.queueUpForSave();
-            new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+            if (directory != null && !directory.isEmpty()) {
+                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName);
+                paymentAccountsStorage.queueUpForSave();
+                new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+            }
         } else {
             new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
@@ -124,8 +127,8 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                PersistableList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     persisted.getList().stream().forEach(paymentAccount -> {
@@ -156,22 +159,24 @@ public class GUIUtil {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
-        try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
-            CSVWriter<T> headerWriter = new CSVWriterBuilder<T>(outputStreamWriter)
-                    .strategy(CSVStrategy.UK_DEFAULT)
-                    .entryConverter(headerConverter)
-                    .build();
-            headerWriter.write(emptyItem);
+        if (file != null) {
+            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
+                CSVWriter<T> headerWriter = new CSVWriterBuilder<T>(outputStreamWriter)
+                        .strategy(CSVStrategy.UK_DEFAULT)
+                        .entryConverter(headerConverter)
+                        .build();
+                headerWriter.write(emptyItem);
 
-            CSVWriter<T> contentWriter = new CSVWriterBuilder<T>(outputStreamWriter)
-                    .strategy(CSVStrategy.UK_DEFAULT)
-                    .entryConverter(contentConverter)
-                    .build();
-            contentWriter.writeAll(list);
-        } catch (RuntimeException | IOException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                CSVWriter<T> contentWriter = new CSVWriterBuilder<T>(outputStreamWriter)
+                        .strategy(CSVStrategy.UK_DEFAULT)
+                        .entryConverter(contentConverter)
+                        .build();
+                contentWriter.writeAll(list);
+            } catch (RuntimeException | IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+            }
         }
     }
 

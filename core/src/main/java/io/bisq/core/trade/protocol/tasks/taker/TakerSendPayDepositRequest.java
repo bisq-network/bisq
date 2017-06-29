@@ -58,11 +58,14 @@ public class TakerSendPayDepositRequest extends TradeTask {
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
-            AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+
             checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
                     "addressEntry must not be set here.");
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
+            processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
+
+            AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
             PayDepositRequest message = new PayDepositRequest(
@@ -88,7 +91,6 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     trade.getMediatorNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion());
-            processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),

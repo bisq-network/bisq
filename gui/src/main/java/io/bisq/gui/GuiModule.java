@@ -63,7 +63,8 @@ public class GuiModule extends AppModule {
 
         bind(IBANValidator.class).in(Singleton.class);
         bind(BtcValidator.class).in(Singleton.class);
-        bind(FiatValidator.class).in(Singleton.class);
+        bind(FiatVolumeValidator.class).in(Singleton.class);
+        bind(FiatPriceValidator.class).in(Singleton.class);
         bind(AltcoinValidator.class).in(Singleton.class);
         bind(InputValidator.class).in(Singleton.class);
         bind(PasswordValidator.class).in(Singleton.class);

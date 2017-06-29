@@ -31,6 +31,8 @@ import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import joptsimple.OptionSet;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.NetworkParameters;
 import org.springframework.core.env.*;
@@ -75,12 +77,16 @@ public class BisqEnvironment extends StandardEnvironment {
 
     @SuppressWarnings("SameReturnValue")
     public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
-        return BaseCurrencyNetwork.LTC_MAINNET;
+        return BaseCurrencyNetwork.BTC_MAINNET;
+    }
+
+    public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
+        //noinspection ConstantConditions,PointlessBooleanExpression
+        return DevEnv.DAO_ACTIVATED && isBaseCurrencySupportingBsq();
     }
 
     public static boolean isBaseCurrencySupportingBsq() {
-        //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.DAO_ACTIVATED && getBaseCurrencyNetwork().getCurrencyCode().equals("LTC");
+        return getBaseCurrencyNetwork().getCurrencyCode().equals("BTC");
     }
 
     public static NetworkParameters getParameters() {
@@ -116,6 +122,9 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel, providers;
+    @Getter
+    @Setter
+    private boolean isBitcoinLocalhostNodeRunning;
 
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,

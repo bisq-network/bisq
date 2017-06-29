@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.Timer;
+import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
@@ -36,20 +38,36 @@ public class TakerPublishTakerFeeTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            processModel.getTradeWalletService().broadcastTx(processModel.getTakeOfferFeeTx(),
+
+            Timer timeoutTimer = UserThread.runAfter(() -> {
+                log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
+                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
+                complete();
+            }, 5);
+
+            processModel.getTradeWalletService().broadcastTx(processModel.resolveTakeOfferFeeTx(trade),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.debug("Trading fee published successfully. Transaction ID = " + transaction.getHashAsString());
-
-                            trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-                            complete();
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                log.debug("Trading fee published successfully. Transaction ID = " + transaction.getHashAsString());
+                                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
+                                complete();
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            appendToErrorMessage("Trading fee payment failed. Maybe your network connection was lost. Please try again.");
-                            failed(t);
+                            if (!completed) {
+                                timeoutTimer.stop();
+                                appendToErrorMessage("Trading fee payment failed. Maybe your network connection was lost. Please try again.");
+                                failed(t);
+                            } else {
+                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            }
                         }
                     });
         } catch (Throwable t) {

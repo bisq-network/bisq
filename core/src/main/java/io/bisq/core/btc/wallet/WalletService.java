@@ -393,6 +393,10 @@ public abstract class WalletService {
         return balance;
     }
 
+    public Coin getBalance(TransactionOutput output) {
+        return getBalanceForAddress(getAddressFromOutput(output));
+    }
+
     public int getNumTxOutputsForAddress(Address address) {
         List<TransactionOutput> transactionOutputs = new ArrayList<>();
         wallet.getTransactions(false).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
@@ -587,7 +591,7 @@ public abstract class WalletService {
         return isOutputScriptConvertibleToAddress(output) ?
                 output.getScriptPubKey().getToAddress(BisqEnvironment.getParameters()).toString() : null;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener

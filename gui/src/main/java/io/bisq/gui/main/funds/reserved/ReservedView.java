@@ -58,7 +58,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
 
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
@@ -77,9 +77,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ReservedView(BtcWalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
+    private ReservedView(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
                          BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
@@ -133,7 +133,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedList);
         updateList();
 
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         tradeManager.getTradableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
     }
 
 
@@ -153,10 +153,18 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private void updateList() {
         observableList.forEach(ReservedListItem::cleanup);
         observableList.setAll(openOfferManager.getObservableList().stream()
-                .map(openOffer -> new ReservedListItem(openOffer,
-                        walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE),
-                        walletService,
-                        formatter))
+                .map(openOffer -> {
+                    Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    if (addressEntryOptional.isPresent()) {
+                        return new ReservedListItem(openOffer,
+                                addressEntryOptional.get(),
+                                btcWalletService,
+                                formatter);
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(e -> e != null)
                 .collect(Collectors.toList()));
     }
 

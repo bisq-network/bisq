@@ -22,10 +22,10 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class FiatValidatorTest {
+public class FiatVolumeValidatorTest {
     @Test
     public void testValidate() {
-        FiatValidator validator = new FiatValidator();
+        FiatVolumeValidator validator = new FiatVolumeValidator();
 
         assertTrue(validator.validate("1").isValid);
         assertTrue(validator.validate("1,1").isValid);

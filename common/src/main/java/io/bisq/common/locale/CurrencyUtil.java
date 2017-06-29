@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class CurrencyUtil {
     private static String baseCurrencyCode = "BTC";
 
-    public static void setBaseCurrencyNetwork(String baseCurrencyCode) {
+    public static void setBaseCurrencyCode(String baseCurrencyCode) {
         CurrencyUtil.baseCurrencyCode = baseCurrencyCode;
     }
 

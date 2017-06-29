@@ -19,7 +19,7 @@ package io.bisq.core.trade.protocol.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerProcessFiatTransferStartedMessage extends TradeTask {
+public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerProcessCounterCurrencyTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -38,7 +38,7 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            FiatTransferStartedMessage message = (FiatTransferStartedMessage) processModel.getTradeMessage();
+            CounterCurrencyTransferStartedMessage message = (CounterCurrencyTransferStartedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
@@ -47,7 +47,7 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-
+            trade.setCounterCurrencyTxId(message.getCounterCurrencyTxId());
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);

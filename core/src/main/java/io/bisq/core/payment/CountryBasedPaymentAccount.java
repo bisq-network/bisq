@@ -18,12 +18,14 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.locale.Country;
+import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 public abstract class CountryBasedPaymentAccount extends PaymentAccount {
@@ -47,6 +49,12 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
 
     @Nullable
     public Country getCountry() {
+        if (country == null) {
+            final String countryCode = ((CountryBasedPaymentAccountPayload) paymentAccountPayload).getCountryCode();
+            Optional<Country> countryOptional = CountryUtil.findCountryByCode(countryCode);
+            if (countryOptional.isPresent())
+                this.country = countryOptional.get();
+        }
         return country;
     }
 

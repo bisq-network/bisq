@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
@@ -310,7 +309,10 @@ public abstract class Trade implements Tradable, Model {
     private String takerPaymentAccountId;
     @Nullable
     private String errorMessage;
-
+    @Getter
+    @Setter
+    @Nullable
+    private String counterCurrencyTxId;
 
     // Transient
     // Immutable
@@ -426,6 +428,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
+        Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
 
         return builder.build();
     }
@@ -451,6 +454,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
+        trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         return trade;
     }
 
@@ -578,25 +582,23 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Trade state={}, id={}", state, getShortId());
-        if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
-            boolean changed = this.state != state;
-            this.state = state;
-            stateProperty.set(state);
-            statePhaseProperty.set(state.getPhase());
-
-            if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
-                tradeProtocol.completed();
-
-            if (changed)
-                persist();
-        } else {
-            final String message = "we got a state change to a previous phase. that is likely a bug.\n" +
-                    "old state is: " + this.state + ". New state is: " + state;
-            log.error(message);
-            if (DevEnv.DEV_MODE)
-                throw new RuntimeException(message);
+        log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
+        if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
+            final String message = "We got a state change to a previous phase.\n" +
+                    "Old state is: " + this.state + ". New state is: " + state;
+            log.warn(message);
         }
+
+        boolean changed = this.state != state;
+        this.state = state;
+        stateProperty.set(state);
+        statePhaseProperty.set(state.getPhase());
+
+        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
+            tradeProtocol.completed();
+
+        if (changed)
+            persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {
@@ -717,6 +719,10 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
+    public boolean isFundsLockedIn() {
+        return isDepositPublished() && !isPayoutPublished() && disputeState != DisputeState.DISPUTE_CLOSED;
+    }
+
     public boolean isDepositConfirmed() {
         return getState().getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
@@ -799,6 +805,7 @@ public abstract class Trade implements Tradable, Model {
         return payoutTx;
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessageProperty.get();
     }

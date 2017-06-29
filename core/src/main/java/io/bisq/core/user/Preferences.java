@@ -57,10 +57,10 @@ public final class Preferences implements PersistedDataHost {
     ));
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
             new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
+            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
             new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
     ));
 
@@ -81,7 +81,6 @@ public final class Preferences implements PersistedDataHost {
     @Delegate(excludes = ExcludesDelegateMethods.class)
     private PreferencesPayload prefPayload = new PreferencesPayload();
     private boolean initialReadDone = false;
-    private BisqEnvironment bisqEnvironment;
 
     @Getter
     private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
@@ -95,6 +94,7 @@ public final class Preferences implements PersistedDataHost {
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
     private final Storage<PreferencesPayload> storage;
+    private final BisqEnvironment bisqEnvironment;
     private final String btcNodesFromOptions;
     private final String useTorFlagFromOptions;
     private boolean autoSelectArbitrators;
@@ -152,20 +152,25 @@ public final class Preferences implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("Preferences");
-
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload");
+        TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"); // move to payload?
+            preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
+            setPreferredTradeCurrency(preferredTradeCurrency);
+            setFiatCurrencies(prefPayload.getFiatCurrencies());
+            setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
             prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            prefPayload.setPreferredTradeCurrency(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code));
-
+            preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
+                    "preferredTradeCurrency must not be null");
+            prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
@@ -188,6 +193,11 @@ public final class Preferences implements PersistedDataHost {
             }
 
             prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
+
+            prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
+            prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
 
@@ -195,13 +205,7 @@ public final class Preferences implements PersistedDataHost {
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
 
-        GlobalSettings.setDefaultTradeCurrency(prefPayload.getPreferredTradeCurrency());
-
-        // TODO why do we do this ???? Should this be in the null case instead?
-        prefPayload.setOfferBookChartScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setTradeChartsScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setBuyScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
-        prefPayload.setSellScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
 
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
@@ -413,8 +417,8 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
-                Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
+        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
+                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
                         buyerSecurityDepositAsLong)));
         persist();
     }
@@ -522,7 +526,9 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty()
+                || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+                || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

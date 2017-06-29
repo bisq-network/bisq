@@ -33,6 +33,8 @@ import java.util.Map;
 
 @Slf4j
 public class PriceProvider extends HttpClientProvider {
+
+    // Do not use Guice here as we might create multiple instances
     public PriceProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl, false);
     }

@@ -93,7 +93,7 @@ public class VotingManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
             if (persisted != null)
                 voteItemsLists.addAll(persisted.getList());

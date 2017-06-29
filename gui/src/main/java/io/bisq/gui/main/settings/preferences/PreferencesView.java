@@ -78,14 +78,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
-    final ObservableList<BlockChainExplorer> blockExplorers;
-    final ObservableList<String> languageCodes;
-    final ObservableList<Country> countries;
-    public final ObservableList<FiatCurrency> fiatCurrencies;
-    public final ObservableList<FiatCurrency> allFiatCurrencies;
-    public final ObservableList<CryptoCurrency> cryptoCurrencies;
-    public final ObservableList<CryptoCurrency> allCryptoCurrencies;
-    public final ObservableList<TradeCurrency> tradeCurrencies;
+    private ObservableList<BlockChainExplorer> blockExplorers;
+    private ObservableList<String> languageCodes;
+    private ObservableList<Country> countries;
+    private ObservableList<FiatCurrency> fiatCurrencies;
+    private ObservableList<FiatCurrency> allFiatCurrencies;
+    private ObservableList<CryptoCurrency> cryptoCurrencies;
+    private ObservableList<CryptoCurrency> allCryptoCurrencies;
+    private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
     private ChangeListener<String> deviationListener, ignoreTradersListListener;
     private ChangeListener<Boolean> deviationFocusedListener;
@@ -102,7 +102,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         this.preferences = preferences;
         this.feeService = feeService;
         this.formatter = formatter;
+    }
 
+    @Override
+    public void initialize() {
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
@@ -115,10 +118,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         allFiatCurrencies.removeAll(fiatCurrencies);
         allCryptoCurrencies.removeAll(cryptoCurrencies);
-    }
-
-    @Override
-    public void initialize() {
+        
         initializeGeneralOptions();
         initializeDisplayCurrencies();
         initializeDisplayOptions();

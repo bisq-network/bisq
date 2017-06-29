@@ -297,7 +297,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
                     return formatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return formatter.formatPriceWithMinPrecision(Price.valueOf(model.getCurrencyCode(), (long) object));
+                    return formatter.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
                 }
             }
 
@@ -618,7 +618,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(paymentMethodColumn);
 
         // direction
-        TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>(Res.get("shared.tradeType"));
+        TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>(Res.get("shared.offerType"));
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,

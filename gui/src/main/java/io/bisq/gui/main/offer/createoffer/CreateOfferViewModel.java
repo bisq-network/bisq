@@ -27,6 +27,7 @@ import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -69,7 +70,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
-    private final FiatValidator fiatValidator;
+    private final FiatVolumeValidator fiatVolumeValidator;
+    private final FiatPriceValidator fiatPriceValidator;
     private final AltcoinValidator altcoinValidator;
 
     private String amountDescription;
@@ -151,7 +153,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel,
-                                FiatValidator fiatValidator,
+                                FiatVolumeValidator fiatVolumeValidator,
+                                FiatPriceValidator fiatPriceValidator,
                                 AltcoinValidator altcoinValidator,
                                 BtcValidator btcValidator,
                                 BsqValidator bsqValidator,
@@ -164,7 +167,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 BsqFormatter bsqFormatter) {
         super(dataModel);
 
-        this.fiatValidator = fiatValidator;
+        this.fiatVolumeValidator = fiatVolumeValidator;
+        this.fiatPriceValidator = fiatPriceValidator;
         this.altcoinValidator = altcoinValidator;
         this.btcValidator = btcValidator;
         this.bsqValidator = bsqValidator;
@@ -190,9 +194,22 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void activate() {
         if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("0.001");
+                switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+                    case "BTC":
+                        amount.set("1");
+                        price.set("2500");
+                        break;
+                    case "LTC":
+                        amount.set("50");
+                        price.set("40");
+                        break;
+                    case "DOGE":
+                        amount.set("800000");
+                        price.set("0.003");
+                        break;
+                }
+
                 minAmount.set(amount.get());
-                price.set("0.001");
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
                 updateButtonDisableState();
@@ -292,6 +309,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 marketPriceMargin.set(btcFormatter.formatToPercent(percentage));
+                                applyMakerFee();
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
                                 new Popup<>().warning(Res.get("validation.NaN")).show();
@@ -318,7 +336,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                             if (marketPrice != null && marketPrice.isValid()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
-                                dataModel.setMarketPriceMargin(percentage);
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
                                 final OfferPayload.Direction compareDirection = isCryptoCurrency ?
@@ -335,9 +352,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 price.set(btcFormatter.formatRoundedDoubleWithPrecision(targetPrice, precision));
                                 ignorePriceStringListener = false;
                                 setPriceToModel();
+                                dataModel.setMarketPriceMargin(percentage);
                                 dataModel.calculateVolume();
                                 dataModel.calculateTotalToPay();
                                 updateButtonDisableState();
+                                applyMakerFee();
                             } else {
                                 new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
@@ -405,7 +424,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
             if (newValue != null)
-                volume.set(btcFormatter.formatVolumeWithMinPrecision(newValue));
+                volume.set(btcFormatter.formatVolume(newValue));
             else
                 volume.set("");
 
@@ -499,8 +518,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
-        if (dataModel.paymentAccount != null)
-            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
+        if (dataModel.paymentAccount != null) {
+            final String currencyCode = dataModel.getTradeCurrencyCode().get();
+            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
+        }
+
+        btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
         final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
         directionLabel = isBuy ? Res.get("shared.buyBitcoin") : Res.get("shared.sellBitcoin");
@@ -564,10 +587,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        btcValidator.setMaxValue(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
         dataModel.onPaymentAccountSelected(paymentAccount);
         if (amount.get() != null)
             amountValidationResult.set(isBtcInputValid(amount.get()));
+
+        final String currencyCode = dataModel.getTradeCurrencyCode().get();
+        btcValidator.setMaxValue(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
@@ -666,6 +691,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 ignorePriceStringListener = false;
                 dataModel.calculateVolume();
                 dataModel.calculateAmount();
+                applyMakerFee();
             }
         }
     }
@@ -684,7 +710,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 setVolumeToModel();
                 ignoreVolumeStringListener = true;
                 if (dataModel.getVolume().get() != null)
-                    volume.set(btcFormatter.formatVolumeWithMinPrecision(dataModel.getVolume().get()));
+                    volume.set(btcFormatter.formatVolume(dataModel.getVolume().get()));
                 ignoreVolumeStringListener = false;
 
                 dataModel.calculateAmount();
@@ -709,13 +735,16 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             InputValidator.ValidationResult result = securityDepositValidator.validate(buyerSecurityDeposit.get());
             buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
-                Coin defaultSecurityDeposit = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT;
+                Coin defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDeposit();
                 String key = "buyerSecurityDepositLowerAsDefault";
                 if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
+                    final String postfix = dataModel.isBuyOffer() ?
+                            Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
+                            Res.get("createOffer.tooLowSecDeposit.makerIsSeller");
                     new Popup<>()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
-                                    btcFormatter.formatCoinWithCode(defaultSecurityDeposit)))
+                                    btcFormatter.formatCoinWithCode(defaultSecurityDeposit)) + "\n\n" + postfix)
                             .width(800)
                             .actionButtonText(Res.get("createOffer.resetToDefault"))
                             .onAction(() -> {
@@ -917,15 +946,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
-        return getPriceValidator().validate(input);
+        return getFiatPriceValidator().validate(input);
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
         return getVolumeValidator().validate(input);
     }
 
-    private MonetaryValidator getPriceValidator() {
-        return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatValidator;
+    private MonetaryValidator getFiatPriceValidator() {
+        return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatPriceValidator;
     }
 
     private MonetaryValidator getVolumeValidator() {
@@ -933,7 +962,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (CurrencyUtil.isCryptoCurrency(code)) {
             return code.equals("BSQ") ? bsqValidator : altcoinValidator;
         } else {
-            return fiatValidator;
+            return fiatVolumeValidator;
         }
     }
 

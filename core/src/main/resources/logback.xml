@@ -10,22 +10,22 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bisq" level="TRACE"/>
-    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
-
-    <logger name="io.bisq.btc.AddressBasedCoinSelector" level="OFF"/>
-
-    <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
-    <logger name="io.bisq.common.locale.Res" level="ERROR"/>
-    <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
-    <logger name="io.bisq.common.storage.FileManager" level="WARN"/>
-
-    <logger name="org.bitcoinj" level="WARN"/>
-
-    <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
-    <logger name="org.bitcoinj.core.Peer" level="WARN"/>
-
-    <logger name="com.neemre.btcdcli4j" level="WARN"/>
+    <!-- <logger name="io.bisq" level="TRACE"/>
+     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
+ 
+     <logger name="io.bisq.btc.AddressBasedCoinSelector" level="OFF"/>
+ 
+     <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
+     <logger name="io.bisq.common.locale.Res" level="ERROR"/>
+     <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
+     <logger name="io.bisq.common.storage.FileManager" level="WARN"/>
+ 
+     <logger name="org.bitcoinj" level="WARN"/>
+ 
+     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
+     <logger name="org.bitcoinj.core.Peer" level="WARN"/>
+ 
+     <logger name="com.neemre.btcdcli4j" level="WARN"/>-->
 
     <!-- 
    <logger name="com.vinumeris.updatefx" level="OFF"/>

@@ -19,7 +19,6 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
 import io.bisq.common.Clock;
-import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
@@ -296,7 +295,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public int getNumPastTrades(Trade trade) {
-        return closedTradableManager.getClosedTrades().stream()
+        return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     if (e instanceof Trade) {
                         Trade t = (Trade) e;
@@ -380,27 +379,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED: // UI action
             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG sent
                 // We don't switch the UI before we got the feedback of the msg delivery
-
-                // Though at startup if we closed before shutdown so fast that we did not get one of the 
-                // following 3 states we need to set BuyerState.STEP3
-                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED)
-                    buyerState.set(BuyerState.STEP3);
+                buyerState.set(BuyerState.STEP2);
                 break;
             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
+                buyerState.set(BuyerState.STEP3);
+                break;
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
-                // If we switch quickly we want to get to our state again without delay
-                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED) {
-                    buyerState.set(BuyerState.STEP3);
-                } else {
-                    // We delay the UI switch to give a chance to see the delivery result
-                    UserThread.runAfter(() -> {
-                        // We might get a higher state set quickly (startup - stored state, then new state) 
-                        // and then we don't want to switch back
-                        if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
-                            buyerState.set(BuyerState.STEP3);
-                    }, 1);
-                }
+                // if failed we need to repeat sending so back to step 2
+                buyerState.set(BuyerState.STEP2);
                 break;
 
             // seller step 3
@@ -412,31 +399,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:   // UI action
             case SELLER_PUBLISHED_PAYOUT_TX: // payout tx broad casted
             case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG sent
-                // We don't switch the UI before we got the feedback of the msg delivery
-
-                // Though at startup if we closed before shutdown so fast that we did not get one of the 
-                // following 3 states we need to set SellerState.STEP4
-                if (sellerState.get() == null || sellerState.get() == UNDEFINED)
-                    sellerState.set(SellerState.STEP4);
+                sellerState.set(SellerState.STEP3);
                 break;
             case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
+                sellerState.set(SellerState.STEP4);
+                break;
             case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
-                // If we switch quickly we want to get to our state again without delay
-                if (sellerState.get() == null || sellerState.get() == UNDEFINED) {
-                    sellerState.set(SellerState.STEP4);
-                } else {
-                    // We delay the UI switch to give a chance to see the delivery result
-                    UserThread.runAfter(() -> {
-                        // We might get a higher state set quickly (startup - stored state, then new state) 
-                        // and then we don't want to switch back
-                        if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
-                            sellerState.set(SellerState.STEP4);
-                    }, 1);
-                    break;
-                }
+                // if failed we need to repeat sending so back to step 3
+                sellerState.set(SellerState.STEP3);
+                break;
 
-                // buyer step 4
+            // buyer step 4
             case BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG:
                 // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG:
             case BUYER_SAW_PAYOUT_TX_IN_NETWORK:

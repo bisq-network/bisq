@@ -66,7 +66,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         amountColumn.setText(Res.get("shared.BTCMinMax"));
         volumeColumn.setText(Res.get("shared.amountMinMax"));
         marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.tradeType"));
+        directionColumn.setText(Res.get("shared.offerType"));
         dateColumn.setText(Res.get("shared.dateTime"));
         offerIdColumn.setText(Res.get("shared.offerId"));
         removeItemColumn.setText("");

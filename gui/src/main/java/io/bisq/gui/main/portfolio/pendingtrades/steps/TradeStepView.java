@@ -89,6 +89,21 @@ public abstract class TradeStepView extends AnchorPane {
             if (newValue != null)
                 showSupportFields();
         };
+
+        clockListener = new Clock.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+                updateTimeLeft();
+            }
+
+            @Override
+            public void onMissedSecondTick(long missed) {
+            }
+        };
     }
 
     public void activate() {
@@ -115,20 +130,6 @@ public abstract class TradeStepView extends AnchorPane {
                 updateTradePeriodState(newValue);
         });
 
-        clockListener = new Clock.Listener() {
-            @Override
-            public void onSecondTick() {
-            }
-
-            @Override
-            public void onMinuteTick() {
-                updateTimeLeft();
-            }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
-        };
         model.clock.addListener(clockListener);
     }
 

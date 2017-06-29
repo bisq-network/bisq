@@ -21,7 +21,9 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.crypto.ScryptUtil;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -55,23 +57,27 @@ public class WalletsManager {
 
     public void decryptWallets(KeyParameter aesKey) {
         btcWalletService.decryptWallet(aesKey);
-        bsqWalletService.decryptWallet(aesKey);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            bsqWalletService.decryptWallet(aesKey);
         tradeWalletService.setAesKey(null);
     }
 
     public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter aesKey) {
-        bsqWalletService.encryptWallet(keyCrypterScrypt, aesKey);
         btcWalletService.encryptWallet(keyCrypterScrypt, aesKey);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            bsqWalletService.encryptWallet(keyCrypterScrypt, aesKey);
 
         // we save the key for the trade wallet as we don't require passwords here
         tradeWalletService.setAesKey(aesKey);
     }
 
     public String getWalletsAsString(boolean includePrivKeys) {
-        return Res.getBaseCurrencyCode() + " Wallet:\n" +
-                btcWalletService.getWalletAsString(includePrivKeys) +
-                "\n\nBSQ Wallet:\n" +
-                bsqWalletService.getWalletAsString(includePrivKeys);
+        final String baseCurrencyWalletDetails = Res.getBaseCurrencyCode() + " Wallet:\n" +
+                btcWalletService.getWalletAsString(includePrivKeys);
+        final String bsqWalletDetails = BisqEnvironment.isBaseCurrencySupportingBsq() ?
+                "\n\nBSQ Wallet:\n" + bsqWalletService.getWalletAsString(includePrivKeys) :
+                "";
+        return baseCurrencyWalletDetails + bsqWalletDetails;
     }
 
     public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
@@ -87,11 +93,11 @@ public class WalletsManager {
     }
 
     public boolean areWalletsEncrypted() {
-        return btcWalletService.isEncrypted() && bsqWalletService.isEncrypted();
+        return btcWalletService.isEncrypted() && (!BisqEnvironment.isBaseCurrencySupportingBsq() || bsqWalletService.isEncrypted());
     }
 
     public boolean areWalletsAvailable() {
-        return btcWalletService.isWalletReady() && bsqWalletService.isWalletReady();
+        return btcWalletService.isWalletReady() && (!BisqEnvironment.isBaseCurrencySupportingBsq() || bsqWalletService.isWalletReady());
     }
 
     public KeyCrypterScrypt getKeyCrypterScrypt() {
@@ -110,14 +116,17 @@ public class WalletsManager {
     }
 
     public boolean hasPositiveBalance() {
+        final Coin bsqWalletServiceBalance = BisqEnvironment.isBaseCurrencySupportingBsq() ?
+                bsqWalletService.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
         return btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE)
-                .add(bsqWalletService.getBalance(Wallet.BalanceType.AVAILABLE))
+                .add(bsqWalletServiceBalance)
                 .isPositive();
     }
 
     public void setAesKey(KeyParameter aesKey) {
         btcWalletService.setAesKey(aesKey);
-        bsqWalletService.setAesKey(aesKey);
+        if (BisqEnvironment.isBaseCurrencySupportingBsq())
+            bsqWalletService.setAesKey(aesKey);
         tradeWalletService.setAesKey(aesKey);
     }
 

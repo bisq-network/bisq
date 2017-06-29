@@ -76,20 +76,21 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
+                            log.info("Message arrived at peer. tradeId={}", id);
                             trade.setState(Trade.State.MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
+                            log.info("Message stored in mailbox. tradeId={}", id);
                             trade.setState(Trade.State.MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
+                            log.error("sendEncryptedMailboxMessage failed. message=" + message);
                             trade.setState(Trade.State.MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST);
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed(errorMessage);

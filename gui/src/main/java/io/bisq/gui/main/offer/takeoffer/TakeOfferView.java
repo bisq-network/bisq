@@ -26,6 +26,7 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -409,8 +410,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     model.getTakerFee(),
                     model.getTxFee()
             );
-            //TODO remove
-            log.error(message);
             key = "takeOfferFundWalletInfo";
             new Popup<>().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)
@@ -461,6 +460,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void close() {
+        model.dataModel.onClose();
         if (closeHandler != null)
             closeHandler.close();
     }
@@ -722,9 +722,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         directionLabel = new Label();
         directionLabel.setAlignment(Pos.CENTER);
         directionLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
-        imageVBox.setSpacing(6);
+        imageVBox.setSpacing(12);
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
@@ -798,8 +799,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox makerFeeValueCurrencyBox = makerFeeValueCurrencyBoxTuple.first;
         takerFeeTextField = makerFeeValueCurrencyBoxTuple.second;
         takerFeeCurrencyLabel = makerFeeValueCurrencyBoxTuple.third;
-        takerFeeCurrencyLabel.setMinWidth(38);
-        takerFeeCurrencyLabel.setMaxWidth(38);
 
         ToggleGroup feeToggleGroup = new ToggleGroup();
         payFeeInBsqButton = new ToggleButton("BSQ");
@@ -835,7 +834,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takerFeeRowHBox = new HBox();
         takerFeeRowHBox.setSpacing(5);
         takerFeeRowHBox.setAlignment(Pos.CENTER_LEFT);
-        takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox, payFeeInBtcToggleButtonsHBox);
+        else
+            takerFeeRowHBox.getChildren().addAll(makerFeeValueCurrencyBox);
 
         GridPane.setRowIndex(takerFeeRowHBox, gridRow);
         GridPane.setColumnIndex(takerFeeRowHBox, 1);
@@ -1126,21 +1129,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         box.setSpacing(4);
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);
-    }
-
-    private Tuple3<HBox, InputTextField, Label> getAmountCurrencyBox(String promptText) {
-        InputTextField input = new InputTextField();
-        input.setPrefWidth(190);
-        input.setAlignment(Pos.CENTER_RIGHT);
-        input.setId("text-input-with-currency-text-field");
-        input.setPromptText(promptText);
-
-        Label currency = new Label();
-        currency.setId("currency-info-label");
-
-        HBox box = new HBox();
-        box.getChildren().addAll(input, currency);
-        return new Tuple3<>(box, input, currency);
     }
 
     private void setupTotalToPayInfoIconLabel() {

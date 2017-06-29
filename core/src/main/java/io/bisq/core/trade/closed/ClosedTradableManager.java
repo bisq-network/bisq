@@ -17,6 +17,7 @@
 
 package io.bisq.core.trade.closed;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
@@ -32,11 +33,14 @@ import javafx.collections.ObservableList;
 
 import javax.inject.Named;
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ClosedTradableManager implements PersistedDataHost {
     private final Storage<TradableList<Tradable>> tradableListStorage;
-    private TradableList<Tradable> closedTrades;
+    private TradableList<Tradable> closedTradables;
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
@@ -57,8 +61,8 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
-        closedTrades.forEach(tradable -> {
+        closedTradables = new TradableList<>(tradableListStorage, "ClosedTrades");
+        closedTradables.forEach(tradable -> {
             tradable.getOffer().setPriceFeedService(priceFeedService);
             if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
@@ -68,19 +72,30 @@ public class ClosedTradableManager implements PersistedDataHost {
     }
 
     public void add(Tradable tradable) {
-        closedTrades.add(tradable);
+        closedTradables.add(tradable);
     }
 
     public boolean wasMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<Tradable> getClosedTrades() {
-        return closedTrades.getList();
+    public ObservableList<Tradable> getClosedTradables() {
+        return closedTradables.getList();
+    }
+
+    public List<Trade> getClosedTrades() {
+        return ImmutableList.copyOf(getClosedTradables().stream()
+                .filter(e -> e instanceof Trade)
+                .map(e -> (Trade) e)
+                .collect(Collectors.toList()));
     }
 
     public Optional<Tradable> getTradableById(String id) {
-        return closedTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+        return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
+    public Stream<Trade> getLockedTradesStream() {
+        return getClosedTrades().stream()
+                .filter(Trade::isFundsLockedIn);
+    }
 }

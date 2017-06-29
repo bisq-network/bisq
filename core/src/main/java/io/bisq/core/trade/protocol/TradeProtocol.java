@@ -110,7 +110,7 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.error("Timeout reached. TradeID=" + trade.getId());
+            log.error("Timeout reached. TradeID={}, state={}", trade.getId(), trade.stateProperty().get());
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradableOnFault();
             cleanup();
@@ -136,20 +136,16 @@ public abstract class TradeProtocol {
 
     private void cleanupTradableOnFault() {
         final Trade.State state = trade.getState();
-        log.debug("cleanupTradable tradeState=" + state);
+        log.warn("cleanupTradableOnFault tradeState=" + state);
         TradeManager tradeManager = processModel.getTradeManager();
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);
-        } else {
-            // we have either as taker the fee paid or as maker the publishDepositTx request sent,
-            // so the maker has his offer closed and therefor its for both a failed trade
-            if (trade.isTakerFeePublished() && !trade.isWithdrawn())
+        } else if (!trade.isFundsLockedIn()) {
+            if (trade.isTakerFeePublished())
                 tradeManager.addTradeToFailedTrades(trade);
-
-            // if we have not the deposit already published we swap reserved funds to available funds
-            if (!trade.isDepositPublished())
-                processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+            else
+                tradeManager.addTradeToClosedTrades(trade);
         }
     }
 }

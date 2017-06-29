@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.locale.Res;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -94,7 +93,6 @@ public class BtcWalletService extends WalletService {
     @Override
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
-
         addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
@@ -107,11 +105,11 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return Res.getBaseCurrencyCode() + " Wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
-                "Bisq " + Res.getBaseCurrencyCode() + "address entry list:\n" +
+        return "Address entry list:\n" +
                 sb.toString() +
-                "All pubkeys as hex:\n" +
+                "\n\n" +
+                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
 
@@ -340,6 +338,20 @@ public class BtcWalletService extends WalletService {
                 .collect(Collectors.toList());
     }
 
+    public List<AddressEntry> getAddressEntriesForOpenOffer() {
+        return getAddressEntryListAsImmutableList().stream()
+                .filter(addressEntry -> AddressEntry.Context.OFFER_FUNDING == addressEntry.getContext() ||
+                        AddressEntry.Context.RESERVED_FOR_TRADE == addressEntry.getContext())
+                .collect(Collectors.toList());
+    }
+
+    public List<AddressEntry> getAddressEntriesForTrade() {
+        return getAddressEntryListAsImmutableList().stream()
+                .filter(addressEntry -> AddressEntry.Context.MULTI_SIG == addressEntry.getContext() ||
+                        AddressEntry.Context.TRADE_PAYOUT == addressEntry.getContext())
+                .collect(Collectors.toList());
+    }
+
     public List<AddressEntry> getAddressEntries(AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
                 .filter(addressEntry -> context == addressEntry.getContext())
@@ -352,7 +364,7 @@ public class BtcWalletService extends WalletService {
                 .collect(Collectors.toList());
     }
 
-    private List<AddressEntry> getAddressEntryListAsImmutableList() {
+    public List<AddressEntry> getAddressEntryListAsImmutableList() {
         return ImmutableList.copyOf(addressEntryList.getList());
     }
 
@@ -362,22 +374,31 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> context == e.getContext())
                 .findAny();
         addressEntryOptional.ifPresent(e -> {
+            log.info("swap addressEntry with address {} and offerId {} from context {} to available",
+                    e.getAddressString(), e.getOfferId(), context);
             addressEntryList.swapToAvailable(e);
             saveAddressEntryList();
         });
     }
 
-    public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
+    public void resetAddressEntriesForOpenOffer(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
+    }
+
+    public void resetAddressEntriesForPendingTrade(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.TRADE_PAYOUT);
+    }
+
+    public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
+        resetAddressEntriesForOpenOffer(offerId);
+        resetAddressEntriesForPendingTrade(offerId);
     }
 
     public void saveAddressEntryList() {
         addressEntryList.persist();
     }
-
 
     public DeterministicKey getMultiSigKeyPair(String tradeId, byte[] pubKey) {
         Optional<AddressEntry> multiSigAddressEntryOptional = getAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG);

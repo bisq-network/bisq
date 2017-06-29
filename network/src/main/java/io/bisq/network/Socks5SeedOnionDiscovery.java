@@ -27,6 +27,8 @@ import org.bitcoinj.params.TestNet3Params;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+import org.libdohj.params.AbstractLitecoinParams;
+
 
 /**
  * Socks5SeedOnionDiscovery provides a list of known Bitcoin .onion seeds.
@@ -44,11 +46,23 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
     public Socks5SeedOnionDiscovery(@SuppressWarnings("UnusedParameters") Socks5Proxy proxy, NetworkParameters params) {
         // We do this because NetworkParameters does not contain any .onion
         // seeds.  Perhaps someday...
-        if (params == MainNetParams.get()) {
-            this.seedAddrs = convertAddrsString(mainNetSeeds(), params.getPort());
-        } else if (params == TestNet3Params.get()) {
-            this.seedAddrs = convertAddrsString(testNet3Seeds(), params.getPort());
+        String[] seedAddresses = {};
+        switch (params.getId()) {
+            case NetworkParameters.ID_MAINNET:
+                seedAddresses = mainNetSeeds();
+                break;
+            case NetworkParameters.ID_TESTNET:
+                seedAddresses = testNet3Seeds();
+                break;
+            case AbstractLitecoinParams.ID_LITE_MAINNET:
+                seedAddresses = LitecoinMainNetSeeds();
+                break;
+            case AbstractLitecoinParams.ID_LITE_TESTNET:
+                seedAddresses = LitecoinTestNet4Seeds();
+                break;
         }
+
+        this.seedAddrs = convertAddrsString(seedAddresses, params.getPort());
     }
 
     /**
@@ -103,6 +117,22 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
                 "t6xj6wilh4ytvcs7.onion",
                 "i6y6ivorwakd7nw3.onion",
                 "ubqj4rsu3nqtxmtp.onion"
+        };
+    }
+
+    /**
+     * returns .onion nodes available on mainnet
+     */
+    private String[] LitecoinMainNetSeeds() {
+        return new String[]{
+        };
+    }
+
+    /**
+     * returns .onion nodes available on testnet3
+     */
+    private String[] LitecoinTestNet4Seeds() {
+        return new String[]{
         };
     }
 
