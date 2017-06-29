@@ -2,10 +2,12 @@ package io.bisq.core.trade.statistics;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -19,6 +21,8 @@ import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,11 +47,28 @@ public class TradeStatisticsManager implements PersistedDataHost {
         jsonFileManager = new JsonFileManager(storageDir);
 
         this.statisticsStorage.setNumMaxBackupFiles(1);
+
+        // TODO can be removed later. Just to clean up the old PersistedEntryMap and TradeStatisticsList which did 
+        // not support multi base currencies 
+        UserThread.runAfter(() -> {
+            String pathname = Paths.get(storageDir.getAbsolutePath(), "TradeStatisticsList").toString();
+            try {
+                FileUtil.deleteFile(new File(pathname));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            pathname = Paths.get(storageDir.getAbsolutePath(), "PersistedEntryMap").toString();
+            try {
+                FileUtil.deleteFile(new File(pathname));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }, 1);
     }
 
     @Override
     public void readPersisted() {
-        TradeStatisticsList persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatisticsList");
+        TradeStatisticsList persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
             persistedTradeStatisticsList = persisted.getList();
     }
