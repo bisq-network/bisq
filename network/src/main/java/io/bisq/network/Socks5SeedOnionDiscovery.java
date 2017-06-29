@@ -21,13 +21,10 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet3Params;
+import org.libdohj.params.AbstractLitecoinParams;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
-
-import org.libdohj.params.AbstractLitecoinParams;
 
 
 /**

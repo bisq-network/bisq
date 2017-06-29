@@ -116,7 +116,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
-    private final boolean supportsDirectContact;
 
     // reserved for future use cases
     // Close offer when certain price is reached
@@ -174,7 +173,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         long sellerSecurityDeposit,
                         long maxTradeLimit,
                         long maxTradePeriod,
-                        boolean supportsDirectContact,
                         boolean useAutoClose,
                         boolean useReOpenAfterAutoClose,
                         long lowerClosePrice,
@@ -213,7 +211,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.sellerSecurityDeposit = sellerSecurityDeposit;
         this.maxTradeLimit = maxTradeLimit;
         this.maxTradePeriod = maxTradePeriod;
-        this.supportsDirectContact = supportsDirectContact;
         this.useAutoClose = useAutoClose;
         this.useReOpenAfterAutoClose = useReOpenAfterAutoClose;
         this.lowerClosePrice = lowerClosePrice;
@@ -260,7 +257,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setMaxTradeLimit(maxTradeLimit)
                 .setMaxTradePeriod(maxTradePeriod)
-                .setSupportsDirectContact(supportsDirectContact)
                 .setUseAutoClose(useAutoClose)
                 .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
                 .setLowerClosePrice(lowerClosePrice)
@@ -324,7 +320,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getSellerSecurityDeposit(),
                 proto.getMaxTradeLimit(),
                 proto.getMaxTradePeriod(),
-                proto.getSupportsDirectContact(),
                 proto.getUseAutoClose(),
                 proto.getUseReOpenAfterAutoClose(),
                 proto.getLowerClosePrice(),
@@ -353,7 +348,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // In the offer we support base and counter currency
     // Fiat offers have base currency BTC and counterCurrency Fiat
     // Altcoins have base currency Altcoin and counterCurrency BTC
-    // The rest of the app does not support yet that concept of base currency and counter currencies
+    // The rest of the app does not support yet that concept of base currency and counter currencies 
     // so we map here for convenience
     public String getCurrencyCode() {
         return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();

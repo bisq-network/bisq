@@ -6,7 +6,7 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 
 /**
  * Messages which support a time to live
- * <p>
+ * <p/>
  * Implementations:
  *
  * @see StoragePayload

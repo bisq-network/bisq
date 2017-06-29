@@ -371,7 +371,8 @@ public class GUIUtil {
 
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        new Popup<>().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
+        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)

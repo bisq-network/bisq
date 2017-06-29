@@ -52,8 +52,8 @@ public final class Alert implements StoragePayload {
     @Nullable
     private PublicKey ownerPubKey;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;

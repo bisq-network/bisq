@@ -495,8 +495,8 @@ public abstract class Trade implements Tradable, Model {
 
         createTradeProtocol();
 
-        // if we have already received a msg we apply it.
-        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
+        // if we have already received a msg we apply it. 
+        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
         // or async calls there.
         // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
         HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
@@ -530,15 +530,15 @@ public abstract class Trade implements Tradable, Model {
         return depositTx;
     }
 
-    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
-    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
+    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we 
+    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
     // received the msb but before the init is called.
     public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
-            // If we have already initialized we apply.
-            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
+            // If we have already initialized we apply. 
+            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
             // or async calls there.
             if (tradeProtocol != null)
                 tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
@@ -569,7 +569,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Abstract
+    // Abstract 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     abstract protected void createTradeProtocol();
@@ -578,7 +578,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
+    // Setters 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {

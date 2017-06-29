@@ -157,7 +157,7 @@ public class RpcService {
                                         try {
                                             opReturnData = Utils.HEX.decode(chunks[1]);
                                         } catch (Throwable t) {
-                                            // We get sometimes exceptions, seems BitcoinJ
+                                            // We get sometimes exceptions, seems BitcoinJ 
                                             // cannot handle all existing OP_RETURN data, but we ignore them
                                             // anyway as our OP_RETURN data is valid in BitcoinJ
                                             log.warn(t.toString());

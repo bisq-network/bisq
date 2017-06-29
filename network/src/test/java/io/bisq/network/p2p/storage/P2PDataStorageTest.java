@@ -124,6 +124,7 @@ public class P2PDataStorageTest {
         //TODO CoreProtobufferResolver is not accessible here
         // We should refactor it so that the classes themselves know how to deserialize
         // so we don't get dependencies from core objects here
+         // -> use the base classes or interfaces instead (ProtoResolver, CoreProtoResolver)
        ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
         assertTrue(Arrays.equals(Hash.getHash(data.getStoragePayload()), Hash.getHash(protectedStorageEntry.getStoragePayload())));
@@ -134,6 +135,7 @@ public class P2PDataStorageTest {
     //TODO CoreProtobufferResolver is not accessible here
     // We should refactor it so that the classes themselves know how to deserialize
     // so we don't get dependencies from core objects here
+    // -> use the base classes or interfaces instead (ProtoResolver, CoreProtoResolver)
    /* @Test
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
         OfferPayload offer = getDummyOffer();

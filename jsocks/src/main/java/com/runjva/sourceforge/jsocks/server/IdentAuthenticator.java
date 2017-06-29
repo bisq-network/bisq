@@ -17,7 +17,7 @@ import java.util.Vector;
  * authentication based on the host from which the connection is made and the
  * name of the user on the remote machine, as reported by identd daemon on the
  * remote machine.
- * <p>
+ * <p/>
  * It can also be used to provide authentication based only on the contacting
  * host address.
  */

@@ -69,10 +69,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         WEEK,
         DAY,
         HOUR,
-        MINUTE_10,
-        // TODO Can be removed after version 4.9.7
-        // Not used anymore but leave it as it might be used in preferences and could cause an exception if not there.
-        MINUTE
+        MINUTE_10
     }
 
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -345,8 +342,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 return TimeUnit.MILLISECONDS.toHours(tradeDateAsTime);
             case MINUTE_10:
                 return TimeUnit.MILLISECONDS.toMinutes(tradeDateAsTime) / 10;
-            case MINUTE:
-                return TimeUnit.MILLISECONDS.toMinutes(tradeDateAsTime);
             default:
                 return tradeDateAsTime;
         }
@@ -366,8 +361,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 return TimeUnit.HOURS.toMillis(tick);
             case MINUTE_10:
                 return TimeUnit.MINUTES.toMillis(tick) * 10;
-            case MINUTE:
-                return TimeUnit.MINUTES.toMillis(tick);
             default:
                 return tick;
         }

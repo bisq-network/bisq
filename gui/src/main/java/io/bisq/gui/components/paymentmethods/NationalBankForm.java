@@ -22,12 +22,8 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.layout.GridPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NationalBankForm extends BankForm {
-    private static final Logger log = LoggerFactory.getLogger(NationalBankForm.class);
-
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }

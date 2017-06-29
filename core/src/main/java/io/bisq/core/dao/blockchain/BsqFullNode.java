@@ -109,7 +109,7 @@ public class BsqFullNode extends BsqNode {
                         () -> {
                             // we are done but it might be that new blocks have arrived in the meantime,
                             // so we try again with startBlockHeight set to current chainHeadHeight
-                            // We also set up the listener in the else main branch where we check
+                            // We also set up the listener in the else main branch where we check  
                             // if we at chainTip, so do nto include here another check as it would
                             // not trigger the listener registration.
                             parseBlocksWithChainHeadHeight(chainHeadHeight,

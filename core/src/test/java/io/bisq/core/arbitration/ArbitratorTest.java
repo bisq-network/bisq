@@ -47,7 +47,6 @@ public class ArbitratorTest {
                 null, null, null);
     }
 
-    // TODO move to common if used often
     public static byte[] getBytes(@SuppressWarnings("SameParameterValue") int count) {
         return RandomUtils.nextBytes(count);
     }

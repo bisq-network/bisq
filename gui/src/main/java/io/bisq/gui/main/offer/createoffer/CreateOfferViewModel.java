@@ -823,7 +823,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public String getMakerFee() {
-        //TODO use last Bisq market price to estimate BSQ val
+        //TODO use last bisq market price to estimate BSQ val
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
         if (dataModel.isCurrencyForMakerFeeBtc())

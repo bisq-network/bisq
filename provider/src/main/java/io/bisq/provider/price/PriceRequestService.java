@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 public class PriceRequestService {
     private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
 
-    private static final long INTERVAL_BTC_AV_LOCAL_MS = 60_000;      // 60 sec
-    private static final long INTERVAL_BTC_AV_GLOBAL_MS = 150_000;    // 2.5 min
+    private static final long INTERVAL_BTC_AV_LOCAL_MS = 60_000;      // 60 sec 
+    private static final long INTERVAL_BTC_AV_GLOBAL_MS = 150_000;    // 2.5 min 
     private static final long INTERVAL_POLONIEX_MS = 60_000;          // 1 min
     private static final long INTERVAL_COIN_MARKET_CAP_MS = 300_000;  // 5 min
     private static final long MARKET_PRICE_TTL_SEC = 1800;            // 30 min
@@ -143,7 +143,7 @@ public class PriceRequestService {
         log.info("requestCoinmarketcapPrices took {} ms.", (System.currentTimeMillis() - ts));
         removeOutdatedPrices(poloniexMap);
         removeOutdatedPrices(allPricesMap);
-        // we don't replace prices which we got form the Poloniex request, just in case the Coinmarketcap data are
+        // we don't replace prices which we got form the Poloniex request, just in case the Coinmarketcap data are 
         // received earlier at startup we allow them but Poloniex will overwrite them.
         map.entrySet().stream()
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
@@ -195,7 +195,7 @@ public class PriceRequestService {
 
         removeOutdatedPrices(btcAverageLocalMap);
         removeOutdatedPrices(allPricesMap);
-        // we don't replace prices which we got form the local request, just in case the global data are received
+        // we don't replace prices which we got form the local request, just in case the global data are received 
         // earlier at startup we allow them but the local request will overwrite them.
         map.entrySet().stream()
                 .filter(e -> btcAverageLocalMap == null || !btcAverageLocalMap.containsKey(e.getKey()))

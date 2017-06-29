@@ -11,10 +11,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Cloned from Fiat class and altered SMALLEST_UNIT_EXPONENT as Fiat is final.
- * <p>
+ * <p/>
  * Represents a monetary fiat value. It was decided to not fold this into {@link org.bitcoinj.core.Coin} because of type
  * safety. Volume values always come with an attached currency code.
- * <p>
+ * <p/>
  * This class is immutable.
  */
 public final class Altcoin implements Monetary, Comparable<Altcoin> {
@@ -60,8 +60,8 @@ public final class Altcoin implements Monetary, Comparable<Altcoin> {
 
     /**
      * Parses an amount expressed in the way humans are used to.
-     * <p>
-     * <p>
+     * <p/>
+     * <p/>
      * This takes string in a format understood by {@link BigDecimal#BigDecimal(String)}, for example "0", "1", "0.10",
      * "1.23E3", "1234.5E-5".
      *

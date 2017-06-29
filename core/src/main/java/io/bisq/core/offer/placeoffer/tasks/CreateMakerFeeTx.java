@@ -58,7 +58,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
             String id = offer.getId();
             BtcWalletService walletService = model.getWalletService();
-            
+
             NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUser().getAcceptedArbitratorAddresses(),
                     model.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
@@ -103,8 +103,8 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 Transaction signedTx = model.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(signedTx);
-                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                // if it gets committed 2 times
+                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
+                // if it gets committed 2 times 
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
@@ -114,7 +114,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                           
+
                             complete();
                             log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                         }

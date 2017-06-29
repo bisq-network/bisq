@@ -577,7 +577,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTakerFee() {
-        //TODO use last Bisq market price to estimate BSQ val
+        //TODO use last bisq market price to estimate BSQ val
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatter().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())

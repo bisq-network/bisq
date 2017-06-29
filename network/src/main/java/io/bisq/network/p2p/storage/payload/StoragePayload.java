@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Messages which support ownership protection (using signatures) and a time to live
- * <p>
+ * <p/>
  * Implementations:
  * io.bisq.alert.Alert
  * io.bisq.arbitration.Arbitrator

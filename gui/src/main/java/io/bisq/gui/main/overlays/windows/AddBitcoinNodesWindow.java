@@ -87,12 +87,12 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
                 "You can run it locally (127.0.0.1) or hosted on a VPS.\n" +
                 "You can edit that settings in \"Settings/Network info\".\n\n" +
                 "If you prefer to use the public " + Res.getBaseCurrencyName() + " network your Bitcoin transactions might get de-anonymized by chain analysis companies operating full nodes to spy on Bitcoin users.\n\n" +
-                "To learn more about that topic please read our FAQ on Bisq.io.");
+                "To learn more about that topic please read our FAQ on bisq.io.");
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
 
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open Bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc"));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);

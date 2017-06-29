@@ -31,7 +31,7 @@ import java.security.spec.X509EncodedKeySpec;
  * StorageSignatureKeyPair/STORAGE_SIGN_KEY_ALGO: That is used for signing the data to be stored to the P2P network (by flooding).
  * The algo is selected because it originated from the TomP2P version which used DSA.
  * Changing to EC keys might be considered.
- * <p>
+ * <p/>
  * MsgSignatureKeyPair/MSG_SIGN_KEY_ALGO/MSG_SIGN_ALGO: That is used when sending a message to a peer which is encrypted and signed.
  * Changing to EC keys might be considered.
  */

@@ -9,9 +9,9 @@ fi
 # Required-Stop:     $local_fs $remote_fs $named $network $time
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Bisq seed node
+# Short-Description: bisq seed node
 # Description:       This script manages the execution of
-#                    a Bisq seed node process using
+#                    a bisq seed node process using
 #                    its own Tor node to provide a hidden service.
 ### END INIT INFO
 

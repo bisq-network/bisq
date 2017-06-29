@@ -84,7 +84,9 @@ public class CreateTakerFeeTx extends TradeTask {
                 //TODO use handler for broadcastTx success
                 processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
                 trade.setTakerFeeTxId(createTakeOfferFeeTx.getHashAsString());
-                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                // TODO cehck
+                // Don't call that as it caused in some cased a InsufficientMoneyException
+                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                 complete();
             } else {
@@ -102,16 +104,19 @@ public class CreateTakerFeeTx extends TradeTask {
                 Transaction signedTx = processModel.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(signedTx);
-                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                // if it gets committed 2 times
+                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
+                // if it gets committed 2 times 
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
 
                 Timer timeoutTimer = UserThread.runAfter(() -> {
                     log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                     trade.setTakerFeeTxId(signedTx.getHashAsString());
                     processModel.setTakeOfferFeeTx(signedTx);
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                    
+
+                    // TODO cehck
+                    // Don't call that as it caused in some cased a InsufficientMoneyException
+                    // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
                     complete();
                 }, 5);
 
@@ -125,7 +130,10 @@ public class CreateTakerFeeTx extends TradeTask {
                                 checkArgument(transaction.equals(signedTx));
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
-                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
+                                // TODO cehck
+                                // Don't call that as it caused in some cased a InsufficientMoneyException
+                                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                                 complete();
                             }

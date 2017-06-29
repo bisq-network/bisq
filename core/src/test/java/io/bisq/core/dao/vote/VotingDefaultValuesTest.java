@@ -35,4 +35,4 @@ public class VotingDefaultValuesTest {
         assertEquals(100, votingDefaultValues.getAdjustedValue(100, 127));
         assertEquals(1000, votingDefaultValues.getAdjustedValue(100, 254));
     }
-}
+} 

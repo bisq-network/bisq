@@ -142,7 +142,6 @@ public abstract class BsqNode {
         bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
     }
 
-    //TODO
     @SuppressWarnings("WeakerAccess")
     protected void startReOrgFromLastSnapshot() {
         applySnapshot();

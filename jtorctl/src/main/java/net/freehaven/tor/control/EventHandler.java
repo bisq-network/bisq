@@ -19,7 +19,7 @@ public interface EventHandler {
      * <li>"FAILED"   :  circuit closed (was not built)</li>
      * <li>"CLOSED"   :  circuit closed (was built)</li>
      * </ul>
-     * <p>
+     * <p/>
      * <b>circID</b> is the alphanumeric identifier of the affected circuit,
      * and <b>path</b> is a comma-separated list of alphanumeric ServerIDs.
      */
@@ -38,7 +38,7 @@ public interface EventHandler {
      * <li>"CLOSED"      :  Stream closed</li>
      * <li>"DETACHED"    :  Detached from circuit; still retriable.</li>
      * </ul>
-     * <p>
+     * <p/>
      * <b>streamID</b> is the alphanumeric identifier of the affected stream,
      * and its <b>target</b> is specified as address:port.
      */

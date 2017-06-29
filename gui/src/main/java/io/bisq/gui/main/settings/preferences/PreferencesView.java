@@ -118,7 +118,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         allFiatCurrencies.removeAll(fiatCurrencies);
         allCryptoCurrencies.removeAll(cryptoCurrencies);
-        
+
         initializeGeneralOptions();
         initializeDisplayCurrencies();
         initializeDisplayOptions();

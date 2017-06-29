@@ -28,15 +28,15 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
+            "el", // Greek
             "es", // Spanish
+            "pt", // Portuguese / Brazil
             "sr"  // Serbian
-
+            
             /*
             // not translated yet
             "zh", // Chinese
-            "pt", // Portuguese
             "it", // Italian
-            "el", // Greek
             "fr", // French
             "ja", // Japanese
             "iw", // Hebrew
@@ -82,7 +82,7 @@ public class LanguageUtil {
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
-        // Filter duplicate locale entries
+        // Filter duplicate locale entries 
         Set<String> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().isEmpty() &&
                 !locale.getDisplayLanguage().isEmpty())
                 .map(Locale::getLanguage)

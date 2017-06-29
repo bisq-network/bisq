@@ -221,6 +221,17 @@ public class BankUtil {
         }
     }
 
+    public static String getHolderIdLabelShort(String countryCode) {
+        switch (countryCode) {
+            case "BR":
+                return "CPF:"; // do not translate as it is used in portuguese only
+            case "CL":
+                return "RUT:";  // do not translate as it is used in spanish only
+            default:
+                return "ID";
+        }
+    }
+
     // Validation
     public static boolean useValidation(String countryCode) {
         switch (countryCode) {

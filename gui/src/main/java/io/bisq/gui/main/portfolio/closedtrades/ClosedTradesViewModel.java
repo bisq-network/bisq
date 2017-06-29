@@ -96,10 +96,6 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             if (item.getTradable() instanceof Trade) {
                 Trade trade = (Trade) item.getTradable();
 
-                // TODO
-               /* if (trade.isFailedState())
-                    return "Failed";
-                else*/
                 if (trade.isWithdrawn() || trade.isPayoutPublished()) {
                     return Res.get("portfolio.closed.completed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {

@@ -65,7 +65,7 @@ public class BuyerStep2View extends TradeStepView {
 
         if (timeoutTimer != null)
             timeoutTimer.stop();
-        
+
         //TODO we get called twice, check why
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {

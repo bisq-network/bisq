@@ -2,7 +2,7 @@ package com.runjva.sourceforge.jsocks.protocol;
 
 /**
  * This interface provides for datagram encapsulation for SOCKSv5 protocol.
- * <p>
+ * <p/>
  * SOCKSv5 allows for datagrams to be encapsulated for purposes of integrity
  * and/or authenticity. How it should be done is aggreed during the
  * authentication stage, and is authentication dependent. This interface is

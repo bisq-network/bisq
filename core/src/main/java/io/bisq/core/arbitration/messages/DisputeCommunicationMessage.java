@@ -140,7 +140,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
-        // We have the case that an envelope got wrapped into a payload.
+        // We have the case that an envelope got wrapped into a payload. 
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads dont have a message version and are also used for persistence
         // We set the value to -1 to indicate it is set but irrelevant

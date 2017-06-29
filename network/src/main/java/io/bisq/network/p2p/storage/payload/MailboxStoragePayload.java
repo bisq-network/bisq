@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * It  differs from the ProtectedExpirableMessage in the way that the sender is permitted to do an add operation
  * but only the receiver is permitted to remove the data.
  * That is the typical requirement for a mailbox like system.
- * <p>
+ * <p/>
  * Typical payloads are trade or dispute network_messages to be stored when the peer is offline.
  */
 @Getter

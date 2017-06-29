@@ -20,14 +20,29 @@ package io.bisq.gui.util.validation;
 
 public final class ClearXchangeValidator extends InputValidator {
 
+    private final EmailValidator emailValidator;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public ClearXchangeValidator() {
+        emailValidator = new EmailValidator();
+    }
+
     @Override
     public ValidationResult validate(String input) {
-        // TODO
-        return super.validate(input);
+        ValidationResult result = validateIfNotEmpty(input);
+        if (!result.isValid) {
+            return result;
+        } else {
+            ValidationResult emailResult = emailValidator.validate(input);
+            if (emailResult.isValid)
+                return emailResult;
+            else
+                return validatePhoneNumber(input);
+        }
     }
 
 
@@ -35,5 +50,8 @@ public final class ClearXchangeValidator extends InputValidator {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
+    // TODO not impl yet -> see InteracETransferValidator
+    private ValidationResult validatePhoneNumber(String input) {
+        return super.validate(input);
+    }
 }

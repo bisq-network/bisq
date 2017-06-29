@@ -1,4 +1,4 @@
-:: Invoke from Bisq home directory
+:: Invoke from bisq home directory
 :: edit iss file -> AppVersion
 :: edit -> -BappVersion and -srcfiles
 
@@ -20,13 +20,13 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -vendor Bisq ^
 -outdir %outdir% ^
 -appclass io.bisq.gui.app.BisqAppMain ^
--srcfiles %outdir%\bisq.jar ^
--srcfiles "core/src/main/resources/bisq.policy" ^
+-srcfiles %outdir%\Bisq.jar ^
 -outfile Bisq ^
--Bicon=package\windows\bisq.ico ^
 -Bruntime="%JAVA_HOME%\jre"
-
-:: when we have support for security manager we use that
+ 
+:: when we have support for security manager we use that 
 :: -BjvmOptions=-Djava.security.manager ^
 :: -BjvmOptions=-Djava.security.debug=failure ^
 :: -BjvmOptions=-Djava.security.policy=file:bisq.policy ^
+
+:: -srcfiles "core/src/main/resources/bisq.policy" ^

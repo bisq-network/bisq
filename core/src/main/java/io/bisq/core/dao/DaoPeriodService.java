@@ -69,7 +69,6 @@ public class DaoPeriodService {
     }
 
     public void onAllServicesInitialized() {
-        // TODO use blockchainService
        /* bestChainHeight = btcWalletService.getBestChainHeight();
         checkArgument(bestChainHeight >= GENESIS_BLOCK_HEIGHT, "GENESIS_BLOCK_HEIGHT must be in the past");
 

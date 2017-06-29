@@ -69,10 +69,10 @@ public class PGP {
                                     RSAPublicKeySpec specRSA = new RSAPublicKeySpec(bcRSA.getModulus(), bcRSA.getPublicExponent());
                                     PublicKey jceKey = KeyFactory.getInstance("RSA").generatePublic(specRSA);
                                     // if you want to use the key in JCE, use jceKey
-                                    // if you want to write "X.509" (SPKI) DER format to a file:
+                                    // if you want to write "X.509" (SPKI) DER format to a file: 
                                     //Files.write(new File(pubKeyAsString).toPath(), jceKey.getEncoded());
-                                    // if you want to write in PEM, bouncycastle can do that
-                                    // or you can just do base64 and add BEGIN/END lines
+                                    // if you want to write in PEM, bouncycastle can do that 
+                                    // or you can just do base64 and add BEGIN/END lines 
                                     // return pubKeyAsString; // assume only one key; if need to handle multiple keys
                                     // or select other than the first, specify more clearly
                                 }

@@ -319,11 +319,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     /**
      * Startup sequence:
-     * <p>
+     * <p/>
      * Variant 1 (normal expected mode):
      * onTorNodeReady -> requestDataManager.firstDataRequestFromAnySeedNode()
      * RequestDataManager.Listener.onDataReceived && onHiddenServicePublished -> onNetworkReady()
-     * <p>
+     * <p/>
      * Variant 2 (no seed node available):
      * onTorNodeReady -> requestDataManager.firstDataRequestFromAnySeedNode
      * retry after 20-30 sec until we get at least one seed node connected

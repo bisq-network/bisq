@@ -120,7 +120,7 @@ public abstract class BisqExecutable {
                 description("Application data directory", BisqEnvironment.DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                description("If set to true all signed network_messages from Bisq developers are ignored " +
+                description("If set to true all signed network_messages from bisq developers are ignored " +
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);

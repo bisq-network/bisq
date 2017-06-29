@@ -178,7 +178,6 @@ public class FileManager<T extends PersistableEnvelope> {
         log.trace("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
     }
 
-    // TODO Sometimes we get a ConcurrentModificationException here
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;

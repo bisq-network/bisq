@@ -53,7 +53,7 @@ import java.util.List;
 /**
  * A candlestick chart is a style of bar-chart used primarily to describe price movements of a security, derivative,
  * or currency over time.
- * <p>
+ * <p/>
  * The Data Y value is used for the opening price and then the close, high and low values are stored in the Data's
  * extra value property using a CandleStickExtraValues object.
  */

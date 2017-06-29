@@ -78,7 +78,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     //private static final int BTC_GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
     private static final String BTC_GENESIS_TX_ID = "4371a1579bccc672231178cc5fe9fbb9366774d3bcbf21545a82f637f4b61a06";
     private static final int BTC_GENESIS_BLOCK_HEIGHT = 473000; // 2017-06-26
-    
+
     // LTC MAIN NET
     private static final String LTC_GENESIS_TX_ID = "44074e68c1168d67871b3e9af0e65d6d7c820b03ba15445df2c4089729985fb6";
     private static final int LTC_GENESIS_BLOCK_HEIGHT = 1220170; // 2017-06-11

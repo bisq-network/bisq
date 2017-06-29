@@ -15,7 +15,7 @@ import java.net.InetAddress;
  * Can be used same way as the normal DatagramSocket. One should be carefull
  * though with the datagram sizes used, as additional data is present in both
  * incomming and outgoing datagrams.
- * <p>
+ * <p/>
  * SOCKS5 protocol allows to send host address as either:
  * <ul>
  * <li>IPV4, normal 4 byte address. (10 bytes header size)
@@ -25,7 +25,7 @@ import java.net.InetAddress;
  * </ul>
  * As with other Socks equivalents, direct addresses are handled transparently,
  * that is data will be send directly when required by the proxy settings.
- * <p>
+ * <p/>
  * <b>NOTE:</b><br>
  * Unlike other SOCKS Sockets, it <b>does not</b> support proxy chaining, and
  * will throw an exception if proxy has a chain proxy attached. The reason for
@@ -146,11 +146,11 @@ public class Socks5DatagramSocket extends DatagramSocket {
     /**
      * Sends the Datagram either through the proxy or directly depending on
      * current proxy settings and destination address. <BR>
-     * <p>
+     * <p/>
      * <B> NOTE: </B> DatagramPacket size should be at least 10 bytes less than
      * the systems limit.
-     * <p>
-     * <p>
+     * <p/>
+     * <p/>
      * See documentation on java.net.DatagramSocket for full details on how to
      * use this method.
      *
@@ -186,7 +186,7 @@ public class Socks5DatagramSocket extends DatagramSocket {
      * SOCKS5 allows to specify host as names rather than ip addresses.Using
      * this method one can send udp datagrams through the proxy, without having
      * to know the ip address of the destination host.
-     * <p>
+     * <p/>
      * If proxy specified for that socket has an option resolveAddrLocally set
      * to true host will be resolved, and the datagram will be send with address
      * type IPV4, if resolve fails, UnknownHostException is thrown.
@@ -345,21 +345,21 @@ public class Socks5DatagramSocket extends DatagramSocket {
     /**
      * This method checks wether proxy still runs udp forwarding service for
      * this socket.
-     * <p>
+     * <p/>
      * This methods checks wether the primary connection to proxy server is
      * active. If it is, chances are that proxy continues to forward datagrams
      * being send from this socket. If it was closed, most likely datagrams are
      * no longer being forwarded by the server.
-     * <p>
+     * <p/>
      * Proxy might decide to stop forwarding datagrams, in which case it should
      * close primary connection. This method allows to check, wether this have
      * been done.
-     * <p>
+     * <p/>
      * You can specify timeout for which we should be checking EOF condition on
      * the primary connection. Timeout is in milliseconds. Specifying 0 as
      * timeout implies infinity, in which case method will block, until
      * connection to proxy is closed or an error happens, and then return false.
-     * <p>
+     * <p/>
      * One possible scenario is to call isProxyactive(0) in separate thread, and
      * once it returned notify other threads about this event.
      *

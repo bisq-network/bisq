@@ -45,7 +45,7 @@ grant {
   permission "java.util.PropertyPermission" "priceFeedProviders", "read";
   permission "java.util.PropertyPermission" "maxMemory", "read";
 
-  /* Why ??? no permission exceptions, no dependency in Bisq nor in bitcoinj. Local problem? */
+  /* Why ??? no permission exceptions, no dependency in bisq nor in bitcoinj. Local problem? */
   permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
 
   permission "java.lang.RuntimePermission" "accessDeclaredMembers";

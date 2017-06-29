@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import java.util.function.Consumer;
 
-// Used for non blocking access to BTC blockchain data and parsing. Encapsulate thread context, so caller
+// Used for non blocking access to BTC blockchain data and parsing. Encapsulate thread context, so caller 
 // gets always called on UserThread
 @Slf4j
 public class BsqFullNodeExecutor {

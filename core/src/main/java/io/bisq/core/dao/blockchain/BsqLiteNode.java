@@ -112,9 +112,9 @@ public class BsqLiteNode extends BsqNode {
                 log.error(throwable.toString());
             }
         });
-
-
-       /*
+        
+        
+       /* 
         requestBsqBlocksHandler.request(peersNodeAddress, startBlockHeight, bsqBlockList -> {
             try {
                 bsqParser.parseBsqBlocks(bsqBlockList, getGenesisBlockHeight(), getGenesisTxId(),

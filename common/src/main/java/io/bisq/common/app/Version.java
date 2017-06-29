@@ -91,9 +91,6 @@ public class Version {
     public static final String BSQ_TX_VERSION = "1";
 
     public static int getP2PMessageVersion() {
-        // TODO investigate why a changed NETWORK_PROTOCOL_VERSION for the serialized objects does not trigger
-        // reliable a disconnect., but java serialisation should be replaced anyway, so using one existing field
-        // for the version is fine.
         return p2pMessageVersion;
     }
 

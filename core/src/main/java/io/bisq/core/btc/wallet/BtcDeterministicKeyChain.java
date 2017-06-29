@@ -34,7 +34,7 @@ class BtcDeterministicKeyChain extends DeterministicKeyChain {
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    // We use 0 (0x80000000) as coin_type for BTC
+    // We use 0 (0x80000000) as coin_type for BTC 
     // m / purpose' / coin_type' / account' / change / address_index
     public static final ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),

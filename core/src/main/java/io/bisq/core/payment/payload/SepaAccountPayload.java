@@ -43,6 +43,8 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     private String iban;
     @Setter
     private String bic;
+    @Setter
+    private String email;
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
@@ -66,11 +68,13 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                                String holderName,
                                String iban,
                                String bic,
+                               String email,
                                List<String> acceptedCountryCodes) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
+        this.email = email;
         this.acceptedCountryCodes = acceptedCountryCodes;
     }
 
@@ -81,6 +85,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
+                        .setEmail(email)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -100,6 +105,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 sepaAccountPayload.getHolderName(),
                 sepaAccountPayload.getIban(),
                 sepaAccountPayload.getBic(),
+                sepaAccountPayload.getEmail(),
                 new ArrayList<>(sepaAccountPayload.getAcceptedCountryCodesList()));
     }
 
@@ -120,7 +126,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", country code: " + getCountryCode();
+        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", Email: " + email + ", country code: " + getCountryCode();
     }
 
     @Override
@@ -128,6 +134,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         return "Holder name: " + holderName + "\n" +
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
+                "Email: " + email + "\n" +
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
 }

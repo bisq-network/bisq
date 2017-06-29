@@ -147,30 +147,29 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // EUR
                     SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
 
-                    // Global
-                    NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                    SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-
-                    // Trans national
-                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
-                    PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
-
                     // UK
                     FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
+
+                    // Sweden
+                    SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
+
+                    // US
+                    CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
+                    US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
                     // Canada
                     INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
 
-                    // US
-                    // CXC is to risky regarding chargeback
-                    // CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                    US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
+                    // Global
+                    CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
+                    SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
 
-                    // Sweden
-                    SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
+                    // Trans national
+                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
+                    PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China
                     ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),

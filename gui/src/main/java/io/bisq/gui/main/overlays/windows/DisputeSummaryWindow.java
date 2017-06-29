@@ -402,7 +402,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         reasonWasScamRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.scam"));
         reasonWasBankRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bank"));
         reasonWasOtherRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.other"));
-        //TODO add banks as reason
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);

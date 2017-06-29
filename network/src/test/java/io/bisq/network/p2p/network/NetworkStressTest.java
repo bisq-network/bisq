@@ -38,12 +38,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Bisq network stress tests.
- * <p>
+ * bisq network stress tests.
+ * <p/>
  * You can invoke this class directly from the command line.
  * If the name of a single test is given as an argument, only that test is run.
  * Otherwise all tests in the class are run.
- * <p>
+ * <p/>
  * You can also set some {@code STRESS_TEST_*} environment variables to
  * customize the execution of tests.
  * See the {@code *_ENVVAR} constants for the names of these variables.

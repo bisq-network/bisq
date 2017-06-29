@@ -319,10 +319,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         log.debug("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");
-        // TODO what is first valid state for trade?
 
         switch (tradeState) {
-            // #################### Phase PREPARATION
+            // #################### Phase PREPARATION 
             case PREPARATION:
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);
@@ -330,7 +329,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             // At first part maker/taker have different roles
             // taker perspective
-            // #################### Phase TAKER_FEE_PAID
+            // #################### Phase TAKER_FEE_PAID 
             case TAKER_PUBLISHED_TAKER_FEE_TX:
 
                 // PUBLISH_DEPOSIT_TX_REQUEST
@@ -348,7 +347,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
 
-            // #################### Phase DEPOSIT_PAID
+            // #################### Phase DEPOSIT_PAID 
             case TAKER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG

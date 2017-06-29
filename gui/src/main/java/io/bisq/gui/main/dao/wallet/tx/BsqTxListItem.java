@@ -116,7 +116,7 @@ class BsqTxListItem {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
-                // We don't support send txs with multiple outputs to multiple receivers, so we can
+                // We don't support send txs with multiple outputs to multiple receivers, so we can 
                 // assume that only one output is not from our own wallets.
                 sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                 break;

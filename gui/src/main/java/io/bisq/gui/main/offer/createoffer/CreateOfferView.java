@@ -432,7 +432,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
-            
+
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();

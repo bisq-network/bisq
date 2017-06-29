@@ -55,13 +55,13 @@ public class ProtoUtil {
      * Get a Java enum from a Protobuf enum in a safe way.
      *
      * @param enumType the class of the enum, e.g: BlaEnum.class
-     * @param name the name of the enum entry, e.g: proto.getWinner().name()
-     * @param <E> the enum Type
+     * @param name     the name of the enum entry, e.g: proto.getWinner().name()
+     * @param <E>      the enum Type
      * @return an enum
      */
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
         E result = Enums.getIfPresent(enumType, name).orNull();
-        if(result == null) {
+        if (result == null) {
             log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
         }
 

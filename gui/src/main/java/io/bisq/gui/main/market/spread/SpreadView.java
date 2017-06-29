@@ -285,7 +285,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    // TODO maybe show exra colums with item.priceSpread and use real amount diff
+                                    // TODO maybe show exra colums with item.priceSpread and use real amount diff 
                                     // not % based
                                     if (item.priceSpread != null)
                                         setText(item.percentage);

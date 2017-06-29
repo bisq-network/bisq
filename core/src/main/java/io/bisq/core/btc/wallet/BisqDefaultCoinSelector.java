@@ -32,8 +32,8 @@ import java.util.Set;
 /**
  * Used from org.bitcoinj.wallet.DefaultCoinSelector but added selectOutput method and changed static methods to
  * instance methods.
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * This class implements a {@link CoinSelector} which attempts to get the highest priority
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.

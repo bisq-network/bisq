@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * Performs DNS lookup over Socks5 proxy that implements the RESOLVE extension.
  * At this time, Tor is only known Socks5 proxy that supports it.
- * <p>
+ * <p/>
  * Adapted from https://github.com/btcsuite/btcd/blob/master/connmgr/tor.go
  */
 public class DnsLookupTor {

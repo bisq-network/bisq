@@ -145,7 +145,7 @@ public class SocksServerSocket extends ServerSocket {
     /**
      * Get the name of the host proxy is using to listen for incoming
      * connection.
-     * <p>
+     * <p/>
      * Usefull when address is returned by proxy as the hostname.
      *
      * @return the hostname of the address proxy is using to listen for incoming

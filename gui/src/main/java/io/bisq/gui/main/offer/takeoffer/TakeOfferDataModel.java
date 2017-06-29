@@ -258,7 +258,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     public void onClose() {
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

@@ -212,8 +212,8 @@ public class VotingDefaultValues {
     }
 
     // Interger value of byte values in java are split in 1 half positive and second half negative:
-    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255.
-    // So we add 256 for values after 127 to get a continuous 0-255 range.
+    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255. 
+    // So we add 256 for values after 127 to get a continuous 0-255 range. 
     public long getAdjustedValue(long originalValue, Byte change) {
         int intValue = change.intValue();
         if (intValue < 0)

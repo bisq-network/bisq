@@ -45,7 +45,7 @@ public class OpReturnVerification {
         TxOutput txOutput = txOutputs.get(index);
         final long txOutputValue = txOutput.getValue();
         if (txOutputValue == 0 && index == txOutputs.size() - 1 && availableValue > 0) {
-            // If we get an OP_RETURN it has to be the last output and
+            // If we get an OP_RETURN it has to be the last output and 
             // the txOutputValue is 0 as well we expect that availableValue>0
             byte[] opReturnData = txOutput.getOpReturnData();
             if (opReturnData != null && opReturnData.length > 1) {

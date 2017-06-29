@@ -148,7 +148,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             daoButton.setManaged(false);
         }
 
-        // TODO can be removed once DAo is released
+        // TODO can be removed once DAO is released
         UserThread.runAfter(() -> {
             root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
