@@ -19,10 +19,7 @@ package io.bisq.gui.main.settings.network;
 
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.app.BisqApp;
@@ -44,13 +41,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -67,11 +62,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TextField onionAddress, totalTrafficTextField;
     @FXML
-    ComboBox<BaseCurrencyNetwork> selectCurrencyNetworkComboBox;
-    @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
-    Label bitcoinPeersLabel, p2PPeersLabel, selectCurrencyNetworkLabel;
+    Label bitcoinPeersLabel, p2PPeersLabel;
     @FXML
     CheckBox useTorForBtcJCheckBox;
     @FXML
@@ -89,7 +82,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final BSFormatter formatter;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
-    private final BisqEnvironment bisqEnvironment;
 
     private final ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
@@ -102,12 +94,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Inject
     public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences,
-                               BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
+                               Clock clock, BSFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
-        this.bisqEnvironment = bisqEnvironment;
         this.clock = clock;
         this.formatter = formatter;
     }
@@ -116,7 +107,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         btcHeader.setText(Res.get("settings.net.btcHeader"));
         p2pHeader.setText(Res.get("settings.net.p2pHeader"));
         onionAddressLabel.setText(Res.get("settings.net.onionAddressLabel"));
-        selectCurrencyNetworkLabel.setText(Res.getWithCol("settings.net.selectCurrencyNetwork"));
         btcNodesLabel.setText(Res.get("settings.net.btcNodesLabel"));
         bitcoinPeersLabel.setText(Res.get("settings.net.bitcoinPeersLabel"));
         useTorForBtcJLabel.setText(Res.get("settings.net.useTorForBtcJLabel"));
@@ -138,29 +128,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(6);
-
-        List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
-        // show ony mainnet in production version
-        if (!DevEnv.DEV_MODE)
-            baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.isMainnet())
-                    .collect(Collectors.toList());
-        selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
-
-        selectCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
-        selectCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
-            @Override
-            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
-                        baseCurrencyNetwork.getCurrencyName();
-            }
-
-            @Override
-            public BaseCurrencyNetwork fromString(String string) {
-                return null;
-            }
-        });
 
         tableView.setMinHeight(230);
         tableView.setPrefHeight(230);
@@ -273,23 +240,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
         btcNodes.focusedProperty().removeListener(btcNodesFocusListener);
-    }
-
-    private void onSelectNetwork() {
-        if (selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
-            selectNetwork();
-    }
-
-    private void selectNetwork() {
-        new Popup().warning(Res.get("settings.net.needRestart"))
-                .onAction(() -> {
-                    bisqEnvironment.saveBaseCryptoNetwork(selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                })
-                .actionButtonText(Res.get("shared.shutDown"))
-                .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> selectCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
-                .show();
     }
 
     private void updateP2PTable() {

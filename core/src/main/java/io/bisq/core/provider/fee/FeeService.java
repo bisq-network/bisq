@@ -25,6 +25,9 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -68,6 +71,8 @@ public class FeeService {
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
     private long lastRequest;
+    private IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -124,6 +129,7 @@ public class FeeService {
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
                         txFeePerByte = map.get(baseCurrencyCode);
+                        feeUpdateCounter.set(feeUpdateCounter.get() + 1);
                         log.info("{} tx fee: txFeePerByte={}", baseCurrencyCode, txFeePerByte);
                         if (resultHandler != null)
                             resultHandler.run();
@@ -180,5 +186,9 @@ public class FeeService {
     public Coin getVotingTxFee() {
         //TODO
         return Coin.valueOf(999);
+    }
+
+    public ReadOnlyIntegerProperty feeUpdateCounterProperty() {
+        return feeUpdateCounter;
     }
 }
