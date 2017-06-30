@@ -29,7 +29,6 @@ import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
@@ -337,8 +336,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    log.error("removeOpenOffer, offerid={}", offer.getId());
+                    btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);

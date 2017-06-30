@@ -86,6 +86,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 // tx malleability
                 offer.setOfferFeePaymentTxId(btcTransaction.getHashAsString());
                 model.setTransaction(btcTransaction);
+                log.error("CreateMakerFeeTx, offerid={}, OFFER_FUNDING", id);
                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                 complete();
@@ -113,6 +114,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
+                            log.error("onSuccess, offerid={}, OFFER_FUNDING", id);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                             complete();

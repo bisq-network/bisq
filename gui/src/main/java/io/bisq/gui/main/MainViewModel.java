@@ -1037,7 +1037,10 @@ public class MainViewModel implements ViewModel {
     private void swapPendingOfferFundingEntries() {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
-                .forEach(addressEntry -> btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING));
+                .forEach(addressEntry -> {
+                    log.error("swapPendingOfferFundingEntries, offerid={}, OFFER_FUNDING", addressEntry.getOfferId());
+                    btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
+                });
     }
 
     private void updateBalance() {

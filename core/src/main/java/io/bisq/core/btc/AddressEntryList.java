@@ -125,6 +125,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
+        log.error("swapToAvailable, offer id={}, context={}", addressEntry.getOfferId(), addressEntry.getContext());
         boolean changed2 = remove(addressEntry);
         boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
         if (changed1 || changed2)
