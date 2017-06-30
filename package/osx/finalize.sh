@@ -20,6 +20,7 @@ cp "$src_dir/gui/deploy/$mac" "$target_dir/"
 
 cp "$src_dir/seednode/target/SeedNode.jar" "$target_dir/SeedNode.jar"
 cp "$src_dir/provider/target/provider.jar" "$target_dir/provider.jar"
+cp "$src_dir/statistics/target/Statistics.jar" "$target_dir/Statistics.jar"
 
 deb32="Bisq-32bit-$version.deb"
 cp "/Users/dev/vm_shared_ubuntu14_32bit/$deb32" "$target_dir/"
@@ -56,5 +57,6 @@ gpg --digest-algo SHA256 --verify $deb32{.asc*,}
 gpg --digest-algo SHA256 --verify $win64{.asc*,}
 gpg --digest-algo SHA256 --verify $win32{.asc*,}
 
+cp -r $target_dir /Users/dev/vm_shared_windows/
 
 open "$target_dir"
