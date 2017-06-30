@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.overlays.windows;
+package io.bisq.gui.main.overlays.windows;
 
-import io.bitsquare.alert.Alert;
-import io.bitsquare.common.util.DownloadType;
-import io.bitsquare.common.util.DownloadUtil;
-import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.main.overlays.Overlay;
+import io.bisq.core.alert.Alert;
+import io.bisq.gui.main.overlays.Overlay;
+import io.bisq.common.util.DownloadType;
+import io.bisq.common.util.DownloadUtil;
+import io.bisq.common.util.Utilities;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
@@ -38,9 +38,8 @@ import java.io.File;
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.gui.util.FormBuilder.addButton;
-import static io.bitsquare.gui.util.FormBuilder.addLabelHyperlinkWithIcon;
-import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
+import static io.bisq.gui.util.FormBuilder.addButton;
+import static io.bisq.gui.util.FormBuilder.addMultilineLabel;
 
 // TODO: For future use sigFile and key download calls have to loop through keyIDs and verifySignature needs to be called for all sigs/keys
 
@@ -87,7 +86,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        messageLabel = addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
+        messageLabel = addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
         headLine = "Important update information!";
         headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
 
@@ -102,14 +101,14 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Button downloadButton = addButton(gridPane, ++rowIndex, "Download now");
 
         // TODO How do we get the right URL for the download? (check for other platforms)
-        String url = "https://github.com/bitsquare/bitsquare/releases/download/" + "v" + alert.version + "/" ;
+        String url = "https://github.com/bitsquare/bitsquare/releases/download/" + "v" + alert.getVersion() + "/" ;
         String fileName;
         if (Utilities.isOSX())
-            fileName = "Bitsquare-" + alert.version + ".dmg";
+            fileName = "Bitsquare-" + alert.getVersion() + ".dmg";
         else if (Utilities.isWindows())
-            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.version + ".exe";
+            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".exe";
         else if (Utilities.isLinux())
-            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.version + ".deb";
+            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".deb";
         else {
             fileName = "";
             downloadButton.setDisable(true);

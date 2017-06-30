@@ -1,4 +1,4 @@
-package io.bitsquare.common.util;
+package io.bisq.common.util;
 
 /**
  * A utility that downloads a file from a URL.
@@ -8,8 +8,10 @@ package io.bitsquare.common.util;
 
 
 import javafx.concurrent.Task;
-import org.bouncycastle.openpgp.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -153,7 +155,7 @@ public class DownloadUtil extends Task<File> {
 
         // Read keys from file
         is = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile));
-        PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(is);
+        PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(is, new JcaKeyFingerprintCalculator());
         is.close();
 
         Iterator<PGPPublicKeyRing> rIt = publicKeyRingCollection.getKeyRings();
@@ -171,7 +173,7 @@ public class DownloadUtil extends Task<File> {
 
         // Read signature from file
         is = PGPUtil.getDecoderStream(new FileInputStream(sigFile));
-        PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(is);
+        PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(is, new JcaKeyFingerprintCalculator());
         Object o = pgpObjectFactory.nextObject();
         if (o instanceof PGPSignatureList) {
             PGPSignatureList signatureList = (PGPSignatureList) o;
@@ -185,10 +187,10 @@ public class DownloadUtil extends Task<File> {
         System.out.format("KeyID used in signature: %X\n", pgpSignature.getKeyID());
         publicKey = pgpPublicKeyRing.getPublicKey(pgpSignature.getKeyID());
         System.out.format("The ID of the selected key is %X\n", publicKey.getKeyID());
-        pgpSignature.initVerify(publicKey, "BC");
+        pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
 
         // Read file to verify
-        try {
+        //try {
             byte[] data = new byte[1024];
             is = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
             while (true) {
@@ -203,12 +205,14 @@ public class DownloadUtil extends Task<File> {
             result = pgpSignature.verify();
             System.out.println("The signature turned out to be " + (result ? "good." : "bad."));
             return result;
+            /*
         } catch (SignatureException sigExc) {
             try {
                 is.close();
             } catch (IOException ioExc) {}
             throw sigExc;
         }
+        */
     }
 
     public String getFileName() {return this.fileName;}
