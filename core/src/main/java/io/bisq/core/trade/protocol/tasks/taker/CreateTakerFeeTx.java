@@ -18,7 +18,6 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.arbitration.Arbitrator;
@@ -44,6 +43,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
+    private Transaction tradeFeeTx;
+
     @SuppressWarnings({"WeakerAccess", "unused"})
     public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -71,7 +72,10 @@ public class CreateTakerFeeTx extends TradeTask {
             Address changeAddress = changeAddressEntry.getAddress();
             final TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             if (trade.isCurrencyForTakerFeeBtc()) {
-                Transaction createTakeOfferFeeTx = tradeWalletService.createBtcTradingFeeTx(
+
+                // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
+
+                tradeFeeTx = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
@@ -79,20 +83,40 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
-                        selectedArbitrator.getBtcAddress());
+                        selectedArbitrator.getBtcAddress(),
+                        new FutureCallback<Transaction>() {
+                            @Override
+                            public void onSuccess(Transaction transaction) {
+                                // we delay one render frame to be sure we don't get called before the method call has 
+                                // returned (tradeFeeTx would be null in that case)
+                                UserThread.execute(() -> {
+                                    if (!completed) {
+                                        if (tradeFeeTx != null && !tradeFeeTx.getHashAsString().equals(transaction.getHashAsString()))
+                                            log.warn("The trade fee tx received from the network had another tx ID than the one we publish");
 
-                //TODO use handler for broadcastTx success
-                processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
-                trade.setTakerFeeTxId(createTakeOfferFeeTx.getHashAsString());
-                // TODO cehck
-                // Don't call that as it caused in some cased a InsufficientMoneyException
-                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                        processModel.setTakeOfferFeeTx(tradeFeeTx);
+                                        trade.setTakerFeeTxId(tradeFeeTx.getHashAsString());
+                                        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
-                complete();
+                                        complete();
+                                    } else {
+                                        log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(@NotNull Throwable t) {
+                                if (!completed) {
+                                    failed(t);
+                                } else {
+                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                }
+                            }
+                        });
             } else {
                 final BsqWalletService bsqWalletService = processModel.getBsqWalletService();
                 Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedBurnFeeTx(trade.getTakerFee());
-                //Coin txFee = trade.getTxFee().subtract(trade.getTakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,
@@ -108,33 +132,19 @@ public class CreateTakerFeeTx extends TradeTask {
                 // if it gets committed 2 times 
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
 
-                Timer timeoutTimer = UserThread.runAfter(() -> {
-                    log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
-                    trade.setTakerFeeTxId(signedTx.getHashAsString());
-                    processModel.setTakeOfferFeeTx(signedTx);
-
-                    // TODO cehck
-                    // Don't call that as it caused in some cased a InsufficientMoneyException
-                    // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-
-                    complete();
-                }, 5);
+                // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
 
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         if (!completed) {
-                            timeoutTimer.stop();
                             if (transaction != null) {
                                 log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                                 checkArgument(transaction.equals(signedTx));
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
-
-                                // TODO cehck
-                                // Don't call that as it caused in some cased a InsufficientMoneyException
-                                // walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-
+                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                
                                 complete();
                             }
                         } else {
@@ -145,7 +155,6 @@ public class CreateTakerFeeTx extends TradeTask {
                     @Override
                     public void onFailure(@NotNull Throwable t) {
                         if (!completed) {
-                            timeoutTimer.stop();
                             log.error(t.toString());
                             t.printStackTrace();
                             trade.setErrorMessage("An error occurred.\n" +

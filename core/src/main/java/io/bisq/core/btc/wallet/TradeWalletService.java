@@ -154,7 +154,8 @@ public class TradeWalletService {
                                              boolean useSavingsWallet,
                                              Coin tradingFee,
                                              Coin txFee,
-                                             String feeReceiverAddresses)
+                                             String feeReceiverAddresses,
+                                             FutureCallback<Transaction> callback)
             throws InsufficientMoneyException, AddressFormatException {
         log.debug("fundingAddress " + fundingAddress.toString());
         log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
@@ -192,6 +193,10 @@ public class TradeWalletService {
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
         WalletService.printTx("tradingFeeTx", tradingFeeTx);
+
+        checkNotNull(walletConfig, "walletConfig must not be null");
+        ListenableFuture<Transaction> broadcastComplete = walletConfig.peerGroup().broadcastTransaction(tradingFeeTx).future();
+        Futures.addCallback(broadcastComplete, callback);
 
         return tradingFeeTx;
     }
