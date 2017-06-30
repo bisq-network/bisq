@@ -17,7 +17,9 @@
 
 package io.bisq.core.btc;
 
+import io.bisq.core.app.BisqEnvironment;
 import lombok.Getter;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -67,5 +69,17 @@ public enum BaseCurrencyNetwork {
 
     public boolean isLitecoin() {
         return "LTC".equals(currencyCode);
+    }
+
+    public Coin getDefaultMinFee() {
+        switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+            case "BTC":
+                return org.bitcoinj.core.Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+            case "LTC":
+            case "DOGE":
+            default:
+                // TODO check what is the right fee at DOGE
+                return Coin.valueOf(100000);
+        }
     }
 }

@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
@@ -45,7 +46,6 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -206,7 +206,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
                     int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
-                    if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
+                    if (withdrawalTxFeeInBytes * 1000 < BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee().value) {
                         new Popup<>().warning(Res.get("setting.preferences.txFeeMin")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeeInBytes > 5000) {

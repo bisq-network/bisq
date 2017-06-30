@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -494,8 +495,9 @@ public class BtcWalletService extends WalletService {
                         do {
                             counter++;
                             fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                            if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                                fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                            final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                            if (fee.compareTo(defaultMinFee) < 0)
+                                fee = defaultMinFee;
 
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount.subtract(fee), toAddress);
@@ -612,8 +614,9 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                    fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                if (fee.compareTo(defaultMinFee) < 0)
+                    fee = defaultMinFee;
 
                 SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
@@ -663,8 +666,9 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                    fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                if (fee.compareTo(defaultMinFee) < 0)
+                    fee = defaultMinFee;
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
