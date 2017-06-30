@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.5.0.0</version>
+        <version>0.5.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -118,12 +118,10 @@
                     <groupId>jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
                 </exclusion>
-<!--
                 <exclusion>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-validator</artifactId>
                 </exclusion>
-                -->
             </exclusions>
         </dependency>
         <dependency>
@@ -227,7 +225,7 @@
         <dependency>
             <groupId>io.bisq</groupId>
             <artifactId>core</artifactId>
-            <version>0.5.0.0</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>
