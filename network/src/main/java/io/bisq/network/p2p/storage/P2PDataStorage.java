@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -94,8 +93,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
 
+        // PersistedEntryMap cannot be set here as we dont know yet the selected base currency
+        // We get it called in readPersistedEntryMap once ready
+    }
 
-        final String storageFileName = "PersistedEntryMap";
+    public void readPersistedEntryMap(String resourceFileName) {
+        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap);
+        if (persistedSequenceNumberMap != null)
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
+
+        final String storageFileName = "EntryMap";
         File dbDir = new File(storageDir.getAbsolutePath());
         if (!dbDir.exists() && !dbDir.mkdir())
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
@@ -103,9 +110,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         final File destinationFile = new File(Paths.get(storageDir.getAbsolutePath(), storageFileName).toString());
         if (!destinationFile.exists()) {
             try {
-                FileUtil.resourceToFile(storageFileName, destinationFile);
-            } catch (ResourceNotFoundException | IOException e) {
-                log.error("Could not copy the " + storageFileName + " resource file to the db directory.\n" + e.getMessage());
+                FileUtil.resourceToFile(resourceFileName, destinationFile);
+            } catch (ResourceNotFoundException e) {
+                log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
+            } catch (Throwable e) {
+                log.error("Could not copy resourceFile " + resourceFileName + " to " +
+                        destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
                 e.printStackTrace();
             }
         } else {
