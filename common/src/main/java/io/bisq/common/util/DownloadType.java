@@ -1,4 +1,4 @@
-package io.bitsquare.common.util;
+package io.bisq.common.util;
 
 public enum DownloadType {
     INST,

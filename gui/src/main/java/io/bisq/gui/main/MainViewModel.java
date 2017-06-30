@@ -83,6 +83,7 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
+import io.bisq.gui.main.overlays.windows.DisplayUpdateDownloadWindow;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -1019,10 +1020,11 @@ public class MainViewModel implements ViewModel {
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
-        if (alert != null &&
-                !alreadyDisplayed &&
-                (!alert.isUpdateInfo() || alert.isNewVersion()))
-            new DisplayAlertMessageWindow().alertMessage(alert).show();
+        if (alert != null && !alreadyDisplayed)
+            if (alert.isUpdateInfo() || alert.isNewVersion())
+                new DisplayUpdateDownloadWindow().alertMessage(alert).show();
+            else
+                new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {

@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -200,6 +201,32 @@ public class Utilities {
             if (!DesktopUtil.open(file))
                 throw new IOException("Failed to open file: " + file.toString());
         }
+    }
+
+    /**
+     * Creates and starts a Task for background downloading
+     * @param fileURL URL of file to be downloaded
+     * @param saveDir Directory to save file to
+     * @param indicator Progress indicator, can be {@code null}
+     * @param downloadType enum to identify downloaded files after completion, options are {INST, KEY, SIG, MISC}
+     * @param index For coordination between key and sig files
+     * @return The task handling the download
+     * @throws IOException
+     */
+    public static DownloadUtil downloadFile(String fileURL, String saveDir, @Nullable ProgressIndicator indicator, DownloadType downloadType, byte index) throws IOException {
+        DownloadUtil task;
+        if (saveDir != null)
+            task = new DownloadUtil(fileURL, saveDir, downloadType, index);
+        else
+            task = new DownloadUtil(fileURL, downloadType, index); // Tries to use system temp directory
+        if (indicator != null) {
+            indicator.progressProperty().unbind();
+            indicator.progressProperty().bind(task.progressProperty());
+        }
+        Thread th = new Thread(task);
+        th.start();
+        // TODO: check for problems when creating task
+        return task;
     }
 
     public static void printSystemLoad() {
