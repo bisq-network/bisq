@@ -30,10 +30,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,7 +59,7 @@ public class PriceFeedService {
     private FaultHandler faultHandler;
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
-    private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
+    private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
     private int retryCounter = 0;
@@ -167,8 +164,8 @@ public class PriceFeedService {
         return currencyCodeProperty;
     }
 
-    public IntegerProperty currenciesUpdateFlagProperty() {
-        return currenciesUpdateFlag;
+    public ReadOnlyIntegerProperty updateCounterProperty() {
+        return updateCounter;
     }
 
     public Date getLastRequestTimeStampBtcAverage() {
@@ -213,7 +210,7 @@ public class PriceFeedService {
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
         }
-        currenciesUpdateFlag.setValue(currenciesUpdateFlag.get() + 1);
+        updateCounter.set(updateCounter.get() + 1);
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {

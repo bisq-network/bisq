@@ -54,6 +54,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -515,31 +516,50 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             private OfferBookListItem offerBookListItem;
-                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
-                                @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                                    if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
-                                        setText(model.getPrice(offerBookListItem));
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
-                                    }
-                                }
-                            };
+                            private ChangeListener<Number> priceChangedListener;
+                            ChangeListener<Scene> sceneChangeListener;
 
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (item.getOffer().getPrice() == null) {
-                                        this.offerBookListItem = item;
-                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
-                                        setText(Res.get("shared.na"));
-                                    } else {
-                                        setText(model.getPrice(item));
+                                    if (getTableView().getScene() != null && sceneChangeListener == null) {
+                                        sceneChangeListener = (observable, oldValue, newValue) -> {
+                                            if (newValue == null) {
+                                                if (priceChangedListener != null) {
+                                                    model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
+                                                    priceChangedListener = null;
+                                                }
+                                                offerBookListItem = null;
+                                                setText("");
+                                                getTableView().sceneProperty().removeListener(sceneChangeListener);
+                                                sceneChangeListener = null;
+                                            }
+                                        };
+                                        getTableView().sceneProperty().addListener(sceneChangeListener);
                                     }
+
+                                    this.offerBookListItem = item;
+
+                                    if (priceChangedListener == null) {
+                                        priceChangedListener = (observable, oldValue, newValue) -> {
+                                            if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
+                                                setText(model.getPrice(offerBookListItem));
+                                            }
+                                        };
+                                        model.priceFeedService.updateCounterProperty().addListener(priceChangedListener);
+                                    }
+                                    setText(item.getOffer().getPrice() == null ? Res.get("shared.na") : model.getPrice(item));
                                 } else {
-                                    if (listener != null)
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                    if (priceChangedListener != null) {
+                                        model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
+                                        priceChangedListener = null;
+                                    }
+                                    if (sceneChangeListener != null) {
+                                        getTableView().sceneProperty().removeListener(sceneChangeListener);
+                                        sceneChangeListener = null;
+                                    }
                                     this.offerBookListItem = null;
                                     setText("");
                                 }
@@ -570,7 +590,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
                                         setText(model.getVolume(offerBookListItem));
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -581,14 +601,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
-                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setText(model.getVolume(item));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                 }

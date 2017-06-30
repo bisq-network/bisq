@@ -316,7 +316,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText(formatter.formatPrice(offer.getPrice()));
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -327,14 +327,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 if (offerListItem != null && !empty) {
                                     if (offerListItem.offer.getPrice() == null) {
                                         this.offer = offerListItem.offer;
-                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setText(formatter.formatPrice(offerListItem.offer.getPrice()));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                 }
@@ -360,7 +360,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText(formatter.formatVolume(offer.getVolume()));
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -372,14 +372,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                     this.offer = offerListItem.offer;
                                     if (offer.getPrice() == null) {
                                         this.offer = offerListItem.offer;
-                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setText(formatter.formatVolume(offer.getVolume()));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                 }

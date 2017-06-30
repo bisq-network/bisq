@@ -370,7 +370,6 @@ public class BtcWalletService extends WalletService {
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {
-        log.error("swapTradeEntryToAvailableEntry, offerId={}, context={}", offerId, context);
         Optional<AddressEntry> addressEntryOptional = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
@@ -384,7 +383,6 @@ public class BtcWalletService extends WalletService {
     }
 
     public void resetAddressEntriesForOpenOffer(String offerId) {
-        log.error("resetAddressEntriesForOpenOffer");
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }

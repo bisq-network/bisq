@@ -483,7 +483,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
 
-        priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateListener);
+        priceFeedService.updateCounterProperty().addListener(currenciesUpdateListener);
     }
 
     private void removeListeners() {
@@ -508,7 +508,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (offer != null && errorMessageListener != null)
             offer.getErrorMessageProperty().removeListener(errorMessageListener);
 
-        priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateListener);
+        priceFeedService.updateCounterProperty().removeListener(currenciesUpdateListener);
     }
 
 

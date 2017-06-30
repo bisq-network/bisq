@@ -952,7 +952,7 @@ public class MainViewModel implements ViewModel {
 
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
 
-        priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeedService.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
+        priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeedService.updateCounterProperty(), updateCounter -> setMarketPriceInItems());
 
         preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> UserThread.runAfter(() -> {
             fillPriceFeedComboBoxItems();
