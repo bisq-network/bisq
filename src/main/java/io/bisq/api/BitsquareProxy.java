@@ -71,7 +71,7 @@ public class BitsquareProxy {
     public CurrencyList getCurrencyList() {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
-        CurrencyUtil.getAllSortedFiatCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getSymbol(), cryptoCurrency.getName(), "fiat"));
+        CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getSymbol(), fiatCurrency.getName(), "fiat"));
         Collections.sort(currencyList.currencies, (io.bisq.api.api.Currency p1, io.bisq.api.api.Currency p2) -> p1.name.compareTo(p2.name));
         return currencyList;
     }
