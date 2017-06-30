@@ -390,7 +390,7 @@ public class BtcWalletService extends WalletService {
 
     public void resetAddressEntriesForPendingTrade(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
-        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.TRADE_PAYOUT);
+        // Don't swap TRADE_PAYOUT as it might be still open in the last trade step to be used for external transfer
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
