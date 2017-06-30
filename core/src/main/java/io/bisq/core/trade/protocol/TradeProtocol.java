@@ -37,7 +37,7 @@ import static io.bisq.core.util.Validator.nonEmptyStringOf;
 
 @Slf4j
 public abstract class TradeProtocol {
-    private static final long TIMEOUT_SEC = 75;
+    private static final long TIMEOUT_SEC = 120;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
