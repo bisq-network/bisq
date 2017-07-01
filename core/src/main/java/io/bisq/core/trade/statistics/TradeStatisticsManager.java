@@ -12,6 +12,7 @@ import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -94,8 +95,23 @@ public class TradeStatisticsManager implements PersistedDataHost {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics)
-                    add((TradeStatistics) storagePayload, true);
+                if (storagePayload instanceof TradeStatistics) {
+                    if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+                        add((TradeStatistics) storagePayload, true);
+                    } else {
+                        // We filter old data items delivered by nodes which still 
+                        // have 0.5.0 running (we got BTC trade statistic items in v0.5.0)
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.set(Calendar.DATE, 28);
+                        calendar.set(Calendar.MONTH, 5);
+                        calendar.set(Calendar.YEAR, 2017);
+                        calendar.setTimeZone(TimeZone.getDefault());
+
+                        final TradeStatistics tradeStatistics = (TradeStatistics) storagePayload;
+                        if (tradeStatistics.getTradeDate().after(calendar.getTime()))
+                            add(tradeStatistics, true);
+                    }
+                }
             }
 
             @Override
