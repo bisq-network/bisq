@@ -150,6 +150,10 @@ public class AppSetupWithP2P extends AppSetup {
 
     protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
+
+        final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+        p2PService.readPersistedEntryMap(storageFileName);
+        
         p2PService.onAllServicesInitialized();
     }
 }
