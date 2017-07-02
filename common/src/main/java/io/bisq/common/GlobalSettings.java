@@ -58,7 +58,7 @@ public class GlobalSettings {
         return btcDenomination;
     }
 
-    public static ReadOnlyObjectProperty<Locale> localePropertyProperty() {
+    public static ReadOnlyObjectProperty<Locale> localeProperty() {
         return localeProperty;
     }
 
