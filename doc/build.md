@@ -112,21 +112,12 @@ It is not needed for a normal user to run such a "full node" but for the build i
 Prepare bisq build
 -----------------
 ### 4. Install Protobuffer
-Install Protobuffer as binary or build from source.
 
-Build from source:
-
-    $ wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-java-3.3.0.tar.gz
-    $ tar xzf protobuf-3.3.0.tar.gz
-    $ cd protobuf-3.3.0
-    $ sudo apt-get update
-    $ sudo apt-get install build-essential
-    $ sudo ./configure
-    $ sudo make
-    $ sudo make check
-    $ sudo make install 
-    $ sudo ldconfig
-    $ protoc --version
+Install Protobuffer.
+       
+    $ wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip
+    $ unzip protoc-3.3.0-linux-x86_64.zip -d protoc3
+    $ sudo mv protoc3/bin/protoc /usr/local/bin/protoc
 
 ### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
 
