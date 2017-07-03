@@ -23,16 +23,18 @@ import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Locale;
 
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BisqAppMain extends BisqExecutable {
-    private static final Logger log = LoggerFactory.getLogger(BisqAppMain.class);
 
     public static void main(String[] args) throws Exception {
+        // Need to set default locale initially otherwise we get problems with non-english systems
+        Locale.setDefault(Locale.ENGLISH);
+        
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();
