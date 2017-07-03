@@ -23,6 +23,7 @@ import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,9 +47,10 @@ public class Statistics {
     private final StatisticsModule statisticsModule;
     private final OfferBookService offerBookService;
     private final PriceFeedService priceFeedService;
+    private final TradeStatisticsManager tradeStatisticsManager;
     private final P2PService p2pService;
     private final AppSetup appSetup;
-  
+
     public Statistics() {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
@@ -93,6 +95,7 @@ public class Statistics {
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         priceFeedService = injector.getInstance(PriceFeedService.class);
+        tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
 
         // We need the price feed for market based offers
         priceFeedService.setCurrencyCode("USD");
@@ -103,13 +106,14 @@ public class Statistics {
                 log.info("onBootstrapComplete: we start requestPriceFeed");
                 priceFeedService.requestPriceFeed(price -> log.info("requestPriceFeed. price=" + price),
                         (errorMessage, throwable) -> log.warn("Exception at requestPriceFeed: " + throwable.getMessage()));
+
+                tradeStatisticsManager.onAllServicesInitialized();
             }
         });
 
         Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
         appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
         appSetup.start();
-    
     }
 
     private void shutDown() {
