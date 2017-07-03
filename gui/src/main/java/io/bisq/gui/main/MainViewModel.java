@@ -334,7 +334,7 @@ public class MainViewModel implements ViewModel {
 
         Timer startupTimeout = UserThread.runAfter(() -> {
             log.warn("startupTimeout called");
-            if (walletsManager.areWalletsAvailable() && walletsManager.areWalletsEncrypted())
+            if (walletsManager.areWalletsEncrypted())
                 walletInitialized.addListener(walletInitializedListener);
             else
                 showStartupTimeoutPopup();
