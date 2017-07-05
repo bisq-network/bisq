@@ -91,7 +91,7 @@ public class ArbitratorManager {
     private final User user;
     private final Preferences preferences;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
-    private final List<Arbitrator> persistedAcceptedArbitrators;
+    private List<Arbitrator> persistedAcceptedArbitrators;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
 
 
@@ -105,13 +105,19 @@ public class ArbitratorManager {
         this.arbitratorService = arbitratorService;
         this.user = user;
         this.preferences = preferences;
+    }
 
-        persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
-        user.clearAcceptedArbitrators();
+    public void shutDown() {
+        stopRepublishArbitratorTimer();
+        stopRetryRepublishArbitratorTimer();
+    }
 
-        // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-        user.clearAcceptedMediators();
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAllServicesInitialized() {
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
@@ -129,19 +135,13 @@ public class ArbitratorManager {
                 }
             }
         });
-    }
 
-    public void shutDown() {
-        stopRepublishArbitratorTimer();
-        stopRetryRepublishArbitratorTimer();
-    }
+        persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
+        user.clearAcceptedArbitrators();
 
+        // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+        user.clearAcceptedMediators();
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onAllServicesInitialized() {
         if (user.getRegisteredArbitrator() != null) {
             P2PService p2PService = arbitratorService.getP2PService();
             if (p2PService.isBootstrapped())
