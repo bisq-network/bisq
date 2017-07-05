@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.overlays.windows;
 
+import io.bisq.common.util.DownloadTask;
+import io.bisq.common.util.DownloadType;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.Alert;
 import io.bisq.gui.main.overlays.Overlay;
-import io.bisq.common.util.DownloadType;
-import io.bisq.common.util.DownloadUtil;
-import io.bisq.common.util.Utilities;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.gui.util.FormBuilder.addButton;
@@ -44,10 +45,10 @@ import static io.bisq.gui.util.FormBuilder.addMultilineLabel;
 // TODO: For future use sigFile and key download calls have to loop through keyIDs and verifySignature needs to be called for all sigs/keys
 
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {
-    private static final String [] keyIDs = {"F379A1C6"};
+    private static final String[] keyIDs = {"F379A1C6"};
     private static final Logger log = LoggerFactory.getLogger(DisplayUpdateDownloadWindow.class);
     private Alert alert;
-    private DownloadUtil installerTask, keyTasks[], sigTasks[];
+    private DownloadTask installerTask, keyTasks[], sigTasks[];
     private boolean downloadSuccessInstaller, downloadSuccessKey[], downloadSuccessSignature[];
     private File installerFile, pubKeyFile[], sigFile[];
     private Label messageLabel;
@@ -59,8 +60,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisplayUpdateDownloadWindow() {
-        type = Type.Attention;
+    public DisplayUpdateDownloadWindow(Alert alert) {
+        this.type = Type.Attention;
+        this.alert = alert;
     }
 
     public void show() {
@@ -75,11 +77,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         display();
     }
 
-    public DisplayUpdateDownloadWindow alertMessage(Alert alert) {
-        this.alert = alert;
-        return this;
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +87,12 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         headLine = "Important update information!";
         headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
 
-
+        /* DOCUMENTATION:
+                FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+                openDataDirButton = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
+                        Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                openDataDirButton.setDefaultButton(false);
+        */
 
         indicator = new ProgressIndicator(0L);
         indicator.setVisible(false);
@@ -101,19 +103,14 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Button downloadButton = addButton(gridPane, ++rowIndex, "Download now");
 
         // TODO How do we get the right URL for the download? (check for other platforms)
-        String url = "https://github.com/bitsquare/bitsquare/releases/download/" + "v" + alert.getVersion() + "/" ;
-        String fileName;
-        if (Utilities.isOSX())
-            fileName = "Bitsquare-" + alert.getVersion() + ".dmg";
-        else if (Utilities.isWindows())
-            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".exe";
-        else if (Utilities.isLinux())
-            fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".deb";
-        else {
-            fileName = "";
-            downloadButton.setDisable(true);
-            messageLabel.setText("Unable to determine the correct installer. Pleaase manually download and verify " +
-                    "the correct file from https://bitsquare.io/downloads");
+
+        String url = "https://github.com/bitsquare/bitsquare/releases/download/" + "v" + alert.getVersion() + "/";
+        Optional<String> fileNameOptional = getFileName(downloadButton);
+        String fileName = fileNameOptional.orElseGet(() -> "");
+        if(!fileNameOptional.isPresent()) {
+                downloadButton.setDisable(true);
+                messageLabel.setText("Unable to determine the correct installer. Please manually download and verify " +
+                        "the correct file from https://bitsquare.io/downloads");
         }
 
         downloadButton.setOnAction(e -> {
@@ -124,26 +121,25 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
             downloadSuccessInstaller = false;
             try {
                 installerTask = Utilities.downloadFile(url.concat(fileName), null, indicator, DownloadType.INST, (byte) 0);
-            } catch (IOException exception)  {
+            } catch (IOException exception) {
                 messageLabel.setText(DOWNLOAD_FAILED);
                 return;
             }
             installerTask.setOnSucceeded(evt -> {
-/*                installerFile = installerTask.getValue();
+                installerFile = installerTask.getValue();
                 if (installerFile == null) {
                     messageLabel.setText(DOWNLOAD_FAILED);
                 } else {
                     downloadSuccessInstaller = true;
-                    verifySignature();
                 }
-*/
+
                 System.out.println("Completed installer");
                 updateStatusAndFileReferences(installerTask);
                 verifySignature();
             });
 
             // download key file
-            keyTasks = new DownloadUtil[keyIDs.length];
+            keyTasks = new DownloadTask[keyIDs.length];
             pubKeyFile = new File[keyIDs.length];
             downloadSuccessKey = new boolean[keyIDs.length];
             byte i = 0;
@@ -157,7 +153,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                 return;
             }
 
-            for (DownloadUtil task : keyTasks) {
+            for (DownloadTask task : keyTasks) {
 //                keyTasks[i].setOnSucceeded(new TaskSucceededHandler(keyTasks[i], pubKeyFile[i], downloadSuccessKey[i]));
                 task.setOnSucceeded(evt -> {
 /*                    file = task.getValue();
@@ -176,12 +172,12 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
 //TODO
             // download signature file
-            sigTasks = new DownloadUtil[keyIDs.length];
+            sigTasks = new DownloadTask[keyIDs.length];
             sigFile = new File[keyIDs.length];
-            downloadSuccessSignature = new boolean[] {false};
+            downloadSuccessSignature = new boolean[]{false};
             try {
                 sigTasks[0] = Utilities.downloadFile(url.concat(fileName /*+ "-" + keyIDs[0]*/ + ".asc"), null, null, DownloadType.SIG, (byte) 0);
-            } catch (IOException exception)  {
+            } catch (IOException exception) {
                 messageLabel.setText(DOWNLOAD_FAILED);
                 return;
             }
@@ -216,7 +212,22 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         GridPane.setMargin(closeButton, new Insets(10, 0, 0, 0));
     }
 
-    private void updateStatusAndFileReferences(DownloadUtil sourceTask) {
+    @NotNull
+    private Optional<String> getFileName(Button downloadButton) {
+        String fileName = null;
+        String prefix = "Bisq-";
+        // https://github.com/bitsquare/bitsquare/releases/download/v0.5.1/Bisq-0.5.1.dmg
+        if (Utilities.isOSX())
+            fileName = prefix + alert.getVersion() + ".dmg";
+        else if (Utilities.isWindows())
+            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".exe";
+        else if (Utilities.isLinux())
+            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + alert.getVersion() + ".deb";
+
+        return Optional.of(fileName);
+    }
+
+    private void updateStatusAndFileReferences(DownloadTask sourceTask) {
         switch (sourceTask.getDownloadType()) {
             case INST:
                 installerFile = sourceTask.getValue();
@@ -238,24 +249,26 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                 break;
         }
     }
-    private void verifySignature () {
+
+    private void verifySignature() {
         System.out.print("Inst.: " + downloadSuccessInstaller);
         System.out.print("\tKey: " + downloadSuccessKey[0]);
         System.out.println("\tSig.: " + downloadSuccessSignature[0]);
         if (downloadSuccessInstaller && arrayAnd(downloadSuccessKey) && arrayAnd(downloadSuccessSignature)) {
-            VerificationResult [] results = new VerificationResult[keyIDs.length];
-            for (int i=0; i<keyIDs.length; i++) {
+            VerificationResult[] results = new VerificationResult[keyIDs.length];
+            for (int i = 0; i < keyIDs.length; i++) {
                 try {
-                    boolean verified = DownloadUtil.verifySignature(pubKeyFile[i], sigFile[i], installerFile);
+                    boolean verified = DownloadTask.verifySignature(pubKeyFile[i], sigFile[i], installerFile);
                     results[i] = verified ? VerificationResult.GOOD : VerificationResult.BAD;
-/*                    if (verified) {
+                    if (verified) {
                         messageLabel.setText("The signature turned out to be GOOD. Please install " + installerFile.getName() + " from " + installerFile.getParent());
-                        Utilities.openDirectory(installerFile.getParentFile());
+                        Utilities.openFile(installerFile.getParentFile());
                     } else {
                         indicator.setVisible(false);
                         messageLabel.setText("The downloaded installer file showed a BAD signature. The file may have been manipulated.");
                     }
-*/                } catch (Exception exc) {
+
+                } catch (Exception exc) {
                     results[i] = VerificationResult.EXCEPTION;
                     indicator.setVisible(false);
                     messageLabel.setText("Signature check caused an exception. This does not yet mean a bad signature. Please try to verify yourself.");
@@ -263,15 +276,15 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                 }
             }
             StringBuilder sb = new StringBuilder();
-            for (int i=0; i<keyIDs.length; i++)
-                sb.append(keyIDs[i] + ":\t"+ results[i] + "\n");
+            for (int i = 0; i < keyIDs.length; i++)
+                sb.append(keyIDs[i] + ":\t" + results[i] + "\n");
             System.out.print(sb.toString());
             indicator.setVisible(false);
             messageLabel.setText(sb.toString());
         }
     }
 
-    private boolean arrayAnd(boolean [] array) {
+    private boolean arrayAnd(boolean[] array) {
         boolean and = true;
         for (boolean b : array)
             and &= b;
@@ -283,11 +296,13 @@ class TaskSucceededHandler implements EventHandler<WorkerStateEvent> {
     Task<File> task;
     File file;
     Boolean success;
+
     TaskSucceededHandler(@NotNull Task<File> t, File f, Boolean s) {
         task = t;
         file = f;
 
     }
+
     public void handle(WorkerStateEvent evt) {
         file = task.getValue();
         if (file != null)

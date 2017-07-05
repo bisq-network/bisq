@@ -2,12 +2,13 @@ package io.bisq.common.util;
 
 /**
  * A utility that downloads a file from a URL.
- * @author www.codejava.net
  *
+ * @author www.codejava.net
  */
 
 
 import javafx.concurrent.Task;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
@@ -20,8 +21,8 @@ import java.security.Security;
 import java.security.SignatureException;
 import java.util.Iterator;
 
-
-public class DownloadUtil extends Task<File> {
+@Slf4j
+public class DownloadTask extends Task<File> {
 
     private static final int BUFFER_SIZE = 4096;
     private String fileName = null;
@@ -33,43 +34,46 @@ public class DownloadUtil extends Task<File> {
 
     /**
      * Prepares a task to download a file from {@code fileURL} to {@code saveDir}.
+     *
      * @param fileURL HTTP URL of the file to be downloaded
      * @param saveDir path of the directory to save the file
      */
-    public DownloadUtil(final String fileURL, final String saveDir, DownloadType downloadType, byte index) {
+    public DownloadTask(final String fileURL, final String saveDir, DownloadType downloadType, byte index) {
         super();
         this.fileURL = fileURL;
         this.saveDir = saveDir;
         this.downloadType = downloadType;
         this.index = index;
+        log.info("Starting DownloadTask with file:{}, saveDir:{}, downloadType:{}, index:{}", fileURL, saveDir,
+                downloadType, index);
     }
 
-    public DownloadUtil(final String fileURL, final String saveDir) {
+    public DownloadTask(final String fileURL, final String saveDir) {
         this(fileURL, saveDir, DownloadType.MISC, (byte) -1);
     }
 
     /**
      * Prepares a task to download a file from {@code fileURL} to the sysyem's temp dir specified in java.io.tmpdir.
+     *
      * @param fileURL HTTP URL of the file to be downloaded
      */
-    public DownloadUtil(final String fileURL, DownloadType downloadType, byte index) {
-        this(fileURL, "/home/bob/Downloads/", downloadType, index);
-//TODO        final String saveDir = System.getProperty("java.io.tmpdir");
-//        final String saveDir = "/home/bob/Downloads/";
-        System.out.println("Auto-selected temp dir " + this.saveDir);
+    public DownloadTask(final String fileURL, DownloadType downloadType, byte index) {
+        this(fileURL, System.getProperty("java.io.tmpdir"), downloadType, index);
     }
 
-    public DownloadUtil(final String fileURL) {
+    public DownloadTask(final String fileURL) {
         this(fileURL, DownloadType.MISC, (byte) -1);
     }
 
 
-        /**
-         * Starts the task and therefore the actual download.
-         * @return A reference to the created file or {@code null} if no file could be found at the provided URL
-         * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
-         */
-    @Override protected File call() throws IOException {
+    /**
+     * Starts the task and therefore the actual download.
+     *
+     * @return A reference to the created file or {@code null} if no file could be found at the provided URL
+     * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
+     */
+    @Override
+    protected File call() throws IOException {
         System.out.println("Task started....");
         URL url = new URL(fileURL);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -92,16 +96,18 @@ public class DownloadUtil extends Task<File> {
                 }
             } else {
                 // extracts file name from URL
-*/                this.fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1, fileURL.length());
+*/
+        this.fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1, fileURL.length());
 /*            }
 
             // opens input stream from the HTTP connection
             InputStream inputStream = httpConn.getInputStream();
 
-*/            String saveFilePath = saveDir + (saveDir.endsWith(File.separator) ? "" : File.separator) + fileName;
+*/
+        String saveFilePath = saveDir + (saveDir.endsWith(File.separator) ? "" : File.separator) + fileName;
 
-            // opens an output stream to save into file
-            File outputFile = new File(saveFilePath);
+        // opens an output stream to save into file
+        File outputFile = new File(saveFilePath);
 /*            FileOutputStream outputStream = new FileOutputStream(outputFile);
 
             int bytesRead;
@@ -122,36 +128,33 @@ public class DownloadUtil extends Task<File> {
                 inputStream.close();
             }
 */
-            return outputFile;
+        return outputFile;
 /*        } else {
             System.out.println("No file to download. Server replied HTTP code: " + responseCode);
         }
         httpConn.disconnect();
         return null;
-*/    }
+*/
+    }
 
     /**
      * Verifies detached PGP signatures against GPG/openPGP RSA public keys. Does currently not work with openssl or JCA/JCE keys.
+     *
      * @param pubKeyFilename Path to file providing the public key to use
-     * @param sigFilename Path to detached signature file
-     * @param dataFilename Path to signed data file
+     * @param sigFilename    Path to detached signature file
+     * @param dataFilename   Path to signed data file
      * @return {@code true} if signature is valid, {@code false} if signature is not valid
      * @throws Exception throws various exceptions in case something went wrong. Main reason should be that key or
-     * signature could be extracted from the provided files due to a "bad" format.<br>
-     * <code>FileNotFoundException, IOException, SignatureException, PGPException</code>
+     *                   signature could be extracted from the provided files due to a "bad" format.<br>
+     *                   <code>FileNotFoundException, IOException, SignatureException, PGPException</code>
      */
     public static boolean verifySignature(File pubKeyFile, File sigFile, File dataFile) throws Exception {
-//        private final String pubkeyFilename = "/home/bob/Downloads/F379A1C6.asc.gpg";
-//        private final String sigFilename = "/home/bob/Downloads/sig.asc";
-//        private final String dataFilename = "/home/bob/Downloads/Bitsquare-64bit-0.4.9.9.1.deb";
-
         Security.addProvider(new BouncyCastleProvider());
         InputStream is;
         int bytesRead;
         PGPPublicKey publicKey;
         PGPSignature pgpSignature;
         boolean result;
-
 
         // Read keys from file
         is = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile));
@@ -166,10 +169,10 @@ public class DownloadUtil extends Task<File> {
             throw new PGPException("Could not find public keyring in provided key file");
         }
 
-    // Would be the solution for multiple keys in one file
-//        Iterator<PGPPublicKey> kIt;
-//        kIt = pgpPublicKeyRing.getPublicKeys();
-//        publicKey = pgpPublicKeyRing.getPublicKey(0xF5B84436F379A1C6L);
+        // Would be the solution for multiple keys in one file
+        //        Iterator<PGPPublicKey> kIt;
+        //        kIt = pgpPublicKeyRing.getPublicKeys();
+        //        publicKey = pgpPublicKeyRing.getPublicKey(0xF5B84436F379A1C6L);
 
         // Read signature from file
         is = PGPUtil.getDecoderStream(new FileInputStream(sigFile));
@@ -191,34 +194,32 @@ public class DownloadUtil extends Task<File> {
 
         // Read file to verify
         //try {
-            byte[] data = new byte[1024];
-            is = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
-            while (true) {
-                bytesRead = is.read(data, 0, 1024);
-                if (bytesRead == -1)
-                    break;
-                pgpSignature.update(data, 0, bytesRead);
-            }
-            is.close();
-
-            // Verify the signature
-            result = pgpSignature.verify();
-            System.out.println("The signature turned out to be " + (result ? "good." : "bad."));
-            return result;
-            /*
-        } catch (SignatureException sigExc) {
-            try {
-                is.close();
-            } catch (IOException ioExc) {}
-            throw sigExc;
+        byte[] data = new byte[1024];
+        is = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
+        while (true) {
+            bytesRead = is.read(data, 0, 1024);
+            if (bytesRead == -1)
+                break;
+            pgpSignature.update(data, 0, bytesRead);
         }
-        */
+        is.close();
+
+        // Verify the signature
+        result = pgpSignature.verify();
+        System.out.println("The signature turned out to be " + (result ? "good." : "bad."));
+        return result;
     }
 
-    public String getFileName() {return this.fileName;}
+    public String getFileName() {
+        return this.fileName;
+    }
 
-    public DownloadType getDownloadType() {return downloadType;}
+    public DownloadType getDownloadType() {
+        return downloadType;
+    }
 
-    public byte getIndex() {return index;}
+    public byte getIndex() {
+        return index;
+    }
 }
 

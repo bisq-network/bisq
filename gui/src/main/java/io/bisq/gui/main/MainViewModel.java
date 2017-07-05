@@ -1022,7 +1022,7 @@ public class MainViewModel implements ViewModel {
         user.setDisplayedAlert(alert);
         if (alert != null && !alreadyDisplayed)
             if (alert.isUpdateInfo() || alert.isNewVersion())
-                new DisplayUpdateDownloadWindow().alertMessage(alert).show();
+                new DisplayUpdateDownloadWindow(alert).show();
             else
                 new DisplayAlertMessageWindow().alertMessage(alert).show();
     }

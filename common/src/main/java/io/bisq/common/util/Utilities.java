@@ -213,12 +213,12 @@ public class Utilities {
      * @return The task handling the download
      * @throws IOException
      */
-    public static DownloadUtil downloadFile(String fileURL, String saveDir, @Nullable ProgressIndicator indicator, DownloadType downloadType, byte index) throws IOException {
-        DownloadUtil task;
+    public static DownloadTask downloadFile(String fileURL, String saveDir, @Nullable ProgressIndicator indicator, DownloadType downloadType, byte index) throws IOException {
+        DownloadTask task;
         if (saveDir != null)
-            task = new DownloadUtil(fileURL, saveDir, downloadType, index);
+            task = new DownloadTask(fileURL, saveDir, downloadType, index);
         else
-            task = new DownloadUtil(fileURL, downloadType, index); // Tries to use system temp directory
+            task = new DownloadTask(fileURL, downloadType, index); // Tries to use system temp directory
         if (indicator != null) {
             indicator.progressProperty().unbind();
             indicator.progressProperty().bind(task.progressProperty());
