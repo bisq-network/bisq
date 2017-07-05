@@ -76,8 +76,8 @@ public class SeedNodesRepository {
 
             // regtest
             new NodeAddress("localhost:2002"),
-            new NodeAddress("localhost:3002"),
-            new NodeAddress("localhost:4002"),
+          /*  new NodeAddress("localhost:3002"),
+            new NodeAddress("localhost:4002"),*/
 
             // LTC
             // mainnet
