@@ -71,9 +71,8 @@ public class AppSetupWithP2P extends AppSetup {
         p2pNetWorkReady = initP2PNetwork();
 
         p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
+            if (newValue) 
                 onBasicServicesInitialized();
-            }
         });
     }
 
