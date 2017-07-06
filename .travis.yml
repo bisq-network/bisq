@@ -1,0 +1,29 @@
+language: java
+jdk:
+    - oraclejdk8
+
+install:
+  - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
+  - cd bitcoinj
+  - mvn clean install
+  - git clone https://github.com/bitsquare/libdohj.git
+  - cd libdohj
+  - mvn clean install
+  - git clone https://github.com/bitsquare/btcd-cli4j.git
+  - cd btcd-cli4j
+  - mvn clean install
+  - cd ..
+
+script: mvn clean install
+
+#notifications:
+#  irc:
+#    channels: chat.freenode.net#bisq
+#    template:
+#      - '%{message} (%{repository}#%{build_number}, %{duration})'
+#      - '%{repository}/%{branch} %{commit} %{author}: %{commit_message}'
+#      - '%{build_url}'
+#    on_success: change
+#    on_failure: always
+#    use_notice: true
+#    skip_join: true
