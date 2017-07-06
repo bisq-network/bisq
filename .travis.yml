@@ -2,7 +2,18 @@ language: java
 jdk:
     - oraclejdk8
 
-script: mvn test
+install:
+  - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
+  - cd bitcoinj
+  - mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+  - git clone https://github.com/bitsquare/libdohj.git
+  - cd libdohj
+  - mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+  - git clone https://github.com/bitsquare/btcd-cli4j.git
+  - cd btcd-cli4j
+  - mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+
+script: mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
 #notifications:
 #  irc:
