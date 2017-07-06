@@ -42,6 +42,11 @@ public class BsqParser {
     private final IssuanceVerification issuanceVerification;
     private final RpcService rpcService;
 
+    // Maybe we want to request fee at some point, leave it for now and disable it
+    private boolean requestFee = false;
+    private final Map<Integer, Long> feesByBlock = new HashMap<>();
+    
+
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqParser(RpcService rpcService,
@@ -138,7 +143,10 @@ public class BsqParser {
         // We add all transactions to the block
         long startTs = System.currentTimeMillis();
         for (String txId : btcdBlock.getTx()) {
-            final Tx tx = rpcService.requestTransaction(txId, blockHeight);
+            if (requestFee)
+                rpcService.requestFees(txId, blockHeight, feesByBlock);
+
+            final Tx tx = rpcService.requestTx(txId, blockHeight);
             txList.add(tx);
             checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
         }
