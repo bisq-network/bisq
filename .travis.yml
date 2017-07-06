@@ -12,6 +12,7 @@ install:
   - git clone https://github.com/bitsquare/btcd-cli4j.git
   - cd btcd-cli4j
   - mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+  - cd ..
 
 script: mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
