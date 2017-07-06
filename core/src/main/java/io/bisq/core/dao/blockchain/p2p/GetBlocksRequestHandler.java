@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p.getblocks;
+package io.bisq.core.dao.blockchain.p2p;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -6,8 +6,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.GetBsqBlocksRequest;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.GetBsqBlocksResponse;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;

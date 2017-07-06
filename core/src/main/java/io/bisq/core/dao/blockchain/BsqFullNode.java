@@ -22,9 +22,9 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
-import io.bisq.core.dao.blockchain.p2p.getblocks.RequestBlocksManager;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.NewBsqBlockBroadcastMessage;
+import io.bisq.core.dao.blockchain.p2p.RequestManager;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
+import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
@@ -44,7 +44,7 @@ public class BsqFullNode extends BsqNode {
     private final JsonChainStateExporter jsonChainStateExporter;
     @Getter
     private boolean parseBlockchainComplete;
-    private RequestBlocksManager requestBlocksManager;
+    private RequestManager requestBlocksManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,12 +150,12 @@ public class BsqFullNode extends BsqNode {
 
         if (requestBlocksManager == null && p2pNetworkReady) {
             if (p2pNetworkReady) {
-                requestBlocksManager = new RequestBlocksManager(p2PService.getNetworkNode(),
+                requestBlocksManager = new RequestManager(p2PService.getNetworkNode(),
                         p2PService.getPeerManager(),
                         p2PService.getBroadcaster(),
                         p2PService.getSeedNodeAddresses(),
                         bsqChainState,
-                        new RequestBlocksManager.Listener() {
+                        new RequestManager.Listener() {
                             @Override
                             public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
 

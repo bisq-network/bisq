@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p.getblocks;
+package io.bisq.core.dao.blockchain.p2p;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -7,9 +7,9 @@ import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.GetBsqBlocksRequest;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.getblocks.messages.NewBsqBlockBroadcastMessage;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
+import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.NodeAddress;
@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class RequestBlocksManager implements MessageListener, ConnectionListener, PeerManager.Listener {
+public class RequestManager implements MessageListener, ConnectionListener, PeerManager.Listener {
 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
@@ -70,12 +70,12 @@ public class RequestBlocksManager implements MessageListener, ConnectionListener
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestBlocksManager(NetworkNode networkNode,
-                                PeerManager peerManager,
-                                Broadcaster broadcaster,
-                                Set<NodeAddress> seedNodeAddresses,
-                                BsqChainState bsqChainState,
-                                Listener listener) {
+    public RequestManager(NetworkNode networkNode,
+                          PeerManager peerManager,
+                          Broadcaster broadcaster,
+                          Set<NodeAddress> seedNodeAddresses,
+                          BsqChainState bsqChainState,
+                          Listener listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
