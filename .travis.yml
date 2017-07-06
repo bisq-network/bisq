@@ -2,6 +2,8 @@ language: java
 jdk:
     - oraclejdk8
 
+script: mvn test
+
 #notifications:
 #  irc:
 #    channels: chat.freenode.net#bisq
