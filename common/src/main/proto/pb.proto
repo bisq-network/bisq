@@ -286,11 +286,13 @@ message PrivateNotificationMessage {
 
 message GetBsqBlocksRequest {
     int32 from_block_height = 1;
+    int32 nonce = 2;
 }
 
 // TODO not fully impl. yet, serialized data used atm
 message GetBsqBlocksResponse {
     bytes bsq_blocks_bytes = 1;
+    int32 request_nonce = 2;
 }
 
 // TODO not fully impl. yet, serialized data used atm

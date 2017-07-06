@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p;
+package io.bisq.core.dao.blockchain.p2p.getblocks.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
@@ -13,9 +13,10 @@ import lombok.Getter;
 @Getter
 public final class GetBsqBlocksResponse extends NetworkEnvelope implements DirectMessage, ExtendedDataSizePermission {
     private final byte[] bsqBlocksBytes;
+    private final int requestNonce;
 
-    public GetBsqBlocksResponse(byte[] bsqBlocksBytes) {
-        this(bsqBlocksBytes, Version.getP2PMessageVersion());
+    public GetBsqBlocksResponse(byte[] bsqBlocksBytes, int requestNonce) {
+        this(bsqBlocksBytes, requestNonce, Version.getP2PMessageVersion());
     }
 
 
@@ -23,20 +24,22 @@ public final class GetBsqBlocksResponse extends NetworkEnvelope implements Direc
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetBsqBlocksResponse(byte[] bsqBlocksBytes, int messageVersion) {
+    private GetBsqBlocksResponse(byte[] bsqBlocksBytes, int requestNonce, int messageVersion) {
         super(messageVersion);
         this.bsqBlocksBytes = bsqBlocksBytes;
+        this.requestNonce = requestNonce;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
                 .setGetBsqBlocksResponse(PB.GetBsqBlocksResponse.newBuilder()
-                        .setBsqBlocksBytes(ByteString.copyFrom(bsqBlocksBytes)))
+                        .setBsqBlocksBytes(ByteString.copyFrom(bsqBlocksBytes))
+                        .setRequestNonce(requestNonce))
                 .build();
     }
 
     public static NetworkEnvelope fromProto(PB.GetBsqBlocksResponse proto, int messageVersion) {
-        return new GetBsqBlocksResponse(proto.getBsqBlocksBytes().toByteArray(), messageVersion);
+        return new GetBsqBlocksResponse(proto.getBsqBlocksBytes().toByteArray(), proto.getRequestNonce(), messageVersion);
     }
 }

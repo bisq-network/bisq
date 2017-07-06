@@ -252,7 +252,7 @@ public class RequestDataHandler implements MessageListener {
                 }
             }
         } else {
-            log.trace("We got a message from another connection and ignore it.");
+            log.warn("We got a message from another connection and ignore it. That should never happen.");
         }
     }
 

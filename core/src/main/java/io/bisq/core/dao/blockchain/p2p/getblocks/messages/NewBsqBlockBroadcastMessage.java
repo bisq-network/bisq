@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p;
+package io.bisq.core.dao.blockchain.p2p.getblocks.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
