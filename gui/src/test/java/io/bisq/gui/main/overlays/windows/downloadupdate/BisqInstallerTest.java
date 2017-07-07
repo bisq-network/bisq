@@ -1,10 +1,11 @@
-package io.bisq.common.util;
+package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -24,7 +25,7 @@ import static org.junit.Assert.assertTrue;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-public class DownloadTaskTest {
+public class BisqInstallerTest {
     @Test
     public void call() throws Exception {
     }
@@ -38,7 +39,7 @@ public class DownloadTaskTest {
         url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
         File pubKeyFile = new File(url.getFile());
 
-        assertTrue(DownloadTask.verifySignature(pubKeyFile, sigFile, dataFile));
+        assertEquals(BisqInstaller.VerifyStatusEnum.OK, BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile));
 
         url = this.getClass().getResource("/downloadUpdate/test_bad.txt");
         dataFile = new File(url.getFile());
@@ -47,8 +48,8 @@ public class DownloadTaskTest {
         url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
         pubKeyFile = new File(url.getFile());
 
-        DownloadTask.verifySignature(pubKeyFile, sigFile, dataFile);
-        assertFalse(DownloadTask.verifySignature(pubKeyFile, sigFile, dataFile));
+        BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile);
+        assertEquals(BisqInstaller.VerifyStatusEnum.FAIL, BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile));
     }
 
     @Test
