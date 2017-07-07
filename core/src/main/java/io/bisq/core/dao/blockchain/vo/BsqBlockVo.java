@@ -17,25 +17,40 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
+import lombok.Getter;
 import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
-
 @Value
-@Immutable
-public class BsqBlockVo implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
+@Getter
+public class BsqBlockVo implements PersistablePayload {
     private final int height;
     private final String hash;
-    private String previousBlockHash;
+    private final String previousBlockHash;
 
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
+    public BsqBlockVo(int height, String hash, String previousBlockHash) {
+        this.height = height;
+        this.hash = hash;
+        this.previousBlockHash = previousBlockHash;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public PB.BsqBlockVo toProtoMessage() {
+        return PB.BsqBlockVo.newBuilder()
+                .setHeight(height)
+                .setHash(hash)
+                .setPreviousBlockHash(previousBlockHash).build();
+    }
+
+    public static BsqBlockVo fromProto(PB.BsqBlockVo proto) {
+        return new BsqBlockVo(proto.getHeight(),
+                proto.getHash(),
+                proto.getPreviousBlockHash());
     }
 }

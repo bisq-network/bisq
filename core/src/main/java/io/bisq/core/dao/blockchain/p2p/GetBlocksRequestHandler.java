@@ -9,6 +9,7 @@ import io.bisq.common.app.Log;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.NetworkNode;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class GetBlocksRequestHandler {
@@ -63,9 +65,8 @@ public class GetBlocksRequestHandler {
 
     public void handle(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
-        //TODO use PB
-        byte[] bsqBlockListBytes = bsqChainState.getSerializedResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
-        final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes, getBsqBlocksRequest.getNonce());
+        List<BsqBlock> bsqBlocks = bsqChainState.getResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+        final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

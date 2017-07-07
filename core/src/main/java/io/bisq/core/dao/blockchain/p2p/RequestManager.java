@@ -6,7 +6,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
@@ -119,8 +118,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     }
 
     public void publishNewBlock(BsqBlock bsqBlock) {
-        byte[] bsqBlockBytes = Utilities.<BsqBlock>serialize(bsqBlock);
-        final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlockBytes);
+        final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlock);
         broadcaster.broadcast(newBsqBlockBroadcastMessage, networkNode.getNodeAddress(), null, true);
     }
 

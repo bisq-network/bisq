@@ -17,27 +17,33 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
-
 @Value
-@Immutable
-public class TxInputVo implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
+public class TxInputVo implements PersistablePayload {
     private final String txId;
     private final int txOutputIndex;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PB.TxInputVo toProtoMessage() {
+        return PB.TxInputVo.newBuilder()
+                .setTxId(txId)
+                .setTxOutputIndex(txOutputIndex)
+                .build();
+    }
+
+    public static TxInputVo fromProto(PB.TxInputVo proto) {
+        return new TxInputVo(proto.getTxId(),
+                proto.getTxOutputIndex());
+    }
+
     public TxIdIndexTuple getTxIdIndexTuple() {
         return new TxIdIndexTuple(txId, txOutputIndex);
-    } // TODO not impl yet
-
-    @Override
-    public Message toProtoMessage() {
-        return null;
     }
 }

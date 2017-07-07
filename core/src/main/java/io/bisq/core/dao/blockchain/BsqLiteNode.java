@@ -20,7 +20,6 @@ package io.bisq.core.dao.blockchain;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
@@ -85,8 +84,7 @@ public class BsqLiteNode extends BsqNode {
                 new RequestManager.Listener() {
                     @Override
                     public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
-                        byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
-                        List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
+                        List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
                         log.info("received msg with {} items", bsqBlockList.size(), bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
                         if (bsqBlockList.size() > 0)
                             log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
@@ -108,8 +106,7 @@ public class BsqLiteNode extends BsqNode {
 
                     @Override
                     public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
-                        byte[] bsqBlockBytes = newBsqBlockBroadcastMessage.getBsqBlockBytes();
-                        BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
+                        BsqBlock bsqBlock = newBsqBlockBroadcastMessage.getBsqBlock();
                         // Be safe and reset all mutable data in case the provider would not have done it
                         bsqBlock.reset();
                         log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
