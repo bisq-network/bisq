@@ -31,7 +31,7 @@ import org.bitcoinj.core.Utils;
 
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
-import java.awt.*;
+import java.util.List;
 import java.io.*;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
@@ -42,6 +42,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.awt.Desktop.*;
 
 
 @Slf4j
@@ -171,9 +172,9 @@ public class Utilities {
 
     public static void openURI(URI uri) throws IOException {
         if (!isLinux()
-                && Desktop.isDesktopSupported()
-                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            Desktop.getDesktop().browse(uri);
+                && isDesktopSupported()
+                && getDesktop().isSupported(Action.BROWSE)) {
+            getDesktop().browse(uri);
         } else {
             // Maybe Application.HostServices works in those cases?
             // HostServices hostServices = getHostServices();
@@ -188,9 +189,9 @@ public class Utilities {
 
     public static void openFile(File file) throws IOException {
         if (!isLinux()
-                && Desktop.isDesktopSupported()
-                && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Desktop.getDesktop().open(file);
+                && isDesktopSupported()
+                && getDesktop().isSupported(Action.OPEN)) {
+            getDesktop().open(file);
         } else {
             // Maybe Application.HostServices works in those cases?
             // HostServices hostServices = getHostServices();
@@ -203,30 +204,8 @@ public class Utilities {
         }
     }
 
-    /**
-     * Creates and starts a Task for background downloading
-     * @param fileURL URL of file to be downloaded
-     * @param saveDir Directory to save file to
-     * @param indicator Progress indicator, can be {@code null}
-     * @param downloadType enum to identify downloaded files after completion, options are {INST, KEY, SIG, MISC}
-     * @param index For coordination between key and sig files
-     * @return The task handling the download
-     * @throws IOException
-     */
-    public static DownloadUtil downloadFile(String fileURL, String saveDir, @Nullable ProgressIndicator indicator, DownloadType downloadType, byte index) throws IOException {
-        DownloadUtil task;
-        if (saveDir != null)
-            task = new DownloadUtil(fileURL, saveDir, downloadType, index);
-        else
-            task = new DownloadUtil(fileURL, downloadType, index); // Tries to use system temp directory
-        if (indicator != null) {
-            indicator.progressProperty().unbind();
-            indicator.progressProperty().bind(task.progressProperty());
-        }
-        Thread th = new Thread(task);
-        th.start();
-        // TODO: check for problems when creating task
-        return task;
+    public static String getTmpDir() {
+        return System.getProperty("java.io.tmpdir");
     }
 
     public static void printSystemLoad() {
