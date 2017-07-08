@@ -108,21 +108,10 @@ It is not needed for a normal user to run such a "full node" but for the build i
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
-
-Prepare bisq build
------------------
-
-### 1. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
-
-If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
-
-In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/security` AND `Java/jre1.8.0_xxx/jre/lib/security` otherwise the test in the above page will fail.
-
-
 Build bisq
 -----------------
 
-### 2. Build final bisq jar
+### 1. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
 
