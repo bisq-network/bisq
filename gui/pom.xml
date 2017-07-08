@@ -49,19 +49,62 @@
         </resources>
 
         <plugins>
+            <!-- Bouncycastle jars are signed and cannot be placed inside shaded jar.
+            we ship them beside our app in /lib -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-bouncycastle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcprov-jdk15on</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcpg-jdk15on</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                 </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
+                    <artifactSet>
+                        <excludes>
+                            <exclude>org.bouncycastle:*:*:*</exclude>
+                        </excludes>
+                    </artifactSet>
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bisq.gui.app.BisqAppMain</mainClass>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>io.bisq.gui.app.BisqAppMain</Main-Class>
+                                <!-- the specified bouncy castle jar classes  -->
+                                <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
+                            </manifestEntries>
                         </transformer>
                     </transformers>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
                     <filters>
                         <filter>
                             <!-- exclude signatures, the bundling process breaks them for some reason -->
@@ -233,7 +276,7 @@
                                             org.bitcoinj:orchid:1.1.1:jar:null:compile:7898329eae76ec6bfdf27081234bb222d5be09df
                                         </urn>
                                         <urn>
-                                            org.bouncycastle:bcprov-jdk15on:1.53:jar:null:compile:9d3def2fa5a0d2ed0c1146e9945df10d29eb4ccb
+                                            org.bouncycastle:bcprov-jdk15on:1.56:jar:null:compile:a153c6f9744a3e9dd6feab5e210e1c9861362ec7
                                         </urn>
                                         <urn>
                                             org.controlsfx:controlsfx:8.0.6_20:jar:null:compile:5a4ca2765419fe12af0f0c7c5a8129c53bb661d9

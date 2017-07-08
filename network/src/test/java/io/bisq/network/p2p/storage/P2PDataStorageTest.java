@@ -18,6 +18,7 @@ import mockit.integration.junit4.JMockit;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.io.File;
@@ -31,6 +32,8 @@ import java.util.Set;
 
 @Slf4j
 @RunWith(JMockit.class)
+// TODO
+@Ignore("CoreProtobufferResolver is not accessible here: We should refactor it so that the classes themselves know how to deserialize so we don't get dependencies from core objects here")
 public class P2PDataStorageTest {
     private final Set<NodeAddress> seedNodes = new HashSet<>();
     private EncryptionService encryptionService1, encryptionService2;
@@ -83,10 +86,6 @@ public class P2PDataStorageTest {
         FileUtil.deleteDirectory(dir1);
         FileUtil.deleteDirectory(dir2);
     }
-
-    //TODO CoreProtobufferResolver is not accessible here
-// We should refactor it so that the classes themselves know how to deserialize
-// so we don't get dependencies from core objects here
 
    /* @Test
     public void testProtectedStorageEntryAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
