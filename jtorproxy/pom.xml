@@ -15,12 +15,12 @@
         <dependency>
             <groupId>io.bisq</groupId>
             <artifactId>jsocks</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.bisq</groupId>
             <artifactId>jtorctl</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>
