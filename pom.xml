@@ -250,4 +250,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <!-- Oracle JDK 9 will support strong cyphers, but they must be explicitly enabled-->
+            <id>enable-strong-cipher-jdk9</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+            </activation>
+            <properties>
+                    <crypto.policy>unlimited</crypto.policy>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>
