@@ -74,8 +74,8 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-### 2. Install the latest protobuffer release on your machine (3.3.0 at the time of writing):
-https://github.com/google/protobuf/releases
+### Protobuf
+Note that Bisq use protobuf during maven build https://github.com/google/protobuf/releases
 
 ### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
 Go to Help > Edit custom properties => paste the following line:
@@ -111,15 +111,8 @@ It is not needed for a normal user to run such a "full node" but for the build i
 
 Prepare bisq build
 -----------------
-### 4. Install Protobuffer
 
-Install Protobuffer.
-       
-    $ wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip
-    $ unzip protoc-3.3.0-linux-x86_64.zip -d protoc3
-    $ sudo mv protoc3/bin/protoc /usr/local/bin/protoc
-
-### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
+### 4. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
 
 We need to get the bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
 
@@ -127,14 +120,14 @@ We need to get the bisq dependencies resolved first as we need to copy the Bounc
     $ cd bisq
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-### 6. Copy the BouncyCastle provider jar file
+### 5. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
-### 7. Edit the java.security file and add BouncyCastleProvider
+### 6. Edit the java.security file and add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
@@ -143,7 +136,7 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
     $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
     ... edit and save
 
-### 8. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
+### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
 If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
 
@@ -153,7 +146,7 @@ In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/
 Build bisq
 -----------------
 
-### 9. Build final bisq jar
+### 8. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
 
