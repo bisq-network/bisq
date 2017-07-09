@@ -108,51 +108,16 @@ It is not needed for a normal user to run such a "full node" but for the build i
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
-
-Prepare bisq build
------------------
-
-### 4. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
-
-We need to get the bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
-
-    $ git clone https://github.com/bitsquare/bitsquare.git
-    $ cd bisq
-    $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-
-### 5. Copy the BouncyCastle provider jar file
-
-Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
-This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
-
-    $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
-
-### 6. Edit the java.security file and add BouncyCastleProvider
-
-Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
-E.g.:
-security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
-
-    $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
-    ... edit and save
-
-### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
-
-If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
-
-In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/security` AND `Java/jre1.8.0_xxx/jre/lib/security` otherwise the test in the above page will fail.
-
-
 Build bisq
 -----------------
 
-### 8. Build final bisq jar
+### 1. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
 
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
-When the build completes, you will find an executable jar: `gui/target/shaded.jar`.
+When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
 To run it use:
 
     $ java -jar gui/target/shaded.jar
@@ -160,7 +125,7 @@ To run it use:
 Build binaries
 -----------------
 
-If you want to build the binaries check out the build scripts under the package directory.
+If you want to build the binaries check out the build scripts under the package directory. copy shaded.jar and the lib directory.
 
 
 DAO full node
