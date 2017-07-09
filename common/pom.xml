@@ -56,6 +56,7 @@
 
     <build>
         <plugins>
+            <!-- unpack correct protobuf exe for current os -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -76,7 +77,6 @@
                                     <classifier>${protobuf.classifier}</classifier>
                                     <type>exe</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
                                     <destFileName>${protobuf.exe}</destFileName>
                                 </artifactItem>
                             </artifactItems>
@@ -84,13 +84,32 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- https://www.xolstice.org/protobuf-maven-plugin/usage.html -->
+            <plugin>
+                <!--fix permissions to R_X -->
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>set-protobuf-permissions</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/permissions.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Run protobuf https://www.xolstice.org/protobuf-maven-plugin/usage.html -->
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.0</version>
                 <configuration>
-                    <protocExecutable>${project.build.directory}/${protobuf.exe}</protocExecutable>
+                    <protocExecutable>${project.build.directory}/${project.artifactId}-${project.version}-bin/${protobuf.exe}</protocExecutable>
                 </configuration>
                 <executions>
                     <execution>
