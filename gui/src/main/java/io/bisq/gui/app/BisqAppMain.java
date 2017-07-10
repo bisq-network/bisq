@@ -37,13 +37,13 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 public class BisqAppMain extends BisqExecutable {
 
     static {
+        // Need to set default locale initially otherwise we get problems with non-english systems
+        Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
+        
         removeCryptographyRestrictions();
     }
 
     public static void main(String[] args) throws Exception {
-        // Need to set default locale initially otherwise we get problems with non-english systems
-        Locale.setDefault(Locale.ENGLISH);
-
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();

@@ -250,7 +250,6 @@ public class RequestDataHandler implements MessageListener {
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
-
             } else {
                 log.warn("We got a message from another connection and ignore it. That should never happen.");
             }
