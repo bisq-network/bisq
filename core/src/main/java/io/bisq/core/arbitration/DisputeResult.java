@@ -62,7 +62,7 @@ public final class DisputeResult implements NetworkPayload {
     private final BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     private final BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
     private final BooleanProperty screenCastProperty = new SimpleBooleanProperty();
-    private final StringProperty summaryNotesProperty = new SimpleStringProperty();
+    private final StringProperty summaryNotesProperty = new SimpleStringProperty("");
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
