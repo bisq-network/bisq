@@ -45,7 +45,7 @@
             <id>macos</id>
             <activation>
                 <os>
-                    <family>macos</family>
+                    <family>mac</family>
                 </os>
             </activation>
             <properties>
