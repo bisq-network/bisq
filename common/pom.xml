@@ -97,7 +97,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <chmod file="${project.build.directory}/dependency/${protobuf.exe}" perm="ugo+rwx"/>
+                                <chmod file="${project.build.directory}/dependency/${protobuf.exe}" perm="u+rx"/>
                                 <echo message="permissions changed for ${project.build.directory}/dependency/${protobuf.exe}"/>
                             </target>
                         </configuration>
