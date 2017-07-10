@@ -33,6 +33,7 @@
             <activation>
                 <os>
                     <family>unix</family>
+                    <name>Linux</name>
                 </os>
             </activation>
             <properties>
@@ -44,7 +45,7 @@
             <id>macos</id>
             <activation>
                 <os>
-                    <family>macos</family>
+                    <family>mac</family>
                 </os>
             </activation>
             <properties>
@@ -85,20 +86,21 @@
                 </executions>
             </plugin>
             <plugin>
-                <!--fix permissions to R_X -->
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
                 <executions>
                     <execution>
-                        <id>set-protobuf-permissions</id>
+                        <id>set-permissions</id>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/permissions.xml</descriptor>
-                            </descriptors>
+                            <target>
+                                <chmod file="${project.build.directory}/dependency/${protobuf.exe}" perm="u+rx"/>
+                                <echo message="permissions changed for ${project.build.directory}/dependency/${protobuf.exe}"/>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
@@ -109,7 +111,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.0</version>
                 <configuration>
-                    <protocExecutable>${project.build.directory}/${project.artifactId}-${project.version}-bin/${protobuf.exe}</protocExecutable>
+                    <protocExecutable>${project.build.directory}/dependency/${protobuf.exe}</protocExecutable>
                 </configuration>
                 <executions>
                     <execution>
