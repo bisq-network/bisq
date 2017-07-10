@@ -29,6 +29,7 @@ import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.ImageUtil;
@@ -36,11 +37,13 @@ import io.bisq.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -56,6 +59,12 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatable> {
+    @FXML
+    GridPane root;
+    @FXML
+    Insets rootPadding;
+    @FXML
+    ColumnConstraints cc1, cc2, cc3, cc4;
 
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox;
@@ -106,6 +115,18 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     @Override
     public void initialize() {
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+        cc1.setMinWidth(MainView.scale(140));
+        cc2.setMinWidth(MainView.scale(300));
+        cc3.setMinWidth(MainView.scale(140));
+        cc4.setMinWidth(MainView.scale(300));
+
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
@@ -244,7 +265,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         //noinspection unchecked
         preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -262,8 +283,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         GridPane.setValignment(fiatTuple.first, VPos.TOP);
         //noinspection unchecked
         fiatCurrenciesListView = fiatTuple.second;
-        fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        fiatCurrenciesListView.setMinHeight(MainView.scale(2 * Layout.LIST_ROW_HEIGHT + 2));
+        fiatCurrenciesListView.setPrefHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
         Label placeholder = new Label(Res.get("setting.preferences.noFiat"));
         placeholder.setWrapText(true);
         fiatCurrenciesListView.setPlaceholder(placeholder);
@@ -277,9 +298,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setLayoutY(5);
+                        label.setLayoutY(MainView.scale(5));
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -308,13 +329,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
-        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
-        //noinspection unchecked
+        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(MainView.scale(0), MainView.scale(0), MainView.scale(0), MainView.scale(20)));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
         GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
-        cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        cryptoCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        cryptoCurrenciesListView.setMinHeight(MainView.scale(2 * Layout.LIST_ROW_HEIGHT + 2));
+        cryptoCurrenciesListView.setPrefHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
         placeholder = new Label(Res.get("setting.preferences.noAltcoins"));
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
@@ -330,7 +350,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -391,16 +411,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
 
+
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
-        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), "", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.useAnimations"), "").second;
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"), "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"),
-                Res.get("setting.preferences.reset"), 0).second;
+                Res.get("setting.preferences.reset"), MainView.scale(0)).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

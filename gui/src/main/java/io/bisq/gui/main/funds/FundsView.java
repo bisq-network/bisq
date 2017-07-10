@@ -31,12 +31,15 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
+    @FXML
+    TabPane root;
     @FXML
     Tab depositTab, withdrawalTab, reservedTab, lockedTab, transactionsTab;
 
@@ -55,6 +58,10 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
         depositTab.setText(Res.get("funds.tab.deposit"));
         withdrawalTab.setText(Res.get("funds.tab.withdrawal"));
         reservedTab.setText(Res.get("funds.tab.reserved"));

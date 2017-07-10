@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import io.bisq.gui.main.MainView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
@@ -41,11 +42,11 @@ public class TextFieldWithCopyIcon extends AnchorPane {
 
     public TextFieldWithCopyIcon() {
         Label copyIcon = new Label();
-        copyIcon.setLayoutY(3);
+        copyIcon.setLayoutY(MainView.scale(3));
         copyIcon.getStyleClass().add("copy-icon");
         Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-        AnchorPane.setRightAnchor(copyIcon, 0.0);
+        AnchorPane.setRightAnchor(copyIcon, MainView.scale(0));
         copyIcon.setOnMouseClicked(e -> {
             String text = getText();
             if (text != null && text.length() > 0) {
@@ -65,9 +66,9 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         textField = new TextField();
         textField.setEditable(false);
         textField.textProperty().bindBidirectional(text);
-        AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(textField, 30.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(copyIcon, MainView.scale(5));
+        AnchorPane.setRightAnchor(textField, MainView.scale(30));
+        AnchorPane.setLeftAnchor(textField, MainView.scale(0));
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());

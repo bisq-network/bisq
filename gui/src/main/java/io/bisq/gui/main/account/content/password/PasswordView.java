@@ -27,12 +27,15 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.PasswordValidator;
+import io.bisq.gui.main.account.content.ContentSettings;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -44,6 +47,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class PasswordView extends ActivatableView<GridPane, Void> {
+    @FXML
+    GridPane root;
 
     private final WalletsManager walletsManager;
     private final PasswordValidator passwordValidator;
@@ -70,8 +75,9 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
         headline = FormBuilder.addTitledGroupBg(root, gridRow, 2, "");
-        passwordField = FormBuilder.addLabelPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE).second;
+        passwordField = FormBuilder.addLabelPasswordTextField(root, gridRow, Res.get("password.enterPassword"), MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         passwordField.setValidator(passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
@@ -81,7 +87,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
+        Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", MainView.scale(15));
         pwButton = tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;
@@ -131,8 +137,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             });
         });
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
-        FormBuilder.addMultilineLabel(root, gridRow, Res.get("account.password.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), MainView.scale(Layout.GROUP_DISTANCE));
+        FormBuilder.addMultilineLabel(root, gridRow, Res.get("account.password.info"), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
     }
 

@@ -24,6 +24,7 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.beans.property.BooleanProperty;
@@ -90,7 +91,7 @@ public abstract class PaymentMethodForm {
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow,
                 Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
-        accountNameTextField.setPrefWidth(300);
+        accountNameTextField.setPrefWidth(MainView.scale(300));
         accountNameTextField.setEditable(false);
         accountNameTextField.setValidator(inputValidator);
         accountNameTextField.setFocusTraversable(false);

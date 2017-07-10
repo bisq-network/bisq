@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.Alert;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.geometry.Insets;
@@ -65,7 +66,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         if (headLine == null)
             headLine = Res.get("sendAlertMessageWindow.headline");
 
-        width = 900;
+        width = MainView.scale(600);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -103,7 +104,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
 
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10).second;
+                Res.get("shared.unlock"), MainView.scale(10)).second;
         if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
@@ -112,7 +113,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 Res.get("sendAlertMessageWindow.enterMsg"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
-        first.setMinWidth(150);
+        first.setMinWidth(MainView.scale(150));
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("sendAlertMessageWindow.isUpdate"), "").second;
         isUpdateCheckBox.setSelected(true);
@@ -131,7 +132,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                         keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(MainView.scale(300)).onClose(this::blurAgain).show();
             }
         });
 
@@ -141,7 +142,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(MainView.scale(300)).onClose(this::blurAgain).show();
             }
         });
 
@@ -152,11 +153,11 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         });
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeAlertMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 }

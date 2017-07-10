@@ -25,6 +25,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import io.bisq.gui.util.FormBuilder;
@@ -95,7 +96,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                 unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
                 unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
                         .onKey(model::setPrivKeyAndCheckPubKey)
-                        .width(700)
+                        .width(MainView.scale(700))
                         .show();
             }
         } else {
@@ -105,20 +106,23 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
     private void updateLanguageList() {
         languagesListView.setItems(model.languageCodes);
-        languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
-        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
+        listChangeListener = c -> languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.getItems().addListener(listChangeListener);
     }
 
     private void buildUI() {
+        root.setSpacing(MainView.scale(10));
+        root.setPadding(new Insets(MainView.scale(0), MainView.scale(10), MainView.scale(10), MainView.scale(0)));
+
         GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(30, 25, -1, 25));
-        gridPane.setHgap(5);
-        gridPane.setVgap(5);
+        gridPane.setPadding(new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(-1), MainView.scale(25)));
+        gridPane.setHgap(MainView.scale(5));
+        gridPane.setVgap(MainView.scale(5));
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
         columnConstraints1.setHgrow(Priority.SOMETIMES);
-        columnConstraints1.setMinWidth(200);
+        columnConstraints1.setMinWidth(MainView.scale(200));
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
         gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
@@ -126,7 +130,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
         TextField pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
-                model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
+                model.registrationPubKeyAsHex.get(), MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
@@ -135,8 +139,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         //noinspection unchecked
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
-        languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setMinHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
+        languagesListView.setMaxHeight(MainView.scale(6 * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
@@ -147,9 +151,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setLayoutY(5);
+                        label.setLayoutY(MainView.scale(5));
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -193,9 +197,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), MainView.scale(Layout.GROUP_DISTANCE));
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
-        GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(infoLabel, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
     }
 

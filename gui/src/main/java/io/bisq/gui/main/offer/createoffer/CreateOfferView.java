@@ -187,8 +187,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void doActivate() {
         if (!isActivated) {
             isActivated = true;
-            currencyComboBox.setPrefWidth(250);
-            paymentAccountsComboBox.setPrefWidth(250);
+            currencyComboBox.setPrefWidth(MainView.scale(250));
+            paymentAccountsComboBox.setPrefWidth(MainView.scale(250));
 
             addBindings();
             addListeners();
@@ -411,7 +411,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         final byte[] imageBytes = QRCode
                 .from(getBitcoinURI())
-                .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
+                .withSize((int)MainView.scale(98), (int)MainView.scale(98)) // code has 41 elements 8 px is border with 98 we get double scale and min. border
                 .to(ImageType.PNG)
                 .stream()
                 .toByteArray();
@@ -761,22 +761,22 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
-        AnchorPane.setLeftAnchor(scrollPane, 0d);
-        AnchorPane.setTopAnchor(scrollPane, 0d);
-        AnchorPane.setRightAnchor(scrollPane, 0d);
-        AnchorPane.setBottomAnchor(scrollPane, 0d);
+        AnchorPane.setLeftAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setTopAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setRightAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setBottomAnchor(scrollPane, MainView.scale(0));
         root.getChildren().add(scrollPane);
     }
 
     private void addGridPane() {
         gridPane = new GridPane();
-        gridPane.setPadding(new Insets(30, 25, -1, 25));
-        gridPane.setHgap(5);
-        gridPane.setVgap(5);
+        gridPane.setPadding(new Insets(MainView.scale(30), MainView.scale(25), MainView.scale(-1), MainView.scale(25)));
+        gridPane.setHgap(MainView.scale(5));
+        gridPane.setVgap(MainView.scale(5));
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
         columnConstraints1.setHgrow(Priority.NEVER);
-        columnConstraints1.setMinWidth(200);
+        columnConstraints1.setMinWidth(MainView.scale(200));
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
         ColumnConstraints columnConstraints3 = new ColumnConstraints();
@@ -790,9 +790,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         //noinspection unchecked
-        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
+        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
-        paymentAccountsComboBox.setMinWidth(300);
+        paymentAccountsComboBox.setMinWidth(MainView.scale(300));
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
@@ -815,7 +815,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         });
 
-        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.currency"), "", 5);
+        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.currency"), "", MainView.scale(5));
         currencyTextFieldLabel = currencyTextFieldTuple.first;
         editOfferElements.add(currencyTextFieldLabel);
         currencyTextField = currencyTextFieldTuple.second;
@@ -823,22 +823,22 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
         directionLabel = new Label();
         directionLabel.setAlignment(Pos.CENTER);
-        directionLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel.setPadding(new Insets(MainView.scale(-5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
-        imageVBox.setSpacing(12);
+        imageVBox.setSpacing(MainView.scale(12));
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
-        GridPane.setMargin(imageVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 10, 10));
+        GridPane.setMargin(imageVBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
         gridPane.getChildren().add(imageVBox);
 
         addAmountPriceFields();
@@ -867,7 +867,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
         cancelButton1.setId("cancel-button");
 
-        GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
+        GridPane.setMargin(nextButton, new Insets(MainView.scale(-35), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         nextButton.setOnAction(e -> {
             if (model.isPriceInRange()) {
                 nextButton.setVisible(false);
@@ -999,7 +999,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
         payFundsTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
-                Res.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+                Res.get("createOffer.fundsBox.title"), MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(payFundsTitledGroupBg, 3);
         payFundsTitledGroupBg.setVisible(false);
 
@@ -1008,10 +1008,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayInfoIconLabel = new Label();
         totalToPayInfoIconLabel.setVisible(false);
         HBox totalToPayBox = new HBox();
-        totalToPayBox.setSpacing(4);
+        totalToPayBox.setSpacing(MainView.scale(4));
         totalToPayBox.setAlignment(Pos.CENTER_RIGHT);
         totalToPayBox.getChildren().addAll(totalToPayLabel, totalToPayInfoIconLabel);
-        GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(totalToPayBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(totalToPayBox, gridRow);
         gridPane.getChildren().add(totalToPayBox);
         totalToPayTextField = new TextFieldWithCopyIcon();
@@ -1020,7 +1020,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayTextField.setVisible(false);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
-        GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(totalToPayTextField, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(totalToPayTextField);
 
         qrCodeImageView = new ImageView();
@@ -1034,7 +1034,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
+        GridPane.setMargin(qrCodeImageView, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE) - 9, MainView.scale(0), MainView.scale(0), MainView.scale(5)));
         gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow,
@@ -1054,7 +1054,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox = new HBox();
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
-        fundingHBox.setSpacing(10);
+        fundingHBox.setSpacing(MainView.scale(10));
         Button fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
@@ -1166,13 +1166,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
 
         toggleButtonsHBox = new HBox();
-        toggleButtonsHBox.setPadding(new Insets(16, 0, 0, 0));
+        toggleButtonsHBox.setPadding(new Insets(MainView.scale(18), MainView.scale(0), MainView.scale(0),MainView.scale( 0)));
         toggleButtonsHBox.getChildren().addAll(fixedPriceButton, useMarketBasedPriceButton);
 
         // =
         Label resultLabel = new Label("=");
-        resultLabel.setFont(Font.font("Helvetica-Bold", 20));
-        resultLabel.setPadding(new Insets(14, 2, 0, 2));
+        resultLabel.setFont(Font.font("Helvetica-Bold", MainView.scale(20)));
+        resultLabel.setPadding(new Insets(MainView.scale(14), MainView.scale(2), MainView.scale(0),MainView.scale(2)));
 
         // volume
         Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = getEditableValueCurrencyBox(Res.get("createOffer.volume.prompt"));
@@ -1187,12 +1187,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         VBox volumeBox = volumeInputBoxTuple.second;
 
         firstRowHBox = new HBox();
-        firstRowHBox.setSpacing(5);
+        firstRowHBox.setSpacing(MainView.scale(5));
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
         firstRowHBox.getChildren().addAll(amountBox, xLabel, percentagePriceBox, toggleButtonsHBox, resultLabel, volumeBox);
         GridPane.setRowIndex(firstRowHBox, gridRow);
         GridPane.setColumnIndex(firstRowHBox, 1);
-        GridPane.setMargin(firstRowHBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
+        GridPane.setMargin(firstRowHBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         GridPane.setColumnSpan(firstRowHBox, 2);
         gridPane.getChildren().add(firstRowHBox);
     }
@@ -1269,17 +1269,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
         Label xLabel = new Label("x");
-        xLabel.setFont(Font.font("Helvetica-Bold", 20));
-        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setFont(Font.font("Helvetica-Bold", MainView.scale(20)));
+        xLabel.setPadding(new Insets(MainView.scale(14), MainView.scale(3), MainView.scale(0), MainView.scale(3)));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
         secondRowHBox = new HBox();
-        secondRowHBox.setSpacing(5);
+        secondRowHBox.setSpacing(MainView.scale(5));
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
         secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, fixedPriceBox);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 1);
-        GridPane.setMargin(secondRowHBox, new Insets(0, 10, 0, 0));
+        GridPane.setMargin(secondRowHBox, new Insets(MainView.scale(0), MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         GridPane.setColumnSpan(secondRowHBox, 2);
         gridPane.getChildren().add(secondRowHBox);
     }
@@ -1320,9 +1320,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     // As we don't use binding here we need to recreate it on mouse over to reflect the current state
     private void createInfoPopover() {
         GridPane infoGridPane = new GridPane();
-        infoGridPane.setHgap(5);
-        infoGridPane.setVgap(5);
-        infoGridPane.setPadding(new Insets(10, 10, 10, 10));
+        infoGridPane.setHgap(MainView.scale(5));
+        infoGridPane.setVgap(MainView.scale(5));
+        infoGridPane.setPadding(new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
 
         int i = 0;
         if (model.isSellOffer())
@@ -1340,7 +1340,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {
             totalToPayInfoPopover.setDetachable(false);
-            totalToPayInfoPopover.setArrowIndent(5);
+            totalToPayInfoPopover.setArrowIndent(MainView.scale(5));
             totalToPayInfoPopover.show(totalToPayInfoIconLabel.getScene().getWindow(),
                     getPopupPosition().getX(),
                     getPopupPosition().getY());
@@ -1350,7 +1350,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
         Label label = new Label(labelText);
         TextField textField = new TextField(value);
-        textField.setMinWidth(500);
+        textField.setMinWidth(MainView.scale(500));
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         textField.setId("payment-info");
@@ -1361,9 +1361,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private Point2D getPopupPosition() {
         Window window = totalToPayInfoIconLabel.getScene().getWindow();
-        Point2D point = totalToPayInfoIconLabel.localToScene(0, 0);
-        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() + 2;
-        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2) - 9;
+        Point2D point = totalToPayInfoIconLabel.localToScene(MainView.scale(0), MainView.scale(0));
+        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() + MainView.scale(2);
+        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2) - MainView.scale(9);
         return new Point2D(x, y);
     }
 }

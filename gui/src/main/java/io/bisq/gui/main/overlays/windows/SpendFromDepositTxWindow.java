@@ -23,6 +23,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.scene.Scene;
@@ -57,7 +58,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         if (headLine == null)
             headLine = "Emergency MultiSig payout tool"; // We dont translate here as it is for dev only purpose
 
-        width = 1000;
+        width = MainView.scale(1000);
         createGridPane();
         addHeadLine();
         addSeparator();

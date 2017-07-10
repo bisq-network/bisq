@@ -24,6 +24,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.SpecificBanksAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.beans.binding.Bindings;
@@ -60,7 +61,7 @@ public class SpecificBankForm extends BankForm {
                 Res.get("payment.nameOfAcceptedBank"), Res.get("payment.addAcceptedBank"));
         InputTextField addBankInputTextField = addBankTuple.second;
         Button addButton = addBankTuple.third;
-        addButton.setMinWidth(200);
+        addButton.setMinWidth(MainView.scale(200));
         addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(),
                 addBankInputTextField.textProperty()));
 
@@ -71,7 +72,7 @@ public class SpecificBankForm extends BankForm {
         acceptedBanksTooltip = new Tooltip();
         acceptedBanksTextField.setTooltip(acceptedBanksTooltip);
         Button clearButton = acceptedBanksTuple.third;
-        clearButton.setMinWidth(200);
+        clearButton.setMinWidth(MainView.scale(200));
         clearButton.setDefaultButton(false);
         clearButton.disableProperty().bind(Bindings.createBooleanBinding(() -> acceptedBanksTextField.getText().isEmpty(), acceptedBanksTextField.textProperty()));
         addButton.setOnAction(e -> {

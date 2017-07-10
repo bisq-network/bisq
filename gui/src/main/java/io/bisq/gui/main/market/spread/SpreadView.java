@@ -21,15 +21,18 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
@@ -39,6 +42,11 @@ import javax.inject.Inject;
 
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
+    @FXML
+    GridPane root;
+    @FXML
+    Insets rootPadding;
+
     private final BSFormatter formatter;
     private final int gridRow = 0;
     private TableView<SpreadItem> tableView;
@@ -59,9 +67,17 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
 
     @Override
     public void initialize() {
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        rootPadding = new Insets(MainView.scale(20), MainView.scale(25), MainView.scale(10), MainView.scale(25));
+
         tableView = new TableView<>();
         GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(-10, -15, -10, -15));
+        GridPane.setMargin(tableView, new Insets(MainView.scale(-10), MainView.scale(-15), MainView.scale(-10), MainView.scale(-15)));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
@@ -130,7 +146,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("shared.currency")) {
             {
-                setMinWidth(160);
+                setMinWidth(MainView.scale(160));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -158,7 +174,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getNumberOfOffersColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total offers") {
             {
-                setMinWidth(100);
+                setMinWidth(MainView.scale(100));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -186,7 +202,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getNumberOfBuyOffersColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
-                setMinWidth(100);
+                setMinWidth(MainView.scale(100));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -214,7 +230,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getNumberOfSellOffersColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
-                setMinWidth(100);
+                setMinWidth(MainView.scale(100));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -242,7 +258,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
-                setMinWidth(140);
+                setMinWidth(MainView.scale(140));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -270,7 +286,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getSpreadColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("market.spread.spreadColumn")) {
             {
-                setMinWidth(110);
+                setMinWidth(MainView.scale(110));
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

@@ -21,6 +21,7 @@ import io.bisq.core.btc.listeners.AddressConfidenceListener;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.TextField;
@@ -49,8 +50,8 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
     private final Tooltip progressIndicatorTooltip;
     private final TxConfidenceIndicator txConfidenceIndicator;
 
-    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
-    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
+    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
+    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
     private BSFormatter formatter;
 
 
@@ -65,7 +66,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
 
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setFocusTraversable(false);
-        txConfidenceIndicator.setPrefSize(24, 24);
+        txConfidenceIndicator.setPrefSize(MainView.scale(24), MainView.scale(24));
         txConfidenceIndicator.setId("funds-confidence");
         txConfidenceIndicator.setLayoutY(1);
         txConfidenceIndicator.setProgress(0);
@@ -117,8 +118,8 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         if (confidence != null) {
             if (txConfidenceIndicator.getProgress() != 0) {
                 txConfidenceIndicator.setVisible(true);
-                AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
-                AnchorPane.setRightAnchor(textField, 35.0);
+                AnchorPane.setRightAnchor(txConfidenceIndicator, MainView.scale(0));
+                AnchorPane.setRightAnchor(textField, MainView.scale(35));
             }
         }
     }

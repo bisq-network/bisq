@@ -25,6 +25,7 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -64,12 +65,12 @@ public class TxIdTextField extends AnchorPane {
     public TxIdTextField() {
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setFocusTraversable(false);
-        txConfidenceIndicator.setPrefSize(24, 24);
+        txConfidenceIndicator.setPrefSize(MainView.scale(24), MainView.scale(24));
         txConfidenceIndicator.setId("funds-confidence");
         txConfidenceIndicator.setLayoutY(1);
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setVisible(false);
-        AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
+        AnchorPane.setRightAnchor(txConfidenceIndicator, MainView.scale(0));
         progressIndicatorTooltip = new Tooltip("-");
         Tooltip.install(txConfidenceIndicator, progressIndicatorTooltip);
 
@@ -78,7 +79,7 @@ public class TxIdTextField extends AnchorPane {
         copyIcon.getStyleClass().add("copy-icon");
         copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-        AnchorPane.setRightAnchor(copyIcon, 30.0);
+        AnchorPane.setRightAnchor(copyIcon, MainView.scale(30));
 
         Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
 
@@ -86,16 +87,16 @@ public class TxIdTextField extends AnchorPane {
         blockExplorerIcon.getStyleClass().add("external-link-icon");
         blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
-        blockExplorerIcon.setMinWidth(20);
-        AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
-        AnchorPane.setTopAnchor(blockExplorerIcon, 4.0);
+        blockExplorerIcon.setMinWidth(MainView.scale(20));
+        AnchorPane.setRightAnchor(blockExplorerIcon, MainView.scale(52));
+        AnchorPane.setTopAnchor(blockExplorerIcon, MainView.scale(4));
 
         textField = new TextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.setTooltip(tooltip);
-        AnchorPane.setRightAnchor(textField, 80.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(textField, MainView.scale(80));
+        AnchorPane.setLeftAnchor(textField, MainView.scale(0));
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         getChildren().addAll(textField, copyIcon, blockExplorerIcon, txConfidenceIndicator);
     }
@@ -144,7 +145,7 @@ public class TxIdTextField extends AnchorPane {
         if (confidence != null) {
             if (txConfidenceIndicator.getProgress() != 0) {
                 txConfidenceIndicator.setVisible(true);
-                AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
+                AnchorPane.setRightAnchor(txConfidenceIndicator, MainView.scale(0));
             }
         }
     }

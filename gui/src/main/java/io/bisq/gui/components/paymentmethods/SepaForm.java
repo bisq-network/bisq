@@ -24,6 +24,7 @@ import io.bisq.core.payment.SepaAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.SepaAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
@@ -113,14 +114,14 @@ public class SepaForm extends PaymentMethodForm {
 
         FormBuilder.addLabel(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"));
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         ComboBox<Country> countryComboBox = new ComboBox<>();
         currencyComboBox = new ComboBox<>();
         currencyTextField = new TextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
         currencyTextField.setFocusTraversable(false);
-        currencyTextField.setMinWidth(300);
+        currencyTextField.setMinWidth(MainView.scale(300));
 
         currencyTextField.setVisible(false);
         currencyTextField.setManaged(false);
@@ -219,17 +220,17 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
-        Label label = FormBuilder.addLabel(gridPane, ++gridRow, title, 0);
+        Label label = FormBuilder.addLabel(gridPane, ++gridRow, title, MainView.scale(0));
         label.setWrapText(true);
-        label.setMaxWidth(180);
+        label.setMaxWidth(MainView.scale(180));
         label.setTextAlignment(TextAlignment.RIGHT);
         GridPane.setHalignment(label, HPos.RIGHT);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
-        flowPane.setMinHeight(55);
+        flowPane.setPadding(new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
+        flowPane.setVgap(MainView.scale(10));
+        flowPane.setHgap(MainView.scale(10));
+        flowPane.setMinHeight(MainView.scale(55));
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
@@ -243,8 +244,8 @@ public class SepaForm extends PaymentMethodForm {
             checkBox.setUserData(countryCode);
             checkBoxList.add(checkBox);
             checkBox.setMouseTransparent(!isEditable);
-            checkBox.setMinWidth(45);
-            checkBox.setMaxWidth(45);
+            checkBox.setMinWidth(MainView.scale(45));
+            checkBox.setMaxWidth(MainView.scale(45));
             checkBox.setTooltip(new Tooltip(country.name));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())
@@ -326,7 +327,7 @@ public class SepaForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(sepaAccount.getPaymentMethod().getId()));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaAccount.getHolderName());

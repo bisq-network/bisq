@@ -26,12 +26,15 @@ import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.main.MainView;
+import io.bisq.gui.main.account.content.ContentSettings;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
@@ -53,6 +56,9 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
+    @FXML
+    GridPane root;
+
     private final WalletsManager walletsManager;
     private final BtcWalletService btcWalletService;
     private final WalletPasswordWindow walletPasswordWindow;
@@ -86,24 +92,25 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
         addTitledGroupBg(root, gridRow, 2, Res.get("account.seed.backup.title"));
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
-        displaySeedWordsTextArea.setPrefHeight(60);
+        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
+        displaySeedWordsTextArea.setPrefHeight(MainView.scale(60));
         displaySeedWordsTextArea.setEditable(false);
 
         datePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("seed.restore.title"), Layout.GROUP_DISTANCE);
-        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        seedWordsTextArea.setPrefHeight(60);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("seed.restore.title"), MainView.scale(Layout.GROUP_DISTANCE));
+        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
+        seedWordsTextArea.setPrefHeight(MainView.scale(60));
 
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("seed.restore"));
 
-        addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), MainView.scale(Layout.GROUP_DISTANCE));
         addMultilineLabel(root, gridRow, Res.get("account.seed.info"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {

@@ -2,6 +2,7 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.gui.main.MainView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -30,7 +31,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         hBox.setSpacing(-1);
         Label label = new Label(text);
         label.setMouseTransparent(true);
-        HBox.setMargin(label, new Insets(4, 0, 0, 0));
+        HBox.setMargin(label, new Insets(MainView.scale(4), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         HBox.setHgrow(label, Priority.ALWAYS);
 
         hyperlink = new Hyperlink(address);
@@ -39,22 +40,22 @@ public class AddressWithIconAndDirection extends AnchorPane {
         // You need to set max width to Double.MAX_VALUE to make HBox.setHgrow working like expected!
         // also pref width needs to be not default (-1)
         hyperlink.setMaxWidth(Double.MAX_VALUE);
-        hyperlink.setPrefWidth(0);
+        hyperlink.setPrefWidth(MainView.scale(0));
 
         hBox.getChildren().addAll(label, hyperlink);
 
         openLinkIcon = new Label();
-        openLinkIcon.setLayoutY(3);
+        openLinkIcon.setLayoutY(MainView.scale(3));
         openLinkIcon.getStyleClass().add("external-link-icon");
         openLinkIcon.setOpacity(0.7);
         AwesomeDude.setIcon(openLinkIcon, awesomeIcon);
 
-        AnchorPane.setLeftAnchor(directionIcon, 3.0);
-        AnchorPane.setTopAnchor(directionIcon, 2.0);
-        AnchorPane.setLeftAnchor(hBox, 22.0);
-        AnchorPane.setRightAnchor(hBox, 15.0);
-        AnchorPane.setRightAnchor(openLinkIcon, 4.0);
-        AnchorPane.setTopAnchor(openLinkIcon, 3.0);
+        AnchorPane.setLeftAnchor(directionIcon, MainView.scale(3));
+        AnchorPane.setTopAnchor(directionIcon, MainView.scale(2));
+        AnchorPane.setLeftAnchor(hBox, MainView.scale(22));
+        AnchorPane.setRightAnchor(hBox, MainView.scale(15));
+        AnchorPane.setRightAnchor(openLinkIcon, MainView.scale(4));
+        AnchorPane.setTopAnchor(openLinkIcon, MainView.scale(3));
 
         getChildren().addAll(directionIcon, hBox, openLinkIcon);
     }

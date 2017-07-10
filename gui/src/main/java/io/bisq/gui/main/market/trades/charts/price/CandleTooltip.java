@@ -32,6 +32,7 @@
 package io.bisq.gui.main.market.trades.charts.price;
 
 import io.bisq.common.locale.Res;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.util.Layout;
 import javafx.geometry.HPos;
@@ -56,7 +57,7 @@ public class CandleTooltip extends GridPane {
     CandleTooltip(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
 
-        setHgap(Layout.GRID_GAP);
+        setHgap(MainView.scale(Layout.GRID_GAP));
 
         setVgap(2);
 

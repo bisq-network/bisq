@@ -30,6 +30,7 @@ import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.PeerInfoIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.GUIUtil;
@@ -50,6 +51,10 @@ import javax.inject.Inject;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
+    @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -79,6 +84,19 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        tradeIdColumn.setMinWidth(MainView.scale(120));
+        tradeIdColumn.setMaxWidth(MainView.scale(120));
+        dateColumn.setMinWidth(MainView.scale(180));
+        marketColumn.setMinWidth(MainView.scale(100));
+        priceColumn.setMinWidth(MainView.scale(100));
+        amountColumn.setMinWidth(MainView.scale(130));
+        volumeColumn.setMinWidth(MainView.scale(130));
+        directionColumn.setMinWidth(MainView.scale(80));
+        stateColumn.setMinWidth(MainView.scale(80));
+        avatarColumn.setMinWidth(MainView.scale(40));
+        avatarColumn.setMaxWidth(MainView.scale(40));
         priceColumn.setText(Res.get("shared.price"));
         amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         volumeColumn.setText(Res.get("shared.volume"));
@@ -315,7 +333,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             numPastTrades,
                                             privateNotificationManager,
                                             newItem.getTradable().getOffer(), preferences);
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                    setPadding(new Insets(MainView.scale(-2), MainView.scale(0), MainView.scale(-2), MainView.scale(0)));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

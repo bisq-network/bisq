@@ -1,3 +1,4 @@
+
 /*
  * This file is part of bisq.
  *
@@ -56,11 +57,11 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private Navigation.Listener listener;
 
     @FXML
-    private ScrollPane scrollPane;
-    @FXML
     private VBox leftVBox;
     @FXML
     private AnchorPane content;
+    @FXML
+    private ScrollPane scrollPane;
 
     private Class<? extends View> selectedViewClass;
 
@@ -72,6 +73,22 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
+        leftVBox.setPrefWidth(MainView.scale(240));
+        leftVBox.setSpacing(MainView.scale(5));
+        AnchorPane.setTopAnchor(leftVBox, MainView.scale(20));
+        AnchorPane.setRightAnchor(leftVBox, MainView.scale(0));
+        AnchorPane.setBottomAnchor(leftVBox, MainView.scale(20));
+        AnchorPane.setLeftAnchor(leftVBox, MainView.scale(15));
+        AnchorPane.setTopAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setRightAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setBottomAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setLeftAnchor(scrollPane, MainView.scale(270));
+        AnchorPane.setTopAnchor(content, MainView.scale(0));
+        AnchorPane.setRightAnchor(content, MainView.scale(0));
+        AnchorPane.setBottomAnchor(content, MainView.scale(0));
+        AnchorPane.setLeftAnchor(content, MainView.scale(0));
+
+
         listener = viewPath -> {
             if (viewPath.size() != 4 || viewPath.indexOf(AccountSettingsView.class) != 2)
                 return;
@@ -159,17 +176,17 @@ class MenuItem extends ToggleButton {
         setToggleGroup(toggleGroup);
         setText(title);
         setId("account-settings-item-background-active");
-        setPrefHeight(40);
-        setPrefWidth(240);
+        setPrefHeight(MainView.scale(40));
+        setPrefWidth(MainView.scale(240));
         setAlignment(Pos.CENTER_LEFT);
 
         Label icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setTextFill(Paint.valueOf("#333"));
-        icon.setPadding(new Insets(0, 5, 0, 0));
+        icon.setPadding(new Insets(MainView.scale(0), MainView.scale(5), MainView.scale(0), MainView.scale(0)));
         icon.setAlignment(Pos.CENTER);
-        icon.setMinWidth(25);
-        icon.setMaxWidth(25);
+        icon.setMinWidth(MainView.scale(25));
+        icon.setMaxWidth(MainView.scale(25));
         setGraphic(icon);
 
         selectedPropertyChangeListener = (ov, oldValue, newValue) -> {

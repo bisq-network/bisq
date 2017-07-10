@@ -75,6 +75,9 @@ public abstract class BisqExecutable {
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
                 description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", BisqEnvironment.LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
+        parser.accepts(CommonOptionKeys.FORCE_DPI_KEY,
+                description("Force dpi setting.", BisqEnvironment.FORCE_DPI_DEFAULT))
+                .withRequiredArg();
 
         //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,

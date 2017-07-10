@@ -66,6 +66,7 @@ public class BisqEnvironment extends StandardEnvironment {
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
+    public static final String FORCE_DPI_DEFAULT = "0";
 
     public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
     public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
@@ -122,6 +123,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel, providers;
+    private final String forceDPI;
     @Getter
     @Setter
     private boolean isBitcoinLocalhostNodeRunning;
@@ -143,6 +145,10 @@ public class BisqEnvironment extends StandardEnvironment {
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
+
+        forceDPI = commandLineProperties.containsProperty(CommonOptionKeys.FORCE_DPI_KEY) ?
+                (String) commandLineProperties.getProperty(CommonOptionKeys.FORCE_DPI_KEY) :
+                FORCE_DPI_DEFAULT;
 
         //AppOptionKeys
         userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
@@ -294,6 +300,7 @@ public class BisqEnvironment extends StandardEnvironment {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             {
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
+                setProperty(CommonOptionKeys.FORCE_DPI_KEY, forceDPI);
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);

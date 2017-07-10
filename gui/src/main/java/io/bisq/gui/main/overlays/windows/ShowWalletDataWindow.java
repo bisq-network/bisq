@@ -21,6 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.WalletsManager;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
@@ -52,7 +53,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         if (headLine == null)
             headLine = Res.get("showWalletDataWindow.walletData");
 
-        width = 1200;
+        width = MainView.scale(1200);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -83,9 +84,9 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
                 Res.getWithCol("showWalletDataWindow.walletData"), "");
         TextArea textArea = labelTextAreaTuple2.second;
         Label label = labelTextAreaTuple2.first;
-        label.setMinWidth(150);
-        textArea.setPrefHeight(500);
-        textArea.setStyle("-fx-font-size: 10;");
+        label.setMinWidth(MainView.scale(150));
+        textArea.setPrefHeight(MainView.scale(500));
+        textArea.setStyle("-fx-font-size: " + MainView.scale(10) + ";");
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("showWalletDataWindow.includePrivKeys"), "").second;
         isUpdateCheckBox.setSelected(false);

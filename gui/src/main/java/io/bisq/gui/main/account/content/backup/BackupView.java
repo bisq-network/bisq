@@ -26,10 +26,13 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
+import io.bisq.gui.main.account.content.ContentSettings;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -48,6 +51,9 @@ import java.util.Date;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
+    @FXML
+    GridPane root;
+
     private final File dataDir, logFile;
     private int gridRow = 0;
     private final Stage stage;
@@ -74,8 +80,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
+
         FormBuilder.addTitledGroupBg(root, gridRow, 1, Res.get("account.backup.title"));
-        Tuple2<Label, InputTextField> tuple = FormBuilder.addLabelInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, InputTextField> tuple = FormBuilder.addLabelInputTextField(root, gridRow, Res.get("account.backup.location"), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         backUpLocationTextField = tuple.second;
         String backupDirectory = preferences.getBackupDirectory();
         if (backupDirectory != null)
@@ -92,9 +100,9 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow = tuple2.second;
         updateButtons();
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), MainView.scale(Layout.GROUP_DISTANCE));
         openDataDirButton = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
-                Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                Res.get("account.backup.openDirectory"), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         openDataDirButton.setDefaultButton(false);
         openLogsButton = FormBuilder.addLabelButton(root, ++gridRow, Res.getWithCol("account.backup.logFile"),
                 Res.get("account.backup.openLogFile")).second;

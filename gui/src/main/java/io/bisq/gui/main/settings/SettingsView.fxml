@@ -25,17 +25,17 @@
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="preferencesTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+        <ScrollPane fx:id="prefScroll" fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
     <Tab fx:id="networkTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+        <ScrollPane fx:id="networkScroll" fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
     <Tab fx:id="aboutTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+        <ScrollPane fx:id="aboutScroll" fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>

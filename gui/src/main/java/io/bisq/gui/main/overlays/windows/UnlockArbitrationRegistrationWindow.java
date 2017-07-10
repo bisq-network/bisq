@@ -20,6 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.beans.value.ChangeListener;
@@ -105,13 +106,13 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     private void addInputFields() {
         Label label = new Label(Res.get("shared.enterPrivKey"));
         label.setWrapText(true);
-        GridPane.setMargin(label, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(label, ++rowIndex);
 
         keyInputTextField = new InputTextField();
         if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
-        GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(keyInputTextField, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(keyInputTextField, rowIndex);
         GridPane.setColumnIndex(keyInputTextField, 1);
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(newValue.length() == 0);
@@ -137,7 +138,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
         });
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(unlockButton, closeButton);

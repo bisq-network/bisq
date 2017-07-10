@@ -16,6 +16,7 @@
  */
 package io.bisq.gui.main.market.trades.charts.volume;
 
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
 import javafx.animation.FadeTransition;
@@ -68,6 +69,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                     // 97 is visible chart data height if chart height is 140. 
                     // So we subtract 43 form the height to get the height for the bar to the bottom.
                     // Did not find a way how to request the chart data height
+                    // Further note: This has some problems with forced DPI scaling, would be good to figure this out
                     final double height = getHeight() - 43;
                     double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
                     volumeBar.update(height - upperYPos, candleWidth, candleData);

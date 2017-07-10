@@ -21,10 +21,12 @@ import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -34,6 +36,10 @@ import javax.inject.Inject;
 @FxmlView
 public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {
 
+    @FXML
+    VBox root;
+    @FXML
+    Insets rootPadding;
     @FXML
     TableView<FailedTradesListItem> tableView;
     @FXML
@@ -50,6 +56,17 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        tradeIdColumn.setMinWidth(MainView.scale(120));
+        tradeIdColumn.setMaxWidth(MainView.scale(120));
+        dateColumn.setMinWidth(MainView.scale(180));
+        marketColumn.setMinWidth(MainView.scale(100));
+        priceColumn.setMinWidth(MainView.scale(100));
+        amountColumn.setMinWidth(MainView.scale(130));
+        volumeColumn.setMinWidth(MainView.scale(130));
+        directionColumn.setMinWidth(MainView.scale(80));
+        stateColumn.setMinWidth(MainView.scale(80));
         priceColumn.setText(Res.get("shared.price"));
         amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         volumeColumn.setText(Res.get("shared.volume"));

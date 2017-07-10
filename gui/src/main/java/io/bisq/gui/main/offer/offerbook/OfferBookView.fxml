@@ -24,7 +24,7 @@
           xmlns:fx="http://javafx.com/fxml">
 
     <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints fx:id="cc" halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
         <ColumnConstraints hgrow="ALWAYS"/>
     </columnConstraints>
 </GridPane>

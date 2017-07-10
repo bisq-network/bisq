@@ -19,6 +19,10 @@ package io.bisq.gui.common.view;
 
 import io.bisq.gui.common.model.Activatable;
 import javafx.scene.Node;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

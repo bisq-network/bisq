@@ -7,6 +7,7 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bisq.gui.util.FormBuilder;
@@ -54,7 +55,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
-        width = 400;
+        width = MainView.scale(400);
         type = Type.Undefined;
         if (INSTANCE != null)
             INSTANCE.hide();
@@ -232,12 +233,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(15, 15, 30, 30));
+        gridPane.setPadding(new Insets(MainView.scale(15), MainView.scale(15), MainView.scale(30), MainView.scale(30)));
     }
 
     @Override
     protected void addCloseButton() {
-        buttonDistance = 10;
+        buttonDistance = MainView.scale(10);
         super.addCloseButton();
 
         actionButton.setOnAction(event -> save());

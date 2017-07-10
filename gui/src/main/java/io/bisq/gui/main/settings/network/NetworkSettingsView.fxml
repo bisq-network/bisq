@@ -30,7 +30,7 @@
           xmlns:fx="http://javafx.com/fxml">
 
     <padding>
-        <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
+        <Insets fx:id="rootPadding" bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
     <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
@@ -53,22 +53,22 @@
 
     <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="3">
         <padding>
-            <Insets top="50.0"/>
+            <Insets fx:id="p2pPadding" top="50.0"/>
         </padding>
         <GridPane.margin>
-            <Insets bottom="-10" left="-10" right="-10" top="30"/>
+            <Insets fx:id="p2pMargin" bottom="-10" left="-10" right="-10" top="30"/>
         </GridPane.margin>
     </TitledGroupBg>
 
     <Label fx:id="onionAddressLabel" GridPane.rowIndex="5">
         <GridPane.margin>
-            <Insets top="50.0"/>
+            <Insets fx:id="onionMargin" top="50.0"/>
         </GridPane.margin>
     </Label>
     <TextField fx:id="onionAddress" GridPane.rowIndex="5" GridPane.columnIndex="1"
                editable="false" focusTraversable="false">
         <GridPane.margin>
-            <Insets top="50.0"/>
+            <Insets fx:id="addressMargin" top="50.0"/>
         </GridPane.margin>
     </TextField>
 

@@ -36,6 +36,7 @@ import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
@@ -72,6 +73,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
         log.debug("initialize ");
         tradersDisputesTab.setText(Res.get("support.tab.support"));
         navigationListener = viewPath -> {

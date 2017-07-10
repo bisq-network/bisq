@@ -22,18 +22,25 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.windows.ContractWindow;
 import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.P2PService;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
+import java.awt.*;
 
 @FxmlView
 public class ArbitratorDisputeView extends TraderDisputeView {
+
+    @FXML
+    Insets rootPadding;
 
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
@@ -49,6 +56,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     @Override
     public void initialize() {
         super.initialize();
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
 
         filterBox.setVisible(true);
         filterBox.setManaged(true);

@@ -35,6 +35,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
@@ -65,6 +66,14 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @Override
     public void initialize() {
+        root.setPrefHeight(MainView.scale(630));
+        root.setPrefWidth(MainView.scale(1000));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+
+
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))

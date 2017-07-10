@@ -24,6 +24,8 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TableGroupHeadline;
+import io.bisq.gui.main.MainView;
+import io.bisq.gui.main.account.content.ContentSettings;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
@@ -31,6 +33,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -47,6 +50,8 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, ArbitratorSelectionViewModel> {
+    @FXML
+    GridPane root;
 
     private final ArbitratorSelectionViewModel model;
 
@@ -72,9 +77,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
+
         addLanguageGroup();
         addArbitratorsGroup();
-        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        listChangeListener = c -> languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
     }
 
     @Override
@@ -82,11 +89,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         languagesListView.getItems().addListener(listChangeListener);
         languageComboBox.setItems(model.allLanguageCodes);
         languagesListView.setItems(model.languageCodes);
-        languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
 
         tableView.setItems(model.arbitratorListItems);
         // TODO should scale with stage resize
-        tableView.setPrefHeight(200);
+        tableView.setPrefHeight(MainView.scale(200));
         
         autoSelectAllMatchingCheckBox.setSelected(model.getAutoSelectArbitrators());
     }
@@ -133,12 +140,12 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     private void addLanguageGroup() {
         addTitledGroupBg(root, gridRow, 1, Res.get("account.arbitratorSelection.whichLanguages"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         GridPane.setValignment(tuple.first, VPos.TOP);
         //noinspection unchecked
         languagesListView = tuple.second;
-        languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setMinHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
+        languagesListView.setMaxHeight(MainView.scale(6 * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
@@ -151,7 +158,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -170,7 +177,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         });
 
         //noinspection unchecked
-        languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
+        languageComboBox = addLabelComboBox(root, ++gridRow, "", MainView.scale(15)).second;
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
@@ -190,44 +197,45 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         TableGroupHeadline tableGroupHeadline = new TableGroupHeadline(Res.get("account.arbitratorSelection.whichDoYouAccept"));
         GridPane.setRowIndex(tableGroupHeadline, ++gridRow);
         GridPane.setColumnSpan(tableGroupHeadline, 2);
-        GridPane.setMargin(tableGroupHeadline, new Insets(40, -10, -10, -10));
+        GridPane.setMargin(tableGroupHeadline, new Insets(MainView.scale(40), MainView.scale(-10), MainView.scale(-10), MainView.scale(-10)));
         root.getChildren().add(tableGroupHeadline);
 
         tableView = new TableView<>();
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(60, -10, 5, -10));
+        GridPane.setMargin(tableView, new Insets(MainView.scale(60), MainView.scale(-10), MainView.scale(5), MainView.scale(-10)));
         root.getChildren().add(tableView);
 
         autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, Res.get("account.arbitratorSelection.autoSelect"));
         GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
         GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
-        GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
+        GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(MainView.scale(0), MainView.scale(-10), MainView.scale(0), MainView.scale(-10)));
         autoSelectAllMatchingCheckBox.setOnAction(event ->
                 model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn<>(Res.get("account.arbitratorSelection.regDate"));
         dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getRegistrationDate()));
-        dateColumn.setMinWidth(140);
-        dateColumn.setMaxWidth(140);
+        dateColumn.setMinWidth(MainView.scale(140));
+        dateColumn.setMaxWidth(MainView.scale(140));
+
 
         TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn<>(Res.get("shared.onionAddress"));
         nameColumn.setSortable(false);
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getAddressString()));
-        nameColumn.setMinWidth(90);
+        nameColumn.setMinWidth(MainView.scale(90));
 
         TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn<>(Res.get("account.arbitratorSelection.languages"));
         languagesColumn.setSortable(false);
         languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getLanguageCodes()));
-        languagesColumn.setMinWidth(130);
+        languagesColumn.setMinWidth(MainView.scale(130));
 
         TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>(
                 Res.get("shared.accept")) {
             {
-                setMinWidth(60);
-                setMaxWidth(60);
+                setMinWidth(MainView.scale(60));
+                setMaxWidth(MainView.scale(60));
                 setSortable(false);
             }
         };

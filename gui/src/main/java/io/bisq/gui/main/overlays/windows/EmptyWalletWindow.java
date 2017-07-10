@@ -25,6 +25,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -79,7 +80,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         if (headLine == null)
             headLine = Res.get("emptyWalletWindow.headline");
 
-        width = 700;
+        width = MainView.scale(700);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -104,11 +105,11 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void addContent() {
-        addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
+        addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), MainView.scale(10));
 
         Coin totalBalance = walletService.getAvailableBalance();
         balanceTextField = addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
-                formatter.formatCoinWithCode(totalBalance), 10).second;
+                formatter.formatCoinWithCode(totalBalance), MainView.scale(10)).second;
 
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         addressInputTextField = tuple.second;
@@ -140,12 +141,12 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         closeButton.setDefaultButton(!isBalanceSufficient);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(emptyWalletButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 
     private void doEmptyWallet(KeyParameter aesKey) {

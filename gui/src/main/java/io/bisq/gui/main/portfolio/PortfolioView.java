@@ -33,12 +33,15 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
+    @FXML
+    TabPane root;
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;
     private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed"));
@@ -59,6 +62,10 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
         openOffersTab.setText(Res.get("portfolio.tab.openOffers"));
         pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades"));
         closedTradesTab.setText(Res.get("portfolio.tab.history"));

@@ -33,6 +33,7 @@ import io.bisq.gui.components.AddressTextField;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.util.BSFormatter;
@@ -70,11 +71,15 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class DepositView extends ActivatableView<VBox, Void> {
 
     @FXML
+    VBox root;
+    @FXML
     GridPane gridPane;
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
     TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confirmationsColumn, usageColumn;
+    @FXML
+    Insets rootPadding, gridPadding;
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private Button generateNewAddressButton;
@@ -111,6 +116,17 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10));
+        selectColumn.setMinWidth(MainView.scale(110));
+        selectColumn.setMaxWidth(MainView.scale(110));
+        addressColumn.setMinWidth(MainView.scale(320));
+        balanceColumn.setMinWidth(MainView.scale(150));
+        confirmationsColumn.setMinWidth(MainView.scale(150));
+        usageColumn.setMinWidth(MainView.scale(200));
+        gridPane.setHgap(MainView.scale(5));
+        gridPane.setVgap(MainView.scale(5));
+        gridPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10));
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         selectColumn.setText(Res.get("shared.select"));
         addressColumn.setText(Res.get("shared.address"));
@@ -153,7 +169,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(qrCodeImageView, new Insets(MainView.scale(Layout.FIRST_ROW_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
@@ -181,7 +197,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountLabel.setVisible(false);
         amountTextField.setManaged(false);
 
-        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), -20);
+        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), MainView.scale(-20));
         GridPane.setColumnIndex(generateNewAddressButton, 0);
         GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
 
@@ -251,7 +267,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountLabel.setVisible(true);
         amountTextField.setManaged(true);
 
-        GridPane.setMargin(generateNewAddressButton, new Insets(15, 0, 0, 0));
+        GridPane.setMargin(generateNewAddressButton, new Insets(MainView.scale(15), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         addressTextField.setAddress(address);
 
