@@ -95,7 +95,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestPreliminaryData() {
+    public boolean requestPreliminaryData() {
         Log.traceCall();
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
@@ -104,6 +104,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             nodeAddresses.remove(nextCandidate);
             isPreliminaryDataRequest = true;
             requestData(nextCandidate, nodeAddresses);
+            return true;
+        } else {
+            return false;
         }
     }
 
