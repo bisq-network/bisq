@@ -5,16 +5,16 @@ jdk:
 install:
   - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
   - cd bitcoinj
-  - mvn clean install
+  - mvn clean install -DskipTests
   - git clone https://github.com/bitsquare/libdohj.git
   - cd libdohj
-  - mvn clean install
+  - mvn clean install -DskipTests
   - git clone https://github.com/bitsquare/btcd-cli4j.git
   - cd btcd-cli4j
-  - mvn clean install
+  - mvn clean install -DskipTests
   - cd ..
 
-script: mvn clean install
+script: mvn clean install -DskipTests
 
 #notifications:
 #  irc:
