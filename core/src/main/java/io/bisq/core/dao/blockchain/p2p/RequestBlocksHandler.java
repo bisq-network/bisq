@@ -141,8 +141,8 @@ public class RequestBlocksHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent()) {
-            if (connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-                if (networkEnvelop instanceof GetBsqBlocksResponse) {
+            if (networkEnvelop instanceof GetBsqBlocksResponse) {
+                if (connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                     Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                     if (!stopped) {
                         GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
@@ -163,9 +163,9 @@ public class RequestBlocksHandler implements MessageListener {
                     } else {
                         log.warn("We have stopped already. We ignore that onDataRequest call.");
                     }
+                } else {
+                    log.warn("We got a message from another connection and ignore it. That should never happen.");
                 }
-            } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
             }
         } else {
             log.debug("Peers node address is not set yet.");
