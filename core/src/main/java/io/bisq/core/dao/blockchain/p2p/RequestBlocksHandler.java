@@ -140,35 +140,31 @@ public class RequestBlocksHandler implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            if (networkEnvelop instanceof GetBsqBlocksResponse) {
-                if (connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-                    Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
-                    if (!stopped) {
-                        GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
-                        if (getBsqBlocksResponse.getRequestNonce() == nonce) {
-                            stopTimeoutTimer();
-                            checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                                    "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
-                                            "at that moment");
-                            cleanup();
-                            listener.onComplete(getBsqBlocksResponse);
-                        } else {
-                            log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
-                                            "handshake (timeout causes connection close but peer might have sent a msg before " +
-                                            "connection was closed).\n\t" +
-                                            "We drop that message. nonce={} / requestNonce={}",
-                                    nonce, getBsqBlocksResponse.getRequestNonce());
-                        }
+        if (networkEnvelop instanceof GetBsqBlocksResponse) {
+            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
+                Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
+                if (!stopped) {
+                    GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
+                    if (getBsqBlocksResponse.getRequestNonce() == nonce) {
+                        stopTimeoutTimer();
+                        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
+                                "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
+                                        "at that moment");
+                        cleanup();
+                        listener.onComplete(getBsqBlocksResponse);
                     } else {
-                        log.warn("We have stopped already. We ignore that onDataRequest call.");
+                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                                        "handshake (timeout causes connection close but peer might have sent a msg before " +
+                                        "connection was closed).\n\t" +
+                                        "We drop that message. nonce={} / requestNonce={}",
+                                nonce, getBsqBlocksResponse.getRequestNonce());
                     }
                 } else {
-                    log.warn("We got a message from another connection and ignore it. That should never happen.");
+                    log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
+            } else {
+                log.warn("We got a message from another connection and ignore it. That should never happen.");
             }
-        } else {
-            log.debug("Peers node address is not set yet.");
         }
     }
 
