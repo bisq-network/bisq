@@ -118,6 +118,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     }
 
     public void publishNewBlock(BsqBlock bsqBlock) {
+        log.info("Publish new block at height={} and block hash={}", bsqBlock.getHeight(), bsqBlock.getHash());
         final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlock);
         broadcaster.broadcast(newBsqBlockBroadcastMessage, networkNode.getNodeAddress(), null, true);
     }
