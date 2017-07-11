@@ -25,7 +25,7 @@ public class SeedNodesRepository {
             new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
 
             // local dev
-            // new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+            //new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
