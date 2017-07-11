@@ -22,6 +22,7 @@ import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
 
 import javax.annotation.Nullable;
@@ -29,12 +30,12 @@ import java.util.Optional;
 
 @Data
 @AllArgsConstructor
+@Slf4j
 public class TxOutput implements PersistablePayload {
     private final TxOutputVo txOutputVo;
     private boolean isUnspent;
     private boolean isVerified;
-    @Nullable
-    private TxOutputType txOutputType;
+    private TxOutputType txOutputType = TxOutputType.UNDEFINED;
     @Nullable
     private SpentInfo spentInfo;
 
@@ -51,9 +52,9 @@ public class TxOutput implements PersistablePayload {
         final PB.TxOutput.Builder builder = PB.TxOutput.newBuilder()
                 .setTxOutputVo(txOutputVo.toProtoMessage())
                 .setIsUnspent(isUnspent)
-                .setIsVerified(isVerified);
+                .setIsVerified(isVerified)
+                .setTxOutputType(txOutputType.toProtoMessage());
 
-        Optional.ofNullable(txOutputType).ifPresent(e -> builder.setTxOutputType(e.toProtoMessage()));
         Optional.ofNullable(spentInfo).ifPresent(e -> builder.setSpentInfo(e.toProtoMessage()));
 
         return builder.build();
