@@ -221,7 +221,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
-        if (currencyCode.equals("SF"))
+        if (currencyCode.equals("SF") || currencyCode.equals("BSQ"))
             return Coin.valueOf(maxTradeLimit).multiply(5);
         else
             return Coin.valueOf(maxTradeLimit);
