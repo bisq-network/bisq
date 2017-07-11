@@ -490,7 +490,6 @@ public class BsqChainState implements PersistableEnvelope {
 
     private void maybeMakeSnapshot() {
         lock.read(() -> {
-            // dont access snapshotCandidate.getChainHeadHeight() as locks are transient and woudl give a null pointer!
             if (isSnapshotHeight(getChainHeadHeight()) &&
                     (snapshotCandidate == null ||
                             snapshotCandidate.chainHeadHeight != getChainHeadHeight())) {

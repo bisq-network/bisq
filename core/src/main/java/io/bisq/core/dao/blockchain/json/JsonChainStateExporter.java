@@ -107,7 +107,7 @@ public class JsonChainStateExporter {
                 final BsqChainState bsqChainStateClone = bsqChainState.getClone();
                 for (Tx tx : bsqChainStateClone.getTxMap().values()) {
                     String txId = tx.getId();
-                    JsonTxType txType = tx.getTxType() != TxType.UNDEFINED ? JsonTxType.valueOf(tx.getTxType().name()) : null;
+                    JsonTxType txType = tx.getTxType() != TxType.UNDEFINED_TX_TYPE ? JsonTxType.valueOf(tx.getTxType().name()) : null;
                     List<JsonTxOutput> outputs = new ArrayList<>();
                     tx.getOutputs().stream().forEach(txOutput -> {
                         final JsonTxOutput outputForJson = new JsonTxOutput(txId,
