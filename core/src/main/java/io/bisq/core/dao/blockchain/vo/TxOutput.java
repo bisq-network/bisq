@@ -76,7 +76,7 @@ public class TxOutput implements PersistablePayload {
     public void reset() {
         isUnspent = false;
         isVerified = false;
-        txOutputType = null;
+        txOutputType = TxOutputType.UNDEFINED;
         spentInfo = null;
     }
 
