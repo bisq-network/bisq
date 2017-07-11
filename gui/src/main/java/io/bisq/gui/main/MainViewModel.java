@@ -276,15 +276,18 @@ public class MainViewModel implements ViewModel {
         if (preferences.showAgain(key)) {
             new SelectBaseCurrencyWindow()
                     .onSelect(baseCurrencyNetwork -> {
-                        bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
                         preferences.dontShowAgain(key, true);
-                        new Popup().warning(Res.get("settings.net.needRestart"))
-                                .onAction(() -> {
-                                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                                })
-                                .actionButtonText(Res.get("shared.shutDown"))
-                                .hideCloseButton()
-                                .show();
+                        final boolean hasChanged = !BisqEnvironment.getBaseCurrencyNetwork().equals(baseCurrencyNetwork);
+                        bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
+                        if (hasChanged) {
+                            new Popup().warning(Res.get("settings.net.needRestart"))
+                                    .onAction(() -> {
+                                        UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                                    })
+                                    .actionButtonText(Res.get("shared.shutDown"))
+                                    .hideCloseButton()
+                                    .show();
+                        }
                     })
                     .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
                     .onAction(() -> {
