@@ -17,29 +17,42 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
-
 @Value
-@Immutable
-public class TxIdIndexTuple implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
+public class TxIdIndexTuple implements PersistablePayload {
     private final String txId;
     private final int index;
 
-    @Override
-    public String toString() {
-        return txId + ":" + index;
+    public TxIdIndexTuple(String txId, int index) {
+        this.txId = txId;
+        this.index = index;
     }
 
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
+    public TxIdIndexTuple(String string) {
+        this(string.split(":")[0], Integer.parseInt(string.split(":")[1]));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PB.TxIdIndexTuple toProtoMessage() {
+        return PB.TxIdIndexTuple.newBuilder()
+                .setTxId(txId)
+                .setIndex(index)
+                .build();
+    }
+
+    public static TxIdIndexTuple fromProto(PB.TxIdIndexTuple proto) {
+        return new TxIdIndexTuple(proto.getTxId(),
+                proto.getIndex());
+    }
+
+    public String getAsString() {
+        return txId + ":" + index;
     }
 }

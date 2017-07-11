@@ -21,16 +21,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.bisq.common.proto.ProtoUtil;
+import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
-
-import java.io.Serializable;
 
 @ToString
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public enum ScriptTypes implements Serializable {
+public enum ScriptType {
 
     // https://github.com/bitcoin/bitcoin/blob/8152d3fe57a991e9088d0b9d261d2b10936f45a9/src/script/standard.cpp
     PUB_KEY("pubkey"),
@@ -51,9 +51,9 @@ public enum ScriptTypes implements Serializable {
     }
 
     @JsonCreator
-    public static ScriptTypes forName(String name) {
+    public static ScriptType forName(String name) {
         if (name != null) {
-            for (ScriptTypes scriptType : ScriptTypes.values()) {
+            for (ScriptType scriptType : ScriptType.values()) {
                 if (name.equals(scriptType.getName())) {
                     return scriptType;
                 }
@@ -61,5 +61,18 @@ public enum ScriptTypes implements Serializable {
         }
         throw new IllegalArgumentException("Expected the argument to be a valid 'bitcoind' script type, "
                 + "but was invalid/unsupported instead. Received scriptType=" + name);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static ScriptType fromProto(PB.ScriptType scriptType) {
+        return ProtoUtil.enumFromProto(ScriptType.class, scriptType.name());
+    }
+
+    public PB.ScriptType toProtoMessage() {
+        return PB.ScriptType.valueOf(name());
     }
 }

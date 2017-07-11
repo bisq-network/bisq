@@ -18,25 +18,55 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Data;
-import lombok.experimental.Delegate;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
-public class BsqBlock implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
-    @Delegate
+public class BsqBlock implements PersistablePayload {
     private final BsqBlockVo bsqBlockVo;
-
     private final List<Tx> txs;
 
     public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {
         this.bsqBlockVo = bsqBlockVo;
         this.txs = txs;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PB.BsqBlock toProtoMessage() {
+        return PB.BsqBlock.newBuilder()
+                .setBsqBlockVo(bsqBlockVo.toProtoMessage())
+                .addAllTxs(txs.stream()
+                        .map(Tx::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static BsqBlock fromProto(PB.BsqBlock proto) {
+        return new BsqBlock(BsqBlockVo.fromProto(proto.getBsqBlockVo()),
+                proto.getTxsList().isEmpty() ?
+                        new ArrayList<>() :
+                        proto.getTxsList().stream()
+                                .map(Tx::fromProto)
+                                .collect(Collectors.toList()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void reset() {
+        txs.stream().forEach(Tx::reset);
+    }
+
 
     @Override
     public String toString() {
@@ -48,7 +78,22 @@ public class BsqBlock implements PersistablePayload, Serializable {
                 "\n}";
     }
 
-    public void reset() {
-        txs.stream().forEach(Tx::reset);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public int getHeight() {
+        return bsqBlockVo.getHeight();
     }
+
+    public String getHash() {
+        return bsqBlockVo.getHash();
+    }
+
+    public String getPreviousBlockHash() {
+        return bsqBlockVo.getPreviousBlockHash();
+    }
+
+
 }

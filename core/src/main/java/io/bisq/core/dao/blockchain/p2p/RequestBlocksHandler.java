@@ -7,28 +7,38 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
-import io.bisq.common.util.Utilities;
-import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
+import io.bisq.network.p2p.peers.PeerManager;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-class RequestBsqBlocksHandler implements MessageListener {
+public class RequestBlocksHandler implements MessageListener {
+
     private static final long TIME_OUT_SEC = 40;
-    private NodeAddress peersNodeAddress;
-    private Consumer<List<BsqBlock>> blockListHandler;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface Listener {
+        void onComplete(GetBsqBlocksResponse getBsqBlocksResponse);
+
+        @SuppressWarnings("UnusedParameters")
+        void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -36,17 +46,25 @@ class RequestBsqBlocksHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
+    private final PeerManager peerManager;
+    private final Listener listener;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
     private boolean stopped;
+    private Connection connection;
+    private NodeAddress peersNodeAddress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestBsqBlocksHandler(NetworkNode networkNode) {
+    public RequestBlocksHandler(NetworkNode networkNode,
+                                PeerManager peerManager,
+                                Listener listener) {
         this.networkNode = networkNode;
+        this.peerManager = peerManager;
+        this.listener = listener;
     }
 
     public void cancel() {
@@ -58,19 +76,19 @@ class RequestBsqBlocksHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void request(NodeAddress peersNodeAddress, int fromBlockHeight, Consumer<List<BsqBlock>> blocksHandler) {
-        this.blockListHandler = blocksHandler;
-        Log.traceCall("nodeAddress=" + peersNodeAddress);
-        this.peersNodeAddress = peersNodeAddress;
+    public void requestBlocks(NodeAddress nodeAddress, int startBlockHeight) {
+        Log.traceCall("nodeAddress=" + nodeAddress);
+        this.peersNodeAddress = nodeAddress;
+
         if (!stopped) {
-            GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(fromBlockHeight);
+            GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight, nonce);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
                                 String errorMessage = "A timeout occurred at sending getBsqBlocksRequest:" + getBsqBlocksRequest +
-                                        " on nodeAddress:" + peersNodeAddress;
-                                log.error(errorMessage + " / RequestDataHandler=" + RequestBsqBlocksHandler.this);
+                                        " on peersNodeAddress:" + peersNodeAddress;
+                                log.debug(errorMessage + " / RequestDataHandler=" + RequestBlocksHandler.this);
                                 handleFault(errorMessage, peersNodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
@@ -80,13 +98,14 @@ class RequestBsqBlocksHandler implements MessageListener {
                         TIME_OUT_SEC);
             }
 
-            log.error("We send a {} to peer {}. ", getBsqBlocksRequest.getClass().getSimpleName(), peersNodeAddress);
+            log.debug("We send a {} to peer {}. ", getBsqBlocksRequest.getClass().getSimpleName(), peersNodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, getBsqBlocksRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
+                        RequestBlocksHandler.this.connection = connection;
                         log.trace("Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
@@ -121,28 +140,31 @@ class RequestBsqBlocksHandler implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent() &&
-                connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (networkEnvelop instanceof GetBsqBlocksResponse) {
+        if (networkEnvelop instanceof GetBsqBlocksResponse) {
+            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
-                    stopTimeoutTimer();
-                    checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                            "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
-                                    "at that moment");
-
-                    byte[] payload = getBsqBlocksResponse.getBsqBlocksBytes();
-                    List<BsqBlock> list = Utilities.<ArrayList<BsqBlock>>deserialize(payload);
-                    log.error("Received {} blocks", list.size());
-                    blockListHandler.accept(list);
-                    cleanup();
+                    if (getBsqBlocksResponse.getRequestNonce() == nonce) {
+                        stopTimeoutTimer();
+                        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
+                                "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
+                                        "at that moment");
+                        cleanup();
+                        listener.onComplete(getBsqBlocksResponse);
+                    } else {
+                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                                        "handshake (timeout causes connection close but peer might have sent a msg before " +
+                                        "connection was closed).\n\t" +
+                                        "We drop that message. nonce={} / requestNonce={}",
+                                nonce, getBsqBlocksResponse.getRequestNonce());
+                    }
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
+            } else {
+                log.warn("We got a message from another connection and ignore it. That should never happen.");
             }
-        } else {
-            log.trace("We got a message from another connection and ignore it.");
         }
     }
 
@@ -158,11 +180,14 @@ class RequestBsqBlocksHandler implements MessageListener {
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
+        peerManager.handleConnectionFault(nodeAddress);
+        listener.onFault(errorMessage, null);
     }
 
     private void cleanup() {
         Log.traceCall();
         stopped = true;
+        networkNode.removeMessageListener(this);
         stopTimeoutTimer();
     }
 

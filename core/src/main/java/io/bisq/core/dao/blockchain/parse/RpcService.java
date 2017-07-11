@@ -25,6 +25,7 @@ import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import com.neemre.btcdcli4j.core.domain.Transaction;
 import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
 import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
@@ -36,12 +37,15 @@ import io.bisq.core.dao.blockchain.vo.*;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -133,7 +137,19 @@ public class RpcService {
         return client.getBlock(blockHash);
     }
 
-    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
+    void requestFees(String txId, int blockHeight, Map<Integer, Long> feesByBlock) throws BsqBlockchainException {
+        try {
+            Transaction transaction = requestTx(txId);
+            final BigDecimal fee = transaction.getFee();
+            if (fee != null)
+                feesByBlock.put(blockHeight, Math.abs(fee.multiply(BigDecimal.valueOf(Coin.COIN.value)).longValue()));
+        } catch (BitcoindException | CommunicationException e) {
+            log.error("error at requestFees with txId={}, blockHeight={}", txId, blockHeight);
+            throw new BsqBlockchainException(e.getMessage(), e);
+        }
+    }
+
+    Tx requestTx(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = requestRawTransaction(txId);
             // rawTransaction.getTime() is in seconds but we keep it in ms internally
@@ -188,11 +204,16 @@ public class RpcService {
                     ImmutableList.copyOf(txInputs),
                     ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {
+            log.error("error at requestTx with txId={}, blockHeight={}", txId, blockHeight);
             throw new BsqBlockchainException(e.getMessage(), e);
         }
     }
 
     RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
+    }
+
+    Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
+        return client.getTransaction(txId);
     }
 }

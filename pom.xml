@@ -131,19 +131,16 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.56</version>
         </dependency>
         -->
         <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk15on</artifactId>
-            <version>1.56</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk16</artifactId>
-            <version>1.46</version>
         </dependency>
 
         <!--utils-->
@@ -250,4 +247,39 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <!-- Oracle JDK 9 will support strong cyphers, but they must be explicitly enabled-->
+            <id>enable-strong-cipher-jdk9</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+            </activation>
+            <properties>
+                    <crypto.policy>unlimited</crypto.policy>
+            </properties>
+        </profile>
+    </profiles>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>1.56</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk15on</artifactId>
+                <version>1.56</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk16</artifactId>
+                <version>1.46</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>

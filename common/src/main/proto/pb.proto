@@ -286,19 +286,17 @@ message PrivateNotificationMessage {
 
 message GetBsqBlocksRequest {
     int32 from_block_height = 1;
+    int32 nonce = 2;
 }
 
-// TODO not fully impl. yet, serialized data used atm
 message GetBsqBlocksResponse {
-    bytes bsq_blocks_bytes = 1;
+    repeated BsqBlock bsq_blocks = 1;
+    int32 request_nonce = 2;
 }
 
-// TODO not fully impl. yet, serialized data used atm
 message NewBsqBlockBroadcastMessage {
-    bytes bsq_block_bytes = 1;
+    BsqBlock bsq_block = 1;
 }
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -387,6 +385,121 @@ message PaymentAccountFilter {
     string payment_method_id = 1;
     string get_method_name = 2;
     string value = 3;
+}
+
+
+// DAO
+
+enum ScriptType {
+    PB_ERROR_SCRIPT_TYPES = 0;
+    PUB_KEY = 1;
+    PUB_KEY_HASH = 2;
+    SCRIPT_HASH = 3;
+    MULTISIG = 4;
+    NULL_DATA = 5;
+    WITNESS_V0_KEYHASH = 6;
+    WITNESS_V0_SCRIPTHASH = 7;
+    NONSTANDARD = 8;
+}
+
+message PubKeyScript {
+    int32 req_sigs = 1;
+    ScriptType script_type = 2;
+    repeated string addresses = 3;
+    string asm = 4;
+    string hex = 5;
+}
+
+message TxInputVo {
+    string tx_id = 1;
+    int32 tx_output_index = 2;
+}
+
+message TxInput {
+    TxInputVo tx_input_vo = 1;
+    TxOutput connected_tx_output = 2;
+}
+
+message TxOutputVo {
+    int32 index = 1;
+    int64 value = 2;
+    string tx_id = 3;
+    PubKeyScript pub_key_script = 4;
+    string address = 5;
+    bytes op_return_data = 6;
+    int32 block_height= 7;
+}
+
+message SpentInfo {
+    int64 block_height = 1;
+    string tx_id = 2;
+    int32 input_index= 3;
+}
+
+enum TxOutputType {
+    PB_ERROR_TX_OUTPUT_TYPE = 0;
+    UNDEFINED = 1;
+    BSQ_OUTPUT = 2;
+    BTC_OUTPUT = 3;
+    OP_RETURN_OUTPUT = 4;
+    COMPENSATION_REQUEST_OP_RETURN_OUTPUT = 5;
+    COMPENSATION_REQUEST_BTC_OUTPUT = 6;
+    SPONSORING_BTC_OUTPUT = 7;
+    VOTING_OP_RETURN_OUTPUT = 8;
+}
+
+message TxOutput {
+    TxOutputVo tx_output_vo = 1;
+    bool is_unspent = 2;
+    bool is_verified = 3;
+    TxOutputType tx_output_type = 4;
+    SpentInfo spent_info = 5;
+}
+
+message TxVo {
+    string tx_version = 1;
+    string id = 2;
+    int32 block_height= 3;
+    string block_hash = 4;
+    int64 time = 5;
+}
+
+enum TxType {
+    PB_ERROR_TX_TYPE = 0;
+    UNVERIFIED = 1;
+    INVALID = 2;
+    GENESIS = 3;
+    TRANSFER_BSQ = 4;
+    PAY_TRADE_FEE = 5;
+    COMPENSATION_REQUEST = 6;
+    VOTE = 7;
+    ISSUANCE = 8;
+    LOCK_UP = 9;
+    UN_LOCK = 10;
+}
+
+message Tx {
+    TxVo tx_vo = 1;
+    repeated TxInput inputs = 2;
+    repeated TxOutput outputs = 3;
+    int64 burnt_fee = 4;
+    TxType tx_type = 5;
+}
+
+message BsqBlockVo {
+    int32 height = 1;
+    string hash = 2;
+    string previous_block_hash = 3;
+}
+    
+message BsqBlock {
+    BsqBlockVo bsq_block_vo = 1;
+    repeated Tx txs = 2;
+}
+
+message TxIdIndexTuple {
+    string tx_id = 1;
+    int32 index = 2;
 }
 
 
@@ -1132,13 +1245,18 @@ message UserPayload {
 }
 
 
-// TODO fully implemented yet
 ///////////////////////////////////////////////////////////////////////////////////////////
 // DAO
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 message BsqChainState {
-    bytes serialized = 1;
+    repeated BsqBlock bsq_blocks = 1;
+    map<string, Tx> tx_map = 2;
+    map<string, TxOutput> unspent_tx_outputs_map = 3;
+    string genesis_tx_id = 4;
+    int32 genesis_block_height = 5;
+    int32 chain_head_height = 6;
+    Tx genesis_tx = 7;
 }
 
 message VoteItem {

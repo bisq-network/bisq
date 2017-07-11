@@ -18,27 +18,59 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.generated.protobuffer.PB;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.experimental.Delegate;
 import org.bitcoinj.core.Utils;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
+import java.util.Optional;
 
 @Data
-public class TxOutput implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
-    @Delegate
+@AllArgsConstructor
+public class TxOutput implements PersistablePayload {
     private final TxOutputVo txOutputVo;
-
     private boolean isUnspent;
     private boolean isVerified;
+    @Nullable
     private TxOutputType txOutputType;
+    @Nullable
     private SpentInfo spentInfo;
 
     public TxOutput(TxOutputVo txOutputVo) {
         this.txOutputVo = txOutputVo;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PB.TxOutput toProtoMessage() {
+        final PB.TxOutput.Builder builder = PB.TxOutput.newBuilder()
+                .setTxOutputVo(txOutputVo.toProtoMessage())
+                .setIsUnspent(isUnspent)
+                .setIsVerified(isVerified);
+
+        Optional.ofNullable(txOutputType).ifPresent(e -> builder.setTxOutputType(e.toProtoMessage()));
+        Optional.ofNullable(spentInfo).ifPresent(e -> builder.setSpentInfo(e.toProtoMessage()));
+
+        return builder.build();
+    }
+
+    public static TxOutput fromProto(PB.TxOutput proto) {
+        return new TxOutput(TxOutputVo.fromProto(proto.getTxOutputVo()),
+                proto.getIsUnspent(),
+                proto.getIsVerified(),
+                TxOutputType.fromProto(proto.getTxOutputType()),
+                proto.hasSpentInfo() ? SpentInfo.fromProto(proto.getSpentInfo()) : null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void reset() {
         isUnspent = false;
@@ -70,5 +102,48 @@ public class TxOutput implements PersistablePayload, Serializable {
 
     public boolean isSponsoringBtcOutput() {
         return txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public int getIndex() {
+        return txOutputVo.getIndex();
+    }
+
+    public long getValue() {
+        return txOutputVo.getValue();
+    }
+
+    public String getTxId() {
+        return txOutputVo.getTxId();
+    }
+
+    public PubKeyScript getPubKeyScript() {
+        return txOutputVo.getPubKeyScript();
+    }
+
+    @Nullable
+    public String getAddress() {
+        return txOutputVo.getAddress();
+    }
+
+    @Nullable
+    public byte[] getOpReturnData() {
+        return txOutputVo.getOpReturnData();
+    }
+
+    public int getBlockHeight() {
+        return txOutputVo.getBlockHeight();
+    }
+
+    public String getId() {
+        return txOutputVo.getId();
+    }
+
+    public TxIdIndexTuple getTxIdIndexTuple() {
+        return txOutputVo.getTxIdIndexTuple();
     }
 }

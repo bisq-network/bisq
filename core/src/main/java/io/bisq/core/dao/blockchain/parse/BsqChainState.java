@@ -18,37 +18,32 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // Represents mutable state of BSQ chain data
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqChainState implements PersistableEnvelope, Serializable {
-    private static final long serialVersionUID = 1;
-
+public class BsqChainState implements PersistableEnvelope {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -91,8 +86,8 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // block 450000 2017-01-25
 
     // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
-    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "da216721fb915da499fe0400d08362f44b672096f37c74501c2f9bcaa7760656";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 363;
 
     // LTC REG TEST
     private static final String LTC_REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
@@ -118,21 +113,24 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Persisted data
-    private final LinkedList<BsqBlock> blocks = new LinkedList<>();
-    private final HashMap<String, Tx> txMap = new HashMap<>();
-    private final HashMap<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
-    private final HashSet<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
-    private final HashSet<Tuple2<Long, Integer>> votingFees = new HashSet<>();
-
+    private final LinkedList<BsqBlock> bsqBlocks;
+    private final Map<String, Tx> txMap;
+    private final Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap;
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private int chainHeadHeight = 0;
     private Tx genesisTx;
 
+    // not impl in PB yet
+    private Set<Tuple2<Long, Integer>> compensationRequestFees;
+    private Set<Tuple2<Long, Integer>> votingFees;
+
     // transient
-    transient private final Storage<BsqChainState> storage;
+    @Nullable
+    transient private Storage<BsqChainState> storage;
+    @Nullable
     transient private BsqChainState snapshotCandidate;
-    transient private FunctionalReadWriteLock lock;
+    transient private final FunctionalReadWriteLock lock;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +141,12 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     @Inject
     public BsqChainState(PersistenceProtoResolver persistenceProtoResolver,
                          @Named(Storage.STORAGE_DIR) File storageDir) {
+
+        bsqBlocks = new LinkedList<>();
+        txMap = new HashMap<>();
+        unspentTxOutputsMap = new HashMap<>();
+        compensationRequestFees = new HashSet<>();
+        votingFees = new HashSet<>();
 
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -178,30 +182,67 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
         lock = new FunctionalReadWriteLock(true);
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            lock = new FunctionalReadWriteLock(true);
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO only supports serialized data atm
+    private BsqChainState(LinkedList<BsqBlock> bsqBlocks,
+                          Map<String, Tx> txMap,
+                          Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap,
+                          String genesisTxId,
+                          int genesisBlockHeight,
+                          int chainHeadHeight,
+                          Tx genesisTx) {
+        this.bsqBlocks = bsqBlocks;
+        this.txMap = txMap;
+        this.unspentTxOutputsMap = unspentTxOutputsMap;
+        this.genesisTxId = genesisTxId;
+        this.genesisBlockHeight = genesisBlockHeight;
+        this.chainHeadHeight = chainHeadHeight;
+        this.genesisTx = genesisTx;
+
+        lock = new FunctionalReadWriteLock(true);
+
+        // not impl yet in PB
+        compensationRequestFees = new HashSet<>();
+        votingFees = new HashSet<>();
+    }
+
     @Override
     public Message toProtoMessage() {
-        PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder();
-        builder.setSerialized(ByteString.copyFrom(Utilities.serialize(this)));
-        return PB.PersistableEnvelope.newBuilder().setBsqChainState(builder).build();
+        return PB.PersistableEnvelope.newBuilder().setBsqChainState(getBsqChainStateBuilder()).build();
+    }
+
+    private PB.BsqChainState.Builder getBsqChainStateBuilder() {
+        return PB.BsqChainState.newBuilder()
+                .addAllBsqBlocks(bsqBlocks.stream()
+                        .map(BsqBlock::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .putAllTxMap(txMap.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                v -> v.getValue().toProtoMessage())))
+                .putAllUnspentTxOutputsMap(unspentTxOutputsMap.entrySet().stream()
+                        .collect(Collectors.toMap(k -> k.getKey().getAsString(),
+                                v -> v.getValue().toProtoMessage())))
+                .setGenesisTxId(genesisTxId)
+                .setGenesisBlockHeight(genesisBlockHeight)
+                .setChainHeadHeight(chainHeadHeight)
+                .setGenesisTx(genesisTx.toProtoMessage());
     }
 
     public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
-        return Utilities.deserialize(proto.getSerialized().toByteArray());
+        return new BsqChainState(new LinkedList<>(proto.getBsqBlocksList().stream()
+                .map(BsqBlock::fromProto)
+                .collect(Collectors.toList())),
+                new HashMap<>(proto.getTxMapMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, v -> Tx.fromProto(v.getValue())))),
+                new HashMap<>(proto.getUnspentTxOutputsMapMap().entrySet().stream()
+                        .collect(Collectors.toMap(k -> new TxIdIndexTuple(k.getKey()), v -> TxOutput.fromProto(v.getValue())))),
+                proto.getGenesisTxId(),
+                proto.getGenesisBlockHeight(),
+                proto.getChainHeadHeight(),
+                Tx.fromProto(proto.getGenesisTx())
+        );
     }
 
 
@@ -211,8 +252,9 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     public void applySnapshot() {
         lock.write(() -> {
+            checkNotNull(storage, "storage must not be null");
             BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState");
-            blocks.clear();
+            bsqBlocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
             chainHeadHeight = 0;
@@ -220,7 +262,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
             if (snapshot != null) {
                 log.info("applySnapshot snapshot.chainHeadHeight=" + snapshot.chainHeadHeight);
-                blocks.addAll(snapshot.blocks);
+                bsqBlocks.addAll(snapshot.bsqBlocks);
                 txMap.putAll(snapshot.txMap);
                 unspentTxOutputsMap.putAll(snapshot.unspentTxOutputsMap);
                 chainHeadHeight = snapshot.chainHeadHeight;
@@ -249,10 +291,10 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     void addBlock(BsqBlock block) throws BlockNotConnectingException {
         try {
             lock.write2(() -> {
-                if (!blocks.contains(block)) {
-                    if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
-                            blocks.getLast().getHeight() + 1 == block.getHeight())) {
-                        blocks.add(block);
+                if (!bsqBlocks.contains(block)) {
+                    if (bsqBlocks.isEmpty() || (bsqBlocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
+                            bsqBlocks.getLast().getHeight() + 1 == block.getHeight())) {
+                        bsqBlocks.add(block);
                         block.getTxs().stream().forEach(BsqChainState.this::addTxToMap);
                         chainHeadHeight = block.getHeight();
                         maybeMakeSnapshot();
@@ -260,7 +302,7 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                     } else {
                         log.warn("addBlock called with a not connecting block:\n" +
                                         "height()={}, hash()={}, head.height()={}, head.hash()={}",
-                                block.getHeight(), block.getHash(), blocks.getLast().getHeight(), blocks.getLast().getHash());
+                                block.getHeight(), block.getHash(), bsqBlocks.getLast().getHeight(), bsqBlocks.getLast().getHash());
                         throw new BlockNotConnectingException(block);
                     }
                 } else {
@@ -310,11 +352,15 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     }
 
     public BsqChainState getClone() {
-        return lock.read(() -> Utilities.<BsqChainState>cloneObject(this));
+        return getClone(this);
+    }
+
+    public BsqChainState getClone(BsqChainState bsqChainState) {
+        return lock.read(() -> (BsqChainState) BsqChainState.fromProto(bsqChainState.getBsqChainStateBuilder().build()));
     }
 
     public boolean containsBlock(BsqBlock bsqBlock) {
-        return lock.read(() -> blocks.contains(bsqBlock));
+        return lock.read(() -> bsqBlocks.contains(bsqBlock));
     }
 
     Optional<TxOutput> getUnspentTxOutput(TxIdIndexTuple txIdIndexTuple) {
@@ -325,16 +371,6 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
 
     public boolean isTxOutputSpendable(String txId, int index) {
         return lock.read(() -> getSpendableTxOutput(txId, index).isPresent());
-    }
-
-    public byte[] getSerializedResettedBlocksFrom(int fromBlockHeight) {
-        return lock.read(() -> {
-            List<BsqBlock> filtered = blocks.stream()
-                    .filter(block -> block.getHeight() >= fromBlockHeight)
-                    .collect(Collectors.toList());
-            filtered.stream().forEach(BsqBlock::reset);
-            return Utilities.<ArrayList<BsqBlock>>serialize(new ArrayList<>(filtered));
-        });
     }
 
     public boolean hasTxBurntFee(String txId) {
@@ -356,6 +392,17 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
     // Only used for Json Exporter
     public Map<String, Tx> getTxMap() {
         return lock.read(() -> txMap);
+    }
+
+    public List<BsqBlock> getResettedBlocksFrom(int fromBlockHeight) {
+        return lock.read(() -> {
+            BsqChainState clone = getClone();
+            List<BsqBlock> filtered = clone.bsqBlocks.stream()
+                    .filter(block -> block.getHeight() >= fromBlockHeight)
+                    .collect(Collectors.toList());
+            filtered.stream().forEach(BsqBlock::reset);
+            return filtered;
+        });
     }
 
 
@@ -450,13 +497,14 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                 // At trigger event we store the latest snapshotCandidate to disc
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
-                    final BsqChainState cloned = Utilities.<BsqChainState>cloneObject(snapshotCandidate);
+                    final BsqChainState cloned = getClone(snapshotCandidate);
+                    checkNotNull(storage, "storage must nto be null");
                     storage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!
                     log.info("Saved snapshotCandidate to Disc at height " + cloned.chainHeadHeight);
                 }
                 // Now we clone and keep it in memory for the next trigger
-                snapshotCandidate = Utilities.<BsqChainState>cloneObject(this);
+                snapshotCandidate = getClone(this);
                 // dont access cloned anymore with methods as locks are transient!
                 log.debug("Cloned new snapshotCandidate at height " + snapshotCandidate.chainHeadHeight);
             }
@@ -476,14 +524,12 @@ public class BsqChainState implements PersistableEnvelope, Serializable {
                         "    unspentTxOutputsMap.size={}\n" +
                         "    compensationRequestFees.size={}\n" +
                         "    votingFees.size={}\n" +
-                        "    blocks data size in kb={}\n",
                 getChainHeadHeight(),
-                blocks.size(),
+                bsqBlocks.size(),
                 txMap.size(),
                 unspentTxOutputsMap.size(),
                 compensationRequestFees.size(),
-                votingFees.size(),
-                Utilities.serialize(blocks.toArray()).length / 1000d);
+                votingFees.size());
     }
 }
 
