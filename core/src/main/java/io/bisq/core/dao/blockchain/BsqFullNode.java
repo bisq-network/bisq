@@ -186,7 +186,7 @@ public class BsqFullNode extends BsqNode {
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
         super.onNewBsqBlock(bsqBlock);
         jsonChainStateExporter.maybeExport();
-        if (parseBlockchainComplete && p2pNetworkReady)
+        if (parseBlockchainComplete && p2pNetworkReady && requestBlocksManager != null)
             requestBlocksManager.publishNewBlock(bsqBlock);
     }
 }
