@@ -252,7 +252,7 @@ public class BsqParser {
 
         // we check if we have any valid BSQ from that tx set
         bsqTxsInBlock.addAll(txsWithoutInputsFromSameBlock.stream()
-                .filter(tx -> isTxValidBsqTx(blockHeight, tx))
+                .filter(tx -> isValidBsqTx(blockHeight, tx))
                 .collect(Collectors.toList()));
 
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");
@@ -277,7 +277,7 @@ public class BsqParser {
         }
     }
 
-    private boolean isTxValidBsqTx(int blockHeight, Tx tx) {
+    private boolean isValidBsqTx(int blockHeight, Tx tx) {
         boolean isBsqTx = false;
         long availableValue = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
