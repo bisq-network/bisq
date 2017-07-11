@@ -73,9 +73,13 @@ public class BsqFullNode extends BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        super.onAllServicesInitialized(errorMessageHandler);
-
-        bsqFullNodeExecutor.setup(this::startParseBlocks,
+        // bsqFullNodeExecutor.setup need to return with result handler before 
+        // super.onAllServicesInitialized(errorMessageHandler) is called
+        // bsqFullNodeExecutor.setup is and async call.
+        bsqFullNodeExecutor.setup(() -> {
+                    super.onAllServicesInitialized(errorMessageHandler);
+                    startParseBlocks();
+                },
                 throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
@@ -129,9 +133,56 @@ public class BsqFullNode extends BsqNode {
     }
 
     @Override
+    protected void onP2PNetworkReady() {
+        super.onP2PNetworkReady();
+
+        if (requestBlocksManager == null && p2pNetworkReady) {
+            createRequestBlocksManager();
+            addBlockHandler();
+        }
+    }
+
+    @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         log.info("onParseBlockchainComplete");
         parseBlockchainComplete = true;
+
+        if (requestBlocksManager == null && p2pNetworkReady) {
+            createRequestBlocksManager();
+            addBlockHandler();
+        }
+    }
+
+    private void createRequestBlocksManager() {
+        requestBlocksManager = new RequestManager(p2PService.getNetworkNode(),
+                p2PService.getPeerManager(),
+                p2PService.getBroadcaster(),
+                p2PService.getSeedNodeAddresses(),
+                bsqChainState,
+                new RequestManager.Listener() {
+                    @Override
+                    public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
+
+                    }
+
+                    @Override
+                    public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
+
+                    }
+
+                    @Override
+                    public void onNoSeedNodeAvailable() {
+
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+
+                    }
+                });
+    }
+
+    private void addBlockHandler() {
         // We register our handler for new blocks
         bsqFullNodeExecutor.addBlockHandler(btcdBlock -> bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
                 genesisBlockHeight,
@@ -145,41 +196,6 @@ public class BsqFullNode extends BsqNode {
                         throwable.printStackTrace();
                     }
                 }));
-
-        log.info("Register MessageListener");
-
-        if (requestBlocksManager == null && p2pNetworkReady) {
-            if (p2pNetworkReady) {
-                requestBlocksManager = new RequestManager(p2PService.getNetworkNode(),
-                        p2PService.getPeerManager(),
-                        p2PService.getBroadcaster(),
-                        p2PService.getSeedNodeAddresses(),
-                        bsqChainState,
-                        new RequestManager.Listener() {
-                            @Override
-                            public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
-
-                            }
-
-                            @Override
-                            public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
-
-                            }
-
-                            @Override
-                            public void onNoSeedNodeAvailable() {
-
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage, @Nullable Connection connection) {
-
-                            }
-                        });
-            } else {
-                //TODO add listener
-            }
-        }
     }
 
     @Override
