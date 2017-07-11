@@ -97,7 +97,7 @@ public class Tx implements PersistablePayload {
 
     public void reset() {
         burntFee = 0;
-        txType = TxType.UNDEFINED;
+        txType = TxType.UNDEFINED_TX_TYPE;
         inputs.stream().forEach(TxInput::reset);
         outputs.stream().forEach(TxOutput::reset);
     }

@@ -466,7 +466,7 @@ message TxVo {
 
 enum TxType {
     PB_ERROR_TX_TYPE = 0;
-    UNDEFINED = 1;
+    UNDEFINED_TX_TYPE = 1;
     UNVERIFIED = 2;
     INVALID = 3;
     GENESIS = 4;
