@@ -21,6 +21,7 @@ import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 
 public enum TxType {
+    UNDEFINED,
     UNVERIFIED,
     INVALID,
     GENESIS,

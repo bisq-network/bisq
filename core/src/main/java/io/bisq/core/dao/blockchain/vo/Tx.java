@@ -35,7 +35,6 @@ public class Tx implements PersistablePayload {
     private final List<TxOutput> outputs;
 
     private long burntFee;
-    @Nullable
     private TxType txType;
 
     public Tx(TxVo txVo, List<TxInput> inputs, List<TxOutput> outputs) {
@@ -98,7 +97,7 @@ public class Tx implements PersistablePayload {
 
     public void reset() {
         burntFee = 0;
-        txType = null;
+        txType = TxType.UNDEFINED;
         inputs.stream().forEach(TxInput::reset);
         outputs.stream().forEach(TxOutput::reset);
     }

@@ -466,16 +466,17 @@ message TxVo {
 
 enum TxType {
     PB_ERROR_TX_TYPE = 0;
-    UNVERIFIED = 1;
-    INVALID = 2;
-    GENESIS = 3;
-    TRANSFER_BSQ = 4;
-    PAY_TRADE_FEE = 5;
-    COMPENSATION_REQUEST = 6;
-    VOTE = 7;
-    ISSUANCE = 8;
-    LOCK_UP = 9;
-    UN_LOCK = 10;
+    UNDEFINED = 1;
+    UNVERIFIED = 2;
+    INVALID = 3;
+    GENESIS = 4;
+    TRANSFER_BSQ = 5;
+    PAY_TRADE_FEE = 6;
+    COMPENSATION_REQUEST = 7;
+    VOTE = 8;
+    ISSUANCE = 9;
+    LOCK_UP = 10;
+    UN_LOCK = 11;
 }
 
 message Tx {
