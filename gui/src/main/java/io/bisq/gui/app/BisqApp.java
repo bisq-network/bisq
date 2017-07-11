@@ -122,7 +122,7 @@ public class BisqApp extends Application {
     public void start(Stage stage) throws IOException {
         BisqApp.primaryStage = stage;
 
-        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "Bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Utilities.printSysInfo();

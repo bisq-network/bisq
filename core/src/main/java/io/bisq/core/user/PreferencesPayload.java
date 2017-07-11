@@ -32,7 +32,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
-    private BlockChainExplorer bsqBlockChainExplorer = new BlockChainExplorer("bisq", "https://explorer.bisq.io/tx.html?tx=",
+    private BlockChainExplorer bsqBlockChainExplorer = new BlockChainExplorer("BSQ", "https://explorer.bisq.io/tx.html?tx=",
             "https://explorer.bisq.io/Address.html?addr=");
     @Nullable
     private String backupDirectory;
