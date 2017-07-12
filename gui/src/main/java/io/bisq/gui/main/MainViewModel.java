@@ -74,6 +74,7 @@ import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bisq.gui.main.overlays.windows.SelectBaseCurrencyWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
@@ -1022,10 +1023,13 @@ public class MainViewModel implements ViewModel {
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
-        if (alert != null &&
-                !alreadyDisplayed &&
-                (!alert.isUpdateInfo() || alert.isNewVersion()))
-            new DisplayAlertMessageWindow().alertMessage(alert).show();
+        if (alert != null && !alreadyDisplayed)
+            if (alert.isUpdateInfo()) {
+                if (alert.isNewVersion())
+                    new DisplayUpdateDownloadWindow(alert).show();
+            } else {
+                new DisplayAlertMessageWindow().alertMessage(alert).show();
+            }
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {

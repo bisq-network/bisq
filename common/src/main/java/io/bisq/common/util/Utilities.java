@@ -30,7 +30,6 @@ import org.bitcoinj.core.Utils;
 
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
-import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +40,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.awt.Desktop.*;
 
 
 @Slf4j
@@ -170,9 +170,9 @@ public class Utilities {
 
     public static void openURI(URI uri) throws IOException {
         if (!isLinux()
-                && Desktop.isDesktopSupported()
-                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            Desktop.getDesktop().browse(uri);
+                && isDesktopSupported()
+                && getDesktop().isSupported(Action.BROWSE)) {
+            getDesktop().browse(uri);
         } else {
             // Maybe Application.HostServices works in those cases?
             // HostServices hostServices = getHostServices();
@@ -187,9 +187,9 @@ public class Utilities {
 
     public static void openFile(File file) throws IOException {
         if (!isLinux()
-                && Desktop.isDesktopSupported()
-                && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Desktop.getDesktop().open(file);
+                && isDesktopSupported()
+                && getDesktop().isSupported(Action.OPEN)) {
+            getDesktop().open(file);
         } else {
             // Maybe Application.HostServices works in those cases?
             // HostServices hostServices = getHostServices();
@@ -200,6 +200,18 @@ public class Utilities {
             if (!DesktopUtil.open(file))
                 throw new IOException("Failed to open file: " + file.toString());
         }
+    }
+
+    public static String getTmpDir() {
+        return System.getProperty("java.io.tmpdir");
+    }
+
+    public static String getDownloadOfHomeDir() {
+        File file = new File(getSystemHomeDirectory() + "/Downloads");
+        if (file.exists())
+            return file.getAbsolutePath();
+        else
+            return getSystemHomeDirectory();
     }
 
     public static void printSystemLoad() {

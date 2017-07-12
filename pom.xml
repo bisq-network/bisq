@@ -127,12 +127,12 @@
             <version>4.1.0</version>
         </dependency>
 
-        <!--crypto-->
+        <!--crypto
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
         </dependency>
-
+        -->
         <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
