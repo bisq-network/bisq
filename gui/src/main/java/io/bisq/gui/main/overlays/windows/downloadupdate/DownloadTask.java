@@ -1,14 +1,23 @@
-package io.bisq.gui.main.overlays.windows.downloadupdate;
-
-/**
- * A utility that downloads a file from a URL.
+/*
+ * This file is part of Bitsquare.
  *
- * @author www.codejava.net
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
+package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.collect.Lists;
-import io.bisq.common.locale.Res;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import javafx.concurrent.Task;
 import lombok.Getter;
@@ -35,9 +44,7 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
     private final String saveDir;
 
     /**
-     * Prepares a task to download a file from {@code fileDescriptors} to the sysyem's temp dir specified in java.io.tmpdir.
-     *
-     * @param fileURL HTTP URL of the file to be downloaded
+     * Prepares a task to download a file from {@code fileDescriptors} to the system's download dir.
      */
     public DownloadTask(final FileDescriptor fileDescriptor) {
         this(Lists.newArrayList(fileDescriptor));
@@ -61,7 +68,6 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
         super();
         this.fileDescriptors = fileDescriptors;
         this.saveDir = saveDir;
-        updateMessage(Res.get("displayUpdateDownloadWindow.download.starting"));
         log.info("Starting DownloadTask with file:{}, saveDir:{}, nr of files: {}", fileDescriptors, saveDir, fileDescriptors.size());
     }
 
@@ -77,23 +83,23 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
 
         String partialSaveFilePath = saveDir + (saveDir.endsWith(File.separator) ? "" : File.separator);
 
-        // go twice over the filedescriptors: first fill in the saveFile, then download the file and fill in the status
+        // go twice over the fileDescriptors: first fill in the saveFile, then download the file and fill in the status
         return fileDescriptors.stream()
                 .map(fileDescriptor -> {
                     fileDescriptor.setSaveFile(new File(partialSaveFilePath + fileDescriptor.getFileName()));
                     return fileDescriptor;
                 })
                 .map(fileDescriptor -> {
-                    updateMessage(Res.get("displayUpdateDownloadWindow.download.file", fileDescriptor.getFileName()));
                     log.info("Downloading {}", fileDescriptor.getFileName());
-                    URL url = null;
                     try {
-                        url = new URL(fileDescriptor.getLoadUrl());
-                        download(url, fileDescriptor.getSaveFile());
+                        updateMessage(fileDescriptor.getFileName());
+                        download(new URL(fileDescriptor.getLoadUrl()), fileDescriptor.getSaveFile());
+                        log.info("Download for {} done", fileDescriptor.getFileName());
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.OK);
                     } catch (Exception e) {
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.FAIL);
                         log.error("Error downloading file:" + fileDescriptor.toString(), e);
+                        e.printStackTrace();
                     }
                     return fileDescriptor;
                 })
@@ -101,13 +107,11 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
     }
 
     private void download(URL url, File outputFile) throws IOException {
-        URLConnection urlConnection = null;
-        urlConnection = url.openConnection();
+        URLConnection urlConnection = url.openConnection();
         urlConnection.connect();
-        int file_size = urlConnection.getContentLength();
-        copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, file_size);
+        int fileSize = urlConnection.getContentLength();
+        copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, fileSize);
     }
-
 
 
     public void copyInputStreamToFileNew(final InputStream source, final File destination, int fileSize) throws IOException {
@@ -116,7 +120,7 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
             try {
                 final byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
                 long count = 0;
-                int n = 0;
+                int n;
                 while (EOF != (n = source.read(buffer))) {
                     output.write(buffer, 0, n);
                     count += n;

@@ -1021,10 +1021,12 @@ public class MainViewModel implements ViewModel {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
         if (alert != null && !alreadyDisplayed)
-            if (alert.isUpdateInfo() || alert.isNewVersion())
-                new DisplayUpdateDownloadWindow(alert).show();
-            else
+            if (alert.isUpdateInfo()) {
+                if (alert.isNewVersion())
+                    new DisplayUpdateDownloadWindow(alert).show();
+            } else {
                 new DisplayAlertMessageWindow().alertMessage(alert).show();
+            }
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {

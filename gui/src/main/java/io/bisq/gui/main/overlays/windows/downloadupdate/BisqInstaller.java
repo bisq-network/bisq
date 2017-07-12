@@ -1,40 +1,56 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.collect.Lists;
 import io.bisq.common.util.Utilities;
-import javafx.scene.control.ProgressIndicator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.io.*;
-import java.security.Security;
 import java.security.SignatureException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class BisqInstaller {
-    private List<String> knownKeys = Lists.newArrayList("F379A1C6");
+    static final String LOCAL_FINGER_PRINT = "F379A1C6";
+    private List<String> knownKeys = Lists.newArrayList(LOCAL_FINGER_PRINT);
 
-    public boolean osCheck() {
+    public boolean isSupportedOS() {
         return Utilities.isOSX() || Utilities.isWindows() || Utilities.isLinux();
     }
 
-    public Optional<DownloadTask> download(String version, ProgressIndicator progressIndicator) {
+    public Optional<DownloadTask> download(String version) {
         String partialUrl = "https://github.com/bitsquare/bitsquare/releases/download/v" + version + "/";
 
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
         List<FileDescriptor> keyFileDescriptors = getKeyFileDescriptors();
-        List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor, version);
+        List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor);
 
         List<FileDescriptor> allFiles = Lists.newArrayList();
         allFiles.addAll(keyFileDescriptors);
@@ -42,9 +58,7 @@ public class BisqInstaller {
         allFiles.addAll(Lists.newArrayList(installerFileDescriptor));
 
         // Download keys, sigs and Installer
-        Optional<DownloadTask> installerDownloadTask = getDownloadTask(allFiles, progressIndicator);
-
-        return installerDownloadTask;
+        return getDownloadTask(allFiles);
     }
 
     public VerifyTask verify(List<FileDescriptor> fileDescriptors) {
@@ -55,38 +69,26 @@ public class BisqInstaller {
         return verifyTask;
     }
 
-    private Optional<DownloadTask> getDownloadTask(List<FileDescriptor> fileDescriptors, ProgressIndicator progressIndicator) {
-        DownloadTask result = null;
+    private Optional<DownloadTask> getDownloadTask(List<FileDescriptor> fileDescriptors) {
         try {
-            result = downloadFiles(fileDescriptors, Utilities.getTmpDir(), progressIndicator);
+            return Optional.of(downloadFiles(fileDescriptors, Utilities.getDownloadOfHomeDir()));
         } catch (IOException exception) {
             return Optional.empty();
         }
-
-        return Optional.of(result);
     }
 
     /**
      * Creates and starts a Task for background downloading
      *
-     * @param fileURL      URL of file to be downloaded
-     * @param saveDir      Directory to save file to
-     * @param indicator    Progress indicator, can be {@code null}
-     * @param downloadType enum to identify downloaded files after completion, options are {INSTALLER, KEY, SIG, MISC}
-     * @param index        For coordination between key and sig files
+     * @param fileDescriptors
+     * @param saveDir         Directory to save file to
      * @return The task handling the download
      * @throws IOException
      */
-    public static DownloadTask downloadFiles(List<FileDescriptor> fileDescriptors, String saveDir, @Nullable ProgressIndicator indicator) throws IOException {
-        DownloadTask task;
-        if (saveDir != null)
-            task = new DownloadTask(fileDescriptors, saveDir);
-        else
-            task = new DownloadTask(fileDescriptors, Utilities.getTmpDir()); // Tries to use system temp directory
-        if (indicator != null) {
-            indicator.progressProperty().unbind();
-            indicator.progressProperty().bind(task.progressProperty());
-        }
+    public static DownloadTask downloadFiles(List<FileDescriptor> fileDescriptors, String saveDir) throws IOException {
+        if (saveDir == null)
+            saveDir = Utilities.getDownloadOfHomeDir();
+        DownloadTask task = new DownloadTask(fileDescriptors, saveDir);
         Thread th = new Thread(task);
         th.start();
         // TODO: check for problems when creating task
@@ -96,31 +98,33 @@ public class BisqInstaller {
     /**
      * Verifies detached PGP signatures against GPG/openPGP RSA public keys. Does currently not work with openssl or JCA/JCE keys.
      *
-     * @param pubKeyFilename Path to file providing the public key to use
-     * @param sigFilename    Path to detached signature file
-     * @param dataFilename   Path to signed data file
+     * @param pubKeyFile Path to file providing the public key to use
+     * @param sigFile    Path to detached signature file
+     * @param dataFile   Path to signed data file
      * @return {@code true} if signature is valid, {@code false} if signature is not valid
      * @throws Exception throws various exceptions in case something went wrong. Main reason should be that key or
      *                   signature could be extracted from the provided files due to a "bad" format.<br>
      *                   <code>FileNotFoundException, IOException, SignatureException, PGPException</code>
      */
     public static VerifyStatusEnum verifySignature(File pubKeyFile, File sigFile, File dataFile) throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
-        InputStream is;
+        // TODO why is that needed?
+        //Security.addProvider(new BouncyCastleProvider());
+
+        InputStream inputStream;
         int bytesRead;
         PGPPublicKey publicKey;
         PGPSignature pgpSignature;
         boolean result;
 
         // Read keys from file
-        is = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile));
-        PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(is, new JcaKeyFingerprintCalculator());
-        is.close();
+        inputStream = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile));
+        PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(inputStream, new JcaKeyFingerprintCalculator());
+        inputStream.close();
 
-        Iterator<PGPPublicKeyRing> rIt = publicKeyRingCollection.getKeyRings();
+        Iterator<PGPPublicKeyRing> iterator = publicKeyRingCollection.getKeyRings();
         PGPPublicKeyRing pgpPublicKeyRing;
-        if (rIt.hasNext()) {
-            pgpPublicKeyRing = rIt.next();
+        if (iterator.hasNext()) {
+            pgpPublicKeyRing = iterator.next();
         } else {
             throw new PGPException("Could not find public keyring in provided key file");
         }
@@ -131,34 +135,34 @@ public class BisqInstaller {
         //        publicKey = pgpPublicKeyRing.getPublicKey(0xF5B84436F379A1C6L);
 
         // Read signature from file
-        is = PGPUtil.getDecoderStream(new FileInputStream(sigFile));
-        PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(is, new JcaKeyFingerprintCalculator());
+        inputStream = PGPUtil.getDecoderStream(new FileInputStream(sigFile));
+        PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
         Object o = pgpObjectFactory.nextObject();
         if (o instanceof PGPSignatureList) {
             PGPSignatureList signatureList = (PGPSignatureList) o;
+            checkArgument(!signatureList.isEmpty(), "signatureList must not be empty");
             pgpSignature = signatureList.get(0);
         } else if (o instanceof PGPSignature) {
             pgpSignature = (PGPSignature) o;
         } else {
             throw new SignatureException("Could not find signature in provided signature file");
         }
-        is.close();
+        inputStream.close();
         log.debug("KeyID used in signature: %X\n", pgpSignature.getKeyID());
         publicKey = pgpPublicKeyRing.getPublicKey(pgpSignature.getKeyID());
         log.debug("The ID of the selected key is %X\n", publicKey.getKeyID());
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
 
         // Read file to verify
-        //try {
         byte[] data = new byte[1024];
-        is = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
+        inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)));
         while (true) {
-            bytesRead = is.read(data, 0, 1024);
+            bytesRead = inputStream.read(data, 0, 1024);
             if (bytesRead == -1)
                 break;
             pgpSignature.update(data, 0, bytesRead);
         }
-        is.close();
+        inputStream.close();
 
         // Verify the signature
         result = pgpSignature.verify();
@@ -168,7 +172,7 @@ public class BisqInstaller {
 
     @NotNull
     private FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
-        String fileName = null;
+        String fileName;
         String prefix = "Bisq-";
         // https://github.com/bitsquare/bitsquare/releases/download/v0.5.1/Bisq-0.5.1.dmg
         if (Utilities.isOSX())
@@ -178,7 +182,7 @@ public class BisqInstaller {
         else if (Utilities.isLinux())
             fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".deb";
         else
-            log.error("No suitable OS found, use osCheck before calling this method.");
+            throw new RuntimeException("No suitable OS found, use osCheck before calling this method.");
 
         return FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)
@@ -186,7 +190,7 @@ public class BisqInstaller {
     }
 
     public List<FileDescriptor> getKeyFileDescriptors() {
-        String fingerprint = "F379A1C6";
+        String fingerprint = LOCAL_FINGER_PRINT;
         String fileName = fingerprint + ".asc";
         String fixedKeyPath = "/keys/" + fileName;
         return Lists.newArrayList(
@@ -204,12 +208,17 @@ public class BisqInstaller {
         );
     }
 
-    public List<FileDescriptor> getSigFileDescriptors(FileDescriptor installerFileDescriptor, String version) {
+    public List<FileDescriptor> getSigFileDescriptors(FileDescriptor installerFileDescriptor) {
         String suffix = ".asc";
+
+        // TODO Shouldn't it be:
+        //   .id(installerFileDescriptor.getId())
+        // instead of:
+        //   .id(FINGER_PRINT_F379A1C6)
         return Lists.newArrayList(FileDescriptor.builder()
                 .type(DownloadType.SIG)
                 .fileName(installerFileDescriptor.getFileName().concat(suffix))
-                .id("F379A1C6")
+                .id(LOCAL_FINGER_PRINT)
                 .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
                 .build());
     }

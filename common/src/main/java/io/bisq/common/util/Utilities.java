@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -31,7 +30,6 @@ import org.bitcoinj.core.Utils;
 
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
-import java.util.List;
 import java.io.*;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
@@ -206,6 +204,14 @@ public class Utilities {
 
     public static String getTmpDir() {
         return System.getProperty("java.io.tmpdir");
+    }
+
+    public static String getDownloadOfHomeDir() {
+        File file = new File(getSystemHomeDirectory() + "/Downloads");
+        if (file.exists())
+            return file.getAbsolutePath();
+        else
+            return getSystemHomeDirectory();
     }
 
     public static void printSystemLoad() {

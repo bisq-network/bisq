@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 /**
@@ -5,7 +22,6 @@ package io.bisq.gui.main.overlays.windows.downloadupdate;
  */
 
 import com.google.common.collect.Lists;
-import io.bisq.common.locale.Res;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.DownloadType;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.VerifyDescriptor;
@@ -27,12 +43,10 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
      * Prepares a task to download a file from {@code fileDescriptors} to {@code saveDir}.
      *
      * @param fileDescriptors HTTP URL of the file to be downloaded
-     * @param saveDir         path of the directory to save the file
      */
     public VerifyTask(final List<FileDescriptor> fileDescriptors) {
         super();
         this.fileDescriptors = fileDescriptors;
-        updateMessage(Res.get("displayUpdateDownloadWindow.verify.starting"));
         log.info("Starting VerifyTask with files:{}", fileDescriptors);
     }
 
@@ -61,18 +75,19 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
                     .filter(fileDescriptor -> DownloadType.KEY.equals(fileDescriptor.getType()))
                     .filter(fileDescriptor -> sig.getId().equals(fileDescriptor.getId()))
                     .collect(Collectors.toList());
-            for(FileDescriptor key : keys) {
-                updateMessage(Res.get("displayUpdateDownloadWindow.verify.files", key.getFileName()));
+            for (FileDescriptor key : keys) {
                 verifyDescriptorBuilder.keyFile(key.getSaveFile());
                 try {
                     verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.verifySignature(key.getSaveFile(), sig.getSaveFile(), installer.get().getSaveFile()));
+                    updateMessage(key.getFileName());
                 } catch (Exception e) {
                     verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
+                    log.error(e.toString());
+                    e.printStackTrace();
                 }
                 verifyDescriptors.add(verifyDescriptorBuilder.build());
             }
         }
-
         return verifyDescriptors;
     }
 }
