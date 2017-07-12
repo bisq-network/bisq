@@ -187,6 +187,8 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         String downloadFailedString = Res.get("displayUpdateDownloadWindow.download.failed");
         downloadButton.setOnAction(e -> {
             if (installer.isSupportedOS()) {
+                downloadedFiles.clear();
+                verifiedSigs.clear();
                 downloadButton.setDisable(true);
                 progressBar.setVisible(true);
                 downloadedFilesLabel.setOpacity(1);
