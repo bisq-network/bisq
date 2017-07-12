@@ -1,9 +1,13 @@
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
+import com.google.common.collect.Lists;
+import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +29,7 @@ import static org.junit.Assert.assertTrue;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+@Slf4j
 public class BisqInstallerTest {
     @Test
     public void call() throws Exception {
@@ -64,4 +69,17 @@ public class BisqInstallerTest {
     public void getIndex() throws Exception {
     }
 
+    @Test
+    public void getSigFileDescriptors() throws Exception {
+        BisqInstaller bisqInstaller = new BisqInstaller();
+        FileDescriptor installerFileDescriptor = FileDescriptor.builder().fileName("filename.txt").id("filename").loadUrl("url://filename.txt").build();
+        FileDescriptor key1 = FileDescriptor.builder().fileName("key1").id("key1").loadUrl("").build();
+        FileDescriptor key2 = FileDescriptor.builder().fileName("key2").id("key2").loadUrl("").build();
+        List<FileDescriptor> sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1));
+        assertEquals(1, sigFileDescriptors.size());
+        sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1, key2));
+        assertEquals(2, sigFileDescriptors.size());
+        log.info("test");
+
+    }
 }

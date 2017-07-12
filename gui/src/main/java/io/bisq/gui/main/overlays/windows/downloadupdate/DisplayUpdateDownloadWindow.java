@@ -243,6 +243,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 stopAnimations();
 
                                 List<VerifyDescriptor> verifyResults = verifyTask.getValue();
+                                // check that there are no failed verifications
                                 Optional<VerifyDescriptor> verifyFailed = verifyResults.stream()
                                         .filter(verifyDescriptor -> !BisqInstaller.VerifyStatusEnum.OK.equals(verifyDescriptor.getVerifyStatusEnum())).findFirst();
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
