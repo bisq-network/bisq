@@ -32,7 +32,9 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
 import java.util.Date;
+import java.util.Optional;
 
 @EqualsAndHashCode
 @Getter
@@ -57,6 +59,7 @@ public final class DisputeResult implements NetworkPayload {
 
     private final String tradeId;
     private final int traderId;
+    @Nullable
     private Winner winner;
     private int reasonOrdinal = Reason.OTHER.ordinal();
     private final BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
@@ -133,10 +136,9 @@ public final class DisputeResult implements NetworkPayload {
 
     @Override
     public PB.DisputeResult toProtoMessage() {
-        return PB.DisputeResult.newBuilder()
+        final PB.DisputeResult.Builder builder = PB.DisputeResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
-                .setWinner(PB.DisputeResult.Winner.valueOf(winner.name()))
                 .setReasonOrdinal(reasonOrdinal)
                 .setTamperProofEvidence(tamperProofEvidenceProperty.get())
                 .setIdVerification(idVerificationProperty.get())
@@ -148,7 +150,11 @@ public final class DisputeResult implements NetworkPayload {
                 .setSellerPayoutAmount(sellerPayoutAmount)
                 .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
                 .setCloseDate(closeDate)
-                .setIsLoserPublisher(isLoserPublisher).build();
+                .setIsLoserPublisher(isLoserPublisher);
+
+        Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(PB.DisputeResult.Winner.valueOf(winner.name())));
+
+        return builder.build();
     }
 
 
