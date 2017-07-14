@@ -69,12 +69,16 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
 
         List<FileDescriptor> sigs = fileDescriptors.stream().filter(fileDescriptor -> DownloadType.SIG.equals(fileDescriptor.getType())).collect(Collectors.toList());
         List<VerifyDescriptor> verifyDescriptors = Lists.newArrayList();
+
+        // iterate all signatures available to us
         for (FileDescriptor sig : sigs) {
             VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder().sigFile(sig.getSaveFile());
+            // Sigs are linked to keys, extract all keys which have the same id
             List<FileDescriptor> keys = fileDescriptors.stream()
-                    .filter(fileDescriptor -> DownloadType.KEY.equals(fileDescriptor.getType()))
-                    .filter(fileDescriptor -> sig.getId().equals(fileDescriptor.getId()))
+                    .filter(keyDescriptor -> DownloadType.KEY.equals(keyDescriptor.getType()))
+                    .filter(keyDescriptor -> sig.getId().equals(keyDescriptor.getId()))
                     .collect(Collectors.toList());
+            // iterate all keys which have the same id
             for (FileDescriptor key : keys) {
                 verifyDescriptorBuilder.keyFile(key.getSaveFile());
                 try {

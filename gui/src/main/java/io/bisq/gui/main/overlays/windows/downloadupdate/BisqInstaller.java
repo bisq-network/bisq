@@ -22,12 +22,14 @@ import io.bisq.common.util.Utilities;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.security.Security;
 import java.security.SignatureException;
 import java.util.Iterator;
 import java.util.List;
@@ -50,7 +52,7 @@ public class BisqInstaller {
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
         List<FileDescriptor> keyFileDescriptors = getKeyFileDescriptors();
-        List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor);
+        List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor, keyFileDescriptors);
 
         List<FileDescriptor> allFiles = Lists.newArrayList();
         allFiles.addAll(keyFileDescriptors);
@@ -107,9 +109,6 @@ public class BisqInstaller {
      *                   <code>FileNotFoundException, IOException, SignatureException, PGPException</code>
      */
     public static VerifyStatusEnum verifySignature(File pubKeyFile, File sigFile, File dataFile) throws Exception {
-        // TODO why is that needed?
-        //Security.addProvider(new BouncyCastleProvider());
-
         InputStream inputStream;
         int bytesRead;
         PGPPublicKey publicKey;
@@ -171,7 +170,7 @@ public class BisqInstaller {
 
 
     @NotNull
-    private FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
+    public FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
         String fileName;
         String prefix = "Bisq-";
         // https://github.com/bitsquare/bitsquare/releases/download/v0.5.1/Bisq-0.5.1.dmg
@@ -189,6 +188,12 @@ public class BisqInstaller {
                 .fileName(fileName).id(fileName).loadUrl(partialUrl.concat(fileName)).build();
     }
 
+    /**
+     * The files containing the gpg keys of the bisq signers.
+     * Currently these are 2 hard-coded keys, one included with bisq and the same key online for maximum security.
+     *
+     * @return list of keys to check agains corresponding sigs.
+     */
     public List<FileDescriptor> getKeyFileDescriptors() {
         String fingerprint = LOCAL_FINGER_PRINT;
         String fileName = fingerprint + ".asc";
@@ -208,19 +213,26 @@ public class BisqInstaller {
         );
     }
 
-    public List<FileDescriptor> getSigFileDescriptors(FileDescriptor installerFileDescriptor) {
+    /**
+     * There is one installer file, X keys and X sigs. The id links the sig to its key.
+     * If we switch to multiple keys, the filename should also be key-dependent (filename.F1234.asc).
+     *
+     * @param installerFileDescriptor which installer file should this signatures be linked to?
+     * @return
+     */
+    public List<FileDescriptor> getSigFileDescriptors(FileDescriptor installerFileDescriptor, List<FileDescriptor> keys) {
         String suffix = ".asc";
+        List<FileDescriptor> result = Lists.newArrayList();
 
-        // TODO Shouldn't it be:
-        //   .id(installerFileDescriptor.getId())
-        // instead of:
-        //   .id(FINGER_PRINT_F379A1C6)
-        return Lists.newArrayList(FileDescriptor.builder()
-                .type(DownloadType.SIG)
-                .fileName(installerFileDescriptor.getFileName().concat(suffix))
-                .id(LOCAL_FINGER_PRINT)
-                .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
-                .build());
+        for(FileDescriptor key: keys) {
+            result.add(FileDescriptor.builder()
+                    .type(DownloadType.SIG)
+                    .fileName(installerFileDescriptor.getFileName().concat(suffix))
+                    .id(key.getId())
+                    .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
+                    .build());
+        }
+        return result;
     }
 
     @Data
