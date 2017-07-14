@@ -47,6 +47,7 @@ public class FeeService {
     public static final long LTC_DEFAULT_TX_FEE = 500; // min fee is 0.001 LTC 200 bytes with 500 -> 100000
     public static final long BTC_DEFAULT_TX_FEE = 200;
     public static final long DOGE_DEFAULT_TX_FEE = 500000; // min tx size is about 200 bytes -> 1 DOGE
+    public static final long DASH_DEFAULT_TX_FEE = 10000; // 10000 now, 1000 in sept 2017
 
     // Dust limit for LTC is 100 000 sat
     // https://litecoin.info/Transaction_fees
@@ -83,6 +84,10 @@ public class FeeService {
         this.feeProvider = feeProvider;
         baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
 
+        /* How to calculate:
+            def nr_satoshi(price_per_one, target_price):
+                return target_price*100000000/price_per_one
+         */
         switch (baseCurrencyCode) {
             case "BTC":
                 MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD for 1 BTC
@@ -104,6 +109,13 @@ public class FeeService {
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 320_000; // 5 USD at DOGE price 0.003 USD  800_000_000_000L
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 480_000; // 7.5 USD at DOGE price 0.003 USD 1_200_000_000_000L
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
+                break;
+            case "DASH":
+                MIN_MAKER_FEE_IN_BASE_CUR = 333_333; // 0.5 USD at DASH price 150 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 333_333;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 3_333_333; // 5 USD at DOGE price 0.003 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 5_000_000; // 7.5 USD at DOGE price 0.003 USD
+                txFeePerByte = DASH_DEFAULT_TX_FEE;
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);

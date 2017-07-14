@@ -18,6 +18,7 @@
 package io.bisq.core.btc;
 
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.provider.fee.FeeService;
 import lombok.Getter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -37,7 +38,11 @@ public enum BaseCurrencyNetwork {
 
     DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
     DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
-    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin");
+    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin"),
+
+    DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
+    DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
+    DASH_REGTEST(DashRegTestParams.get(), "DASH", "REGTEST", "Dash");
 
     @Getter
     private final NetworkParameters parameters;
@@ -76,7 +81,11 @@ public enum BaseCurrencyNetwork {
             case "BTC":
                 return org.bitcoinj.core.Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
             case "LTC":
+                return Coin.valueOf(FeeService.LTC_DEFAULT_TX_FEE);
             case "DOGE":
+                return Coin.valueOf(FeeService.DOGE_DEFAULT_TX_FEE);
+            case "DASH":
+                return Coin.valueOf(FeeService.DASH_DEFAULT_TX_FEE);
             default:
                 // TODO check what is the right fee at DOGE
                 return Coin.valueOf(100000);
