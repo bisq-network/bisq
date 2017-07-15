@@ -81,7 +81,7 @@ public class CurrencyUtil {
         return allSortedCryptoCurrencies;
     }
 
-    // Don't make a PR for adding a coin but follow the steps described here: 
+    // Don't make a PR for adding a coin but follow the steps described here:
     // https://forum.bisq.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
@@ -121,7 +121,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
+        if (!baseCurrencyCode.equals("DASH"))
+            result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
@@ -223,7 +224,7 @@ public class CurrencyUtil {
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
-        /* 
+        /*
         StringBuilder sb = new StringBuilder();
         result.stream().forEach(e -> sb.append("<li>\"")
                 .append(e.getCode())
@@ -241,7 +242,8 @@ public class CurrencyUtil {
         //  result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
+        if (!baseCurrencyCode.equals("DASH"))
+            result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
