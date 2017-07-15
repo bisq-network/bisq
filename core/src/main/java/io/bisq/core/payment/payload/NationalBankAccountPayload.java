@@ -30,6 +30,7 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
 
     public NationalBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
+        email = "";  //email must not be null but empty string, otherwise hash check fails for contract
     }
 
 
@@ -47,7 +48,8 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                                        String accountNr,
                                        String accountType,
                                        String holderTaxId,
-                                       String bankId) {
+                                       String bankId,
+                                       String email) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -58,7 +60,8 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                 accountNr,
                 accountType,
                 holderTaxId,
-                bankId);
+                bankId,
+                email);
     }
 
     @Override
@@ -79,18 +82,19 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
 
     public static NationalBankAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+        PB.BankAccountPayload bankAccountPayloadPB = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                bankAccountPayload.getHolderName(),
-                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
-                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
-                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
-                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
-                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId());
+                bankAccountPayloadPB.getHolderName(),
+                bankAccountPayloadPB.getBankName().isEmpty() ? null : bankAccountPayloadPB.getBankName(),
+                bankAccountPayloadPB.getBranchId().isEmpty() ? null : bankAccountPayloadPB.getBranchId(),
+                bankAccountPayloadPB.getAccountNr().isEmpty() ? null : bankAccountPayloadPB.getAccountNr(),
+                bankAccountPayloadPB.getAccountType().isEmpty() ? null : bankAccountPayloadPB.getAccountType(),
+                bankAccountPayloadPB.getHolderTaxId().isEmpty() ? null : bankAccountPayloadPB.getHolderTaxId(),
+                bankAccountPayloadPB.getBankId().isEmpty() ? null : bankAccountPayloadPB.getBankId(),
+                bankAccountPayloadPB.getEmail().isEmpty() ? null : bankAccountPayloadPB.getEmail());
     }
 
     @Override

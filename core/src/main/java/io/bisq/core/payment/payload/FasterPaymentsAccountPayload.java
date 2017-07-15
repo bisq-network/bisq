@@ -27,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
-@Setter
 @Getter
 @Slf4j
 public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
+    @Setter
     private String sortCode;
+    @Setter
     private String accountNr;
+    private String email = "";// not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
 
     public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -47,11 +49,13 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          String id,
                                          long maxTradePeriod,
                                          String sortCode,
-                                         String accountNr) {
+                                         String accountNr,
+                                         String email) {
         this(paymentMethod, id, maxTradePeriod);
 
         this.sortCode = sortCode;
         this.accountNr = accountNr;
+        this.email = email;
     }
 
     @Override
@@ -59,7 +63,8 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
         return getPaymentAccountPayloadBuilder()
                 .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
                         .setSortCode(sortCode)
-                        .setAccountNr(accountNr))
+                        .setAccountNr(accountNr)
+                        .setEmail(email))
                 .build();
     }
 
@@ -68,7 +73,8 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 proto.getFasterPaymentsAccountPayload().getSortCode(),
-                proto.getFasterPaymentsAccountPayload().getAccountNr());
+                proto.getFasterPaymentsAccountPayload().getAccountNr(),
+                proto.getFasterPaymentsAccountPayload().getEmail());
     }
 
 

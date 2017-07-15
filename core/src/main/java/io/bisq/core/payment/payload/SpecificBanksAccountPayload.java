@@ -37,6 +37,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
 
     public SpecificBanksAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
+        email = "";  //email must not be null but empty string, otherwise hash check fails for contract
     }
 
 
@@ -55,6 +56,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String accountType,
                                         String holderTaxId,
                                         String bankId,
+                                        String email,
                                         ArrayList<String> acceptedBanks) {
         super(paymentMethodName,
                 id,
@@ -66,7 +68,8 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 accountNr,
                 accountType,
                 holderTaxId,
-                bankId);
+                bankId,
+                email);
         this.acceptedBanks = acceptedBanks;
     }
 
@@ -104,6 +107,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
+                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
         );
     }

@@ -294,12 +294,12 @@ public class MainViewModel implements ViewModel {
                     .onAction(() -> {
                         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
                         preferences.dontShowAgain(key, true);
-                        startBasicServices();
+                        checkIfLocalHostNodeIsRunning();
                     })
                     .hideCloseButton()
                     .show();
         } else {
-            startBasicServices();
+            checkIfLocalHostNodeIsRunning();
         }
     }
 
@@ -320,13 +320,19 @@ public class MainViewModel implements ViewModel {
                 } catch (IOException ignore) {
                 }
             }
+            startBasicServices();
         }
     }
 
     private void startBasicServices() {
         log.info("startBasicServices");
 
-        checkIfLocalHostNodeIsRunning();
+        //TODO remove after v0.5.2
+        String key = "revertIdCheckRequirement";
+        if (preferences.showAgain(key) && Version.VERSION.equals("0.5.2")) {
+            new Popup<>().information(Res.get("popup.info.revertIdCheckRequirement")).show();
+            preferences.dontShowAgain(key, true);
+        }
 
         final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         p2PService.readPersistedEntryMap(storageFileName);

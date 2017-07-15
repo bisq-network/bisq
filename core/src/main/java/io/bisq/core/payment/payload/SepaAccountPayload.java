@@ -43,6 +43,8 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     private String iban;
     @Setter
     private String bic;
+    private String email = ""; // not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
+   
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
@@ -66,11 +68,13 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                                String holderName,
                                String iban,
                                String bic,
+                               String email,
                                List<String> acceptedCountryCodes) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
+        this.email = email;
         this.acceptedCountryCodes = acceptedCountryCodes;
     }
 
@@ -81,6 +85,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
+                        .setEmail(email)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -92,15 +97,16 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.SepaAccountPayload sepaAccountPayload = countryBasedPaymentAccountPayload.getSepaAccountPayload();
+        PB.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                sepaAccountPayload.getHolderName(),
-                sepaAccountPayload.getIban(),
-                sepaAccountPayload.getBic(),
-                new ArrayList<>(sepaAccountPayload.getAcceptedCountryCodesList()));
+                sepaAccountPayloadPB.getHolderName(),
+                sepaAccountPayloadPB.getIban(),
+                sepaAccountPayloadPB.getBic(),
+                sepaAccountPayloadPB.getEmail(),
+                new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()));
     }
 
 

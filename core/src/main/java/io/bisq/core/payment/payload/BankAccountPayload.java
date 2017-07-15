@@ -48,6 +48,8 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     protected String holderTaxId;
     @Nullable
     protected String bankId;
+    @Nullable
+    protected String email; // not used anymore but need to keep it for backward compatibility, 
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -68,7 +70,8 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                                  String accountNr,
                                  String accountType,
                                  String holderTaxId,
-                                 String bankId) {
+                                 String bankId,
+                                 String email) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;
         this.bankName = bankName;
@@ -77,6 +80,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         this.accountType = accountType;
         this.holderTaxId = holderTaxId;
         this.bankId = bankId;
+        this.email = email;
     }
 
     @Override
@@ -90,6 +94,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         Optional.ofNullable(accountNr).ifPresent(builder::setAccountNr);
         Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
+        Optional.ofNullable(email).ifPresent(builder::setEmail);
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = super.getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setBankAccountPayload(builder);
