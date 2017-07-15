@@ -149,15 +149,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }
 
         // TODO can be removed once DAO is released
-        UserThread.runAfter(() -> {
-            root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
-                    daoButton.setVisible(true);
-                    daoButton.setManaged(true);
-                }
-            });
-        }, 1);
-
+        if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+            UserThread.runAfter(() -> {
+                root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
+                        daoButton.setVisible(true);
+                        daoButton.setManaged(true);
+                    }
+                });
+            }, 1);
+        }
+        
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
