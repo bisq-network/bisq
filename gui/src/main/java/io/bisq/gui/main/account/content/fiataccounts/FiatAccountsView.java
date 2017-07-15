@@ -22,7 +22,9 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.payment.*;
+import io.bisq.core.payment.ClearXchangeAccount;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -144,7 +146,18 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-        if (paymentAccount instanceof SepaAccount ||
+        if (paymentAccount instanceof ClearXchangeAccount) {
+            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iConfirm"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else {
+            doSaveNewAccount(paymentAccount);
+        }
+
+     /*   if (paymentAccount instanceof SepaAccount ||
                 paymentAccount instanceof BankAccount ||
                 paymentAccount instanceof ClearXchangeAccount ||
                 paymentAccount instanceof FasterPaymentsAccount ||
@@ -171,7 +184,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                     .show();
         } else {
             doSaveNewAccount(paymentAccount);
-        }
+        }*/
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
