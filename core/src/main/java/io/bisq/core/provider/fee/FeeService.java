@@ -29,6 +29,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,15 +43,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
-    // https://litecoin.info/Transaction_fees
-    //0.001 (LTC)/kb -> 0.00100000 sat/kb -> 100 sat/byte
-    public static final long LTC_DEFAULT_TX_FEE = 500; // min fee is 0.001 LTC 200 bytes with 500 -> 100000
-    public static final long BTC_DEFAULT_TX_FEE = 200;
-    public static final long DOGE_DEFAULT_TX_FEE = 500000; // min tx size is about 200 bytes -> 1 DOGE
-    public static final long DASH_DEFAULT_TX_FEE = 10000; // 10000 now, 1000 in sept 2017
+    // fixed min fee
+    public static final Coin BTC_REFERENCE_DEFAULT_MIN_TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // 5000
+    // https://litecoin.info/Transaction_fees min fee is 100_000
+    public static final Coin LTC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(100_000);
+    // min fee is 1 DOGE
+    public static final Coin DOGE_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(1_000_000_000);
+    //TODO check
+    // min tx fee per tx is 10000 now, 1000 in sept 2017
+    public static final Coin DASH_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
 
-    // Dust limit for LTC is 100 000 sat
-    // https://litecoin.info/Transaction_fees
+    // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
+    // fees are per byte
+    public static final long BTC_DEFAULT_TX_FEE = 200; // fees are between 50-400 sat/byte so we try to stay in average
+    public static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
+    public static final long DOGE_DEFAULT_TX_FEE = DOGE_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;  // 200 bytes tx -> 200*5_000_000L=1_000_000_000 (1 DOGE)
+    public static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
+
     private static long MIN_MAKER_FEE_IN_BASE_CUR;
     private static long MIN_TAKER_FEE_IN_BASE_CUR;
     private static long DEFAULT_MAKER_FEE_IN_BASE_CUR;
@@ -85,36 +94,38 @@ public class FeeService {
         baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
 
         /* How to calculate:
-            def nr_satoshi(price_per_one, target_price):
-                return target_price*100000000/price_per_one
+              MIN_MAKER_FEE_IN_BASE_CUR = target fiat price * 100000000 / price (in btc: 0.5*100000000/2500)
+              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount 
+                                             (in btc: 5*100000000/2500 / 1)
+                                             (in ltc: 5*100000000/40 / 50)
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD for 1 BTC
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at BTC price 2500 USD
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at BTC price 2500 USD for 1 BTC (maxTradeAmount)
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at BTC price 2500 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 1_200_000; // 0.5 USD at LTC price 40 USD for 50 LTC
+                MIN_MAKER_FEE_IN_BASE_CUR = 1_200_000; // 0.5 USD at LTC price 40 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 1_200_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 240_000; // 5 USD at LTC price 40 USD
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 240_000; // 5 USD at LTC price 40 USD for 50 LTC (maxTradeAmount)
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 360_000; // 7.5 USD at LTC price 40 USD
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
-                MIN_MAKER_FEE_IN_BASE_CUR = 32_000; // 0.5 USD at DOGE price 0.003 USD 80_000_000_000L
-                MIN_TAKER_FEE_IN_BASE_CUR = 32_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 320_000; // 5 USD at DOGE price 0.003 USD  800_000_000_000L
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 480_000; // 7.5 USD at DOGE price 0.003 USD 1_200_000_000_000L
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD 
+                MIN_TAKER_FEE_IN_BASE_CUR = 20_000_000_000L;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at DOGE price 0.003 USD  for 800 000 DOGE (maxTradeAmount)
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD 
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             case "DASH":
-                MIN_MAKER_FEE_IN_BASE_CUR = 333_333; // 0.5 USD at DASH price 150 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 333_333;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 3_333_333; // 5 USD at DOGE price 0.003 USD
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 5_000_000; // 7.5 USD at DOGE price 0.003 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.5 USD at DASH price 150 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 300_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 160_000; // 5 USD at DASH price 150 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 240_000; // 7.5 USD at DASH price 150 USD  for 20 DASH (maxTradeAmount)
                 txFeePerByte = DASH_DEFAULT_TX_FEE;
                 break;
             default:

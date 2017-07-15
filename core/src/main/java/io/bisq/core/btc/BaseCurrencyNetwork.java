@@ -79,16 +79,15 @@ public enum BaseCurrencyNetwork {
     public Coin getDefaultMinFee() {
         switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
             case "BTC":
-                return org.bitcoinj.core.Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE;
             case "LTC":
-                return Coin.valueOf(FeeService.LTC_DEFAULT_TX_FEE);
+                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE;
             case "DOGE":
-                return Coin.valueOf(FeeService.DOGE_DEFAULT_TX_FEE);
+                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE;
             case "DASH":
-                return Coin.valueOf(FeeService.DASH_DEFAULT_TX_FEE);
+                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE;
             default:
-                // TODO check what is the right fee at DOGE
-                return Coin.valueOf(100000);
+                throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
         }
     }
 }

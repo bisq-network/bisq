@@ -139,8 +139,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     break;
                 case "DASH":
                     // av. price June 2017: 150 EUR/DASH
-                    maxTradeLimitMidRisk = Coin.parseCoin("8");
-                    maxTradeLimitLowRisk = Coin.parseCoin("16");
+                    maxTradeLimitMidRisk = Coin.parseCoin("10");
+                    maxTradeLimitLowRisk = Coin.parseCoin("20");
                     break;
 
                 default:
