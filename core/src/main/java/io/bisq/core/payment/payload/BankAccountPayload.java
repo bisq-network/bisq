@@ -19,7 +19,6 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
-import io.bisq.common.locale.Res;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,8 +48,6 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     protected String holderTaxId;
     @Nullable
     protected String bankId;
-    @Nullable
-    protected String email;
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -71,8 +68,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                                  String accountNr,
                                  String accountType,
                                  String holderTaxId,
-                                 String bankId,
-                                 String email) {
+                                 String bankId) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;
         this.bankName = bankName;
@@ -81,7 +77,6 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         this.accountType = accountType;
         this.holderTaxId = holderTaxId;
         this.bankId = bankId;
-        this.email = email;
     }
 
     @Override
@@ -95,7 +90,6 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         Optional.ofNullable(accountNr).ifPresent(builder::setAccountNr);
         Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
-        Optional.ofNullable(email).ifPresent(builder::setEmail);
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = super.getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setBankAccountPayload(builder);
@@ -123,11 +117,8 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                 BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
         String holderIdString = BankUtil.isHolderIdRequired(countryCode) ?
                 (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
-        String emailString = email != null ?
-                (Res.get("payment.email") + " " + email + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
-                emailString +
                 bankName +
                 bankId +
                 branchId +

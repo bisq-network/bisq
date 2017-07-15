@@ -55,7 +55,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String accountType,
                                         String holderTaxId,
                                         String bankId,
-                                        String email,
                                         ArrayList<String> acceptedBanks) {
         super(paymentMethodName,
                 id,
@@ -67,8 +66,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 accountNr,
                 accountType,
                 holderTaxId,
-                bankId,
-                email);
+                bankId);
         this.acceptedBanks = acceptedBanks;
     }
 
@@ -106,7 +104,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
         );
     }

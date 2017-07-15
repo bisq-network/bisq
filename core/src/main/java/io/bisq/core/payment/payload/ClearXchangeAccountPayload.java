@@ -78,7 +78,7 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Zelle (ClearXchange) - Holder name: " + holderName + ", emailOrMobileNr or mobile no.: " + emailOrMobileNr;
+        return "Zelle (ClearXchange) - Holder name: " + holderName + ", email or mobile no.: " + emailOrMobileNr;
     }
 
     @Override
