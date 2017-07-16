@@ -104,7 +104,6 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                                 log.trace("takerSignAndPublishTx succeeded " + transaction);
                                 trade.setDepositTx(transaction);
                                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-                                log.error("onSuccess, offerid={}, RESERVED_FOR_TRADE", trade.getId());
                                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
                                 complete();
