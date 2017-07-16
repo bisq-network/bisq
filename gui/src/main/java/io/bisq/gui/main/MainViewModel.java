@@ -305,9 +305,22 @@ public class MainViewModel implements ViewModel {
     private void showRevertIdCheckRequirement() {
         //TODO remove after v0.5.2
         String key = "revertIdCheckRequirement";
-        if (preferences.showAgain(key) && Version.VERSION.equals("0.5.2") &&
-                user.getPaymentAccounts() != null && !user.getPaymentAccounts().isEmpty())
+        if (preferences.showAgain(key) &&
+                Version.VERSION.equals("0.5.2") &&
+                user.getPaymentAccounts() != null &&
+                user.getPaymentAccounts().stream()
+                        .filter(e -> e.getPaymentMethod().getId().equals(PaymentMethod.SEPA_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.NATIONAL_BANK_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.SAME_BANK_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.SPECIFIC_BANKS_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.CHASE_QUICK_PAY_ID) ||
+                                e.getPaymentMethod().getId().equals(PaymentMethod.INTERAC_E_TRANSFER_ID))
+                        .findAny()
+                        .isPresent()) {
             new Popup<>().information(Res.get("popup.info.revertIdCheckRequirement")).show();
+        }
         preferences.dontShowAgain(key, true);
         checkIfLocalHostNodeIsRunning();
     }
