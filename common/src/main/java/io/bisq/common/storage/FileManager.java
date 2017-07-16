@@ -161,7 +161,7 @@ public class FileManager<T extends PersistableEnvelope> {
                 log.warn("make dir failed");
 
         File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "backup_of_corrupted_data", fileName).toString());
-        renameTempFileToFile(storageFile, corruptedFile);
+        FileUtil.renameFile(storageFile, corruptedFile);
     }
 
     public synchronized void backupFile(String fileName, int numMaxBackupFiles) {
@@ -216,7 +216,7 @@ public class FileManager<T extends PersistableEnvelope> {
             // Close resources before replacing file with temp file because otherwise it causes problems on windows
             // when rename temp file
             fileOutputStream.close();
-            renameTempFileToFile(tempFile, storageFile);
+            FileUtil.renameFile(tempFile, storageFile);
         } catch (Throwable t) {
             log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
         } finally {
@@ -239,21 +239,6 @@ public class FileManager<T extends PersistableEnvelope> {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-        }
-    }
-
-    private synchronized void renameTempFileToFile(File tempFile, File file) throws IOException {
-        if (Utilities.isWindows()) {
-            // Work around an issue on Windows whereby you can't rename over existing files.
-            final File canonical = file.getCanonicalFile();
-            if (canonical.exists() && !canonical.delete()) {
-                throw new IOException("Failed to delete canonical file for replacement with save");
-            }
-            if (!tempFile.renameTo(canonical)) {
-                throw new IOException("Failed to rename " + tempFile + " to " + canonical);
-            }
-        } else if (!tempFile.renameTo(file)) {
-            throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
     }
 }
