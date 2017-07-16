@@ -334,8 +334,9 @@ public class MainViewModel implements ViewModel {
             preferences.dontShowAgain(key, true);
         }
 
+        // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
         final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        p2PService.readPersistedEntryMap(storageFileName);
+        p2PService.readEntryMapFromResources(storageFileName);
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -1029,13 +1030,14 @@ public class MainViewModel implements ViewModel {
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
-        if (alert != null && !alreadyDisplayed)
+        if (alert != null && !alreadyDisplayed) {
             if (alert.isUpdateInfo()) {
                 if (alert.isNewVersion())
                     new DisplayUpdateDownloadWindow(alert).show();
             } else {
                 new DisplayAlertMessageWindow().alertMessage(alert).show();
             }
+        }
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {

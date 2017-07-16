@@ -249,8 +249,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.start(this);
     }
 
-    public void readPersistedEntryMap(String resourceFileName) {
-        p2PDataStorage.readPersistedEntryMap(resourceFileName);
+    public void readEntryMapFromResources(String resourceFileName) {
+        p2PDataStorage.readEntryMapFromResources(resourceFileName);
     }
 
     public void onAllServicesInitialized() {

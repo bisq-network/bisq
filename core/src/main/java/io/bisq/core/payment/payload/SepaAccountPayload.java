@@ -126,7 +126,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", country code: " + getCountryCode();
+        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", Country code: " + getCountryCode();
     }
 
     @Override

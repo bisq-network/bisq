@@ -97,7 +97,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We get it called in readPersistedEntryMap once ready
     }
 
-    public void readPersistedEntryMap(String resourceFileName) {
+    public void readEntryMapFromResources(String resourceFileName) {
         SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap);
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));

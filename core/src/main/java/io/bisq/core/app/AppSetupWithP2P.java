@@ -149,9 +149,9 @@ public class AppSetupWithP2P extends AppSetup {
 
     protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
-
+        // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
         final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        p2PService.readPersistedEntryMap(storageFileName);
+        p2PService.readEntryMapFromResources(storageFileName);
         
         p2PService.onAllServicesInitialized();
     }

@@ -49,7 +49,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     @Nullable
     protected String bankId;
     @Nullable
-    protected String email; // not used anymore but need to keep it for backward compatibility, 
+    protected String email; // not used anymore but need to keep it for backward compatibility. get set by subclasses to empty string
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

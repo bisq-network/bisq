@@ -162,11 +162,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                                 Address.fromBase58(DashMainNetParams.get(), input);
                                 break;
-                            case DASH_REGTEST:
-                                Address.fromBase58(DashRegTestParams.get(), input);
-                                break;
                             case DASH_TESTNET:
                                 Address.fromBase58(DashTestNet3Params.get(), input);
+                                break;
+                            case DASH_REGTEST:
+                                Address.fromBase58(DashRegTestParams.get(), input);
                                 break;
                         }
                         return new ValidationResult(true);
