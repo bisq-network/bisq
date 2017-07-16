@@ -498,12 +498,14 @@ public class Connection implements MessageListener {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
         } finally {
-            if (protoOutputStreamLock.isLocked())
-                protoOutputStreamLock.unlock();
+            try {
+                if (protoOutputStreamLock.isLocked())
+                    protoOutputStreamLock.unlock();
+            } catch (Throwable ignore) {
+            }
             try {
                 protoOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Throwable ignore) {
             }
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
