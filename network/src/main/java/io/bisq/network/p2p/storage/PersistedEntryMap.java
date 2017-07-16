@@ -23,12 +23,14 @@ import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PersistedEntryMap implements PersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
@@ -54,6 +56,9 @@ public class PersistedEntryMap implements PersistableEnvelope {
     public static PersistableEnvelope fromProto(Map<String, PB.ProtectedStorageEntry> proto,
                                                 NetworkProtoResolver networkProtoResolver) {
         // Protobuffer maps don't support bytes as key so we use a hex string
+
+        // Takes about 4 sec for 4000 items ;-( Java serialisation was 500 ms
+        log.info("PersistedEntryMap.fromProto size: " + proto.entrySet().size());
         Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = proto.entrySet().stream()
                 .collect(Collectors.<Map.Entry<String, PB.ProtectedStorageEntry>, P2PDataStorage.ByteArray, ProtectedStorageEntry>toMap(
                         e -> new P2PDataStorage.ByteArray(e.getKey()),

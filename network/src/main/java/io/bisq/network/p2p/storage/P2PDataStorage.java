@@ -97,11 +97,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We get it called in readPersistedEntryMap once ready
     }
 
-    public void readEntryMapFromResources(String resourceFileName) {
-        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap);
-        if (persistedSequenceNumberMap != null)
-            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
-
+    // This method is called at startup in a non-user thread.
+    // We should not have any threading issues here as the p2p network is just initializing
+    public synchronized void readEntryMapFromResources(String resourceFileName) {
         final String storageFileName = "EntryMap";
         File dbDir = new File(storageDir.getAbsolutePath());
         if (!dbDir.exists() && !dbDir.mkdir())
@@ -110,6 +108,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         final File destinationFile = new File(Paths.get(storageDir.getAbsolutePath(), storageFileName).toString());
         if (!destinationFile.exists()) {
             try {
+                log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
                 FileUtil.resourceToFile(resourceFileName, destinationFile);
             } catch (ResourceNotFoundException e) {
                 log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
@@ -121,8 +120,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             log.debug(storageFileName + " file exists already.");
         }
-
+        // takes about 4 seconds with PB! :-(
         persistedEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
+
         if (persistedEntryMap != null) {
             map.putAll(persistedEntryMap.getMap());
             log.info("persistedEntryMap size=" + map.size());

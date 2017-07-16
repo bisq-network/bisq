@@ -64,14 +64,12 @@ import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
-import io.bisq.gui.main.overlays.windows.SelectBaseCurrencyWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
@@ -192,6 +190,7 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
+    private BooleanProperty loadEntryMapResult, checkCryptoSetupResult;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -255,10 +254,6 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        checkCryptoSetup();
-    }
-
-    private void showTacWindow() {
         //noinspection ConstantConditions,ConstantConditions
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
@@ -266,7 +261,7 @@ public class MainViewModel implements ViewModel {
                     preferences.setTacAccepted(true);
                     showSelectBaseCurrencyWindow();
                 }).show();
-            }, 2);
+            }, 1);
         } else {
             showSelectBaseCurrencyWindow();
         }
@@ -275,7 +270,11 @@ public class MainViewModel implements ViewModel {
     private void showSelectBaseCurrencyWindow() {
         String key = "showSelectBaseCurrencyWindowAtFistStartup";
         if (preferences.showAgain(key)) {
-            new SelectBaseCurrencyWindow()
+            bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
+            preferences.dontShowAgain(key, true);
+            showRevertIdCheckRequirement();
+            
+           /* new SelectBaseCurrencyWindow()
                     .onSelect(baseCurrencyNetwork -> {
                         preferences.dontShowAgain(key, true);
                         final boolean hasChanged = !BisqEnvironment.getBaseCurrencyNetwork().equals(baseCurrencyNetwork);
@@ -294,49 +293,30 @@ public class MainViewModel implements ViewModel {
                     .onAction(() -> {
                         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
                         preferences.dontShowAgain(key, true);
-                        checkIfLocalHostNodeIsRunning();
+                        showRevertIdCheckRequirement();
                     })
                     .hideCloseButton()
-                    .show();
+                    .show();*/
         } else {
-            checkIfLocalHostNodeIsRunning();
+            showRevertIdCheckRequirement();
         }
     }
 
-    private void checkIfLocalHostNodeIsRunning() {
-        Socket socket = null;
-        try {
-            socket = new Socket();
-            socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
-                    BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
-            log.info("Localhost peer detected.");
-            bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
-        } catch (IOException e) {
-            log.info("Localhost peer not detected.");
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-            }
-            startBasicServices();
-        }
+    private void showRevertIdCheckRequirement() {
+        //TODO remove after v0.5.2
+        String key = "revertIdCheckRequirement";
+        if (preferences.showAgain(key) && Version.VERSION.equals("0.5.2") &&
+                user.getPaymentAccounts() != null && !user.getPaymentAccounts().isEmpty())
+            new Popup<>().information(Res.get("popup.info.revertIdCheckRequirement")).show();
+        preferences.dontShowAgain(key, true);
+        checkIfLocalHostNodeIsRunning();
     }
 
     private void startBasicServices() {
         log.info("startBasicServices");
 
-        //TODO remove after v0.5.2
-        String key = "revertIdCheckRequirement";
-        if (preferences.showAgain(key) && Version.VERSION.equals("0.5.2")) {
-            new Popup<>().information(Res.get("popup.info.revertIdCheckRequirement")).show();
-            preferences.dontShowAgain(key, true);
-        }
-
-        // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
-        final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        p2PService.readEntryMapFromResources(storageFileName);
+        loadEntryMapResult = loadEntryMap();
+        checkCryptoSetupResult = checkCryptoSetup();
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -359,7 +339,15 @@ public class MainViewModel implements ViewModel {
             initWalletService();
 
         // need to store it to not get garbage collected
-        allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
+        allServicesDone = EasyBind.combine(checkCryptoSetupResult, loadEntryMapResult, walletInitialized, p2pNetWorkReady,
+                (a, b, c, d) -> {
+                    log.info("\ncheckCryptoSetupResult={}\n" +
+                                    "loadEntryMapResult={}\n" +
+                                    "walletInitialized={}\n" +
+                                    "p2pNetWorkReady={}",
+                            a, b, c, d);
+                    return a && b && c && d;
+                });
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
                 startupTimeout.stop();
@@ -392,6 +380,22 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private BooleanProperty loadEntryMap() {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread loadEntryMapThread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("loadEntryMapThread");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
+                final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+                p2PService.readEntryMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        loadEntryMapThread.start();
+        return result;
+    }
 
     private BooleanProperty initP2PNetwork() {
         log.info("initP2PNetwork");
@@ -727,7 +731,39 @@ public class MainViewModel implements ViewModel {
                 .show();
     }
 
-    private void checkCryptoSetup() {
+    private void checkIfLocalHostNodeIsRunning() {
+        Thread checkIfLocalHostNodeIsRunningThread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
+                Socket socket = null;
+                try {
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
+                            BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
+                    log.info("Localhost peer detected.");
+                    UserThread.execute(() -> {
+                        bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
+                        startBasicServices();
+                    });
+                } catch (Throwable e) {
+                    log.info("Localhost peer not detected.");
+                    UserThread.execute(MainViewModel.this::startBasicServices);
+                } finally {
+                    if (socket != null) {
+                        try {
+                            socket.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                }
+            }
+        };
+        checkIfLocalHostNodeIsRunningThread.start();
+    }
+
+    private BooleanProperty checkCryptoSetup() {
+        BooleanProperty result = new SimpleBooleanProperty();
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
@@ -750,7 +786,7 @@ public class MainViewModel implements ViewModel {
                         log.debug("Crypto test succeeded");
 
                         if (Security.getProvider("BC") != null) {
-                            UserThread.execute(MainViewModel.this::showTacWindow);
+                            UserThread.execute(() -> result.set(true));
                         } else {
                             throw new CryptoException("Security provider BountyCastle is not available.");
                         }
@@ -769,6 +805,8 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
+
+        return result;
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
