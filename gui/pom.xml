@@ -135,12 +135,14 @@
             </plugin>
 
             <plugin>
+                <!--TODO create 3 profiles, use travis multi os build to create installer-->
+                <!--TODO signature with gpg?-->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <executions>
                     <execution>
-                        <!--TODO require C:\Program Files (x86)\Inno Setup 5 in patch amd installed prior-->
+                        <!--TODO require C:\Program Files (x86)\Inno Setup 5 in path  amd installed prior-->
                         <id>package-win-installer-32bits</id>
                         <phase>package</phase>
                         <goals>
@@ -359,7 +361,7 @@
             <id>verify-toolchain</id>
             <activation>
                 <!-- you have the possibility to switch off for faster local development-->
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <plugins>
