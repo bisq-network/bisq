@@ -56,6 +56,7 @@ public class Restrictions {
                     break;
                 case "DOGE":
                     MIN_TRADE_AMOUNT = Coin.valueOf(1_000_000_000L); // 0.03 EUR at DOGE price 0.003 EUR;
+                    break;
                 case "DASH":
                     MIN_TRADE_AMOUNT = Coin.valueOf(20_000L); // 0.03 EUR at @ 150 EUR/DASH;
                     break;
