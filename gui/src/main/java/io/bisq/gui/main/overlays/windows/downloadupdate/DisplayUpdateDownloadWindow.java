@@ -182,13 +182,11 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
 
         BisqInstaller installer = new BisqInstaller();
-        List<String> downloadedFiles = new ArrayList<>();
-        List<String> verifiedSigs = new ArrayList<>();
         String downloadFailedString = Res.get("displayUpdateDownloadWindow.download.failed");
         downloadButton.setOnAction(e -> {
             if (installer.isSupportedOS()) {
-                downloadedFiles.clear();
-                verifiedSigs.clear();
+                List<String> downloadedFiles = new ArrayList<>();
+                List<String> verifiedSigs = new ArrayList<>();
                 downloadButton.setDisable(true);
                 progressBar.setVisible(true);
                 downloadedFilesLabel.setOpacity(1);

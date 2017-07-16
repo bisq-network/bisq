@@ -22,14 +22,12 @@ import io.bisq.common.util.Utilities;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.security.Security;
 import java.security.SignatureException;
 import java.util.Iterator;
 import java.util.List;
@@ -224,13 +222,17 @@ public class BisqInstaller {
         String suffix = ".asc";
         List<FileDescriptor> result = Lists.newArrayList();
 
-        for(FileDescriptor key: keys) {
-            result.add(FileDescriptor.builder()
-                    .type(DownloadType.SIG)
-                    .fileName(installerFileDescriptor.getFileName().concat(suffix))
-                    .id(key.getId())
-                    .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
-                    .build());
+        for (FileDescriptor key : keys) {
+            if (!result.stream().filter(e -> e.getId().equals(key.getId())).findAny().isPresent()) {
+                result.add(FileDescriptor.builder()
+                        .type(DownloadType.SIG)
+                        .fileName(installerFileDescriptor.getFileName().concat(suffix))
+                        .id(key.getId())
+                        .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
+                        .build());
+            } else {
+                log.debug("We have already a file with the key: " + key.getId());
+            }
         }
         return result;
     }

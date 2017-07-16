@@ -18,6 +18,7 @@
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.collect.Lists;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import javafx.concurrent.Task;
 import lombok.Getter;
@@ -107,6 +108,11 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
     }
 
     private void download(URL url, File outputFile) throws IOException {
+        if (outputFile.exists()) {
+            log.info("We found an existing file and rename it as *.backup.");
+            FileUtil.renameFile(outputFile, new File(outputFile.getAbsolutePath() + ".backup"));
+        }
+
         URLConnection urlConnection = url.openConnection();
         urlConnection.connect();
         int fileSize = urlConnection.getContentLength();
