@@ -73,7 +73,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
     private static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
 
-    private static BaseCurrencyNetwork baseCurrencyNetwork;
+    private static BaseCurrencyNetwork baseCurrencyNetwork = BaseCurrencyNetwork.BTC_MAINNET;
 
     @SuppressWarnings("SameReturnValue")
     public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {

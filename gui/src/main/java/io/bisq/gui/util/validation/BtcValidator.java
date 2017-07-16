@@ -71,11 +71,15 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfAboveDust(String input) {
-        final Coin coin = Coin.parseCoin(input);
-        if (Restrictions.isAboveDust(coin))
-            return new ValidationResult(true);
-        else
-            return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (Restrictions.isAboveDust(coin))
+                return new ValidationResult(true);
+            else
+                return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
     }
 
     protected ValidationResult validateIfNotFractionalBtcValue(String input) {
