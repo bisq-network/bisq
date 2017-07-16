@@ -25,6 +25,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bisq \
     -vendor Bisq \
     -outdir gui/deploy \
+    -srcfiles $jarFile \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
