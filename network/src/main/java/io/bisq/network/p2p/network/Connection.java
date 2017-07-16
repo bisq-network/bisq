@@ -499,6 +499,15 @@ public class Connection implements MessageListener {
             e.printStackTrace();
         } finally {
             try {
+                //TODO check why the exc. is thrown
+                /* We got those exceptions at seed nodes:
+                java.lang.IllegalMonitorStateException
+                at java.util.concurrent.locks.ReentrantLock$Sync.tryRelease(ReentrantLock.java:151)
+                at java.util.concurrent.locks.AbstractQueuedSynchronizer.release(AbstractQueuedSynchronizer.java:1261)
+                at java.util.concurrent.locks.ReentrantLock.unlock(ReentrantLock.java:457)
+                at com.google.common.util.concurrent.CycleDetectingLockFactory$CycleDetectingReentrantLock.unlock(CycleDetectingLockFactory.java:858)
+                at io.bisq.network.p2p.network.Connection.doShutDown(Connection.java:502)
+                 */
                 if (protoOutputStreamLock.isLocked())
                     protoOutputStreamLock.unlock();
             } catch (Throwable ignore) {
