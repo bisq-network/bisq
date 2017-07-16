@@ -38,24 +38,21 @@ public class SeedNodesRepository {
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-           /* new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            new NodeAddress("mfla72c4igh5ta2t.onion:8002"),*/
 
             // LTC mainnet
             new NodeAddress("acyvotgewx46pebw.onion:8003"),
-            new NodeAddress("bolqw3hs55uii7ku.onion:8003"),
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
-            new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
 
-            // local dev
-            // new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
+            // keep the below but we don't run them atm
+            /*  new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
+            new NodeAddress("bolqw3hs55uii7ku.onion:8003"),*/
 
             // DOGE mainnet
-            new NodeAddress("t6bwuj75mvxswavs.onion:8006")
+            new NodeAddress("t6bwuj75mvxswavs.onion:8006"),
 
-            // local dev
-            //new NodeAddress("iouuvpjnqjw4t3mp.onion:8006"),
-            //new NodeAddress("6kdjei7twxj45j43.onion:8006")
+            //DASH mainnet
+            new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
+            new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
     );
 
     // Addresses are used if the last digit of their port match the network id:
