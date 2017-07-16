@@ -75,7 +75,7 @@ For Mac OSX, you will need to set JAVA_HOME as:
 
 
 ### Protobuf
-Note that Bisq use protobuf during maven build https://github.com/google/protobuf/releases
+Note that Bisq use protobuf during maven build. Installation is done via the maven build.
 
 ### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
 Go to Help > Edit custom properties => paste the following line:
@@ -107,6 +107,7 @@ It is not needed for a normal user to run such a "full node" but for the build i
     $ git clone https://github.com/bitsquare/btcd-cli4j.git
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    $ cd ..
     
 Build bisq
 -----------------
@@ -114,7 +115,8 @@ Build bisq
 ### 1. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
-
+   
+    $ cd bisq
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
@@ -125,14 +127,14 @@ To run it use:
 Build binaries
 -----------------
 
-If you want to build the binaries check out the build scripts under the package directory. copy shaded.jar and the lib directory.
+If you want to build the binaries check out the build scripts under the package directory. Use the shaded.jar and the lib directory.
 
 
 DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
 use dedicated program arguments for the bisq node.
-See the rpc.md doc in the same directory.
+See https://github.com/bitsquare/bitsquare/blob/master/doc/rpc.md for more details.
 
 
 Development mode

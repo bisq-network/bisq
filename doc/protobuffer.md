@@ -1,12 +1,8 @@
 # Protobuffer FAQ
 
-## How to install
+## Installation
 
-### On linux
-
-    wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip
-    unzip protoc-3.3.0-linux-x86_64.zip -d protoc3
-    sudo mv protoc3/bin/protoc /usr/local/bin/protoc
+Protobuffer is installed automatically via the maven build.
 
 ## Why protobuffer?
 
