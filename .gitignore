@@ -1,30 +1,45 @@
-/docs
-/log
-/bin
-/out
-**/target
-.idea
+### Eclipse
+.project
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.project
+.settings/
+.loadpath
+.externalToolBuilders/
+*.launch
+
+### IDEA
+.idea/*
 !.idea/copyright/bisq_Affero_GPLv3.xml
 !.idea/copyright/profiles_settings.xml
 !.idea/codeStyleSettings.xml
-*.iml
+*.ipr
+*.iws
+*/*.iml
+
+### Maven
+target/
+
+### Mac
+/xchange
+*.java.hsp
+*.~ava
+.DS_Store
+*.sw[op]
+
+### Windows
+desktop.ini
+
+### General
 *.spvchain
 *.wallet
 *.ser
 *.log
-*.sw[op]
-.DS_Store
-.gradle
-build
-.classpath
-.project
-.settings
-*.java.hsp
-*.~ava
-/bundles
-/bisq*
-/xchange
-desktop.ini
-*/target/*
-*.class
 /gui/deploy/*

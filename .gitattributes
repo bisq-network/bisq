@@ -1,0 +1,56 @@
+# Set default behaviour, in case users don't have core.autocrlf set.
+* text=auto
+
+# Explicitly declare text files we want to always be normalized and converted
+# to native line endings on checkout.
+*.java text
+*.xml text
+*.xsl text
+*.csv text
+*.conf text
+*.properties text
+*.jsp text
+*.css text
+*.scss text
+*.svg text
+*.js text
+*.html text
+*.episode text
+*.xsd text
+*.dtd text
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.gif binary
+*.zip binary
+*.jar binary
+*.doc binary
+*.docx binary
+*.dot binary
+*.xls binary
+*.otf binary
+*.eot binary
+*.ttf binary
+*.ttf binary
+*.woff binary
+
+# Custom for Visual Studio
+*.cs     diff=csharp
+*.sln    merge=union
+*.csproj merge=union
+*.vbproj merge=union
+*.fsproj merge=union
+*.dbproj merge=union
+
+*.doc	 diff=astextplain
+*.DOC	 diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot  diff=astextplain
+*.DOT  diff=astextplain
+*.pdf  diff=astextplain
+*.PDF	 diff=astextplain
+*.rtf	 diff=astextplain
+*.RTF	 diff=astextplain
+
