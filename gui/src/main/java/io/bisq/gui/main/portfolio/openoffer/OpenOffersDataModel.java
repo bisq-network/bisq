@@ -53,14 +53,14 @@ class OpenOffersDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         openOfferManager.getObservableList().addListener(tradesListChangeListener);
-        priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateFlagPropertyListener);
+        priceFeedService.updateCounterProperty().addListener(currenciesUpdateFlagPropertyListener);
         applyList();
     }
 
     @Override
     protected void deactivate() {
         openOfferManager.getObservableList().removeListener(tradesListChangeListener);
-        priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateFlagPropertyListener);
+        priceFeedService.updateCounterProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
     void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

@@ -19,7 +19,6 @@ package io.bisq.gui.main.dao.wallet;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
@@ -83,14 +82,11 @@ public class BsqWalletView extends ActivatableViewAndModel {
         transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, AwesomeIcon.TABLE);
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
 
-        //TODO
+        // TODO just until DAO is enabled
         if (!DevEnv.DAO_ACTIVATED) {
             dashboard.setDisable(true);
             send.setDisable(true);
             transactions.setDisable(true);
-            UserThread.execute(() -> {
-                receive.setSelected(true);
-            });
         }
     }
 
@@ -108,8 +104,11 @@ public class BsqWalletView extends ActivatableViewAndModel {
             if (selectedViewClass == null)
                 selectedViewClass = BsqDashboardView.class;
 
-            loadView(selectedViewClass);
+            // TODO just until DAO is enabled
+            if (!DevEnv.DAO_ACTIVATED)
+                selectedViewClass = BsqReceiveView.class;
 
+            loadView(selectedViewClass);
         } else if (viewPath.size() == 4 && viewPath.indexOf(BsqWalletView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);

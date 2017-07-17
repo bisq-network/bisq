@@ -42,7 +42,7 @@ public class Res {
     private static ResourceBundle resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", GlobalSettings.getLocale(), new UTF8Control());
 
     static {
-        GlobalSettings.localePropertyProperty().addListener((observable, oldValue, newValue) -> {
+        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> {
             resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", newValue, new UTF8Control());
         });
     }

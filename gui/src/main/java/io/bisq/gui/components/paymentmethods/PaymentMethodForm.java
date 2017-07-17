@@ -34,16 +34,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
 public abstract class PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(PaymentMethodForm.class);
-
     protected final PaymentAccount paymentAccount;
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;

@@ -5,7 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-version="0.5.0"
+version="0.5.2"
 
 mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
@@ -33,6 +33,8 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bisq.gui.app.BisqAppMain \
     -outfile Bisq
  
+ 
+# TODO <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path> not included in build
 # when we have support for security manager we use that     
 #     \
 #    -BjvmOptions=-Djava.security.manager \

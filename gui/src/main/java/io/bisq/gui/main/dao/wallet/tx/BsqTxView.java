@@ -54,6 +54,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -86,6 +87,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private BsqChainStateListener bsqChainStateListener;
     private BsqBalanceListener bsqBalanceListener;
     private ProgressBar chainSyncIndicator;
+    private NewBestBlockListener newBestBlockListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +151,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqChainStateListener = this::onChainHeightChanged;
+        newBestBlockListener = block -> onChainHeightChanged();
     }
 
     @Override
@@ -156,6 +159,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
         bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
+
+        btcWalletService.addNewBestBlockListener(newBestBlockListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -177,6 +182,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
+        btcWalletService.removeNewBestBlockListener(newBestBlockListener);
+
         observableList.forEach(BsqTxListItem::cleanup);
         bsqBlockchainManager.removeBsqChainStateListener(bsqChainStateListener);
 

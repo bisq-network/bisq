@@ -121,7 +121,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
+        if (!baseCurrencyCode.equals("DASH"))
+            result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
@@ -241,7 +242,8 @@ public class CurrencyUtil {
         //  result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
+        if (!baseCurrencyCode.equals("DASH"))
+            result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));

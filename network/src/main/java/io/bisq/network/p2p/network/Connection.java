@@ -498,12 +498,23 @@ public class Connection implements MessageListener {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
         } finally {
-            if (protoOutputStreamLock.isLocked())
-                protoOutputStreamLock.unlock();
+            try {
+                //TODO check why the exc. is thrown
+                /* We got those exceptions at seed nodes:
+                java.lang.IllegalMonitorStateException
+                at java.util.concurrent.locks.ReentrantLock$Sync.tryRelease(ReentrantLock.java:151)
+                at java.util.concurrent.locks.AbstractQueuedSynchronizer.release(AbstractQueuedSynchronizer.java:1261)
+                at java.util.concurrent.locks.ReentrantLock.unlock(ReentrantLock.java:457)
+                at com.google.common.util.concurrent.CycleDetectingLockFactory$CycleDetectingReentrantLock.unlock(CycleDetectingLockFactory.java:858)
+                at io.bisq.network.p2p.network.Connection.doShutDown(Connection.java:502)
+                 */
+                if (protoOutputStreamLock.isLocked())
+                    protoOutputStreamLock.unlock();
+            } catch (Throwable ignore) {
+            }
             try {
                 protoOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Throwable ignore) {
             }
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 

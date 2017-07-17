@@ -19,7 +19,6 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
-import io.bisq.common.locale.Res;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,7 +49,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     @Nullable
     protected String bankId;
     @Nullable
-    protected String email;
+    protected String email; // not used anymore but need to keep it for backward compatibility. get set by subclasses to empty string
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -123,11 +122,8 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                 BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
         String holderIdString = BankUtil.isHolderIdRequired(countryCode) ?
                 (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
-        String emailString = email != null ?
-                (Res.get("payment.email") + " " + email + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
-                emailString +
                 bankName +
                 bankId +
                 branchId +

@@ -30,6 +30,7 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.*;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -478,6 +479,18 @@ public abstract class WalletService {
     public boolean removeEventListener(WalletEventListener listener) {
         //noinspection deprecation
         return wallet.removeEventListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    public void addNewBestBlockListener(NewBestBlockListener listener) {
+        //noinspection deprecation
+        walletsSetup.getChain().addNewBestBlockListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    public void removeNewBestBlockListener(NewBestBlockListener listener) {
+        //noinspection deprecation
+        walletsSetup.getChain().removeNewBestBlockListener(listener);
     }
 
     public boolean isWalletReady() {

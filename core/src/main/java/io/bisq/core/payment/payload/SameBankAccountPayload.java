@@ -30,6 +30,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
 
     public SameBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
+        email = ""; //email must not be null but empty string, otherwise hash check fails for contract
     }
 
 

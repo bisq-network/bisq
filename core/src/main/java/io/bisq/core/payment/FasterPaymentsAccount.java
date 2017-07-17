@@ -50,12 +50,4 @@ public final class FasterPaymentsAccount extends PaymentAccount {
     public String getAccountNr() {
         return ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr();
     }
-
-    public void setEmail(String value) {
-        ((FasterPaymentsAccountPayload) paymentAccountPayload).setEmail(value);
-    }
-
-    public String getEmail() {
-        return ((FasterPaymentsAccountPayload) paymentAccountPayload).getEmail();
-    }
 }

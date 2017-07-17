@@ -25,7 +25,7 @@ public class SeedNodesRepository {
             new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
 
             // local dev
-            // new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+            //new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
@@ -38,24 +38,21 @@ public class SeedNodesRepository {
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-           /* new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            new NodeAddress("mfla72c4igh5ta2t.onion:8002"),*/
 
             // LTC mainnet
             new NodeAddress("acyvotgewx46pebw.onion:8003"),
-            new NodeAddress("bolqw3hs55uii7ku.onion:8003"),
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
-            new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
 
-            // local dev
-            // new NodeAddress("vlzlf3vs6yisxl4a.onion:8003"),
+            // keep the below but we don't run them atm
+            /*  new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
+            new NodeAddress("bolqw3hs55uii7ku.onion:8003"),*/
 
             // DOGE mainnet
-            new NodeAddress("t6bwuj75mvxswavs.onion:8006")
+            new NodeAddress("t6bwuj75mvxswavs.onion:8006"),
 
-            // local dev
-            //new NodeAddress("iouuvpjnqjw4t3mp.onion:8006"),
-            //new NodeAddress("6kdjei7twxj45j43.onion:8006")
+            //DASH mainnet
+            new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
+            new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
     );
 
     // Addresses are used if the last digit of their port match the network id:
@@ -76,8 +73,8 @@ public class SeedNodesRepository {
 
             // regtest
             new NodeAddress("localhost:2002"),
-            new NodeAddress("localhost:3002"),
-            new NodeAddress("localhost:4002"),
+          /*  new NodeAddress("localhost:3002"),
+            new NodeAddress("localhost:4002"),*/
 
             // LTC
             // mainnet
@@ -87,7 +84,10 @@ public class SeedNodesRepository {
             new NodeAddress("localhost:2005"),
 
             // DOGE regtest
-            new NodeAddress("localhost:2008")
+            new NodeAddress("localhost:2008"),
+
+            // DASH regtest
+            new NodeAddress("localhost:2011")
     );
     private NodeAddress nodeAddressToExclude;
 

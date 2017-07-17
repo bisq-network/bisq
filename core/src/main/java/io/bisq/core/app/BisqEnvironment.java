@@ -60,7 +60,7 @@ public class BisqEnvironment extends StandardEnvironment {
         DEFAULT_APP_NAME = defaultAppName;
     }
 
-    public static String DEFAULT_APP_NAME = "bisq";
+    public static String DEFAULT_APP_NAME = "Bisq";
 
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
@@ -73,12 +73,12 @@ public class BisqEnvironment extends StandardEnvironment {
     private static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
     private static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
 
-    private static BaseCurrencyNetwork baseCurrencyNetwork;
-
     @SuppressWarnings("SameReturnValue")
     public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
         return BaseCurrencyNetwork.BTC_MAINNET;
     }
+
+    private static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
 
     public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
         //noinspection ConstantConditions,PointlessBooleanExpression

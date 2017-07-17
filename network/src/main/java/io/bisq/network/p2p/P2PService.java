@@ -249,8 +249,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.start(this);
     }
 
-    public void readPersistedEntryMap(String resourceFileName) {
-        p2PDataStorage.readPersistedEntryMap(resourceFileName);
+    public void readEntryMapFromResources(String resourceFileName) {
+        p2PDataStorage.readEntryMapFromResources(resourceFileName);
     }
 
     public void onAllServicesInitialized() {
@@ -343,9 +343,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
 
-        requestDataManager.requestPreliminaryData();
+        boolean seedNodesAvailable = requestDataManager.requestPreliminaryData();
+
         keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
+
+        if (!seedNodesAvailable) {
+            isBootstrapped = true;
+            p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
+        }
     }
 
     @Override

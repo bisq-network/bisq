@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.0</version>
+    <version>0.5.2</version>
     <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -67,7 +67,7 @@
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.5.0</version>
+                <version>0.5.2</version>
                 <configuration>
                     <protocExecutable>/usr/local/bin/protoc</protocExecutable>
                 </configuration>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>org.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>0.14.1</version>
+            <version>0.14.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
@@ -128,23 +128,15 @@
             <version>4.1.0</version>
         </dependency>
 
-        <!--crypto-->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.56</version>
-        </dependency>
-
+        <!--crypto TODO why are versions removed here?-->
         <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk15on</artifactId>
-            <version>1.56</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk16</artifactId>
-            <version>1.46</version>
         </dependency>
 
         <!--utils-->
@@ -251,4 +243,39 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <!-- Oracle JDK 9 will support strong cyphers, but they must be explicitly enabled-->
+            <id>enable-strong-cipher-jdk9</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+            </activation>
+            <properties>
+                    <crypto.policy>unlimited</crypto.policy>
+            </properties>
+        </profile>
+    </profiles>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>1.56</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk15on</artifactId>
+                <version>1.56</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk16</artifactId>
+                <version>1.46</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>

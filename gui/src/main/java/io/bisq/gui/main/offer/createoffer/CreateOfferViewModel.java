@@ -196,8 +196,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("1");
-                        price.set("2500");
+                        amount.set("0.01");
+                        price.set("2000");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -206,6 +206,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     case "DOGE":
                         amount.set("800000");
                         price.set("0.003");
+                        break;
+                    case "DASH":
+                        amount.set("0.1");
+                        price.set("40");
                         break;
                 }
 
@@ -483,7 +487,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
 
-        priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateListener);
+        priceFeedService.updateCounterProperty().addListener(currenciesUpdateListener);
     }
 
     private void removeListeners() {
@@ -508,7 +512,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (offer != null && errorMessageListener != null)
             offer.getErrorMessageProperty().removeListener(errorMessageListener);
 
-        priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateListener);
+        priceFeedService.updateCounterProperty().removeListener(currenciesUpdateListener);
     }
 
 

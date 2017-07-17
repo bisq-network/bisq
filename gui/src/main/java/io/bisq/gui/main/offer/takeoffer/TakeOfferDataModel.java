@@ -459,8 +459,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-        btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        log.error("swapTradeToSavings, offerid={}", offer.getId());
+        btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
   /*  private void setFeeFromFundingTx(Coin fee) {

@@ -42,6 +42,11 @@ public class BsqParser {
     private final IssuanceVerification issuanceVerification;
     private final RpcService rpcService;
 
+    // Maybe we want to request fee at some point, leave it for now and disable it
+    private boolean requestFee = false;
+    private final Map<Integer, Long> feesByBlock = new HashMap<>();
+    
+
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqParser(RpcService rpcService,
@@ -138,7 +143,10 @@ public class BsqParser {
         // We add all transactions to the block
         long startTs = System.currentTimeMillis();
         for (String txId : btcdBlock.getTx()) {
-            final Tx tx = rpcService.requestTransaction(txId, blockHeight);
+            if (requestFee)
+                rpcService.requestFees(txId, blockHeight, feesByBlock);
+
+            final Tx tx = rpcService.requestTx(txId, blockHeight);
             txList.add(tx);
             checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
         }
@@ -244,7 +252,7 @@ public class BsqParser {
 
         // we check if we have any valid BSQ from that tx set
         bsqTxsInBlock.addAll(txsWithoutInputsFromSameBlock.stream()
-                .filter(tx -> isTxValidBsqTx(blockHeight, tx))
+                .filter(tx -> isValidBsqTx(blockHeight, tx))
                 .collect(Collectors.toList()));
 
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");
@@ -269,7 +277,7 @@ public class BsqParser {
         }
     }
 
-    private boolean isTxValidBsqTx(int blockHeight, Tx tx) {
+    private boolean isValidBsqTx(int blockHeight, Tx tx) {
         boolean isBsqTx = false;
         long availableValue = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {

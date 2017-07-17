@@ -164,8 +164,8 @@ public class RequestDataHandler implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (networkEnvelop instanceof GetDataResponse) {
+        if (networkEnvelop instanceof GetDataResponse) {
+            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelop;
@@ -250,9 +250,9 @@ public class RequestDataHandler implements MessageListener {
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
+            } else {
+                log.warn("We got a message from another connection and ignore it. That should never happen.");
             }
-        } else {
-            log.trace("We got a message from another connection and ignore it.");
         }
     }
 

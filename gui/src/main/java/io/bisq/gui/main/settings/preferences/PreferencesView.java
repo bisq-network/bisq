@@ -18,12 +18,16 @@
 package io.bisq.gui.main.settings.preferences;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -45,10 +49,10 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -63,6 +67,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
+    private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
@@ -70,6 +75,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
+    private final BisqEnvironment bisqEnvironment;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -90,6 +96,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ChangeListener<String> deviationListener, ignoreTradersListListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
+    private ChangeListener<Number> transactionFeeChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +104,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(Preferences preferences, FeeService feeService, BSFormatter formatter) {
+    public PreferencesView(Preferences preferences, FeeService feeService,
+                           BisqEnvironment bisqEnvironment, BSFormatter formatter) {
         super();
         this.preferences = preferences;
         this.feeService = feeService;
+        this.bisqEnvironment = bisqEnvironment;
         this.formatter = formatter;
     }
 
@@ -145,42 +154,43 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
+
+        // selectBaseCurrencyNetwork
         //noinspection unchecked
-        userLanguageComboBox = addLabelComboBox(root, gridRow,
-                Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
+        selectBaseCurrencyNetworkComboBox = addLabelComboBox(root, gridRow,
+                Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
+
+        selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
+            @Override
+            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
+                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
+                        baseCurrencyNetwork.getCurrencyName();
+            }
+
+            @Override
+            public BaseCurrencyNetwork fromString(String string) {
+                return null;
+            }
+        });
+
+        // userLanguage
+        //noinspection unchecked
+        userLanguageComboBox = addLabelComboBox(root, ++gridRow,
+                Res.getWithCol("shared.language")).second;
+
+        // userCountry
         //noinspection unchecked
         userCountryComboBox = addLabelComboBox(root, ++gridRow,
                 Res.getWithCol("shared.country")).second;
-        // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
+
+        // blockChainExplorer
         //noinspection unchecked
         blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer")).second;
-        deviationInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("setting.preferences.deviation")).second;
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
 
-        deviationListener = (observable, oldValue, newValue) -> {
-            try {
-                double value = formatter.parsePercentStringToDouble(newValue);
-                if (value <= 0.3) {
-                    preferences.setMaxPriceDistanceInPercent(value);
-                } else {
-                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge")).show();
-                    UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
-                }
-            } catch (NumberFormatException t) {
-                log.error("Exception at parseDouble deviation: " + t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
-            }
-        };
-        deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
-            if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
-        };
-
+        // transactionFee
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
@@ -206,7 +216,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
                     int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
-                    if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
+                    if (withdrawalTxFeeInBytes * 1000 < BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee().value) {
                         new Popup<>().warning(Res.get("setting.preferences.txFeeMin")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeeInBytes > 5000) {
@@ -228,7 +238,36 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 }
             }
         };
+        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
 
+        // deviation
+        deviationInputTextField = addLabelInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.deviation")).second;
+
+        deviationListener = (observable, oldValue, newValue) -> {
+            try {
+                double value = formatter.parsePercentStringToDouble(newValue);
+                if (value <= 0.3) {
+                    preferences.setMaxPriceDistanceInPercent(value);
+                } else {
+                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge")).show();
+                    UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                }
+            } catch (NumberFormatException t) {
+                log.error("Exception at parseDouble deviation: " + t.toString());
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+            }
+        };
+        deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
+            if (oldValue1 && !newValue1)
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+        };
+
+        // autoSelectArbitrators
+        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
+                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
+
+        // ignoreTraders 
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers")).second;
         ignoreTradersListListener = (observable, oldValue, newValue) ->
@@ -408,13 +447,24 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void activateGeneralOptions() {
+        List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
+        // show ony mainnet in production version
+        if (!DevEnv.DEV_MODE)
+            baseCurrencyNetworks = baseCurrencyNetworks.stream()
+                    .filter(e -> e.isMainnet())
+                    .collect(Collectors.toList());
+        selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
+        selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
+        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
+
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
 
         transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
-        if (!useCustomWithdrawalTxFee)
+        if (!useCustomWithdrawalTxFee) {
             transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
-
+            feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
+        }
 
         transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
@@ -565,18 +615,37 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 String.valueOf(feeService.getTxFeePerByte().value);
     }
 
+    private void onSelectNetwork() {
+        if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
+            selectNetwork();
+    }
+
+    private void selectNetwork() {
+        new Popup().warning(Res.get("settings.net.needRestart"))
+                .onAction(() -> {
+                    bisqEnvironment.saveBaseCryptoNetwork(selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
+                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                })
+                .actionButtonText(Res.get("shared.shutDown"))
+                .closeButtonText(Res.get("shared.cancel"))
+                .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
+                .show();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void deactivateGeneralOptions() {
-        //btcDenominationComboBox.setOnAction(null);
+        selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
+        if (transactionFeeChangeListener != null)
+            feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
         useCustomFeeCheckbox.selectedProperty().removeListener(useCustomFeeCheckboxListener);
     }

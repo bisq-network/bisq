@@ -116,7 +116,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 if (!isAnyPricePresent()) {
                     offerBook.fillOfferBookListItems();
                     updateChartData();
-                    priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdatedListener);
+                    priceFeedService.updateCounterProperty().removeListener(currenciesUpdatedListener);
                 }
             }
         };
@@ -149,7 +149,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         updateChartData();
 
         if (isAnyPricePresent())
-            priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdatedListener);
+            priceFeedService.updateCounterProperty().addListener(currenciesUpdatedListener);
 
         syncPriceFeedCurrency();
     }

@@ -1,6 +1,7 @@
 package io.bisq.common.storage;
 
 import com.google.common.io.Files;
+import io.bisq.common.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,6 +93,21 @@ public class FileUtil {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 fileOutputStream.write(buffer, 0, bytesRead);
             }
+        }
+    }
+
+    public static void renameFile(File oldFile, File newFile) throws IOException {
+        if (Utilities.isWindows()) {
+            // Work around an issue on Windows whereby you can't rename over existing files.
+            final File canonical = newFile.getCanonicalFile();
+            if (canonical.exists() && !canonical.delete()) {
+                throw new IOException("Failed to delete canonical file for replacement with save");
+            }
+            if (!oldFile.renameTo(canonical)) {
+                throw new IOException("Failed to rename " + oldFile + " to " + canonical);
+            }
+        } else if (!oldFile.renameTo(newFile)) {
+            throw new IOException("Failed to rename " + oldFile + " to " + newFile);
         }
     }
 }

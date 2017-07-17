@@ -39,7 +39,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "3. The " + Res.getBaseCurrencyName() + " market price is delivered by 3rd parties (BitcoinAverage, Poloniex, Coinmarketcap). " +
                 "It is your responsibility to verify the price with other sources for correctness.\n\n" +
 
-                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\"  the users confirms " +
+                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the users confirms " +
                 "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
 
                 "5. Any dispute, controversy or claim arising out of or relating to the use of the software shall be settled by arbitration in " +

@@ -1,5 +1,9 @@
 # Protobuffer FAQ
 
+## Installation
+
+Protobuffer is installed automatically via the maven build.
+
 ## Why protobuffer?
 
 There are a number of reasons why protobuffer was chosen, here are some of them:

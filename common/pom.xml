@@ -5,24 +5,117 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.5.0</version>
+        <version>0.5.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>common</artifactId>
 
+    <properties>
+        <protobuf.version>3.3.0</protobuf.version>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <protobuf.classifier>windows-x86_64</protobuf.classifier>
+                <protobuf.exe>protoc.exe</protobuf.exe>
+            </properties>
+        </profile>
+        <profile>
+            <id>unix</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <properties>
+                <protobuf.classifier>linux-x86_64</protobuf.classifier>
+                <protobuf.exe>protoc</protobuf.exe>
+            </properties>
+        </profile>
+        <profile>
+            <id>macos</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <protobuf.classifier>osx-x86_64</protobuf.classifier>
+                <protobuf.exe>protoc</protobuf.exe>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
-            <!-- https://www.xolstice.org/protobuf-maven-plugin/usage.html -->
+            <!-- unpack correct protobuf exe for current os -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-protoc</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.google.protobuf</groupId>
+                                    <artifactId>protoc</artifactId>
+                                    <version>${protobuf.version}</version>
+                                    <classifier>${protobuf.classifier}</classifier>
+                                    <type>exe</type>
+                                    <overWrite>true</overWrite>
+                                    <destFileName>${protobuf.exe}</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>set-permissions</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <chmod file="${project.build.directory}/dependency/${protobuf.exe}" perm="u+rx"/>
+                                <echo message="permissions changed for ${project.build.directory}/dependency/${protobuf.exe}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Run protobuf https://www.xolstice.org/protobuf-maven-plugin/usage.html -->
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.0</version>
                 <configuration>
-                    <protocExecutable>/usr/local/bin/protoc</protocExecutable>
+                    <protocExecutable>${project.build.directory}/dependency/${protobuf.exe}</protocExecutable>
                 </configuration>
                 <executions>
                     <execution>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>compile</goal>
                             <goal>test-compile</goal>
@@ -37,7 +130,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.3.0</version>
+            <version>${protobuf.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

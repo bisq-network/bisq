@@ -2,14 +2,14 @@ package io.bisq.provider.fee.providers;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import io.bisq.common.util.MathUtils;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.fee.FeeRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 //TODO use protobuffer instead of json
 public class BtcFeesProvider {
@@ -23,20 +23,27 @@ public class BtcFeesProvider {
     }
 
     public Long getFee() throws IOException {
-        String response = httpClient.requestWithGET("recommended", "User-Agent", "");
-        log.info("Get recommended fee response:  " + response);
-        Map<String, Long> map = new HashMap<>();
-        //noinspection unchecked
-        LinkedTreeMap<String, Double> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
-        treeMap.entrySet().stream().forEach(e -> map.put(e.getKey(), e.getValue().longValue()));
+        // prev. used:  https://bitcoinfees.21.co/api/v1/fees/recommended
+        // but was way too high
 
-        if (map.get("fastestFee") < FeeRequestService.BTC_MAX_TX_FEE)
-            return map.get("fastestFee");
-        else if (map.get("halfHourFee") < FeeRequestService.BTC_MAX_TX_FEE)
-            return map.get("halfHourFee");
-        else if (map.get("hourFee") < FeeRequestService.BTC_MAX_TX_FEE)
-            return map.get("hourFee");
-        else
-            return FeeRequestService.BTC_MAX_TX_FEE;
+        //https://bitcoinfees.21.co/api/v1/fees/list
+        String response = httpClient.requestWithGET("list", "User-Agent", "");
+        log.info("Get recommended fee response:  " + response);
+
+        LinkedTreeMap<String, ArrayList<LinkedTreeMap<String, Double>>> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
+        final long[] fee = new long[1];
+        // we want a fee which is at least in 10 blocks in (21.co estimation seem to be way too high, so we get 
+        // prob much faster in
+        int maxBlocks = 10;
+        treeMap.entrySet().stream()
+                .flatMap(e -> e.getValue().stream())
+                .forEach(e -> {
+                    Double maxDelay = e.get("maxDelay");
+                    if (maxDelay <= maxBlocks && fee[0] == 0)
+                        fee[0] = MathUtils.roundDoubleToLong(e.get("maxFee"));
+                });
+        fee[0] = Math.min(Math.max(fee[0], FeeRequestService.BTC_MIN_TX_FEE), FeeRequestService.BTC_MAX_TX_FEE);
+        log.info("fee " + fee[0]);
+        return fee[0];
     }
 }

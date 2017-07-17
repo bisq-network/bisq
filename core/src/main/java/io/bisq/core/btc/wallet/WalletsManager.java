@@ -93,7 +93,9 @@ public class WalletsManager {
     }
 
     public boolean areWalletsEncrypted() {
-        return btcWalletService.isEncrypted() && (!BisqEnvironment.isBaseCurrencySupportingBsq() || bsqWalletService.isEncrypted());
+        return areWalletsAvailable() &&
+                btcWalletService.isEncrypted() &&
+                (!BisqEnvironment.isBaseCurrencySupportingBsq() || bsqWalletService.isEncrypted());
     }
 
     public boolean areWalletsAvailable() {

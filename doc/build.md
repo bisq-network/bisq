@@ -74,8 +74,8 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-### 2. Install the latest protobuffer release on your machine (3.3.0 at the time of writing):
-https://github.com/google/protobuf/releases
+### Protobuf
+Note that Bisq use protobuf during maven build. Installation is done via the maven build.
 
 ### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
 Go to Help > Edit custom properties => paste the following line:
@@ -100,75 +100,26 @@ It is not needed for a normal user to run such a "full node" but for the build i
     
     $ cd ..
     $ git clone https://github.com/bitsquare/libdohj.git
-    $ cd bitcoinj
+    $ cd libdohj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
         
     $ cd ..
     $ git clone https://github.com/bitsquare/btcd-cli4j.git
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    $ cd ..
     
-
-Prepare bisq build
------------------
-### 4. Install Protobuffer
-Install Protobuffer as binary or build from source.
-
-Build from source:
-
-    $ wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-java-3.3.0.tar.gz
-    $ tar xzf protobuf-3.3.0.tar.gz
-    $ cd protobuf-3.3.0
-    $ sudo apt-get update
-    $ sudo apt-get install build-essential
-    $ sudo ./configure
-    $ sudo make
-    $ sudo make check
-    $ sudo make install 
-    $ sudo ldconfig
-    $ protoc --version
-
-### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
-
-We need to get the bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
-
-    $ git clone https://github.com/bitsquare/bitsquare.git
-    $ cd bisq
-    $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-
-### 6. Copy the BouncyCastle provider jar file
-
-Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
-This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
-
-    $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
-
-### 7. Edit the java.security file and add BouncyCastleProvider
-
-Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
-E.g.:
-security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
-
-    $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
-    ... edit and save
-
-### 8. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
-
-If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
-
-In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/security` AND `Java/jre1.8.0_xxx/jre/lib/security` otherwise the test in the above page will fail.
-
-
 Build bisq
 -----------------
 
-### 9. Build final bisq jar
+### 1. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
-
+   
+    $ cd bisq
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
-When the build completes, you will find an executable jar: `gui/target/shaded.jar`.
+When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
 To run it use:
 
     $ java -jar gui/target/shaded.jar
@@ -176,14 +127,14 @@ To run it use:
 Build binaries
 -----------------
 
-If you want to build the binaries check out the build scripts under the package directory.
+If you want to build the binaries check out the build scripts under the package directory. Use the shaded.jar and the lib directory.
 
 
 DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
 use dedicated program arguments for the bisq node.
-See the rpc.md doc in the same directory.
+See https://github.com/bitsquare/bitsquare/blob/master/doc/rpc.md for more details.
 
 
 Development mode
@@ -194,13 +145,13 @@ and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
-    $ java -jar seednode/target/SeedNode.jar --baseCryptoNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=bisq_seed_node_localhost_2002
+    $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=bisq_seed_node_localhost_2002
 
-    $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
+    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-    $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
+    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-    $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Running local seed node with Tor and RegTest
@@ -209,7 +160,7 @@ Running local seed node with Tor and RegTest
 If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
 You can find the hidden service address after you started once a seed node. Start it with a placeholder address like:
 
-    $ java -jar seednode/target/SeedNode.jar --baseCryptoNetwork=BTC_REGTEST --nodePort=8002 --myAddress=xxxxxxxx.onion:8002 --appName=bisq_seed_node_xxxxxxxx.onion_8000
+    $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --nodePort=8002 --myAddress=xxxxxxxx.onion:8002 --appName=bisq_seed_node_xxxxxxxx.onion_8000
 
 Once the hidden service is published (check console output) quit the seed node and copy the hidden service address from the console output.
 Alternatively you can navigate to the application directory and open bisq_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
@@ -221,13 +172,13 @@ Here are example program arguments for using regtest and using the Tor network (
 
      $ java -jar seednode/target/SeedNode.jar ewdkppp3vicnbgqt.onion:8002 2 50
 
-     $ java -jar seednode/target/SeedNode.jar --baseCryptoNetwork=BTC_REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=bisq_seed_node_ewdkppp3vicnbgqt.oinion_8002
+     $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=bisq_seed_node_ewdkppp3vicnbgqt.oinion_8002
 
-     $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
+     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-     $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
+     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-     $ java -jar gui/target/shaded.jar --baseCryptoNetwork=BTC_REGTEST --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Problems?

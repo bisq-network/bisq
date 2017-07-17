@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.5.0
+version=0.5.2
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bisq-$version.jar"
 
@@ -25,7 +25,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bisq \
     -vendor Bisq \
     -outdir gui/deploy \
-    -srcfiles $jarFile:$jdkfixFile \
+    -srcfiles $jarFile \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \

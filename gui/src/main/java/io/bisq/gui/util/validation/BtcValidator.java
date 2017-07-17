@@ -71,20 +71,28 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfAboveDust(String input) {
-        final Coin coin = Coin.parseCoin(input);
-        if (Restrictions.isAboveDust(coin))
-            return new ValidationResult(true);
-        else
-            return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (Restrictions.isAboveDust(coin))
+                return new ValidationResult(true);
+            else
+                return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
     }
 
     protected ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
-            return new ValidationResult(false, Res.get("validation.btc.fraction"));
-        else
-            return new ValidationResult(true);
+        try {
+            BigDecimal bd = new BigDecimal(input);
+            final BigDecimal satoshis = bd.movePointRight(8);
+            if (satoshis.scale() > 0)
+                return new ValidationResult(false, Res.get("validation.btc.fraction"));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
     }
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {

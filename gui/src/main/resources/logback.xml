@@ -24,6 +24,9 @@
     <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
     <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
 
+    <!-- We get too many errors logged from connection issues-->
+    <logger name="org.bitcoinj.net.BlockingClient" level="OFF"/>
+
     <!-- 
      <logger name="org.bitcoinj.net.ConnectionHandler" level="WARN"/>
     

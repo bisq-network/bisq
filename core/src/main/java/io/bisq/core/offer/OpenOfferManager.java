@@ -29,7 +29,6 @@ import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
@@ -178,8 +177,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
 
-        final int size = openOffers.size();
-        if (offerBookService.isBootstrapped()) {
+        final int size = openOffers != null ? openOffers.size() : 0;
+        if (offerBookService.isBootstrapped() && size > 0) {
             openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
@@ -337,8 +336,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-                    btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    log.error("removeOpenOffer, offerid={}", offer.getId());
+                    btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);

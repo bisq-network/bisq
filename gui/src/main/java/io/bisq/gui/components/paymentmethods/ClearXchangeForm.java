@@ -32,12 +32,8 @@ import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ClearXchangeForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(ClearXchangeForm.class);
-
     private final ClearXchangeAccount clearXchangeAccount;
     private final ClearXchangeValidator clearXchangeValidator;
     private InputTextField mobileNrInputTextField;

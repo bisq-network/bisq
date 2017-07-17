@@ -17,14 +17,28 @@
 
 package io.bisq.gui.util.validation;
 
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.gui.util.BSFormatter;
 import org.bitcoinj.core.Coin;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class BtcValidatorTest {
+    @Before
+    public void setup() {
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
+        Res.setBaseCurrencyCode(currencyCode);
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+        CurrencyUtil.setBaseCurrencyCode(currencyCode);
+    }
+
     @Test
     public void testIsValid() {
         BtcValidator validator = new BtcValidator(new BSFormatter());
@@ -35,7 +49,7 @@ public class BtcValidatorTest {
         assertTrue(validator.validate(",1").isValid);
         assertTrue(validator.validate(".1").isValid);
         assertTrue(validator.validate("0.12345678").isValid);
-        assertTrue(validator.validate(Coin.SATOSHI.toPlainString()).isValid);
+        assertFalse(validator.validate(Coin.SATOSHI.toPlainString()).isValid); // below dust
 
         assertFalse(validator.validate(null).isValid);
         assertFalse(validator.validate("").isValid);

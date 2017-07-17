@@ -26,7 +26,7 @@ import java.util.Locale;
 
 public class GlobalSettings {
     private static boolean useAnimations = true;
-    private static Locale locale = Locale.US;
+    private static Locale locale = new Locale("en", "US");
     private static final ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(locale);
     private static TradeCurrency defaultTradeCurrency;
     private static String btcDenomination;
@@ -58,7 +58,7 @@ public class GlobalSettings {
         return btcDenomination;
     }
 
-    public static ReadOnlyObjectProperty<Locale> localePropertyProperty() {
+    public static ReadOnlyObjectProperty<Locale> localeProperty() {
         return localeProperty;
     }
 
@@ -69,5 +69,4 @@ public class GlobalSettings {
     public static Locale getLocale() {
         return locale;
     }
-
 }
