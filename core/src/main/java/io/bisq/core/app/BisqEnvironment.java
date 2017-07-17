@@ -44,6 +44,8 @@ import org.springframework.core.io.support.ResourcePropertySource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
@@ -107,6 +109,38 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     private static String appDataDir(String userDataDir, String appName) {
+        //TODO fix for changing app name form bisq to Bisq (add dir renamed as well)
+        final String newAppName = "Bisq";
+        if (appName.equals(newAppName)) {
+            final String oldAppName = "bisq";
+            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq 
+            Path newPath = Paths.get(Paths.get(userDataDir, appName).toString());//Bisq
+            File oldDir = new File(oldPath.toString()); // bisq 
+            File newDir = new File(newPath.toString()); //Bisq
+            try {
+                if (Files.exists(oldPath) && oldDir.getCanonicalPath().endsWith(oldAppName)) {
+                    if (Files.exists(newPath) && newDir.getCanonicalPath().endsWith(newAppName)) {
+                        // we have both bisq and Bisq and rename Bisq to Bisq_backup
+                        File newDirBackup = new File(newDir.toString() + "_backup"); // Bisq
+                        log.info("Rename Bisq data dir {} to {}", newPath.toString(), newDirBackup.toString());
+                        if (!newDir.renameTo(newDirBackup))
+                            throw new RuntimeException("Cannot rename dir");
+
+                        log.info("Rename old data dir {} to {}", oldDir.toString(), newPath.toString());
+                        if (!oldDir.renameTo(newDir))
+                            throw new RuntimeException("Cannot rename dir");
+                    } else {
+                        log.info("Rename old data dir {} to {}", oldDir.toString(), newPath.toString());
+                        if (!oldDir.renameTo(newDir))
+                            throw new RuntimeException("Cannot rename dir");
+
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         return Paths.get(userDataDir, appName).toString();
     }
 
