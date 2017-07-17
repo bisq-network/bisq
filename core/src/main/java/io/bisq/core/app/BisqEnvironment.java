@@ -100,12 +100,17 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     private static String defaultUserDataDir() {
-        if (Utilities.isWindows())
-            return System.getenv("APPDATA");
+        String property = System.getProperty("user.home");
+        if (Utilities.isWindows()) {
+            // TODO files need to be located in user.home not in roaming
+            // TBD why it was there originally
+            // migration!
+            return property;
+        }
         else if (Utilities.isOSX())
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
+            return Paths.get(property, "Library", "Application Support").toString();
         else // *nix
-            return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
+            return Paths.get(property, ".local", "share").toString();
     }
 
     private static String appDataDir(String userDataDir, String appName) {
@@ -113,9 +118,9 @@ public class BisqEnvironment extends StandardEnvironment {
         final String newAppName = "Bisq";
         if (appName.equals(newAppName)) {
             final String oldAppName = "bisq";
-            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq 
+            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq
             Path newPath = Paths.get(Paths.get(userDataDir, appName).toString());//Bisq
-            File oldDir = new File(oldPath.toString()); // bisq 
+            File oldDir = new File(oldPath.toString()); // bisq
             File newDir = new File(newPath.toString()); //Bisq
             try {
                 if (Files.exists(oldPath) && oldDir.getCanonicalPath().endsWith(oldAppName)) {

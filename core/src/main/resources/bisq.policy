@@ -2,257 +2,266 @@
 A codeBase with a trailing "/*" matches all files (both class and JAR files) contained in that directory.
 A codeBase with a trailing "/-" matches all files (both class and JAR files) in the directory and recursively
   all files in subdirectories contained in that directory.  */
+
+/*
+java.util.PropertyPermission - Controls read/write access to JVM properties such as java.home.
+java.lang.RuntimePermission - Controls use of some System/Runtime functions like exit() and exec(). Also control the package access/definition.
+java.io.FilePermission - Controls read/write/execute access to files and directories.
+java.net.SocketPermission - Controls use of network sockets.
+java.net.NetPermission - Controls use of multicast network connections.
+java.lang.reflect.ReflectPermission - Controls use of reflection to do class introspection.
+java.security.SecurityPermission - Controls access to Security methods.
+java.security.AllPermission - Allows access to all permissions, just as if you were running without a SecurityManager.
+*/
+
 grant {
-    permission "java.util.PropertyPermission" "*", "read,write";
-    permission "java.util.PropertyPermission" "appDataDir", "read";
-    permission "java.util.PropertyPermission" "appName", "read";
-    permission "java.util.PropertyPermission" "banList", "read";
-    permission "java.util.PropertyPermission" "baseCryptoNetwork", "read";
-    permission "java.util.PropertyPermission" "bitcoinRegtestHost", "read";
-    permission "java.util.PropertyPermission" "btcNodes", "read";
-    permission "java.util.PropertyPermission" "cglib.debugLocation", "read";
-    /* TODO Why ??? no permission exceptions, no dependency in bisq nor in bitcoinj. Local problem? */
-    permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
-    permission "java.util.PropertyPermission" "dumpStatistics", "read";
-    permission "java.util.PropertyPermission" "guava.concurrent.generate_cancellation_cause", "read";
-    permission "java.util.PropertyPermission" "guice.custom.loader", "read";
-    permission "java.util.PropertyPermission" "guice_check_nullable_provides_params", "read";
-    permission "java.util.PropertyPermission" "guice_custom_class_loading", "read";
-    permission "java.util.PropertyPermission" "guice_include_stack_traces", "read";
-    permission "java.util.PropertyPermission" "idea.launcher.*", "read";
-    permission "java.util.PropertyPermission" "ignoreDevMsg", "read";
-    permission "java.util.PropertyPermission" "java.runtime.name", "read";
-    permission "java.util.PropertyPermission" "java.runtime.version", "read";
-    permission "java.util.PropertyPermission" "javafx.toolkit", "read";
-    permission "java.util.PropertyPermission" "keyStorageDir", "read";
-    permission "java.util.PropertyPermission" "logback.*", "read";
-    permission "java.util.PropertyPermission" "logback.configurationFile", "read";
-    permission "java.util.PropertyPermission" "logback.ContextSelector", "read";
-    permission "java.util.PropertyPermission" "logback.debug", "read";
-    permission "java.util.PropertyPermission" "logback.ignoreTCL", "read";
-    permission "java.util.PropertyPermission" "logback.statusListenerClass", "read";
-    permission "java.util.PropertyPermission" "logLevel", "read";
-    permission "java.util.PropertyPermission" "maxConnections", "read";
-    permission "java.util.PropertyPermission" "maxMemory", "read";
-    permission "java.util.PropertyPermission" "myAddress", "read";
-    permission "java.util.PropertyPermission" "networkId", "read";
-    permission "java.util.PropertyPermission" "nodePort", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.*", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.diagnostics.dest", "read";
+    permission java.io.FilePermission "${user.home}/Bisq", "read,write";
+    permission java.io.FilePermission "${user.home}/Bisq/bisq.properties", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/bisq.log", "read,write";
 
-    /* note casing! */
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.Log", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.log", "read";
+    permission java.io.FilePermission "${user.home}/bisq", "read";
 
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.Log.allowFlawedContext", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.Log.allowFlawedDiscovery", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.Log.allowFlawedHierarchy", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.LogFactory", "read";
-    permission "java.util.PropertyPermission" "org.apache.commons.logging.LogFactory.HashtableImpl", "read";
-    permission "java.util.PropertyPermission" "priceFeedProviders", "read";
-    permission "java.util.PropertyPermission" "providers", "read";
-    permission "java.util.PropertyPermission" "rpcBlockPort", "read";
-    permission "java.util.PropertyPermission" "rpcPassword", "read";
-    permission "java.util.PropertyPermission" "rpcPort", "read";
-    permission "java.util.PropertyPermission" "rpcUser", "read";
-    permission "java.util.PropertyPermission" "rpcWalletPort", "read";
-    permission "java.util.PropertyPermission" "seedNodes", "read";
-    permission "java.util.PropertyPermission" "slf4j.detectLoggerNameMismatch", "read";
-    permission "java.util.PropertyPermission" "socks5DiscoverMode", "read";
-    permission "java.util.PropertyPermission" "socks5ProxyBtcAddress", "read";
-    permission "java.util.PropertyPermission" "socks5ProxyHttpAddress", "read";
-    permission "java.util.PropertyPermission" "spring.getenv.ignore", "read";
-    permission "java.util.PropertyPermission" "storageDir", "read";
-    permission "java.util.PropertyPermission" "sun.arch.data.model", "read";
-    permission "java.util.PropertyPermission" "torDir", "read";
-    permission "java.util.PropertyPermission" "useLocalhost", "read";
-    permission "java.util.PropertyPermission" "user.home", "read";
-    permission java.util.PropertyPermission "user.language", "write";
-    permission "java.util.PropertyPermission" "useragent.name", "read";
-    permission "java.util.PropertyPermission" "useragent.version", "read";
-    permission "java.util.PropertyPermission" "useTorForBtc", "read";
-    permission "java.util.PropertyPermission" "walletDir", "read";
+    permission java.util.PropertyPermission "/var/folders/-", "read,write,delete";
 
-    permission "java.lang.RuntimePermission" "accessClassInPackage.com.sun.javafx.tk.quantum";
-    permission "java.lang.RuntimePermission" "accessClassInPackage.sun.misc";
-    permission "java.lang.RuntimePermission" "accessClassInPackage.sun.reflect";
-    permission "java.lang.RuntimePermission" "accessClassInPackage.sun.util.logging.resources";
-    permission "java.lang.RuntimePermission" "accessDeclaredMembers";
-    permission "java.lang.RuntimePermission" "accessUserInformation";
-    permission "java.lang.RuntimePermission" "getClassLoader";
-    permission "java.lang.RuntimePermission" "getenv.*";
-    permission "java.lang.RuntimePermission" "getenv.APPDATA";
-    permission "java.lang.RuntimePermission" "getenv.appDataDir";
-    permission "java.lang.RuntimePermission" "getenv.banList";
-    permission "java.lang.RuntimePermission" "getenv.baseCryptoNetwork";
-    permission "java.lang.RuntimePermission" "getenv.bitcoinRegtestHost";
-    permission "java.lang.RuntimePermission" "getenv.btcNodes";
-    permission "java.lang.RuntimePermission" "getenv.dumpStatistics";
-    permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
-    permission "java.lang.RuntimePermission" "getenv.keyStorageDir";
-    permission "java.lang.RuntimePermission" "getenv.logLevel";
-    permission "java.lang.RuntimePermission" "getenv.maxConnections";
-    permission "java.lang.RuntimePermission" "getenv.maxMemory";
-    permission "java.lang.RuntimePermission" "getenv.myAddress";
-    permission "java.lang.RuntimePermission" "getenv.networkId";
-    permission "java.lang.RuntimePermission" "getenv.priceFeedProviders";
-    permission "java.lang.RuntimePermission" "getenv.PROCESSOR_ARCHITECTURE";
-    permission "java.lang.RuntimePermission" "getenv.PROCESSOR_ARCHITEW6432";
-    permission "java.lang.RuntimePermission" "getenv.providers";
-    permission "java.lang.RuntimePermission" "getenv.rpcBlockPort";
-    permission "java.lang.RuntimePermission" "getenv.rpcPassword";
-    permission "java.lang.RuntimePermission" "getenv.rpcPort";
-    permission "java.lang.RuntimePermission" "getenv.rpcUser";
-    permission "java.lang.RuntimePermission" "getenv.rpcWalletPort";
-    permission "java.lang.RuntimePermission" "getenv.seedNodes";
-    permission "java.lang.RuntimePermission" "getenv.socks5DiscoverMode";
-    permission "java.lang.RuntimePermission" "getenv.socks5ProxyBtcAddress";
-    permission "java.lang.RuntimePermission" "getenv.socks5ProxyHttpAddress";
-    permission "java.lang.RuntimePermission" "getenv.storageDir";
-    permission "java.lang.RuntimePermission" "getenv.torDir";
-    permission "java.lang.RuntimePermission" "getenv.useragent.name";
-    permission "java.lang.RuntimePermission" "getenv.useragent.version";
-    permission "java.lang.RuntimePermission" "getenv.useTorForBtc";
-    permission "java.lang.RuntimePermission" "getenv.walletDir";
-    permission "java.lang.RuntimePermission" "getProtectionDomain";
-    permission "java.lang.RuntimePermission" "loadLibrary.javasecp256k1";
-    permission "java.lang.RuntimePermission" "loadLibrary.secp256k1";
-    permission "java.lang.RuntimePermission" "modifyThread";
-    permission "java.lang.RuntimePermission" "setContextClassLoader";
-    permission "java.lang.RuntimePermission" "setDefaultUncaughtExceptionHandler";
-    permission "java.lang.RuntimePermission" "shutdownHooks";
-
-    /* TODO windows home to be tested */
-    permission java.io.FilePermission "${appdata}\Bisq", "read,write";
-    permission java.io.FilePermission "${appdata}\bisq", "read,write";
-    permission java.io.FilePermission "${appdata}\Bisq\bisq.log", "read,write";
-    permission java.io.FilePermission "${appdata}\Bisq\bisq.properties", "read";
-
-    /* TODO linux home to be tested */
-    permission java.io.FilePermission "${user.home}\Bisq", "read,write";
-    permission java.io.FilePermission "${user.home}\Bisq\bisq.log", "read,write";
-    permission java.io.FilePermission "${user.home}\Bisq\bisq.properties", "read";
-    permission java.io.FilePermission "${user.home}\bisq", "read";
-    permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
-
-    /* TODO osx???? */
-    permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
-    permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}Bisq-", "read,write,delete";
-
+    /* TODO osx????
+    permission java.util.PropertyPermission "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
+    permission java.util.PropertyPermission "${user.home}${/}.local${/}share${/}Bisq-", "read,write,delete";
+*/
     /* TODO only for dev */
    /*
-    permission "java.io.FilePermission" "${user.home}${/}.m2${/}-", "read";
-    permission "java.io.FilePermission" "/Users/me/dev/bitcoin_projects/bisq/-", "read";
+    permission java.util.PropertyPermission "${user.home}${/}.m2${/}-", "read";
+    permission java.util.PropertyPermission "/Users/me/dev/bitcoin_projects/bisq/-", "read";
     */
-    permission "java.io.FilePermission" "C:\Program Files\JetBrains\IntelliJ IDEA 2017.1.2\bin\breakgen64.dll", "read";
+    permission java.util.PropertyPermission "C:\Program Files\JetBrains\IntelliJ IDEA 2017.1.2\bin\breakgen64.dll", "read";
 
-    permission "java.lang.reflect.ReflectPermission" "suppressAccessChecks";
+
+    permission java.util.PropertyPermission "*", "read,write";
+    permission java.util.PropertyPermission "appDataDir", "read";
+    permission java.util.PropertyPermission "appName", "read";
+    permission java.util.PropertyPermission "banList", "read";
+    permission java.util.PropertyPermission "baseCryptoNetwork", "read";
+    permission java.util.PropertyPermission "bitcoinRegtestHost", "read";
+    permission java.util.PropertyPermission "btcNodes", "read";
+    permission java.util.PropertyPermission "cglib.debugLocation", "read";
+    /* TODO Why ??? no permission exceptions, no dependency in bisq nor in bitcoinj. Local problem? */
+    permission java.util.PropertyPermission "com.google.appengine.runtime.environment", "read";
+    permission java.util.PropertyPermission "dumpStatistics", "read";
+    permission java.util.PropertyPermission "guava.concurrent.generate_cancellation_cause", "read";
+    permission java.util.PropertyPermission "guice.custom.loader", "read";
+    permission java.util.PropertyPermission "guice_check_nullable_provides_params", "read";
+    permission java.util.PropertyPermission "guice_custom_class_loading", "read";
+    permission java.util.PropertyPermission "guice_include_stack_traces", "read";
+    permission java.util.PropertyPermission "idea.launcher.*", "read";
+    permission java.util.PropertyPermission "ignoreDevMsg", "read";
+    permission java.util.PropertyPermission "java.runtime.name", "read";
+    permission java.util.PropertyPermission "java.runtime.version", "read";
+    permission java.util.PropertyPermission "javafx.toolkit", "read";
+    permission java.util.PropertyPermission "keyStorageDir", "read";
+    permission java.util.PropertyPermission "logback.*", "read";
+    permission java.util.PropertyPermission "logback.configurationFile", "read";
+    permission java.util.PropertyPermission "logback.ContextSelector", "read";
+    permission java.util.PropertyPermission "logback.debug", "read";
+    permission java.util.PropertyPermission "logback.ignoreTCL", "read";
+    permission java.util.PropertyPermission "logback.statusListenerClass", "read";
+    permission java.util.PropertyPermission "logLevel", "read";
+    permission java.util.PropertyPermission "maxConnections", "read";
+    permission java.util.PropertyPermission "maxMemory", "read";
+    permission java.util.PropertyPermission "myAddress", "read";
+    permission java.util.PropertyPermission "networkId", "read";
+    permission java.util.PropertyPermission "nodePort", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.*", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.diagnostics.dest", "read";
+
+    /* note casing! */
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.log", "read";
+
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedContext", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedDiscovery", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedHierarchy", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory.HashtableImpl", "read";
+    permission java.util.PropertyPermission "priceFeedProviders", "read";
+    permission java.util.PropertyPermission "providers", "read";
+    permission java.util.PropertyPermission "rpcBlockPort", "read";
+    permission java.util.PropertyPermission "rpcPassword", "read";
+    permission java.util.PropertyPermission "rpcPort", "read";
+    permission java.util.PropertyPermission "rpcUser", "read";
+    permission java.util.PropertyPermission "rpcWalletPort", "read";
+    permission java.util.PropertyPermission "seedNodes", "read";
+    permission java.util.PropertyPermission "slf4j.detectLoggerNameMismatch", "read";
+    permission java.util.PropertyPermission "socks5DiscoverMode", "read";
+    permission java.util.PropertyPermission "socks5ProxyBtcAddress", "read";
+    permission java.util.PropertyPermission "socks5ProxyHttpAddress", "read";
+    permission java.util.PropertyPermission "spring.getenv.ignore", "read";
+    permission java.util.PropertyPermission "storageDir", "read";
+    permission java.util.PropertyPermission "sun.arch.data.model", "read";
+    permission java.util.PropertyPermission "torDir", "read";
+    permission java.util.PropertyPermission "useLocalhost", "read";
+    permission java.util.PropertyPermission "user.home", "read";
+    permission java.util.PropertyPermission "user.language", "write";
+    permission java.util.PropertyPermission "useragent.name", "read";
+    permission java.util.PropertyPermission "useragent.version", "read";
+    permission java.util.PropertyPermission "useTorForBtc", "read";
+    permission java.util.PropertyPermission "walletDir", "read";
+
+    permission java.lang.RuntimePermission "accessClassInPackage.com.sun.javafx.tk.quantum";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.util.logging.resources";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.RuntimePermission "accessUserInformation";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.lang.RuntimePermission "getenv.*";
+    permission java.lang.RuntimePermission "getenv.APPDATA";
+    permission java.lang.RuntimePermission "getenv.appDataDir";
+    permission java.lang.RuntimePermission "getenv.banList";
+    permission java.lang.RuntimePermission "getenv.baseCryptoNetwork";
+    permission java.lang.RuntimePermission "getenv.bitcoinRegtestHost";
+    permission java.lang.RuntimePermission "getenv.btcNodes";
+    permission java.lang.RuntimePermission "getenv.dumpStatistics";
+    permission java.lang.RuntimePermission "getenv.ignoreDevMsg";
+    permission java.lang.RuntimePermission "getenv.keyStorageDir";
+    permission java.lang.RuntimePermission "getenv.logLevel";
+    permission java.lang.RuntimePermission "getenv.maxConnections";
+    permission java.lang.RuntimePermission "getenv.maxMemory";
+    permission java.lang.RuntimePermission "getenv.myAddress";
+    permission java.lang.RuntimePermission "getenv.networkId";
+    permission java.lang.RuntimePermission "getenv.priceFeedProviders";
+    permission java.lang.RuntimePermission "getenv.PROCESSOR_ARCHITECTURE";
+    permission java.lang.RuntimePermission "getenv.PROCESSOR_ARCHITEW6432";
+    permission java.lang.RuntimePermission "getenv.providers";
+    permission java.lang.RuntimePermission "getenv.rpcBlockPort";
+    permission java.lang.RuntimePermission "getenv.rpcPassword";
+    permission java.lang.RuntimePermission "getenv.rpcPort";
+    permission java.lang.RuntimePermission "getenv.rpcUser";
+    permission java.lang.RuntimePermission "getenv.rpcWalletPort";
+    permission java.lang.RuntimePermission "getenv.seedNodes";
+    permission java.lang.RuntimePermission "getenv.socks5DiscoverMode";
+    permission java.lang.RuntimePermission "getenv.socks5ProxyBtcAddress";
+    permission java.lang.RuntimePermission "getenv.socks5ProxyHttpAddress";
+    permission java.lang.RuntimePermission "getenv.storageDir";
+    permission java.lang.RuntimePermission "getenv.torDir";
+    permission java.lang.RuntimePermission "getenv.useragent.name";
+    permission java.lang.RuntimePermission "getenv.useragent.version";
+    permission java.lang.RuntimePermission "getenv.useTorForBtc";
+    permission java.lang.RuntimePermission "getenv.walletDir";
+    permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "loadLibrary.javasecp256k1";
+    permission java.lang.RuntimePermission "loadLibrary.secp256k1";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "setDefaultUncaughtExceptionHandler";
+    permission java.lang.RuntimePermission "shutdownHooks";
+
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
 
     /* Backup folder */
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\AddressEntryList", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\ClosedTrades", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\DisputeList", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\EntryMap", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\FailedTrades", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\NavigationPath", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\OpenOffers", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\PeerList", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\PendingTrades", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\PersistedEntryMap", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\PreferencesPayload", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\SequenceNumberMap", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\TradeStatistics", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\TradeStatisticsList", "read";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\UserPayload", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Roaming\Bisq\btc_mainnet\db\backup", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet", "read,write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\AddressEntryList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\ClosedTrades", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\DisputeList", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\EntryMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\FailedTrades", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\NavigationPath", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\OpenOffers", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PeerList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PendingTrades", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PersistedEntryMap", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PreferencesPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\SequenceNumberMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\TradeStatistics", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\TradeStatisticsList", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\UserPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup", "read";
 
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\temp-.tmp", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_AddressEntryList\-_AddressEntryList", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_EntryMap\-_EntryMap", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_NavigationPath\-_NavigationPath", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_PreferencesPayload\-_PreferencesPayload", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_SequenceNumberMap\-_SequenceNumberMap", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_TradeStatistics\-_TradeStatistics", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\db\backup\backups_UserPayload\-_UserPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\temp-.tmp", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_AddressEntryList\-_AddressEntryList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_EntryMap\-_EntryMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_NavigationPath\-_NavigationPath", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_PreferencesPayload\-_PreferencesPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_SequenceNumberMap\-_SequenceNumberMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_TradeStatistics\-_TradeStatistics", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_UserPayload\-_UserPayload", "read,write,delete";
 
     /* Keys folder */
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\backup", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\backup\backups_enc_key", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\backup\backups_enc_key\-_enc.key", "write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\backup\backups_sig_key", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\backup\backups_sig_key\-_sig.key", "write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\enc.key", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\keys\sig.key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_enc_key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_enc_key\-_enc.key", "write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_sig_key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_sig_key\-_sig.key", "write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\enc.key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\sig.key", "read";
 
     /* TODO TOR we may need another policy for linux and osx */
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\.tor", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\.tor\control_auth_cookie", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Cipher._AES.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA256.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA512.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Random.OSRNG.winrandom.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util._counter.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util.strxor.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\_ctypes.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\_hashlib.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\_socket.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\_ssl.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\bz2.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fte.cDFA.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.zip", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\VERSION", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs\-.json", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client-torbrowser.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\obfs4proxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.zip", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\pyexpat.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\python27.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\select.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\terminateprocess-buffer.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\unicodedata.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\w9xpopen.exe", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\PluggableTransports\zope.interface._zope_interface_coptimizations.pyd", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\geoip", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\geoip6", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice\backup", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key\-_private_key", "write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice\hostname", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\hiddenservice\private_key", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libeay32.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libevent-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libevent_core-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libevent_extra-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libgcc_s_sjlj-1.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libgmp-10.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\libssp-0.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\ssleay32.dll", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\tor.exe", "read,write,delete,execute";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\torrc", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\torrc.orig.1", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\tor\zlib1.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\.tor", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\.tor\control_auth_cookie", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Cipher._AES.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA256.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA512.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Random.OSRNG.winrandom.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util._counter.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util.strxor.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_ctypes.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_hashlib.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_socket.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_ssl.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\bz2.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fte.cDFA.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.zip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\VERSION", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs\-.json", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client-torbrowser.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfs4proxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.zip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\pyexpat.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\python27.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\select.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\terminateprocess-buffer.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\unicodedata.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\w9xpopen.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\zope.interface._zope_interface_coptimizations.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\geoip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\geoip6", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key\-_private_key", "write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\hostname", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\private_key", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libeay32.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent_core-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent_extra-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libgcc_s_sjlj-1.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libgmp-10.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libssp-0.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\ssleay32.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\tor.exe", "read,write,delete,execute";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\torrc", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\torrc.orig.1", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\zlib1.dll", "read,write,delete";
 
     /* Wallet */
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\backup", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet\-_bisq_BSQ.wallet", "write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet", "read";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet\-_bisq_BTC.wallet", "write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\bisq.spvchain", "read,write";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\bisq_BSQ.wallet", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\bisq_BTC.wallet", "read,write,delete";
-    permission java.io.FilePermission "${appdata}\Bisq\btc_mainnet\wallet\wallet-.tmp", "read,write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet\-_bisq_BSQ.wallet", "write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet", "read";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet\-_bisq_BTC.wallet", "write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq.spvchain", "read,write";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq_BSQ.wallet", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq_BTC.wallet", "read,write,delete";
+    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\wallet-.tmp", "read,write";
 
 
     /* TODO images loaded from jar */
@@ -280,17 +289,17 @@ grant {
 
 
     /* TODO do we need so open? */
-    permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve, accept";
+    permission java.net.SocketPermission "127.0.0.1:*", "listen,connect,resolve, accept";
     permission java.net.SocketPermission "127.0.0.1:59345", "connect,resolve";
     permission java.net.SocketPermission "127.0.0.1:59347", "connect,resolve";
 
     /* TODO what is this? */
-    permission "java.net.URLPermission" "http://95.85.11.205:8080/all", "GET:User-Agent";
-    permission "java.net.URLPermission" "http://95.85.11.205:8080/getFees", "GET:User-Agent";
-    permission "java.net.URLPermission" "http://95.85.11.205:8080/getAllMarketPrices", "GET:User-Agent";
+    permission java.net.URLPermission "http://95.85.11.205:8080/all", "GET:User-Agent";
+    permission java.net.URLPermission "http://95.85.11.205:8080/getFees", "GET:User-Agent";
+    permission java.net.URLPermission "http://95.85.11.205:8080/getAllMarketPrices", "GET:User-Agent";
 
-    permission "java.net.SocketPermission" "*:8333", "connect,resolve";
-    permission "java.net.SocketPermission" "*.onion:80", "connect,resolve";
+    permission java.net.SocketPermission "*:8333", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:80", "connect,resolve";
 
     permission java.net.SocketPermission "${hostname}", "resolve";
     permission java.net.SocketPermission "bitseed.xf2.org", "resolve";
@@ -301,9 +310,11 @@ grant {
     permission java.net.SocketPermission "seed.bitcoinstats.com", "resolve";
     permission java.net.SocketPermission "seed.bitnodes.io", "resolve";
 
+    permission java.awt.AWTPermission "accessSystemTray";
+    permission java.awt.AWTPermission "showWindowWithoutWarningBanner";
 
-    permission "java.awt.AWTPermission" "accessSystemTray";
-    permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
+    permission java.util.logging.LoggingPermission "control";
 
-    permission "java.util.logging.LoggingPermission" "control";
+    permission java.security.SecurityPermission "insertProvider";
+    permission java.security.SecurityPermission "insertProvider.BC";
 };
