@@ -45,10 +45,10 @@
         <module>jsocks</module>
         <module>jtorctl</module>
         <module>jtorproxy</module>
+        <module>api</module>
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>
-        <module>api</module>
         <module>provider</module>
     </modules>
 
