@@ -13,18 +13,8 @@ matrix:
   include:
     - os: linux
       jdk: oraclejdk8
-      before_install:
-      - ./travis-download-maven.sh
-      - export M2_HOME=$HOME/.binaries/apache-maven-3.3.9
-      - export PATH=$M2_HOME/bin:$PATH
-      - mvn -Xmx32m --version
     - os: osx
       osx_image: xcode8
-      before_install:
-      - ./travis-download-maven.sh
-      - export M2_HOME=$HOME/.binaries/apache-maven-3.3.9
-      - export PATH=$M2_HOME/bin:$PATH
-      - mvn -Xmx32m --version
 
 install:
   - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
