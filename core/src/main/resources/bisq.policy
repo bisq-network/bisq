@@ -4,6 +4,17 @@ A codeBase with a trailing "/-" matches all files (both class and JAR files) in 
   all files in subdirectories contained in that directory.  */
 
 /*
+To run with SecurityManager and default Java security policy, which is $JAVA_HOME/jre/lib/security/java.policy:
+java -Djava.security.manager Main
+
+To run with SecurityManager and only your custom security policy (ignoring default java security policy):
+java -Djava.security.manager -Djava.security.policy==security.policy Main
+
+To run with SecurityManager and default java security policy first, then your custom security policy:
+java -Djava.security.manager -Djava.security.policy=security.policy Main
+*/
+
+/*
 java.util.PropertyPermission - Controls read/write access to JVM properties such as java.home.
 java.lang.RuntimePermission - Controls use of some System/Runtime functions like exit() and exec(). Also control the package access/definition.
 java.io.FilePermission - Controls read/write/execute access to files and directories.
@@ -21,6 +32,11 @@ grant {
 
     permission java.io.FilePermission "${user.home}/bisq", "read";
 
+    /* TODO fix bundle */
+    permission java.io.FilePermission "C:/Users/cedric/IdeaProjects/bitsquare/bitsquare/common/target/classes/i18n/displayStrings.properties", "read";
+  permission java.io.FilePermission "C:/Users/cedric/IdeaProjects/bitsquare/bitsquare/gui/target/classes/io/bisq/gui/main/MainView.fxml", "read";
+
+
     permission java.util.PropertyPermission "/var/folders/-", "read,write,delete";
 
     /* TODO osx????
@@ -32,7 +48,7 @@ grant {
     permission java.util.PropertyPermission "${user.home}${/}.m2${/}-", "read";
     permission java.util.PropertyPermission "/Users/me/dev/bitcoin_projects/bisq/-", "read";
     */
-    permission java.util.PropertyPermission "C:\Program Files\JetBrains\IntelliJ IDEA 2017.1.2\bin\breakgen64.dll", "read";
+    permission java.util.PropertyPermission "C:/Program Files/JetBrains/IntelliJ IDEA 2017.1.2/bin/breakgen64.dll", "read";
 
 
     permission java.util.PropertyPermission "*", "read,write";
@@ -158,134 +174,173 @@ grant {
 
     /* Backup folder */
     permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet", "read,write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\AddressEntryList", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\ClosedTrades", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\DisputeList", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\EntryMap", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\FailedTrades", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\NavigationPath", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\OpenOffers", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PeerList", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PendingTrades", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PersistedEntryMap", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\PreferencesPayload", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\SequenceNumberMap", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\TradeStatistics", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\TradeStatisticsList", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\UserPayload", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/*", "read,write,delete";  /* TODO tmpXXXXXXX file would prefer a folder */
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data", "read,write";
 
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\temp-.tmp", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_AddressEntryList\-_AddressEntryList", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_EntryMap\-_EntryMap", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_NavigationPath\-_NavigationPath", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_PreferencesPayload\-_PreferencesPayload", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_SequenceNumberMap\-_SequenceNumberMap", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_TradeStatistics\-_TradeStatistics", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\db\backup\backups_UserPayload\-_UserPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/AddressEntryList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/ClosedTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/DisputeList", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/EntryMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/FailedTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/NavigationPath", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/OpenOffers", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/PeerList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/PendingTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/PersistedEntryMap", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/PreferencesPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/SequenceNumberMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/TradeStatistics", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/TradeStatisticsList", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup_of_corrupted_data/UserPayload", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/AddressEntryList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/ClosedTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/DisputeList", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/EntryMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/FailedTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/NavigationPath", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/OpenOffers", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/PeerList", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/PendingTrades", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/PersistedEntryMap", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/PreferencesPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/SequenceNumberMap", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/TradeStatistics", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/TradeStatisticsList", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/UserPayload", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup", "read";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/temp-.tmp", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_AddressEntryList", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_AddressEntryList/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_EntryMap", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_EntryMap/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_NavigationPath", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_NavigationPath/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_PreferencesPayload", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_PreferencesPayload/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_SequenceNumberMap", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_SequenceNumberMap/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_TradeStatistics", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_TradeStatistics/-", "read,write,delete";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_UserPayload", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/db/backup/backups_UserPayload/-", "read,write,delete";
 
     /* Keys folder */
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_enc_key", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_enc_key\-_enc.key", "write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_sig_key", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\backup\backups_sig_key\-_sig.key", "write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\enc.key", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\keys\sig.key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup", "read";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup/backups_enc_key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup/backups_enc_key/*", "write";
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup/backups_sig_key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup/backups_sig_key/*", "read,write";
+
+    /*TODO would like to have wildcard
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/backup/backups_sig_key/*_sig.key", "write";*/
+
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/enc.key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/keys/sig.key", "read";
 
     /* TODO TOR we may need another policy for linux and osx */
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\.tor", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\.tor\control_auth_cookie", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Cipher._AES.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA256.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Hash._SHA512.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Random.OSRNG.winrandom.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util._counter.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\Crypto.Util.strxor.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_ctypes.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_hashlib.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_socket.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\_ssl.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\bz2.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fte.cDFA.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy.zip", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\VERSION", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\fteproxy\defs\-.json", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client-torbrowser.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\meek-client.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfs4proxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\obfsproxy.zip", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\pyexpat.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\python27.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\select.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\terminateprocess-buffer.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\unicodedata.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\w9xpopen.exe", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\PluggableTransports\zope.interface._zope_interface_coptimizations.pyd", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\geoip", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\geoip6", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\backup\backups_private_key\-_private_key", "write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\hostname", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\hiddenservice\private_key", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libeay32.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent_core-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libevent_extra-2-0-5.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libgcc_s_sjlj-1.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libgmp-10.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\libssp-0.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\ssleay32.dll", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\tor.exe", "read,write,delete,execute";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\torrc", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\torrc.orig.1", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\tor\zlib1.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/.tor", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/.tor/control_auth_cookie", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Cipher._AES.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Hash._SHA256.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Hash._SHA512.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Random.OSRNG.winrandom.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Util._counter.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/Crypto.Util.strxor.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/_ctypes.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/_hashlib.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/_socket.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/_ssl.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/bz2.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fte.cDFA.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy.zip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy/VERSION", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy/defs", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/fteproxy/defs/-.json", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/meek-client-torbrowser.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/meek-client.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/obfs4proxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/obfsproxy.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/obfsproxy.zip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/pyexpat.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/python27.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/select.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/terminateprocess-buffer.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/unicodedata.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/w9xpopen.exe", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/PluggableTransports/zope.interface._zope_interface_coptimizations.pyd", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/geoip", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/geoip6", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice/backup", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice/backup/backups_private_key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice/backup/backups_private_key/*", "write";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice/hostname", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/hiddenservice/private_key", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libeay32.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libevent-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libevent_core-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libevent_extra-2-0-5.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libgcc_s_sjlj-1.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libgmp-10.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/libssp-0.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/ssleay32.dll", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/tor.exe", "read,write,delete,execute";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/torrc", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/torrc.orig.1", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/tor/zlib1.dll", "read,write,delete";
 
     /* Wallet */
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BSQ_wallet\-_bisq_BSQ.wallet", "write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet", "read";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\backup\backups_bisq_BTC_wallet\-_bisq_BTC.wallet", "write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq.spvchain", "read,write";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq_BSQ.wallet", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\bisq_BTC.wallet", "read,write,delete";
-    permission java.io.FilePermission "${user.home}\Bisq\btc_mainnet\wallet\wallet-.tmp", "read,write";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/backup", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/backup/backups_bisq_BSQ_wallet", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/backup/backups_bisq_BSQ_wallet/-_bisq_BSQ.wallet", "write";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/backup/backups_bisq_BTC_wallet", "read";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/backup/backups_bisq_BTC_wallet/-_bisq_BTC.wallet", "write";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/bisq.spvchain", "read,write";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/bisq_BSQ.wallet", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/bisq_BTC.wallet", "read,write,delete";
+    permission java.io.FilePermission "${user.home}/Bisq/btc_mainnet/wallet/wallet-.tmp", "read,write";
 
 
     /* TODO images loaded from jar */
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\alert_round.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\avatars\avatar_15.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\blue_circle.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\btcaverage.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\connection\tor.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\green_circle.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\logo_splash.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\account.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\buyoffer.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\dao.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\disputes.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\funds.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\market.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\portfolio.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\selloffer.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\selloffer_active.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\nav\settings.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\poloniex.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\sell_large.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\sell_white.png", "read";
-    permission java.io.FilePermission "jar:file:shaded.jar!\images\spinner.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/alert_round.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/avatars/avatar_15.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/blue_circle.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/btcaverage.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/connection/tor.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/green_circle.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/logo_splash.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/account.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/buyoffer.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/dao.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/disputes.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/funds.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/market.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/portfolio.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/selloffer.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/selloffer_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/settings.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/poloniex.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/sell_large.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/sell_white.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/spinner.png", "read";
 
 
     /* TODO do we need so open? */
