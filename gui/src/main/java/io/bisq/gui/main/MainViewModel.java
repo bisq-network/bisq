@@ -306,7 +306,6 @@ public class MainViewModel implements ViewModel {
         //TODO remove after v0.5.2
         String key = "revertIdCheckRequirement";
         if (preferences.showAgain(key) &&
-                Version.VERSION.equals("0.5.2") &&
                 user.getPaymentAccounts() != null &&
                 user.getPaymentAccounts().stream()
                         .filter(e -> e.getPaymentMethod().getId().equals(PaymentMethod.SEPA_ID) ||
