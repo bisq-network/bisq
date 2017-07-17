@@ -1,4 +1,9 @@
 language: java
+
+os:
+  - linux
+  - osx
+
 jdk:
     - oraclejdk8
 
@@ -14,7 +19,8 @@ install:
   - mvn clean install -DskipTests
   - cd ..
 
-script: mvn clean install -DskipTests
+# -Dgpg.skip to not sign installer with gpg, if omitted add a -Dgpg.passphrase=thephrase or use encrypted entry in settings.xml see http://maven.apache.org/plugins/maven-gpg-plugin/usage.html
+script: mvn clean install -DskipTests -Dgpg.skip
 
 #notifications:
 #  irc:
