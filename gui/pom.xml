@@ -133,190 +133,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <!--TODO create 3 profiles, use travis multi os build to create installer-->
-                <!--TODO signature with gpg?-->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <!--TODO require C:\Program Files (x86)\Inno Setup 5 in path  amd installed prior-->
-                        <id>package-win-installer-32bits</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <!--Add project resource directories to classpath. This is especially useful if the exec
-                            plugin is used for a code generator that reads its settings from the classpath.-->
-                            <addResourcesToClasspath>false</addResourcesToClasspath>
-
-                            <!--so custom config package are found, note that basedir is the default, here just to
-                             show you how these files are found -->
-                            <workingDirectory>${basedir}</workingDirectory>
-
-                            <!-- https://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
-                            <executable>${env.JAVA_HOME}/bin/javapackager</executable>
-
-                            <arguments>
-                                <argument>-deploy</argument>
-                                <argument>-native</argument>
-                                <argument>exe</argument>
-
-                                <argument>-BappVersion=${project.version}</argument>
-
-                                <argument>-name</argument>
-                                <argument>Bisq</argument>
-                                <argument>-title</argument>
-                                <argument>Bisq</argument>
-                                <argument>-vendor</argument>
-                                <argument>Bisq</argument>
-
-                                <!-- windows specifics -->
-                                <argument>-Bicon=${basedir}/package/windows/Bisq.ico</argument>
-
-                                <argument>-appclass</argument>
-                                <argument>io.bisq.gui.app.BisqAppMain</argument>
-                                <argument>-srcfiles</argument>
-                                <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
-                                <argument>-outfile</argument>
-                                <argument>${project.artifactId}-app</argument>
-
-                                <argument>-outdir</argument>
-                                <argument>./target/win32</argument>
-
-                                <argument>-v</argument>
-                                <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
-
-                                <!--TODO add java.security-->
-                                <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
-                                <!--<argument>-srcfiles</argument>-->
-                                <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package-osx-installer</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${env.JAVA_HOME}/bin/javapackager</executable>
-                            <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
-                            <arguments>
-                                <argument>-deploy</argument>
-                                <argument>-native</argument>
-                                <argument>dmg</argument>
-                                <argument>-BappVersion=${project.version}</argument>
-
-                                <argument>-name</argument>
-                                <argument>Bisq</argument>
-                                <argument>-title</argument>
-                                <argument>Bisq</argument>
-                                <argument>-vendor</argument>
-                                <argument>Bisq</argument>
-
-                                <!-- osx specifics-->
-                                <argument>-Bicon=${basedir}/package/macosx/Bisq.icns</argument>
-
-                                <!--Value stored in the info plist for CFBundleIdentifier. This value must be globally
-                                unique and contain only letters, numbers, dots, and dashes. Reverse DNS order is
-                                recommended, for example, com.example.application.my-application.-->
-                                <argument>-Bmac.CFBundleIdentifier=io.bisq</argument>
-
-                                <!--Name of the application as it appears on the OS X Menu Bar. A name of less than 16
-                                characters is recommended. The default is the name attribute.-->
-                                <argument>-Bmac.CFBundleName=Bisq</argument>
-                                <!--Category for the application. The category must be in the list of categories
-                                   found on the Apple Developer website.-->
-                                <argument>-Bmac.category=Network</argument>
-
-                                <!--Name of the signing key used for Devleloper ID or Gatekeeper signing.
-                                If you imported a standard key from the Apple Developer Website, then that key
-                                is used by default. If no key can be identified, then the application is not signed.-->
-                                <!--<argument>mac.signing-key-developer-id-app=key</argument>-->
-
-                                <argument>-appclass</argument>
-                                <argument>io.bisq.gui.app.BisqAppMain</argument>
-                                <argument>-srcfiles</argument>
-                                <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
-                                <argument>-outfile</argument>
-                                <argument>${project.artifactId}-app</argument>
-
-                                <argument>-outdir</argument>
-                                <argument>./target/osx</argument>
-
-                                <argument>-v</argument>
-                                <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
-
-                                <!--TODO add java.security-->
-                                <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
-                                <!--<argument>-srcfiles</argument>-->
-                                <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package-linux-installer</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${env.JAVA_HOME}/bin/javapackager</executable>
-                            <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
-                            <arguments>
-                                <argument>-deploy</argument>
-                                <argument>-native</argument>
-                                <argument>deb</argument>
-                                <argument>-BappVersion=${project.version}</argument>
-
-                                <argument>-name</argument>
-                                <argument>Bisq</argument>
-                                <argument>-title</argument>
-                                <argument>Bisq</argument>
-                                <argument>-vendor</argument>
-                                <argument>Bisq</argument>
-
-                                <!-- linux specifics-->
-                                <argument>-Bcategory=Network</argument>
-                                <argument>-Bemail=team@bisq.io</argument>
-                                <argument>-BlicenseType=GPLv3</argument>
-                                <argument>-BlicenseFile=LICENSE</argument>
-                                <argument>-Bicon=${basedir}/package/linux/icon.png</argument>
-                                <argument>-BjvmOptions=-Xss1280k</argument>
-
-                                <argument>-appclass</argument>
-                                <argument>io.bisq.gui.app.BisqAppMain</argument>
-                                <argument>-srcfiles</argument>
-                                <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
-                                <argument>-outfile</argument>
-                                <argument>${project.artifactId}-app</argument>
-
-                                <argument>-outdir</argument>
-                                <argument>./target/linux</argument>
-
-                                <argument>-v</argument>
-                                <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
-
-                                <!--TODO add java.security-->
-                                <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
-                                <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
-                                <!--<argument>-srcfiles</argument>-->
-                                <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -355,9 +171,246 @@
 
     <profiles>
         <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!--TODO signature with gpg?-->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <execution>
+                                <!--TODO require C:\Program Files (x86)\Inno Setup 5 in path  amd installed prior-->
+                                <id>package-win-installer</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <!--Add project resource directories to classpath. This is especially useful if the exec
+                                    plugin is used for a code generator that reads its settings from the classpath.-->
+                                    <addResourcesToClasspath>false</addResourcesToClasspath>
+
+                                    <!--so custom config package are found, note that basedir is the default, here just to
+                                     show you how these files are found -->
+                                    <workingDirectory>${basedir}</workingDirectory>
+
+                                    <!-- https://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
+                                    <executable>${env.JAVA_HOME}/bin/javapackager</executable>
+
+                                    <arguments>
+                                        <argument>-deploy</argument>
+                                        <argument>-native</argument>
+                                        <argument>exe</argument>
+
+                                        <argument>-BappVersion=${project.version}</argument>
+
+                                        <argument>-name</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-title</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-vendor</argument>
+                                        <argument>Bisq</argument>
+
+                                        <!-- windows specifics -->
+                                        <argument>-Bicon=${basedir}/package/windows/Bisq.ico</argument>
+
+                                        <argument>-appclass</argument>
+                                        <argument>io.bisq.gui.app.BisqAppMain</argument>
+                                        <argument>-srcfiles</argument>
+                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>-outfile</argument>
+                                        <argument>${project.artifactId}-app</argument>
+
+                                        <argument>-outdir</argument>
+                                        <argument>./target/win32</argument>
+
+                                        <argument>-v</argument>
+                                        <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
+
+                                        <!--TODO add java.security-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
+                                        <!--<argument>-srcfiles</argument>-->
+                                        <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>unix</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!--TODO signature with gpg?-->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+
+                            <execution>
+                                <id>package-linux-installer</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${env.JAVA_HOME}/bin/javapackager</executable>
+                                    <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
+                                    <arguments>
+                                        <argument>-deploy</argument>
+                                        <argument>-native</argument>
+                                        <argument>deb</argument>
+                                        <argument>-BappVersion=${project.version}</argument>
+
+                                        <argument>-name</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-title</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-vendor</argument>
+                                        <argument>Bisq</argument>
+
+                                        <!-- linux specifics-->
+                                        <argument>-Bcategory=Network</argument>
+                                        <argument>-Bemail=team@bisq.io</argument>
+                                        <argument>-BlicenseType=GPLv3</argument>
+                                        <argument>-BlicenseFile=LICENSE</argument>
+                                        <argument>-Bicon=${basedir}/package/linux/icon.png</argument>
+                                        <argument>-BjvmOptions=-Xss1280k</argument>
+
+                                        <argument>-appclass</argument>
+                                        <argument>io.bisq.gui.app.BisqAppMain</argument>
+                                        <argument>-srcfiles</argument>
+                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>-outfile</argument>
+                                        <argument>${project.artifactId}-app</argument>
+
+                                        <argument>-outdir</argument>
+                                        <argument>./target/linux</argument>
+
+                                        <argument>-v</argument>
+                                        <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
+
+                                        <!--TODO add java.security-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
+                                        <!--<argument>-srcfiles</argument>-->
+                                        <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>macos</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!--TODO signature with gpg?-->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>package-osx-installer</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${env.JAVA_HOME}/bin/javapackager</executable>
+                                    <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
+                                    <arguments>
+                                        <argument>-deploy</argument>
+                                        <argument>-native</argument>
+                                        <argument>dmg</argument>
+                                        <argument>-BappVersion=${project.version}</argument>
+
+                                        <argument>-name</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-title</argument>
+                                        <argument>Bisq</argument>
+                                        <argument>-vendor</argument>
+                                        <argument>Bisq</argument>
+
+                                        <!-- osx specifics-->
+                                        <argument>-Bicon=${basedir}/package/macosx/Bisq.icns</argument>
+
+                                        <!--Value stored in the info plist for CFBundleIdentifier. This value must be globally
+                                        unique and contain only letters, numbers, dots, and dashes. Reverse DNS order is
+                                        recommended, for example, com.example.application.my-application.-->
+                                        <argument>-Bmac.CFBundleIdentifier=io.bisq</argument>
+
+                                        <!--Name of the application as it appears on the OS X Menu Bar. A name of less than 16
+                                        characters is recommended. The default is the name attribute.-->
+                                        <argument>-Bmac.CFBundleName=Bisq</argument>
+                                        <!--Category for the application. The category must be in the list of categories
+                                           found on the Apple Developer website.-->
+                                        <argument>-Bmac.category=Network</argument>
+
+                                        <!--Name of the signing key used for Devleloper ID or Gatekeeper signing.
+                                        If you imported a standard key from the Apple Developer Website, then that key
+                                        is used by default. If no key can be identified, then the application is not signed.-->
+                                        <!--<argument>mac.signing-key-developer-id-app=key</argument>-->
+
+                                        <argument>-appclass</argument>
+                                        <argument>io.bisq.gui.app.BisqAppMain</argument>
+                                        <argument>-srcfiles</argument>
+                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>-outfile</argument>
+                                        <argument>${project.artifactId}-app</argument>
+
+                                        <argument>-outdir</argument>
+                                        <argument>./target/osx</argument>
+
+                                        <argument>-v</argument>
+                                        <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
+
+                                        <!--TODO add java.security-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.debug=failure</argument>-->
+                                        <!--<argument>-BjvmOptions=-Djava.security.policy=file:bisq.policy</argument>-->
+                                        <!--<argument>-srcfiles</argument>-->
+                                        <!--<argument>"core/src/main/resources/bisq.policy"</argument>-->
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <!-- Verify the dependency chain: see https://github.com/gary-rowe/BitcoinjEnforcerRules for
           more information on this.
-       -->
+        -->
             <id>verify-toolchain</id>
             <activation>
                 <!-- you have the possibility to switch off for faster local development-->
