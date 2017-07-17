@@ -178,6 +178,15 @@
                 </os>
             </activation>
             <build>
+                <resources>
+                    <resource>
+                        <!--to evaluate placeholder in files-->
+                        <directory>${basedir}/package</directory>
+                        <filtering>true</filtering>
+                        <targetPath>${project.build.directory}/package</targetPath>
+                    </resource>
+                </resources>
+
                 <plugins>
                     <plugin>
                         <!--TODO signature with gpg?-->
@@ -199,7 +208,7 @@
 
                                     <!--so custom config package are found, note that basedir is the default, here just to
                                      show you how these files are found -->
-                                    <workingDirectory>${basedir}</workingDirectory>
+                                    <workingDirectory>${project.build.directory}/package</workingDirectory>
 
                                     <!-- https://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
                                     <executable>${env.JAVA_HOME}/bin/javapackager</executable>
@@ -229,7 +238,7 @@
                                         <argument>${project.artifactId}-app</argument>
 
                                         <argument>-outdir</argument>
-                                        <argument>./target/win32</argument>
+                                        <argument>${project.build.directory}/target/win32</argument>
 
                                         <argument>-v</argument>
                                         <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
@@ -280,6 +289,14 @@
                 </os>
             </activation>
             <build>
+                <resources>
+                    <resource>
+                        <!--to evaluate placeholder in files-->
+                        <directory>${basedir}/package</directory>
+                        <filtering>true</filtering>
+                        <targetPath>${project.build.directory}/package</targetPath>
+                    </resource>
+                </resources>
                 <plugins>
                     <plugin>
                         <!--TODO signature with gpg?-->
@@ -295,6 +312,10 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <!--so custom config package are found, note that basedir is the default, here just to
+                                         show you how these files are found -->
+                                    <workingDirectory>${project.build.directory}/package</workingDirectory>
+
                                     <executable>${env.JAVA_HOME}/bin/javapackager</executable>
                                     <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
                                     <arguments>
@@ -326,7 +347,7 @@
                                         <argument>${project.artifactId}-app</argument>
 
                                         <argument>-outdir</argument>
-                                        <argument>./target/linux</argument>
+                                        <argument>${project.build.directory}/target/linux</argument>
 
                                         <argument>-v</argument>
                                         <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
@@ -376,6 +397,14 @@
                 </os>
             </activation>
             <build>
+                <resources>
+                    <resource>
+                        <!--to evaluate placeholder in files-->
+                        <directory>${basedir}/package</directory>
+                        <filtering>true</filtering>
+                        <targetPath>${project.build.directory}/package</targetPath>
+                    </resource>
+                </resources>
                 <plugins>
                     <plugin>
                         <!--TODO signature with gpg?-->
@@ -390,6 +419,10 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <!--so custom config package are found, note that basedir is the default, here just to
+                                        show you how these files are found -->
+                                    <workingDirectory>${project.build.directory}/package</workingDirectory>
+
                                     <executable>${env.JAVA_HOME}/bin/javapackager</executable>
                                     <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
                                     <arguments>
@@ -433,7 +466,7 @@
                                         <argument>${project.artifactId}-app</argument>
 
                                         <argument>-outdir</argument>
-                                        <argument>./target/osx</argument>
+                                        <argument>${project.build.directory}/target/osx</argument>
 
                                         <argument>-v</argument>
                                         <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
