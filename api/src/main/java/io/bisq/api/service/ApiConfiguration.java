@@ -1,10 +1,15 @@
 package io.bisq.api.service;
 
-import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.Configuration;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class ApiConfiguration extends Configuration {
+    // these 2 lines were added for swagger configuration
+    @JsonProperty("swagger")
+    public SwaggerBundleConfiguration swaggerBundleConfiguration;
+
     @NotEmpty
     private String template;
 
