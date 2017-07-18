@@ -285,7 +285,6 @@
                                         <artifact>
                                             <file>${project.build.directory}/win32/bundles/Bisq.exe</file>
                                             <type>exe</type>
-                                            <classifier>install</classifier>
                                         </artifact>
                                     </artifacts>
                                 </configuration>
@@ -331,6 +330,7 @@
                                          show you how these files are found -->
                                     <workingDirectory>${project.build.directory}/package</workingDirectory>
 
+                                    <!--/usr/lib/jvm/java-8-openjdk-amd64-->
                                     <executable>${env.JAVA_HOME}/bin/javapackager</executable>
                                     <!-- http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javapackager.html -->
                                     <arguments>
@@ -357,15 +357,15 @@
                                         <argument>-appclass</argument>
                                         <argument>io.bisq.gui.app.BisqAppMain</argument>
                                         <argument>-srcfiles</argument>
-                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar:linux/LICENSE</argument>
                                         <argument>-outfile</argument>
                                         <argument>${project.artifactId}-app</argument>
 
                                         <argument>-outdir</argument>
-                                        <argument>${project.build.directory}/target/linux</argument>
+                                        <argument>${project.build.directory}/linux</argument>
 
                                         <argument>-v</argument>
-                                        <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
+                                        <argument>-Bruntime=${env.JAVA_HOME}/jre</argument>
 
                                         <!--TODO add java.security-->
                                         <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
@@ -407,9 +407,8 @@
                                 <configuration>
                                     <artifacts>
                                         <artifact>
-                                            <file>${project.build.directory}/linux/bundles/Bisq.exe</file>
-                                            <type>exe</type>
-                                            <classifier>install</classifier>
+                                            <file>${project.build.directory}/linux/bundles/bisq-${project.version}.deb</file>
+                                            <type>deb</type>
                                         </artifact>
                                     </artifacts>
                                 </configuration>
@@ -496,7 +495,7 @@
                                         <argument>${project.artifactId}-app</argument>
 
                                         <argument>-outdir</argument>
-                                        <argument>${project.build.directory}/target/osx</argument>
+                                        <argument>${project.build.directory}/osx</argument>
 
                                         <argument>-v</argument>
                                         <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
@@ -543,8 +542,7 @@
                                     <artifacts>
                                         <artifact>
                                             <file>${project.build.directory}/osx/bundles/Bisq.dmg</file>
-                                            <type>exe</type>
-                                            <classifier>install</classifier>
+                                            <type>dmg</type>
                                         </artifact>
                                     </artifacts>
                                 </configuration>
