@@ -3,7 +3,11 @@ package io.bisq.api.service;
 import com.codahale.metrics.annotation.Timed;
 import io.bisq.api.BitsquareProxy;
 import io.bisq.api.api.*;
+import io.bisq.core.offer.OfferPayload;
+import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
@@ -11,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Api(value = "api")
+//@Path("/api/v1")
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 public class ApiResource {
@@ -29,7 +35,7 @@ public class ApiResource {
         this.counter = new AtomicLong();
         this.bitsquareProxy = bitsquareProxy;
         currencyList = bitsquareProxy.getCurrencyList();
-        marketList  = bitsquareProxy.getMarketList();
+        marketList = bitsquareProxy.getMarketList();
     }
 
     ///////////////// ACCOUNT ///////////////////////////
@@ -53,19 +59,18 @@ public class ApiResource {
     ///////////////// MARKET ///////////////////////////
 
     /**
-     Markets
-
-     market_list
-
-     Returns list of all markets
-
-     Params
-
-     None
-     Example Return
-
-     [ { "pair": "dash_btc", "lsymbol": "DASH", "rsymbol": "BTC", }, ... ]
-
+     * Markets
+     * <p>
+     * market_list
+     * <p>
+     * Returns list of all markets
+     * <p>
+     * Params
+     * <p>
+     * None
+     * Example Return
+     * <p>
+     * [ { "pair": "dash_btc", "lsymbol": "DASH", "rsymbol": "BTC", }, ... ]
      */
     @GET
     @Timed
@@ -77,7 +82,7 @@ public class ApiResource {
 
     ///////////////// OFFER ///////////////////////////
 
-    @GET
+    @DELETE
     @Timed
     @Path("/offer_cancel")
     public boolean offerCancel(@QueryParam("offer_id") String offerId) {
@@ -85,12 +90,12 @@ public class ApiResource {
 
     }
 
-    @DELETE
+    @GET
     @Timed
     @Path("/offer_detail")
     public OfferData offerDetail(@QueryParam("offer_id") String offerId) {
         Optional<OfferData> offerDetail = bitsquareProxy.getOfferDetail(offerId);
-        if(offerDetail.isPresent()) {
+        if (offerDetail.isPresent()) {
             return offerDetail.get();
         }
         return null;
@@ -114,7 +119,7 @@ public class ApiResource {
                                      @DefaultValue("0") @QueryParam("start") long start,
                                      @DefaultValue("9223372036854775807") @QueryParam("end") long end,
                                      @DefaultValue("100") @QueryParam("limit") int limit
-                          ) {
+    ) {
         return bitsquareProxy.getOfferList();
     }
 
@@ -133,20 +138,20 @@ public class ApiResource {
     @Timed
     @Path("/offer_make")
     public boolean offerMake(@QueryParam("market") String market,
-                          @QueryParam("payment_account_id") String accountId,
-                          @QueryParam("direction") String direction,
-                          @QueryParam("amount") BigDecimal amount,
-                          @QueryParam("min_amount") BigDecimal minAmount,
-                          @DefaultValue("fixed") @QueryParam("price_type") String fixed,
-                          @DefaultValue("100") @QueryParam("price") String price) {
-        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100", "1.0");
+                             @NotEmpty @QueryParam("payment_account_id") String accountId,
+                             @NotNull @QueryParam("direction") OfferPayload.Direction direction,
+                             @NotNull @QueryParam("amount") BigDecimal amount,
+                             @NotNull @QueryParam("min_amount") BigDecimal minAmount,
+                             @DefaultValue("fixed") @QueryParam("price_type") String fixed,
+                             @DefaultValue("100") @QueryParam("price") String price) {
+        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100");
     }
 
-   /**
-    * param	        type	desc	                                                required	values	default
-    * offer_id	    string	Identifies the offer to accept	                        1
-    * payment_account_id	string	Identifies the payment account to receive funds into	1
-    * amount	    string	amount to spend	                                        1
+    /**
+     * param	        type	desc	                                                required	values	default
+     * offer_id	    string	Identifies the offer to accept	                        1
+     * payment_account_id	string	Identifies the payment account to receive funds into	1
+     * amount	    string	amount to spend	                                        1
      */
     @GET
     @Timed
@@ -166,18 +171,18 @@ public class ApiResource {
 
     /**
      * wallet_detail
-
-     Returns wallet info. balance, etc.
-
-     Params
-
-     None
-     Example Return
-
-     {
-     "balance": 0.5623,
-     // TBD
-     }
+     * <p>
+     * Returns wallet info. balance, etc.
+     * <p>
+     * Params
+     * <p>
+     * None
+     * Example Return
+     * <p>
+     * {
+     * "balance": 0.5623,
+     * // TBD
+     * }
      */
     @GET
     @Timed
@@ -191,6 +196,7 @@ public class ApiResource {
      * status	string	filter by wether each address has a non-zero balance or not		funded | unfunded | both	both
      * start	int	starting index, zero based			0
      * limit	int	max number of addresses to return.			100
+     *
      * @return
      */
     @GET
@@ -204,23 +210,23 @@ public class ApiResource {
 
     /**
      * wallet_tx_list
-
-     Returns list of wallet transactions according to criteria
-
-     Param	Type	Required?	Default	Description
-     start	timestamp	no	0	start of period
-     end	timestamp	no	INT_MAX	end of period
-     limit	int	no	100	maximum records to return.
-     Example Return
-
-     {
-     "amount": 1.3453,
-     "type": "send",
-     "address": "14w4mZx4b6JjtEd9BZPnLCSXzbHjKH3Pn3",
-     "time": <timestamp>,
-     "confirmations": 5
-     // TBD
-     }
+     * <p>
+     * Returns list of wallet transactions according to criteria
+     * <p>
+     * Param	Type	Required?	Default	Description
+     * start	timestamp	no	0	start of period
+     * end	timestamp	no	INT_MAX	end of period
+     * limit	int	no	100	maximum records to return.
+     * Example Return
+     * <p>
+     * {
+     * "amount": 1.3453,
+     * "type": "send",
+     * "address": "14w4mZx4b6JjtEd9BZPnLCSXzbHjKH3Pn3",
+     * "time": <timestamp>,
+     * "confirmations": 5
+     * // TBD
+     * }
      */
     @GET
     @Timed
@@ -228,11 +234,10 @@ public class ApiResource {
     public WalletTransactions walletTransactionList(@DefaultValue("0") @QueryParam("start") Integer start,
                                                     @DefaultValue(STRING_END_INT_MAX_VALUE) @QueryParam("end") Integer end,
                                                     @DefaultValue("100") @QueryParam("start") Integer limit
-                                               ) {
+    ) {
 //        return bitsquareProxy.getWalletTransactions(start, end, limit);
         return null;
     }
-
 
 
 }

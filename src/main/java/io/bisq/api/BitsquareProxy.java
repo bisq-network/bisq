@@ -4,20 +4,26 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import io.bisq.api.api.*;
 import io.bisq.api.api.Currency;
+import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.util.MathUtils;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.SameBankAccount;
-import io.bisq.core.payment.SpecificBanksAccount;
+import io.bisq.core.payment.*;
+import io.bisq.core.provider.fee.FeeService;
+import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.core.util.CoinUtil;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +31,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,26 +45,26 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public class BitsquareProxy {
-    @Inject
     private WalletService walletService;
-    @Inject
     private User user;
-    @Inject
     private TradeManager tradeManager;
-    @Inject
     private OpenOfferManager openOfferManager;
-    @Inject
     private OfferBookService offerBookService;
-    @Inject
     private P2PService p2PService;
-    @Inject
     private KeyRing keyRing;
-    @Inject
     private PriceFeedService priceFeedService;
+    private FeeService feeService;
+    private Preferences preferences;
+    private BsqWalletService bsqWalletService;
+
+
+    private MarketPrice marketPrice;
+    private boolean marketPriceAvailable;
+
 
     public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                           OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
-                          PriceFeedService priceFeedService, User user) {
+                          PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -66,6 +73,9 @@ public class BitsquareProxy {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.user = user;
+        this.feeService = feeService;
+        this.preferences = preferences;
+        this.bsqWalletService = bsqWalletService;
     }
 
     public CurrencyList getCurrencyList() {
@@ -89,9 +99,13 @@ public class BitsquareProxy {
     }
 
 
+    private List<PaymentAccount> getPaymentAccountList() {
+        return new ArrayList(user.getPaymentAccounts());
+    }
+
     public AccountList getAccountList() {
         AccountList accountList = new AccountList();
-        accountList.accounts = user.getPaymentAccounts().stream()
+        accountList.accounts = getPaymentAccountList().stream()
                 .map(paymentAccount -> new Account(paymentAccount)).collect(Collectors.toSet());
         return accountList;
     }
@@ -126,18 +140,30 @@ public class BitsquareProxy {
 
     }
 
-    public boolean offerMake(String market, String accountId, String direction, BigDecimal amount, BigDecimal minAmount,
-                          boolean useMarketBasedPrice, double marketPriceMarginParam, String currencyCode, String counterCurrencyCode, String fiatPrice, String versionNr) {
+    public boolean offerMake(String market, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+                             boolean useMarketBasedPrice, double marketPriceMargin, String currencyCode, String counterCurrencyCode, String fiatPrice) {
         // TODO: detect bad direction, bad market, no paymentaccount for user
         // PaymentAccountUtil.isPaymentAccountValidForOffer
-        Optional<Account> optionalAccount = getAccountList().getPaymentAccounts().stream()
-                .filter(account1 -> account1.getPayment_account_id().equals(accountId)).findFirst();
+        Optional<PaymentAccount> optionalAccount = getPaymentAccountList().stream()
+                .filter(account1 -> account1.getId().equals(accountId)).findFirst();
         if(!optionalAccount.isPresent()) {
             // return an error
+            log.error("Colud not find payment account with id:{}", accountId);
             return false;
         }
-        Account account = optionalAccount.get();
-        PaymentAccount paymentAccount = user.getPaymentAccount(account.getPayment_account_id());
+        PaymentAccount paymentAccount = optionalAccount.get();
+
+        // COPIED from CreateDataOfferModel: TODO refactor uit of GUI module  /////////////////////////////
+        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
+        ArrayList<String> acceptedCountryCodes = null;
+        if (paymentAccount instanceof SepaAccount) {
+            acceptedCountryCodes = new ArrayList<>();
+            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
+        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
+            acceptedCountryCodes = new ArrayList<>();
+            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
+        }
+        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
         ArrayList<String> acceptedBanks = null;
         if (paymentAccount instanceof SpecificBanksAccount) {
             acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
@@ -145,16 +171,30 @@ public class BitsquareProxy {
             acceptedBanks = new ArrayList<>();
             acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
         }
+        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
+        long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
+        boolean isPrivateOffer = false;
+        boolean useAutoClose = false;
+        boolean useReOpenAfterAutoClose = false;
+        long lowerClosePrice = 0;
+        long upperClosePrice = 0;
+        String hashOfChallenge = null;
+        HashMap<String, String> extraDataMap = null;
+
+        // COPIED from CreateDataOfferModel /////////////////////////////
+
+        updateMarketPriceAvailable(currencyCode);
 
         // TODO there are a lot of dummy values in this constructor !!!
+        Coin coinAmount = Coin.valueOf(amount.longValueExact());
         OfferPayload offerPayload = new OfferPayload(
                 UUID.randomUUID().toString(),
                 new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
-                OfferPayload.Direction.valueOf(direction),
+                direction,
                 Long.valueOf(fiatPrice),
-                marketPriceMarginParam,
+                marketPriceMargin,
                 useMarketBasedPrice,
                 amount.longValueExact(),
                 minAmount.longValueExact(),
@@ -162,39 +202,91 @@ public class BitsquareProxy {
                 counterCurrencyCode,
                 (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
                 (ArrayList<NodeAddress>) user.getAcceptedMediatorAddresses(),
-                account.getContract_data().getPayment_method_id(),
-                account.getPayment_account_id(),
-                "TO BE FILLED IN", // offerfeepaymenttxid
-                account.getCountry().toString(),
-                account.getAccepted_country_codes(),
-                account.getBank_id(),
+                paymentAccount.getPaymentMethod().getId(),
+                paymentAccount.getId(),
+                null, // "TO BE FILLED IN", // offerfeepaymenttxid ???
+                countryCode,
+                acceptedCountryCodes,
+                bankId,
                 acceptedBanks,
-                versionNr,
-                0,
-                0,
-                0,
-                true,
-                0,
-                0,
-                0,
-                0,
-                true,
-                true,
-                0,
-                0,
-                true,
-                null,
-                null,
-                0
+                Version.VERSION,
+                walletService.getLastBlockSeenHeight(),
+                feeService.getTxFee(600).value,
+                getMakerFee(coinAmount, marketPriceMargin).value,
+                preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
+                preferences.getBuyerSecurityDepositAsCoin().value,
+                Restrictions.getSellerSecurityDeposit().value,
+                maxTradeLimit,
+                maxTradePeriod,
+                useAutoClose,
+                useReOpenAfterAutoClose,
+                upperClosePrice,
+                lowerClosePrice,
+                isPrivateOffer,
+                hashOfChallenge,
+                extraDataMap,
+                Version.TRADE_PROTOCOL_VERSION
                 );
 
         Offer offer = new Offer(offerPayload); // priceFeedService);
 
-        // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
-        openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
-                true, (transaction) -> log.info("Result is "+transaction));
+        try {
+            // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
+            openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
+                    true, (transaction) -> log.info("Result is " + transaction));
+        } catch(Throwable e) {
+            return false;
+        }
         return true;
     }
+
+    /// START TODO refactor out of GUI module ////
+
+    boolean isBsqForFeeAvailable(Coin amount, double marketPriceMargin) {
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                getMakerFee(false, amount, marketPriceMargin) != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                getMakerFee(false, amount, marketPriceMargin) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false, amount, marketPriceMargin)).isNegative();
+    }
+
+    boolean isCurrencyForMakerFeeBtc(Coin amount, double marketPriceMargin) {
+        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount, marketPriceMargin);
+    }
+
+    private void updateMarketPriceAvailable(String baseCurrencyCode) {
+        marketPrice = priceFeedService.getMarketPrice(baseCurrencyCode);
+        marketPriceAvailable = (marketPrice != null );
+    }
+
+    @Nullable
+    public Coin getMakerFee(Coin amount, double marketPriceMargin) {
+        return getMakerFee(isCurrencyForMakerFeeBtc(amount, marketPriceMargin), amount, marketPriceMargin);
+    }
+
+    @Nullable
+    Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount, double marketPriceMargin) {
+        if (amount != null) {
+            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
+            double makerFeeAsDouble = (double) feePerBtc.value;
+            if (marketPriceAvailable) {
+                if (marketPriceMargin > 0)
+                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
+                else
+                    makerFeeAsDouble = 0;
+                // For BTC we round so min value change is 100 satoshi
+                if (isCurrencyForMakerFeeBtc)
+                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
+            }
+
+            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
+        } else {
+            return null;
+        }
+    }
+
+    /// STOP TODO refactor out of GUI module ////
+
 
     public WalletDetails getWalletDetails() {
         if (!walletService.isWalletReady()) {

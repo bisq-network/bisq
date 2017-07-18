@@ -128,7 +128,7 @@ public class Api {
         });
         try {
 
-            injector.getInstance(DropwizardApplication.class).run("server", "bitsquare-api.yml");
+            injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
         } catch (Exception e) {
             e.printStackTrace();
         }

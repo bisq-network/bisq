@@ -51,7 +51,7 @@ public class ApiMain extends BisqExecutable {
 
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        BisqEnvironment.setDefaultAppName("Bitsquare_api");
+        BisqEnvironment.setDefaultAppName("Bisq_api");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -77,8 +77,9 @@ public class ApiMain extends BisqExecutable {
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(ApiMain.class.getClassLoader());
-
-        new ApiMain().execute(args);
+        if (options.has(AppOptionKeys.ENABLE_API) && options.valueOf(AppOptionKeys.ENABLE_API).equals(true)) {
+            new ApiMain().execute(args);
+        }
     }
 
     @Override
