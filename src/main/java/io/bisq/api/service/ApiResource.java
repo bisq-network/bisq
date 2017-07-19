@@ -52,6 +52,7 @@ public class ApiResource {
     @GET
     @Timed
     @Path("/currency_list")
+    // @CacheControl(maxAge=6, maxAgeUnit = TimeUnit.HOURS)
     public CurrencyList currencyList() {
         return currencyList;
     }
@@ -143,7 +144,7 @@ public class ApiResource {
                              @NotNull @QueryParam("amount") BigDecimal amount,
                              @NotNull @QueryParam("min_amount") BigDecimal minAmount,
                              @DefaultValue("fixed") @QueryParam("price_type") String fixed,
-                             @DefaultValue("100") @QueryParam("price") String price) {
+                             @NotEmpty @QueryParam("price") String price) {
         return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100");
     }
 
