@@ -100,17 +100,25 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     private static String defaultUserDataDir() {
-        String property = System.getProperty("user.home");
-        if (Utilities.isWindows()) {
-            // TODO files need to be located in user.home not in roaming
-            // TBD why it was there originally
-            // migration!
-            return property;
+
+        String property = System.getProperty("bisq.conf");
+
+        if ("".equals(property)) {
+            if (Utilities.isWindows()) {
+                // TODO files need to be located in user.home not in roaming
+                // TBD why it was there originally
+                // migration!
+                property = System.getProperty("user.home");
+            } else if (Utilities.isOSX())
+                property = Paths.get(property, "Library", "Application Support").toString();
+            else // *nix
+                property = Paths.get(property, ".local", "share").toString();
         }
-        else if (Utilities.isOSX())
-            return Paths.get(property, "Library", "Application Support").toString();
-        else // *nix
-            return Paths.get(property, ".local", "share").toString();
+
+        // TODO we need another variable or a subdir of bisq.home for java policy FilePermission
+        System.setProperty("bisq.conf", property);
+
+        return property;
     }
 
     private static String appDataDir(String userDataDir, String appName) {
