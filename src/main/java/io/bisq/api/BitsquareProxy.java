@@ -1,7 +1,6 @@
 package io.bisq.api;
 
 import com.google.common.base.Strings;
-import com.google.inject.Inject;
 import io.bisq.api.api.*;
 import io.bisq.api.api.Currency;
 import io.bisq.common.app.Version;
@@ -12,10 +11,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.WalletService;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferBookService;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.offer.*;
 import io.bisq.core.payment.*;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
@@ -26,6 +22,7 @@ import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
+import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -110,16 +107,18 @@ public class BitsquareProxy {
         return accountList;
     }
 
-    public boolean offerCancel(String offerId) {
+    public boolean offerCancel(String offerId) throws Exception {
         if (Strings.isNullOrEmpty(offerId)) {
-            return false;
+            throw new Exception("offerId is null");
         }
-        Optional<Offer> offer = offerBookService.getOffers().stream().filter(offer1 -> offerId.equals(offer1.getId())).findAny();
-        if (!offer.isPresent()) {
-            return false;
+        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
+        if (!openOfferById.isPresent()) {
+            throw new Exception("Offer with id:" + offerId + " was not found.");
         }
         // do something more intelligent here, maybe block till handler is called.
-        offerBookService.removeOffer(offer.get().getOfferPayload(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+        //Platform.runLater(() -> offerBookService.removeOffer(offer.get().getOfferPayload(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
+        Platform.runLater(() -> openOfferManager.removeOpenOffer(openOfferById.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
+
         return true;
     }
 
