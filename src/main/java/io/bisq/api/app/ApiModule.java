@@ -23,13 +23,18 @@ import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.proto.network.NetworkProtoResolver;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
+import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.offer.OfferModule;
+import io.bisq.core.proto.network.CoreNetworkProtoResolver;
+import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -51,12 +56,15 @@ public class ApiModule extends AppModule {
 
     @Override
     protected void configure() {
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+
+        //bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
+        // bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
-        bind(DropwizardApplication.class).in(Singleton.class);
+        bind(Preferences.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
@@ -64,7 +72,9 @@ public class ApiModule extends AppModule {
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+        bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
+        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
+        bind(DropwizardApplication.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());
@@ -73,6 +83,8 @@ public class ApiModule extends AppModule {
         install(offerModule());
         install(torModule());
         install(bitcoinModule());
+        install(daoModule());
+        //install(guiModule());
         install(alertModule());
         install(filterModule());
     }
@@ -107,5 +119,9 @@ public class ApiModule extends AppModule {
 
     private BitcoinModule bitcoinModule() {
         return new BitcoinModule(environment);
+    }
+
+    private DaoModule daoModule() {
+        return new DaoModule(environment);
     }
 }

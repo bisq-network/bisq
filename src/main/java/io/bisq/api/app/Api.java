@@ -38,7 +38,7 @@ public class Api {
     private final Injector injector;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
-    private final WalletService walletService;
+    //private final WalletService walletService;
     private final ApiModule apiModule;
     private final User user;
     private final P2PService p2pService;
@@ -85,7 +85,7 @@ public class Api {
         Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
-        walletService = injector.getInstance(WalletService.class);
+        //walletService = injector.getInstance(WalletService.class);
         user = injector.getInstance(User.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
 
@@ -141,7 +141,7 @@ public class Api {
         });
     }
 
-    private void gracefulShutDown(ResultHandler resultHandler) {
+    public void gracefulShutDown(ResultHandler resultHandler) {
         log.debug("gracefulShutDown");
         try {
             if (injector != null) {
