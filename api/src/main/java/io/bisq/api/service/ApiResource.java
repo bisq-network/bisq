@@ -86,9 +86,8 @@ public class ApiResource {
     @DELETE
     @Timed
     @Path("/offer_cancel")
-    public boolean offerCancel(@QueryParam("offer_id") String offerId) {
+    public boolean offerCancel(@QueryParam("offer_id") String offerId) throws Exception {
         return bitsquareProxy.offerCancel(offerId);
-
     }
 
     @GET
