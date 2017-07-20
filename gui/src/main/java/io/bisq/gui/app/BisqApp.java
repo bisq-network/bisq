@@ -175,7 +175,7 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-            injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
+            //injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
 /*
             PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
             Injector injector = Guice.createInjector(new GraphvizModule());

@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 import io.bisq.api.BitsquareProxy;
 import io.bisq.api.health.CurrencyListHealthCheck;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
@@ -47,6 +47,9 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 
     @Inject
     FeeService feeService;
+
+    @Inject
+    Storage storage;
 
     @Inject
     private Preferences preferences;
@@ -87,6 +90,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
                 configuration.getDefaultName(),
                 bitsquareProxy
         );
+        preferences.readPersisted();
         environment.jersey().register(resource);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bitsquareProxy));
     }

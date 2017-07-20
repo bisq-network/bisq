@@ -78,7 +78,8 @@ class BisqAppModule extends AppModule {
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
+
+
 
         // ordering is used for shut down sequence
         install(tradeModule());
