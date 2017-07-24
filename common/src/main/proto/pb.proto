@@ -410,24 +410,10 @@ message PubKeyScript {
     string hex = 5;
 }
 
-message TxInputVo {
+message TxInput {
     string tx_id = 1;
     int32 tx_output_index = 2;
-}
-
-message TxInput {
-    TxInputVo tx_input_vo = 1;
-    TxOutput connected_tx_output = 2;
-}
-
-message TxOutputVo {
-    int32 index = 1;
-    int64 value = 2;
-    string tx_id = 3;
-    PubKeyScript pub_key_script = 4;
-    string address = 5;
-    bytes op_return_data = 6;
-    int32 block_height= 7;
+    TxOutput connected_tx_output = 3;
 }
 
 message SpentInfo {
@@ -449,11 +435,17 @@ enum TxOutputType {
 }
 
 message TxOutput {
-    TxOutputVo tx_output_vo = 1;
-    bool is_unspent = 2;
-    bool is_verified = 3;
-    TxOutputType tx_output_type = 4;
-    SpentInfo spent_info = 5;
+    int32 index = 1;
+    int64 value = 2;
+    string tx_id = 3;
+    PubKeyScript pub_key_script = 4;
+    string address = 5;
+    bytes op_return_data = 6;
+    int32 block_height= 7;
+    bool is_unspent = 8;
+    bool is_verified = 9;
+    TxOutputType tx_output_type = 10;
+    SpentInfo spent_info = 11;
 }
 
 message TxVo {
@@ -486,16 +478,12 @@ message Tx {
     int64 burnt_fee = 4;
     TxType tx_type = 5;
 }
-
-message BsqBlockVo {
+    
+message BsqBlock {
     int32 height = 1;
     string hash = 2;
     string previous_block_hash = 3;
-}
-    
-message BsqBlock {
-    BsqBlockVo bsq_block_vo = 1;
-    repeated Tx txs = 2;
+    repeated Tx txs = 4;
 }
 
 message TxIdIndexTuple {
