@@ -1,8 +1,15 @@
 
-/* A codeBase with a trailing "/" matches all class files (not JAR files) in the specified directory.
+/*
+
+http://docs.oracle.com/javase/8/docs/technotes/guides/security/PolicyFiles.html
+
+A codeBase with a trailing "/" matches all class files (not JAR files) in the specified directory.
 A codeBase with a trailing "/*" matches all files (both class and JAR files) contained in that directory.
 A codeBase with a trailing "/-" matches all files (both class and JAR files) in the directory and recursively
-  all files in subdirectories contained in that directory.  */
+  all files in subdirectories contained in that directory.
+
+${/}  Is translated into Unix / or MSWin \
+   */
 
 /*
 To run with SecurityManager and default Java security policy, which is $JAVA_HOME/jre/lib/security/java.policy:
