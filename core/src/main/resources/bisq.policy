@@ -39,15 +39,18 @@ grant codeBase "file:${bisq.home}/lib/bcprov-jdk15on.jar" {
   permission java.util.PropertyPermission "org.bouncycastle.ec.disable_mqv", "read";
 };
 
-// linux specifics
-grant codeBase "file:${JAVA_HOME}/jre/lib/ext/java-atk-wrapper.jar" {
-  permission java.awt.AWTPermission "accessEventQueue";
-  permission java.awt.AWTPermission "listenToAllAWTEvents";
+
+grant {
   permission java.io.FilePermission "/usr/bin/xprop", "execute";
-  permission java.io.FilePermission "${JAVA_HOME}/jre/lib/ext/amd64/libatk-wrapper.so", "read";
-  permission java.io.FilePermission "${JAVA_HOME}/jre/lib/ext/libatk-wrapper.so", "read";
+
+  permission java.io.FilePermission "<<ALL FILES>>", "read";
+
+  permission java.awt.AWTPermission "listenToAllAWTEvents";
+  permission java.awt.AWTPermission "accessEventQueue";
+
   permission java.lang.RuntimePermission "loadLibrary.atk-wrapper";
 };
+
 
 // windows temp
 grant codeBase "file:${bisq.conf}/AppData/Local/Temp/-" {
@@ -64,11 +67,8 @@ grant codeBase "file:${bisq.home}/shaded.jar" {
     permission java.awt.AWTPermission "accessSystemTray";
     permission java.awt.AWTPermission "showWindowWithoutWarningBanner";
 
-    // require by javafw on linux
-    permission java.io.FilePermission "/usr/bin/xprop", "execute";
-
-    // TODO ALARM required by linux only: not acceptable
-    // permission java.io.FilePermission "<<ALL FILES>>", "execute";
+    // because of TorNetworkNode
+    permission java.io.FilePermission "<<ALL FILES>>", "execute";
 
     // App data dir id under the apps control anyway
     permission java.io.FilePermission "${bisq.conf}/Bisq", "read,write";
