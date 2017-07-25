@@ -94,7 +94,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
-        // result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
@@ -243,7 +243,7 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        //  result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         if (!baseCurrencyCode.equals("DASH"))
