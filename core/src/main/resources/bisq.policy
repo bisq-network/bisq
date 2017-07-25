@@ -130,10 +130,29 @@ grant codeBase "file:${bisq.home}/shaded.jar" {
 
     // General socket
     permission java.net.SocketPermission "127.0.0.1:*", "listen,connect,resolve, accept";
-    permission java.net.SocketPermission "*:8333", "connect,resolve";
-    permission java.net.SocketPermission "*.onion:80", "connect,resolve";
 
-    // TODO seed for bitcoin, add DASH
+    // see https://github.com/dogecoin/dogecoin/blob/master/share/seeds/nodes_main.txt
+    permission java.net.SocketPermission "*.onion:80", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:8333", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:7033", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:8444", "connect,resolve";
+
+    // TODO do we limit or let Bisq connect,resolve to any host? (insecure?)
+
+    // Bitcoin seed node
+    // see https://github.com/bitcoin/bitcoin/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/bitcoin/bitcoin/blob/master/contrib/seeds/nodes_test.txt
+    // Dash seed node
+    // see https://github.com/dashpay/dash/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/dashpay/dash/blob/master/contrib/seeds/nodes_test.txt
+    permission java.net.SocketPermission "*:8333", "connect,resolve";
+
+    // Lite coin seed
+    // see https://github.com/litecoin-project/litecoin/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/litecoin-project/litecoin/blob/master/contrib/seeds/nodes_test.txt
+    permission java.net.SocketPermission "*:9333", "connect,resolve";
+
+    // bitcoin seed
     permission java.net.SocketPermission "bitseed.xf2.org", "resolve";
     permission java.net.SocketPermission "dnsseed.bitcoin.dashjr.org", "resolve";
     permission java.net.SocketPermission "dnsseed.bluematt.me", "resolve";
@@ -146,6 +165,9 @@ grant codeBase "file:${bisq.home}/shaded.jar" {
     permission java.net.SocketPermission "bitseed.xf2.org", "resolve";
     permission java.net.SocketPermission "dnsseed.bitcoin.dashjr.org", "resolve";
     permission java.net.SocketPermission "dnsseed.bluematt.me", "resolve";
+
+    // dogecoin seed node???
+    //TODO see https://github.com/dogecoin/dogecoin/blob/master/share/seeds/nodes_main.txt
 
     permission java.net.SocketPermission "localhost:23330", "listen,resolve";
 
