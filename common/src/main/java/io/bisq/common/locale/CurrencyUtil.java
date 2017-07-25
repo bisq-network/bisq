@@ -138,9 +138,12 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
+        result.add(new CryptoCurrency("EOS", "EOS", true));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
+        //TODO ticker?
+        //result.add(new CryptoCurrency("FILE", "Filecoin", true));
         result.add(new CryptoCurrency("GAME", "GameCredits"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
@@ -149,6 +152,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
+        result.add(new CryptoCurrency("IOTA", "IOTA", true));
         result.add(new CryptoCurrency("IOP", "Fermat"));
         result.add(new CryptoCurrency("JNS", "Janus", true));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
@@ -245,8 +249,6 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
-        if (!baseCurrencyCode.equals("DOGE"))
-            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
