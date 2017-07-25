@@ -1,8 +1,8 @@
 package io.bisq.api;
 
 import com.google.common.base.Strings;
-import io.bisq.api.api.*;
-import io.bisq.api.api.Currency;
+import io.bisq.api.model.*;
+import io.bisq.api.model.Currency;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 
 /**
- * This class is a proxy for all bitsquare features the api will use.
+ * This class is a proxy for all bitsquare features the model will use.
  * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  */
@@ -79,7 +79,7 @@ public class BitsquareProxy {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
         CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getSymbol(), fiatCurrency.getName(), "fiat"));
-        Collections.sort(currencyList.currencies, (io.bisq.api.api.Currency p1, io.bisq.api.api.Currency p2) -> p1.name.compareTo(p2.name));
+        Collections.sort(currencyList.currencies, (io.bisq.api.model.Currency p1, io.bisq.api.model.Currency p2) -> p1.name.compareTo(p2.name));
         return currencyList;
     }
 
@@ -91,7 +91,7 @@ public class BitsquareProxy {
         marketList.markets.addAll(btc);
         btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(toList());
         marketList.markets.addAll(btc);
-        Collections.sort(currencyList.currencies, (io.bisq.api.api.Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
+        Collections.sort(currencyList.currencies, (io.bisq.api.model.Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
         return marketList;
     }
 
@@ -116,25 +116,24 @@ public class BitsquareProxy {
             throw new Exception("Offer with id:" + offerId + " was not found.");
         }
         // do something more intelligent here, maybe block till handler is called.
-        //Platform.runLater(() -> offerBookService.removeOffer(offer.get().getOfferPayload(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
         Platform.runLater(() -> openOfferManager.removeOpenOffer(openOfferById.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
-
         return true;
     }
 
-    public Optional<OfferData> getOfferDetail(String offerId) {
+    public Optional<OfferData> getOfferDetail(String offerId) throws Exception {
         if (Strings.isNullOrEmpty(offerId)) {
-            return Optional.empty();
+            throw new Exception("OfferId is null");
         }
         Optional<Offer> offer = offerBookService.getOffers().stream().filter(offer1 -> offerId.equals(offer1.getId())).findAny();
         if (!offer.isPresent()) {
-            return Optional.empty();
+            throw new Exception("OfferId not found");
         }
         return Optional.of(new OfferData(offer.get()));
     }
 
     public List<OfferData> getOfferList() {
-        List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(toList());
+        //List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(toList());
+        List<OfferData> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferData(offer1.getOffer())).collect(toList());
         return offer;
 
     }

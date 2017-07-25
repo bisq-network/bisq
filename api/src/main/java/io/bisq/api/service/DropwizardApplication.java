@@ -19,6 +19,8 @@ import io.dropwizard.Application;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 public class DropwizardApplication extends Application<ApiConfiguration> {
     @Inject
@@ -69,14 +71,12 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     public void initialize(Bootstrap<ApiConfiguration> bootstrap) {
         bootstrap.setConfigurationSourceProvider(
                 new ResourceConfigurationSourceProvider());
-/*
         bootstrap.addBundle(new SwaggerBundle<ApiConfiguration>() {
             @Override
             protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(ApiConfiguration configuration) {
                 return configuration.swaggerBundleConfiguration;
             }
         });
-*/
     }
 
     @Override
@@ -85,7 +85,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService);
-        final ApiResource resource = new ApiResource(
+        final ApiResourceV1 resource = new ApiResourceV1(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
                 bitsquareProxy

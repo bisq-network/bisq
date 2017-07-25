@@ -1,4 +1,4 @@
-package io.bisq.api.api;
+package io.bisq.api.model;
 
 
 import io.bisq.core.payment.payload.PaymentMethod;
