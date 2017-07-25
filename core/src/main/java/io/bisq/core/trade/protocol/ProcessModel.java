@@ -29,7 +29,6 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
-import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.PaymentAccount;
@@ -54,7 +53,6 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -260,39 +258,6 @@ public class ProcessModel implements Model, PersistablePayload {
         else
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
-    }
-
-    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
-                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
-                                    paymentAccountPayload.getPaymentMethodId());
-                            if (samePaymentMethodId) {
-                                try {
-                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                    String result = (String) method.invoke(paymentAccountPayload);
-                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
-                                    return result.equals(paymentAccountFilter.getValue());
-                                } catch (Throwable e) {
-                                    log.error(e.getMessage());
-                                    return false;
-                                }
-                            } else {
-                                return false;
-                            }
-                        })
-                        .findAny()
-                        .isPresent();
-    }
-
-    public boolean isNodeBanned(NodeAddress nodeAddress) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress.getHostNameWithoutPostFix()))
-                        .findAny()
-                        .isPresent();
     }
 
     public Coin getFundsNeededForTradeAsLong() {

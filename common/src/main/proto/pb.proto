@@ -539,6 +539,8 @@ message Filter {
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
+    repeated string banned_currencies = 7;
+    repeated string banned_payment_methods = 8;    
 }
 
 message TradeStatistics {

@@ -362,7 +362,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator,
                             boolean hasSameProtocolVersion, boolean isIgnored,
-                            boolean isOfferBanned, boolean isNodeBanned) {
+                            boolean isOfferBanned, boolean isCurrencyBanned,
+                            boolean isPaymentMethodBanned, boolean isNodeAddressBanned) {
         if (!hasMatchingArbitrator) {
             openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
                     Res.get("popup.warning.noArbitratorSelected.msg"),
@@ -379,7 +380,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             new Popup<>().warning(Res.get("offerbook.warning.userIgnored")).show();
         } else if (isOfferBanned) {
             new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (isNodeBanned) {
+        } else if (isCurrencyBanned) {
+            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+        } else if (isPaymentMethodBanned) {
+            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+        } else if (isNodeAddressBanned) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         }
     }
@@ -672,7 +677,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();
                             boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
-                                    hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned;
+                                    hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
+                                    isPaymentMethodBanned, isNodeAddressBanned;
 
                             {
                                 button.setGraphic(iconView);
@@ -695,12 +701,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isIgnored = model.isIgnored(offer);
                                         isOfferBanned = model.isOfferBanned(offer);
-                                        isNodeBanned = model.isNodeBanned(offer);
+                                        isCurrencyBanned = model.isCurrencyBanned(offer);
+                                        isPaymentMethodBanned = model.isPaymentMethodBanned(offer);
+                                        isNodeAddressBanned = model.isNodeAddressBanned(offer);
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
                                                 !isOfferBanned &&
-                                                !isNodeBanned;
+                                                !isCurrencyBanned &&
+                                                !isPaymentMethodBanned &&
+                                                !isNodeAddressBanned;
 
                                         tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
 
@@ -714,7 +724,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 // ugly hack to get the icon clickable when deactivated
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
-                                                            hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned);
+                                                            hasSameProtocolVersion, isIgnored, isOfferBanned,
+                                                            isCurrencyBanned, isPaymentMethodBanned, isNodeAddressBanned);
                                             });
                                         }
                                     }
@@ -739,7 +750,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (!myOffer && !isTradable)
                                         button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer,
                                                 hasMatchingArbitrator, hasSameProtocolVersion,
-                                                isIgnored, isOfferBanned, isNodeBanned));
+                                                isIgnored, isOfferBanned, isCurrencyBanned, isPaymentMethodBanned,
+                                                isNodeAddressBanned));
 
                                     button.setText(title);
                                     setGraphic(button);
