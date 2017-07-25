@@ -52,9 +52,6 @@ public class BisqAppMain extends BisqExecutable {
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
-        parser.accepts(AppOptionKeys.ENABLE_API, description("Enables the api (default = disabled)", false))
-                .withRequiredArg();
-
         OptionSet options;
         try {
             options = parser.parse(args);
