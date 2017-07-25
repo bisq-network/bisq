@@ -2,7 +2,7 @@ package io.bisq.api.service;
 
 import com.codahale.metrics.annotation.Timed;
 import io.bisq.api.BitsquareProxy;
-import io.bisq.api.api.*;
+import io.bisq.api.model.*;
 import io.bisq.core.offer.OfferPayload;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -12,24 +12,22 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Api(value = "api")
-//@Path("/api/v1")
-@Path("/api")
+@Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
-public class ApiResource {
+public class ApiResourceV1 {
     private final String template;
     private final String defaultName;
     private final AtomicLong counter;
     private final CurrencyList currencyList;
     private final MarketList marketList;
     private final BitsquareProxy bitsquareProxy;
-    // "0x7fffffff";
+    // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
     private static final String STRING_END_INT_MAX_VALUE = "2147483647";
 
-    public ApiResource(String template, String defaultName, BitsquareProxy bitsquareProxy) {
+    public ApiResourceV1(String template, String defaultName, BitsquareProxy bitsquareProxy) {
         this.template = template;
         this.defaultName = defaultName;
         this.counter = new AtomicLong();
@@ -93,12 +91,8 @@ public class ApiResource {
     @GET
     @Timed
     @Path("/offer_detail")
-    public OfferData offerDetail(@QueryParam("offer_id") String offerId) {
-        Optional<OfferData> offerDetail = bitsquareProxy.getOfferDetail(offerId);
-        if (offerDetail.isPresent()) {
-            return offerDetail.get();
-        }
-        return null;
+    public OfferData offerDetail(@QueryParam("offer_id") String offerId) throws Exception {
+        return bitsquareProxy.getOfferDetail(offerId).get();
     }
 
     /**

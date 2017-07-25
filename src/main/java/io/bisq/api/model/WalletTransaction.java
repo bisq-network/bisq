@@ -1,4 +1,4 @@
-package io.bisq.api.api;
+package io.bisq.api.model;
 
 import lombok.AllArgsConstructor;
 

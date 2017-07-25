@@ -1,8 +1,7 @@
-package io.bisq.api.api;
+package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Setter;
 
 @AllArgsConstructor
 public class WalletDetails {
