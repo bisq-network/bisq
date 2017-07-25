@@ -126,6 +126,12 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>4.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!--crypto TODO why are versions removed here?-->
@@ -153,7 +159,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>19.0</version>
+            <version>20.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -252,7 +258,7 @@
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                    <crypto.policy>unlimited</crypto.policy>
+                <crypto.policy>unlimited</crypto.policy>
             </properties>
         </profile>
     </profiles>

@@ -86,6 +86,10 @@ At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
 
+### 2.2 If using Intellij install the Lombok plugin
+https://plugins.jetbrains.com/plugin/6317-lombok-plugin
+
+
 Build required dependencies
 ---------------------------
 ### 3. Install BitcoinJ (branch bisq_0.14.4.1), libdohj and Btcd-cli4j
