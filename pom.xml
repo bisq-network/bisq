@@ -62,6 +62,19 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <!--This plugin allow you to automatically verify PGP signature of all project dependency.-->
+                <groupId>com.github.s4u.plugins</groupId>
+                <artifactId>pgpverify-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
