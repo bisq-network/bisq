@@ -74,6 +74,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <pgpverify.keyserver>hkps://hkps.pool.sks-keyservers.net</pgpverify.keyserver>
+                    <pgpverify.failNoSignature>true</pgpverify.failNoSignature>
+                    <pgpgverify.failWeakSignature>true</pgpgverify.failWeakSignature>
+                    <pgpverify.verifyPomFiles>true</pgpverify.verifyPomFiles>
+                </configuration>
+
             </plugin>
             <!--
             <plugin>
