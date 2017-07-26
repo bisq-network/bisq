@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
@@ -220,8 +219,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
-        // We dont get it sorted without the delay at startup
-        UserThread.execute(() -> priceColumn.sortTypeProperty().bind(model.priceSortTypeProperty));
+        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> {
+            priceColumn.setSortType(newValue);
+        });
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
@@ -268,9 +268,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setOnAction(null);
         model.getOfferList().comparatorProperty().unbind();
 
+        volumeColumn.sortableProperty().unbind();
         priceColumn.sortableProperty().unbind();
-        priceColumn.sortTypeProperty().unbind();
         amountColumn.sortableProperty().unbind();
+        model.getOfferList().comparatorProperty().unbind();
+
         model.getOfferList().removeListener(offerListListener);
 
         currencySelectionSubscriber.unsubscribe();
