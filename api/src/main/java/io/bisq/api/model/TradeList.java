@@ -15,28 +15,26 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.api.health;
+package io.bisq.api.model;
 
-import com.codahale.metrics.health.HealthCheck;
-import io.bisq.api.BisqProxy;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.bisq.core.trade.Trade;
+import lombok.Getter;
+import lombok.Setter;
 
-public class CurrencyListHealthCheck  extends HealthCheck {
-    private final BisqProxy bisqProxy;
+import java.util.ArrayList;
+import java.util.List;
 
-    public CurrencyListHealthCheck(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+public class TradeList {
+    @Setter
+    public List<Trade> trades = new ArrayList<>();
+
+    public TradeList() {
+        // Jackson deserialization
     }
 
-    /**
-     * Check that the proky returns a valid currencylist
-     *
-     * @return
-     * @throws Exception
-     */
-    @Override
-    protected Result check() throws Exception {
-        if(bisqProxy.getCurrencyList().currencies.size() > 0)
-            return Result.healthy();
-        return Result.unhealthy("Size of currency list is 0");
+    @JsonValue
+    public List<Trade> getTrade() {
+        return trades;
     }
 }

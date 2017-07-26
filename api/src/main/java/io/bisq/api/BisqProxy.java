@@ -8,15 +8,21 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.*;
 import io.bisq.core.payment.*;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
+import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
+import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
@@ -41,8 +47,8 @@ import static java.util.stream.Collectors.toList;
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  */
 @Slf4j
-public class BitsquareProxy {
-    private WalletService walletService;
+public class BisqProxy {
+    private BtcWalletService btcWalletService;
     private User user;
     private TradeManager tradeManager;
     private OpenOfferManager openOfferManager;
@@ -59,10 +65,10 @@ public class BitsquareProxy {
     private boolean marketPriceAvailable;
 
 
-    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
-                          OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
-                          PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService) {
-        this.walletService = walletService;
+    public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
+                     PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService) {
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.offerBookService = offerBookService;
@@ -208,7 +214,7 @@ public class BitsquareProxy {
                 bankId,
                 acceptedBanks,
                 Version.VERSION,
-                walletService.getLastBlockSeenHeight(),
+                btcWalletService.getLastBlockSeenHeight(),
                 feeService.getTxFee(600).value,
                 getMakerFee(coinAmount, marketPriceMargin).value,
                 preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
@@ -285,25 +291,39 @@ public class BitsquareProxy {
 
     /// STOP TODO refactor out of GUI module ////
 
+    public void offerTake() {
+        //openOfferManager.
+
+    }
+
+    public TradeList getTradeList() {
+        TradeList tradeList = new TradeList();
+        tradeList.setTrades(tradeManager.getTradableList().sorted());
+        return tradeList;
+    }
+
+    public Optional<Trade> getTrade(String tradeId) {
+        return getTradeList().getTrade().stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
+    }
 
     public WalletDetails getWalletDetails() {
-        if (!walletService.isWalletReady()) {
+        if (!btcWalletService.isWalletReady()) {
             return null;
         }
 
-        Coin availableBalance = walletService.getAvailableBalance();
-        Coin reservedBalance = walletService.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
+        Coin availableBalance = btcWalletService.getAvailableBalance();
+        Coin reservedBalance = btcWalletService.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
         return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
     }
 
     public WalletTransactions getWalletTransactions(long start, long end, long limit) {
         boolean includeDeadTransactions = false;
-        Set<Transaction> transactions = walletService.getTransactions(includeDeadTransactions);
+        Set<Transaction> transactions = btcWalletService.getTransactions(includeDeadTransactions);
         WalletTransactions walletTransactions = new WalletTransactions();
         List<WalletTransaction> transactionList = walletTransactions.getTransactions();
 
         for (Transaction t : transactions) {
-//            transactionList.add(new WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
+//            transactionList.add(new WalletTransaction(t.getValue(btcWalletService.getWallet().getTransactionsByTime())))
         }
         return null;
     }
@@ -314,5 +334,57 @@ public class BitsquareProxy {
                 .map(paymentAccount -> (CryptoCurrencyAccount) paymentAccount)
                 .map(paymentAccount -> new WalletAddress(((CryptoCurrencyAccount) paymentAccount).getId(), paymentAccount.getPaymentMethod().toString(), ((CryptoCurrencyAccount) paymentAccount).getAddress()))
                 .collect(toList());
+    }
+
+    public boolean paymentStarted(String tradeId) {
+        Optional<Trade> tradeOpt = getTrade(tradeId);
+        if(!tradeOpt.isPresent())
+            return false;
+        Trade trade = tradeOpt.get();
+
+        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        // if test here to decide maker/taker
+        Platform.runLater(() -> {
+            ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(() -> {
+                        log.info("Fiat payment started.");
+                    },
+                    (e) -> {
+                        log.error("Error onFiatPaymentStarted", e);
+                    });
+        });
+        return true; // TODO better return value?
+    }
+
+    public boolean paymentReceived(String tradeId) {
+        Optional<Trade> tradeOpt = getTrade(tradeId);
+        if(!tradeOpt.isPresent())
+            return false;
+        Trade trade = tradeOpt.get();
+        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        // if test here to decide maker/taker
+        Platform.runLater(() -> {
+            ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(() -> {
+                        log.info("Fiat payment started.");
+                    },
+                    (e) -> {
+                        log.error("Error onFiatPaymentStarted", e);
+                    });
+        });
+        return true; // TODO better return value?
+    }
+
+    public boolean moveFundsToBisqWallet(String tradeId) {
+        Optional<Trade> tradeOpt = getTrade(tradeId);
+        if(!tradeOpt.isPresent())
+            return false;
+        Trade trade = tradeOpt.get();
+
+        Platform.runLater(() -> {
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            // TODO do we need to handle this ui stuff? --> handleTradeCompleted();
+            tradeManager.addTradeToClosedTrades(trade);
+        });
+
+        return true; // TODO better return value?
     }
 }

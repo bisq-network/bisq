@@ -1,39 +1,52 @@
 package io.bisq.api.service;
 
 import com.codahale.metrics.annotation.Timed;
-import io.bisq.api.BitsquareProxy;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+import io.bisq.api.BisqProxy;
 import io.bisq.api.model.*;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
+import io.bisq.core.trade.protocol.TradeProtocol;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Api(value = "api")
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
+@Slf4j
+/**
+ * REST interface. This class is Dropwizard-specific.
+ * Bisq logic is kept to a minimum here, everything is passed to the BisqProxy.
+ */
 public class ApiResourceV1 {
     private final String template;
     private final String defaultName;
     private final AtomicLong counter;
     private final CurrencyList currencyList;
     private final MarketList marketList;
-    private final BitsquareProxy bitsquareProxy;
+    private final BisqProxy bisqProxy;
     // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
     private static final String STRING_END_INT_MAX_VALUE = "2147483647";
 
-    public ApiResourceV1(String template, String defaultName, BitsquareProxy bitsquareProxy) {
+    public ApiResourceV1(String template, String defaultName, BisqProxy bisqProxy) {
         this.template = template;
         this.defaultName = defaultName;
         this.counter = new AtomicLong();
-        this.bitsquareProxy = bitsquareProxy;
-        currencyList = bitsquareProxy.getCurrencyList();
-        marketList = bitsquareProxy.getMarketList();
+        this.bisqProxy = bisqProxy;
+        currencyList = bisqProxy.getCurrencyList();
+        marketList = bisqProxy.getMarketList();
     }
 
     ///////////////// ACCOUNT ///////////////////////////
@@ -42,7 +55,7 @@ public class ApiResourceV1 {
     @Timed
     @Path("/account_list")
     public AccountList accountList() {
-        return bitsquareProxy.getAccountList();
+        return bisqProxy.getAccountList();
     }
 
     ///////////////// CURRENCY ///////////////////////////
@@ -85,14 +98,14 @@ public class ApiResourceV1 {
     @Timed
     @Path("/offer_cancel")
     public boolean offerCancel(@QueryParam("offer_id") String offerId) throws Exception {
-        return bitsquareProxy.offerCancel(offerId);
+        return bisqProxy.offerCancel(offerId);
     }
 
     @GET
     @Timed
     @Path("/offer_detail")
     public OfferData offerDetail(@QueryParam("offer_id") String offerId) throws Exception {
-        return bitsquareProxy.getOfferDetail(offerId).get();
+        return bisqProxy.getOfferDetail(offerId).get();
     }
 
     /**
@@ -114,7 +127,7 @@ public class ApiResourceV1 {
                                      @DefaultValue("9223372036854775807") @QueryParam("end") long end,
                                      @DefaultValue("100") @QueryParam("limit") int limit
     ) {
-        return bitsquareProxy.getOfferList();
+        return bisqProxy.getOfferList();
     }
 
     /**
@@ -138,7 +151,7 @@ public class ApiResourceV1 {
                              @NotNull @QueryParam("min_amount") BigDecimal minAmount,
                              @DefaultValue("fixed") @QueryParam("price_type") String fixed,
                              @NotEmpty @QueryParam("price") String price) {
-        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100");
+        return bisqProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100");
     }
 
     /**
@@ -159,8 +172,63 @@ public class ApiResourceV1 {
 
     ///////////////// TRADE ///////////////////////////
 
+    // trade_detail
+    @GET
+    @Timed
+    @Path("/trade_detail")
+    public String tradeDetail(@QueryParam("trade_id") String tradeId) {
+        try {
+            Optional<Trade> any = bisqProxy.getTrade(tradeId);
+            if (any.isPresent())
+                return JsonFormat.printer().print(any.get().toProtoMessage());
+            else
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+        } catch (InvalidProtocolBufferException e) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    // trade_list
+    @GET
+    @Timed
+    @Path("/trade_list")
+    public String tradeDetail() throws InvalidProtocolBufferException {
+        return JsonFormat.printer().print(bisqProxy.getTradeList().getTrade().get(0).toProtoMessage());
+    }
+
+    @GET
+    @Timed
+    @Path("/payment_started")
+    public boolean paymentStarted(@NotEmpty @QueryParam("trade_id") String tradeId) {
+        if(!bisqProxy.paymentStarted(tradeId)) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return true; // TODO return json
+    }
+
+    @GET
+    @Timed
+    @Path("/payment_received")
+    public boolean paymentReceived(@NotEmpty @QueryParam("trade_id") String tradeId) {
+        if(!bisqProxy.paymentReceived(tradeId)) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return true; // TODO return json
+    }
+
 
     ///////////////// WALLET ///////////////////////////
+
+    @GET
+    @Timed
+    @Path("/move_funds_to_bisq_wallet")
+    public boolean moveFundsToBisqWallet(@NotEmpty @QueryParam("trade_id") String tradeId) {
+        if(!bisqProxy.moveFundsToBisqWallet(tradeId)) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return true; // TODO return json
+    }
 
 
     /**
@@ -182,7 +250,7 @@ public class ApiResourceV1 {
     @Timed
     @Path("/wallet_detail")
     public WalletDetails walletDetail() {
-        return bitsquareProxy.getWalletDetails();
+        return bisqProxy.getWalletDetails();
     }
 
     /**
@@ -199,7 +267,7 @@ public class ApiResourceV1 {
     public List<WalletAddress> walletAddresses(@DefaultValue("BOTH") @QueryParam("status") String status,
                                                @DefaultValue("0") @QueryParam("start") Integer start,
                                                @DefaultValue("100") @QueryParam("limit") Integer limit) {
-        return bitsquareProxy.getWalletAddresses();
+        return bisqProxy.getWalletAddresses();
     }
 
     /**
@@ -229,9 +297,17 @@ public class ApiResourceV1 {
                                                     @DefaultValue(STRING_END_INT_MAX_VALUE) @QueryParam("end") Integer end,
                                                     @DefaultValue("100") @QueryParam("start") Integer limit
     ) {
-//        return bitsquareProxy.getWalletTransactions(start, end, limit);
+//        return bisqProxy.getWalletTransactions(start, end, limit);
         return null;
     }
 
+    ////////////////////////////// helper methods
+
+    protected Trade getTrade(String tradeId) {
+        Optional<Trade> any = bisqProxy.getTrade(tradeId);
+        if (!any.isPresent())
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        return any.get();
+    }
 
 }
