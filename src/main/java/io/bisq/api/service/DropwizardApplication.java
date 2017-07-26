@@ -1,7 +1,7 @@
 package io.bisq.api.service;
 
 import com.google.inject.Inject;
-import io.bisq.api.BitsquareProxy;
+import io.bisq.api.BisqProxy;
 import io.bisq.api.health.CurrencyListHealthCheck;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
@@ -83,16 +83,16 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration,
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, openOfferManager,
+        BisqProxy bisqProxy = new BisqProxy(walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService);
         final ApiResourceV1 resource = new ApiResourceV1(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
-                bitsquareProxy
+                bisqProxy
         );
         preferences.readPersisted();
         environment.jersey().register(resource);
-        environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bitsquareProxy));
+        environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
     }
 
 }

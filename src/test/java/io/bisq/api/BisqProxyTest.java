@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
 /**
  * Created by mike on 01/02/2017.
  */
-public class BitsquareProxyTest {
+public class BisqProxyTest {
     @Test
     public void getCurrencyList() throws Exception {
     }
