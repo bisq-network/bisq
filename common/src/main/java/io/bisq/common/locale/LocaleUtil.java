@@ -107,10 +107,8 @@ public class LocaleUtil {
         allLocales.add(new Locale("de", "DE", ""));
         allLocales.add(new Locale("da", "DK", ""));
         allLocales.add(new Locale("es", "DO", ""));
-        allLocales.add(new Locale("ar", "DZ", ""));
         allLocales.add(new Locale("es", "EC", ""));
         allLocales.add(new Locale("et", "EE", ""));
-        allLocales.add(new Locale("ar", "EG", ""));
         allLocales.add(new Locale("ca", "ES", ""));
         allLocales.add(new Locale("es", "ES", ""));
         allLocales.add(new Locale("fi", "FI", ""));
@@ -135,7 +133,6 @@ public class LocaleUtil {
         allLocales.add(new Locale("ar", "JO", ""));
         allLocales.add(new Locale("ja", "JP", ""));
         allLocales.add(new Locale("ja", "JP", ""));
-        allLocales.add(new Locale("sw", "KE", ""));
         allLocales.add(new Locale("km", "KH", ""));
         allLocales.add(new Locale("ko", "KR", ""));
         allLocales.add(new Locale("ar", "KW", ""));
@@ -145,8 +142,6 @@ public class LocaleUtil {
         allLocales.add(new Locale("fr", "LU", ""));
         allLocales.add(new Locale("de", "LU", ""));
         allLocales.add(new Locale("lv", "LV", ""));
-        allLocales.add(new Locale("ar", "LY", ""));
-        allLocales.add(new Locale("ar", "MA", ""));
         allLocales.add(new Locale("ro", "MD", ""));
         allLocales.add(new Locale("sr", "ME", ""));
         allLocales.add(new Locale("sr", "ME", ""));
@@ -174,7 +169,6 @@ public class LocaleUtil {
         allLocales.add(new Locale("sr", "RS", ""));
         allLocales.add(new Locale("ru", "RU", ""));
         allLocales.add(new Locale("ar", "SA", ""));
-        allLocales.add(new Locale("ar", "SD", ""));
         allLocales.add(new Locale("sv", "SE", ""));
         allLocales.add(new Locale("en", "SG", ""));
         allLocales.add(new Locale("zh", "SG", ""));
@@ -184,7 +178,6 @@ public class LocaleUtil {
         allLocales.add(new Locale("ar", "SY", ""));
         allLocales.add(new Locale("th", "TH", ""));
         allLocales.add(new Locale("th", "TH", ""));
-        allLocales.add(new Locale("ar", "TN", ""));
         allLocales.add(new Locale("tr", "TR", ""));
         allLocales.add(new Locale("zh", "TW", ""));
         allLocales.add(new Locale("uk", "UA", ""));
@@ -194,7 +187,68 @@ public class LocaleUtil {
         allLocales.add(new Locale("es", "VE", ""));
         allLocales.add(new Locale("vi", "VN", ""));
         allLocales.add(new Locale("ar", "YE", ""));
-        allLocales.add(new Locale("en", "ZA", ""));
+
+        // all african
+        // correct language set
+        allLocales.add(new Locale("ar", "DZ", "")); // Algeria
+        allLocales.add(new Locale("ar", "EG", "")); // Egypt
+        allLocales.add(new Locale("sw", "KE", "")); // Kenya
+        allLocales.add(new Locale("ar", "LY", "")); // Libya
+        allLocales.add(new Locale("ar", "MA", "")); // Morocco
+        allLocales.add(new Locale("ar", "SD", "")); // Sudan
+        allLocales.add(new Locale("ar", "TN", "")); // Tunisia
+        allLocales.add(new Locale("en", "ZA", "")); // South Africa
+
+        // language not set (use english as default)
+        allLocales.add(new Locale("en", "DJ", "")); // Djibouti
+        allLocales.add(new Locale("en", "LR", "")); // Liberia
+        allLocales.add(new Locale("en", "TZ", "")); // Tanzania
+        allLocales.add(new Locale("en", "LS", "")); // Lesotho
+        allLocales.add(new Locale("en", "UG", "")); // Uganda
+        allLocales.add(new Locale("en", "MG", "")); // Madagascar
+        allLocales.add(new Locale("en", "YT", "")); // Mayotte
+        allLocales.add(new Locale("en", "ML", "")); // Mali
+        allLocales.add(new Locale("en", "MR", "")); // Mauritania
+        allLocales.add(new Locale("en", "MU", "")); // Mauritius
+        allLocales.add(new Locale("en", "MW", "")); // Malawi
+        allLocales.add(new Locale("en", "ER", "")); // Eritrea
+        allLocales.add(new Locale("en", "MZ", "")); // Mozambique
+        allLocales.add(new Locale("en", "AO", "")); // Angola
+        allLocales.add(new Locale("en", "ET", "")); // Ethiopia
+        allLocales.add(new Locale("en", "NA", "")); // Namibia
+        allLocales.add(new Locale("en", "RE", "")); // Reunion
+        allLocales.add(new Locale("en", "ZM", "")); // Zambia
+        allLocales.add(new Locale("en", "NE", "")); // Niger
+        allLocales.add(new Locale("en", "NG", "")); // Nigeria
+        allLocales.add(new Locale("en", "ZW", "")); // Zimbabwe
+        allLocales.add(new Locale("en", "BF", "")); // Burkina Faso
+        allLocales.add(new Locale("en", "RW", "")); // Rwanda
+        allLocales.add(new Locale("en", "BI", "")); // Burundi
+        allLocales.add(new Locale("en", "BJ", "")); // Benin
+        allLocales.add(new Locale("en", "SC", "")); // Seychelles
+        allLocales.add(new Locale("en", "SH", "")); // Saint Helena
+        allLocales.add(new Locale("en", "BW", "")); // Botswana
+        allLocales.add(new Locale("en", "SL", "")); // Sierra Leone
+        allLocales.add(new Locale("en", "GA", "")); // Gabon
+        allLocales.add(new Locale("en", "SN", "")); // Senegal
+        allLocales.add(new Locale("en", "SO", "")); // Somalia
+        allLocales.add(new Locale("en", "SS", "")); // South Sudan
+        allLocales.add(new Locale("en", "CD", "")); // The Democratic Republic Of Congo
+        allLocales.add(new Locale("en", "GH", "")); // Ghana
+        allLocales.add(new Locale("en", "ST", "")); // Sao Tome And Principe
+        allLocales.add(new Locale("en", "KM", "")); // Comoros
+        allLocales.add(new Locale("en", "CF", "")); // Central African Republic
+        allLocales.add(new Locale("en", "CG", "")); // Congo
+        allLocales.add(new Locale("en", "GM", "")); // Gambia
+        allLocales.add(new Locale("en", "CI", "")); // Côte d'Ivoire
+        allLocales.add(new Locale("en", "GN", "")); // Guinea
+        allLocales.add(new Locale("en", "SZ", "")); // Swaziland
+        allLocales.add(new Locale("en", "CM", "")); // Cameroon
+        allLocales.add(new Locale("en", "GQ", "")); // Equatorial Guinea
+        allLocales.add(new Locale("en", "TD", "")); // Chad
+        allLocales.add(new Locale("en", "GW", "")); // Guinea-Bissau
+        allLocales.add(new Locale("en", "CV", "")); // Cape Verde
+        allLocales.add(new Locale("en", "TG", "")); // Togo
 
         return allLocales;
     }
