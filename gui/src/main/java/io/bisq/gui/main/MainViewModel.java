@@ -148,6 +148,8 @@ public class MainViewModel implements ViewModel {
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
+    final BooleanProperty isExternallyProvidedPrice = new SimpleBooleanProperty(true);
+    final BooleanProperty isPriceAvailable = new SimpleBooleanProperty(false);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -1026,12 +1028,13 @@ public class MainViewModel implements ViewModel {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
-            if (marketPrice != null && marketPrice.isValid()) {
+            if (marketPrice != null && marketPrice.isPriceAvailable()) {
                 priceString = formatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
-                item.setIsPriceAvailable(true);
+                item.setPriceAvailable(true);
+                item.setExternallyProvidedPrice(marketPrice.isExternallyProvidedPrice());
             } else {
                 priceString = Res.get("shared.na");
-                item.setIsPriceAvailable(false);
+                item.setPriceAvailable(false);
             }
             item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
         });
@@ -1057,8 +1060,10 @@ public class MainViewModel implements ViewModel {
         UserThread.runAfter(() -> {
             if (item != null) {
                 String code = item.currencyCode;
-                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable());
-                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable());
+                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());
+                isPriceAvailable.set(item.isPriceAvailable());
             }
         }, 100, TimeUnit.MILLISECONDS);
     }

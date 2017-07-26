@@ -25,6 +25,8 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
@@ -135,8 +137,19 @@ public class PriceFeedService {
     public MarketPrice getMarketPrice(String currencyCode) {
         if (cache.containsKey(currencyCode))
             return cache.get(currencyCode);
-        else
+        else 
             return null;
+    }
+
+
+    public void setBisqMarketPrice(String currencyCode, Price price) {
+        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
+            cache.put(currencyCode, new MarketPrice(currencyCode,
+                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                    0,
+                    false));
+            updateCounter.set(updateCounter.get() + 1);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +211,7 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    if (marketPrice.isValid())
+                    if (marketPrice.isRecentExternalPriceAvailable())
                         priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
                     log.warn("Error at applyPriceToConsumer " + t.getMessage());
@@ -243,7 +256,7 @@ public class PriceFeedService {
                                     convertedPrice = value.getPrice() / baseCurrencyPrice.getPrice();
                                 else
                                     convertedPrice = value.getPrice() * baseCurrencyPrice.getPrice();
-                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
+                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec(), true));
                             });
                             cache.putAll(convertedPriceMap);
                             break;

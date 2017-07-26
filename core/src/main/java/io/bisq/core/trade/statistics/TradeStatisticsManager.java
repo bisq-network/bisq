@@ -13,6 +13,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -32,6 +33,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
     private final Storage<TradeStatisticsList> statisticsStorage;
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
+    private final PriceFeedService priceFeedService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
     private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
@@ -40,10 +42,12 @@ public class TradeStatisticsManager implements PersistedDataHost {
     @Inject
     public TradeStatisticsManager(Storage<TradeStatisticsList> statisticsStorage,
                                   P2PService p2PService,
+                                  PriceFeedService priceFeedService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.statisticsStorage = statisticsStorage;
         this.p2PService = p2PService;
+        this.priceFeedService = priceFeedService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
@@ -129,12 +133,24 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         });
 
+        applyBisqMarketPrice();
+
         statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
         dump();
 
         // print all currencies sorted by nr. of trades
         // printAllCurrencyStats();
 
+    }
+
+    private void applyBisqMarketPrice() {
+        List<TradeStatistics> sortedList = new ArrayList<>(tradeStatisticsSet);
+        // sort by date so we have most recent as last entry which we use for displaying the latest price
+        sortedList.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+        if (!sortedList.isEmpty()) {
+            TradeStatistics tradeStatistics = sortedList.get(sortedList.size() - 1);
+            priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
+        }
     }
 
     public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
@@ -144,7 +160,11 @@ public class TradeStatisticsManager implements PersistedDataHost {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
 
+                tradeStatistics.getTradePrice().getValue();
+
                 if (storeLocally) {
+                    applyBisqMarketPrice();
+
                     statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
                     dump();
                 }
