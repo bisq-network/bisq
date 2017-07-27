@@ -126,9 +126,13 @@ public class RpcService {
             public void blockDetected(Block block) {
                 if (block != null) {
                     log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
-                    blockHandler.accept(block);
+                    if (block.getHeight() != null && block.getHash() != null) {
+                        blockHandler.accept(block);
+                    } else {
+                        log.warn("We received a block with block.getHeight()=null or block.getHash()=null. That should not happen.");
+                    }
                 } else {
-                    log.error("We received a block with value null. That should not happen.");
+                    log.warn("We received a block with value null. That should not happen.");
                 }
             }
         });
@@ -175,14 +179,16 @@ public class RpcService {
                                 if (scriptPubKey.getType().equals(ScriptTypes.NULL_DATA)) {
                                     String[] chunks = scriptPubKey.getAsm().split(" ");
                                     // TODO only store BSQ OP_RETURN date filtered by type byte
-                                    if (chunks.length == 2 && chunks[0].equals("OP_RETURN")) {
+
+                                    // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
+                                    if (chunks.length == 2 && chunks[0].equals("OP_RETURN") && !"0".equals(chunks[1])) {
                                         try {
                                             opReturnData = Utils.HEX.decode(chunks[1]);
                                         } catch (Throwable t) {
                                             // We get sometimes exceptions, seems BitcoinJ 
                                             // cannot handle all existing OP_RETURN data, but we ignore them
                                             // anyway as our OP_RETURN data is valid in BitcoinJ
-                                            log.warn(t.toString());
+                                            log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
                                         }
                                     }
                                 }

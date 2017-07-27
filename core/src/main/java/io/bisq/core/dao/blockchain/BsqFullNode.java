@@ -89,10 +89,11 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
-        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight), throwable -> {
-            log.error(throwable.toString());
-            throwable.printStackTrace();
-        });
+        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight),
+                throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                });
     }
 
     @Override

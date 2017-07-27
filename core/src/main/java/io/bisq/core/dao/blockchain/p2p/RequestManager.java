@@ -174,7 +174,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
+        log.info("onAwakeFromStandby");
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -327,9 +327,11 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                             List<NodeAddress> list = seedNodeAddresses.stream()
                                     .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
                                     .collect(Collectors.toList());
+                            Collections.shuffle(list);
 
                             if (!list.isEmpty()) {
                                 NodeAddress nextCandidate = list.get(0);
+                                seedNodeAddresses.remove(nextCandidate);
                                 log.info("We try requestBlocks with {}", nextCandidate);
                                 requestBlocks(nextCandidate, startBlockHeight);
                             } else {

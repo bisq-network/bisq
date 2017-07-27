@@ -70,10 +70,8 @@ public class BsqChainState implements PersistableEnvelope {
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
     // BTC MAIN NET
-    // private static final String BTC_GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
-    //private static final int BTC_GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
-    private static final String BTC_GENESIS_TX_ID = "4371a1579bccc672231178cc5fe9fbb9366774d3bcbf21545a82f637f4b61a06";
-    private static final int BTC_GENESIS_BLOCK_HEIGHT = 473000; // 2017-06-26
+    private static final String BTC_GENESIS_TX_ID = "e5c8313c4144d219b5f6b2dacf1d36f2d43a9039bb2fcd1bd57f8352a9c9809a";
+    private static final int BTC_GENESIS_BLOCK_HEIGHT = 477865; // 2017-07-28
 
     // TEST NET
     private static final String BTC_TEST_NET_GENESIS_TX_ID = "34efdaed087084855bfbdad5f1f73b4586e64912153b0afa86bdeb5c03d4ad1c";
@@ -95,6 +93,7 @@ public class BsqChainState implements PersistableEnvelope {
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private int chainHeadHeight = 0;
+    @Nullable
     private Tx genesisTx;
 
     // not impl in PB yet
@@ -178,7 +177,7 @@ public class BsqChainState implements PersistableEnvelope {
     }
 
     private PB.BsqChainState.Builder getBsqChainStateBuilder() {
-        return PB.BsqChainState.newBuilder()
+        final PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder()
                 .addAllBsqBlocks(bsqBlocks.stream()
                         .map(BsqBlock::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -190,8 +189,11 @@ public class BsqChainState implements PersistableEnvelope {
                                 v -> v.getValue().toProtoMessage())))
                 .setGenesisTxId(genesisTxId)
                 .setGenesisBlockHeight(genesisBlockHeight)
-                .setChainHeadHeight(chainHeadHeight)
-                .setGenesisTx(genesisTx.toProtoMessage());
+                .setChainHeadHeight(chainHeadHeight);
+
+        Optional.ofNullable(genesisTx).ifPresent(e -> builder.setGenesisTx(genesisTx.toProtoMessage()));
+
+        return builder;
     }
 
     public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
