@@ -1,6 +1,8 @@
 package io.bisq.api;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.bisq.api.model.*;
 import io.bisq.api.model.Currency;
 import io.bisq.common.app.Version;
@@ -12,7 +14,6 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.*;
 import io.bisq.core.payment.*;
 import io.bisq.core.provider.fee.FeeService;
@@ -29,6 +30,7 @@ import io.bisq.core.util.CoinUtil;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -106,6 +108,10 @@ public class BisqProxy {
         return new ArrayList(user.getPaymentAccounts());
     }
 
+    private PaymentAccount getPaymentAccount(String paymentAccountId) {
+        return user.getPaymentAccount(paymentAccountId);
+    }
+
     public AccountList getAccountList() {
         AccountList accountList = new AccountList();
         accountList.accounts = getPaymentAccountList().stream()
@@ -126,20 +132,26 @@ public class BisqProxy {
         return true;
     }
 
-    public Optional<OfferData> getOfferDetail(String offerId) throws Exception {
+    public Optional<Offer> getOffer(String offerId) throws Exception {
         if (Strings.isNullOrEmpty(offerId)) {
             throw new Exception("OfferId is null");
         }
         Optional<Offer> offer = offerBookService.getOffers().stream().filter(offer1 -> offerId.equals(offer1.getId())).findAny();
+        return offer;
+    }
+
+    public OfferDetail getOfferDetail(String offerId) throws Exception {
+        Optional<Offer> offer = getOffer(offerId);
         if (!offer.isPresent()) {
             throw new Exception("OfferId not found");
         }
-        return Optional.of(new OfferData(offer.get()));
+
+        return new OfferDetail(offer.get());
     }
 
-    public List<OfferData> getOfferList() {
-        //List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(toList());
-        List<OfferData> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferData(offer1.getOffer())).collect(toList());
+    public List<OfferDetail> getOfferList() {
+        //List<OfferDetail> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferDetail(offer1)).collect(toList());
+        List<OfferDetail> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferDetail(offer1.getOffer())).collect(toList());
         return offer;
 
     }
@@ -150,7 +162,7 @@ public class BisqProxy {
         // PaymentAccountUtil.isPaymentAccountValidForOffer
         Optional<PaymentAccount> optionalAccount = getPaymentAccountList().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
-        if(!optionalAccount.isPresent()) {
+        if (!optionalAccount.isPresent()) {
             // return an error
             log.error("Colud not find payment account with id:{}", accountId);
             return false;
@@ -230,7 +242,7 @@ public class BisqProxy {
                 hashOfChallenge,
                 extraDataMap,
                 Version.TRADE_PROTOCOL_VERSION
-                );
+        );
 
         Offer offer = new Offer(offerPayload); // priceFeedService);
 
@@ -238,7 +250,7 @@ public class BisqProxy {
             // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
             openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
                     true, (transaction) -> log.info("Result is " + transaction));
-        } catch(Throwable e) {
+        } catch (Throwable e) {
             return false;
         }
         return true;
@@ -260,7 +272,7 @@ public class BisqProxy {
 
     private void updateMarketPriceAvailable(String baseCurrencyCode) {
         marketPrice = priceFeedService.getMarketPrice(baseCurrencyCode);
-        marketPriceAvailable = (marketPrice != null );
+        marketPriceAvailable = (marketPrice != null);
     }
 
     @Nullable
@@ -291,14 +303,103 @@ public class BisqProxy {
 
     /// STOP TODO refactor out of GUI module ////
 
-    public void offerTake() {
-        //openOfferManager.
+    ///////////////// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
+
+    /**
+     * TakeOfferDataModel.initWithData(Offer) needs to be refactored for fee calculation etc.
+     *
+     * @param offerId
+     * @param paymentAccountId
+     * @param amount
+     * @return
+     * @throws Exception
+     */
+    public boolean offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) throws Exception {
+        // check that the offerId is valid
+        Optional<Offer> offerOptional = getOffer(offerId);
+        if(!offerOptional.isPresent()) {
+            throw new Exception("Unknown offer id");
+        }
+        Offer offer = offerOptional.get();
+
+        // check the paymentAccountId is valid
+        PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
+        if(paymentAccount == null) {
+            throw new Exception("Unknown payment account id");
+        }
+
+        // check the amount is within the range
+        Coin coinAmount = Coin.valueOf(Long.valueOf(amount));
+        //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
+
+        // check that the price is correct ??
+
+        // check taker fee
+
+        // check security deposit for BTC buyer
+        // check security deposit for BTC seller
+
+        Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
+                offer.getBuyerSecurityDeposit() :
+                offer.getSellerSecurityDeposit();
+        Coin txFeeFromFeeService = feeService.getTxFee(600);
+        Coin fundsNeededForTrade = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
+
+        Platform.runLater(() -> {
+            tradeManager.onTakeOffer(coinAmount,
+                    txFeeFromFeeService,
+                    getTakerFee(coinAmount),
+                    isCurrencyForTakerFeeBtc(coinAmount),
+                    offer.getPrice().getValue(),
+                    fundsNeededForTrade,
+                    offer,
+                    paymentAccount.getId(),
+                    useSavingsWallet,
+                    (trade) -> log.info("Trade offer taken, offer:{}, trade:{}", offer.getId(), trade.getId()),
+                    errorMessage -> {
+                        log.warn(errorMessage);
+                    }
+            );
+        });
+        return true;
     }
+
+    boolean isCurrencyForTakerFeeBtc(Coin amount) {
+        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
+    }
+
+    @Nullable
+    Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
+        if (amount != null) {
+            // TODO write unit test for that
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public Coin getTakerFee(Coin amount) {
+        return getTakerFee(amount, isCurrencyForTakerFeeBtc(amount));
+    }
+
+
+    boolean isBsqForFeeAvailable(Coin amount) {
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                getTakerFee(amount, false) != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                getTakerFee(amount,false) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount,false)).isNegative();
+    }
+
+    ///////////////// END OFFER TAKE DEPENDENCIES //////////////////////////
 
     public TradeList getTradeList() {
         TradeList tradeList = new TradeList();
-        tradeList.setTrades(tradeManager.getTradableList().sorted());
+        ObservableList<Trade> tradableList = tradeManager.getTradableList();
+        tradeList.setTrades(tradableList == null || tradableList.size() == 0? Lists.newArrayList():tradableList.sorted());
         return tradeList;
     }
 
@@ -338,7 +439,7 @@ public class BisqProxy {
 
     public boolean paymentStarted(String tradeId) {
         Optional<Trade> tradeOpt = getTrade(tradeId);
-        if(!tradeOpt.isPresent())
+        if (!tradeOpt.isPresent())
             return false;
         Trade trade = tradeOpt.get();
 
@@ -357,7 +458,7 @@ public class BisqProxy {
 
     public boolean paymentReceived(String tradeId) {
         Optional<Trade> tradeOpt = getTrade(tradeId);
-        if(!tradeOpt.isPresent())
+        if (!tradeOpt.isPresent())
             return false;
         Trade trade = tradeOpt.get();
         TradeProtocol tradeProtocol = trade.getTradeProtocol();
@@ -375,7 +476,7 @@ public class BisqProxy {
 
     public boolean moveFundsToBisqWallet(String tradeId) {
         Optional<Trade> tradeOpt = getTrade(tradeId);
-        if(!tradeOpt.isPresent())
+        if (!tradeOpt.isPresent())
             return false;
         Trade trade = tradeOpt.get();
 
