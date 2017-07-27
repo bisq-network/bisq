@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  },
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class OfferData {
+public class OfferDetail {
     @JsonProperty
     String offer_id;
     @JsonProperty
@@ -53,7 +53,7 @@ public class OfferData {
     // offerfeepaymenttxid ???
 
 
-    public OfferData(Offer offer) {
+    public OfferDetail(Offer offer) {
         this.offer_id = offer.getId();
         this.direction = offer.getDirection();
         this.state = offer.getState();
