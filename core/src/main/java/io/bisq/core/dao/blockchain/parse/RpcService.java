@@ -99,6 +99,9 @@ public class RpcService {
             nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
             nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
             nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+            nodeConfig.setProperty("node.bitcoind.notification.alert.port", "64647");
+            nodeConfig.setProperty("node.bitcoind.notification.wallet.port", "64648");
+            nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
             BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
             daemon = new BtcdDaemonImpl(client);
             log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
