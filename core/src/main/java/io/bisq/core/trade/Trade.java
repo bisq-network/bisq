@@ -332,6 +332,7 @@ public abstract class Trade implements Tradable, Model {
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty(errorMessage);
 
     //  Mutable
+    @Getter
     transient protected TradeProtocol tradeProtocol;
     @Nullable
     @Setter

@@ -187,13 +187,7 @@
             <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.3.0</version>
-        </dependency>
--->
+
         <!--logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -228,18 +222,6 @@
             <groupId>org.jmockit</groupId>
             <artifactId>jmockit</artifactId>
             <version>1.30</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>3.3.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
             <scope>test</scope>
         </dependency>
         <dependency>
