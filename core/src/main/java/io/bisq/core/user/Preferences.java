@@ -56,6 +56,11 @@ public final class Preferences implements PersistedDataHost {
             new BlockChainExplorer("Blockr.io", "https://tbtc.blockr.io/tx/info/", "https://tbtc.blockr.io/address/info/")
     ));
 
+    public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.io/tx.html?tx=",
+            "https://explorer.bisq.io/Address.html?addr=");
+    public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.io/testnet/tx.html?tx=",
+            "https://explorer.bisq.io/testnet/Address.html?addr=");
+
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
             new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
@@ -160,6 +165,7 @@ public final class Preferences implements PersistedDataHost {
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload");
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -181,7 +187,6 @@ public final class Preferences implements PersistedDataHost {
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             switch (baseCurrencyNetwork.getCurrencyCode()) {
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
@@ -210,6 +215,8 @@ public final class Preferences implements PersistedDataHost {
             prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
+
+        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER : BSQ_TEST_NET_EXPLORER);
 
 
         // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
@@ -436,11 +443,6 @@ public final class Preferences implements PersistedDataHost {
 
     public void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount) {
         prefPayload.setSelectedPaymentAccountForCreateOffer(paymentAccount);
-        persist();
-    }
-
-    public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
-        prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
         persist();
     }
 
