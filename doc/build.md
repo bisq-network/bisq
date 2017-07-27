@@ -120,6 +120,7 @@ Build bisq
 
 Now we have all prepared to build the correct bisq jar.
    
+    $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bisq
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
