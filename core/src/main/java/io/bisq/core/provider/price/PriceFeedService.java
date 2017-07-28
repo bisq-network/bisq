@@ -137,7 +137,7 @@ public class PriceFeedService {
     public MarketPrice getMarketPrice(String currencyCode) {
         if (cache.containsKey(currencyCode))
             return cache.get(currencyCode);
-        else 
+        else
             return null;
     }
 
@@ -248,20 +248,36 @@ public class PriceFeedService {
                         case "DASH":
                             // apply conversion of btc based price to baseCurrencyCode based with btc/baseCurrencyCode price
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
-                            Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
-                            priceMap.entrySet().stream().forEach(e -> {
-                                final MarketPrice value = e.getValue();
-                                double convertedPrice;
-                                if (CurrencyUtil.isCryptoCurrency(e.getKey()))
-                                    convertedPrice = value.getPrice() / baseCurrencyPrice.getPrice();
-                                else
-                                    convertedPrice = value.getPrice() * baseCurrencyPrice.getPrice();
-                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec(), true));
-                            });
-                            cache.putAll(convertedPriceMap);
+                            if (baseCurrencyPrice != null) {
+                                Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
+                                priceMap.entrySet().stream().forEach(e -> {
+                                    final MarketPrice marketPrice = e.getValue();
+                                    if (marketPrice != null) {
+                                        double convertedPrice;
+                                        final double marketPriceAsDouble = marketPrice.getPrice();
+                                        final double baseCurrencyPriceAsDouble = baseCurrencyPrice.getPrice();
+                                        if (marketPriceAsDouble > 0 && baseCurrencyPriceAsDouble > 0) {
+                                            if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                                convertedPrice = marketPriceAsDouble / baseCurrencyPriceAsDouble;
+                                            else
+                                                convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
+                                            convertedPriceMap.put(e.getKey(),
+                                                    new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
+                                        } else {
+                                            log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +
+                                                    "baseCurrencyPriceAsDouble={}", marketPriceAsDouble, baseCurrencyPriceAsDouble);
+                                        }
+                                    } else {
+                                        log.warn("marketPrice is null");
+                                    }
+                                });
+                                cache.putAll(convertedPriceMap);
+                            } else {
+                                log.warn("baseCurrencyPrice is null");
+                            }
                             break;
                         default:
-                            throw new RuntimeException("baseCurrencyCode not dfined. baseCurrencyCode=" + baseCurrencyCode);
+                            throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
                     }
 
                     resultHandler.run();
