@@ -47,7 +47,6 @@ import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -237,12 +236,11 @@ public class ProcessModel implements Model, PersistablePayload {
 
     @Override
     public void persist() {
-        throw new NotImplementedException("persist is not implemented in that class");
+        log.warn("persist is not implemented in that class");
     }
 
     @Override
     public void onComplete() {
-        throw new NotImplementedException("persist is not implemented in that class");
     }
 
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {

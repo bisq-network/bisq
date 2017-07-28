@@ -37,7 +37,6 @@ import io.bisq.core.trade.SellerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.MainView;
@@ -70,7 +69,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
-    private final User user;
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
     private final P2PService p2PService;
@@ -96,13 +94,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService,
-                                  User user, KeyRing keyRing, DisputeManager disputeManager,
+                                  KeyRing keyRing, DisputeManager disputeManager,
                                   Preferences preferences, P2PService p2PService,
                                   Navigation navigation, WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
-        this.user = user;
         this.keyRing = keyRing;
         this.disputeManager = disputeManager;
         this.preferences = preferences;

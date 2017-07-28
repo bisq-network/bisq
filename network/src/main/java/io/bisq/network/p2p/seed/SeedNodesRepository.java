@@ -19,13 +19,16 @@ public class SeedNodesRepository {
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // BTC mainnet
-            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
+
+            //TODO dev
+            /*new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
             new NodeAddress("723ljisnynbtdohi.onion:8000"),
             new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
-            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),*/
 
+            //TODO dev
             // local dev
-            //new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
+            new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
