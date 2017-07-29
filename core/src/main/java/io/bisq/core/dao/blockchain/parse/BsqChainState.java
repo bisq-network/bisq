@@ -29,6 +29,7 @@ import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -61,6 +62,7 @@ public class BsqChainState implements PersistableEnvelope {
 
     private static final int SNAPSHOT_GRID = 100;  // set high to deactivate
     private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
+    public static final Coin GENESIS_TOTAL_SUPPLY = Coin.COIN.multiply(25);
 
     //mainnet
     // this tx has a lot of outputs
@@ -78,8 +80,8 @@ public class BsqChainState implements PersistableEnvelope {
     private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1155218;
 
     // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "da216721fb915da499fe0400d08362f44b672096f37c74501c2f9bcaa7760656";
-    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 363;
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "321a2156d6cac631d3e574caf54a5a401e51971280c14b18b5f5877026a94d47";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 111;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +157,7 @@ public class BsqChainState implements PersistableEnvelope {
                           String genesisTxId,
                           int genesisBlockHeight,
                           int chainHeadHeight,
-                          Tx genesisTx) {
+                          @Nullable Tx genesisTx) {
         this.bsqBlocks = bsqBlocks;
         this.txMap = txMap;
         this.unspentTxOutputsMap = unspentTxOutputsMap;
@@ -207,8 +209,7 @@ public class BsqChainState implements PersistableEnvelope {
                 proto.getGenesisTxId(),
                 proto.getGenesisBlockHeight(),
                 proto.getChainHeadHeight(),
-                Tx.fromProto(proto.getGenesisTx())
-        );
+                proto.hasGenesisTx() ? Tx.fromProto(proto.getGenesisTx()) : null);
     }
 
 
@@ -371,6 +372,29 @@ public class BsqChainState implements PersistableEnvelope {
         });
     }
 
+    public Coin getTotalBurntFee() {
+        return lock.read(() -> Coin.valueOf(getTxMap().entrySet().stream().mapToLong(e -> e.getValue().getBurntFee()).sum()));
+    }
+
+    public Set<Tx> getFeeTransactions() {
+        return lock.read(() -> getTxMap().entrySet().stream().filter(e -> e.getValue().getBurntFee() > 0).map(Map.Entry::getValue).collect(Collectors.toSet()));
+    }
+
+    public Coin getIssuedAmount() {
+        return lock.read(() -> BsqChainState.GENESIS_TOTAL_SUPPLY);
+    }
+
+    public Set<TxOutput> getUnspentTxOutputs() {
+        return lock.read(() -> getAllTxOutputs().stream().filter(e -> e.isVerified() && e.isUnspent()).collect(Collectors.toSet()));
+    }
+
+    public Set<TxOutput> getSpentTxOutputs() {
+        return lock.read(() -> getAllTxOutputs().stream().filter(e -> e.isVerified() && !e.isUnspent()).collect(Collectors.toSet()));
+    }
+
+    public Set<Tx> getTransactions() {
+        return lock.read(() -> getTxMap().entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toSet()));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope read access
