@@ -95,7 +95,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         GridPane.setRowIndex(label, ++gridRow);
         root.getChildren().add(label);
         hyperlinkWithIcon = new HyperlinkWithIcon(bsqChainState.getGenesisTxId(), AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + bsqChainState.getGenesisTxId()));
         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", bsqChainState.getGenesisTxId())));
         GridPane.setRowIndex(hyperlinkWithIcon, gridRow);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
@@ -123,6 +122,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         bsqBlockchainManager.addBsqChainStateListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
+
+        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + bsqChainState.getGenesisTxId()));
 
         onBsqChainStateChanged();
         updatePrice();
