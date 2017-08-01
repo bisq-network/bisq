@@ -11,6 +11,11 @@
 
     <artifactId>jtorproxy</artifactId>
 
+    <properties>
+        <!-- change here to get the desired version, verify signature, unpack and package in a format used by Bisq -->
+        <torbrowser.version>7.0.2</torbrowser.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.bisq</groupId>
@@ -27,84 +32,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.googlecode.maven-download-plugin</groupId>
-                <artifactId>download-maven-plugin</artifactId>
-                <version>1.3.0</version>
-                <executions>
-                    <execution>
-                        <id>get-windows</id>
-                        <!-- the wget goal actually binds itself to this phase by default -->
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/TheTorProject/gettorbrowser/releases/download/v7.0.2/torbrowser-install-7.0.2_en-US.exe
-                            </url>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>get-windows-asc</id>
-                        <!-- the wget goal actually binds itself to this phase by default -->
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/TheTorProject/gettorbrowser/releases/download/v7.0.2/torbrowser-install-7.0.2_en-US.exe.asc
-                            </url>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>get-macos</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/TheTorProject/gettorbrowser/releases/download/v7.0.2/TorBrowser-7.0.2-osx64_en-US.dmg
-                            </url>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>get-linux32</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/TheTorProject/gettorbrowser/releases/download/v7.0.2/tor-browser-linux32-7.0.2_en-US.tar.xz
-                            </url>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>get-linux64</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/TheTorProject/gettorbrowser/releases/download/v7.0.2/tor-browser-linux64-7.0.2_en-US.tar.xz
-                            </url>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <dependencies>
-                    <!--    Optional:   May want to use more up to date commons compress, add this dependency
-                            <dependency>
-                                <groupId>org.apache.commons</groupId>
-                                <artifactId>commons-compress</artifactId>
-                                <version>1.10</version>
-                            </dependency> -->
                     <dependency>
                         <groupId>org.apache.ant</groupId>
                         <artifactId>ant-compress</artifactId>
@@ -112,6 +42,7 @@
                     </dependency>
                 </dependencies>
                 <executions>
+
                     <execution>
                         <id>unpack-linux64</id>
                         <phase>generate-resources</phase>
@@ -119,24 +50,111 @@
                             <tasks>
                                 <taskdef resource="org/apache/ant/compress/antlib.xml"
                                          classpathref="maven.plugin.classpath"/>
-                                <taskdef resource="org/apache/commons/openpgp/ant/antlib.xml"
-                                         uri="antlib:org.apache.commons.openpgp.ant"/>
-                                <echo message="unzipping file"/>
-                                <exec executable="gpg">
-                                    <arg value="--verify ${project.build.directory}/tor-browser-linux64-7.0.2_en-US.asc ${project.build.directory}/tor-browser-linux64-7.0.2_en-US.tar.xz"></arg>
+
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
+                                     dest="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
+                                     skipexisting="true"/>
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc"
+                                     dest="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc"
+                                     skipexisting="true"/>
+
+                                <exec executable="C:\Program Files\Git\usr\bin\gpg" failonerror="true">
+                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"></arg>
                                 </exec>
-                                <unxz src="${project.build.directory}/tor-browser-linux64-7.0.2_en-US.tar.xz"
-                                      dest="${project.build.directory}/linuxx64.tar"/>
+
+                                <unxz src="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
+                                      dest="${project.build.directory}/linuxx64.tar"
+
+                                />
                                 <untar src="${project.build.directory}/linuxx64.tar"
-                                       dest="${project.build.directory}/linuxx64/"/>
+                                       dest="${project.build.directory}/linuxx64/"
+                                 />
                             </tasks>
                         </configuration>
                         <goals>
                             <goal>run</goal>
                         </goals>
                     </execution>
+
+                    <execution>
+                        <id>unpack-linux32</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <taskdef resource="org/apache/ant/compress/antlib.xml"
+                                         classpathref="maven.plugin.classpath"/>
+
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
+                                     dest="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
+                                     skipexisting="true"/>
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc"
+                                     dest="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc"
+                                     skipexisting="true"/>
+
+                                <exec executable="C:\Program Files\Git\usr\bin\gpg" failonerror="true">
+                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"></arg>
+                                </exec>
+
+                                <unxz src="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
+                                      dest="${project.build.directory}/linuxx32.tar"
+
+                                />
+                                <untar src="${project.build.directory}/linuxx32.tar"
+                                       dest="${project.build.directory}/linuxx32/"
+                                />
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>package-linux64</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/linux64.xml</descriptor>
+                            </descriptors>
+                            <finalName>tor-browser-linux64-${torbrowser.version}.zip</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-linux32</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/linux32.xml</descriptor>
+                            </descriptors>
+                            <finalName>tor-browser-linux32-${torbrowser.version}.zip</finalName>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.8</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+
     </build>
 </project>
