@@ -127,8 +127,18 @@
                                     <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe.asc ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe"></arg>
                                 </exec>
 
+                                <!-- unpack Tor
+                                x unpack
+                                -o destination folder
+                                -aoa Overwrite all existing files without prompt.
+                                -->
                                 <exec executable="7z" failonerror="true">
                                     <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/windows -aoa Browser/TorBrowser/Tor/*"></arg>
+                                </exec>
+
+                                <!-- unpack geoip6 and geoip -->
+                                <exec executable="7z" failonerror="true">
+                                    <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/geoip -aoa Browser/TorBrowser/Data/Tor/*"></arg>
                                 </exec>
                             </target>
                         </configuration>
@@ -155,6 +165,11 @@
                                     <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"></arg>
                                 </exec>
 
+                                <!-- unpack Tor
+                                             x unpack
+                                             -o destination folder
+                                             -aoa Overwrite all existing files without prompt.
+                                             -->
                                 <exec executable="7z" failonerror="true">
                                     <arg line="x ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg -o${project.build.directory}/osx -aoa TorBrowser.app/Contents/MacOS/Tor/*"></arg>
                                 </exec>
@@ -233,6 +248,22 @@
                             <finalName>tor</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <outputDirectory>${project.build.directory}/classes/native/windows/x86</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>move</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/geoip.xml</descriptor>
+                            </descriptors>
+                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
+                            <finalName>classes</finalName> <!-- misuse as folder name destination -->
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
