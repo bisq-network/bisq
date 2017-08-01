@@ -14,7 +14,11 @@ install:
   - mvn clean install -DskipTests
   - cd ..
 
-script: mvn clean install -DskipTests
+script:
+  # run plugin to rename pom version to branch name in reactor
+  - mvn post-clean -Prename-pom-version-like-branch
+  # run now a normal build
+  - mvn install -DskipTests
 
 #notifications:
 #  irc:
