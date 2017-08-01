@@ -254,7 +254,7 @@
                                 <goals>
                                     <goal>pom</goal>
                                 </goals>
-                                <phase>post-clean</phase>
+                                <phase>clean</phase>
                                 <configuration>
                                     <release>false</release>
                                     <forceNumericalVersion>false</forceNumericalVersion>
