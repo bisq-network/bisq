@@ -189,24 +189,3 @@ What we most need help with right now is test coverage. But we also have a bunch
 
 ## Where does jtorctl-briar.jar come from?
 This is a fork of jtorctl with some fixes from Briar. So we got it out of Briar's depot. The plan is that jtorctl is supposed to accept Briar's changes and then we will start to build jtorctl ourselves from the Tor depot directly.
-
-## Where did the binaries for the Tor OP come from?
-### Android
-The ARM binary for Android came from the OrBot distribution available at https://guardianproject.info/releases/. I take the latest PIE release qualify APK, unzip it and go to res/raw and then decompress tor.mp3 and go into bin and copy out the tor executable file and put it into android/src/main/assets
-
-### Windows
-I download the Expert Bundle for Windows from https://www.torproject.org/download/download.html.en and took tor.exe, libeay32.dll, libevent-2-0-5.dll, libgcc_s_sjlj-1.dll and ssleay32.dll from the Tor directory. I then need to zip them all together into a file called tor.zip and stick them into java/src/main/resources/native/windows/x86.
-
-### Linux
-I download the 32 bit Tor Browser Bundle for Linux from https://www.torproject.org/download/download.html.en and then unzipped and untared it and navigated to tor-browser_en-US\Browser\TorBrowser\Tor\ and copied out the tor and libevent-2.0.so.5 files. Note that for stupid reasons I really should fix I currently need to zip these files together into a file called tor.zip before sticking them into java/src/main/resources/native/linux/x86.
-
-I then do the same thing but this time with the 64 bit download and put the results into the x64 linux sub-directory.
-
-### OS/X
-I download the OS/X Tor Browser bundle from https://www.torproject.org/download/download.html.en and using 7Zip opened my way into the dmg file inside of 0.unknown partition\TorBrowser.app\TorBrowser\Tor and copied out tor.real and libevent-2.0.5.dylib. And, as with Linux, I then need to zip those two files together into a file called tor.zip and put that into java/src/main/resources/native/osx/x64.
-
-## Where did the geoip and geoip6 files come from?
-I took them from the Data/Tor directory of the Windows Expert Bundle (see previous question).
-
-## Why does the Android code require minSdkVersion 16?!?!?! Why so high?
-The issue is the tor executable that I get from Guardian. To run on Lollipop the executable has to be PIE. But PIE support only started with SDK 16. So if I'm going to ship a PIE executable I have to set minSdkVersion to 16. But!!!!! Guardian actually also builds a non-PIE version of the executable. So if you have a use case that requires support for an SDK less than 16 PLEASE PLEASE PLEASE send mail to the [Thali Mailing list](https://pairlist10.pair.net/mailman/listinfo/thali-talk). We absolutely can fix this. We just haven't had a good reason to. So please give us one!
