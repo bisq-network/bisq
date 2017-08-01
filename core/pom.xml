@@ -6,7 +6,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.5.3</version>
+        <version>MASTER-SNAPSHOT</version>
     </parent>
 
     <artifactId>core</artifactId>
