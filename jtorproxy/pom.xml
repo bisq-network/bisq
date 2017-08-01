@@ -12,7 +12,10 @@
     <artifactId>jtorproxy</artifactId>
 
     <properties>
-        <!-- change here to get the desired version, verify signature, unpack and package in a format used by Bisq -->
+        <!-- change here to get the desired version, verify signature, unpack and package in a format used by Bisq
+
+        requirement are: gpg and 7z in path
+        -->
         <torbrowser.version>7.0.2</torbrowser.version>
     </properties>
 
@@ -125,7 +128,35 @@
                                 </exec>
 
                                 <exec executable="7z" failonerror="true">
-                                    <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/windows -aoa"></arg>
+                                    <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/windows -aoa Browser/TorBrowser/Tor/*"></arg>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>unpack-osx</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <target>
+                                <taskdef resource="org/apache/ant/compress/antlib.xml"
+                                         classpathref="maven.plugin.classpath"/>
+
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"
+                                     dest="${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"
+                                     skipexisting="true"/>
+                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc"
+                                     dest="${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc"
+                                     skipexisting="true"/>
+
+                                <exec executable="gpg" failonerror="true">
+                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"></arg>
+                                </exec>
+
+                                <exec executable="7z" failonerror="true">
+                                    <arg line="x ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg -o${project.build.directory}/osx -aoa TorBrowser.app/Contents/MacOS/Tor/*"></arg>
                                 </exec>
                             </target>
                         </configuration>
@@ -141,6 +172,22 @@
                 <version>3.0.0</version>
                 <executions>
                     <execution>
+                        <id>package-osx</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/osx.xml</descriptor>
+                            </descriptors>
+                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
+                            <finalName>tor</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <outputDirectory>${project.build.directory}/classes/native/osx/x64</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>package-linux64</id>
                         <phase>package</phase>
                         <goals>
@@ -150,7 +197,10 @@
                             <descriptors>
                                 <descriptor>src/main/assembly/linux64.xml</descriptor>
                             </descriptors>
-                            <finalName>tor-browser</finalName>
+                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
+                            <finalName>tor</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <outputDirectory>${project.build.directory}/classes/native/linux/x64</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -163,7 +213,10 @@
                             <descriptors>
                                 <descriptor>src/main/assembly/linux32.xml</descriptor>
                             </descriptors>
-                            <finalName>tor-browser</finalName>
+                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
+                            <finalName>tor</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <outputDirectory>${project.build.directory}/classes/native/linux/x86</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -176,7 +229,10 @@
                             <descriptors>
                                 <descriptor>src/main/assembly/windows.xml</descriptor>
                             </descriptors>
-                            <finalName>tor-browser</finalName>
+                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
+                            <finalName>tor</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <outputDirectory>${project.build.directory}/classes/native/windows/x86</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
