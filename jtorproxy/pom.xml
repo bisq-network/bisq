@@ -60,7 +60,7 @@
                                      dest="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc"
                                      skipexisting="true"/>
 
-                                <exec executable="C:\Program Files\Git\usr\bin\gpg" failonerror="true">
+                                <exec executable="gpg" failonerror="true">
                                     <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"></arg>
                                 </exec>
 
@@ -92,7 +92,7 @@
                                      dest="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc"
                                      skipexisting="true"/>
 
-                                <exec executable="C:\Program Files\Git\usr\bin\gpg" failonerror="true">
+                                <exec executable="gpg" failonerror="true">
                                     <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"></arg>
                                 </exec>
 
