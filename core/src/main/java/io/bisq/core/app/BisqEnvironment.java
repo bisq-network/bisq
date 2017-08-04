@@ -113,9 +113,9 @@ public class BisqEnvironment extends StandardEnvironment {
         final String newAppName = "Bisq";
         if (appName.equals(newAppName)) {
             final String oldAppName = "bisq";
-            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq 
+            Path oldPath = Paths.get(Paths.get(userDataDir, oldAppName).toString());// bisq
             Path newPath = Paths.get(Paths.get(userDataDir, appName).toString());//Bisq
-            File oldDir = new File(oldPath.toString()); // bisq 
+            File oldDir = new File(oldPath.toString()); // bisq
             File newDir = new File(newPath.toString()); //Bisq
             try {
                 if (Files.exists(oldPath) && oldDir.getCanonicalPath().endsWith(oldAppName)) {

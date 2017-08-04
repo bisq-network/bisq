@@ -1,122 +1,210 @@
-grant {
-  permission "java.util.PropertyPermission" "idea.launcher.*", "read";
-  permission "java.util.PropertyPermission" "slf4j.detectLoggerNameMismatch", "read";
-  permission "java.util.PropertyPermission" "user.home", "read";
-  permission "java.util.PropertyPermission" "java.runtime.name", "read";
-  permission "java.util.PropertyPermission" "java.runtime.version", "read";
-  permission "java.util.PropertyPermission" "sun.arch.data.model", "read";
-  permission "java.util.PropertyPermission" "ignoreDevMsg", "read";
-  permission "java.util.PropertyPermission" "baseCryptoNetwork", "read";
-  permission "java.util.PropertyPermission" "appDataDir", "read";
-  permission "java.util.PropertyPermission" "logLevel", "read";
-  permission "java.util.PropertyPermission" "storageDir", "read";
-  permission "java.util.PropertyPermission" "keyStorageDir", "read";
-  permission "java.util.PropertyPermission" "dumpStatistics", "read";
-  permission "java.util.PropertyPermission" "torDir", "read";
-  permission "java.util.PropertyPermission" "maxConnections", "read";
-  permission "java.util.PropertyPermission" "networkId", "read";
-  permission "java.util.PropertyPermission" "myAddress", "read";
-  permission "java.util.PropertyPermission" "banList", "read";
-  permission "java.util.PropertyPermission" "socks5ProxyBtcAddress", "read";
-  permission "java.util.PropertyPermission" "socks5ProxyHttpAddress", "read";
-  permission "java.util.PropertyPermission" "useragent.name", "read";
-  permission "java.util.PropertyPermission" "useragent.version", "read";
-  permission "java.util.PropertyPermission" "walletDir", "read";
-  permission "java.util.PropertyPermission" "useTorForBtc", "read";
-  permission "java.util.PropertyPermission" "providers", "read";
-  permission "java.util.PropertyPermission" "rpcUser", "read";
-  permission "java.util.PropertyPermission" "rpcPassword", "read";
-  permission "java.util.PropertyPermission" "rpcPort", "read";
-  permission "java.util.PropertyPermission" "rpcBlockPort", "read";
-  permission "java.util.PropertyPermission" "rpcWalletPort", "read";
-  permission "java.util.PropertyPermission" "logback.*", "read";
-  permission "java.util.PropertyPermission" "org.apache.commons.logging.*", "read";
-  permission "java.util.PropertyPermission" "spring.getenv.ignore", "read";
-  permission "java.util.PropertyPermission" "javafx.toolkit", "read";
-  permission "java.util.PropertyPermission" "guice.custom.loader", "read";
-  permission "java.util.PropertyPermission" "cglib.debugLocation", "read";
-  permission "java.util.PropertyPermission" "useLocalhost", "read";
-  permission "java.util.PropertyPermission" "nodePort", "read";
-  permission "java.util.PropertyPermission" "seedNodes", "read";
-  permission "java.util.PropertyPermission" "bitcoinRegtestHost", "read";
-  permission "java.util.PropertyPermission" "btcNodes", "read";
-  permission "java.util.PropertyPermission" "appName", "read";
-  permission "java.util.PropertyPermission" "socks5DiscoverMode", "read";
-  permission "java.util.PropertyPermission" "priceFeedProviders", "read";
-  permission "java.util.PropertyPermission" "maxMemory", "read";
 
-  /* Why ??? no permission exceptions, no dependency in bisq nor in bitcoinj. Local problem? */
-  permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
+/*
 
-  permission "java.lang.RuntimePermission" "accessDeclaredMembers";
-  permission "java.lang.RuntimePermission" "setDefaultUncaughtExceptionHandler";
-  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.misc";
-  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.util.logging.resources";
-  permission "java.lang.RuntimePermission" "accessClassInPackage.com.sun.javafx.tk.quantum";
-  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.reflect";
-  permission "java.lang.RuntimePermission" "getProtectionDomain";
-  permission "java.lang.RuntimePermission" "setContextClassLoader";
-  permission "java.lang.RuntimePermission" "shutdownHooks";
-  permission "java.lang.RuntimePermission" "getenv.logLevel";
-  permission "java.lang.RuntimePermission" "getenv.storageDir";
-  permission "java.lang.RuntimePermission" "getenv.keyStorageDir";
-  permission "java.lang.RuntimePermission" "getenv.dumpStatistics";
-  permission "java.lang.RuntimePermission" "getenv.torDir";
-  permission "java.lang.RuntimePermission" "getenv.maxConnections";
-  permission "java.lang.RuntimePermission" "getenv.myAddress";
-  permission "java.lang.RuntimePermission" "getenv.networkId";
-  permission "java.lang.RuntimePermission" "getenv.banList";
-  permission "java.lang.RuntimePermission" "getenv.socks5ProxyBtcAddress";
-  permission "java.lang.RuntimePermission" "getenv.socks5ProxyHttpAddress";
-  permission "java.lang.RuntimePermission" "getenv.useragent.name";
-  permission "java.lang.RuntimePermission" "getenv.useragent.version";
-  permission "java.lang.RuntimePermission" "getenv.walletDir";
-  permission "java.lang.RuntimePermission" "getenv.useTorForBtc";
-  permission "java.lang.RuntimePermission" "getenv.providers";
-  permission "java.lang.RuntimePermission" "getenv.rpcPassword";
-  permission "java.lang.RuntimePermission" "getenv.rpcUser";
-  permission "java.lang.RuntimePermission" "getenv.rpcPort";
-  permission "java.lang.RuntimePermission" "getenv.rpcBlockPort";
-  permission "java.lang.RuntimePermission" "getenv.rpcWalletPort";
-  permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
-  permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
-  permission "java.lang.RuntimePermission" "getenv.baseCryptoNetwork";
-  permission "java.lang.RuntimePermission" "getenv.appDataDir";
-  permission "java.lang.RuntimePermission" "getenv.socks5DiscoverMode";
-  permission "java.lang.RuntimePermission" "getenv.priceFeedProviders";
-  permission "java.lang.RuntimePermission" "getenv.seedNodes";
-  permission "java.lang.RuntimePermission" "getenv.bitcoinRegtestHost";
-  permission "java.lang.RuntimePermission" "getenv.btcNodes";
-  permission "java.lang.RuntimePermission" "getenv.maxMemory";
-  permission "java.lang.RuntimePermission" "getClassLoader";
-  permission "java.lang.RuntimePermission" "accessUserInformation";
-  permission "java.lang.RuntimePermission" "loadLibrary.javasecp256k1";
-  permission "java.lang.RuntimePermission" "modifyThread";
+http://docs.oracle.com/javase/8/docs/technotes/guides/security/PolicyFiles.html
 
-  /* user data dir for Mac, Linux, Windows */
-  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
-  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}bisq-", "read,write,delete";
-  permission "java.io.FilePermission" "${appdata}${/}bisq-", "read,write,delete";
+A codeBase with a trailing "/" matches all class files (not JAR files) in the specified directory.
+A codeBase with a trailing "/*" matches all files (both class and JAR files) contained in that directory.
+A codeBase with a trailing "/-" matches all files (both class and JAR files) in the directory and recursively
+  all files in subdirectories contained in that directory.
 
-  /* temp dir Mac, Linux, Windows TODO */
-  permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
+${/}  Is translated into Unix / or MSWin \
+   */
 
-  /* only for dev
-  permission "java.io.FilePermission" "${user.home}${/}.m2${/}-", "read";
-  permission "java.io.FilePermission" "/Users/me/dev/bitcoin_projects/bisq/-", "read";
-  permission "java.lang.reflect.ReflectPermission" "suppressAccessChecks";
+/*
+To run with SecurityManager and default Java security policy, which is $JAVA_HOME/jre/lib/security/java.policy:
+java -Djava.security.manager Main
+
+To run with SecurityManager and only your custom security policy (ignoring default java security policy):
+java -Djava.security.manager -Djava.security.policy==security.policy Main
+
+To run with SecurityManager and default java security policy first, then your custom security policy:
+java -Djava.security.manager -Djava.security.policy=security.policy Main
 */
 
+/*
+java.util.PropertyPermission - Controls read/write access to JVM properties such as java.home.
+java.lang.RuntimePermission - Controls use of some System/Runtime functions like exit() and exec(). Also control the package access/definition.
+java.io.FilePermission - Controls read/write/execute access to files and directories.
+java.net.SocketPermission - Controls use of network sockets.
+java.net.NetPermission - Controls use of multicast network connections.
+java.lang.reflect.ReflectPermission - Controls use of reflection to do class introspection.
+java.security.SecurityPermission - Controls access to Security methods.
+java.security.AllPermission - Allows access to all permissions, just as if you were running without a SecurityManager.
+*/
 
-  permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve, accept";
-  permission "java.net.URLPermission" "http://95.85.11.205:8080/all", "GET:User-Agent";
-  permission "java.net.URLPermission" "http://95.85.11.205:8080/getFees", "GET:User-Agent";
-  permission "java.net.URLPermission" "http://95.85.11.205:8080/getAllMarketPrices", "GET:User-Agent";
-  permission "java.net.SocketPermission" "*:8333", "connect,resolve";
-  permission "java.net.SocketPermission" "*.onion:80", "connect,resolve";
+grant codeBase "file:${bisq.home}/lib/bcprov-jdk15on.jar" {
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.security.provider";
+  permission java.security.SecurityPermission "putProviderProperty.BC";
+  permission java.util.PropertyPermission "org.bouncycastle.ec.disable_mqv", "read";
+};
 
-  permission "java.awt.AWTPermission" "accessSystemTray";
-  permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
-  permission "java.security.SecurityPermission" "insertProvider";
-  permission "java.util.logging.LoggingPermission" "control";
+
+grant {
+  permission java.io.FilePermission "/usr/bin/xprop", "execute";
+
+  permission java.io.FilePermission "<<ALL FILES>>", "read";
+
+  permission java.awt.AWTPermission "listenToAllAWTEvents";
+  permission java.awt.AWTPermission "accessEventQueue";
+
+  permission java.lang.RuntimePermission "loadLibrary.atk-wrapper";
+};
+
+
+// windows temp
+grant codeBase "file:${bisq.conf}/AppData/Local/Temp/-" {
+  permission java.io.FilePermission "${bisq.conf}/AppData/Local/Temp/-", "read,write,delete";
+};
+
+//linux tmp
+grant codeBase "file:/tmp/*" {
+  permission java.io.FilePermission "/tmp/*", "read,write,delete";
+};
+
+grant codeBase "file:${bisq.home}/shaded.jar" {
+
+    permission java.awt.AWTPermission "accessSystemTray";
+    permission java.awt.AWTPermission "showWindowWithoutWarningBanner";
+
+    // because of TorNetworkNode
+    permission java.io.FilePermission "<<ALL FILES>>", "execute";
+
+    // App data dir id under the apps control anyway
+    permission java.io.FilePermission "${bisq.conf}/Bisq", "read,write";
+    permission java.io.FilePermission "${bisq.conf}/Bisq/-", "read,write,delete,execute";
+
+    permission java.io.FilePermission "${bisq.conf}/bisq", "read,write";
+    permission java.io.FilePermission "${bisq.conf}/bisq/-", "read,write,delete,execute";
+
+    // images
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/alert_round.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/btcaverage.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/buy_white.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/connection/tor.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/logo_splash.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/account.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/buyoffer.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/dao.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/disputes.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/funds.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/market.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/market_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/portfolio.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/selloffer.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/settings.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/poloniex.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/sell_white.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/spinner.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/avatars/avatar_13.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/avatars/avatar_15.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/avatars/avatar_3.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/avatars/avatar_8.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/blue_circle.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/green_circle.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/buyoffer_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/portfolio_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/selloffer_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/nav/settings_active.png", "read";
+    permission java.io.FilePermission "jar:file:shaded.jar!/images/remove.png", "read";
+
+    permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "getenv.*";
+    permission java.lang.RuntimePermission "getenv.APPDATA";
+    permission java.lang.RuntimePermission "getenv.PROCESSOR_ARCHITECTURE";
+    permission java.lang.RuntimePermission "getenv.PROCESSOR_ARCHITEW6432";
+    permission java.lang.RuntimePermission "loadLibrary.secp256k1";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "setDefaultUncaughtExceptionHandler";
+    permission java.lang.RuntimePermission "shutdownHooks";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+
+    // Linux specifics
+    permission java.lang.RuntimePermission "accessClassInPackage.org.GNOME.Accessibility";
+    permission java.lang.RuntimePermission "accessUserInformation";
+    permission java.lang.RuntimePermission "loadLibrary.atk-wrapper";
+
+    // General socket
+    permission java.net.SocketPermission "127.0.0.1:*", "listen,connect,resolve, accept";
+
+    // see https://github.com/dogecoin/dogecoin/blob/master/share/seeds/nodes_main.txt
+    permission java.net.SocketPermission "*.onion:80", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:8333", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:7033", "connect,resolve";
+    permission java.net.SocketPermission "*.onion:8444", "connect,resolve";
+
+    // TODO do we limit or let Bisq connect,resolve to any host? (insecure?)
+
+    // Bitcoin seed node
+    // see https://github.com/bitcoin/bitcoin/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/bitcoin/bitcoin/blob/master/contrib/seeds/nodes_test.txt
+    // Dash seed node
+    // see https://github.com/dashpay/dash/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/dashpay/dash/blob/master/contrib/seeds/nodes_test.txt
+    permission java.net.SocketPermission "*:8333", "connect,resolve";
+
+    // Lite coin seed
+    // see https://github.com/litecoin-project/litecoin/blob/master/contrib/seeds/nodes_main.txt
+    // see https://github.com/litecoin-project/litecoin/blob/master/contrib/seeds/nodes_test.txt
+    permission java.net.SocketPermission "*:9333", "connect,resolve";
+
+    // bitcoin seed
+    permission java.net.SocketPermission "bitseed.xf2.org", "resolve";
+    permission java.net.SocketPermission "dnsseed.bitcoin.dashjr.org", "resolve";
+    permission java.net.SocketPermission "dnsseed.bluematt.me", "resolve";
+
+    permission java.net.SocketPermission "seed.bitcoin.jonasschnelli.ch", "resolve";
+    permission java.net.SocketPermission "seed.bitcoin.sipa.be", "resolve";
+    permission java.net.SocketPermission "seed.bitcoinstats.com", "resolve";
+    permission java.net.SocketPermission "seed.bitnodes.io", "resolve";
+
+    permission java.net.SocketPermission "bitseed.xf2.org", "resolve";
+    permission java.net.SocketPermission "dnsseed.bitcoin.dashjr.org", "resolve";
+    permission java.net.SocketPermission "dnsseed.bluematt.me", "resolve";
+
+    // dogecoin seed node???
+    //TODO see https://github.com/dogecoin/dogecoin/blob/master/share/seeds/nodes_main.txt
+
+    permission java.net.SocketPermission "localhost:23330", "listen,resolve";
+
+    permission java.security.SecurityPermission "insertProvider";
+
+    permission java.util.PropertyPermission "*", "read,write";
+    permission java.util.PropertyPermission "cglib.debugLocation", "read";
+    permission java.util.PropertyPermission "com.google.appengine.runtime.environment", "read";
+
+    permission java.util.PropertyPermission "guava.concurrent.generate_cancellation_cause", "read";
+
+    permission java.util.PropertyPermission "guice_check_nullable_provides_params", "read";
+    permission java.util.PropertyPermission "guice_custom_class_loading", "read";
+    permission java.util.PropertyPermission "guice_include_stack_traces", "read";
+
+    permission java.util.PropertyPermission "java.runtime.name", "read";
+    permission java.util.PropertyPermission "java.runtime.version", "read";
+    permission java.util.PropertyPermission "javafx.toolkit", "read";
+
+    permission java.util.PropertyPermission "logback.ContextSelector", "read";
+    permission java.util.PropertyPermission "logback.configurationFile", "read";
+    permission java.util.PropertyPermission "logback.debug", "read";
+    permission java.util.PropertyPermission "logback.ignoreTCL", "read";
+    permission java.util.PropertyPermission "logback.statusListenerClass", "read";
+
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedContext", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedDiscovery", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.Log.allowFlawedHierarchy", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory.HashtableImpl", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.diagnostics.dest", "read";
+    permission java.util.PropertyPermission "org.apache.commons.logging.log", "read";
+
+    permission java.util.PropertyPermission "slf4j.detectLoggerNameMismatch", "read";
+
+    permission java.util.PropertyPermission "spring.getenv.ignore", "read";
+    permission java.util.PropertyPermission "sun.arch.data.model", "read";
+    permission java.util.PropertyPermission "user.language", "write";
 };
