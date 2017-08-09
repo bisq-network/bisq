@@ -32,7 +32,7 @@
         <dependency>
             <groupId>com.github.bitsquare.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>29f99be</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -64,7 +64,7 @@
         <dependency>
             <groupId>com.github.bitsquare.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-daemon</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>29f99be</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
