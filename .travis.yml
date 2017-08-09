@@ -1,6 +1,5 @@
 language: java
-jdk:
-    - oraclejdk8
+jdk: oraclejdk8
 
 install:
   - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
