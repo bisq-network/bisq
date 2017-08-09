@@ -85,34 +85,9 @@ Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configure
 At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
-
 ### 2.2 If using Intellij install the Lombok plugin
 https://plugins.jetbrains.com/plugin/6317-lombok-plugin
 
-
-Build required dependencies
----------------------------
-### 3. Install BitcoinJ (branch bisq_0.14.4.1), libdohj and Btcd-cli4j
-libdohj is used for supporting usage of some altcoins with BitcoinJ.
-Btcd-cli4j is used for RPC communication to a local Bitcoin Core node for verifying the BSQ transactions.
-It is not needed for a normal user to run such a "full node" but for the build it is required.
-
-    $ cd ..
-    $ git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
-    $ cd bitcoinj
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-    
-    $ cd ..
-    $ git clone https://github.com/bitsquare/libdohj.git
-    $ cd libdohj
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-        
-    $ cd ..
-    $ git clone https://github.com/bitsquare/btcd-cli4j.git
-    $ cd btcd-cli4j
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-    $ cd ..
-    
 Build bisq
 -----------------
 

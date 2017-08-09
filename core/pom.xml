@@ -29,12 +29,10 @@
             <version>5.0.3</version>
         </dependency>
 
-        <!-- We use a local project atm but should be added either as jar or to a https repo.
-             Default repo for that project is http only, so it is unsafe to use.-->
         <dependency>
-            <groupId>com.neemre.btcd-cli4j</groupId>
+            <groupId>com.github.bitsquare.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
-            <version>0.5.8.1</version>
+            <version>29f99be</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -64,9 +62,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.neemre.btcd-cli4j</groupId>
+            <groupId>com.github.bitsquare.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-daemon</artifactId>
-            <version>0.5.8.1</version>
+            <version>29f99be</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -95,7 +93,7 @@
             </exclusions>
         </dependency>
 
-        <!-- For some strange reason we need to include jackson here extra (is included in com.neemre) -->
+        <!-- For some strange reason we need to include jackson here extra (is included in btcd-cli4j) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
