@@ -139,6 +139,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
+        result.add(new CryptoCurrency("FTC", "Feathercoin"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("GAME", "GameCredits"));
