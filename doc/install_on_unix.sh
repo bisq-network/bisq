@@ -48,17 +48,6 @@ rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
     $ sudo ldconfig
     $ protoc --version
     
-echo "Install bitcoinj"
-cd ~
-git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
-cd bitcoinj
-mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-
-cd ~
-git clone -b bisq_0.14.4.1 https://github.com/bitsquare/btcd-cli4j.git
-cd btcd-cli4j
-mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-
 
 echo "Install and resolve dependencies for bisq"
 cd ~

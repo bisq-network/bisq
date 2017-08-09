@@ -85,6 +85,10 @@
 
     <repositories>
         <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
             <id>sonatype-oss-snapshot</id>
             <snapshots/>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -92,14 +96,12 @@
     </repositories>
 
     <dependencies>
-        <!--bitcoinj
-           Needs local installation!
-           See doc/build.md for further info
-       -->
+        <!-- NOTE: our custom bitcoinj dependency is resolved transitively
+             via the libdohj dependency below -->
         <dependency>
-            <groupId>org.libdohj</groupId>
+            <groupId>com.github.bitsquare.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>0.14.2</version>
+            <version>aa0729e5</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
