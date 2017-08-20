@@ -135,4 +135,20 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("NXT-JM2U-U4AE-G7WF-3Np9F").isValid);
         assertFalse(validator.validate("NXT-2222-2222-2222-22222").isValid);
     }
+
+    @Test
+    public void testWAC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("WAC");
+
+        assertTrue(validator.validate("WfEnB3VGrBqW7uamJMymymEwxMBYQKELKY").isValid);
+        assertTrue(validator.validate("WTLWtNN5iJJQyTeMfZMMrfrDvdGZrYGP5U").isValid);
+        assertTrue(validator.validate("WemK3MgwREsEaF4vdtYLxmMqAXp49C2LYQ").isValid);
+        assertTrue(validator.validate("WZggcFY5cJdAxx9unBW5CVPAH8VLTxZ6Ym").isValid);
+
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("abcde").isValid);
+        assertFalse(validator.validate("mWvZ7nZAUzpRMFp2Bfjxz27Va47nUfB79E").isValid);
+        assertFalse(validator.validate("WemK3MgwREsE23fgsadtYLxmMqAX9C2LYQ").isValid);
+    }
 }

@@ -26,6 +26,7 @@ import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PivxParams;
+import io.bisq.gui.util.validation.params.WACoinsParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
@@ -245,6 +246,15 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (NxtReedSolomonValidator.DecodeException e) {
                         return wrongChecksum;
                     }
+                case "WAC":
+                    try {
+                        Address.fromBase58(WACoinsParams.get(), input);
+                    }
+                    catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                    return new ValidationResult(true);
+
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
