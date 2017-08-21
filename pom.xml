@@ -101,7 +101,7 @@
         <dependency>
             <groupId>com.github.bitsquare.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>aa0729e5</version>
+            <version>75110221</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
