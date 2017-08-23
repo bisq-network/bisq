@@ -1,18 +1,18 @@
 /*
- * This file is part of Bitsquare.
+ * This file is part of Bisq.
  *
- * Bitsquare is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.gui.main.overlays.windows.downloadupdate;
@@ -45,7 +45,7 @@ public class BisqInstaller {
     }
 
     public Optional<DownloadTask> download(String version) {
-        String partialUrl = "https://github.com/bitsquare/bitsquare/releases/download/v" + version + "/";
+        String partialUrl = "https://github.com/bisq-network/bisq-exchange/releases/download/v" + version + "/";
 
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
@@ -171,7 +171,7 @@ public class BisqInstaller {
     public FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
         String fileName;
         String prefix = "Bisq-";
-        // https://github.com/bitsquare/bitsquare/releases/download/v0.5.1/Bisq-0.5.1.dmg
+        // https://github.com/bisq-network/bisq-exchange/releases/download/v0.5.1/Bisq-0.5.1.dmg
         if (Utilities.isOSX())
             fileName = prefix + version + ".dmg";
         else if (Utilities.isWindows())

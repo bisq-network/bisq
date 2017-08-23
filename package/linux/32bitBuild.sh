@@ -42,7 +42,7 @@ $JAVA_HOME/bin/javapackager \
 
 # sudo alien -r -c -k gui/deploy/bundles/bisq-$version.deb
 
-cp "gui/deploy/bundles/bisq-$version.deb" "/home/bitsquare/Desktop/Bisq-32bit-$version.deb"
+cp "gui/deploy/bundles/bisq-$version.deb" "/home/bisq-network/Desktop/Bisq-32bit-$version.deb"
 mv "gui/deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu14_32bit/Bisq-32bit-$version.deb"
 
 # mv "bisq-$version-1.i386.rpm" "/media/sf_vm_shared_ubuntu14_32bit/Bisq-32bit-$version.rpm"
