@@ -335,7 +335,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/bisq-exchange/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues"));
         //noinspection unchecked
         return (T) this;
     }
@@ -734,7 +734,7 @@ public abstract class Overlay<T extends Overlay> {
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bisq-network/bisq-exchange/issues");
+            GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues");
         });
 
         Button forumButton = new Button(Res.get("popup.reportError.forum"));

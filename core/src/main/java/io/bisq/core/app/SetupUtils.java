@@ -39,7 +39,7 @@ public class SetupUtils {
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
-        // See: https://github.com/bisq-network/bisq-exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
+        // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
         Thread checkCryptoThread = new Thread() {
             @Override
             public void run() {
