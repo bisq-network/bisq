@@ -180,6 +180,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("OK", "OKCash"));
         result.add(new CryptoCurrency("OMNI", "Omni"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
+        result.add(new CryptoCurrency("PART", "Particl"));
         result.add(new CryptoCurrency("PASC", "Pascal Coin", true));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
@@ -195,7 +196,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("RDD", "ReddCoin"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("SFSC", "Safe FileSystem Coin"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
