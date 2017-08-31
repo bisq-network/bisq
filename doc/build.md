@@ -10,10 +10,21 @@ There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq)
 System requirements
 -------------
 
-The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u131 or better (as well as maven and git).
+The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u131 or better, as well as maven and git.
+
+**Linux**
+
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
-    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+    $ sudo apt-get install openjdk-8-jdk maven git libopenjfx-java
+
+**Windows**
+
+You may simply download the Zip with Bisq's source code. If you prefer to clone the Bisq repository then install Git:
+https://git-scm.com/downloads
+
+Install Maven:
+http://maven.apache.org/download.cgi
 
 ### 1. Check the version of Java you currently have installed
 
@@ -86,12 +97,16 @@ At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
 
-Build bisq
+Build Bisq
 -----------------
 
-### 1. Build final bisq jar
+### 1. Build final Bisq jar
 
-Now we have all prepared to build the correct bisq jar.
+Make sure you are running the JDK, not a JRE. Uninstall all JREs if you aren't certain.
+
+Now we have all prepared to build the correct 
+
+jar.
    
     $ cd bisq
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
@@ -110,7 +125,7 @@ If you want to build the binaries check out the build scripts under the package 
 DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
-use dedicated program arguments for the bisq node.
+use dedicated program arguments for the node.
 See https://github.com/bisq-network/bisq-exchange/blob/master/doc/rpc.md for more details.
 
 
