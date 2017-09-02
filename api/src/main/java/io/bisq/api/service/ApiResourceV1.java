@@ -4,13 +4,17 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.api.BisqProxy;
+import io.bisq.api.BisqProxyError;
 import io.bisq.api.model.*;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Range;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -33,8 +37,6 @@ public class ApiResourceV1 {
     private final String template;
     private final String defaultName;
     private final AtomicLong counter;
-    private final CurrencyList currencyList;
-    private final MarketList marketList;
     private final BisqProxy bisqProxy;
     // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
     private static final String STRING_END_INT_MAX_VALUE = "2147483647";
@@ -44,8 +46,6 @@ public class ApiResourceV1 {
         this.defaultName = defaultName;
         this.counter = new AtomicLong();
         this.bisqProxy = bisqProxy;
-        currencyList = bisqProxy.getCurrencyList();
-        marketList = bisqProxy.getMarketList();
     }
 
     ///////////////// ACCOUNT ///////////////////////////
@@ -64,7 +64,7 @@ public class ApiResourceV1 {
     @Path("/currency_list")
     // @CacheControl(maxAge=6, maxAgeUnit = TimeUnit.HOURS)
     public CurrencyList currencyList() {
-        return currencyList;
+        return bisqProxy.getCurrencyList();
     }
 
     ///////////////// MARKET ///////////////////////////
@@ -87,25 +87,11 @@ public class ApiResourceV1 {
     @Timed
     @Path("/market_list")
     public MarketList marketList() {
-        return marketList;
+        return bisqProxy.getMarketList();
     }
 
 
     ///////////////// OFFER ///////////////////////////
-
-    @DELETE
-    @Timed
-    @Path("/offer_cancel")
-    public boolean offerCancel(@QueryParam("offer_id") String offerId) throws Exception {
-        return bisqProxy.offerCancel(offerId);
-    }
-
-    @GET
-    @Timed
-    @Path("/offer_detail")
-    public OfferDetail offerDetail(@QueryParam("offer_id") String offerId) throws Exception {
-        return bisqProxy.getOfferDetail(offerId);
-    }
 
     /**
      * param	type	desc	                        values	                                            default
@@ -123,10 +109,24 @@ public class ApiResourceV1 {
                                        @DefaultValue("all") @QueryParam("status") String status,
                                        @DefaultValue("all") @QueryParam("whose") String whose,
                                        @DefaultValue("0") @QueryParam("start") long start,
-                                       @DefaultValue("9223372036854775807") @QueryParam("end") long end,
+                                       @Range(min = 0, max = 9223372036854775807L) @DefaultValue("9223372036854775807") @QueryParam("end") long end,
                                        @DefaultValue("100") @QueryParam("limit") int limit
     ) {
         return bisqProxy.getOfferList();
+    }
+
+    @GET
+    @Timed
+    @Path("/offer_detail")
+    public OfferDetail offerDetail(@QueryParam("offer_id") String offerId) throws Exception {
+        return bisqProxy.getOfferDetail(offerId);
+    }
+
+    @DELETE
+    @Timed
+    @Path("/offer_cancel")
+    public boolean offerCancel(@NotEmpty @QueryParam("offer_id") String offerId) {
+        return handleBisqProxyError(bisqProxy.offerCancel(offerId), Response.Status.NOT_FOUND);
     }
 
     /**
@@ -143,14 +143,19 @@ public class ApiResourceV1 {
     @GET
     @Timed
     @Path("/offer_make")
-    public boolean offerMake(@QueryParam("market") String market,
-                             @NotEmpty @QueryParam("payment_account_id") String accountId,
-                             @NotNull @QueryParam("direction") OfferPayload.Direction direction,
-                             @NotNull @QueryParam("amount") BigDecimal amount,
-                             @NotNull @QueryParam("min_amount") BigDecimal minAmount,
-                             @DefaultValue("fixed") @QueryParam("price_type") String fixed,
-                             @NotEmpty @QueryParam("price") String price) {
-        return bisqProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100");
+    public boolean offerMake(
+            @NotEmpty @QueryParam("payment_account_id") String accountId,
+            @NotNull @QueryParam("direction") OfferPayload.Direction direction,
+            @NotNull @DefaultValue("FIXED") @QueryParam("price_type") PriceType priceType,
+            @NotNull @QueryParam("base_currency_code") String baseCurrencyCode,
+            @NotNull @QueryParam("counter_currency_code") String counterCurrencyCode,
+            @Min(-1) @Max(1) @DefaultValue("0") @QueryParam("percentage_from_market_price") Double percentage_from_market_price,
+            @DefaultValue("0") @QueryParam("fixed_price") String fixedPrice,
+            @Min(100000) @Max(200000000) @NotNull @QueryParam("amount") BigDecimal amount,
+            @Min(100000) @Max(200000000) @NotNull @QueryParam("min_amount") BigDecimal minAmount
+    ) {
+        return handleBisqProxyError(bisqProxy.offerMake(accountId, direction, amount, minAmount,
+                PriceType.PERCENTAGE.equals(priceType), percentage_from_market_price, baseCurrencyCode, counterCurrencyCode, fixedPrice));
     }
 
     /**
@@ -202,7 +207,9 @@ public class ApiResourceV1 {
             }
             return "error";
         }).collect(Collectors.joining(", "));
-    };
+    }
+
+    ;
 
     @GET
     @Timed
@@ -317,4 +324,22 @@ public class ApiResourceV1 {
         return any.get();
     }
 
+    private boolean handleBisqProxyError(Optional<BisqProxyError> optionalBisqProxyError, Response.Status status) {
+
+        if (optionalBisqProxyError.isPresent()) {
+            BisqProxyError bisqProxyError = optionalBisqProxyError.get();
+            if (bisqProxyError.getOptionalThrowable().isPresent()) {
+                throw new WebApplicationException(bisqProxyError.getErrorMessage(), bisqProxyError.getOptionalThrowable().get());
+            } else {
+                throw new WebApplicationException(bisqProxyError.getErrorMessage());
+            }
+        }
+
+        return true;
+
+    }
+
+    private boolean handleBisqProxyError(Optional<BisqProxyError> optionalBisqProxyError) {
+        return handleBisqProxyError(optionalBisqProxyError, Response.Status.INTERNAL_SERVER_ERROR);
+    }
 }

@@ -402,7 +402,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         openOfferManager.placeOffer(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                resultHandler);
+                resultHandler, error -> log.error(error));
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
