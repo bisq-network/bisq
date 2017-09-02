@@ -1,7 +1,9 @@
 package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode
 public class Market {
     @JsonProperty
     String pair;

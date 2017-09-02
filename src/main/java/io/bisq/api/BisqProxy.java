@@ -1,7 +1,6 @@
 package io.bisq.api;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.bisq.api.model.*;
 import io.bisq.api.model.Currency;
@@ -31,6 +30,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -39,6 +39,8 @@ import org.bitcoinj.wallet.Wallet;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -65,6 +67,10 @@ public class BisqProxy {
 
     private MarketPrice marketPrice;
     private boolean marketPriceAvailable;
+    @Getter
+    private MarketList marketList;
+    @Getter
+    private CurrencyList currencyList;
 
 
     public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
@@ -81,9 +87,11 @@ public class BisqProxy {
         this.feeService = feeService;
         this.preferences = preferences;
         this.bsqWalletService = bsqWalletService;
+        this.marketList = calculateMarketList();
+        this.currencyList = calculateCurrencyList();
     }
 
-    public CurrencyList getCurrencyList() {
+    protected CurrencyList calculateCurrencyList() {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
         CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getSymbol(), fiatCurrency.getName(), "fiat"));
@@ -91,9 +99,9 @@ public class BisqProxy {
         return currencyList;
     }
 
-    public MarketList getMarketList() {
+    protected MarketList calculateMarketList() {
         MarketList marketList = new MarketList();
-        CurrencyList currencyList = getCurrencyList(); // we calculate this twice but only at startup
+        CurrencyList currencyList = calculateCurrencyList(); // we calculate this twice but only at startup
         //currencyList.getCurrencies().stream().flatMap(currency -> marketList.getMarkets().forEach(currency1 -> cur))
         List<Market> btc = CurrencyUtil.getAllSortedCryptoCurrencies().stream().filter(cryptoCurrency -> !(cryptoCurrency.getCode().equals("BTC"))).map(cryptoCurrency -> new Market(cryptoCurrency.getCode(), "BTC")).collect(toList());
         marketList.markets.addAll(btc);
@@ -119,17 +127,17 @@ public class BisqProxy {
         return accountList;
     }
 
-    public boolean offerCancel(String offerId) throws Exception {
+    public Optional<BisqProxyError> offerCancel(String offerId) {
         if (Strings.isNullOrEmpty(offerId)) {
-            throw new Exception("offerId is null");
+            BisqProxyError.getOptional("offerId is null");
         }
         Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
         if (!openOfferById.isPresent()) {
-            throw new Exception("Offer with id:" + offerId + " was not found.");
+            BisqProxyError.getOptional("Offer with id:" + offerId + " was not found.");
         }
         // do something more intelligent here, maybe block till handler is called.
         Platform.runLater(() -> openOfferManager.removeOpenOffer(openOfferById.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
-        return true;
+        return Optional.empty();
     }
 
     public Optional<Offer> getOffer(String offerId) throws Exception {
@@ -156,104 +164,141 @@ public class BisqProxy {
 
     }
 
-    public boolean offerMake(String market, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                             boolean useMarketBasedPrice, double marketPriceMargin, String currencyCode, String counterCurrencyCode, String fiatPrice) {
-        // TODO: detect bad direction, bad market, no paymentaccount for user
-        // PaymentAccountUtil.isPaymentAccountValidForOffer
+    public Optional<BisqProxyError> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String baseCurrencyCode, String counterCurrencyCode, String fiatPrice) {
+        // Checked that if fixed we have a fixed price, if percentage we have a percentage
+        if (marketPriceMargin == null && useMarketBasedPrice) {
+            return BisqProxyError.getOptional("When choosing PERCENTAGE price, fill in percentage_from_market_price");
+        } else if ( (Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
+            return BisqProxyError.getOptional("When choosing FIXED price, fill in fixed_price with a price > 0");
+        }
+        // check that the currency pairs are valid
+        if (!checkValidMarket(baseCurrencyCode, counterCurrencyCode)) {
+            return BisqProxyError.getOptional("There is no valid market pair: " + baseCurrencyCode.toLowerCase() + "_" + counterCurrencyCode.toLowerCase());
+        }
+
         Optional<PaymentAccount> optionalAccount = getPaymentAccountList().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
         if (!optionalAccount.isPresent()) {
             // return an error
-            log.error("Colud not find payment account with id:{}", accountId);
-            return false;
+            String errorMessage = "Could not find payment account with id: " + accountId;
+            log.error(errorMessage);
+            return BisqProxyError.getOptional(errorMessage);
         }
         PaymentAccount paymentAccount = optionalAccount.get();
 
-        // COPIED from CreateDataOfferModel: TODO refactor uit of GUI module  /////////////////////////////
-        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
-        ArrayList<String> acceptedCountryCodes = null;
-        if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
-        }
-        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
-        ArrayList<String> acceptedBanks = null;
-        if (paymentAccount instanceof SpecificBanksAccount) {
-            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-        } else if (paymentAccount instanceof SameBankAccount) {
-            acceptedBanks = new ArrayList<>();
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-        }
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
-        long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
-        boolean isPrivateOffer = false;
-        boolean useAutoClose = false;
-        boolean useReOpenAfterAutoClose = false;
-        long lowerClosePrice = 0;
-        long upperClosePrice = 0;
-        String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
-
-        // COPIED from CreateDataOfferModel /////////////////////////////
-
-        updateMarketPriceAvailable(currencyCode);
-
-        // TODO there are a lot of dummy values in this constructor !!!
-        Coin coinAmount = Coin.valueOf(amount.longValueExact());
-        OfferPayload offerPayload = new OfferPayload(
-                UUID.randomUUID().toString(),
-                new Date().getTime(),
-                p2PService.getAddress(),
-                keyRing.getPubKeyRing(),
-                direction,
-                Long.valueOf(fiatPrice),
-                marketPriceMargin,
-                useMarketBasedPrice,
-                amount.longValueExact(),
-                minAmount.longValueExact(),
-                currencyCode,
-                counterCurrencyCode,
-                (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
-                (ArrayList<NodeAddress>) user.getAcceptedMediatorAddresses(),
-                paymentAccount.getPaymentMethod().getId(),
-                paymentAccount.getId(),
-                null, // "TO BE FILLED IN", // offerfeepaymenttxid ???
-                countryCode,
-                acceptedCountryCodes,
-                bankId,
-                acceptedBanks,
-                Version.VERSION,
-                btcWalletService.getLastBlockSeenHeight(),
-                feeService.getTxFee(600).value,
-                getMakerFee(coinAmount, marketPriceMargin).value,
-                preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
-                preferences.getBuyerSecurityDepositAsCoin().value,
-                Restrictions.getSellerSecurityDeposit().value,
-                maxTradeLimit,
-                maxTradePeriod,
-                useAutoClose,
-                useReOpenAfterAutoClose,
-                upperClosePrice,
-                lowerClosePrice,
-                isPrivateOffer,
-                hashOfChallenge,
-                extraDataMap,
-                Version.TRADE_PROTOCOL_VERSION
-        );
-
-        Offer offer = new Offer(offerPayload); // priceFeedService);
-
         try {
+
+            // COPIED from CreateDataOfferModel: TODO refactor uit of GUI module  /////////////////////////////
+            String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
+            ArrayList<String> acceptedCountryCodes = null;
+            if (paymentAccount instanceof SepaAccount) {
+                acceptedCountryCodes = new ArrayList<>();
+                acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
+            } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
+                acceptedCountryCodes = new ArrayList<>();
+                acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
+            }
+            String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
+            ArrayList<String> acceptedBanks = null;
+            if (paymentAccount instanceof SpecificBanksAccount) {
+                acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
+            } else if (paymentAccount instanceof SameBankAccount) {
+                acceptedBanks = new ArrayList<>();
+                acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
+            }
+            long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(baseCurrencyCode).value;
+            long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
+            boolean isPrivateOffer = false;
+            boolean useAutoClose = false;
+            boolean useReOpenAfterAutoClose = false;
+            long lowerClosePrice = 0;
+            long upperClosePrice = 0;
+            String hashOfChallenge = null;
+            HashMap<String, String> extraDataMap = null;
+
+            // COPIED from CreateDataOfferModel /////////////////////////////
+
+            updateMarketPriceAvailable(baseCurrencyCode);
+
+            // TODO dummy values in this constructor !!!
+            Coin coinAmount = Coin.valueOf(amount.longValueExact());
+            OfferPayload offerPayload = new OfferPayload(
+                    UUID.randomUUID().toString(),
+                    new Date().getTime(),
+                    p2PService.getAddress(),
+                    keyRing.getPubKeyRing(),
+                    direction,
+                    Long.valueOf(fiatPrice),
+                    marketPriceMargin,
+                    useMarketBasedPrice,
+                    amount.longValueExact(),
+                    minAmount.longValueExact(),
+                    baseCurrencyCode,
+                    counterCurrencyCode,
+                    (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
+                    (ArrayList<NodeAddress>) user.getAcceptedMediatorAddresses(),
+                    paymentAccount.getPaymentMethod().getId(),
+                    paymentAccount.getId(),
+                    null, // will be filled in by BroadcastMakerFeeTx class
+                    countryCode,
+                    acceptedCountryCodes,
+                    bankId,
+                    acceptedBanks,
+                    Version.VERSION,
+                    btcWalletService.getLastBlockSeenHeight(),
+                    feeService.getTxFee(600).value, // default also used in code CreateOfferDataModel
+                    getMakerFee(coinAmount, marketPriceMargin).value,
+                    preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
+                    preferences.getBuyerSecurityDepositAsCoin().value,
+                    Restrictions.getSellerSecurityDeposit().value,
+                    maxTradeLimit,
+                    maxTradePeriod,
+                    useAutoClose,
+                    useReOpenAfterAutoClose,
+                    upperClosePrice,
+                    lowerClosePrice,
+                    isPrivateOffer,
+                    hashOfChallenge,
+                    extraDataMap,
+                    Version.TRADE_PROTOCOL_VERSION
+            );
+
+            Offer offer = new Offer(offerPayload);
+            offer.setPriceFeedService(priceFeedService);
+
+
+            // use countdownlatch to block this method until there's a success/error callback call
+            CountDownLatch loginLatch = new CountDownLatch(1);
+
+            // TODO remove ugly workaround - probably implies refactoring the placeoffer code
+            String[] errorResult = new String[1];
+
             // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
             openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
-                    true, (transaction) -> log.info("Result is " + transaction));
+                    true,
+                    (transaction) -> {
+                        log.info("Result is " + transaction);
+                        errorResult[0] = "";
+                        loginLatch.countDown();
+                    },
+                    error -> {
+                        loginLatch.countDown();
+                        errorResult[0] = error;
+                    }
+            );
+
+            // wait X seconds for a result or timeout
+            if (loginLatch.await(5L, TimeUnit.SECONDS))
+                if (errorResult[0] == "")
+                    return Optional.empty();
+                else
+                    return BisqProxyError.getOptional("Error while placing offer:" + errorResult[0]);
+            else
+                return BisqProxyError.getOptional("Timeout exceeded"); // Timeout exceeded
         } catch (Throwable e) {
-            return false;
+            return BisqProxyError.getOptional(e.getMessage(), e);
         }
-        return true;
     }
 
     /// START TODO refactor out of GUI module ////
@@ -318,14 +363,14 @@ public class BisqProxy {
     public boolean offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) throws Exception {
         // check that the offerId is valid
         Optional<Offer> offerOptional = getOffer(offerId);
-        if(!offerOptional.isPresent()) {
+        if (!offerOptional.isPresent()) {
             throw new Exception("Unknown offer id");
         }
         Offer offer = offerOptional.get();
 
         // check the paymentAccountId is valid
         PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
-        if(paymentAccount == null) {
+        if (paymentAccount == null) {
             throw new Exception("Unknown payment account id");
         }
 
@@ -390,8 +435,8 @@ public class BisqProxy {
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
                 getTakerFee(amount, false) != null &&
                 bsqWalletService.getAvailableBalance() != null &&
-                getTakerFee(amount,false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount,false)).isNegative();
+                getTakerFee(amount, false) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount, false)).isNegative();
     }
 
     ///////////////// END OFFER TAKE DEPENDENCIES //////////////////////////
@@ -399,7 +444,7 @@ public class BisqProxy {
     public TradeList getTradeList() {
         TradeList tradeList = new TradeList();
         ObservableList<Trade> tradableList = tradeManager.getTradableList();
-        tradeList.setTrades(tradableList == null || tradableList.size() == 0? Lists.newArrayList():tradableList.sorted());
+        tradeList.setTrades(tradableList == null || tradableList.size() == 0 ? Lists.newArrayList() : tradableList.sorted());
         return tradeList;
     }
 
@@ -487,5 +532,9 @@ public class BisqProxy {
         });
 
         return true; // TODO better return value?
+    }
+
+    private boolean checkValidMarket(String lsymbol, String rsymbol) {
+        return marketList.markets.contains(new Market(lsymbol, rsymbol));
     }
 }
