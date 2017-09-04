@@ -175,17 +175,6 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-            if(Boolean.valueOf(bisqEnvironment.getRequiredProperty(AppOptionKeys.ENABLE_API))) {
-                injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
-            }
-/*
-            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
-            Injector injector = Guice.createInjector(new GraphvizModule());
-            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
-            grapher.setOut(out);
-            grapher.setRankdir("TB");
-            grapher.graph(injector);
-*/
 
             // All classes which are persisting objects need to be added here
             // Maintain order!
@@ -225,6 +214,10 @@ public class BisqApp extends Application {
                 if (mainView != null)
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });
+
+            if(Boolean.valueOf(bisqEnvironment.getRequiredProperty(AppOptionKeys.ENABLE_API))) {
+                injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
+            }
 
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
