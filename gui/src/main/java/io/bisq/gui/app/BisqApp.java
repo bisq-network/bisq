@@ -176,6 +176,10 @@ public class BisqApp extends Application {
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
+            if(Boolean.valueOf(bisqEnvironment.getRequiredProperty(AppOptionKeys.ENABLE_API))) {
+                injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
+            }
+
             // All classes which are persisting objects need to be added here
             // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
@@ -214,10 +218,6 @@ public class BisqApp extends Application {
                 if (mainView != null)
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });
-
-            if(Boolean.valueOf(bisqEnvironment.getRequiredProperty(AppOptionKeys.ENABLE_API))) {
-                injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
-            }
 
             // load the main view and create the main scene
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);

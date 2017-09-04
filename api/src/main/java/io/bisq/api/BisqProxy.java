@@ -166,6 +166,12 @@ public class BisqProxy {
 
     public Optional<BisqProxyError> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
                                               boolean useMarketBasedPrice, Double marketPriceMargin, String baseCurrencyCode, String counterCurrencyCode, String fiatPrice) {
+
+        // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
+        if(user.getAcceptedArbitratorAddresses().size() == 0) {
+            return BisqProxyError.getOptional("No arbitrator has been chosen");
+        }
+
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
             return BisqProxyError.getOptional("When choosing PERCENTAGE price, fill in percentage_from_market_price");
@@ -267,6 +273,9 @@ public class BisqProxy {
             Offer offer = new Offer(offerPayload);
             offer.setPriceFeedService(priceFeedService);
 
+            if(!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
+                return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
+            }
 
             // use countdownlatch to block this method until there's a success/error callback call
             CountDownLatch loginLatch = new CountDownLatch(1);
