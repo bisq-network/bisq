@@ -9,6 +9,6 @@ public class WalletDetails {
     private String available_balance;
     @JsonProperty
     private String reserved_balance;
-//    @JsonProperty
-//    private long locked_balance;
+    @JsonProperty
+    private String locked_balance;
 }

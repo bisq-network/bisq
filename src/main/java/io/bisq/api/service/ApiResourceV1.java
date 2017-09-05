@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
+
 /**
  * REST interface. This class is Dropwizard-specific.
  * Bisq logic is kept to a minimum here, everything is passed to the BisqProxy.
@@ -170,8 +171,8 @@ public class ApiResourceV1 {
     public boolean offerTake(@NotEmpty @QueryParam("offer_id") String offerId,
                              @NotEmpty @QueryParam("payment_account_id") String paymentAccountId,
                              @NotEmpty @QueryParam("amount") String amount,
-                             @NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) throws Exception {
-        return bisqProxy.offerTake(offerId, paymentAccountId, amount, useSavingsWallet);
+                             @NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) {
+        return handleBisqProxyError(bisqProxy.offerTake(offerId, paymentAccountId, amount, useSavingsWallet));
     }
 
 
@@ -215,20 +216,14 @@ public class ApiResourceV1 {
     @Timed
     @Path("/payment_started")
     public boolean paymentStarted(@NotEmpty @QueryParam("trade_id") String tradeId) {
-        if (!bisqProxy.paymentStarted(tradeId)) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        return true; // TODO return json
+        return handleBisqProxyError (bisqProxy.paymentStarted(tradeId), Response.Status.NOT_FOUND);
     }
 
     @GET
     @Timed
     @Path("/payment_received")
     public boolean paymentReceived(@NotEmpty @QueryParam("trade_id") String tradeId) {
-        if (!bisqProxy.paymentReceived(tradeId)) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        return true; // TODO return json
+        return handleBisqProxyError (bisqProxy.paymentReceived(tradeId), Response.Status.NOT_FOUND);
     }
 
 
