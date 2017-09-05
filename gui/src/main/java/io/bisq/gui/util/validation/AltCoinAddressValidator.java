@@ -245,6 +245,16 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (NxtReedSolomonValidator.DecodeException e) {
                         return wrongChecksum;
                     }
+                // Address validation for Zencash - https://zensystem.io
+                case "ZEN":
+                    // Fail for private addresses
+	                if (input.startsWith("zc"))
+		                return new ValidationResult(false, Res.get("validation.altcoin.zAddressesNotSupported"));
+	                //We only support transparent and multisig addresses
+	                else if (input.startsWith("zn") || input.startsWith("zs") || input.startsWith("t"))
+                        return validationResult;
+                    else
+                        return regexTestFailed;
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
