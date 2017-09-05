@@ -6,6 +6,8 @@ import io.bisq.api.model.*;
 import io.bisq.api.model.Currency;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
@@ -18,11 +20,11 @@ import io.bisq.core.payment.*;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.BuyerAsMakerTrade;
+import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
-import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
-import io.bisq.core.trade.protocol.TradeProtocol;
+import io.bisq.core.trade.protocol.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
@@ -42,6 +44,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -49,6 +52,9 @@ import static java.util.stream.Collectors.toList;
  * This class is a proxy for all bitsquare features the model will use.
  * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
+ * => this should be the common gateway to bisq used by all outward-facing API classes.
+ *
+ * If the bisq code is refactored correctly, this class could become very light.
  */
 @Slf4j
 public class BisqProxy {
@@ -75,7 +81,8 @@ public class BisqProxy {
 
     public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
-                     PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService) {
+                     PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences,
+                     BsqWalletService bsqWalletService) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -158,8 +165,8 @@ public class BisqProxy {
     }
 
     public List<OfferDetail> getOfferList() {
-        //List<OfferDetail> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferDetail(offer1)).collect(toList());
-        List<OfferDetail> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferDetail(offer1.getOffer())).collect(toList());
+        List<OfferDetail> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferDetail(offer1)).collect(toList());
+        //List<OfferDetail> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferDetail(offer1.getOffer())).collect(toList());
         return offer;
 
     }
@@ -168,14 +175,14 @@ public class BisqProxy {
                                               boolean useMarketBasedPrice, Double marketPriceMargin, String baseCurrencyCode, String counterCurrencyCode, String fiatPrice) {
 
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
-        if(user.getAcceptedArbitratorAddresses().size() == 0) {
+        if (user.getAcceptedArbitratorAddresses().size() == 0) {
             return BisqProxyError.getOptional("No arbitrator has been chosen");
         }
 
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
             return BisqProxyError.getOptional("When choosing PERCENTAGE price, fill in percentage_from_market_price");
-        } else if ( (Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
+        } else if ((Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
             return BisqProxyError.getOptional("When choosing FIXED price, fill in fixed_price with a price > 0");
         }
         // check that the currency pairs are valid
@@ -273,12 +280,12 @@ public class BisqProxy {
             Offer offer = new Offer(offerPayload);
             offer.setPriceFeedService(priceFeedService);
 
-            if(!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            if (!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
                 return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
             }
 
             // use countdownlatch to block this method until there's a success/error callback call
-            CountDownLatch loginLatch = new CountDownLatch(1);
+            CountDownLatch placeOfferLatch = new CountDownLatch(1);
 
             // TODO remove ugly workaround - probably implies refactoring the placeoffer code
             String[] errorResult = new String[1];
@@ -289,22 +296,22 @@ public class BisqProxy {
                     (transaction) -> {
                         log.info("Result is " + transaction);
                         errorResult[0] = "";
-                        loginLatch.countDown();
+                        placeOfferLatch.countDown();
                     },
                     error -> {
-                        loginLatch.countDown();
+                        placeOfferLatch.countDown();
                         errorResult[0] = error;
                     }
             );
 
             // wait X seconds for a result or timeout
-            if (loginLatch.await(5L, TimeUnit.SECONDS))
+            if (placeOfferLatch.await(5L, TimeUnit.SECONDS))
                 if (errorResult[0] == "")
                     return Optional.empty();
                 else
                     return BisqProxyError.getOptional("Error while placing offer:" + errorResult[0]);
             else
-                return BisqProxyError.getOptional("Timeout exceeded"); // Timeout exceeded
+                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
         } catch (Throwable e) {
             return BisqProxyError.getOptional(e.getMessage(), e);
         }
@@ -369,54 +376,68 @@ public class BisqProxy {
      * @return
      * @throws Exception
      */
-    public boolean offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) throws Exception {
-        // check that the offerId is valid
-        Optional<Offer> offerOptional = getOffer(offerId);
-        if (!offerOptional.isPresent()) {
-            throw new Exception("Unknown offer id");
+    public Optional<BisqProxyError> offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) {
+        try {
+            // check that the offerId is valid
+            Optional<Offer> offerOptional = getOffer(offerId);
+            if (!offerOptional.isPresent()) {
+                return BisqProxyError.getOptional("Unknown offer id");
+            }
+            Offer offer = offerOptional.get();
+
+            // check the paymentAccountId is valid
+            PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
+            if (paymentAccount == null) {
+                return BisqProxyError.getOptional("Unknown payment account id");
+            }
+
+            // check the paymentAccountId is compatible with the offer
+            if (!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
+                return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
+            }
+
+            // check the amount is within the range
+            Coin coinAmount = Coin.valueOf(Long.valueOf(amount));
+            //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
+
+            // workaround because TradeTask does not have an error handler to notify us that something went wrong
+            if (btcWalletService.getAvailableBalance().isLessThan(coinAmount)) {
+                return BisqProxyError.getOptional("Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + coinAmount);
+            }
+
+            // check that the price is correct ??
+
+            // check taker fee
+
+            // check security deposit for BTC buyer
+            // check security deposit for BTC seller
+
+            Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
+                    offer.getBuyerSecurityDeposit() :
+                    offer.getSellerSecurityDeposit();
+            Coin txFeeFromFeeService = feeService.getTxFee(600);
+            Coin fundsNeededForTrade = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
+
+            Platform.runLater(() -> {
+                tradeManager.onTakeOffer(coinAmount,
+                        txFeeFromFeeService,
+                        getTakerFee(coinAmount),
+                        isCurrencyForTakerFeeBtc(coinAmount),
+                        offer.getPrice().getValue(),
+                        fundsNeededForTrade,
+                        offer,
+                        paymentAccount.getId(),
+                        useSavingsWallet,
+                        (trade) -> log.info("Trade offer taken, offer:{}, trade:{}", offer.getId(), trade.getId()),
+                        errorMessage -> {
+                            log.warn(errorMessage);
+                        }
+                );
+            });
+            return Optional.empty();
+        } catch (Throwable e) {
+            return BisqProxyError.getOptional(e.getMessage(), e);
         }
-        Offer offer = offerOptional.get();
-
-        // check the paymentAccountId is valid
-        PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
-        if (paymentAccount == null) {
-            throw new Exception("Unknown payment account id");
-        }
-
-        // check the amount is within the range
-        Coin coinAmount = Coin.valueOf(Long.valueOf(amount));
-        //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
-
-        // check that the price is correct ??
-
-        // check taker fee
-
-        // check security deposit for BTC buyer
-        // check security deposit for BTC seller
-
-        Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
-                offer.getBuyerSecurityDeposit() :
-                offer.getSellerSecurityDeposit();
-        Coin txFeeFromFeeService = feeService.getTxFee(600);
-        Coin fundsNeededForTrade = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
-
-        Platform.runLater(() -> {
-            tradeManager.onTakeOffer(coinAmount,
-                    txFeeFromFeeService,
-                    getTakerFee(coinAmount),
-                    isCurrencyForTakerFeeBtc(coinAmount),
-                    offer.getPrice().getValue(),
-                    fundsNeededForTrade,
-                    offer,
-                    paymentAccount.getId(),
-                    useSavingsWallet,
-                    (trade) -> log.info("Trade offer taken, offer:{}, trade:{}", offer.getId(), trade.getId()),
-                    errorMessage -> {
-                        log.warn(errorMessage);
-                    }
-            );
-        });
-        return true;
     }
 
     boolean isCurrencyForTakerFeeBtc(Coin amount) {
@@ -468,8 +489,26 @@ public class BisqProxy {
 
         Coin availableBalance = btcWalletService.getAvailableBalance();
         Coin reservedBalance = btcWalletService.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
-        return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
+        Coin lockedBalance = Coin.ZERO;
+        return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString(), lockedBalance.toPlainString());
     }
+
+    /*
+    private void updateLockedBalance() {
+        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
+        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
+        Coin sum = Coin.valueOf(lockedTrades
+                .mapToLong(trade -> {
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                    if (addressEntryOptional.isPresent())
+                        return addressEntryOptional.get().getCoinLockedInMultiSig().getValue();
+                    else
+                        return 0;
+                })
+                .sum());
+        lockedBalance.set(formatter.formatCoinWithCode(sum));
+    }
+    */
 
     public WalletTransactions getWalletTransactions(long start, long end, long limit) {
         boolean includeDeadTransactions = false;
@@ -491,41 +530,116 @@ public class BisqProxy {
                 .collect(toList());
     }
 
-    public boolean paymentStarted(String tradeId) {
-        Optional<Trade> tradeOpt = getTrade(tradeId);
-        if (!tradeOpt.isPresent())
-            return false;
-        Trade trade = tradeOpt.get();
+    public Optional<BisqProxyError> paymentStarted(String tradeId) {
+        try {
+            Optional<Trade> tradeOpt = getTrade(tradeId);
+            if (!tradeOpt.isPresent()) {
+                return BisqProxyError.getOptional("Could not find trade id " + tradeId);
+            }
+            Trade trade = tradeOpt.get();
 
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-        // if test here to decide maker/taker
-        Platform.runLater(() -> {
-            ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(() -> {
-                        log.info("Fiat payment started.");
-                    },
-                    (e) -> {
-                        log.error("Error onFiatPaymentStarted", e);
-                    });
-        });
-        return true; // TODO better return value?
+            if (!Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.equals(trade.getState())) {
+                return BisqProxyError.getOptional("Trade is not in the correct state to start payment: " + trade.getState());
+            }
+            TradeProtocol tradeProtocol = trade.getTradeProtocol();
+
+            // use countdownlatch to block this method until there's a success/error callback call
+            CountDownLatch startPaymentLatch = new CountDownLatch(1);
+            // TODO remove ugly workaround - probably implies refactoring
+            String[] errorResult = new String[1];
+
+            // common resulthandler
+            ResultHandler resultHandler = () -> {
+                log.info("Fiat payment started.");
+                errorResult[0] = "";
+                startPaymentLatch.countDown();
+
+            };
+            // comon errorhandler
+            ErrorMessageHandler errorResultHandler = (error) -> {
+                log.error("Error onFiatPaymentStarted", error);
+                startPaymentLatch.countDown();
+                errorResult[0] = error;
+            };
+
+            Runnable buyerAsMakerStartFiatPayment = () -> {
+                ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
+            };
+
+            Runnable buyerAsTakerStartFiatPayment = () -> {
+                ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
+            };
+
+            Platform.runLater(trade instanceof BuyerAsMakerTrade ? buyerAsMakerStartFiatPayment : buyerAsTakerStartFiatPayment);
+            // wait X seconds for a result or timeout
+            if (startPaymentLatch.await(5L, TimeUnit.SECONDS))
+                if (errorResult[0] == "")
+                    return Optional.empty();
+                else
+                    return BisqProxyError.getOptional("Error while starting payment:" + errorResult[0]);
+            else
+                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
+        } catch (Throwable e) {
+            return BisqProxyError.getOptional(e.getMessage(), e);
+        }
     }
 
-    public boolean paymentReceived(String tradeId) {
-        Optional<Trade> tradeOpt = getTrade(tradeId);
-        if (!tradeOpt.isPresent())
-            return false;
-        Trade trade = tradeOpt.get();
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-        // if test here to decide maker/taker
-        Platform.runLater(() -> {
-            ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(() -> {
-                        log.info("Fiat payment started.");
-                    },
-                    (e) -> {
-                        log.error("Error onFiatPaymentStarted", e);
-                    });
-        });
-        return true; // TODO better return value?
+    public Optional<BisqProxyError> paymentReceived(String tradeId) {
+        try {
+            Optional<Trade> tradeOpt = getTrade(tradeId);
+            if (!tradeOpt.isPresent()) {
+                return BisqProxyError.getOptional("Could not find trade id " + tradeId);
+            }
+            Trade trade = tradeOpt.get();
+
+            if (!Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG.equals(trade.getState())) {
+                return BisqProxyError.getOptional("Trade is not in the correct state to start payment: " + trade.getState());
+            }
+            TradeProtocol tradeProtocol = trade.getTradeProtocol();
+
+            if(!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
+                return BisqProxyError.getOptional("Trade is not in the correct state to start payment received: " + tradeProtocol.getClass().getSimpleName());
+            }
+
+            // use countdownlatch to block this method until there's a success/error callback call
+            CountDownLatch startPaymentLatch = new CountDownLatch(1);
+            // TODO remove ugly workaround - probably implies refactoring
+            String[] errorResult = new String[1];
+
+            // common resulthandler
+            ResultHandler resultHandler = () -> {
+                log.info("Fiat payment received.");
+                errorResult[0] = "";
+                startPaymentLatch.countDown();
+
+            };
+            // comon errorhandler
+            ErrorMessageHandler errorResultHandler = (error) -> {
+                log.error("Error onFiatPaymentReceived", error);
+                startPaymentLatch.countDown();
+                errorResult[0] = error;
+            };
+
+            Runnable sellerAsMakerStartFiatPayment = () -> {
+                ((SellerAsMakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
+            };
+
+            Runnable sellerAsTakerStartFiatPayment = () -> {
+                ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
+            };
+
+            Platform.runLater(trade instanceof SellerAsMakerTrade ? sellerAsMakerStartFiatPayment : sellerAsTakerStartFiatPayment);
+            // wait X seconds for a result or timeout
+            if (startPaymentLatch.await(5L, TimeUnit.SECONDS))
+                if (errorResult[0] == "")
+                    return Optional.empty();
+                else
+                    return BisqProxyError.getOptional("Error while executing payment received:" + errorResult[0]);
+            else
+                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
+        } catch (Throwable e) {
+            return BisqProxyError.getOptional(e.getMessage(), e);
+        }
     }
 
     public boolean moveFundsToBisqWallet(String tradeId) {
