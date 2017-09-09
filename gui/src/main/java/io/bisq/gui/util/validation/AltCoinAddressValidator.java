@@ -23,8 +23,10 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
+import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
+import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
 import lombok.extern.slf4j.Slf4j;
@@ -244,6 +246,21 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(accountId != 0);
                     } catch (NxtReedSolomonValidator.DecodeException e) {
                         return wrongChecksum;
+                    }
+                case "PNC":
+                    if (input.matches("^[P3][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        if (PNCAddressValidator.ValidateAddress(input)) {
+                            try {
+                                Address.fromBase58(PNCParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
+                    } else {
+                        return regexTestFailed;
                     }
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
