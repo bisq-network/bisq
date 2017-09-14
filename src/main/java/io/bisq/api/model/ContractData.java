@@ -29,6 +29,7 @@ import java.util.List;
 @Data
 public class ContractData {
     PaymentAccountPayload contractData;
+    /*
     @JsonProperty
     String payment_method_id;
     @JsonProperty
@@ -51,9 +52,11 @@ public class ContractData {
     String bank_id;
     @JsonProperty
     String single_trade_currency;
+*/
 
     public ContractData(PaymentAccount bitsquarePaymentAccount) {
         this.contractData = bitsquarePaymentAccount.getPaymentAccountPayload();
+        /*
         this.payment_method_id = contractData.getPaymentMethodId();
         this.contract_id = contractData.getId();
         this.max_trade_period = contractData.getMaxTradePeriod();
@@ -72,6 +75,6 @@ public class ContractData {
 
         single_trade_currency = bitsquarePaymentAccount.getSingleTradeCurrency().getCode();
         payment_details = bitsquarePaymentAccount.getPaymentAccountPayload().getPaymentDetailsForTradePopup();
-
+*/
     }
 }

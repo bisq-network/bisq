@@ -170,9 +170,9 @@ public class ApiResourceV1 {
     @Path("/offer_take")
     public boolean offerTake(@NotEmpty @QueryParam("offer_id") String offerId,
                              @NotEmpty @QueryParam("payment_account_id") String paymentAccountId,
-                             @NotEmpty @QueryParam("amount") String amount,
-                             @NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) {
-        return handleBisqProxyError(bisqProxy.offerTake(offerId, paymentAccountId, amount, useSavingsWallet));
+                             @NotEmpty @QueryParam("amount") String amount) {
+                             //@NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) {
+        return handleBisqProxyError(bisqProxy.offerTake(offerId, paymentAccountId, amount, true));
     }
 
 
@@ -304,10 +304,9 @@ public class ApiResourceV1 {
     @Path("/wallet_tx_list")
     public WalletTransactions walletTransactionList(@DefaultValue("0") @QueryParam("start") Integer start,
                                                     @DefaultValue(STRING_END_INT_MAX_VALUE) @QueryParam("end") Integer end,
-                                                    @DefaultValue("100") @QueryParam("start") Integer limit
+                                                    @DefaultValue("100") @QueryParam("limit") Integer limit
     ) {
-//        return bisqProxy.getWalletTransactions(start, end, limit);
-        return null;
+        return bisqProxy.getWalletTransactions(start, end, limit);
     }
 
     ////////////////////////////// helper methods
