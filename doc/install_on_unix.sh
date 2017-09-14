@@ -51,7 +51,7 @@ rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
 
 echo "Install and resolve dependencies for bisq"
 cd ~
-git clone -b DAO https://github.com/bisq-network/bisq-exchange.git
+git clone -b DAO https://github.com/bisq-network/exchange.git
 cd bisq
 mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 

@@ -18,7 +18,7 @@ Status
 ------
 Bisq has released the beta version on the 27th of April 2016. It is operational since that time without any major incident.
 Please follow the current development state at our [road map]( https://bisq.io/roadmap).
-For the latest version checkout our [releases page](https://github.com/bisq-network/bisq-exchange/releases) at Github.
+For the latest version checkout our [releases page](https://github.com/bisq-network/exchange/releases) at Github.
 
 Building from source
 --------------------
@@ -34,7 +34,7 @@ Staying in Touch
 Contact the team and keep up to date using any of the following:
 
  - The [Bisq Website](https://bisq.io)
- - GitHub [Issues](https://github.com/bisq-network/bisq-exchange/issues)
+ - GitHub [Issues](https://github.com/bisq-network/exchange/issues)
  - The [Bisq Forum]( https://forum.bisq.io)
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)

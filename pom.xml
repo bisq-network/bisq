@@ -24,13 +24,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bisq-network/bisq-exchange/issues</url>
+        <url>https://github.com/bisq-network/exchange/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bisq-network/bisq-exchange</connection>
-        <developerConnection>scm:git:https://github.com/bisq-network/bisq-exchange</developerConnection>
-        <url>scm:git:https://github.com/bisq-network/bisq-exchange</url>
+        <connection>scm:git:https://github.com/bisq-network/exchange</connection>
+        <developerConnection>scm:git:https://github.com/bisq-network/exchange</developerConnection>
+        <url>scm:git:https://github.com/bisq-network/exchange</url>
     </scm>
 
     <properties>

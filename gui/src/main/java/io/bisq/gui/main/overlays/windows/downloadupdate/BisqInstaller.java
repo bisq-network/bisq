@@ -45,7 +45,7 @@ public class BisqInstaller {
     }
 
     public Optional<DownloadTask> download(String version) {
-        String partialUrl = "https://github.com/bisq-network/bisq-exchange/releases/download/v" + version + "/";
+        String partialUrl = "https://github.com/bisq-network/exchange/releases/download/v" + version + "/";
 
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
@@ -171,7 +171,7 @@ public class BisqInstaller {
     public FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
         String fileName;
         String prefix = "Bisq-";
-        // https://github.com/bisq-network/bisq-exchange/releases/download/v0.5.1/Bisq-0.5.1.dmg
+        // https://github.com/bisq-network/exchange/releases/download/v0.5.1/Bisq-0.5.1.dmg
         if (Utilities.isOSX())
             fileName = prefix + version + ".dmg";
         else if (Utilities.isWindows())
