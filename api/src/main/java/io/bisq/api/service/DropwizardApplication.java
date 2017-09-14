@@ -7,6 +7,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.fee.FeeService;
@@ -25,6 +26,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 public class DropwizardApplication extends Application<ApiConfiguration> {
     @Inject
     BtcWalletService walletService;
+
+    @Inject
+    WalletsSetup walletsSetup;
 
     @Inject
     TradeManager tradeManager;
@@ -84,7 +88,8 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         BisqProxy bisqProxy = new BisqProxy(walletService, tradeManager, openOfferManager,
-                offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService);
+                offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
+                walletsSetup);
         final ApiResourceV1 resource = new ApiResourceV1(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),

@@ -14,7 +14,6 @@ public class WalletTransactions {
     List<WalletTransaction> transactions = new ArrayList<>();
 
     @JsonValue
-
     public List<WalletTransaction> getTransactions() {
         return transactions;
     }

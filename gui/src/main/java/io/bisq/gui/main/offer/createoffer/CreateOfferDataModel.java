@@ -27,7 +27,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
-import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
@@ -38,6 +37,7 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.offer.OfferUtil;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.BankAccountPayload;
@@ -46,7 +46,6 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
@@ -58,7 +57,6 @@ import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -327,7 +325,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkNotNull(getMakerFee(), "makerFee must not be null");
+        checkNotNull(OfferUtil.getMakerFee(bsqWalletService, preferences, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin), "makerFee must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
@@ -373,8 +371,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 Version.VERSION,
                 btcWalletService.getLastBlockSeenHeight(),
                 txFeeFromFeeService.value,
-                getMakerFee().value,
-                isCurrencyForMakerFeeBtc(),
+                OfferUtil.getMakerFee(bsqWalletService, preferences, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin).value,
+                OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin),
                 buyerSecurityDepositAsCoin.value,
                 sellerSecurityDeposit.value,
                 maxTradeLimit,
@@ -393,7 +391,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(getMakerFee(), "makerFee must not be null");
+        checkNotNull(OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin), "makerFee must not be null");
 
         Coin reservedFundsForOffer = getSecurityDeposit();
         if (!isBuyOffer())
@@ -535,21 +533,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return marketPriceMargin;
     }
 
-    boolean isCurrencyForMakerFeeBtc() {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable();
-    }
 
     boolean isMakerFeeValid() {
-        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
+        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForFeeAvailable(bsqWalletService, this.amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 
-    boolean isBsqForFeeAvailable() {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getMakerFee(false) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getMakerFee(false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false)).isNegative();
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -589,10 +577,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        final Coin makerFee = getMakerFee();
+        final Coin makerFee = OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin);
         if (direction != null && amount.get() != null && makerFee != null) {
             Coin feeAndSecDeposit = getTxFee().add(getSecurityDeposit());
-            if (isCurrencyForMakerFeeBtc())
+            if (OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin))
                 feeAndSecDeposit = feeAndSecDeposit.add(makerFee);
             Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(total);
@@ -604,8 +592,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return isBuyOffer() ? buyerSecurityDeposit.get() : sellerSecurityDeposit;
     }
 
-    boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
+    public boolean isBuyOffer() {
+        return OfferUtil.isBuyOffer(getDirection());
     }
 
     private void updateBalance() {
@@ -648,10 +636,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getTxFee() {
-        if (isCurrencyForMakerFeeBtc())
+        if (OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin))
             return txFeeFromFeeService;
         else
-            return txFeeFromFeeService.subtract(getMakerFee());
+            return txFeeFromFeeService.subtract(OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin));
     }
 
     public Preferences getPreferences() {
@@ -697,32 +685,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         preferences.setBuyerSecurityDepositAsLong(buyerSecurityDeposit.value);
     }
 
-    @Nullable
-    public Coin getMakerFee() {
-        return getMakerFee(isCurrencyForMakerFeeBtc());
-    }
 
-    @Nullable
-    Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        Coin amount = this.amount.get();
-        if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            double makerFeeAsDouble = (double) feePerBtc.value;
-            if (marketPriceAvailable) {
-                if (marketPriceMargin > 0)
-                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
-                else
-                    makerFeeAsDouble = 0;
-                // For BTC we round so min value change is 100 satoshi
-                if (isCurrencyForMakerFeeBtc)
-                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
-            }
 
-            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -790,5 +754,20 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {
         this.marketPriceAvailable = marketPriceAvailable;
+    }
+
+    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
+        return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+    public Coin getMakerFee() {
+        return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isCurrencyForMakerFeeBtc() {
+        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isBsqForFeeAvailable() {
+        return OfferUtil.isBsqForFeeAvailable(bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 }

@@ -15,6 +15,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.*;
 import io.bisq.core.payment.*;
 import io.bisq.core.provider.fee.FeeService;
@@ -46,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -69,6 +71,7 @@ public class BisqProxy {
     private FeeService feeService;
     private Preferences preferences;
     private BsqWalletService bsqWalletService;
+    private WalletsSetup walletsSetup;
 
 
     private MarketPrice marketPrice;
@@ -82,7 +85,7 @@ public class BisqProxy {
     public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
                      PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences,
-                     BsqWalletService bsqWalletService) {
+                     BsqWalletService bsqWalletService, WalletsSetup walletsSetup) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -96,6 +99,7 @@ public class BisqProxy {
         this.bsqWalletService = bsqWalletService;
         this.marketList = calculateMarketList();
         this.currencyList = calculateCurrencyList();
+        this.walletsSetup = walletsSetup;
     }
 
     protected CurrencyList calculateCurrencyList() {
@@ -290,8 +294,13 @@ public class BisqProxy {
             // TODO remove ugly workaround - probably implies refactoring the placeoffer code
             String[] errorResult = new String[1];
 
-            // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
-            openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
+            checkNotNull(getMakerFee(false, Coin.valueOf(amount.longValue()), marketPriceMargin), "makerFee must not be null");
+
+            Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
+            if (!OfferUtil.isBuyOffer(direction))
+                reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
+
+            openOfferManager.placeOffer(offer, reservedFundsForOffer,
                     true,
                     (transaction) -> {
                         log.info("Result is " + transaction);
@@ -316,6 +325,9 @@ public class BisqProxy {
             return BisqProxyError.getOptional(e.getMessage(), e);
         }
     }
+
+
+
 
     /// START TODO refactor out of GUI module ////
 
@@ -511,15 +523,16 @@ public class BisqProxy {
     */
 
     public WalletTransactions getWalletTransactions(long start, long end, long limit) {
-        boolean includeDeadTransactions = false;
+        boolean includeDeadTransactions = true;
         Set<Transaction> transactions = btcWalletService.getTransactions(includeDeadTransactions);
+
         WalletTransactions walletTransactions = new WalletTransactions();
         List<WalletTransaction> transactionList = walletTransactions.getTransactions();
 
         for (Transaction t : transactions) {
-//            transactionList.add(new WalletTransaction(t.getValue(btcWalletService.getWallet().getTransactionsByTime())))
+            transactionList.add(new WalletTransaction(t, walletsSetup.getBtcWallet()));
         }
-        return null;
+        return walletTransactions;
     }
 
     public List<WalletAddress> getWalletAddresses() {

@@ -3,7 +3,6 @@ package io.bisq.api.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.bisq.common.locale.Country;
-import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.PaymentAccount;
 import lombok.Data;
 import org.springframework.util.CollectionUtils;
@@ -72,40 +71,23 @@ public class Account {
     @JsonProperty
     long created;
     @JsonProperty
-    AccountPaymentMethod payment_method;
-    @JsonProperty
     String account_name;
     @JsonProperty
     List<String> trade_currencies;
     @JsonProperty("payment_method_details")
     ContractData contract_data;
     @JsonProperty
-    Country country;
-    @JsonProperty
-    String bank_id;
-    @JsonProperty
-    String iban;
-    @JsonProperty
-    String holder_name;
-    @JsonProperty
-    String bic;
-    @JsonProperty
-    TradeCurrency single_trade_currency;
-    @JsonProperty
-    String paymentDetails;
-    @JsonProperty
-    List<String> accepted_country_codes;
+    String paymentAccountPayload;
 
     public Account(PaymentAccount bitsquarePaymentAccount) {
         this.payment_account_id = bitsquarePaymentAccount.getId();
         this.created = bitsquarePaymentAccount.getCreationDate().toInstant().toEpochMilli();
-        this.payment_method = new AccountPaymentMethod(bitsquarePaymentAccount.getPaymentMethod());
         this.account_name = bitsquarePaymentAccount.getAccountName();
         if (!CollectionUtils.isEmpty(bitsquarePaymentAccount.getTradeCurrencies())) {
             this.trade_currencies = bitsquarePaymentAccount.getTradeCurrencies().stream()
                     .map(tradeCurrency -> tradeCurrency.getCode()).collect(Collectors.toList());
         }
         this.contract_data = new ContractData(bitsquarePaymentAccount);
-        this.bank_id = contract_data.getBank_id();
+        this.paymentAccountPayload = bitsquarePaymentAccount.getPaymentAccountPayload().toString();
     }
 }
