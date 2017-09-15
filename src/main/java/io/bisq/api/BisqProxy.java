@@ -10,6 +10,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
+import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
@@ -159,13 +160,21 @@ public class BisqProxy {
         return offer;
     }
 
-    public OfferDetail getOfferDetail(String offerId) throws Exception {
+    /**
+     * Return detail for a particular offerId.
+     * @returns a tuple, with as first member an optional result, as second member an optional error.
+     */
+    public Tuple2<Optional<OfferDetail>, Optional<BisqProxyError>> getOfferDetail(String offerId) throws Exception {
+        Optional<OfferDetail> result = Optional.empty();
+        Optional<BisqProxyError> error = Optional.empty();
+
         Optional<Offer> offer = getOffer(offerId);
         if (!offer.isPresent()) {
-            throw new Exception("OfferId not found");
+            error = BisqProxyError.getOptional("OfferId not found");
         }
+        result = Optional.of(new OfferDetail(offer.get()));
 
-        return new OfferDetail(offer.get());
+        return new Tuple2<>(result, error);
     }
 
     public List<OfferDetail> getOfferList() {

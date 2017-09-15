@@ -6,6 +6,7 @@ import com.google.protobuf.util.JsonFormat;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.BisqProxyError;
 import io.bisq.api.model.*;
+import io.bisq.common.util.Tuple2;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import io.swagger.annotations.Api;
@@ -120,7 +121,12 @@ public class ApiResourceV1 {
     @Timed
     @Path("/offer_detail")
     public OfferDetail offerDetail(@QueryParam("offer_id") String offerId) throws Exception {
-        return bisqProxy.getOfferDetail(offerId);
+        Tuple2<Optional<OfferDetail>, Optional<BisqProxyError>> result = bisqProxy.getOfferDetail(offerId);
+        if (!result.first.isPresent()) {
+            handleBisqProxyError(result.second);
+        }
+
+        return result.first.get();
     }
 
     @DELETE
@@ -171,7 +177,7 @@ public class ApiResourceV1 {
     public boolean offerTake(@NotEmpty @QueryParam("offer_id") String offerId,
                              @NotEmpty @QueryParam("payment_account_id") String paymentAccountId,
                              @NotEmpty @QueryParam("amount") String amount) {
-                             //@NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) {
+        //@NotNull @QueryParam("use_savings_wallet") boolean useSavingsWallet) {
         return handleBisqProxyError(bisqProxy.offerTake(offerId, paymentAccountId, amount, true));
     }
 
@@ -199,31 +205,46 @@ public class ApiResourceV1 {
     @GET
     @Timed
     @Path("/trade_list")
-    public String tradeList() throws InvalidProtocolBufferException {
-        return bisqProxy.getTradeList().trades.stream().map(trade -> trade.toProtoMessage()).map(message -> {
+    public String tradeList(){
+        String result = "[]";
+        TradeList tradeList = bisqProxy.getTradeList();
+        if(tradeList == null || tradeList.trades == null || tradeList.trades.size() == 0) {
+            return "{}";
+        } else {
             try {
-                return JsonFormat.printer().print(message);
-            } catch (InvalidProtocolBufferException e) {
-                e.printStackTrace();
+                List<String> stringList = tradeList.trades.stream().map(trade -> trade.toProtoMessage()).map(message -> {
+                    try {
+                        return JsonFormat.printer().print(message);
+                    } catch (InvalidProtocolBufferException e) {
+                        e.printStackTrace();
+                    }
+                    return "error";
+                }).collect(Collectors.toList());
+                int last = stringList.size() - 1;
+                result = "[" + String.join(", ",
+                        String.join(", ", stringList.subList(0, last)),
+                        stringList.get(last)) + "]";
+            } catch (Throwable e) {
+                log.error("Error processing tradeList method", e);
+                // will use empty result
             }
-            return "error";
-        }).collect(Collectors.joining(", "));
-    }
+        }
 
-    ;
+        return result;
+    }
 
     @GET
     @Timed
     @Path("/payment_started")
     public boolean paymentStarted(@NotEmpty @QueryParam("trade_id") String tradeId) {
-        return handleBisqProxyError (bisqProxy.paymentStarted(tradeId), Response.Status.NOT_FOUND);
+        return handleBisqProxyError(bisqProxy.paymentStarted(tradeId), Response.Status.NOT_FOUND);
     }
 
     @GET
     @Timed
     @Path("/payment_received")
     public boolean paymentReceived(@NotEmpty @QueryParam("trade_id") String tradeId) {
-        return handleBisqProxyError (bisqProxy.paymentReceived(tradeId), Response.Status.NOT_FOUND);
+        return handleBisqProxyError(bisqProxy.paymentReceived(tradeId), Response.Status.NOT_FOUND);
     }
 
 
@@ -327,10 +348,11 @@ public class ApiResourceV1 {
             } else {
                 throw new WebApplicationException(bisqProxyError.getErrorMessage());
             }
+        } else if (optionalBisqProxyError == null) {
+            throw new WebApplicationException("Unknow error.");
         }
 
         return true;
-
     }
 
     private boolean handleBisqProxyError(Optional<BisqProxyError> optionalBisqProxyError) {
