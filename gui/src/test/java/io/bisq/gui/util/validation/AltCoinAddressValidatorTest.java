@@ -135,4 +135,18 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("NXT-JM2U-U4AE-G7WF-3Np9F").isValid);
         assertFalse(validator.validate("NXT-2222-2222-2222-22222").isValid);
     }
+
+    @Test
+    public void testPNC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("PNC");
+
+        assertTrue(validator.validate("3AB1qXhaU3hK5oAPQfwzN3QkM8LxAgL8vB").isValid);
+        assertTrue(validator.validate("PD57PGdk69yioZ6FD3zFNzVUeJhMf6Kti4").isValid);
+
+        assertFalse(validator.validate("3AB1qXhaU3hK5oAPQfwzN3QkM8LxAgL8v").isValid);
+        assertFalse(validator.validate("PD57PGdk69yioZ6FD3zFNzVUeJhMf6Kti42").isValid);
+        assertFalse(validator.validate("PD57PGdk69yioZ6FD3zFNzVUeJhMMMKti4").isValid);
+        assertFalse(validator.validate("PD57PG").isValid);
+    }
 }
