@@ -30,6 +30,7 @@ import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -261,6 +262,38 @@ public final class AltCoinAddressValidator extends InputValidator {
                         }
                     } else {
                         return regexTestFailed;
+                    }
+                case "ZEN":
+                    try {
+                        // Get the non Base58 form of the address and the bytecode of the first two bytes
+                        byte [] byteAddress = Base58.decodeChecked(input);
+                        int version0 = byteAddress[0] & 0xFF;
+                        int version1 = byteAddress[1] & 0xFF;
+
+                        // We only support public ("zn" (0x20,0x89), "t1" (0x1C,0xB8))
+                        // and multisig ("zs" (0x20,0x96), "t3" (0x1C,0xBD)) addresses
+
+                        // Fail for private addresses
+                        if (version0 == 0x16 && version1 == 0x9A) {
+                            // Address starts with "zc"
+                            return new ValidationResult(false, Res.get("validation.altcoin.zAddressesNotSupported"));
+                        }
+                        else if (version0 == 0x1C && (version1 == 0xB8 || version1 == 0xBD)) {
+                            // "t1" or "t3" address
+                            return new ValidationResult(true);
+                        }
+                        else if (version0 == 0x20 && (version1 == 0x89 || version1 == 0x96)) {
+                            // "zn" or "zs" address
+                            return new ValidationResult(true);
+                        }
+                        else {
+                            // Unknown Type
+                            return new ValidationResult(false);
+                        }
+                    }
+                    catch (AddressFormatException e) {
+                        // Unhandled Exception (probably a checksum error)
+                        return new ValidationResult(false);
                     }
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
