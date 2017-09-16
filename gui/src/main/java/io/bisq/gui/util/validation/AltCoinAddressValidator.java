@@ -263,7 +263,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-                    // Address validation for Zencash - https://zensystem.io
                 case "ZEN":
                     try {
                         // Get the non Base58 form of the address and the bytecode of the first two bytes
