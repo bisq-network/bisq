@@ -24,13 +24,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bitsquare/bitsquare/issues</url>
+        <url>https://github.com/bisq-network/exchange/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bitsquare/bitsquare</connection>
-        <developerConnection>scm:git:https://github.com/bitsquare/bitsquare</developerConnection>
-        <url>scm:git:https://github.com/bitsquare/bitsquare</url>
+        <connection>scm:git:https://github.com/bisq-network/exchange</connection>
+        <developerConnection>scm:git:https://github.com/bisq-network/exchange</developerConnection>
+        <url>scm:git:https://github.com/bisq-network/exchange</url>
     </scm>
 
     <properties>
@@ -99,9 +99,9 @@
         <!-- NOTE: our custom bitcoinj dependency is resolved transitively
              via the libdohj dependency below -->
         <dependency>
-            <groupId>com.github.bitsquare.libdohj</groupId>
+            <groupId>com.github.bisq-network.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>aa0729e5</version>
+            <version>b5c2f768</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
