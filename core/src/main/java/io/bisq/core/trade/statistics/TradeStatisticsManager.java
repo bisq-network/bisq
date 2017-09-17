@@ -133,7 +133,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         dump();
 
         // print all currencies sorted by nr. of trades
-        // printAllCurrencyStats();
+        printAllCurrencyStats();
 
     }
 
@@ -186,7 +186,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
             }
         }
 
-        StringBuilder sb1 = new StringBuilder();
+        StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
         map1.entrySet().stream()
                 .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
                 .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
@@ -194,19 +194,62 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         Map<String, Set<TradeStatistics>> map2 = new HashMap<>();
         for (TradeStatistics tradeStatistics : tradeStatisticsSet) {
-            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getCounterCurrency())) {
-                final String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
-                if (!map2.containsKey(counterCurrency))
-                    map2.put(counterCurrency, new HashSet<>());
+            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getBaseCurrency())) {
+                final String code = CurrencyUtil.getNameAndCode(tradeStatistics.getBaseCurrency());
+                if (!map2.containsKey(code))
+                    map2.put(code, new HashSet<>());
 
-                map2.get(counterCurrency).add(tradeStatistics);
+                map2.get(code).add(tradeStatistics);
             }
         }
 
-        StringBuilder sb2 = new StringBuilder();
+        List<String> allCryptoCurrencies = new ArrayList<>();
+        Set<String> coinsWithValidator = new HashSet<>();
+        coinsWithValidator.add("BTC");
+        coinsWithValidator.add("LTC");
+        coinsWithValidator.add("DOGE");
+        coinsWithValidator.add("DASH");
+        coinsWithValidator.add("ETH");
+        coinsWithValidator.add("PIVX");
+        coinsWithValidator.add("IOP");
+        coinsWithValidator.add("888");
+        coinsWithValidator.add("ZEC");
+        coinsWithValidator.add("GBYTE");
+        coinsWithValidator.add("NXT");
+        coinsWithValidator.add("PNC");
+        coinsWithValidator.add("ZEN");
+        coinsWithValidator.add("WAC");
+
+        Set<String> newlyAdded = new HashSet<>();
+        newlyAdded.add("PNC");
+        newlyAdded.add("WAC");
+        newlyAdded.add("ZEN");
+
+        CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
+        StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
+        StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
         map2.entrySet().stream()
                 .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-                .forEach(e -> sb2.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+                .forEach(e -> {
+                    final String key = e.getKey();
+                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
+                    // key is: USD Tether (USDT)
+                    String code = key.substring(key.indexOf("(")+1, key.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        allCryptoCurrencies.remove(key);
+                });
         log.error(sb2.toString());
+
+        // Not considered age of newly added coins, so take care with removal if coin was added recently.
+        allCryptoCurrencies.sort(String::compareTo);
+        allCryptoCurrencies.stream()
+                .forEach(e -> {
+                    // key is: USD Tether (USDT)
+                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        sb3.append(e).append("\n");
+                });
+        log.error(sb3.toString());
     }
 }
