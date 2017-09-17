@@ -136,7 +136,7 @@ public class CurrencyUtil {
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
-        
+        /*
         StringBuilder sb = new StringBuilder();
         result.stream().forEach(e -> sb.append("<li>\"")
                 .append(e.getCode())
@@ -145,7 +145,7 @@ public class CurrencyUtil {
                 .append("\"</li>")
                 .append("\n"));
         log.info(sb.toString());
-        
+        */
         return result;
     }
 

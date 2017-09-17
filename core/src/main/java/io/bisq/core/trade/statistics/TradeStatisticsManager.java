@@ -133,7 +133,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         dump();
 
         // print all currencies sorted by nr. of trades
-        printAllCurrencyStats();
+        // printAllCurrencyStats();
 
     }
 
@@ -220,6 +220,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         coinsWithValidator.add("ZEN");
         coinsWithValidator.add("WAC");
 
+        // As of: 17.Sept 2017
         Set<String> newlyAdded = new HashSet<>();
         newlyAdded.add("PNC");
         newlyAdded.add("WAC");
