@@ -189,6 +189,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
+        result.add(new CryptoCurrency("PNC", "Pranacoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
         result.add(new CryptoCurrency("POT", "PotCoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
@@ -218,14 +219,16 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
-        result.add(new CryptoCurrency("WDC", "Worldcoin"));
+        result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("WAVES", "Waves"));
+        result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("XAUR", "Xaurum"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-
+        result.add(new CryptoCurrency("ZEN", "ZenCash"));
+       
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
