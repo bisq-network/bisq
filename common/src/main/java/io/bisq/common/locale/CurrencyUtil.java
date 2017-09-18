@@ -123,6 +123,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("DEC", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
@@ -138,12 +139,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
-        result.add(new CryptoCurrency("EOS", "EOS", true));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
-        //TODO ticker?
-        //result.add(new CryptoCurrency("FILE", "Filecoin", true));
         result.add(new CryptoCurrency("GAME", "GameCredits"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
@@ -152,7 +150,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
-        result.add(new CryptoCurrency("IOTA", "IOTA", true));
         result.add(new CryptoCurrency("IOP", "Fermat"));
         result.add(new CryptoCurrency("JNS", "Janus", true));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
@@ -188,6 +185,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
+        result.add(new CryptoCurrency("PNC", "Pranacoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
         result.add(new CryptoCurrency("POT", "PotCoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
@@ -217,14 +215,16 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
-        result.add(new CryptoCurrency("WDC", "Worldcoin"));
+        result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("WAVES", "Waves"));
+        result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("XAUR", "Xaurum"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-
+        result.add(new CryptoCurrency("ZEN", "ZenCash"));
+       
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
@@ -249,6 +249,8 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        if (!baseCurrencyCode.equals("DOGE"))
+            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));

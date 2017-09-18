@@ -326,6 +326,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                     return new ValidationResult(true);
+		        case "DCT":
+                    if (input.matches("^(?=.{5,63}$)([a-z][a-z0-9-]+[a-z0-9])(\\.[a-z][a-z0-9-]+[a-z0-9])*$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
