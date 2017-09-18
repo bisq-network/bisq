@@ -222,9 +222,10 @@ public class TradeManager implements PersistedDataHost {
 
         cleanUpAddressEntries();
 
+        // TODO remove once we support Taker side publishing at take offer process
         // We start later to have better connectivity to the network
-        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
-                90, TimeUnit.SECONDS);
+      /*  UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
+                1, TimeUnit.SECONDS);*/
 
         pendingTradesInitialized.set(true);
     }

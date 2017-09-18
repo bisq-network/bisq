@@ -117,6 +117,10 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long maxTradeLimit;
     private final long maxTradePeriod;
 
+    //TODO check if it breaks existing objects
+    // @Nullable
+    // private final byte[] saltedHashOfPaymentAccount;
+
     // reserved for future use cases
     // Close offer when certain price is reached
     private final boolean useAutoClose;

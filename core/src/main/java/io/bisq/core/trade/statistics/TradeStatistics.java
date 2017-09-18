@@ -27,10 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-// We don't include the pubKeyRing as both traders might publish it if the maker uses an old
-// version and update later (taker publishes first, then later maker)
-// We also don't include the trade date as that is set locally and different for maker and taker
-
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKeyBytes", "signaturePubKey"})
 @Value
@@ -53,6 +49,10 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     private final byte[] signaturePubKeyBytes;
     @JsonExclude
     transient private final PublicKey signaturePubKey;
+    
+    //TODO check if it breaks existing objects
+    // @Nullable
+    // private final byte[] saltedHashOfPaymentAccount;
 
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
