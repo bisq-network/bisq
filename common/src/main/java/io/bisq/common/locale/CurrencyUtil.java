@@ -123,6 +123,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("DEC", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
