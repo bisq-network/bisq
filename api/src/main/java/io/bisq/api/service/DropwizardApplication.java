@@ -17,7 +17,9 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.P2PService;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -81,6 +83,13 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
                 return configuration.swaggerBundleConfiguration;
             }
         });
+        // Overriding settings through environment variables, added to override the http port from 8080 to something else
+        // See http://www.dropwizard.io/1.1.4/docs/manual/core.html#configuration
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false)
+                )
+        );
     }
 
     @Override
