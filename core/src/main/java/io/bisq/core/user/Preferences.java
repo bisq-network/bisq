@@ -57,9 +57,9 @@ public final class Preferences implements PersistedDataHost {
     ));
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.io/tx.html?tx=",
-            "https://explorer.bisq.io/Address.html?addr=");
+            "https://explorer.bisq.network/Address.html?addr=");
     public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.io/testnet/tx.html?tx=",
-            "https://explorer.bisq.io/testnet/Address.html?addr=");
+            "https://explorer.bisq.network/testnet/Address.html?addr=");
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),

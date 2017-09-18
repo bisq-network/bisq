@@ -140,8 +140,7 @@ public class PriceFeedService {
         else
             return null;
     }
-
-
+    
     public void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,

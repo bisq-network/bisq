@@ -513,7 +513,7 @@ public class BsqChainState implements PersistableEnvelope {
                         "    unspentTxOutputsMap.size={}\n" +
                         "    compensationRequestFees.size={}\n" +
                         "    votingFees.size={}\n" +
-                        getChainHeadHeight(),
+                getChainHeadHeight(),
                 bsqBlocks.size(),
                 txMap.size(),
                 unspentTxOutputsMap.size(),

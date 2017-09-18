@@ -45,6 +45,7 @@ public class BsqValidator extends AltcoinValidator {
     @Inject
     public BsqValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;
+        // TODO do we want a limit here?
         //setMaxValue(bsqFormatter.parseToCoin("2500000"));
     }
 
