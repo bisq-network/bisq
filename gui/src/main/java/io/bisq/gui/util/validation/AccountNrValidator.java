@@ -80,7 +80,7 @@ public final class AccountNrValidator extends BankValidator {
                 if (input != null) {
                     length = 11;
                     // Provided by sturles:
-                    // https://github.com/bitsquare/bitsquare/pull/707
+                    // https://github.com/bisq-network/exchange/pull/707
 
                     // https://no.wikipedia.org/wiki/MOD11#Implementasjoner_i_forskjellige_programmeringspr.C3.A5k
                     // https://en.wikipedia.org/wiki/International_Bank_Account_Number#Generating_IBAN_check_digits6

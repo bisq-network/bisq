@@ -31,7 +31,7 @@ SetupIconFile=Bisq.ico
 UninstallDisplayIcon={app}\Bisq.ico
 UninstallDisplayName=Bisq
 WizardImageStretch=No
-WizardSmallImageFile={localappdata}\Bisq-setup-icon.bmp
+WizardSmallImageFile=Bisq-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
 ChangesAssociations=Yes
 

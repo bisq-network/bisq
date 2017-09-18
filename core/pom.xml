@@ -30,7 +30,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.bitsquare.btcd-cli4j</groupId>
+            <groupId>com.github.bisq-network.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
             <version>29f99be</version>
             <exclusions>
@@ -62,7 +62,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.github.bitsquare.btcd-cli4j</groupId>
+            <groupId>com.github.bisq-network.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-daemon</artifactId>
             <version>29f99be</version>
             <exclusions>
