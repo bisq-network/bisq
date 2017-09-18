@@ -160,7 +160,7 @@ public class LocaleUtil {
         allLocales.add(new Locale("es", "PE", ""));
         allLocales.add(new Locale("en", "PH", ""));
         allLocales.add(new Locale("pl", "PL", ""));
-        allLocales.add(new Locale("es", "PR", ""));
+        allLocales.add(new Locale("es", "PR", "")); // Puerto Rico
         allLocales.add(new Locale("pt", "PT", ""));
         allLocales.add(new Locale("es", "PY", ""));
         allLocales.add(new Locale("ar", "QA", ""));
