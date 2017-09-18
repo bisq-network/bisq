@@ -219,12 +219,14 @@ public class TradeStatisticsManager implements PersistedDataHost {
         coinsWithValidator.add("PNC");
         coinsWithValidator.add("ZEN");
         coinsWithValidator.add("WAC");
-
+        coinsWithValidator.add("DEC");
+        
         // As of: 17.Sept 2017
         Set<String> newlyAdded = new HashSet<>();
         newlyAdded.add("PNC");
         newlyAdded.add("WAC");
         newlyAdded.add("ZEN");
+        newlyAdded.add("DEC");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
