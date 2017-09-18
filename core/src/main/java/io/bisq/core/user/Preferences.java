@@ -35,6 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Preferences implements PersistedDataHost {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
