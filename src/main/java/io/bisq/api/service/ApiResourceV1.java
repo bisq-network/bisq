@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -209,7 +210,7 @@ public class ApiResourceV1 {
         String result = "[]";
         TradeList tradeList = bisqProxy.getTradeList();
         if(tradeList == null || tradeList.trades == null || tradeList.trades.size() == 0) {
-            return "{}";
+            // will use default result
         } else {
             try {
                 List<String> stringList = tradeList.trades.stream().map(trade -> trade.toProtoMessage()).map(message -> {
@@ -220,13 +221,14 @@ public class ApiResourceV1 {
                     }
                     return "error";
                 }).collect(Collectors.toList());
-                int last = stringList.size() - 1;
-                result = "[" + String.join(", ",
-                        String.join(", ", stringList.subList(0, last)),
-                        stringList.get(last)) + "]";
+                StringJoiner stringJoiner = new StringJoiner(",", "[", "]");
+                for(String string : stringList) {
+                    stringJoiner.add(string);
+                }
+                result = stringJoiner.toString();
             } catch (Throwable e) {
                 log.error("Error processing tradeList method", e);
-                // will use empty result
+                // will use default result
             }
         }
 
