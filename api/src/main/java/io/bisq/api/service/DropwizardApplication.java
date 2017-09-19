@@ -13,6 +13,8 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.closed.ClosedTradableManager;
+import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.P2PService;
@@ -24,6 +26,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import org.eclipse.jetty.server.Authentication;
 
 public class DropwizardApplication extends Application<ApiConfiguration> {
     @Inject
@@ -34,6 +37,12 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 
     @Inject
     TradeManager tradeManager;
+
+    @Inject
+    ClosedTradableManager closedTradableManager;
+
+    @Inject
+    FailedTradesManager failedTradesManager;
 
     @Inject
     OpenOfferManager openOfferManager;
@@ -98,7 +107,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         BisqProxy bisqProxy = new BisqProxy(walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
-                walletsSetup);
+                walletsSetup, closedTradableManager, failedTradesManager);
         final ApiResourceV1 resource = new ApiResourceV1(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),

@@ -26,6 +26,8 @@ import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.closed.ClosedTradableManager;
+import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.protocol.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -36,6 +38,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
@@ -64,6 +67,8 @@ public class BisqProxy {
     private BtcWalletService btcWalletService;
     private User user;
     private TradeManager tradeManager;
+    private ClosedTradableManager closedTradableManager;
+    private FailedTradesManager failedTradesManager;
     private OpenOfferManager openOfferManager;
     private OfferBookService offerBookService;
     private P2PService p2PService;
@@ -86,7 +91,8 @@ public class BisqProxy {
     public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
                      PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences,
-                     BsqWalletService bsqWalletService, WalletsSetup walletsSetup) {
+                     BsqWalletService bsqWalletService, WalletsSetup walletsSetup, ClosedTradableManager closedTradableManager,
+                     FailedTradesManager failedTradesManager) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -101,6 +107,8 @@ public class BisqProxy {
         this.marketList = calculateMarketList();
         this.currencyList = calculateCurrencyList();
         this.walletsSetup = walletsSetup;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
     }
 
     protected CurrencyList calculateCurrencyList() {
@@ -509,13 +517,13 @@ public class BisqProxy {
         }
 
         Coin availableBalance = btcWalletService.getAvailableBalance();
-        Coin reservedBalance = btcWalletService.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
-        Coin lockedBalance = Coin.ZERO;
+        Coin reservedBalance = updateReservedBalance();
+        Coin lockedBalance = updateLockedBalance();
         return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString(), lockedBalance.toPlainString());
     }
 
-    /*
-    private void updateLockedBalance() {
+    // TODO copied from MainViewModel - refactor !
+    private Coin updateLockedBalance() {
         Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
         lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
         Coin sum = Coin.valueOf(lockedTrades
@@ -527,9 +535,28 @@ public class BisqProxy {
                         return 0;
                 })
                 .sum());
-        lockedBalance.set(formatter.formatCoinWithCode(sum));
+        return sum;
     }
-    */
+
+    // TODO
+    private Coin updateReservedBalance() {
+        Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
+                .map(openOffer -> {
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    if (addressEntryOptional.isPresent()) {
+                        Address address = addressEntryOptional.get().getAddress();
+                        return btcWalletService.getBalanceForAddress(address);
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(e -> e != null)
+                .mapToLong(Coin::getValue)
+                .sum());
+
+        return sum;
+    }
+
 
     public WalletTransactions getWalletTransactions(long start, long end, long limit) {
         boolean includeDeadTransactions = true;
