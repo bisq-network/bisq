@@ -394,7 +394,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String key = "securityDepositInfo";
             new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();

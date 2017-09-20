@@ -82,7 +82,7 @@ public class TacWindow extends Overlay<TacWindow> {
         String fontSize = smallScreen ? "9" : "12";
         messageLabel.setStyle("-fx-font-size: " + fontSize + ";");
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bisq.io/arbitration_system.pdf");
+                "https://bisq.network/arbitration_system.pdf");
         hyperlinkWithIcon.setStyle("-fx-font-size: " + fontSize + ";");
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }

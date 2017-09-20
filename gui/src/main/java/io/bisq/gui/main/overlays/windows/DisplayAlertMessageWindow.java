@@ -70,7 +70,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         if (alert.isUpdateInfo()) {
             headLine = Res.get("displayAlertMessageWindow.update.headline");
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
-            String url = "https://bisq.io/downloads";
+            String url = "https://bisq.network/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     Res.get("displayAlertMessageWindow.update.download"), url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
