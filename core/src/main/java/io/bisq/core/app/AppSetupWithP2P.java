@@ -17,6 +17,7 @@
 
 package io.bisq.core.app;
 
+import io.bisq.common.UserThread;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -68,8 +69,15 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        p2pNetWorkReady = initP2PNetwork();
+        BooleanProperty result = loadEntryMap();
+        result.addListener((observable, oldValue, newValue) -> {
+            if (newValue) 
+                startInitP2PNetwork();
+        });
+    }
 
+    private void startInitP2PNetwork() {
+        p2pNetWorkReady = initP2PNetwork();
         p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 onBasicServicesInitialized();
@@ -81,6 +89,22 @@ public class AppSetupWithP2P extends AppSetup {
     // Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private BooleanProperty loadEntryMap() {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread loadEntryMapThread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("loadEntryMapThread");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
+                final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
+                p2PService.readEntryMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        loadEntryMapThread.start();
+        return result;
+    }
+    
     private BooleanProperty initP2PNetwork() {
         log.info("initP2PNetwork");
         p2PService.getNetworkNode().addConnectionListener(new ConnectionListener() {
@@ -149,11 +173,9 @@ public class AppSetupWithP2P extends AppSetup {
 
     protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
-        // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
-        final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() +
-                "_" + BisqEnvironment.getBaseCurrencyNetwork().getNetwork();
-        p2PService.readEntryMapFromResources(storageFileName);
 
         p2PService.onAllServicesInitialized();
+
+        tradeStatisticsManager.onAllServicesInitialized();
     }
 }
