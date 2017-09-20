@@ -343,10 +343,7 @@ public class BisqProxy {
         }
     }
 
-
-
-
-    /// START TODO refactor out of GUI module ////
+    /// START TODO OFFER_MAKE dependencies, refactor out of GUI module ///////
 
     boolean isBsqForFeeAvailable(Coin amount, double marketPriceMargin) {
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
@@ -391,13 +388,12 @@ public class BisqProxy {
         }
     }
 
-    /// STOP TODO refactor out of GUI module ////
+    /// STOP TODO OFFER_MAKE dependencies, refactor out of GUI module ///////
 
-    ///////////////// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
-
+    /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
     /**
-     * TakeOfferDataModel.initWithData(Offer) needs to be refactored for fee calculation etc.
+     * TODO TakeOfferDataModel.initWithData(Offer) needs to be refactored for fee calculation etc.
      *
      * @param offerId
      * @param paymentAccountId
@@ -498,7 +494,7 @@ public class BisqProxy {
                 !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount, false)).isNegative();
     }
 
-    ///////////////// END OFFER TAKE DEPENDENCIES //////////////////////////
+    /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
     public TradeList getTradeList() {
         TradeList tradeList = new TradeList();
@@ -538,7 +534,7 @@ public class BisqProxy {
         return sum;
     }
 
-    // TODO
+    // TODO copied from MainViewModel - refactor !
     private Coin updateReservedBalance() {
         Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
                 .map(openOffer -> {
