@@ -228,6 +228,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
+        result.add(new CryptoCurrency("ELLA", "Ellaism"));
        
         result.sort(TradeCurrency::compareTo);
 
