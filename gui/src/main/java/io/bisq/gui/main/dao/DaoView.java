@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -63,7 +64,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         votingTab.setClosable(false);
         root.getTabs().addAll(compensationTab, votingTab);
 
-        if (!DevEnv.DAO_PHASE2_ACTIVATED) {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq() && !DevEnv.DAO_PHASE2_ACTIVATED) {
             votingTab.setDisable(true);
             compensationTab.setDisable(true);
         }
