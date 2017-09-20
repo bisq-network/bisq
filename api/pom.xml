@@ -222,11 +222,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>core</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
             <version>1.1.2-1</version>
