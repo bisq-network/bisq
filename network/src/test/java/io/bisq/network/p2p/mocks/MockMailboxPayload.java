@@ -8,7 +8,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.ExpirablePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.UUID;
 
@@ -31,7 +31,7 @@ public final class MockMailboxPayload extends NetworkEnvelope implements Mailbox
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("toProtoNetworkEnvelope not impl.");
     }
 
 

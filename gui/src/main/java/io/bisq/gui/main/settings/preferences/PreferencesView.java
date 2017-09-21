@@ -448,6 +448,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void activateGeneralOptions() {
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
+
+        // We don't support DOGE anymore due lack of interest but leave it in the code in case it will get 
+        // re-activated some day
+        baseCurrencyNetworks = baseCurrencyNetworks.stream()
+                .filter(e -> !e.isDoge())
+                .collect(Collectors.toList());
+        
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
             baseCurrencyNetworks = baseCurrencyNetworks.stream()

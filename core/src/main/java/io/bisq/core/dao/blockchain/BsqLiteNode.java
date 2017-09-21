@@ -85,7 +85,7 @@ public class BsqLiteNode extends BsqNode {
                     @Override
                     public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
                         List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
-                        log.info("received msg with {} items", bsqBlockList.size(), bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+                        log.info("received msg with {} items", bsqBlockList.size());
                         if (bsqBlockList.size() > 0)
                             log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
                         // Be safe and reset all mutable data in case the provider would not have done it

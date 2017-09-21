@@ -100,22 +100,20 @@ public class BisqApp extends Application {
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
     private static BisqEnvironment bisqEnvironment;
-
-    private BisqAppModule bisqAppModule;
-    private Injector injector;
-    private boolean popupOpened;
-
-    private static Stage primaryStage;
-    private Scene scene;
-    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
-    private MainView mainView;
-
     public static Runnable shutDownHandler;
-    private boolean shutDownRequested;
+    private static Stage primaryStage;
 
     public static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
+
+    private BisqAppModule bisqAppModule;
+    private Injector injector;
+    private boolean popupOpened;
+    private Scene scene;
+    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
+    private MainView mainView;
+    private boolean shutDownRequested;
 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override

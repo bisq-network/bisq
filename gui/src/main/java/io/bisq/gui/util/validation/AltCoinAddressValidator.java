@@ -177,6 +177,28 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "BSQ":
+                    if (!input.startsWith("B"))
+                        return new ValidationResult(false, Res.get("validation.altcoin.invalidAddress",
+                                currencyCode, "BSQ address must start with \"B\""));
+
+                    String addressAsBtc = input.substring(1, input.length());
+                    try {
+                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
+                            case BTC_MAINNET:
+                                Address.fromBase58(MainNetParams.get(), addressAsBtc);
+                                break;
+                            case BTC_TESTNET:
+                                Address.fromBase58(TestNet3Params.get(), addressAsBtc);
+                                break;
+                            case BTC_REGTEST:
+                                Address.fromBase58(RegTestParams.get(), addressAsBtc);
+                                break;
+                        }
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
@@ -304,6 +326,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                     return new ValidationResult(true);
+		        case "DCT":
+                    if (input.matches("^(?=.{5,63}$)([a-z][a-z0-9-]+[a-z0-9])(\\.[a-z][a-z0-9-]+[a-z0-9])*$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;

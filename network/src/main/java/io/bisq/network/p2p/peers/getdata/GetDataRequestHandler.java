@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
 
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIME_OUT_SEC = 60;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

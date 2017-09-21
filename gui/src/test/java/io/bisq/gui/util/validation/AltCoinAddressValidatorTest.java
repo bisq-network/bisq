@@ -182,4 +182,22 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("mWvZ7nZAUzpRMFp2Bfjxz27Va47nUfB79E").isValid);
         assertFalse(validator.validate("WemK3MgwREsE23fgsadtYLxmMqAX9C2LYQ").isValid);
     }
+   
+    @Test
+    public void testDCT() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("DCT");
+
+        assertTrue(validator.validate("ud6910c2790bda53bcc53cb131f8fa3bf").isValid);
+        assertTrue(validator.validate("decent-account123").isValid);
+	    assertTrue(validator.validate("decent.acc-123").isValid);
+
+        assertFalse(validator.validate("my.acc123").isValid);
+        assertFalse(validator.validate("123decent").isValid);
+        assertFalse(validator.validate("decent_acc").isValid);
+        assertFalse(validator.validate("dEcent").isValid);
+	    assertFalse(validator.validate("dct1").isValid);
+	    assertFalse(validator.validate("decent-").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }

@@ -68,10 +68,17 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        p2pNetWorkReady = initP2PNetwork();
-
-        p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
+        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
+        result.addListener((observable, oldValue, newValue) -> {
             if (newValue) 
+                startInitP2PNetwork();
+        });
+    }
+
+    private void startInitP2PNetwork() {
+        p2pNetWorkReady = initP2PNetwork();
+        p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
+            if (newValue)
                 onBasicServicesInitialized();
         });
     }
@@ -149,10 +156,9 @@ public class AppSetupWithP2P extends AppSetup {
 
     protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
-        // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
-        final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-        p2PService.readEntryMapFromResources(storageFileName);
-        
+
         p2PService.onAllServicesInitialized();
+
+        tradeStatisticsManager.onAllServicesInitialized();
     }
 }

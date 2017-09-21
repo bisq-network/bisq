@@ -146,7 +146,7 @@ class SpreadViewModel extends ActivatableViewModel {
                     // TODO maybe show extra colums with spread and use real amount diff
                     // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
 
-                    if (spread != null && marketPrice != null && marketPrice.isValid()) {
+                    if (spread != null && marketPrice != null && marketPrice.isPriceAvailable()) {
                         double marketPriceAsDouble = marketPrice.getPrice();
                         final double precision = isFiatCurrency ?
                                 Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
