@@ -193,7 +193,7 @@ public class BisqProxy {
     }
 
     public Optional<BisqProxyError> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                                              boolean useMarketBasedPrice, Double marketPriceMargin, String baseCurrencyCode, String counterCurrencyCode, String fiatPrice) {
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, String fiatPrice) {
 
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         if (user.getAcceptedArbitratorAddresses().size() == 0) {
@@ -207,9 +207,15 @@ public class BisqProxy {
             return BisqProxyError.getOptional("When choosing FIXED price, fill in fixed_price with a price > 0");
         }
         // check that the currency pairs are valid
-        if (!checkValidMarket(baseCurrencyCode, counterCurrencyCode)) {
-            return BisqProxyError.getOptional("There is no valid market pair: " + baseCurrencyCode.toLowerCase() + "_" + counterCurrencyCode.toLowerCase());
+        if (!checkValidMarket(marketPair)) {
+            return BisqProxyError.getOptional("There is no valid market pair called: " + marketPair);
         }
+
+        Market market = new Market(marketPair);
+        // if right side is fiat, then left is base currency.
+        // else right side is base currency.
+        String baseCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getLsymbol() : market.getRsymbol();
+        String counterCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getRsymbol() : market.getLsymbol();
 
         Optional<PaymentAccount> optionalAccount = getPaymentAccountList().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
@@ -702,7 +708,7 @@ public class BisqProxy {
         return true; // TODO better return value?
     }
 
-    private boolean checkValidMarket(String lsymbol, String rsymbol) {
-        return marketList.markets.contains(new Market(lsymbol, rsymbol));
+    private boolean checkValidMarket(String marketPair) {
+        return marketList.markets.contains(new Market(marketPair));
     }
 }

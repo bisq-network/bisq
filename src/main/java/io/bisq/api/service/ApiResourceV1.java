@@ -139,9 +139,9 @@ public class ApiResourceV1 {
 
     /**
      * param	    type	desc	                                                                        required	values	            default
-     * market	    string	identifies the market this offer will be placed in	                            1
      * payment_account_id	string	identifies the account to which funds will be received once offer is executed.	1
      * direction	string	defines if this is an offer to buy or sell	                                    1	        sell | buy
+     * market_pair	    string	identifies the market this offer will be placed in	                            1
      * amount	    real	amount to buy or sell, in terms of left side of market pair	                    1
      * min_amount	real	minimum amount to buy or sell, in terms of left side of market pair	            1
      * price_type	string	defines if this is a fixed offer or a percentage offset from present market price.		    fixed | percentage	fixed
@@ -155,15 +155,14 @@ public class ApiResourceV1 {
             @NotEmpty @QueryParam("payment_account_id") String accountId,
             @NotNull @QueryParam("direction") OfferPayload.Direction direction,
             @NotNull @DefaultValue("FIXED") @QueryParam("price_type") PriceType priceType,
-            @NotNull @QueryParam("base_currency_code") String baseCurrencyCode,
-            @NotNull @QueryParam("counter_currency_code") String counterCurrencyCode,
+            @NotNull @QueryParam("market_pair") String marketPair,
             @Min(-1) @Max(1) @DefaultValue("0") @QueryParam("percentage_from_market_price") Double percentage_from_market_price,
             @DefaultValue("0") @QueryParam("fixed_price") String fixedPrice,
             @Min(100000) @Max(200000000) @NotNull @QueryParam("amount") BigDecimal amount,
             @Min(100000) @Max(200000000) @NotNull @QueryParam("min_amount") BigDecimal minAmount
     ) {
         return handleBisqProxyError(bisqProxy.offerMake(accountId, direction, amount, minAmount,
-                PriceType.PERCENTAGE.equals(priceType), percentage_from_market_price, baseCurrencyCode, counterCurrencyCode, fixedPrice));
+                PriceType.PERCENTAGE.equals(priceType), percentage_from_market_price, marketPair, fixedPrice));
     }
 
     /**
