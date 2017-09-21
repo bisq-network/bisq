@@ -126,7 +126,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (persistedEntryMap != null) {
             map.putAll(persistedEntryMap.getMap());
             log.info("persistedEntryMap size=" + map.size());
-            log.error("map.putAll(persistedEntryMap.getMap());");
 
             // In case another object is already listening...
             if (!hashMapChangedListeners.isEmpty())

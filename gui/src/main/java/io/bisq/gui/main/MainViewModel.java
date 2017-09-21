@@ -37,6 +37,7 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.app.SetupUtils;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
@@ -192,7 +193,6 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
-    private BooleanProperty loadEntryMapResult, checkCryptoSetupResult;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -257,80 +257,35 @@ public class MainViewModel implements ViewModel {
 
     public void start() {
         //noinspection ConstantConditions,ConstantConditions
+        bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
+
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
                     preferences.setTacAccepted(true);
-                    showSelectBaseCurrencyWindow();
+                    checkIfLocalHostNodeIsRunning();
                 }).show();
             }, 1);
         } else {
-            showSelectBaseCurrencyWindow();
+            checkIfLocalHostNodeIsRunning();
         }
     }
 
-    private void showSelectBaseCurrencyWindow() {
-        String key = "showSelectBaseCurrencyWindowAtFistStartup";
-        if (preferences.showAgain(key)) {
-            bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
-            preferences.dontShowAgain(key, true);
-            showRevertIdCheckRequirement();
-            
-           /* new SelectBaseCurrencyWindow()
-                    .onSelect(baseCurrencyNetwork -> {
-                        preferences.dontShowAgain(key, true);
-                        final boolean hasChanged = !BisqEnvironment.getBaseCurrencyNetwork().equals(baseCurrencyNetwork);
-                        bisqEnvironment.saveBaseCryptoNetwork(baseCurrencyNetwork);
-                        if (hasChanged) {
-                            new Popup().warning(Res.get("settings.net.needRestart"))
-                                    .onAction(() -> {
-                                        UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                                    })
-                                    .actionButtonText(Res.get("shared.shutDown"))
-                                    .hideCloseButton()
-                                    .show();
-                        }
-                    })
-                    .actionButtonText(Res.get("selectBaseCurrencyWindow.default", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()))
-                    .onAction(() -> {
-                        bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
-                        preferences.dontShowAgain(key, true);
-                        showRevertIdCheckRequirement();
-                    })
-                    .hideCloseButton()
-                    .show();*/
-        } else {
-            showRevertIdCheckRequirement();
-        }
-    }
+    private void startLoadEntryMap() {
+        log.info("startLoadEntryMap");
 
-    private void showRevertIdCheckRequirement() {
-        //TODO remove after v0.5.2
-        String key = "revertIdCheckRequirement";
-        if (preferences.showAgain(key) &&
-                user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().stream()
-                        .filter(e -> e.getPaymentMethod().getId().equals(PaymentMethod.SEPA_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.NATIONAL_BANK_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.SAME_BANK_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.SPECIFIC_BANKS_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.CHASE_QUICK_PAY_ID) ||
-                                e.getPaymentMethod().getId().equals(PaymentMethod.INTERAC_E_TRANSFER_ID))
-                        .findAny()
-                        .isPresent()) {
-            new Popup<>().information(Res.get("popup.info.revertIdCheckRequirement")).show();
-        }
-        preferences.dontShowAgain(key, true);
-        checkIfLocalHostNodeIsRunning();
+        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
+        result.addListener((observable, oldValue, newValue) -> {
+            if (newValue)
+                startBasicServices();
+        });
+
+        // TODO can be removed in jdk 9
+        checkCryptoSetup();
     }
 
     private void startBasicServices() {
         log.info("startBasicServices");
-
-        loadEntryMapResult = loadEntryMap();
-        checkCryptoSetupResult = checkCryptoSetup();
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -353,14 +308,12 @@ public class MainViewModel implements ViewModel {
             initWalletService();
 
         // need to store it to not get garbage collected
-        allServicesDone = EasyBind.combine(checkCryptoSetupResult, loadEntryMapResult, walletInitialized, p2pNetWorkReady,
-                (a, b, c, d) -> {
-                    log.info("\ncheckCryptoSetupResult={}\n" +
-                                    "loadEntryMapResult={}\n" +
-                                    "walletInitialized={}\n" +
+        allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady,
+                (a, b) -> {
+                    log.info("\nwalletInitialized={}\n" +
                                     "p2pNetWorkReady={}",
-                            a, b, c, d);
-                    return a && b && c && d;
+                            a, b);
+                    return a && b;
                 });
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
@@ -394,22 +347,6 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private BooleanProperty loadEntryMap() {
-        BooleanProperty result = new SimpleBooleanProperty();
-        Thread loadEntryMapThread = new Thread() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("loadEntryMapThread");
-                // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
-                final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-                p2PService.readEntryMapFromResources(storageFileName);
-                UserThread.execute(() -> result.set(true));
-            }
-        };
-        loadEntryMapThread.start();
-        return result;
-    }
 
     private BooleanProperty initP2PNetwork() {
         log.info("initP2PNetwork");
@@ -758,11 +695,11 @@ public class MainViewModel implements ViewModel {
                     log.info("Localhost peer detected.");
                     UserThread.execute(() -> {
                         bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
-                        startBasicServices();
+                        startLoadEntryMap();
                     });
                 } catch (Throwable e) {
                     log.info("Localhost peer not detected.");
-                    UserThread.execute(MainViewModel.this::startBasicServices);
+                    UserThread.execute(MainViewModel.this::startLoadEntryMap);
                 } finally {
                     if (socket != null) {
                         try {

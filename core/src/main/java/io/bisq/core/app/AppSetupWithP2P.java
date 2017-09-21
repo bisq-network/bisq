@@ -17,7 +17,6 @@
 
 package io.bisq.core.app;
 
-import io.bisq.common.UserThread;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -69,7 +68,7 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        BooleanProperty result = loadEntryMap();
+        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
         result.addListener((observable, oldValue, newValue) -> {
             if (newValue) 
                 startInitP2PNetwork();
@@ -89,22 +88,6 @@ public class AppSetupWithP2P extends AppSetup {
     // Initialisation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BooleanProperty loadEntryMap() {
-        BooleanProperty result = new SimpleBooleanProperty();
-        Thread loadEntryMapThread = new Thread() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("loadEntryMapThread");
-                // Used to load different EntryMap files per base currency (EntryMap_BTC, EntryMap_LTC,...)
-                final String storageFileName = "EntryMap_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-                p2PService.readEntryMapFromResources(storageFileName);
-                UserThread.execute(() -> result.set(true));
-            }
-        };
-        loadEntryMapThread.start();
-        return result;
-    }
-    
     private BooleanProperty initP2PNetwork() {
         log.info("initP2PNetwork");
         p2PService.getNetworkNode().addConnectionListener(new ConnectionListener() {
