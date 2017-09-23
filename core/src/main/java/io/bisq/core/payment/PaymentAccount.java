@@ -17,9 +17,11 @@
 
 package io.bisq.core.payment;
 
+import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -57,6 +59,15 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Nullable
     protected TradeCurrency selectedTradeCurrency;
 
+    @Setter
+    @Nullable
+    protected PaymentAccountAgeWitness paymentAccountAgeWitness;
+
+    // TODO add to PB!
+    @Setter
+    @Nullable
+    protected byte[] salt;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,6 +81,9 @@ public abstract class PaymentAccount implements PersistablePayload {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
+
+        // We set by default a random salt. User can set salt as well by hex string
+        salt = CryptoUtils.getSalt(32); // 256 bit
     }
 
 
@@ -142,4 +156,20 @@ public abstract class PaymentAccount implements PersistablePayload {
     }
 
     protected abstract PaymentAccountPayload getPayload();
+
+    // TODO make abstract
+    // Identifying data of payment account (e.g. IBAN). 
+    // This is critical code for verifying age of payment account. 
+    // Any change would break validation of historical data!
+    public byte[] getAgeWitnessInputData() {
+        return new byte[0];
+    }
+
+    public void setSaltAsHex(String saltAsHex) {
+        this.salt = Utilities.decodeFromHex(saltAsHex);
+    }
+
+    public String getSaltAsHex() {
+        return Utilities.bytesAsHexString(salt);
+    }
 }

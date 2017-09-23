@@ -22,7 +22,9 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SepaAccountPayload;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.nio.charset.Charset;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -76,5 +78,12 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
 
     public void removeAcceptedCountry(String countryCode) {
         ((SepaAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return ArrayUtils.addAll(getIban().getBytes(Charset.forName("UTF-8")), getBic().getBytes(Charset.forName("UTF-8")));
     }
 }

@@ -31,6 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class PaymentAccountPayload implements NetworkPayload {
     protected final String paymentMethodId;
     protected final String id;
+    
+    // That is problematic and should be removed in next hard fork. 
+    // Any change in maxTradePeriod would make existing payment accounts incompatible.
+    // TODO prepare backward compatible change
     protected final long maxTradePeriod;
 
 

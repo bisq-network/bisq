@@ -20,6 +20,7 @@ package io.bisq.common.crypto;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
@@ -28,6 +29,12 @@ public class CryptoUtils {
     public static String pubKeyToString(PublicKey publicKey) {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
+    }
+
+    public static byte[] getSalt(int size) {
+        byte[] salt = new byte[size];
+        new SecureRandom().nextBytes(salt);
+        return salt;
     }
 }
 
