@@ -97,11 +97,14 @@ public class TakerVerifyAndSignContract extends TradeTask {
             );
             String contractAsJson = Utilities.objectToJson(contract);
             log.trace("Contract as json:{}", contractAsJson);
+
+            contract.printDiff(processModel.getTradingPeer().getContractAsJson());
+            checkArgument(contractAsJson.equals(processModel.getTradingPeer().getContractAsJson()), "Contracts are not matching");
+
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setTakerContractSignature(signature);
-
             try {
                 checkNotNull(maker.getPubKeyRing(), "maker.getPubKeyRing() must nto be null");
                 Sig.verify(maker.getPubKeyRing().getSignaturePubKey(),
