@@ -68,10 +68,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
-            // TODO dev
-            byte[] accountSalt = new byte[1];
+            byte[] accountSalt = processModel.getPaymentAccountPayload(trade).getSalt();
 
-            
             PayDepositRequest message = new PayDepositRequest(
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),

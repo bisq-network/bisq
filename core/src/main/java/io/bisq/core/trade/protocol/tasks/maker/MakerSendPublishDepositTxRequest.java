@@ -54,8 +54,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                             addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            // TODO dev
-            byte[] accountSalt = new byte[1];
+            byte[] accountSalt = processModel.getPaymentAccountPayload(trade).getSalt();
 
             PublishDepositTxRequest message = new PublishDepositTxRequest(
                     processModel.getOfferId(),

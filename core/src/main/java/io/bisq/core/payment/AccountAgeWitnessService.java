@@ -159,6 +159,6 @@ public class AccountAgeWitnessService {
             log.warn("witnessHash is not matching peers offersWitness. " +
                     "witnessHash={}, offersWitness={}", Utilities.bytesAsHexString(witnessHash), 
                     Utilities.bytesAsHexString(offersWitness));
-        return false;
+        return result;
     }
 }
