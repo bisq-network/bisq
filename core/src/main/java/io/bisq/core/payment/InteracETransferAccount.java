@@ -31,7 +31,7 @@ public final class InteracETransferAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
+    protected PaymentAccountPayload createPayload() {
         return new InteracETransferAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

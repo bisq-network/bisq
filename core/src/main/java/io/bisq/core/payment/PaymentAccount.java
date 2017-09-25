@@ -81,7 +81,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     public void init() {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
-        paymentAccountPayload = getPayload();
+        paymentAccountPayload = createPayload();
         setRandomSalt();
     }
 
@@ -170,7 +170,7 @@ public abstract class PaymentAccount implements PersistablePayload {
             return null;
     }
 
-    protected abstract PaymentAccountPayload getPayload();
+    protected abstract PaymentAccountPayload createPayload();
 
     public void setSalt(byte[] salt) {
         this.salt = salt;
