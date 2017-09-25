@@ -62,7 +62,7 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     @Setter
     @Nullable
-    protected PaymentAccountAgeWitness paymentPaymentAccountAgeWitness;
+    protected AccountAgeWitness paymentAccountAgeWitness;
 
     // TODO add to PB!
     @Setter

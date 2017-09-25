@@ -46,12 +46,12 @@ public class PaymentAccountAgeWitnessService {
         this.keyRing = keyRing;
     }
 
-    public PaymentAccountAgeWitness getPaymentAccountWitness(PaymentAccount paymentAccount, Trade trade) throws CryptoException {
+    public AccountAgeWitness getPaymentAccountWitness(PaymentAccount paymentAccount, Trade trade) throws CryptoException {
         byte[] hash = getWitnessHash(paymentAccount);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
         long tradeDate = trade.getTakeOfferDate().getTime();
         byte[] hashOfPubKey = Sha256Hash.hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
-        return new PaymentAccountAgeWitness(hash,
+        return new AccountAgeWitness(hash,
                 hashOfPubKey,
                 signature,
                 tradeDate);
@@ -68,7 +68,7 @@ public class PaymentAccountAgeWitnessService {
     }
 
     boolean verifyAgeWitness(byte[] peersAgeWitnessInputData,
-                             PaymentAccountAgeWitness witness,
+                             AccountAgeWitness witness,
                              byte[] peersSalt,
                              PublicKey peersPublicKey,
                              int nonce,

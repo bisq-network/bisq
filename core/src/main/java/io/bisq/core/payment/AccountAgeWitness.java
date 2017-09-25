@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKey"})
 @Value
-public class PaymentAccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
+public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
 
     private final byte[] hash;                      // 32 bytes
     private final byte[] hashOfPubKey;              // 32 bytes
@@ -52,10 +52,10 @@ public class PaymentAccountAgeWitness implements LazyProcessedStoragePayload, Pe
     @Nullable
     private Map<String, String> extraDataMap;
 
-    public PaymentAccountAgeWitness(byte[] hash,
-                                    byte[] hashOfPubKey,
-                                    byte[] signature,
-                                    long tradeDate) {
+    public AccountAgeWitness(byte[] hash,
+                             byte[] hashOfPubKey,
+                             byte[] signature,
+                             long tradeDate) {
 
         this(hash,
                 hashOfPubKey,
@@ -68,11 +68,11 @@ public class PaymentAccountAgeWitness implements LazyProcessedStoragePayload, Pe
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountAgeWitness(byte[] hash,
-                             byte[] hashOfPubKey,
-                             byte[] signature,
-                             long tradeDate,
-                             @Nullable Map<String, String> extraDataMap) {
+    AccountAgeWitness(byte[] hash,
+                      byte[] hashOfPubKey,
+                      byte[] signature,
+                      long tradeDate,
+                      @Nullable Map<String, String> extraDataMap) {
         this.hash = hash;
         this.hashOfPubKey = hashOfPubKey;
         this.signature = signature;
