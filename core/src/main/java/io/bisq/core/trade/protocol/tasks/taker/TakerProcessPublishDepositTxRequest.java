@@ -45,7 +45,6 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             checkNotNull(publishDepositTxRequest);
 
             processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload()));
-            processModel.getTradingPeer().setAccountSalt(checkNotNull(publishDepositTxRequest.getAccountSalt()));
             processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
             processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
             processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));

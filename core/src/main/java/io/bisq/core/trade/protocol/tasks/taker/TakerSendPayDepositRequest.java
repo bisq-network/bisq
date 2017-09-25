@@ -68,8 +68,6 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
-            byte[] accountSalt = processModel.getPaymentAccountPayload(trade).getSalt();
-
             PayDepositRequest message = new PayDepositRequest(
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
@@ -92,7 +90,6 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     UUID.randomUUID().toString(),
-                    accountSalt,
                     Version.getP2PMessageVersion());
 
             processModel.getP2PService().sendEncryptedDirectMessage(

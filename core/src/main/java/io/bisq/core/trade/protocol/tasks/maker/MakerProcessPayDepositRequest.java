@@ -47,8 +47,6 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), payDepositRequest);
 
             processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(payDepositRequest.getTakerPaymentAccountPayload()));
-            processModel.getTradingPeer().setAccountSalt(checkNotNull(payDepositRequest.getAccountSalt()));
-
             processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
             checkArgument(payDepositRequest.getRawTransactionInputs().size() > 0);
 

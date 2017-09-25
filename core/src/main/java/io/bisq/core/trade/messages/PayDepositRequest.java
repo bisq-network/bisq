@@ -59,7 +59,6 @@ public final class PayDepositRequest extends TradeMessage {
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final String uid;
-    private final byte[] accountSalt;
 
     public PayDepositRequest(String tradeId,
                              NodeAddress senderNodeAddress,
@@ -82,7 +81,6 @@ public final class PayDepositRequest extends TradeMessage {
                              NodeAddress arbitratorNodeAddress,
                              NodeAddress mediatorNodeAddress,
                              String uid,
-                             byte[] accountSalt,
                              int messageVersion) {
         super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
@@ -105,7 +103,6 @@ public final class PayDepositRequest extends TradeMessage {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.uid = uid;
-        this.accountSalt = accountSalt;
     }
 
 
@@ -138,8 +135,7 @@ public final class PayDepositRequest extends TradeMessage {
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
-                .setUid(uid)
-                .setAccountSalt(ByteString.copyFrom(accountSalt));
+                .setUid(uid);
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
@@ -175,7 +171,6 @@ public final class PayDepositRequest extends TradeMessage {
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 proto.getUid(),
-                proto.getAccountSalt().toByteArray(),
                 messageVersion);
     }
 
@@ -203,7 +198,6 @@ public final class PayDepositRequest extends TradeMessage {
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     uid='" + uid + '\'' +
-                ",\n     accountSalt='" + Utilities.bytesAsHexString(accountSalt) + '\'' +
                 "\n} " + super.toString();
     }
 }

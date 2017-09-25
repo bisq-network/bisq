@@ -44,16 +44,13 @@ public class TakerVerifyOffersAgeWitnessHash extends TradeTask {
             runInterceptHook();
 
             final Map<String, String> extraDataMap = trade.getOffer().getExtraDataMap();
-            final byte[] accountSalt = processModel.getTradingPeer().getAccountSalt();
             if (extraDataMap != null &&
-                    extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS) &&
-                    accountSalt != null) {
+                    extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS)) {
                 final String offersWitness = extraDataMap.get(OfferPayload.ACCOUNT_AGE_WITNESS);
                 final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload()
                         , "Peers paymentAccountPayload must nto be null");
                 checkArgument(processModel.getAccountAgeWitnessService()
                         .verifyOffersAccountAgeWitness(paymentAccountPayload,
-                                accountSalt,
                                 Utilities.decodeFromHex(offersWitness)), "");
             }
             complete();

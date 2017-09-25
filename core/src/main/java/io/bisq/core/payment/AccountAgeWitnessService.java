@@ -46,8 +46,8 @@ public class AccountAgeWitnessService {
         this.keyRing = keyRing;
     }
 
-    public AccountAgeWitness getPaymentAccountWitness(PaymentAccount paymentAccount, Trade trade) throws CryptoException {
-        byte[] hash = getWitnessHash(paymentAccount);
+    public AccountAgeWitness getPaymentAccountWitness(PaymentAccountPayload paymentAccountPayload, Trade trade) throws CryptoException {
+        byte[] hash = getWitnessHash(paymentAccountPayload);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
         long tradeDate = trade.getTakeOfferDate().getTime();
         byte[] hashOfPubKey = Sha256Hash.hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
@@ -57,8 +57,8 @@ public class AccountAgeWitnessService {
                 tradeDate);
     }
 
-    public byte[] getWitnessHash(PaymentAccount paymentAccount) {
-        return getWitnessHash(paymentAccount.getPaymentAccountPayload(), paymentAccount.getSalt());
+    public byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload) {
+        return getWitnessHash(paymentAccountPayload, paymentAccountPayload.getSalt());
     }
 
     public byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
@@ -151,9 +151,8 @@ public class AccountAgeWitnessService {
     }
 
     public boolean verifyOffersAccountAgeWitness(PaymentAccountPayload paymentAccountPayload,
-                                                 byte[] peersSalt,
                                                  byte[] offersWitness) {
-        byte[] witnessHash = getWitnessHash(paymentAccountPayload, peersSalt);
+        byte[] witnessHash = getWitnessHash(paymentAccountPayload, paymentAccountPayload.getSalt());
         final boolean result = Arrays.equals(witnessHash, offersWitness);
         if (!result)
             log.warn("witnessHash is not matching peers offersWitness. " +
