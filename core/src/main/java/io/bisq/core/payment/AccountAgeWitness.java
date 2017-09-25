@@ -17,18 +17,21 @@
 
 package io.bisq.core.payment;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 // Object has 118 raw bytes (not PB size)
@@ -82,44 +85,39 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
         signaturePubKey = Sig.getPublicKeyFromBytes(signature);
     }
 
-
-    // TODO
     @Override
-    public Message toProtoMessage() {
-        return null;
-    }
-    
-   /* @Override
     public PB.StoragePayload toProtoMessage() {
-        final PB.PaymentAccountAgeWitness.Builder builder = PB.PaymentAccountAgeWitness.newBuilder()
-                .setSignaturePubKeyBytes(ByteString.copyFrom(hash))
-                .setSignaturePubKeyBytes(ByteString.copyFrom(pubKeyBytes))
-                .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes));
+        final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
+                .setHash(ByteString.copyFrom(hash))
+                .setHashOfPukKey(ByteString.copyFrom(hashOfPubKey))
+                .setSignature(ByteString.copyFrom(signature))
+                .setTradeDate(tradeDate);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setPaymentAccountAgeWitness(builder).build();
+        return PB.StoragePayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
-    public PB.PaymentAccountAgeWitness toProtoPaymentAccountAgeWitness() {
-        return toProtoMessage().getPaymentAccountAgeWitness();
+    public PB.AccountAgeWitness toProtoAccountAgeWitness() {
+        return toProtoMessage().getAccountAgeWitness();
     }
 
-    public static PaymentAccountAgeWitness fromProto(PB.PaymentAccountAgeWitness proto) {
-        return new PaymentAccountAgeWitness(
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+    public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
+        return new AccountAgeWitness(
                 proto.getHash().toByteArray(),
-                proto.getPubKeyBytes().toByteArray(),
-                proto.getSignaturePubKeyBytes().toByteArray(),
+                proto.getHashOfPukKey().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getTradeDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
-    }*/
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO needed?
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(30);
+        return TimeUnit.SECONDS.toMillis(1);
     }
 
     @Override

@@ -341,6 +341,7 @@ message StoragePayload {
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
         CompensationRequestPayload compensation_request_payload = 8;
+        AccountAgeWitness account_age_witness = 9;
     }
 }
 
@@ -637,6 +638,14 @@ message CompensationRequestPayload {
     string signature = 16;
     string fee_tx_id = 17;
     map<string, string> extra_data = 18;
+}
+
+message AccountAgeWitness {
+    bytes hash = 1;
+    bytes hash_of_puk_key = 2;
+    bytes signature = 3;
+    int64 trade_date = 4;
+    map<string, string> extra_data = 5;
 }
 
 
