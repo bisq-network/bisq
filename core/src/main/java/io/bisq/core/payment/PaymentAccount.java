@@ -17,8 +17,6 @@
 
 package io.bisq.core.payment;
 
-import com.google.protobuf.ByteString;
-import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
@@ -64,10 +62,6 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Nullable
     protected AccountAgeWitness paymentAccountAgeWitness;
 
-    @Setter
-    @Nullable
-    protected byte[] salt;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -81,7 +75,6 @@ public abstract class PaymentAccount implements PersistablePayload {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = createPayload();
-        setRandomSalt();
     }
 
 
@@ -100,7 +93,6 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setAccountName(accountName)
                 .addAllTradeCurrencies(ProtoUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
-        Optional.ofNullable(salt).ifPresent(salt -> builder.setSalt(ByteString.copyFrom(salt)));
         return builder.build();
     }
 
@@ -116,22 +108,11 @@ public abstract class PaymentAccount implements PersistablePayload {
         if (proto.hasSelectedTradeCurrency())
             account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
 
-        if (!proto.getSalt().isEmpty())
-            account.setSalt(proto.getSalt().toByteArray());
-        else
-            account.setRandomSalt();
-
         return account;
     }
 
-    private void setRandomSalt() {
-        // We set by default a random salt. 
-        // User can set salt as well by hex string.
-        // Persisted value will overwrite that
-        salt = CryptoUtils.getSalt(32); // 256 bit
-    }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -171,14 +152,18 @@ public abstract class PaymentAccount implements PersistablePayload {
     protected abstract PaymentAccountPayload createPayload();
 
     public void setSalt(byte[] salt) {
-        this.salt = salt;
+        paymentAccountPayload.setSalt(salt);
+    }
+
+    public byte[] getSalt() {
+        return paymentAccountPayload.getSalt();
     }
 
     public void setSaltAsHex(String saltAsHex) {
-        this.salt = Utilities.decodeFromHex(saltAsHex);
+        setSalt(Utilities.decodeFromHex(saltAsHex));
     }
 
     public String getSaltAsHex() {
-        return Utilities.bytesAsHexString(salt);
+        return Utilities.bytesAsHexString(getSalt());
     }
 }

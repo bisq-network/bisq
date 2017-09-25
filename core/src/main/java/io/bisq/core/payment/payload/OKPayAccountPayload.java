@@ -24,8 +24,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -35,7 +38,9 @@ import java.nio.charset.Charset;
 public final class OKPayAccountPayload extends PaymentAccountPayload {
     private String accountNr;
 
-    public OKPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+    public OKPayAccountPayload(String paymentMethod,
+                               String id,
+                               long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
@@ -44,10 +49,12 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OKPayAccountPayload(String paymentMethod, String id,
+    private OKPayAccountPayload(String paymentMethod,
+                                String id,
                                 long maxTradePeriod,
-                                String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
+                                String accountNr,
+                                Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod, id, maxTradePeriod, excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -64,7 +71,8 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
         return new OKPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
-                proto.getOKPayAccountPayload().getAccountNr());
+                proto.getOKPayAccountPayload().getAccountNr(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? new HashMap<>() : proto.getExcludeFromJsonDataMap());
     }
 
 

@@ -17,13 +17,21 @@
 
 package io.bisq.core.payment.payload;
 
+import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.util.JsonExclude;
+import io.bisq.common.util.Utilities;
 import io.bisq.consensus.RestrictedByContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
 // If a field gets added it need to be be annotated with @JsonExclude (excluded from contract). 
@@ -34,36 +42,69 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 public abstract class PaymentAccountPayload implements NetworkPayload, RestrictedByContractJson {
+
+    // Keys for excludeFromJsonDataMap
+    public static final String SALT = "salt";
+
     protected final String paymentMethodId;
     protected final String id;
-    
+
     // That is problematic and should be removed in next hard fork. 
     // Any change in maxTradePeriod would make existing payment accounts incompatible.
     // TODO prepare backward compatible change
     protected final long maxTradePeriod;
+
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
+    // field in a class would break that hash and therefore break the storage mechanism.
+
+    // extraDataMap used from v0.6 on for hashOfPaymentAccount
+    // key ACCOUNT_AGE_WITNESS, value: hex string of hashOfPaymentAccount byte array
+    @JsonExclude
+    private final Map<String, String> excludeFromJsonDataMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountPayload(String paymentMethodId, String id, long maxTradePeriod) {
-        this.paymentMethodId = paymentMethodId;
-        this.id = id;
-        this.maxTradePeriod = maxTradePeriod;
+    PaymentAccountPayload(String paymentMethodId,
+                          String id,
+                          long maxTradePeriod) {
+        this(paymentMethodId,
+                id,
+                maxTradePeriod,
+                new HashMap<>());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    protected PaymentAccountPayload(String paymentMethodId,
+                                    String id,
+                                    long maxTradePeriod,
+                                    Map<String, String> excludeFromJsonDataMap) {
+        this.paymentMethodId = paymentMethodId;
+        this.id = id;
+        this.maxTradePeriod = maxTradePeriod;
+        this.excludeFromJsonDataMap = excludeFromJsonDataMap;
+
+        // If not set (old versions) we set by default a random 256 bit salt. 
+        // User can set salt as well by hex string.
+        // Persisted value will overwrite that
+        if (!this.excludeFromJsonDataMap.containsKey(SALT))
+            this.excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(CryptoUtils.getSalt(32)));
+    }
+
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         return PB.PaymentAccountPayload.newBuilder()
                 .setPaymentMethodId(paymentMethodId)
                 .setId(id)
-                .setMaxTradePeriod(maxTradePeriod);
+                .setMaxTradePeriod(maxTradePeriod)
+                .putAllExcludeFromJsonData(excludeFromJsonDataMap);
     }
-
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -73,6 +114,14 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     abstract public String getPaymentDetailsForTradePopup();
 
+    public byte[] getSalt() {
+        checkArgument(excludeFromJsonDataMap.containsKey(SALT), "Salt must have been set in excludeFromJsonDataMap.");
+        return Utilities.decodeFromHex(excludeFromJsonDataMap.get(SALT));
+    }
+
+    public void setSalt(byte[] salt) {
+        excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
+    }
 
     // TODO make abstract
     // Identifying data of payment account (e.g. IBAN). 

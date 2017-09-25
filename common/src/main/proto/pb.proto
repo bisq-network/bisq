@@ -781,6 +781,7 @@ message PaymentAccountPayload {
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
     }
+    map<string, string> exclude_from_json_data = 15;
 }
 
 message AliPayAccountPayload {
@@ -1325,7 +1326,6 @@ message PaymentAccount {
     repeated TradeCurrency trade_currencies = 5;
     TradeCurrency selected_trade_currency = 6;
     PaymentAccountPayload payment_account_payload = 7;
-    bytes salt = 8;
 }
 
 message PaymentMethod {
