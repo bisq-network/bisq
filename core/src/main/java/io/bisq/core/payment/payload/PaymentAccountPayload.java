@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
 // If a field gets added it need to be be annotated with @JsonExclude (excluded from contract). 
+// We should add an extraDataMap as in StoragePayload objects
 
 @Getter
 @EqualsAndHashCode

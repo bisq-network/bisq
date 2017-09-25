@@ -64,7 +64,6 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Nullable
     protected AccountAgeWitness paymentAccountAgeWitness;
 
-    // TODO add to PB!
     @Setter
     @Nullable
     protected byte[] salt;
@@ -117,7 +116,6 @@ public abstract class PaymentAccount implements PersistablePayload {
         if (proto.hasSelectedTradeCurrency())
             account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
 
-        // We don't set if it is null (we dont want to overwrite random salt generated at init
         if (!proto.getSalt().isEmpty())
             account.setSalt(proto.getSalt().toByteArray());
         else
