@@ -82,6 +82,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
     private final FilterManager filterManager;
+    private final PaymentAccountAgeWitnessService paymentAccountAgeWitnessService;
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final String offerId;
@@ -132,6 +133,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                          PriceFeedService priceFeedService, FilterManager filterManager,
+                         PaymentAccountAgeWitnessService paymentAccountAgeWitnessService,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
@@ -142,6 +144,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
+        this.paymentAccountAgeWitnessService = paymentAccountAgeWitnessService;
         this.feeService = feeService;
         this.formatter = formatter;
 
@@ -343,7 +346,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
+        HashMap<String, String> extraDataMap = new HashMap<>();
+
+        byte[] hashOfPaymentAccount = paymentAccountAgeWitnessService.getWitnessHash(paymentAccount);
+        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS, Utilities.bytesAsHexString(hashOfPaymentAccount));
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,

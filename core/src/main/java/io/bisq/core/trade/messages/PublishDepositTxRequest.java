@@ -49,6 +49,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     private final List<RawTransactionInput> makerInputs;
     private final NodeAddress senderNodeAddress;
     private final String uid;
+    private final byte[] accountSalt;
 
     public PublishDepositTxRequest(String tradeId,
                                    PaymentAccountPayload makerPaymentAccountPayload,
@@ -60,7 +61,8 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                    byte[] preparedDepositTx,
                                    List<RawTransactionInput> makerInputs,
                                    NodeAddress senderNodeAddress,
-                                   String uid) {
+                                   String uid,
+                                   byte[] accountSalt) {
         this(tradeId,
                 makerPaymentAccountPayload,
                 makerAccountId,
@@ -72,6 +74,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 makerInputs,
                 senderNodeAddress,
                 uid,
+                accountSalt,
                 Version.getP2PMessageVersion());
     }
 
@@ -91,6 +94,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                     List<RawTransactionInput> makerInputs,
                                     NodeAddress senderNodeAddress,
                                     String uid,
+                                    byte[] accountSalt,
                                     int messageVersion) {
         super(messageVersion, tradeId);
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
@@ -103,6 +107,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         this.makerInputs = makerInputs;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
+        this.accountSalt = accountSalt;
     }
 
     @Override
@@ -119,7 +124,8 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                         .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
                         .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                        .setUid(uid)
+                        .setAccountSalt(ByteString.copyFrom(accountSalt)))
                 .build();
     }
 
@@ -139,6 +145,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 makerInputs,
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
+                proto.getAccountSalt().toByteArray(),
                 messageVersion);
     }
 
@@ -156,6 +163,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 ",\n     makerInputs=" + makerInputs +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     uid='" + uid + '\'' +
+                ",\n     accountSalt='" + Utilities.bytesAsHexString(accountSalt) + '\'' +
                 "\n} " + super.toString();
     }
 }

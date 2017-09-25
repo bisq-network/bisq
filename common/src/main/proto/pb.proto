@@ -186,6 +186,7 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 19;
     NodeAddress mediator_node_address = 20;
     string uid = 21;
+    bytes account_salt = 22;
 }
 
 message PublishDepositTxRequest {
@@ -200,6 +201,7 @@ message PublishDepositTxRequest {
     bytes maker_multi_sig_pub_key = 9;
     NodeAddress sender_node_address = 10;
     string uid = 11;
+    bytes account_salt = 12;
 }
 
 message DepositTxPublishedMessage {
@@ -1323,6 +1325,7 @@ message PaymentAccount {
     repeated TradeCurrency trade_currencies = 5;
     TradeCurrency selected_trade_currency = 6;
     PaymentAccountPayload payment_account_payload = 7;
+    bytes salt = 8;
 }
 
 message PaymentMethod {

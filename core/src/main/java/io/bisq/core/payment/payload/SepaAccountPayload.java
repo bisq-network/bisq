@@ -26,7 +26,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -135,5 +137,12 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return ArrayUtils.addAll(getIban().getBytes(Charset.forName("UTF-8")), getBic().getBytes(Charset.forName("UTF-8")));
     }
 }

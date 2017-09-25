@@ -60,6 +60,8 @@ public final class TradingPeer implements PersistablePayload {
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
+    @Nullable
+    private byte[] accountSalt;
 
     public TradingPeer() {
     }

@@ -70,4 +70,13 @@ public abstract class PaymentAccountPayload implements NetworkPayload {
     abstract public String getPaymentDetails();
 
     abstract public String getPaymentDetailsForTradePopup();
+
+
+    // TODO make abstract
+    // Identifying data of payment account (e.g. IBAN). 
+    // This is critical code for verifying age of payment account. 
+    // Any change would break validation of historical data!
+    public byte[] getAgeWitnessInputData() {
+        return new byte[0];
+    }
 }

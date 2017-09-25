@@ -66,6 +66,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         }
     }
 
+    // Keys for extra map
+    public static final String ACCOUNT_AGE_WITNESS = "accountAgeWitness";
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -117,10 +120,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long maxTradeLimit;
     private final long maxTradePeriod;
 
-    //TODO check if it breaks existing objects
-    // @Nullable
-    // private final byte[] saltedHashOfPaymentAccount;
-
     // reserved for future use cases
     // Close offer when certain price is reached
     private final boolean useAutoClose;
@@ -135,9 +134,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;
+    
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    
+    // extraDataMap used from v0.6 on for hashOfPaymentAccount
+    // key ACCOUNT_AGE_WITNESS, value: hex string of hashOfPaymentAccount byte array
     @Nullable
     private final Map<String, String> extraDataMap;
     private final int protocolVersion;

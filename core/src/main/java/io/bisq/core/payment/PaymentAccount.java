@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment;
 
+import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoUtil;
@@ -61,7 +62,7 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     @Setter
     @Nullable
-    protected PaymentAccountAgeWitness paymentAccountAgeWitness;
+    protected PaymentAccountAgeWitness paymentPaymentAccountAgeWitness;
 
     // TODO add to PB!
     @Setter
@@ -81,9 +82,7 @@ public abstract class PaymentAccount implements PersistablePayload {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
-
-        // We set by default a random salt. User can set salt as well by hex string
-        salt = CryptoUtils.getSalt(32); // 256 bit
+        setRandomSalt();
     }
 
 
@@ -102,6 +101,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setAccountName(accountName)
                 .addAllTradeCurrencies(ProtoUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
+        Optional.ofNullable(salt).ifPresent(salt -> builder.setSalt(ByteString.copyFrom(salt)));
         return builder.build();
     }
 
@@ -113,12 +113,27 @@ public abstract class PaymentAccount implements PersistablePayload {
         account.setAccountName(proto.getAccountName());
         account.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
         account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
+
         if (proto.hasSelectedTradeCurrency())
             account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
+
+        // We don't set if it is null (we dont want to overwrite random salt generated at init
+        if (!proto.getSalt().isEmpty())
+            account.setSalt(proto.getSalt().toByteArray());
+        else
+            account.setRandomSalt();
+
         return account;
     }
 
+    private void setRandomSalt() {
+        // We set by default a random salt. 
+        // User can set salt as well by hex string.
+        // Persisted value will overwrite that
+        salt = CryptoUtils.getSalt(32); // 256 bit
+    }
 
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -157,12 +172,8 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     protected abstract PaymentAccountPayload getPayload();
 
-    // TODO make abstract
-    // Identifying data of payment account (e.g. IBAN). 
-    // This is critical code for verifying age of payment account. 
-    // Any change would break validation of historical data!
-    public byte[] getAgeWitnessInputData() {
-        return new byte[0];
+    public void setSalt(byte[] salt) {
+        this.salt = salt;
     }
 
     public void setSaltAsHex(String saltAsHex) {
