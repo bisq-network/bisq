@@ -51,7 +51,7 @@ public class TakerVerifyOffersAgeWitnessHash extends TradeTask {
                 final String offersWitness = extraDataMap.get(OfferPayload.ACCOUNT_AGE_WITNESS);
                 final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload()
                         , "Peers paymentAccountPayload must nto be null");
-                checkArgument(processModel.getPaymentAccountAgeWitnessService()
+                checkArgument(processModel.getAccountAgeWitnessService()
                         .verifyOffersAccountAgeWitness(paymentAccountPayload,
                                 accountSalt,
                                 Utilities.decodeFromHex(offersWitness)), "");

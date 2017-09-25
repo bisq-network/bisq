@@ -41,15 +41,15 @@ import static org.junit.Assert.assertTrue;
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 @Slf4j
-public class PaymentAccountAgeWitnessServiceTest {
+public class AccountAgeWitnessServiceTest {
 
     private PublicKey publicKey;
     private KeyPair keypair;
-    private PaymentAccountAgeWitnessService service;
+    private AccountAgeWitnessService service;
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        service = new PaymentAccountAgeWitnessService(null);
+        service = new AccountAgeWitnessService(null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }

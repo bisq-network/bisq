@@ -39,7 +39,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
-import io.bisq.core.payment.PaymentAccountAgeWitnessService;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
@@ -89,7 +89,7 @@ public class TradeManager implements PersistedDataHost {
     private final PriceFeedService priceFeedService;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final PaymentAccountAgeWitnessService paymentAccountAgeWitnessService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
@@ -116,7 +116,7 @@ public class TradeManager implements PersistedDataHost {
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         PersistenceProtoResolver persistenceProtoResolver,
-                        PaymentAccountAgeWitnessService paymentAccountAgeWitnessService,
+                        AccountAgeWitnessService accountAgeWitnessService,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -130,7 +130,7 @@ public class TradeManager implements PersistedDataHost {
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.paymentAccountAgeWitnessService = paymentAccountAgeWitnessService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -334,7 +334,7 @@ public class TradeManager implements PersistedDataHost {
                 openOfferManager,
                 user,
                 filterManager,
-                paymentAccountAgeWitnessService,
+                accountAgeWitnessService,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);

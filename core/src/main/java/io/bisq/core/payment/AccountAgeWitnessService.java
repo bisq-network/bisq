@@ -37,12 +37,12 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PaymentAccountAgeWitnessService {
+public class AccountAgeWitnessService {
 
     private KeyRing keyRing;
 
     @Inject
-    public PaymentAccountAgeWitnessService(KeyRing keyRing) {
+    public AccountAgeWitnessService(KeyRing keyRing) {
         this.keyRing = keyRing;
     }
 

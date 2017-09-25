@@ -82,7 +82,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
     private final FilterManager filterManager;
-    private final PaymentAccountAgeWitnessService paymentAccountAgeWitnessService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final String offerId;
@@ -133,7 +133,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                          PriceFeedService priceFeedService, FilterManager filterManager,
-                         PaymentAccountAgeWitnessService paymentAccountAgeWitnessService,
+                         AccountAgeWitnessService accountAgeWitnessService,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
@@ -144,7 +144,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
-        this.paymentAccountAgeWitnessService = paymentAccountAgeWitnessService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.feeService = feeService;
         this.formatter = formatter;
 
@@ -348,7 +348,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = new HashMap<>();
 
-        byte[] hashOfPaymentAccount = paymentAccountAgeWitnessService.getWitnessHash(paymentAccount);
+        byte[] hashOfPaymentAccount = accountAgeWitnessService.getWitnessHash(paymentAccount);
         extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS, Utilities.bytesAsHexString(hashOfPaymentAccount));
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
