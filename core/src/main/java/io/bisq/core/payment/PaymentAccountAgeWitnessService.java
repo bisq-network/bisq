@@ -22,6 +22,7 @@ import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -46,10 +47,7 @@ public class PaymentAccountAgeWitnessService {
     }
 
     public PaymentAccountAgeWitness getPaymentAccountWitness(PaymentAccount paymentAccount, Trade trade) throws CryptoException {
-        byte[] ageWitnessInputData = paymentAccount.getAgeWitnessInputData();
-        byte[] salt = paymentAccount.getSalt();
-        final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        byte[] hash = Sha256Hash.hash(combined);
+        byte[] hash = getWitnessHash(paymentAccount);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
         long tradeDate = trade.getTakeOfferDate().getTime();
         byte[] hashOfPubKey = Sha256Hash.hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
@@ -57,6 +55,16 @@ public class PaymentAccountAgeWitnessService {
                 hashOfPubKey,
                 signature,
                 tradeDate);
+    }
+
+    public byte[] getWitnessHash(PaymentAccount paymentAccount) {
+        return getWitnessHash(paymentAccount.getPaymentAccountPayload(), paymentAccount.getSalt());
+    }
+
+    public byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
+        byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
+        final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
+        return Sha256Hash.hash(combined);
     }
 
     boolean verifyAgeWitness(byte[] peersAgeWitnessInputData,
@@ -140,5 +148,17 @@ public class PaymentAccountAgeWitnessService {
                     peersPublicKey, nonce, Utilities.bytesAsHexString(signature));
             return false;
         }
+    }
+
+    public boolean verifyOffersAccountAgeWitness(PaymentAccountPayload paymentAccountPayload,
+                                                 byte[] peersSalt,
+                                                 byte[] offersWitness) {
+        byte[] witnessHash = getWitnessHash(paymentAccountPayload, peersSalt);
+        final boolean result = Arrays.equals(witnessHash, offersWitness);
+        if (!result)
+            log.warn("witnessHash is not matching peers offersWitness. " +
+                    "witnessHash={}, offersWitness={}", Utilities.bytesAsHexString(witnessHash), 
+                    Utilities.bytesAsHexString(offersWitness));
+        return false;
     }
 }

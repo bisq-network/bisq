@@ -27,6 +27,7 @@ import io.bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.taker.TakerVerifyOffersAgeWitnessHash;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -120,6 +121,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerProcessPublishDepositTxRequest.class,
                 CheckIfPeerIsBanned.class,
                 TakerVerifyMakerAccount.class,
+                TakerVerifyOffersAgeWitnessHash.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 SellerAsTakerSignAndPublishDepositTx.class,

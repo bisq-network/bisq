@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 @Slf4j
-public class PaymentAccountAgeWitnessServiceTest {
+public class PaymentPaymentAccountAgeWitnessServiceTest {
 
     private PublicKey publicKey;
     private KeyPair keypair;
