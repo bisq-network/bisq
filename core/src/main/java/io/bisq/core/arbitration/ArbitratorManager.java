@@ -170,8 +170,18 @@ public class ArbitratorManager {
         Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
-                .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
-                        && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
+                .filter(e -> {
+                    final boolean isInPublicKeyInList = isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()));
+                    if (!isInPublicKeyInList)
+                        log.warn("We got an arbitrator which is not in our list of publicKeys. Arbitrator=", e.toString());
+                    final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
+                            e.getRegistrationPubKey(),
+                            e.getRegistrationSignature());
+                    if (!isSigValid)
+                        log.warn("Sig check for arbitrator failed. Arbitrator=", e.toString());
+
+                    return isInPublicKeyInList && isSigValid;
+                })
                 .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
