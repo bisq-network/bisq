@@ -20,7 +20,9 @@ package io.bisq.consensus;
 /**
  * Market interface for classes which are used in the trade contract. 
  * Any change of the class fields would breaking backward compatibility.
- * If a field needs to gets added it needs to be annotated with @JsonExclude (thus excluded from the contract JSON). 
+ * If a field needs to get added it needs to be annotated with @JsonExclude (thus excluded from the contract JSON). 
+ * Better to use the excludeFromJsonDataMap (annotated with @JsonExclude; used in PaymentAccountPayload) to 
+ * add a key/value pair. 
  */
 public interface RestrictedByContractJson {
 }

@@ -54,12 +54,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     // TODO prepare backward compatible change
     protected final long maxTradePeriod;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-
-    // extraDataMap used from v0.6 on for hashOfPaymentAccount
-    // key ACCOUNT_AGE_WITNESS, value: hex string of hashOfPaymentAccount byte array
+    // Used for new data (e.g. salt introduced in v0.6) which would break backward compatibility as 
+    // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would 
+    // fail the contract verification. 
     @JsonExclude
     private final Map<String, String> excludeFromJsonDataMap;
 
