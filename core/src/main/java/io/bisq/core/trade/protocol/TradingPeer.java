@@ -80,6 +80,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(multiSigPubKey)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        Optional.ofNullable(accountSalt).ifPresent(e -> builder.setAccountSalt(ByteString.copyFrom(accountSalt)));
         return builder.build();
     }
 
@@ -104,6 +105,7 @@ public final class TradingPeer implements PersistablePayload {
                             .collect(Collectors.toList());
             tradingPeer.setRawTransactionInputs(rawTransactionInputs);
             tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
+            tradingPeer.setAccountSalt(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountSalt()));
             return tradingPeer;
         }
     }
