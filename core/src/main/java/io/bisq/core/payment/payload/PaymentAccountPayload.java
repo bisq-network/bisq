@@ -18,6 +18,7 @@
 package io.bisq.core.payment.payload;
 
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.consensus.RestrictedByContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @ToString
 @Slf4j
-public abstract class PaymentAccountPayload implements NetworkPayload {
+public abstract class PaymentAccountPayload implements NetworkPayload, RestrictedByContractJson {
     protected final String paymentMethodId;
     protected final String id;
     
