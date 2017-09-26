@@ -39,8 +39,8 @@ import javax.annotation.Nullable;
 import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 
 // We dont translate here as it is for dev only purpose
-public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> {
-    private static final Logger log = LoggerFactory.getLogger(SpendFromDepositTxWindow.class);
+public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
+    private static final Logger log = LoggerFactory.getLogger(ManualPayoutTxWindow.class);
     private final TradeWalletService tradeWalletService;
 
 
@@ -48,7 +48,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SpendFromDepositTxWindow(TradeWalletService tradeWalletService) {
+    public ManualPayoutTxWindow(TradeWalletService tradeWalletService) {
         this.tradeWalletService = tradeWalletService;
         type = Type.Attention;
     }
