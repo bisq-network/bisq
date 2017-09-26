@@ -119,8 +119,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         depositTxHex.setText("");
         P2SHMultiSigOutputScript.setText("");
 
-        buyerPayoutAmount.setText("1.03");
-        sellerPayoutAmount.setText("0.03");
+        buyerPayoutAmount.setText("");
+        sellerPayoutAmount.setText("");
         arbitratorPayoutAmount.setText("0");
 
         buyerAddressString.setText("");
@@ -131,13 +131,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         sellerPubKeyAsHex.setText("");
         sellerPrivateKeyAsHex.setText("");
 
-        //4.9 (pkfcmj42c6es6tjt.onion)
-        // arbitratorAddressString.setText("19xdeiQM2Hn2M2wbpT5imcYWzqhiSDHPy4");
-        // arbitratorPubKeyAsHex.setText("02c62e794fe67f3a2115e2de4757143ff7f27bdf38aa4ae58a3595baa6d676875b");
-
-        // 4.2 (ntjhaj27rylxwvnp.onion)
-        arbitratorAddressString.setText("1FdFzBazmHQxbUbdCUJwuCtR37DrZrEobu");
-        arbitratorPubKeyAsHex.setText("030fdc2ebc297df4047442f6079f1ce3b7d1938a41f88bd11497545cc94fcfd315");
+        arbitratorAddressString.setText("");
+        arbitratorPubKeyAsHex.setText("");
 
         actionButtonText("Sign and publish transaction");
 
