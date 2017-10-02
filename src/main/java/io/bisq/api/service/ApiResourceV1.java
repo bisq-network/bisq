@@ -9,7 +9,7 @@ import io.bisq.api.model.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
-import io.swagger.annotations.Api;
+import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
@@ -27,7 +27,22 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-@Api(value = "api")
+@Api(value = "bisq")
+@SwaggerDefinition(
+        host = "http://localhost:8080",
+        info = @Info(
+                description = "API for the Bisq exchange",
+                title = "The Bisq API",
+                contact = @Contact(name = "the Bisq open source project", email="Use the Bisq's project support channels"
+                ),
+                license =  @License(
+                        name = "GNU General Public License v3.0",
+                        url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
+                ),
+                version = "1"
+        )
+)
+
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
