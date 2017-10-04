@@ -54,11 +54,13 @@ public class FeeProvider extends HttpClientProvider {
             Long ltcTxFee = dataMap.get("ltcTxFee").longValue();
             Long dogeTxFee = dataMap.get("dogeTxFee").longValue();
             Long dashTxFee = dataMap.get("dashTxFee").longValue();
+            Long trkcTxFee = dataMap.get("trkcTxFee").longValue();
 
             map.put("BTC", btcTxFee);
             map.put("LTC", ltcTxFee);
             map.put("DOGE", dogeTxFee);
             map.put("DASH", dashTxFee);
+            map.put("TRKC", trkcTxFee);
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
