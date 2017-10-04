@@ -146,7 +146,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     maxTradeLimitLowRisk = Coin.parseCoin("20");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("40");
                     break;
-
+                case "TRKC":
+                    // av. price Sep 2017: 150 EUR/TRKC
+                    maxTradeLimitMidRisk = Coin.parseCoin("10");
+                    maxTradeLimitLowRisk = Coin.parseCoin("20");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("40");
+                    break;
                 default:
                     log.error("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
                     throw new RuntimeException("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
