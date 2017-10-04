@@ -81,6 +81,9 @@ public final class Preferences implements PersistedDataHost {
     private static final ArrayList<BlockChainExplorer> DASH_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
     ));
+    private static final ArrayList<BlockChainExplorer> TRKC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("ChainRadar", "https://chainradar.com/", "https://chainradar.com/")
+    ));
 
 
     // payload is initialized so the default values are available for Property initialization.
@@ -198,6 +201,9 @@ public final class Preferences implements PersistedDataHost {
                 case "DASH":
                     setBlockChainExplorerMainNet(DASH_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(DASH_TEST_NET_EXPLORERS.get(0));
+                    break;
+                case "TRKC":
+                    setBlockChainExplorerMainNet(TRKC_MAIN_NET_EXPLORERS.get(0));
                     break;
                 default:
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
@@ -529,6 +535,8 @@ public final class Preferences implements PersistedDataHost {
             case DASH_REGTEST:
             case DASH_TESTNET:
                 return DASH_TEST_NET_EXPLORERS;
+            case TRKC_MAINNET:
+                return TRKC_MAIN_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }

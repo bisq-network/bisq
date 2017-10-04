@@ -55,6 +55,7 @@ public class FeeRequestService {
         dataMap.put("ltcTxFee", FeeService.LTC_DEFAULT_TX_FEE);
         dataMap.put("dogeTxFee", FeeService.DOGE_DEFAULT_TX_FEE);
         dataMap.put("dashTxFee", FeeService.DASH_DEFAULT_TX_FEE);
+        dataMap.put("trkcTxFee", FeeService.TRKC_DEFAULT_TX_FEE);
 
         writeToJson();
         startRequests();

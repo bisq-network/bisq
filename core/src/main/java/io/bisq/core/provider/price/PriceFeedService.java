@@ -233,6 +233,7 @@ public class PriceFeedService {
                         case "LTC":
                         case "DOGE":
                         case "DASH":
+                        case "TRKC": 
                             // apply conversion of btc based price to baseCurrencyCode based with btc/baseCurrencyCode price
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
                             Map<String, MarketPrice> convertedPriceMap = new HashMap<>();

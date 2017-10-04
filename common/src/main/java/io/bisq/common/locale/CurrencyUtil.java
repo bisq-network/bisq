@@ -123,6 +123,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
+        if (!baseCurrencyCode.equals("TRKC"))
+             result.add(new CryptoCurrency("TRKC", "Truckcoin"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
@@ -252,6 +254,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
+        if (!baseCurrencyCode.equals("TRKC"))
+            result.add(new CryptoCurrency("TRKC", "Truckcoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
@@ -297,7 +301,14 @@ public class CurrencyUtil {
                 new FiatCurrency("TRY"),
                 new FiatCurrency("ZAR"),
                 new FiatCurrency("HKD"),
-                new FiatCurrency("CNY")
+                new FiatCurrency("CNY"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("SAR"),
+                new FiatCurrency("UAH"),
+                new FiatCurrency("VEF"),
+                new FiatCurrency("VND")
         ));
         currencies.sort(TradeCurrency::compareTo);
         return currencies;
