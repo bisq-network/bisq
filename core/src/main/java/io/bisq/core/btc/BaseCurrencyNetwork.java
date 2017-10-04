@@ -43,6 +43,10 @@ public enum BaseCurrencyNetwork {
     DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
     DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
     DASH_REGTEST(DashRegTestParams.get(), "DASH", "REGTEST", "Dash");
+    
+    DASH_MAINNET(DashMainNetParams.get(), "TRKC", "MAINNET", "Truckcoin"),
+    DASH_TESTNET(DashTestNet3Params.get(), "TRKC", "TESTNET", "Truckcoin"),
+    DASH_REGTEST(DashRegTestParams.get(), "TRKC", "REGTEST", "Truckcoin");
 
     @Getter
     private final NetworkParameters parameters;
@@ -86,6 +90,8 @@ public enum BaseCurrencyNetwork {
                 return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE;
             case "DASH":
                 return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE;
+            case "TRKC":
+                return FeeService.TRKC_REFERENCE_DEFAULT_MIN_TX_FEE;
             default:
                 throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
         }
