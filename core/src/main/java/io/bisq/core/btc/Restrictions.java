@@ -60,6 +60,9 @@ public class Restrictions {
                 case "DASH":
                     MIN_TRADE_AMOUNT = Coin.valueOf(20_000L); // 0.03 EUR at @ 150 EUR/DASH;
                     break;
+                case "TRKC":
+                    MIN_TRADE_AMOUNT = Coin.valueOf(20_000L); // 0.03 EUR at @ 150 EUR/TRKC;
+                    break;
             }
         return MIN_TRADE_AMOUNT;
     }
@@ -78,6 +81,9 @@ public class Restrictions {
                     break;
                 case "DASH":
                     MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(300_000_000L); // 450 EUR @ 150 EUR/DASH;
+                    break;
+                case "TRKC":
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(300_000_000L); // 450 EUR @ 150 EUR/TRKC;
                     break;
             }
 
@@ -99,6 +105,9 @@ public class Restrictions {
                 case "DASH":
                     MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_500_000L); // 2.5 EUR @ 150 EUR/DASH;
                     break;
+                case "TRKC":
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_500_000L); // 2.5 EUR @ 150 EUR/TRKC;
+                    break;
             }
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
@@ -118,6 +127,9 @@ public class Restrictions {
                 case "DASH":
                     DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000_000L); // 75 EUR @ 150 EUR/DASH;
                     break;
+                case "TRKC":
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000_000L); // 75 EUR @ 150 EUR/TRKC;
+                    break;
             }
         return DEFAULT_BUYER_SECURITY_DEPOSIT;
     }
@@ -136,6 +148,9 @@ public class Restrictions {
                     break;
                 case "DASH":
                     SELLER_SECURITY_DEPOSIT = Coin.valueOf(15_000_000L); // 25 EUR @ 150 EUR/DASH;
+                    break;
+                case "TRKC":
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(15_000_000L); // 25 EUR @ 150 EUR/TRKC;
                     break;
             }
         return SELLER_SECURITY_DEPOSIT;
