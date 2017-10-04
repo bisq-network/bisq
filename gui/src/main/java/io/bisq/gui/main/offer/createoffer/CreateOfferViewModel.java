@@ -211,6 +211,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         amount.set("0.1");
                         price.set("40");
                         break;
+                    case "TRKC":
+                        amount.set("0.1");
+                        price.set("10");
+break;
                 }
 
                 minAmount.set(amount.get());
