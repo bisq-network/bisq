@@ -88,6 +88,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
+                            case TRKC_MAINNET:
                                 Address.fromBase58(BtcMainNetParams.get(), input);
                                 return new ValidationResult(true);
                         }
@@ -107,6 +108,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
+                            case TRKC_MAINNET:
                             case LTC_MAINNET:
                                 Address.fromBase58(LitecoinMainNetParams.get(), input);
                                 break;
@@ -133,6 +135,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
+                            case TRKC_MAINNET:  
                             case DOGE_MAINNET:
                                 Address.fromBase58(DogecoinMainNetParams.get(), input);
                                 break;
@@ -173,6 +176,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "TRKC":
+                        if (input.startsWith("W"))
+                        return new ValidationResult(true);
+                        else
+                        return new ValidationResult(false, Res.get("validation.altcoin.trkcAddressesNotSupported"));
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
