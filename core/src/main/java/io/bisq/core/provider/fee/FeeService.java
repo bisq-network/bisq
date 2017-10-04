@@ -52,6 +52,8 @@ public class FeeService {
     //TODO check
     // min tx fee per tx is 10000 now, 1000 in sept 2017
     public static final Coin DASH_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
+    // min tx fee per tx is 10000 now, 1000 in sept 2017
+    public static final Coin TRKC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
 
     // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
     // fees are per byte
@@ -127,6 +129,13 @@ public class FeeService {
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 160_000; // 5 USD at DASH price 150 USD
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 240_000; // 7.5 USD at DASH price 150 USD  for 20 DASH (maxTradeAmount)
                 txFeePerByte = DASH_DEFAULT_TX_FEE;
+                break;
+            case "TRKC":
+                MIN_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.5 USD at TRKC price 150 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 300_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 160_000; // 5 USD at TRKC price 150 USD
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 240_000; // 7.5 USD at TRKC price 150 USD  for 20 TRKC (maxTradeAmount)
+                txFeePerByte = TRKC_DEFAULT_TX_FEE;
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
