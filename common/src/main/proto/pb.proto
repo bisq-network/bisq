@@ -921,6 +921,8 @@ message PersistableEnvelope {
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
+        
+        AccountAgeWitnessMap account_age_witness_map = 15;
     }
 }
 
@@ -1175,6 +1177,11 @@ message TradingPeer {
     int64 change_output_value = 10;
     string change_output_address = 11;
 }
+
+message AccountAgeWitnessMap {
+   map<string, AccountAgeWitness> account_age_witness_map = 1;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
