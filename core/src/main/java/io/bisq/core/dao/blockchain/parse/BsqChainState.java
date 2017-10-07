@@ -142,7 +142,6 @@ public class BsqChainState implements PersistableEnvelope {
                 genesisTxId = BTC_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
                 break;
-
         }
 
         lock = new FunctionalReadWriteLock(true);
