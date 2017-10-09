@@ -154,6 +154,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
         result.add(new CryptoCurrency("IOTA", "IOTA", true));
+        result.add(new CryptoCurrency("ELLA", "Ellaism"));
         result.add(new CryptoCurrency("IOP", "Fermat"));
         result.add(new CryptoCurrency("JNS", "Janus", true));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
@@ -228,8 +229,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-        result.add(new CryptoCurrency("ELLA", "Ellaism"));
-       
+
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
