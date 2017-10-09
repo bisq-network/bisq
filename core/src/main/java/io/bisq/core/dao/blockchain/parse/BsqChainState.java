@@ -95,11 +95,10 @@ public class BsqChainState implements PersistableEnvelope {
 
 
     // TEST NET
-    // 0.5 BTC to grazcoin ms4ewGfJEv5RTnBD2moDoP5Kp1uJJwDGSX
-    // 0.3 BTC to alice: myjn5JVuQLN9S4QwGzY4VrD86819Zc2uhj
-    // 0.2BTC to bob: mx3xo655TAjC5r7ScuVEU8b6FMLomnKSeX
-    private static final String BTC_TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
-    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
+    // TEST NET
+    // Phase 0 initial genesis tx 6.10.2017: 2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
 
     private static final String LTC_TEST_NET_GENESIS_TX_ID = "not set";
     private static final int LTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1;
