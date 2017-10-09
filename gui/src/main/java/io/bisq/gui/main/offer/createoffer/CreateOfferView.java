@@ -194,7 +194,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addListeners();
             addSubscriptions();
 
-            sellerSecurityDepositTextField.setText(model.sellerSecurityDeposit);
+            if (sellerSecurityDepositTextField != null)
+                sellerSecurityDepositTextField.setText(model.sellerSecurityDeposit);
 
             if (waitingForFundsBusyAnimation != null)
                 waitingForFundsBusyAnimation.play();
@@ -495,8 +496,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         buyerSecurityDepositInputTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
-        makerFeeTextField.textProperty().bind(model.makerFee);
-        makerFeeCurrencyLabel.textProperty().bind(model.makerFeeCurrencyCode);
+
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            makerFeeTextField.textProperty().bind(model.makerFee);
+            makerFeeCurrencyLabel.textProperty().bind(model.makerFeeCurrencyCode);
+        }
 
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
@@ -545,8 +549,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         buyerSecurityDepositInputTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
-        makerFeeTextField.textProperty().unbind();
-        makerFeeCurrencyLabel.textProperty().unbind();
+
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            makerFeeTextField.textProperty().unbind();
+            makerFeeCurrencyLabel.textProperty().unbind();
+        }
 
         // Validation
         amountTextField.validationResultProperty().unbind();
@@ -846,12 +853,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addOptionsGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("createOffer.feeCurrencyAndDeposit"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 3);
+        final boolean bsqForFeeAvailable = model.dataModel.isBsqForFeeAvailable();
+        final String title = bsqForFeeAvailable ?
+                Res.get("createOffer.feeCurrencyAndDeposit") : Res.get("createOffer.setDeposit");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow,  bsqForFeeAvailable ? 3 : 2, title, Layout.GROUP_DISTANCE);
+      //  GridPane.setColumnSpan(titledGroupBg, bsqForFeeAvailable ? 3 : 2);
 
-        addMakerFeeRow();
+        if (bsqForFeeAvailable)
+            addMakerFeeRow();
+
         addBuyerSecurityDepositRow();
-        addSellerSecurityDepositRow();
+
+        // Let's hide that as the user cannot edit it anyway...
+        // addSellerSecurityDepositRow();
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("shared.nextStep"), Res.get("shared.cancel"));
@@ -880,15 +894,20 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 int delay = 500;
                 int diff = 100;
                 transitions.fadeOutAndRemove(titledGroupBg, delay, (event) -> onShowPayFundsScreen());
-                delay -= diff;
-                transitions.fadeOutAndRemove(makerFeeTextLabel, delay);
-                transitions.fadeOutAndRemove(makerFeeRowHBox, delay);
+                if (model.dataModel.isBsqForFeeAvailable()) {
+                    delay -= diff;
+                    transitions.fadeOutAndRemove(makerFeeTextLabel, delay);
+                    transitions.fadeOutAndRemove(makerFeeRowHBox, delay);
+                }
                 delay -= diff;
                 transitions.fadeOutAndRemove(buyerSecurityDepositLabel, delay);
                 transitions.fadeOutAndRemove(buyerSecurityDepositValueCurrencyBox, delay);
+
+                // We hide that, but leave it in code as it might be reconsidered to show it
+                /*
                 delay -= diff;
                 transitions.fadeOutAndRemove(sellerSecurityDepositLabel, delay);
-                transitions.fadeOutAndRemove(sellerSecurityDepositValueCurrencyBox, delay);
+                transitions.fadeOutAndRemove(sellerSecurityDepositValueCurrencyBox, delay);*/
             }
         });
     }
@@ -953,17 +972,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addBuyerSecurityDepositRow() {
+        final double top = model.dataModel.isBsqForFeeAvailable() ? 0 : Layout.FIRST_ROW_AND_GROUP_DISTANCE;
         buyerSecurityDepositLabel = addLabel(gridPane, ++gridRow,
                 Res.getWithCol("shared.securityDepositBox.description", Res.get("shared.buyer")),
-                0);
+                top);
 
         Tuple3<HBox, InputTextField, Label> tuple = getEditableValueCurrencyBox(
                 Res.get("createOffer.securityDeposit.prompt"));
         buyerSecurityDepositValueCurrencyBox = tuple.first;
         buyerSecurityDepositInputTextField = tuple.second;
         buyerSecurityDepositBtcLabel = tuple.third;
-        buyerSecurityDepositBtcLabel.setMinWidth(makerFeeCurrencyLabel.getMinWidth());
-        buyerSecurityDepositBtcLabel.setMaxWidth(makerFeeCurrencyLabel.getMaxWidth());
+
+        if (makerFeeCurrencyLabel != null) {
+            buyerSecurityDepositBtcLabel.setMinWidth(makerFeeCurrencyLabel.getMinWidth());
+            buyerSecurityDepositBtcLabel.setMaxWidth(makerFeeCurrencyLabel.getMaxWidth());
+        }
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
         editOfferElements.add(buyerSecurityDepositBtcLabel);
@@ -971,6 +994,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setRowIndex(buyerSecurityDepositValueCurrencyBox, gridRow);
         GridPane.setColumnIndex(buyerSecurityDepositValueCurrencyBox, 1);
         GridPane.setColumnSpan(buyerSecurityDepositValueCurrencyBox, 2);
+        GridPane.setMargin(buyerSecurityDepositValueCurrencyBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(buyerSecurityDepositValueCurrencyBox);
     }
 
@@ -984,8 +1008,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         sellerSecurityDepositTextField = tuple.second;
         sellerSecurityDepositTextField.setPrefWidth(buyerSecurityDepositInputTextField.getPrefWidth());
         sellerSecurityDepositBtcLabel = tuple.third;
-        sellerSecurityDepositBtcLabel.setMinWidth(makerFeeCurrencyLabel.getMinWidth());
-        sellerSecurityDepositBtcLabel.setMaxWidth(makerFeeCurrencyLabel.getMaxWidth());
+        if (makerFeeCurrencyLabel != null) {
+            sellerSecurityDepositBtcLabel.setMinWidth(makerFeeCurrencyLabel.getMinWidth());
+            sellerSecurityDepositBtcLabel.setMaxWidth(makerFeeCurrencyLabel.getMaxWidth());
+        }
 
         editOfferElements.add(sellerSecurityDepositTextField);
         editOfferElements.add(buyerSecurityDepositBtcLabel);
@@ -1285,20 +1311,22 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void updateFeeToggleButtons(boolean btcSelected) {
-        model.setCurrencyForMakerFeeBtc(btcSelected);
-        if (btcSelected || model.dataModel.isBsqForFeeAvailable()) {
-            if (!payFeeInBtcButton.isSelected() && btcSelected)
-                payFeeInBtcButton.setSelected(true);
-            if (payFeeInBsqButton.isSelected() && !btcSelected)
-                payFeeInBsqButton.setSelected(false);
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            model.setCurrencyForMakerFeeBtc(btcSelected);
+            if (btcSelected || model.dataModel.isBsqForFeeAvailable()) {
+                if (!payFeeInBtcButton.isSelected() && btcSelected)
+                    payFeeInBtcButton.setSelected(true);
+                if (payFeeInBsqButton.isSelected() && !btcSelected)
+                    payFeeInBsqButton.setSelected(false);
 
-            payFeeInBtcButton.setMouseTransparent(btcSelected);
-            payFeeInBsqButton.setMouseTransparent(!btcSelected);
+                payFeeInBtcButton.setMouseTransparent(btcSelected);
+                payFeeInBsqButton.setMouseTransparent(!btcSelected);
 
-            payFeeInBtcButton.setStyle(btcSelected ?
-                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-            payFeeInBsqButton.setStyle(!btcSelected ?
-                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+                payFeeInBtcButton.setStyle(btcSelected ?
+                        "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+                payFeeInBsqButton.setStyle(!btcSelected ?
+                        "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+            }
         }
     }
 
@@ -1328,7 +1356,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.isSellOffer())
             addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.tradeAmount"), model.tradeAmount.get());
 
-        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.securityDeposit"), model.getSecurityDepositInfo());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
         addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.offerFee"), model.getMakerFee());
         addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();

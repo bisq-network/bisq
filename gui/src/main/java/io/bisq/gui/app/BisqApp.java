@@ -271,7 +271,7 @@ public class BisqApp extends Application {
                         TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                         BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                         if (walletService.isWalletReady())
-                            new SpendFromDepositTxWindow(tradeWalletService).show();
+                            new ManualPayoutTxWindow(tradeWalletService).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (DevEnv.DEV_MODE) {

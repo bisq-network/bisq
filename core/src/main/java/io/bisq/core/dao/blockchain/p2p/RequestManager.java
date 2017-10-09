@@ -271,7 +271,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
 
                                 @Override
                                 public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    log.trace("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                    log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                             "ErrorMessage={}", peersNodeAddress, errorMessage);
 
                                     peerManager.handleConnectionFault(peersNodeAddress);

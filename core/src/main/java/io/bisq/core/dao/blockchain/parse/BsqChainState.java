@@ -76,8 +76,9 @@ public class BsqChainState implements PersistableEnvelope {
     private static final int BTC_GENESIS_BLOCK_HEIGHT = 477865; // 2017-07-28
 
     // TEST NET
-    private static final String BTC_TEST_NET_GENESIS_TX_ID = "34efdaed087084855bfbdad5f1f73b4586e64912153b0afa86bdeb5c03d4ad1c";
-    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1155218;
+    // Phase 0 initial genesis tx 6.10.2017: 2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
 
     // REG TEST
     private static final String BTC_REG_TEST_GENESIS_TX_ID = "321a2156d6cac631d3e574caf54a5a401e51971280c14b18b5f5877026a94d47";
@@ -141,7 +142,6 @@ public class BsqChainState implements PersistableEnvelope {
                 genesisTxId = BTC_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
                 break;
-
         }
 
         lock = new FunctionalReadWriteLock(true);
