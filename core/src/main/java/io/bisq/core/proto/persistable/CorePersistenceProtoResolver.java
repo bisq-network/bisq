@@ -13,6 +13,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.VoteItemsList;
+import io.bisq.core.payment.AccountAgeWitnessMap;
 import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.TradableList;
@@ -65,6 +66,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             btcWalletService.get());
                 case TRADE_STATISTICS_LIST:
                     return TradeStatisticsList.fromProto(proto.getTradeStatisticsList());
+                case ACCOUNT_AGE_WITNESS_MAP:
+                    return AccountAgeWitnessMap.fromProto(proto.getAccountAgeWitnessMap());
                 case DISPUTE_LIST:
                     return DisputeList.fromProto(proto.getDisputeList(),
                             this,

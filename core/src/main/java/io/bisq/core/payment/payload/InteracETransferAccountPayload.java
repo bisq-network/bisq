@@ -24,6 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.nio.charset.Charset;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -97,5 +100,12 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 "Email: " + email + "\n" +
                 "Secret question: " + question + "\n" +
                 "Answer: " + answer;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(Charset.forName("UTF-8")),
+                ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
+                        answer.getBytes(Charset.forName("UTF-8")))));
     }
 }

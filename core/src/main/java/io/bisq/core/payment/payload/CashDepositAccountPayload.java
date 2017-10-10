@@ -29,6 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -151,7 +152,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
                 BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
-        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ?
+        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
                 (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
         String requirementsString = requirements != null && !requirements.isEmpty() ?
                 ("Extra requirements: " + requirements + "\n") : "";
@@ -165,7 +166,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 branchId +
                 accountNr +
                 accountType +
-                holderIdString +
+                holderTaxIdString +
                 requirementsString +
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
@@ -177,5 +178,28 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     @Nullable
     public String getBankId() {
         return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        String bankName = BankUtil.isBankNameRequired(countryCode) ? this.bankName : "";
+        String bankId = BankUtil.isBankIdRequired(countryCode) ? this.bankId : "";
+        String branchId = BankUtil.isBranchIdRequired(countryCode) ? this.branchId : "";
+        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? this.accountNr : "";
+        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? this.accountType : "";
+        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
+                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+
+        // We don't add holderName and holderEmail because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+
+        String all = bankName +
+                bankId +
+                branchId +
+                accountNr +
+                accountType +
+                holderTaxIdString;
+
+        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
     }
 }

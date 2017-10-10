@@ -30,6 +30,8 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitness;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -57,9 +59,8 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class OfferBookViewModel extends ActivatableViewModel {
@@ -74,6 +75,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private Set<String> tradeCurrencyCodes = new HashSet<>();
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
@@ -106,7 +108,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager, FilterManager filterManager,
-                              Navigation navigation, BSFormatter formatter) {
+                              AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -117,6 +119,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -484,5 +487,34 @@ class OfferBookViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    Optional<Long> getAccountAge(Offer offer) {
+        if (offer.getAccountAgeWitnessHash().isPresent()) {
+            Optional<AccountAgeWitness> accountAgeWitness = accountAgeWitnessService.findWitnessByHash(offer.getAccountAgeWitnessHash().get());
+            if (accountAgeWitness.isPresent()) {
+                return Optional.of(new Date().getTime() - accountAgeWitness.get().getTradeDate());
+            } else {
+                return Optional.<Long>empty();
+            }
+        } else {
+            return Optional.<Long>empty();
+        }
+    }
+
+    int getAccountAgeCategory(Offer offer) {
+        final Optional<Long> accountAgeOptional = getAccountAge(offer);
+        if (accountAgeOptional.isPresent()) {
+            final Long accountAge = accountAgeOptional.get();
+            if (accountAge < TimeUnit.DAYS.toMillis(30)) {
+                return 1;
+            } else if (accountAge < TimeUnit.DAYS.toMillis(60)) {
+                return 2;
+            } else {
+                return 3;
+            }
+        } else {
+            return 0;
+        }
     }
 }

@@ -46,7 +46,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     @Setter
     private String bic;
     private String email = ""; // not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
-   
+
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
@@ -143,6 +143,6 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     public byte[] getAgeWitnessInputData() {
         // We don't add holderName because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
-        return ArrayUtils.addAll(getIban().getBytes(Charset.forName("UTF-8")), getBic().getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(iban.getBytes(Charset.forName("UTF-8")), bic.getBytes(Charset.forName("UTF-8"))));
     }
 }

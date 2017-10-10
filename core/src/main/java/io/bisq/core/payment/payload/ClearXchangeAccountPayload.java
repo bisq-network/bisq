@@ -25,6 +25,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.Charset;
+
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
@@ -85,5 +87,12 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email or mobile no.: " + emailOrMobileNr;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return super.getAgeWitnessInputData(emailOrMobileNr.getBytes(Charset.forName("UTF-8")));
     }
 }

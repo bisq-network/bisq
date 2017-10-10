@@ -67,7 +67,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     }
 
     // Keys for extra map
-    public static final String ACCOUNT_AGE_WITNESS = "accountAgeWitness";
+    public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitness";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -54,6 +54,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
                 if (walletService.getBalanceForAddress(address).isZero()) {
                     trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
                     swapReservedForTradeEntry();
+                    processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade), trade);
                 } else {
                     listener = new BalanceListener(address) {
                         @Override
@@ -61,6 +62,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
                             if (balance.isZero() && trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED) {
                                 trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
                                 swapReservedForTradeEntry();
+                                processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade), trade);
                             }
                         }
                     };

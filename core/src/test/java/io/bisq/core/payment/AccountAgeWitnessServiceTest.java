@@ -1,7 +1,6 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.Sig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -49,7 +48,7 @@ public class AccountAgeWitnessServiceTest {
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        service = new AccountAgeWitnessService(null);
+        service = new AccountAgeWitnessService(null, null, null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }
@@ -74,11 +73,11 @@ public class AccountAgeWitnessServiceTest {
     }
 
     @Test
-    public void testVerifyPubKeyHash() {
-        byte[] hashOfPubKey = Hash.getHash(Sig.getPublicKeyBytes(publicKey));
-        assertFalse(service.verifyPubKeyHash(new byte[0], publicKey));
-        assertFalse(service.verifyPubKeyHash(new byte[1], publicKey));
-        assertTrue(service.verifyPubKeyHash(hashOfPubKey, publicKey));
+    public void testVerifySigPubKey() {
+        byte[] sigPubKey = Sig.getPublicKeyBytes(publicKey);
+        assertFalse(service.verifySigPubKey(new byte[0], publicKey));
+        assertFalse(service.verifySigPubKey(new byte[1], publicKey));
+        assertTrue(service.verifySigPubKey(sigPubKey, publicKey));
     }
 
     @Test

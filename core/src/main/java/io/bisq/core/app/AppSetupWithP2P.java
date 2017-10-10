@@ -19,6 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.P2PService;
@@ -36,23 +37,27 @@ import java.util.ArrayList;
 @Slf4j
 public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
+    protected final AccountAgeWitnessService accountAgeWitnessService;
     protected BooleanProperty p2pNetWorkReady;
 
     @Inject
     public AppSetupWithP2P(EncryptionService encryptionService,
                            KeyRing keyRing,
                            P2PService p2PService,
-                           TradeStatisticsManager tradeStatisticsManager) {
+                           TradeStatisticsManager tradeStatisticsManager,
+                           AccountAgeWitnessService accountAgeWitnessService) {
         super(encryptionService,
                 keyRing,
                 tradeStatisticsManager);
         this.p2PService = p2PService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
     @Override
     public void initPersistedDataHosts() {
         ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
         persistedDataHosts.add(tradeStatisticsManager);
+        persistedDataHosts.add(accountAgeWitnessService);
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
@@ -70,7 +75,7 @@ public class AppSetupWithP2P extends AppSetup {
     protected void initBasicServices() {
         BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
         result.addListener((observable, oldValue, newValue) -> {
-            if (newValue) 
+            if (newValue)
                 startInitP2PNetwork();
         });
     }
@@ -160,5 +165,7 @@ public class AppSetupWithP2P extends AppSetup {
         p2PService.onAllServicesInitialized();
 
         tradeStatisticsManager.onAllServicesInitialized();
+        
+        accountAgeWitnessService.onAllServicesInitialized();
     }
 }

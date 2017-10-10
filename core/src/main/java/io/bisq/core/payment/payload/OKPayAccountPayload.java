@@ -92,6 +92,6 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return accountNr.getBytes(Charset.forName("UTF-8"));
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

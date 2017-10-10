@@ -18,12 +18,17 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
+import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.storage.HashMapChangedListener;
+import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bitcoinj.core.Sha256Hash;
@@ -31,28 +36,96 @@ import org.bitcoinj.core.Sha256Hash;
 import javax.inject.Inject;
 import java.math.BigInteger;
 import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class AccountAgeWitnessService {
+public class AccountAgeWitnessService implements PersistedDataHost {
 
     private KeyRing keyRing;
+    private Storage<AccountAgeWitnessMap> storage;
+    private P2PService p2PService;
+    private Map<String, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
     @Inject
-    public AccountAgeWitnessService(KeyRing keyRing) {
+    public AccountAgeWitnessService(KeyRing keyRing, Storage<AccountAgeWitnessMap> storage, P2PService p2PService) {
         this.keyRing = keyRing;
+        this.storage = storage;
+        this.p2PService = p2PService;
     }
 
-    public AccountAgeWitness getPaymentAccountWitness(PaymentAccountPayload paymentAccountPayload, Trade trade) throws CryptoException {
+    @Override
+    public void readPersisted() {
+        AccountAgeWitnessMap persisted = storage.initAndGetPersistedWithFileName("AccountAgeWitnessMap");
+        //if (persisted != null)
+        //    accountAgeWitnessMap = persisted.getMap();
+        // else
+    }
+
+    public void onAllServicesInitialized() {
+        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+            @Override
+            public void onAdded(ProtectedStorageEntry data) {
+                final StoragePayload storagePayload = data.getStoragePayload();
+                if (storagePayload instanceof AccountAgeWitness) {
+                    log.error("we received the accountAgeWitness from the P2P network. hash={}", ((AccountAgeWitness) storagePayload).getHashAsHex());
+                    add((AccountAgeWitness) storagePayload, true);
+                }
+            }
+
+            @Override
+            public void onRemoved(ProtectedStorageEntry data) {
+                // We don't remove items
+            }
+        });
+
+        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+        final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
+        list.forEach(e -> {
+            final StoragePayload storagePayload = e.getStoragePayload();
+            if (storagePayload instanceof AccountAgeWitness)
+                add((AccountAgeWitness) storagePayload, false);
+
+        });
+    }
+
+    public void add(AccountAgeWitness accountAgeWitness, boolean storeLocally) {
+        accountAgeWitnessMap.put(accountAgeWitness.getHashAsHex(), accountAgeWitness);
+        log.error("add: we received the accountAgeWitness from the P2P network. hash={}", accountAgeWitness.getHashAsHex());
+
+        //TODO do we need to store it? its in EntryMap anyway...
+        // if (storeLocally)
+        //    storage.queueUpForSave(new AccountAgeWitnessMap(accountAgeWitnessMap), 2000);
+    }
+
+    public void publishAccountAgeWitness(PaymentAccountPayload paymentAccountPayload, Trade trade) {
+        log.error("#### publishAccountAgeWitness");
+        try {
+            AccountAgeWitness accountAgeWitness = getAccountAgeWitness(paymentAccountPayload, trade);
+            if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsHex())) {
+                log.error("we publish the accountAgeWitness to the P2P network. hash={}", accountAgeWitness.getHashAsHex());
+                p2PService.addData(accountAgeWitness, true);
+            } else {
+                log.error("We got already the entry in the P2P storage. hash={}", accountAgeWitness.getHashAsHex());
+            }
+
+        } catch (CryptoException e) {
+            e.printStackTrace();
+            log.error(e.toString());
+        }
+    }
+
+    public Optional<AccountAgeWitness> findWitnessByHash(String hash) {
+        return accountAgeWitnessMap.containsKey(hash) ? Optional.of(accountAgeWitnessMap.get(hash)) : Optional.<AccountAgeWitness>empty();
+    }
+
+    public AccountAgeWitness getAccountAgeWitness(PaymentAccountPayload paymentAccountPayload, Trade trade) throws CryptoException {
         byte[] hash = getWitnessHash(paymentAccountPayload);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
         long tradeDate = trade.getTakeOfferDate().getTime();
-        byte[] hashOfPubKey = Sha256Hash.hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
+        byte[] sigPubKey = keyRing.getPubKeyRing().getSignaturePubKeyBytes();
         return new AccountAgeWitness(hash,
-                hashOfPubKey,
+                sigPubKey,
                 signature,
                 tradeDate);
     }
@@ -80,8 +153,8 @@ public class AccountAgeWitnessService {
             return false;
 
 
-        // Check if peer's pubkey is matching the hash in the witness data
-        if (!verifyPubKeyHash(witness.getHashOfPubKey(), peersPublicKey))
+        // Check if peer's pubkey is matching the one from the witness data
+        if (!verifySigPubKey(witness.getSigPubKey(), peersPublicKey))
             return false;
 
         final byte[] combined = ArrayUtils.addAll(peersAgeWitnessInputData, peersSalt);
@@ -110,12 +183,12 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    boolean verifyPubKeyHash(byte[] hashOfPubKey,
-                             PublicKey peersPublicKey) {
-        final boolean result = Arrays.equals(Hash.getHash(Sig.getPublicKeyBytes(peersPublicKey)), hashOfPubKey);
+    boolean verifySigPubKey(byte[] sigPubKey,
+                            PublicKey peersPublicKey) {
+        final boolean result = Arrays.equals(Sig.getPublicKeyBytes(peersPublicKey), sigPubKey);
         if (!result)
-            log.warn("hashOfPubKey is not matching peers peersPublicKey. " +
-                    "hashOfPubKey={}, peersPublicKey={}", Utilities.bytesAsHexString(hashOfPubKey), peersPublicKey);
+            log.warn("sigPubKey is not matching peers peersPublicKey. " +
+                    "sigPubKey={}, peersPublicKey={}", Utilities.bytesAsHexString(sigPubKey), peersPublicKey);
         return result;
     }
 
@@ -156,7 +229,7 @@ public class AccountAgeWitnessService {
         final boolean result = Arrays.equals(witnessHash, offersWitness);
         if (!result)
             log.warn("witnessHash is not matching peers offersWitness. " +
-                    "witnessHash={}, offersWitness={}", Utilities.bytesAsHexString(witnessHash), 
+                            "witnessHash={}, offersWitness={}", Utilities.bytesAsHexString(witnessHash),
                     Utilities.bytesAsHexString(offersWitness));
         return result;
     }

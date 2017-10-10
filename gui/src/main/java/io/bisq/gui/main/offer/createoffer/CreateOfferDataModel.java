@@ -349,7 +349,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         HashMap<String, String> extraDataMap = new HashMap<>();
 
         byte[] hashOfPaymentAccount = accountAgeWitnessService.getWitnessHash(paymentAccount.getPaymentAccountPayload());
-        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS, Utilities.bytesAsHexString(hashOfPaymentAccount));
+        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, Utilities.bytesAsHexString(hashOfPaymentAccount));
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,

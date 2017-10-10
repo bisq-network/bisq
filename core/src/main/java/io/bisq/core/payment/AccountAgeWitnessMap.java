@@ -21,31 +21,36 @@ import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableHashMap;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.P2PDataStorage;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-// key in PB map cannot be byte array, so we use a hex string of the bytes array
-public class AccountAgeWitnessMap extends PersistableHashMap<P2PDataStorage.ByteArray, AccountAgeWitness> {
+// Key in PB map cannot be byte array, so we use a hex string of the bytes array
+public class AccountAgeWitnessMap extends PersistableHashMap<String, AccountAgeWitness> {
 
-    public AccountAgeWitnessMap(HashMap<P2PDataStorage.ByteArray, AccountAgeWitness> hashMap) {
-        super(hashMap);
+    public AccountAgeWitnessMap(Map<String, AccountAgeWitness> map) {
+        super(map);
     }
 
     @Override
     public Message toProtoMessage() {
-        PB.PersistableEnvelope.Builder builder = PB.PersistableEnvelope.newBuilder()
-                .setAccountAgeWitnessMap(PB.AccountAgeWitnessMap.newBuilder());
-       
-    /*    .putAllAccountAgeWitnessMap(getHashMap().stream()
-                .map(TradeStatistics::toProtoTradeStatistics)
-                .collect(Collectors.toList())))*/
-        return builder.build();
+        Map<String, PB.AccountAgeWitness> protoMap = getMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+                    return e.getValue().toProtoAccountAgeWitness();
+                }));
+
+        final PB.AccountAgeWitnessMap.Builder builder = PB.AccountAgeWitnessMap.newBuilder();
+        builder.putAllAccountAgeWitnessMap(protoMap);
+
+        return PB.PersistableEnvelope.newBuilder()
+                .setAccountAgeWitnessMap(builder).build();
     }
 
     public static PersistableEnvelope fromProto(PB.AccountAgeWitnessMap proto) {
-        return null; /*new AccountAgeWitnessMap(new ArrayList<>(proto.getAccountAgeWitnessMap().stream()
-                .map(TradeStatistics::fromProto)
-                .collect(Collectors.toList())));*/
+        Map<String, AccountAgeWitness> map = proto.getAccountAgeWitnessMapMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+                    return AccountAgeWitness.fromProto(e.getValue());
+                }));
+        return new AccountAgeWitnessMap(map);
     }
 }

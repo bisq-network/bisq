@@ -19,6 +19,7 @@ package io.bisq.core.payment;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
@@ -41,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
 
     private final byte[] hash;                      // 32 bytes
-    private final byte[] hashOfPubKey;              // 32 bytes
+    private final byte[] sigPubKey;                 // ? bytes
     private final byte[] signature;                 // 46 bytes
     private final long tradeDate;                   // 8 byte
 
@@ -56,12 +57,12 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
     private Map<String, String> extraDataMap;
 
     public AccountAgeWitness(byte[] hash,
-                             byte[] hashOfPubKey,
+                             byte[] sigPubKey,
                              byte[] signature,
                              long tradeDate) {
 
         this(hash,
-                hashOfPubKey,
+                sigPubKey,
                 signature,
                 tradeDate,
                 null);
@@ -72,24 +73,24 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     AccountAgeWitness(byte[] hash,
-                      byte[] hashOfPubKey,
+                      byte[] sigPubKey,
                       byte[] signature,
                       long tradeDate,
                       @Nullable Map<String, String> extraDataMap) {
         this.hash = hash;
-        this.hashOfPubKey = hashOfPubKey;
+        this.sigPubKey = sigPubKey;
         this.signature = signature;
         this.tradeDate = tradeDate;
         this.extraDataMap = extraDataMap;
 
-        signaturePubKey = Sig.getPublicKeyFromBytes(signature);
+        signaturePubKey = Sig.getPublicKeyFromBytes(sigPubKey);
     }
 
     @Override
     public PB.StoragePayload toProtoMessage() {
         final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
-                .setHashOfPukKey(ByteString.copyFrom(hashOfPubKey))
+                .setSigPubKey(ByteString.copyFrom(sigPubKey))
                 .setSignature(ByteString.copyFrom(signature))
                 .setTradeDate(tradeDate);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -103,7 +104,7 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
     public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
         return new AccountAgeWitness(
                 proto.getHash().toByteArray(),
-                proto.getHashOfPukKey().toByteArray(),
+                proto.getSigPubKey().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getTradeDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
@@ -129,5 +130,9 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
     // We allow max 1 day time difference
     public boolean isTradeDateValid() {
         return new Date().getTime() - tradeDate < TimeUnit.DAYS.toMillis(1);
+    }
+
+    public String getHashAsHex() {
+        return Utilities.encodeToHex(hash);
     }
 }

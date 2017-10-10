@@ -31,14 +31,54 @@ public class PeerInfoIcon extends Group {
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades,
-                        PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
+    public PeerInfoIcon(String hostName,
+                        String tooltipText,
+                        int numTrades,
+                        PrivateNotificationManager privateNotificationManager,
+                        Offer offer,
+                        Preferences preferences) {
+        this(hostName, tooltipText, numTrades, privateNotificationManager, offer, preferences, -1);
+    }
+
+    public PeerInfoIcon(String hostName,
+                        String tooltipText,
+                        int numTrades,
+                        PrivateNotificationManager privateNotificationManager,
+                        Offer offer,
+                        Preferences preferences,
+                        int accountAgeCategory) {
         this.hostName = hostName;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
 
         peerTagMap = preferences.getPeerTagMap();
 
+        // outer circle
+        Color color1;
+        switch (accountAgeCategory) {
+            case 1:
+                color1 = Color.rgb(204, 153, 51); //brown/gold
+                break;
+            case 2:
+                color1 = Color.rgb(204, 204, 51); // green/yellow
+                break;
+            case 3:
+                color1 = Color.rgb(0, 153, 0); // green
+                break;
+            case 0:
+            default:
+                color1 = Color.rgb(255, 153, 51); //orange
+                break;
+        }
+
+        double size1 = 26;
+        Canvas outerBackground = new Canvas(size1, size1);
+        GraphicsContext gc1 = outerBackground.getGraphicsContext2D();
+        gc1.setFill(color1);
+        gc1.fillOval(0, 0, size1, size1);
+        outerBackground.setLayoutY(1);
+
+        // inner circle
         int maxIndices = 15;
         int intValue = 0;
         try {
@@ -58,16 +98,16 @@ public class PeerInfoIcon extends Group {
         int green = (intValue >> 16) % 256;
         int blue = (intValue >> 24) % 256;
 
-        Color color = Color.rgb(red, green, blue);
-        color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
+        Color color2 = Color.rgb(red, green, blue);
+        color2 = color2.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
-        double SIZE = 26;
-        Canvas background = new Canvas(SIZE, SIZE);
-        GraphicsContext gc = background.getGraphicsContext2D();
-        gc.setFill(color);
-        gc.fillOval(0, 0, SIZE, SIZE);
-        background.setLayoutY(1);
-
+        double size2 = 22;
+        Canvas innerBackground = new Canvas(size2, size2);
+        GraphicsContext gc2 = innerBackground.getGraphicsContext2D();
+        gc2.setFill(color2);
+        gc2.fillOval(0, 0, size2, size2);
+        innerBackground.setLayoutY(3);
+        innerBackground.setLayoutX(2);
 
         ImageView avatarImageView = new ImageView();
         avatarImageView.setId("avatar_" + index);
@@ -95,7 +135,7 @@ public class PeerInfoIcon extends Group {
 
         updatePeerInfoIcon();
 
-        getChildren().addAll(background, avatarImageView, tagPane, numTradesPane);
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
                 .hostName(hostName)

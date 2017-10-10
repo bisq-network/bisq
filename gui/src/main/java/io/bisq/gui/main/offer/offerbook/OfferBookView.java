@@ -52,7 +52,6 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
@@ -66,6 +65,7 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
@@ -800,8 +800,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String tooltipText = hasTraded ?
                                             Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :
                                             Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
-                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
-                                            privateNotificationManager, newItem.getOffer(), model.preferences);
+
+                                    final Optional<Long> accountAge = model.getAccountAge(newItem.getOffer());
+                                    if (accountAge.isPresent()) 
+                                        tooltipText += "\n" + Res.get("peerInfoIcon.tooltip.offer.accountAge", 
+                                                formatter.formatDurationAsWords(accountAge.get()));
+
+                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(hostName, 
+                                            tooltipText, 
+                                            numPastTrades,
+                                            privateNotificationManager, 
+                                            newItem.getOffer(),
+                                            model.preferences,
+                                            model.getAccountAgeCategory(newItem.getOffer()));
+
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

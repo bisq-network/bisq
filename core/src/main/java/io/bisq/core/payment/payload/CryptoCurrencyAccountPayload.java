@@ -81,4 +81,11 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
     }
+
+    // TODO test
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        throw new UnsupportedOperationException("Must nto be called on CryptoCurrencyAccountPayload");
+       // return paymentMethodId.getBytes(Charset.forName("UTF-8"));
+    }
 }

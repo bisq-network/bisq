@@ -25,6 +25,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.Charset;
+
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
@@ -78,5 +80,10 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

@@ -24,6 +24,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.nio.charset.Charset;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
@@ -82,5 +84,10 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

@@ -23,6 +23,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.nio.charset.Charset;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -55,4 +58,9 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     abstract public String getPaymentDetails();
 
     abstract public String getPaymentDetailsForTradePopup();
+
+    @Override
+    protected byte[] getAgeWitnessInputData(byte[] data) {
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(countryCode.getBytes(Charset.forName("UTF-8")), data));
+    }
 }

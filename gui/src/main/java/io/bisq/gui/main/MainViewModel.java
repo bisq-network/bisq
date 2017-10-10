@@ -50,6 +50,7 @@ import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
@@ -137,6 +138,7 @@ public class MainViewModel implements ViewModel {
     private final BisqEnvironment bisqEnvironment;
     private final FailedTradesManager failedTradesManager;
     private final ClosedTradableManager closedTradableManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     // BTC network
@@ -210,7 +212,7 @@ public class MainViewModel implements ViewModel {
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
-                         ClosedTradableManager closedTradableManager,
+                         ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -238,6 +240,7 @@ public class MainViewModel implements ViewModel {
         this.bisqEnvironment = bisqEnvironment;
         this.failedTradesManager = failedTradesManager;
         this.closedTradableManager = closedTradableManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
@@ -625,6 +628,8 @@ public class MainViewModel implements ViewModel {
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         tradeStatisticsManager.onAllServicesInitialized();
+
+        accountAgeWitnessService.onAllServicesInitialized();
 
         priceFeedService.onAllServicesInitialized();
 

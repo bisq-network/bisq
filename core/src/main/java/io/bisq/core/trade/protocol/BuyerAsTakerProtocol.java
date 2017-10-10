@@ -27,6 +27,7 @@ import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.PublishAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.taker.TakerVerifyOffersAgeWitnessHash;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
@@ -130,6 +131,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 BuyerAsTakerSignAndPublishDepositTx.class,
+                PublishAccountAgeWitness.class,
                 TakerSendDepositTxPublishedMessage.class
         );
         taskRunner.run();

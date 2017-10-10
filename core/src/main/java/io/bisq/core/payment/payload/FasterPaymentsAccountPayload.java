@@ -24,6 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.nio.charset.Charset;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -91,5 +94,11 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
                 "Account number: " + accountNr;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(sortCode.getBytes(Charset.forName("UTF-8")), 
+                accountNr.getBytes(Charset.forName("UTF-8"))));
     }
 }

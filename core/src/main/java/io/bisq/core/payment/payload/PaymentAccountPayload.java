@@ -27,7 +27,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,7 +103,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
                 .setMaxTradePeriod(maxTradePeriod)
                 .putAllExcludeFromJsonData(excludeFromJsonDataMap);
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -120,11 +122,12 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
         excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
     }
 
-    // TODO make abstract
     // Identifying data of payment account (e.g. IBAN). 
     // This is critical code for verifying age of payment account. 
     // Any change would break validation of historical data!
-    public byte[] getAgeWitnessInputData() {
-        return new byte[0];
+    public abstract byte[] getAgeWitnessInputData();
+
+    protected byte[] getAgeWitnessInputData(byte[] data) {
+        return ArrayUtils.addAll(paymentMethodId.getBytes(Charset.forName("UTF-8")), data);
     }
 }

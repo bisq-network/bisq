@@ -24,6 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.nio.charset.Charset;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -85,5 +88,12 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Postal address: " + postalAddress;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We use here the holderName because the address alone seems to be too weak
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(holderName.getBytes(Charset.forName("UTF-8")),
+                postalAddress.getBytes(Charset.forName("UTF-8"))));
     }
 }
