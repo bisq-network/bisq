@@ -100,6 +100,7 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
+        result.add(new CryptoCurrency("ELLA", "Ellaism"));
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
