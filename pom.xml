@@ -127,6 +127,12 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>4.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!--crypto TODO why are versions removed here?-->
@@ -154,7 +160,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>19.0</version>
+            <version>20.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -182,13 +188,7 @@
             <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.3.0</version>
-        </dependency>
--->
+
         <!--logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -226,18 +226,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>3.3.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
@@ -253,7 +241,7 @@
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                    <crypto.policy>unlimited</crypto.policy>
+                <crypto.policy>unlimited</crypto.policy>
             </properties>
         </profile>
     </profiles>

@@ -85,6 +85,8 @@ Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configure
 At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
+### 2.2 If using Intellij install the Lombok plugin
+https://plugins.jetbrains.com/plugin/6317-lombok-plugin
 
 Build bisq
 -----------------
@@ -93,6 +95,7 @@ Build bisq
 
 Now we have all prepared to build the correct bisq jar.
    
+    $ git clone https://github.com/bitsquare/bitsquare.git bisq
     $ cd bisq
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 

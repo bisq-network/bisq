@@ -19,8 +19,8 @@ package io.bisq.gui.main.dao.wallet;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -83,7 +83,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
 
         // TODO just until DAO is enabled
-        if (!DevEnv.DAO_ACTIVATED) {
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             dashboard.setDisable(true);
             send.setDisable(true);
             transactions.setDisable(true);
@@ -105,7 +105,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
                 selectedViewClass = BsqDashboardView.class;
 
             // TODO just until DAO is enabled
-            if (!DevEnv.DAO_ACTIVATED)
+            if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
                 selectedViewClass = BsqReceiveView.class;
 
             loadView(selectedViewClass);

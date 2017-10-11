@@ -89,7 +89,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private TitledGroupBg payFundsPane, paymentAccountTitledGroupBg;
+    private TitledGroupBg payFundsPane, paymentAccountTitledGroupBg, feeCurrencyTitledGroupBg;
     private VBox priceAsPercentageInputBox;
     private HBox fundingHBox, takerFeeRowHBox, buyerSecurityDepositValueCurrencyBox,
             sellerSecurityDepositValueCurrencyBox;
@@ -151,7 +151,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addGridPane();
         addPaymentGroup();
         addAmountPriceGroup();
-        addOptionsGroup();
+        if (model.dataModel.isBsqForFeeAvailable())
+            addFeeCurrencySelection();
+
+        addButtons();
+        addOfferAvailabilityLabel();
         addFundingGroup();
 
         balanceTextField.setFormatter(model.getBtcFormatter());
@@ -293,9 +297,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
-        buyerSecurityDepositTextField.setText(model.getBuyerSecurityDeposit());
-        sellerSecurityDepositTextField.setText(model.getSellerSecurityDeposit());
-
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            buyerSecurityDepositTextField.setText(model.getBuyerSecurityDeposit());
+            sellerSecurityDepositTextField.setText(model.getSellerSecurityDeposit());
+        }
+        
         if (offer.getPrice() == null)
             new Popup<>().warning(Res.get("takeOffer.noPriceFeedAvailable"))
                     .onClose(this::close)
@@ -384,9 +390,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceTextField.setMouseTransparent(true);
         priceAsPercentageTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
-        payFeeInBtcButton.setMouseTransparent(true);
-        payFeeInBsqButton.setMouseTransparent(true);
 
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            payFeeInBtcButton.setMouseTransparent(true);
+            payFeeInBsqButton.setMouseTransparent(true);
+        }
+        
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
 
@@ -394,7 +403,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String key = "securityDepositInfo";
             new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();
@@ -476,9 +485,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + Res.getBaseCurrencyCode()));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
-        takerFeeTextField.textProperty().bind(model.takerFee);
-        takerFeeCurrencyLabel.textProperty().bind(model.takerFeeCurrencyCode);
-
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            takerFeeTextField.textProperty().bind(model.takerFee);
+            takerFeeCurrencyLabel.textProperty().bind(model.takerFeeCurrencyCode);
+        }
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
         fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
@@ -497,8 +507,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().unbind();
         priceAsPercentageLabel.prefWidthProperty().unbind();
         nextButton.disableProperty().unbind();
-        takerFeeTextField.textProperty().unbind();
-        takerFeeCurrencyLabel.textProperty().unbind();
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            takerFeeTextField.textProperty().unbind();
+            takerFeeCurrencyLabel.textProperty().unbind();
+        }
 
         // funding
         fundingHBox.visibleProperty().unbind();
@@ -734,14 +746,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addSecondRow();
     }
 
-    private void addOptionsGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("takeOffer.feeCurrency"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 3);
+    private void addFeeCurrencySelection() {
+        feeCurrencyTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("takeOffer.feeCurrency"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(feeCurrencyTitledGroupBg, 3);
 
         addMakerFeeRow();
         addBuyerSecurityDepositRow();
         addSellerSecurityDepositRow();
+    }
 
+    private void addButtons() {
         nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
         nextButton.setOnAction(e -> {
@@ -754,17 +768,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             int delay = 500;
             int diff = 100;
-            transitions.fadeOutAndRemove(titledGroupBg, delay, (event) -> onShowPayFundsScreen());
-            delay -= diff;
-            transitions.fadeOutAndRemove(takerFeeTextLabel, delay);
-            transitions.fadeOutAndRemove(takerFeeRowHBox, delay);
-            delay -= diff;
-            transitions.fadeOutAndRemove(buyerSecurityDepositLabel, delay);
-            transitions.fadeOutAndRemove(buyerSecurityDepositValueCurrencyBox, delay);
-            delay -= diff;
-            transitions.fadeOutAndRemove(sellerSecurityDepositLabel, delay);
-            transitions.fadeOutAndRemove(sellerSecurityDepositValueCurrencyBox, delay);
-
+            if (model.dataModel.isBsqForFeeAvailable()) {
+                transitions.fadeOutAndRemove(feeCurrencyTitledGroupBg, delay, (event) -> onShowPayFundsScreen());
+                delay -= diff;
+                transitions.fadeOutAndRemove(takerFeeTextLabel, delay);
+                transitions.fadeOutAndRemove(takerFeeRowHBox, delay);
+                delay -= diff;
+                transitions.fadeOutAndRemove(buyerSecurityDepositLabel, delay);
+                transitions.fadeOutAndRemove(buyerSecurityDepositValueCurrencyBox, delay);
+                delay -= diff;
+                transitions.fadeOutAndRemove(sellerSecurityDepositLabel, delay);
+                transitions.fadeOutAndRemove(sellerSecurityDepositValueCurrencyBox, delay);
+            } else {
+                onShowPayFundsScreen();
+            }
         });
 
         cancelButton1 = new Button(Res.get("shared.cancel"));
@@ -774,7 +791,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.dataModel.swapTradeToSavings();
             close();
         });
+    }
 
+    private void addOfferAvailabilityLabel() {
         offerAvailabilityBusyAnimation = new BusyAnimation();
         offerAvailabilityLabel = new Label(Res.get("takeOffer.fundsBox.isOfferAvailable"));
 
@@ -1096,20 +1115,22 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void updateFeeToggleButtons(boolean btcSelected) {
-        model.setCurrencyForTakerFeeBtc(btcSelected);
-        if (btcSelected || model.dataModel.isBsqForFeeAvailable()) {
-            if (!payFeeInBtcButton.isSelected() && btcSelected)
-                payFeeInBtcButton.setSelected(true);
-            if (payFeeInBsqButton.isSelected() && !btcSelected)
-                payFeeInBsqButton.setSelected(false);
+        if (model.dataModel.isBsqForFeeAvailable()) {
+            model.setCurrencyForTakerFeeBtc(btcSelected);
+            if (btcSelected || model.dataModel.isBsqForFeeAvailable()) {
+                if (!payFeeInBtcButton.isSelected() && btcSelected)
+                    payFeeInBtcButton.setSelected(true);
+                if (payFeeInBsqButton.isSelected() && !btcSelected)
+                    payFeeInBsqButton.setSelected(false);
 
-            payFeeInBtcButton.setMouseTransparent(btcSelected);
-            payFeeInBsqButton.setMouseTransparent(!btcSelected);
+                payFeeInBtcButton.setMouseTransparent(btcSelected);
+                payFeeInBsqButton.setMouseTransparent(!btcSelected);
 
-            payFeeInBtcButton.setStyle(btcSelected ?
-                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-            payFeeInBsqButton.setStyle(!btcSelected ?
-                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+                payFeeInBtcButton.setStyle(btcSelected ?
+                        "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+                payFeeInBsqButton.setStyle(!btcSelected ?
+                        "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+            }
         }
     }
 
@@ -1151,7 +1172,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.isSeller())
             addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
 
-        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.securityDeposit"), model.getSecurityDepositInfo());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.offerFee"), model.getTakerFee());
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();

@@ -17,6 +17,7 @@
 
 package io.bisq.gui.app;
 
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.BisqExecutable;
@@ -24,12 +25,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.security.Permission;
-import java.security.PermissionCollection;
 import java.util.Locale;
-import java.util.Map;
 
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
@@ -39,8 +35,8 @@ public class BisqAppMain extends BisqExecutable {
     static {
         // Need to set default locale initially otherwise we get problems at non-english OS
         Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
-        
-        removeCryptographyRestrictions();
+
+        Utilities.removeCryptographyRestrictions();
     }
 
     public static void main(String[] args) throws Exception {
@@ -80,55 +76,4 @@ public class BisqAppMain extends BisqExecutable {
         BisqApp.setEnvironment(getBisqEnvironment(options));
         javafx.application.Application.launch(BisqApp.class);
     }
-
-    private static void removeCryptographyRestrictions() {
-        if (!isRestrictedCryptography()) {
-            System.out.println("Cryptography restrictions removal not needed");
-            return;
-        }
-        try {
-        /*
-         * Do the following, but with reflection to bypass access checks:
-         *
-         * JceSecurity.isRestricted = false;
-         * JceSecurity.defaultPolicy.perms.clear();
-         * JceSecurity.defaultPolicy.add(CryptoAllPermission.INSTANCE);
-         */
-            final Class<?> jceSecurity = Class.forName("javax.crypto.JceSecurity");
-            final Class<?> cryptoPermissions = Class.forName("javax.crypto.CryptoPermissions");
-            final Class<?> cryptoAllPermission = Class.forName("javax.crypto.CryptoAllPermission");
-
-            final Field isRestrictedField = jceSecurity.getDeclaredField("isRestricted");
-            isRestrictedField.setAccessible(true);
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(isRestrictedField, isRestrictedField.getModifiers() & ~Modifier.FINAL);
-            isRestrictedField.set(null, false);
-
-            final Field defaultPolicyField = jceSecurity.getDeclaredField("defaultPolicy");
-            defaultPolicyField.setAccessible(true);
-            final PermissionCollection defaultPolicy = (PermissionCollection) defaultPolicyField.get(null);
-
-            final Field perms = cryptoPermissions.getDeclaredField("perms");
-            perms.setAccessible(true);
-            ((Map<?, ?>) perms.get(defaultPolicy)).clear();
-
-            final Field instance = cryptoAllPermission.getDeclaredField("INSTANCE");
-            instance.setAccessible(true);
-            defaultPolicy.add((Permission) instance.get(null));
-
-            System.out.println("Successfully removed cryptography restrictions");
-        } catch (final Exception e) {
-            System.err.println("Failed to remove cryptography restrictions" + e);
-        }
-    }
-
-    private static boolean isRestrictedCryptography() {
-        // This matches Oracle Java 7 and 8, but not Java 9 or OpenJDK.
-        final String name = System.getProperty("java.runtime.name");
-        final String ver = System.getProperty("java.version");
-        return name != null && name.equals("Java(TM) SE Runtime Environment")
-                && ver != null && (ver.startsWith("1.7") || ver.startsWith("1.8"));
-    }
-
 }

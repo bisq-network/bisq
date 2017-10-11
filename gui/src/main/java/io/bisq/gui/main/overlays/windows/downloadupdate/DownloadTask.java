@@ -91,11 +91,11 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
                     return fileDescriptor;
                 })
                 .map(fileDescriptor -> {
-                    log.info("Downloading {}", fileDescriptor.getFileName());
+                    log.info("Downloading {}", fileDescriptor.getLoadUrl());
                     try {
                         updateMessage(fileDescriptor.getFileName());
                         download(new URL(fileDescriptor.getLoadUrl()), fileDescriptor.getSaveFile());
-                        log.info("Download for {} done", fileDescriptor.getFileName());
+                        log.info("Download for {} done", fileDescriptor.getLoadUrl());
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.OK);
                     } catch (Exception e) {
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.FAIL);
@@ -118,7 +118,6 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
         int fileSize = urlConnection.getContentLength();
         copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, fileSize);
     }
-
 
     public void copyInputStreamToFileNew(final InputStream source, final File destination, int fileSize) throws IOException {
         try {

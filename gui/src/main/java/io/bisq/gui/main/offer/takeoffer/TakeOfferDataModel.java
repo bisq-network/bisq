@@ -29,6 +29,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -66,6 +67,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
+    private final FilterManager filterManager;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final BSFormatter formatter;
@@ -103,7 +105,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                       User user, FeeService feeService,
+                       User user, FeeService feeService, FilterManager filterManager,
                        Preferences preferences, PriceFeedService priceFeedService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
@@ -111,6 +113,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
+        this.filterManager = filterManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
@@ -274,21 +277,31 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (isBuyOffer())
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
-        tradeManager.onTakeOffer(amount.get(),
-                txFeeFromFeeService,
-                getTakerFee(),
-                isCurrencyForTakerFeeBtc(),
-                tradePrice.getValue(),
-                fundsNeededForTrade,
-                offer,
-                paymentAccount.getId(),
-                useSavingsWallet,
-                tradeResultHandler,
-                errorMessage -> {
-                    log.warn(errorMessage);
-                    new Popup<>().warning(errorMessage).show();
-                }
-        );
+        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
+            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+        } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
+            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+        } else if (filterManager.isOfferIdBanned(offer.getId())) {
+            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
+        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix())) {
+            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+        } else {
+            tradeManager.onTakeOffer(amount.get(),
+                    txFeeFromFeeService,
+                    getTakerFee(),
+                    isCurrencyForTakerFeeBtc(),
+                    tradePrice.getValue(),
+                    fundsNeededForTrade,
+                    offer,
+                    paymentAccount.getId(),
+                    useSavingsWallet,
+                    tradeResultHandler,
+                    errorMessage -> {
+                        log.warn(errorMessage);
+                        new Popup<>().warning(errorMessage).show();
+                    }
+            );
+        }
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
