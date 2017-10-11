@@ -2,15 +2,18 @@ package io.bisq.gui.main;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 public class PriceFeedComboBoxItem {
-    private static final Logger log = LoggerFactory.getLogger(PriceFeedComboBoxItem.class);
-
     public final String currencyCode;
     public final StringProperty displayStringProperty = new SimpleStringProperty();
+    @Setter
+    @Getter
     private boolean isPriceAvailable;
+    @Setter
+    @Getter
+    private boolean isExternallyProvidedPrice;
 
     public PriceFeedComboBoxItem(String currencyCode) {
         this.currencyCode = currencyCode;
@@ -18,13 +21,5 @@ public class PriceFeedComboBoxItem {
 
     public void setDisplayString(String displayString) {
         this.displayStringProperty.set(displayString);
-    }
-
-    public void setIsPriceAvailable(boolean isPriceAvailable) {
-        this.isPriceAvailable = isPriceAvailable;
-    }
-
-    public boolean isPriceAvailable() {
-        return isPriceAvailable;
     }
 }

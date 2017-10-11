@@ -746,7 +746,7 @@ public abstract class Overlay<T extends Overlay> {
         forumButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bisq.io");
+            GUIUtil.openWebPage("http://forum.bisq.network");
         });
     }
 

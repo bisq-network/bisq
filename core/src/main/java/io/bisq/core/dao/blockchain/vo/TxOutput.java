@@ -17,10 +17,11 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import com.google.protobuf.ByteString;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.generated.protobuffer.PB;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
@@ -29,18 +30,43 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Data
-@AllArgsConstructor
 @Slf4j
 public class TxOutput implements PersistablePayload {
-    private final TxOutputVo txOutputVo;
+    private final int index;
+    private final long value;
+    private final String txId;
+    @Nullable
+    private final PubKeyScript pubKeyScript;
+    @Nullable
+    private final String address;
+    @Nullable
+    @JsonExclude
+    private final byte[] opReturnData;
+    private final int blockHeight;
     private boolean isUnspent;
     private boolean isVerified;
     private TxOutputType txOutputType = TxOutputType.UNDEFINED;
     @Nullable
     private SpentInfo spentInfo;
 
-    public TxOutput(TxOutputVo txOutputVo) {
-        this.txOutputVo = txOutputVo;
+    public TxOutput(int index,
+                    long value,
+                    String txId,
+                    @Nullable PubKeyScript pubKeyScript,
+                    @Nullable String address,
+                    @Nullable byte[] opReturnData,
+                    int blockHeight) {
+        this(index,
+                value,
+                txId,
+                pubKeyScript,
+                address,
+                opReturnData,
+                blockHeight,
+                false,
+                false,
+                TxOutputType.UNDEFINED,
+                null);
     }
 
 
@@ -48,20 +74,56 @@ public class TxOutput implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private TxOutput(int index,
+                     long value,
+                     String txId,
+                     @Nullable PubKeyScript pubKeyScript,
+                     @Nullable String address,
+                     @Nullable byte[] opReturnData,
+                     int blockHeight,
+                     boolean isUnspent,
+                     boolean isVerified,
+                     TxOutputType txOutputType,
+                     @Nullable SpentInfo spentInfo) {
+        this.index = index;
+        this.value = value;
+        this.txId = txId;
+        this.pubKeyScript = pubKeyScript;
+        this.address = address;
+        this.opReturnData = opReturnData;
+        this.blockHeight = blockHeight;
+        this.isUnspent = isUnspent;
+        this.isVerified = isVerified;
+        this.txOutputType = txOutputType;
+        this.spentInfo = spentInfo;
+    }
+
     public PB.TxOutput toProtoMessage() {
         final PB.TxOutput.Builder builder = PB.TxOutput.newBuilder()
-                .setTxOutputVo(txOutputVo.toProtoMessage())
+                .setIndex(index)
+                .setValue(value)
+                .setTxId(txId)
+                .setBlockHeight(blockHeight)
                 .setIsUnspent(isUnspent)
                 .setIsVerified(isVerified)
                 .setTxOutputType(txOutputType.toProtoMessage());
 
+        Optional.ofNullable(pubKeyScript).ifPresent(e -> builder.setPubKeyScript(pubKeyScript.toProtoMessage()));
+        Optional.ofNullable(address).ifPresent(e -> builder.setAddress(address));
+        Optional.ofNullable(opReturnData).ifPresent(e -> builder.setOpReturnData(ByteString.copyFrom(opReturnData)));
         Optional.ofNullable(spentInfo).ifPresent(e -> builder.setSpentInfo(e.toProtoMessage()));
 
         return builder.build();
     }
 
     public static TxOutput fromProto(PB.TxOutput proto) {
-        return new TxOutput(TxOutputVo.fromProto(proto.getTxOutputVo()),
+        return new TxOutput(proto.getIndex(),
+                proto.getValue(),
+                proto.getTxId(),
+                proto.hasPubKeyScript() ? PubKeyScript.fromProto(proto.getPubKeyScript()) : null,
+                proto.getAddress().isEmpty() ? null : proto.getAddress(),
+                proto.getOpReturnData().isEmpty() ? null : proto.getOpReturnData().toByteArray(),
+                proto.getBlockHeight(),
                 proto.getIsUnspent(),
                 proto.getIsVerified(),
                 TxOutputType.fromProto(proto.getTxOutputType()),
@@ -80,23 +142,6 @@ public class TxOutput implements PersistablePayload {
         spentInfo = null;
     }
 
-    @Override
-    public String toString() {
-        return "TxOutput{" +
-                "\n     index=" + getIndex() +
-                ",\n     value=" + getValue() +
-                ",\n     txId='" + getId() + '\'' +
-                ",\n     pubKeyScript=" + getPubKeyScript() +
-                ",\n     address='" + getAddress() + '\'' +
-                ",\n     opReturnData=" + (getOpReturnData() != null ? Utils.HEX.encode(getOpReturnData()) : "null") +
-                ",\n     blockHeight=" + getBlockHeight() +
-                ",\n     isUnspent=" + isUnspent +
-                ",\n     isVerified=" + isVerified +
-                ",\n     txOutputType=" + txOutputType +
-                ",\n     spentInfo=" + (spentInfo != null ? spentInfo.toString() : "null") +
-                "\n}";
-    }
-
     public boolean isCompensationRequestBtcOutput() {
         return txOutputType == TxOutputType.COMPENSATION_REQUEST_BTC_OUTPUT;
     }
@@ -105,46 +150,28 @@ public class TxOutput implements PersistablePayload {
         return txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegates
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public int getIndex() {
-        return txOutputVo.getIndex();
-    }
-
-    public long getValue() {
-        return txOutputVo.getValue();
-    }
-
-    public String getTxId() {
-        return txOutputVo.getTxId();
-    }
-
-    public PubKeyScript getPubKeyScript() {
-        return txOutputVo.getPubKeyScript();
-    }
-
-    @Nullable
-    public String getAddress() {
-        return txOutputVo.getAddress();
-    }
-
-    @Nullable
-    public byte[] getOpReturnData() {
-        return txOutputVo.getOpReturnData();
-    }
-
-    public int getBlockHeight() {
-        return txOutputVo.getBlockHeight();
-    }
-
     public String getId() {
-        return txOutputVo.getId();
+        return txId + ":" + index;
     }
 
     public TxIdIndexTuple getTxIdIndexTuple() {
-        return txOutputVo.getTxIdIndexTuple();
+        return new TxIdIndexTuple(txId, index);
+    }
+
+    @Override
+    public String toString() {
+        return "TxOutput{" +
+                "\n     index=" + index +
+                ",\n     value=" + value +
+                ",\n     txId='" + getId() + '\'' +
+                ",\n     pubKeyScript=" + pubKeyScript +
+                ",\n     address='" + address + '\'' +
+                ",\n     opReturnData=" + (opReturnData != null ? Utils.HEX.encode(opReturnData) : "null") +
+                ",\n     blockHeight=" + blockHeight +
+                ",\n     isUnspent=" + isUnspent +
+                ",\n     isVerified=" + isVerified +
+                ",\n     txOutputType=" + txOutputType +
+                ",\n     spentInfo=" + (spentInfo != null ? spentInfo.toString() : "null") +
+                "\n}";
     }
 }

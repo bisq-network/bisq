@@ -19,7 +19,6 @@ package io.bisq.core.app;
 
 import ch.qos.logback.classic.Level;
 import io.bisq.common.CommonOptionKeys;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.Storage;
@@ -84,7 +83,12 @@ public class BisqEnvironment extends StandardEnvironment {
 
     public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
         //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.DAO_ACTIVATED && isBaseCurrencySupportingBsq();
+        return isDAOEnabled() && isBaseCurrencySupportingBsq();
+    }
+
+    public static boolean isDAOEnabled() {
+        //noinspection ConstantConditions,PointlessBooleanExpression
+        return !getBaseCurrencyNetwork().isMainnet() && isBaseCurrencySupportingBsq();
     }
 
     public static boolean isBaseCurrencySupportingBsq() {

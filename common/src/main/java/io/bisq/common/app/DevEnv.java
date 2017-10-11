@@ -20,6 +20,5 @@ public class DevEnv {
     @SuppressWarnings("PointlessBooleanExpression")
     public static final boolean DEV_MODE = STRESS_TEST_MODE || false;
 
-    public static final boolean DAO_ACTIVATED = false;
     public static final boolean DAO_PHASE2_ACTIVATED = false;
 }

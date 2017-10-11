@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Preferences implements PersistedDataHost {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
-            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
+            new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
@@ -44,6 +44,8 @@ public final class Preferences implements PersistedDataHost {
             new BlockChainExplorer("Chainflyer", "http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/"),
             new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
     ));
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
@@ -53,6 +55,11 @@ public final class Preferences implements PersistedDataHost {
             new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
+
+    public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
+            "https://explorer.bisq.network/Address.html?addr=");
+    public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
+            "https://explorer.bisq.network/testnet/Address.html?addr=");
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
@@ -158,6 +165,7 @@ public final class Preferences implements PersistedDataHost {
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload");
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -179,7 +187,6 @@ public final class Preferences implements PersistedDataHost {
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             switch (baseCurrencyNetwork.getCurrencyCode()) {
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
@@ -209,6 +216,7 @@ public final class Preferences implements PersistedDataHost {
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
+        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER : BSQ_TEST_NET_EXPLORER);
 
         // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
@@ -434,11 +442,6 @@ public final class Preferences implements PersistedDataHost {
 
     public void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount) {
         prefPayload.setSelectedPaymentAccountForCreateOffer(paymentAccount);
-        persist();
-    }
-
-    public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
-        prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
         persist();
     }
 

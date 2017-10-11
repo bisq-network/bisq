@@ -22,9 +22,13 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.Security;
@@ -73,5 +77,24 @@ public class SetupUtils {
             }
         };
         checkCryptoThread.start();
+    }
+
+    public static BooleanProperty loadEntryMap(P2PService p2PService) {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread loadEntryMapThread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("loadEntryMapThread");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
+                final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+                final String storageFileName = "EntryMap_"
+                        + baseCurrencyNetwork.getCurrencyCode() + "_"
+                        + baseCurrencyNetwork.getNetwork();
+                p2PService.readEntryMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        loadEntryMapThread.start();
+        return result;
     }
 }

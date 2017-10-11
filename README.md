@@ -1,4 +1,4 @@
-<img src="https://bisq.io/wp-content/uploads/2014/09/bitsquare-home2.jpg"/>
+<img src="https://bisq.network/images/logo_white_bg.png"/>
 
 
 What is Bisq?
@@ -12,12 +12,12 @@ There are no central points of control or failure in the Bisq network. There are
 
 Because the national currency portion of any trade must be transferred via traditional means such as a wire transfer, Bisq incorporates first-class support for human arbitration to resolve any errors or disputes.
 
-You can read about all of this and more in the [whitepaper](https://bisq.io/bitsquare.pdf) and [arbitration](https://bisq.io/arbitration_system.pdf) documents. Several [videos](https://bisq.io/blog/category/video) are available as well.
+You can read about all of this and more in the [whitepaper](https://bisq.network/bitsquare.pdf) and [arbitration](https://bisq.network/arbitration_system.pdf) documents. Several [videos](https://bisq.network/blog/category/video) are available as well.
 
 Status
 ------
 Bisq has released the beta version on the 27th of April 2016. It is operational since that time without any major incident.
-Please follow the current development state at our [road map]( https://bisq.io/roadmap).
+Please follow the current development state at our [road map]( https://bisq.network/roadmap).
 For the latest version checkout our [releases page](https://github.com/bisq-network/exchange/releases) at Github.
 
 Building from source
@@ -33,9 +33,9 @@ Staying in Touch
 
 Contact the team and keep up to date using any of the following:
 
- - The [Bisq Website](https://bisq.io)
+ - The [Bisq Website](https://bisq.network)
  - GitHub [Issues](https://github.com/bisq-network/exchange/issues)
- - The [Bisq Forum]( https://forum.bisq.io)
+ - The [Bisq Forum]( https://forum.bisq.network)
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@Bitsquare_](https://twitter.com/bitsquare_) on Twitter

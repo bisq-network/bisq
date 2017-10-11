@@ -170,6 +170,7 @@ public class CountryUtil {
     }
 
     private static final Map<String, String> regionCodeToNameMap = new HashMap<>();
+    // Key is: ISO 3166 code, value is region code as defined in regionCodeToNameMap
     private static final Map<String, String> regionByCountryCodeMap = new HashMap<>();
 
     static {

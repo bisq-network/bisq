@@ -448,19 +448,19 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isOfferBanned(Offer offer) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedOfferIds().stream()
-                        .filter(e -> e.equals(offer.getId()))
-                        .findAny()
-                        .isPresent();
+        return filterManager.isOfferIdBanned(offer.getId());
     }
 
-    boolean isNodeBanned(Offer offer) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()))
-                        .findAny()
-                        .isPresent();
+    boolean isCurrencyBanned(Offer offer) {
+        return filterManager.isCurrencyBanned(offer.getCurrencyCode());
+    }
+
+    boolean isPaymentMethodBanned(Offer offer) {
+        return filterManager.isPaymentMethodBanned(offer.getPaymentMethod());
+    }
+
+    boolean isNodeAddressBanned(Offer offer) {
+        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix());
     }
 
     boolean hasSameProtocolVersion(Offer offer) {

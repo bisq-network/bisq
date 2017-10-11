@@ -29,12 +29,15 @@ import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 @Value
 public final class Contract implements NetworkPayload {
     private final OfferPayload offerPayload;
@@ -208,6 +211,25 @@ public final class Contract implements NetworkPayload {
 
     public Price getTradePrice() {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
+    }
+
+    public void printDiff(@Nullable String peersContractAsJson) {
+        final String json = Utilities.objectToJson(this);
+        String diff = StringUtils.difference(json, peersContractAsJson);
+        if (!diff.isEmpty()) {
+            log.warn("Diff of both contracts: \n" + diff);
+            log.warn("\n\n------------------------------------------------------------\n"
+                    + "Contract as json\n"
+                    + json
+                    + "\n------------------------------------------------------------\n");
+
+            log.warn("\n\n------------------------------------------------------------\n"
+                    + "Peers contract as json\n"
+                    + peersContractAsJson
+                    + "\n------------------------------------------------------------\n");
+        } else {
+            log.debug("Both contracts are the same");
+        }
     }
 
     @Override

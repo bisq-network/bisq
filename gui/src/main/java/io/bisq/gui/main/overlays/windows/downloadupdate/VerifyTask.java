@@ -29,9 +29,11 @@ import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -67,31 +69,69 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
             return Lists.newArrayList();
         }
 
-        List<FileDescriptor> sigs = fileDescriptors.stream().filter(fileDescriptor -> DownloadType.SIG.equals(fileDescriptor.getType())).collect(Collectors.toList());
-        List<VerifyDescriptor> verifyDescriptors = Lists.newArrayList();
+        Optional<FileDescriptor> signingKeyOptional = fileDescriptors.stream()
+                .filter(fileDescriptor -> DownloadType.SIGNING_KEY.equals(fileDescriptor.getType()))
+                .findAny();
 
-        // iterate all signatures available to us
-        for (FileDescriptor sig : sigs) {
-            VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder().sigFile(sig.getSaveFile());
-            // Sigs are linked to keys, extract all keys which have the same id
-            List<FileDescriptor> keys = fileDescriptors.stream()
-                    .filter(keyDescriptor -> DownloadType.KEY.equals(keyDescriptor.getType()))
-                    .filter(keyDescriptor -> sig.getId().equals(keyDescriptor.getId()))
-                    .collect(Collectors.toList());
-            // iterate all keys which have the same id
-            for (FileDescriptor key : keys) {
-                verifyDescriptorBuilder.keyFile(key.getSaveFile());
-                try {
-                    verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.verifySignature(key.getSaveFile(), sig.getSaveFile(), installer.get().getSaveFile()));
-                    updateMessage(key.getFileName());
-                } catch (Exception e) {
-                    verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
-                    log.error(e.toString());
-                    e.printStackTrace();
+        List<VerifyDescriptor> verifyDescriptors = Lists.newArrayList();
+        if (signingKeyOptional.isPresent()) {
+            final FileDescriptor signingKeyFD = signingKeyOptional.get();
+            StringBuilder sb = new StringBuilder();
+            try {
+                Scanner scanner = new Scanner(new FileReader(signingKeyFD.getSaveFile()));
+                while (scanner.hasNext()) {
+                    sb.append(scanner.next());
                 }
+                scanner.close();
+            } catch (Exception e) {
+                log.error(e.toString());
+                e.printStackTrace();
+                VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder();
+                verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
                 verifyDescriptors.add(verifyDescriptorBuilder.build());
+                return verifyDescriptors;
             }
+            String signingKey = sb.toString();
+
+            List<FileDescriptor> sigs = fileDescriptors.stream()
+                    .filter(fileDescriptor -> DownloadType.SIG.equals(fileDescriptor.getType()))
+                    .collect(Collectors.toList());
+
+            // iterate all signatures available to us
+            for (FileDescriptor sig : sigs) {
+                VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder().sigFile(sig.getSaveFile());
+                // Sigs are linked to keys, extract all keys which have the same id
+                List<FileDescriptor> keys = fileDescriptors.stream()
+                        .filter(keyDescriptor -> DownloadType.KEY.equals(keyDescriptor.getType()))
+                        .filter(keyDescriptor -> sig.getId().equals(keyDescriptor.getId()))
+                        .collect(Collectors.toList());
+                // iterate all keys which have the same id
+                for (FileDescriptor key : keys) {
+                    if (signingKey.equals(key.getId())) {
+                        verifyDescriptorBuilder.keyFile(key.getSaveFile());
+                        try {
+                            verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.verifySignature(key.getSaveFile(),
+                                    sig.getSaveFile(),
+                                    installer.get().getSaveFile()));
+                            updateMessage(key.getFileName());
+                        } catch (Exception e) {
+                            verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
+                            log.error(e.toString());
+                            e.printStackTrace();
+                        }
+                        verifyDescriptors.add(verifyDescriptorBuilder.build());
+                    } else {
+                        log.trace("key not matching the defined in signingKey. We try the next.");
+                    }
+                }
+            }
+        } else {
+            log.error("signingKey is not found");
+            VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder();
+            verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
+            verifyDescriptors.add(verifyDescriptorBuilder.build());
         }
+
         return verifyDescriptors;
     }
 }

@@ -27,15 +27,24 @@ public class MarketPrice {
     private final String currencyCode;
     private final double price;
     private final long timestampSec;
+    private final boolean isExternallyProvidedPrice; // if we get it from btc average or others.
 
-    public MarketPrice(String currencyCode, double price, long timestampSec) {
+    public MarketPrice(String currencyCode, double price, long timestampSec, boolean isExternallyProvidedPrice) {
         this.currencyCode = currencyCode;
         this.price = price;
         this.timestampSec = timestampSec;
+        this.isExternallyProvidedPrice = isExternallyProvidedPrice;
     }
 
-    public boolean isValid() {
-        long limit = Instant.now().getEpochSecond() - MARKET_PRICE_MAX_AGE_SEC;
-        return timestampSec > limit && price > 0;
+    public boolean isPriceAvailable() {
+        return price > 0;
+    }
+
+    private boolean isRecentPriceAvailable() {
+        return timestampSec > (Instant.now().getEpochSecond() - MARKET_PRICE_MAX_AGE_SEC) && isPriceAvailable();
+    }
+
+    public boolean isRecentExternalPriceAvailable() {
+        return isExternallyProvidedPrice && isRecentPriceAvailable();
     }
 }
