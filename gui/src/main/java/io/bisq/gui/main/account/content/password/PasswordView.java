@@ -119,7 +119,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private void onApplyPassword(BusyAnimation busyAnimation, Label deriveStatusLabel) {
         String password = passwordField.getText();
-        checkArgument(password.length() < 50, Res.get("password.tooLong"));
+        checkArgument(password.length() < 500, Res.get("password.tooLong"));
 
         pwButton.setDisable(true);
         deriveStatusLabel.setText(Res.get("password.deriveKey"));

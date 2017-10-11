@@ -189,7 +189,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
             String password = passwordTextField.getText();
-            checkArgument(password.length() < 50, Res.get("password.tooLong"));
+            checkArgument(password.length() < 500, Res.get("password.tooLong"));
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt != null) {
                 busyAnimation.play();
