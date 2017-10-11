@@ -124,6 +124,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     });
             trade.setDepositTx(depositTx);
         } catch (Throwable t) {
+            trade.getContract().printDiff(processModel.getTradingPeer().getContractAsJson());
             failed(t);
         }
     }

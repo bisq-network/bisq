@@ -22,6 +22,8 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
@@ -36,8 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.bitcoinj.core.Utils.HEX;
@@ -162,17 +166,82 @@ public class FilterManager {
         }
     }
 
+    // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
-        PB.Filter.Builder builder = PB.Filter.newBuilder().addAllBannedNodeAddress(filter.getBannedNodeAddress())
+        PB.Filter.Builder builder = PB.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())
+                .addAllBannedNodeAddress(filter.getBannedNodeAddress())
                 .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()
                         .map(PaymentAccountFilter::toProtoMessage)
                         .collect(Collectors.toList()));
+
+        Optional.ofNullable(filter.getBannedCurrencies()).ifPresent(builder::addAllBannedCurrencies);
+        Optional.ofNullable(filter.getBannedPaymentMethods()).ifPresent(builder::addAllBannedPaymentMethods);
+
         return Utils.HEX.encode(builder.build().toByteArray());
     }
 
     @Nullable
     public Filter getDevelopersFilter() {
         return user.getDevelopersFilter();
+    }
+
+    public boolean isCurrencyBanned(String currencyCode) {
+        return getFilter() != null &&
+                getFilter().getBannedCurrencies() != null &&
+                getFilter().getBannedCurrencies().stream()
+                        .filter(e -> e.equals(currencyCode))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
+        return getFilter() != null &&
+                getFilter().getBannedPaymentMethods() != null &&
+                getFilter().getBannedPaymentMethods().stream()
+                        .filter(e -> e.equals(paymentMethod.getId()))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isOfferIdBanned(String offerId) {
+        return getFilter() != null &&
+                getFilter().getBannedOfferIds().stream()
+                        .filter(e -> e.equals(offerId))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isNodeAddressBanned(String nodeAddress) {
+        return getFilter() != null &&
+                getFilter().getBannedNodeAddress().stream()
+                        .filter(e -> e.equals(nodeAddress))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
+                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
+        return getFilter() != null &&
+                getFilter().getBannedPaymentAccounts().stream()
+                        .filter(paymentAccountFilter -> {
+                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
+                                    paymentAccountPayload.getPaymentMethodId());
+                            if (samePaymentMethodId) {
+                                try {
+                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
+                                    String result = (String) method.invoke(paymentAccountPayload);
+                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
+                                    return result.equals(paymentAccountFilter.getValue());
+                                } catch (Throwable e) {
+                                    log.error(e.getMessage());
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        })
+                        .findAny()
+                        .isPresent();
     }
 }

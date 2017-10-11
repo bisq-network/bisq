@@ -35,6 +35,7 @@ import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OfferUtil;
@@ -78,6 +79,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
+    private final FilterManager filterManager;
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final String offerId;
@@ -127,7 +129,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
-                         PriceFeedService priceFeedService,
+                         PriceFeedService priceFeedService, FilterManager filterManager,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
@@ -137,6 +139,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.filterManager = filterManager;
         this.feeService = feeService;
         this.formatter = formatter;
 
@@ -347,6 +350,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
                 "securityDeposit must be not be less than " +
                         Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
+
+        checkArgument(!filterManager.isCurrencyBanned(currencyCode),
+                Res.get("offerbook.warning.currencyBanned"));
+        checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
+                Res.get("offerbook.warning.paymentMethodBanned"));
+
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),

@@ -119,7 +119,6 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
         copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, fileSize);
     }
 
-
     public void copyInputStreamToFileNew(final InputStream source, final File destination, int fileSize) throws IOException {
         try {
             final FileOutputStream output = FileUtils.openOutputStream(destination);

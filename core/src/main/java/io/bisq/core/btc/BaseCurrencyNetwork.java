@@ -76,6 +76,15 @@ public enum BaseCurrencyNetwork {
         return "LTC".equals(currencyCode);
     }
 
+    public boolean isDash() {
+        return "DASH".equals(currencyCode);
+    }
+
+    public boolean isDoge() {
+        return "DOGE".equals(currencyCode);
+    }
+
+
     public Coin getDefaultMinFee() {
         switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
             case "BTC":

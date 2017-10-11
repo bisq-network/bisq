@@ -108,10 +108,9 @@ public class BsqParser {
                 List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                         genesisBlockHeight,
                         genesisTxId);
-                final BsqBlockVo bsqBlockVo = new BsqBlockVo(btcdBlock.getHeight(),
+                final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getHeight(),
                         btcdBlock.getHash(),
-                        btcdBlock.getPreviousBlockHash());
-                final BsqBlock bsqBlock = new BsqBlock(bsqBlockVo,
+                        btcdBlock.getPreviousBlockHash(),
                         ImmutableList.copyOf(bsqTxsInBlock));
 
                 bsqChainState.addBlock(bsqBlock);
@@ -173,10 +172,9 @@ public class BsqParser {
         List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                 genesisBlockHeight,
                 genesisTxId);
-        final BsqBlockVo bsqBlockVo = new BsqBlockVo(btcdBlock.getHeight(),
+        final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getHeight(),
                 btcdBlock.getHash(),
-                btcdBlock.getPreviousBlockHash());
-        final BsqBlock bsqBlock = new BsqBlock(bsqBlockVo,
+                btcdBlock.getPreviousBlockHash(),
                 ImmutableList.copyOf(bsqTxsInBlock));
         bsqChainState.addBlock(bsqBlock);
         return bsqBlock;
@@ -252,7 +250,7 @@ public class BsqParser {
 
         // we check if we have any valid BSQ from that tx set
         bsqTxsInBlock.addAll(txsWithoutInputsFromSameBlock.stream()
-                .filter(tx -> isValidBsqTx(blockHeight, tx))
+                .filter(tx -> isBsqTx(blockHeight, tx))
                 .collect(Collectors.toList()));
 
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");
@@ -277,7 +275,7 @@ public class BsqParser {
         }
     }
 
-    private boolean isValidBsqTx(int blockHeight, Tx tx) {
+    private boolean isBsqTx(int blockHeight, Tx tx) {
         boolean isBsqTx = false;
         long availableValue = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
