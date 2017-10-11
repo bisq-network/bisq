@@ -47,6 +47,12 @@ public final class Filter implements StoragePayload {
     private final List<String> bannedNodeAddress;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
 
+    // Because we added those fields in v 0.5.4 and old versions do not have it we annotate it with @Nullable
+    @Nullable
+    private final List<String> bannedCurrencies;
+    @Nullable
+    private final List<String> bannedPaymentMethods;
+
     private String signatureAsBase64;
     private byte[] ownerPubKeyBytes;
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
@@ -58,10 +64,14 @@ public final class Filter implements StoragePayload {
 
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
-                  List<PaymentAccountFilter> bannedPaymentAccounts) {
+                  List<PaymentAccountFilter> bannedPaymentAccounts,
+                  @Nullable List<String> bannedCurrencies,
+                  @Nullable List<String> bannedPaymentMethods) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
+        this.bannedCurrencies = bannedCurrencies;
+        this.bannedPaymentMethods = bannedPaymentMethods;
     }
 
 
@@ -73,12 +83,16 @@ public final class Filter implements StoragePayload {
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
+                  @Nullable List<String> bannedCurrencies,
+                  @Nullable List<String> bannedPaymentMethods,
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
         this(bannedOfferIds,
                 bannedNodeAddress,
-                bannedPaymentAccounts);
+                bannedPaymentAccounts,
+                bannedCurrencies,
+                bannedPaymentMethods);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -99,7 +113,11 @@ public final class Filter implements StoragePayload {
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .setSignatureAsBase64(signatureAsBase64)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
+
+        Optional.ofNullable(bannedCurrencies).ifPresent(builder::addAllBannedCurrencies);
+        Optional.ofNullable(bannedPaymentMethods).ifPresent(builder::addAllBannedPaymentMethods);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+
         return PB.StoragePayload.newBuilder().setFilter(builder).build();
     }
 
@@ -109,6 +127,8 @@ public final class Filter implements StoragePayload {
                 proto.getBannedPaymentAccountsList().stream()
                         .map(PaymentAccountFilter::fromProto)
                         .collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : proto.getBannedCurrenciesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : proto.getBannedPaymentMethodsList().stream().collect(Collectors.toList()),
                 proto.getSignatureAsBase64(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());

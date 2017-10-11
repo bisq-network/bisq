@@ -78,6 +78,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     public PeerInfoWithTagEditor numTrades(int numTrades) {
         this.numTrades = numTrades;
+        if (numTrades == 0)
+            width = 500;
         return this;
     }
 
@@ -141,7 +143,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     protected void addContent() {
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.nrOfTrades"), String.valueOf(numTrades));
+        FormBuilder.addLabelTextField(gridPane, ++rowIndex,
+                Res.get("peerInfo.nrOfTrades"),
+                numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
+
         inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";

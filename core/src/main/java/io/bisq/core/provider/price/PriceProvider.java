@@ -58,7 +58,7 @@ public class PriceProvider extends HttpClientProvider {
                 final double price = (double) treeMap.get("price");
                 // json uses double for our timestampSec long value...
                 final long timestampSec = MathUtils.doubleToLong((double) treeMap.get("timestampSec"));
-                marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec));
+                marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();

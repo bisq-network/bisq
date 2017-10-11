@@ -25,6 +25,8 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
@@ -138,6 +140,16 @@ public class PriceFeedService {
         else
             return null;
     }
+    
+    public void setBisqMarketPrice(String currencyCode, Price price) {
+        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
+            cache.put(currencyCode, new MarketPrice(currencyCode,
+                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                    0,
+                    false));
+            updateCounter.set(updateCounter.get() + 1);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter
@@ -198,7 +210,7 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    if (marketPrice.isValid())
+                    if (marketPrice.isRecentExternalPriceAvailable())
                         priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
                     log.warn("Error at applyPriceToConsumer " + t.getMessage());
@@ -235,20 +247,36 @@ public class PriceFeedService {
                         case "DASH":
                             // apply conversion of btc based price to baseCurrencyCode based with btc/baseCurrencyCode price
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
-                            Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
-                            priceMap.entrySet().stream().forEach(e -> {
-                                final MarketPrice value = e.getValue();
-                                double convertedPrice;
-                                if (CurrencyUtil.isCryptoCurrency(e.getKey()))
-                                    convertedPrice = value.getPrice() / baseCurrencyPrice.getPrice();
-                                else
-                                    convertedPrice = value.getPrice() * baseCurrencyPrice.getPrice();
-                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
-                            });
-                            cache.putAll(convertedPriceMap);
+                            if (baseCurrencyPrice != null) {
+                                Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
+                                priceMap.entrySet().stream().forEach(e -> {
+                                    final MarketPrice marketPrice = e.getValue();
+                                    if (marketPrice != null) {
+                                        double convertedPrice;
+                                        final double marketPriceAsDouble = marketPrice.getPrice();
+                                        final double baseCurrencyPriceAsDouble = baseCurrencyPrice.getPrice();
+                                        if (marketPriceAsDouble > 0 && baseCurrencyPriceAsDouble > 0) {
+                                            if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                                convertedPrice = marketPriceAsDouble / baseCurrencyPriceAsDouble;
+                                            else
+                                                convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
+                                            convertedPriceMap.put(e.getKey(),
+                                                    new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
+                                        } else {
+                                            log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +
+                                                    "baseCurrencyPriceAsDouble={}", marketPriceAsDouble, baseCurrencyPriceAsDouble);
+                                        }
+                                    } else {
+                                        log.warn("marketPrice is null");
+                                    }
+                                });
+                                cache.putAll(convertedPriceMap);
+                            } else {
+                                log.warn("baseCurrencyPrice is null");
+                            }
                             break;
                         default:
-                            throw new RuntimeException("baseCurrencyCode not dfined. baseCurrencyCode=" + baseCurrencyCode);
+                            throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
                     }
 
                     resultHandler.run();

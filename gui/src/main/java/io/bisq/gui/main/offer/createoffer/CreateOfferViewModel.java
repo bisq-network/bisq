@@ -196,8 +196,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("0.01");
-                        price.set("2000");
+                        amount.set("0.0101");
+                        price.set("3500");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -301,7 +301,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     dataModel.calculateTotalToPay();
 
                     if (!inputIsMarketBasedPrice) {
-                        if (marketPrice != null && marketPrice.isValid()) {
+                        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                             double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = btcFormatter.parseNumberStringToDouble(price.get());
@@ -338,7 +338,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             final String currencyCode = dataModel.getTradeCurrencyCode().get();
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                            if (marketPrice != null && marketPrice.isValid()) {
+                            if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
@@ -462,8 +462,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void updateMarketPriceAvailable() {
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
-        marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
-        dataModel.setMarketPriceAvailable(marketPrice != null);
+        marketPriceAvailableProperty.set(marketPrice == null || !marketPrice.isExternallyProvidedPrice() ? 0 : 1);
+        dataModel.setMarketPriceAvailable(marketPrice != null && marketPrice.isExternallyProvidedPrice());
     }
 
     private void addListeners() {
@@ -603,7 +603,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.onCurrencySelected(tradeCurrency);
 
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
-        marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+        marketPriceAvailableProperty.set(marketPrice == null || !marketPrice.isExternallyProvidedPrice() ? 0 : 1);
         updateButtonDisableState();
     }
 

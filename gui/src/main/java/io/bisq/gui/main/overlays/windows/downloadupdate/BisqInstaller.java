@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -37,25 +38,30 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqInstaller {
-    static final String LOCAL_FINGER_PRINT = "F379A1C6";
-    private List<String> knownKeys = Lists.newArrayList(LOCAL_FINGER_PRINT);
+    static final String FINGER_PRINT_MANFRED_KARRER = "F379A1C6";
+    static final String FINGER_PRINT_CHRIS_BEAMS = "5BC5ED73";
+    static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
+    static final String DOWNLOAD_HOST_URL = "https://github.com/bisq-network/exchange/releases/download/";
 
     public boolean isSupportedOS() {
         return Utilities.isOSX() || Utilities.isWindows() || Utilities.isLinux();
     }
 
     public Optional<DownloadTask> download(String version) {
-        String partialUrl = "https://github.com/bisq-network/exchange/releases/download/v" + version + "/";
+        String partialUrl = DOWNLOAD_HOST_URL + "v" + version + "/";
 
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
+        // tells us which key was used for signing
+        FileDescriptor signingKeyDescriptor = getSigningKeyDescriptor(partialUrl);
         List<FileDescriptor> keyFileDescriptors = getKeyFileDescriptors();
         List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor, keyFileDescriptors);
 
         List<FileDescriptor> allFiles = Lists.newArrayList();
+        allFiles.addAll(Lists.newArrayList(installerFileDescriptor));
+        allFiles.addAll(Lists.newArrayList(signingKeyDescriptor));
         allFiles.addAll(keyFileDescriptors);
         allFiles.addAll(sigFileDescriptors);
-        allFiles.addAll(Lists.newArrayList(installerFileDescriptor));
 
         // Download keys, sigs and Installer
         return getDownloadTask(allFiles);
@@ -147,6 +153,11 @@ public class BisqInstaller {
         inputStream.close();
         log.debug("KeyID used in signature: %X\n", pgpSignature.getKeyID());
         publicKey = pgpPublicKeyRing.getPublicKey(pgpSignature.getKeyID());
+
+        // If signature is not matching the key used for signing we fail
+        if (publicKey == null)
+            return VerifyStatusEnum.FAIL;
+
         log.debug("The ID of the selected key is %X\n", publicKey.getKeyID());
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
 
@@ -166,7 +177,6 @@ public class BisqInstaller {
         return result ? VerifyStatusEnum.OK : VerifyStatusEnum.FAIL;
     }
 
-
     @NotNull
     public FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
         String fileName;
@@ -183,8 +193,23 @@ public class BisqInstaller {
 
         return FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)
-                .fileName(fileName).id(fileName).loadUrl(partialUrl.concat(fileName)).build();
+                .fileName(fileName)
+                .id(fileName)
+                .loadUrl(partialUrl.concat(fileName))
+                .build();
     }
+
+    @NotNull
+    public FileDescriptor getSigningKeyDescriptor(String url) {
+        String fileName = "signingkey.asc";
+        return FileDescriptor.builder()
+                .type(DownloadType.SIGNING_KEY)
+                .fileName(fileName)
+                .id(fileName)
+                .loadUrl(url.concat(fileName))
+                .build();
+    }
+
 
     /**
      * The files containing the gpg keys of the bisq signers.
@@ -193,22 +218,34 @@ public class BisqInstaller {
      * @return list of keys to check agains corresponding sigs.
      */
     public List<FileDescriptor> getKeyFileDescriptors() {
-        String fingerprint = LOCAL_FINGER_PRINT;
-        String fileName = fingerprint + ".asc";
-        String fixedKeyPath = "/keys/" + fileName;
-        return Lists.newArrayList(
-                FileDescriptor.builder()
-                        .type(DownloadType.KEY)
-                        .fileName(fileName)
-                        .id(fingerprint)
-                        .loadUrl("https://bisq.io/pubkey/" + fileName).build(),
-                FileDescriptor.builder()
-                        .type(DownloadType.KEY)
-                        .fileName(fileName + "-local")
-                        .id(fingerprint)
-                        .loadUrl(getClass().getResource(fixedKeyPath).toExternalForm())
-                        .build()
-        );
+        List<FileDescriptor> list = new ArrayList<>();
+
+        list.add(getKeyFileDescriptor(FINGER_PRINT_MANFRED_KARRER));
+        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_MANFRED_KARRER));
+
+        list.add(getKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
+        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
+
+        return list;
+    }
+
+    private FileDescriptor getKeyFileDescriptor(String fingerPrint) {
+        final String fileName = fingerPrint + ".asc";
+        return FileDescriptor.builder()
+                .type(DownloadType.KEY)
+                .fileName(fileName)
+                .id(fingerPrint)
+                .loadUrl(PUB_KEY_HOSTING_URL + fileName)
+                .build();
+    }
+
+    private FileDescriptor getLocalKeyFileDescriptor(String fingerPrint) {
+        return FileDescriptor.builder()
+                .type(DownloadType.KEY)
+                .fileName(fingerPrint + ".asc-local")
+                .id(fingerPrint)
+                .loadUrl(getClass().getResource("/keys/" + fingerPrint + ".asc").toExternalForm())
+                .build();
     }
 
     /**
@@ -270,6 +307,7 @@ public class BisqInstaller {
         INSTALLER,
         KEY,
         SIG,
+        SIGNING_KEY,
         MISC
     }
 }

@@ -29,7 +29,10 @@ import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.*;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.btc.BtcOptionKeys;
+import io.bisq.core.btc.RegTestHost;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.DnsLookupTor;
 import io.bisq.network.Socks5MultiDiscovery;
@@ -74,7 +77,6 @@ public class WalletsSetup {
 
     private final RegTestHost regTestHost;
     private final AddressEntryList addressEntryList;
-    private final UserAgent userAgent;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final BisqEnvironment bisqEnvironment;
@@ -96,7 +98,6 @@ public class WalletsSetup {
     @Inject
     public WalletsSetup(RegTestHost regTestHost,
                         AddressEntryList addressEntryList,
-                        UserAgent userAgent,
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
                         BisqEnvironment bisqEnvironment,
@@ -104,7 +105,6 @@ public class WalletsSetup {
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
-        this.userAgent = userAgent;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.bisqEnvironment = bisqEnvironment;
@@ -179,8 +179,7 @@ public class WalletsSetup {
 
         configPeerNodes(socks5Proxy);
         walletConfig.setDownloadListener(downloadListener)
-                .setBlockingStartup(false)
-                .setUserAgent(userAgent.getName(), userAgent.getVersion());
+                .setBlockingStartup(false);
 
         // If seed is non-null it means we are restoring from backup.
         walletConfig.setSeed(seed);
