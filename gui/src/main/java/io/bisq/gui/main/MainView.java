@@ -159,7 +159,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 });
             }, 1);
         }
-        
+
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
@@ -330,7 +330,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
-        btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
+        btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setOnMouseEntered(e -> {
@@ -354,7 +354,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
-        poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
+        poloniexIconButton.setManaged(poloniexIconButton.isVisible());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setOnMouseEntered(e -> {
@@ -372,9 +372,27 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Label label = new Label(Res.get("mainView.marketPrice.provider"));
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
-        label.visibleProperty().bind(createBooleanBinding(() -> model.isCryptoCurrencyPriceFeedSelected.get() || model.isFiatCurrencyPriceFeedSelected.get(),
-                model.isCryptoCurrencyPriceFeedSelected, model.isFiatCurrencyPriceFeedSelected));
+        label.visibleProperty().bind(createBooleanBinding(() -> model.isPriceAvailable.get() &&
+                        (model.isCryptoCurrencyPriceFeedSelected.get() ||
+                                model.isFiatCurrencyPriceFeedSelected.get() ||
+                                !model.isExternallyProvidedPrice.get()),
+                model.isPriceAvailable,
+                model.isCryptoCurrencyPriceFeedSelected,
+                model.isFiatCurrencyPriceFeedSelected,
+                model.isExternallyProvidedPrice));
         label.managedProperty().bind(label.visibleProperty());
+
+        model.isExternallyProvidedPrice.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                label.setText(Res.get("mainView.marketPrice.provider"));
+                label.setTooltip(null);
+            } else {
+                label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
+                final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
+                tooltip.setStyle("-fx-font-size: 12");
+                label.setTooltip(tooltip);
+            }
+        });
 
         HBox hBox2 = new HBox();
         hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);

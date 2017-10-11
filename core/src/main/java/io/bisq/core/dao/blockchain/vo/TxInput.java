@@ -26,12 +26,13 @@ import java.util.Optional;
 
 @Data
 public class TxInput implements PersistablePayload {
-    private final TxInputVo txInputVo;
+    private final String txId;
+    private final int txOutputIndex;
     @Nullable
     private TxOutput connectedTxOutput;
 
-    public TxInput(TxInputVo txInputVo) {
-        this(txInputVo, null);
+    public TxInput(String txId, int txOutputIndex) {
+        this(txId, txOutputIndex, null);
     }
 
 
@@ -39,20 +40,25 @@ public class TxInput implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TxInput(TxInputVo txInputVo, @Nullable TxOutput connectedTxOutput) {
-        this.txInputVo = txInputVo;
+    private TxInput(String txId, int txOutputIndex, @Nullable TxOutput connectedTxOutput) {
+        this.txId = txId;
+        this.txOutputIndex = txOutputIndex;
         this.connectedTxOutput = connectedTxOutput;
     }
 
     public PB.TxInput toProtoMessage() {
         final PB.TxInput.Builder builder = PB.TxInput.newBuilder()
-                .setTxInputVo(txInputVo.toProtoMessage());
+                .setTxId(txId)
+                .setTxOutputIndex(txOutputIndex);
+
         Optional.ofNullable(connectedTxOutput).ifPresent(e -> builder.setConnectedTxOutput(e.toProtoMessage()));
+
         return builder.build();
     }
 
     public static TxInput fromProto(PB.TxInput proto) {
-        return new TxInput(TxInputVo.fromProto(proto.getTxInputVo()),
+        return new TxInput(proto.getTxId(),
+                proto.getTxOutputIndex(),
                 proto.hasConnectedTxOutput() ? TxOutput.fromProto(proto.getConnectedTxOutput()) : null);
     }
 
@@ -65,28 +71,16 @@ public class TxInput implements PersistablePayload {
         connectedTxOutput = null;
     }
 
+    public TxIdIndexTuple getTxIdIndexTuple() {
+        return new TxIdIndexTuple(txId, txOutputIndex);
+    }
+
     @Override
     public String toString() {
         return "TxInput{" +
-                "\n     txId=" + getTxId() +
-                ",\n     txOutputIndex=" + getTxOutputIndex() +
-                ",\n     txOutput='" + connectedTxOutput + '\'' +
+                "\n     txId=" + txId +
+                ",\n     txOutputIndex=" + txOutputIndex +
+                ",\n     connectedTxOutput='" + connectedTxOutput + '\'' +
                 "\n}";
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegates
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getTxId() {
-        return txInputVo.getTxId();
-    }
-
-    public int getTxOutputIndex() {
-        return txInputVo.getTxOutputIndex();
-    }
-
-    public TxIdIndexTuple getTxIdIndexTuple() {
-        return txInputVo.getTxIdIndexTuple();
     }
 }

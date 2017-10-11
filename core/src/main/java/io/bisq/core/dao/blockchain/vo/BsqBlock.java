@@ -27,11 +27,15 @@ import java.util.stream.Collectors;
 
 @Data
 public class BsqBlock implements PersistablePayload {
-    private final BsqBlockVo bsqBlockVo;
+    private final int height;
+    private final String hash;
+    private final String previousBlockHash;
     private final List<Tx> txs;
 
-    public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {
-        this.bsqBlockVo = bsqBlockVo;
+    public BsqBlock(int height, String hash, String previousBlockHash, List<Tx> txs) {
+        this.height = height;
+        this.hash = hash;
+        this.previousBlockHash = previousBlockHash;
         this.txs = txs;
     }
 
@@ -42,7 +46,9 @@ public class BsqBlock implements PersistablePayload {
 
     public PB.BsqBlock toProtoMessage() {
         return PB.BsqBlock.newBuilder()
-                .setBsqBlockVo(bsqBlockVo.toProtoMessage())
+                .setHeight(height)
+                .setHash(hash)
+                .setPreviousBlockHash(previousBlockHash)
                 .addAllTxs(txs.stream()
                         .map(Tx::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -50,7 +56,9 @@ public class BsqBlock implements PersistablePayload {
     }
 
     public static BsqBlock fromProto(PB.BsqBlock proto) {
-        return new BsqBlock(BsqBlockVo.fromProto(proto.getBsqBlockVo()),
+        return new BsqBlock(proto.getHeight(),
+                proto.getHash(),
+                proto.getPreviousBlockHash(),
                 proto.getTxsList().isEmpty() ?
                         new ArrayList<>() :
                         proto.getTxsList().stream()
@@ -67,7 +75,6 @@ public class BsqBlock implements PersistablePayload {
         txs.stream().forEach(Tx::reset);
     }
 
-
     @Override
     public String toString() {
         return "BsqBlock{" +
@@ -77,23 +84,4 @@ public class BsqBlock implements PersistablePayload {
                 ",\n     txs='" + txs + '\'' +
                 "\n}";
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegates
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public int getHeight() {
-        return bsqBlockVo.getHeight();
-    }
-
-    public String getHash() {
-        return bsqBlockVo.getHash();
-    }
-
-    public String getPreviousBlockHash() {
-        return bsqBlockVo.getPreviousBlockHash();
-    }
-
-
 }

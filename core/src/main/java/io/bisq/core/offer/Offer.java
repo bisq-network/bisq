@@ -128,7 +128,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         if (offerPayload.isUseMarketBasedPrice()) {
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-            if (marketPrice != null && marketPrice.isValid()) {
+            if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
