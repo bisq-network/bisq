@@ -128,10 +128,6 @@ public abstract class BisqExecutable {
                 description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(AppOptionKeys.ENABLE_API,
-                description("If set to true the trading api is enabled.", false))
-                .withRequiredArg()
-                .ofType(boolean.class);
         parser.accepts(AppOptionKeys.PROVIDERS,
                 description("Custom providers (comma separated)", false))
                 .withRequiredArg();

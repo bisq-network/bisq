@@ -37,8 +37,6 @@ import org.springframework.core.env.Environment;
 
 import java.util.ResourceBundle;
 
-import static com.google.inject.name.Names.named;
-
 public class GuiModule extends AppModule {
 
     private final Stage primaryStage;
@@ -75,6 +73,5 @@ public class GuiModule extends AppModule {
         bind(Stage.class).toInstance(primaryStage);
 
         bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
-        bindConstant().annotatedWith(named(AppOptionKeys.ENABLE_API)).to(environment.getRequiredProperty(AppOptionKeys.ENABLE_API));
     }
 }

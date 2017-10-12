@@ -21,7 +21,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.bisq.api.service.DropwizardApplication;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -163,7 +162,7 @@ public class BisqApp extends Application {
         Security.addProvider(new BouncyCastleProvider());
 
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        String currencyCode = baseCurrencyNetwork.getCurrencyCode();
+        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
@@ -173,10 +172,14 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-
-            if(Boolean.valueOf(bisqEnvironment.getRequiredProperty(AppOptionKeys.ENABLE_API))) {
-                injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
-            }
+/*
+            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
+            Injector injector = Guice.createInjector(new GraphvizModule());
+            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
+            grapher.setOut(out);
+            grapher.setRankdir("TB");
+            grapher.graph(injector);
+*/
 
             // All classes which are persisting objects need to be added here
             // Maintain order!

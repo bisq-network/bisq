@@ -343,12 +343,6 @@
         </dependency>
 
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>8.0.6_20</version>
@@ -371,10 +365,6 @@
             <artifactId>jcsv</artifactId>
             <version>1.4.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
+
     </dependencies>
 </project>

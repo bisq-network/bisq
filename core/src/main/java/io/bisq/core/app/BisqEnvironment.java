@@ -166,7 +166,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
-            myAddress, banList, dumpStatistics, enableApi, maxMemory, socks5ProxyBtcAddress,
+            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
 
 
@@ -199,9 +199,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
-                "";
-        enableApi = commandLineProperties.containsProperty(AppOptionKeys.ENABLE_API) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.ENABLE_API) :
                 "";
         maxMemory = commandLineProperties.containsProperty(AppOptionKeys.MAX_MEMORY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
@@ -347,7 +344,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
-                setProperty(AppOptionKeys.ENABLE_API, enableApi);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
