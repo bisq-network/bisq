@@ -65,7 +65,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                         candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.90; // use 90% width between ticks
                     }
 
-                    // 97 is visible chart data height if chart height is 140.
+                    // 97 is visible chart data height if chart height is 140. 
                     // So we subtract 43 form the height to get the height for the bar to the bottom.
                     // Did not find a way how to request the chart data height
                     final double height = getHeight() - 43;

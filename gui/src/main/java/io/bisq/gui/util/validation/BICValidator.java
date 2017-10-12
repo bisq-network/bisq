@@ -23,7 +23,7 @@ import java.util.Locale;
 
 /*
  * BIC information taken from German wikipedia (2017-01-30)
- *
+ * 
  * length 8 or 11 characters
  * General format: BBBB CC LL (bbb)
  * with	B - Bank code

@@ -29,8 +29,8 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
     -outfile Bisq
-
-# when we have support for security manager we use that
+     
+# when we have support for security manager we use that     
 #     \
 #    -BjvmOptions=-Djava.security.manager \
 #    -BjvmOptions=-Djava.security.debug=failure \

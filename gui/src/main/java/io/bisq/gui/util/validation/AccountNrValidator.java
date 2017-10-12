@@ -85,9 +85,9 @@ public final class AccountNrValidator extends BankValidator {
                     // https://no.wikipedia.org/wiki/MOD11#Implementasjoner_i_forskjellige_programmeringspr.C3.A5k
                     // https://en.wikipedia.org/wiki/International_Bank_Account_Number#Generating_IBAN_check_digits6
 
-                    // 11 digits, last digit is checksum.  Checksum algoritm is
+                    // 11 digits, last digit is checksum.  Checksum algoritm is 
                     // MOD11 with weights 2,3,4,5,6,7,2,3,4,5 right to left.
-                    // First remove whitespace and periods.  Normal formatting is:
+                    // First remove whitespace and periods.  Normal formatting is: 
                     // 1234.56.78903
                     input2 = StringUtils.remove(input, " ");
                     input2 = StringUtils.remove(input2, ".");
