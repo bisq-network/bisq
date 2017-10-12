@@ -355,10 +355,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayload.getCountryCode();
     }
 
-    /**
-     * notation is switched when
-     * @return
-     */
     public String getCurrencyCode() {
         return CurrencyUtil.isCryptoCurrency(offerPayload.getBaseCurrencyCode()) ?
                 offerPayload.getBaseCurrencyCode() :

@@ -34,7 +34,7 @@
      <logger name="io.bisq.p2p.peers.getdata" level="WARN"/>
      <logger name="io.bisq.p2p.peers.keepalive" level="WARN"/>
      <logger name="io.bisq.p2p.peers.peerexchange" level="WARN"/>
-
+ 
      <logger name="io.bisq.p2p.network" level="WARN"/>
      <logger name="io.bisq.p2p.P2PService" level="WARN"/>-->
 
