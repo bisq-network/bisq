@@ -57,7 +57,7 @@ public class UserThread {
     }
 
 
-    // Prefer FxTimer if a delay is needed in a JavaFx class (gui module)
+    // Prefer FxTimer if a delay is needed in a JavaFx class (gui module) 
     public static Timer runAfterRandomDelay(Runnable runnable, long minDelayInSec, long maxDelayInSec) {
         return UserThread.runAfterRandomDelay(runnable, minDelayInSec, maxDelayInSec, TimeUnit.SECONDS);
     }

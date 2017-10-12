@@ -27,7 +27,7 @@ public class CurrencyTuple {
 
     public CurrencyTuple(String code, String name) {
         // We use Fiat class and there precision is 4
-        // In future we might add custom precision per currency
+        // In future we might add custom precision per currency 
         this(code, name, 4);
     }
 
