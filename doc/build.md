@@ -3,7 +3,7 @@
 
 This guide will walk you through the process of building bisq from source.
 
-> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
+> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bisq-network/exchange/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
 There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
 
@@ -89,29 +89,6 @@ At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
 
-Build required dependencies
----------------------------
-### 3. Install BitcoinJ (branch bisq_0.14.4.1), libdohj and Btcd-cli4j
-libdohj is used for supporting usage of some altcoins with BitcoinJ.
-Btcd-cli4j is used for RPC communication to a local Bitcoin Core node for verifying the BSQ transactions.
-It is not needed for a normal user to run such a "full node" but for the build it is required.
-
-    $ cd ..
-    $ git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
-    $ cd bitcoinj
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-    
-    $ cd ..
-    $ git clone https://github.com/bitsquare/libdohj.git
-    $ cd libdohj
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-        
-    $ cd ..
-    $ git clone https://github.com/bitsquare/btcd-cli4j.git
-    $ cd btcd-cli4j
-    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
-    $ cd ..
-    
 Build bisq
 -----------------
 
@@ -137,14 +114,14 @@ DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
 use dedicated program arguments for the bisq node.
-See https://github.com/bitsquare/bitsquare/blob/master/doc/rpc.md for more details.
+See https://github.com/bisq-network/exchange/blob/master/doc/rpc.md for more details.
 
 
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-bisq-with-Mainnet)
-and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/Testing-bisq-with-Mainnet)
+and how to use [regtest](https://github.com/bisq-network/exchange/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
@@ -187,4 +164,4 @@ Here are example program arguments for using regtest and using the Tor network (
 Problems?
 ---------
 
-If the instructions above don't work for you, please [raise an issue](https://github.com/bitsquare/bitsquare/issues/new?labels=%5Bbuild%5D). Thanks!
+If the instructions above don't work for you, please [raise an issue](https://github.com/bisq-network/exchange/issues/new?labels=%5Bbuild%5D). Thanks!

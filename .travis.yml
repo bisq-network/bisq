@@ -1,35 +1,10 @@
 language: java
-jdk:
-    - oraclejdk8
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install p7zip; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -y p7zip-full; fi
-
-install:
-  - git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
-  - cd bitcoinj
-  - mvn clean install -DskipTests
-  - git clone https://github.com/bitsquare/libdohj.git
-  - cd libdohj
-  - mvn clean install -DskipTests
-  - git clone https://github.com/bitsquare/btcd-cli4j.git
-  - cd btcd-cli4j
-  - mvn clean install -DskipTests
-  - cd ..
 
 script: mvn clean install -DskipTests
 
-#notifications:
-#  irc:
-#    channels: chat.freenode.net#bisq
-#    template:
-#      - '%{message} (%{repository}#%{build_number}, %{duration})'
-#      - '%{repository}/%{branch} %{commit} %{author}: %{commit_message}'
-#      - '%{build_url}'
-#    on_success: change
-#    on_failure: always
-#    use_notice: true
-#    skip_join: true
+notifications:
+  slack:
+    rooms:
+      - secure: H82Q57T5nRNDfVnxzlWZ2WoeGt71oq2eJGHbqJ4wP2tIc8b02UO9bztPKFxbm9slMu0JjxZdJfnHSgNZKfPVXrTqwPYRVjKqm7m9TynIlkQabV+yCI/oRvy4Xi/Xj7/aPvZat4s/bxjrtw9KwVdpmqWvRNNSgiTqQ4teBJ1uQGs=
+    on_success: change
+    on_failure: always

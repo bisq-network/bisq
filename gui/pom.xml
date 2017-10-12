@@ -252,7 +252,7 @@
                                             org.apache.maven.plugins:maven-deploy-plugin:2.7:maven-plugin:null:runtime:6dadfb75679ca010b41286794f737088ebfe12fd
                                         </urn>
                                         <urn>
-                                            org.apache.maven.plugins:maven-enforcer-plugin:RELEASE:maven-plugin:null:runtime:e9bd7df541415bfe587ce082458f9a48bf9b55b4
+                                            org.apache.maven.plugins:maven-enforcer-plugin:1.4.1:maven-plugin:null:runtime:e9bd7df541415bfe587ce082458f9a48bf9b55b4
                                         </urn>
                                         <urn>
                                             org.apache.maven.plugins:maven-install-plugin:2.4:maven-plugin:null:runtime:9d1316166fe4c313f56276935e08df11f45267c2
