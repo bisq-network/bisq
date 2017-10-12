@@ -334,6 +334,7 @@ public class BuyerStep2View extends TradeStepView {
             String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
+            String paddedId = " " + id + " ";
             String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                 //noinspection UnusedAssignment
@@ -350,7 +351,7 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
@@ -361,7 +362,7 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn;
             else
@@ -370,7 +371,7 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn + "\n\n" +
                         fees;
