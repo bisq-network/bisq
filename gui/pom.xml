@@ -86,7 +86,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
                 <configuration>
                     <artifactSet>
                         <excludes>
@@ -132,7 +131,20 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <!-- strip "non reproducible" data from the generated artifacts -->
+            <plugin>
+                <groupId>io.github.zlika</groupId>
+                <artifactId>reproducible-build-maven-plugin</artifactId>
+                <version>0.3</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>strip-jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Verify the dependency chain: see https://github.com/gary-rowe/BitcoinjEnforcerRules for
            more information on this.
         -->
