@@ -173,7 +173,7 @@ public class ArbitratorManager {
                 .filter(e -> {
                     final boolean isInPublicKeyInList = isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()));
                     if (!isInPublicKeyInList)
-                        log.warn("We got an arbitrator which is not in our list of publicKeys. Arbitrator=", e.toString());
+                        log.warn("We got an arbitrator which is not in our list of publicKeys. Arbitrator={}", e.toString());
                     final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
                             e.getRegistrationPubKey(),
                             e.getRegistrationSignature());
