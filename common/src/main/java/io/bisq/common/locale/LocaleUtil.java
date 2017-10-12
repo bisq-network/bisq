@@ -29,7 +29,7 @@ public class LocaleUtil {
 
     public static List<Locale> getAllLocales() {
 
-        // derived form Locale.getAvailableLocales() and added some missing locales 
+        // derived form Locale.getAvailableLocales() and added some missing locales
         // Key is ISO 639-1 code (https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), value is ISO 3166 country code 
         List<Locale> allLocales = new ArrayList<>();
 
