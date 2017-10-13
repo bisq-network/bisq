@@ -285,7 +285,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            Coin reservedFundsForOffer,
                            boolean useSavingsWallet,
-                           TransactionResultHandler resultHandler) {
+                           TransactionResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
@@ -307,6 +308,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     } else {
                         log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
+                },
+                error -> {
+                    errorMessageHandler.handleErrorMessage(error);
                 }
         );
         placeOfferProtocol.placeOffer();
