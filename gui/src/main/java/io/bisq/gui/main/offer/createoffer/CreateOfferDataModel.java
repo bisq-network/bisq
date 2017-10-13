@@ -409,7 +409,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         openOfferManager.placeOffer(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                resultHandler, error -> log.error(error));
+                resultHandler,
+                log::error);
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -505,10 +506,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return direction;
     }
 
-    String getOfferId() {
-        return offerId;
-    }
-
     AddressEntry getAddressEntry() {
         return addressEntry;
     }
@@ -542,11 +539,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return marketPriceMargin;
     }
 
-
     boolean isMakerFeeValid() {
-        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForFeeAvailable(bsqWalletService, this.amount.get(), marketPriceAvailable, marketPriceMargin);
+        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -656,7 +651,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        log.error("swapTradeToSavings, offerid={}", offerId);
+        log.error("swapTradeToSavings, offerId={}", offerId);
         btcWalletService.resetAddressEntriesForOpenOffer(offerId);
     }
 
@@ -695,8 +690,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
 
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -719,10 +712,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void setMinAmount(Coin minAmount) {
         this.minAmount.set(minAmount);
-    }
-
-    void setDirection(OfferPayload.Direction direction) {
-        this.direction = direction;
     }
 
     ReadOnlyStringProperty getTradeCurrencyCode() {
@@ -766,8 +755,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
+        return OfferUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
+
     public Coin getMakerFee() {
         return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
     }

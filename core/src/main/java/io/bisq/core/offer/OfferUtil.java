@@ -37,21 +37,6 @@ import javax.annotation.Nullable;
 public class OfferUtil {
 
     /**
-     * Returns the makerfee as Coin, this can be priced in BTC or BSQ.
-     *
-     * @param bsqWalletService
-     * @param preferences preferences are used to see if the user indicated a preference for paying fees in BTC
-     * @param amount
-     * @param marketPriceAvailable
-     * @param marketPriceMargin
-     * @return
-     */
-    @Nullable
-    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return getMakerFee(isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount, marketPriceAvailable, marketPriceMargin), amount,  marketPriceAvailable,  marketPriceMargin);
-    }
-
-    /**
      * Given the direction, is this a BUY?
      *
      * @param direction
@@ -60,9 +45,28 @@ public class OfferUtil {
     public static boolean isBuyOffer(OfferPayload.Direction direction) {
         return direction == OfferPayload.Direction.BUY;
     }
+    
+    /**
+     * Returns the makerFee as Coin, this can be priced in BTC or BSQ.
+     *
+     * @param bsqWalletService
+     * @param preferences          preferences are used to see if the user indicated a preference for paying fees in BTC
+     * @param amount
+     * @param marketPriceAvailable
+     * @param marketPriceMargin
+     * @return
+     */
+    @Nullable
+    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+        final boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+        return getMakerFee(isCurrencyForMakerFeeBtc,
+                amount,
+                marketPriceAvailable,
+                marketPriceMargin);
+    }
 
     /**
-     * Calculates the maker fee for the given amount, marketprice and marketpricemargin.
+     * Calculates the maker fee for the given amount, marketPrice and marketPriceMargin.
      *
      * @param isCurrencyForMakerFeeBtc
      * @param amount
@@ -71,7 +75,7 @@ public class OfferUtil {
      * @return
      */
     @Nullable
-    public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+    public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
         if (amount != null) {
             final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
@@ -104,7 +108,8 @@ public class OfferUtil {
      * @return
      */
     public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(bsqWalletService, amount,  marketPriceAvailable,  marketPriceMargin);
+        return preferences.getPayFeeInBtc() || 
+                !isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
     }
 
     /**
@@ -116,11 +121,12 @@ public class OfferUtil {
      * @param marketPriceMargin
      * @return
      */
-    public static boolean isBsqForFeeAvailable(BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getMakerFee(false , amount, marketPriceAvailable, marketPriceMargin) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin)).isNegative();
+    public static boolean isBsqForFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+        final Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
+        final Coin availableBalance = bsqWalletService.getAvailableBalance();
+        return makerFee != null &&
+                BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                availableBalance != null &&
+                !availableBalance.subtract(makerFee).isNegative();
     }
 }
