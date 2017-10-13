@@ -328,7 +328,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkNotNull(OfferUtil.getMakerFee(bsqWalletService, preferences, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin), "makerFee must not be null");
+        checkNotNull(getMakerFee(), "makerFee must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
@@ -380,8 +380,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 Version.VERSION,
                 btcWalletService.getLastBlockSeenHeight(),
                 txFeeFromFeeService.value,
-                OfferUtil.getMakerFee(bsqWalletService, preferences, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin).value,
-                OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, Coin.valueOf(amount), marketPriceAvailable, marketPriceMargin),
+                getMakerFee().value,
+                isCurrencyForMakerFeeBtc(),
                 buyerSecurityDepositAsCoin.value,
                 sellerSecurityDeposit.value,
                 maxTradeLimit,
@@ -400,7 +400,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin), "makerFee must not be null");
+        checkNotNull(getMakerFee(), "makerFee must not be null");
 
         Coin reservedFundsForOffer = getSecurityDeposit();
         if (!isBuyOffer())
@@ -586,10 +586,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        final Coin makerFee = OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin);
+        final Coin makerFee = getMakerFee();
         if (direction != null && amount.get() != null && makerFee != null) {
             Coin feeAndSecDeposit = getTxFee().add(getSecurityDeposit());
-            if (OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin))
+            if (isCurrencyForMakerFeeBtc())
                 feeAndSecDeposit = feeAndSecDeposit.add(makerFee);
             Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(total);
@@ -645,10 +645,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getTxFee() {
-        if (OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin))
+        if (isCurrencyForMakerFeeBtc())
             return txFeeFromFeeService;
         else
-            return txFeeFromFeeService.subtract(OfferUtil.getMakerFee(bsqWalletService, preferences, this.amount.get(), marketPriceAvailable, marketPriceMargin));
+            return txFeeFromFeeService.subtract(getMakerFee());
     }
 
     public Preferences getPreferences() {
