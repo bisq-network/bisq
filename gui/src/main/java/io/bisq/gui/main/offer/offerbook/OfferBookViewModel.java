@@ -483,7 +483,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&
-                            tradingPeerNodeAddress.getHostName().equals(offer.getMakerNodeAddress().getHostName());
+                            tradingPeerNodeAddress.getFullAddress().equals(offer.getMakerNodeAddress().getFullAddress());
                 })
                 .collect(Collectors.toSet())
                 .size();

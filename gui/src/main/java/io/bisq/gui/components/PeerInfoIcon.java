@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    private final String hostName;
+    private final String address;
     private final String tooltipText;
     private final int numTrades;
     private final Map<String, String> peerTagMap;
@@ -31,51 +31,51 @@ public class PeerInfoIcon extends Group {
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName,
+    public PeerInfoIcon(String address,
                         String tooltipText,
                         int numTrades,
                         PrivateNotificationManager privateNotificationManager,
                         Offer offer,
                         Preferences preferences) {
-        this(hostName, tooltipText, numTrades, privateNotificationManager, offer, preferences, -1);
+        this(address, tooltipText, numTrades, privateNotificationManager, offer, preferences, -1);
     }
 
-    public PeerInfoIcon(String hostName,
+    public PeerInfoIcon(String address,
                         String tooltipText,
                         int numTrades,
                         PrivateNotificationManager privateNotificationManager,
                         Offer offer,
                         Preferences preferences,
                         int accountAgeCategory) {
-        this.hostName = hostName;
+        this.address = address;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
 
         peerTagMap = preferences.getPeerTagMap();
 
         // outer circle
-        Color color1;
+        Color ringColor;
         switch (accountAgeCategory) {
-            case 1:
-                color1 = Color.rgb(204, 153, 51); //brown/gold
+            case 3:
+                ringColor = Color.rgb(0, 153, 0); // > 2 months green
                 break;
             case 2:
-                color1 = Color.rgb(204, 204, 51); // green/yellow
+                ringColor = Color.rgb(204, 204, 51); // 1-2 months green/yellow
                 break;
-            case 3:
-                color1 = Color.rgb(0, 153, 0); // green
+            case 1:
+                ringColor = Color.rgb(204, 153, 51); // < 1 month brown/gold
                 break;
             case 0:
             default:
-                color1 = Color.rgb(255, 153, 51); //orange
+                ringColor = Color.rgb(255, 153, 51); // new account orange
                 break;
         }
 
-        double size1 = 26;
-        Canvas outerBackground = new Canvas(size1, size1);
-        GraphicsContext gc1 = outerBackground.getGraphicsContext2D();
-        gc1.setFill(color1);
-        gc1.fillOval(0, 0, size1, size1);
+        double outerSize = 26;
+        Canvas outerBackground = new Canvas(outerSize, outerSize);
+        GraphicsContext outerBackgroundGc = outerBackground.getGraphicsContext2D();
+        outerBackgroundGc.setFill(ringColor);
+        outerBackgroundGc.fillOval(0, 0, outerSize, outerSize);
         outerBackground.setLayoutY(1);
 
         // inner circle
@@ -83,7 +83,7 @@ public class PeerInfoIcon extends Group {
         int intValue = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] bytes = md.digest(hostName.getBytes());
+            byte[] bytes = md.digest(address.getBytes());
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
                     | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 
@@ -98,20 +98,21 @@ public class PeerInfoIcon extends Group {
         int green = (intValue >> 16) % 256;
         int blue = (intValue >> 24) % 256;
 
-        Color color2 = Color.rgb(red, green, blue);
-        color2 = color2.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
+        Color innerColor = Color.rgb(red, green, blue);
+        innerColor = innerColor.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
-        double size2 = 22;
-        Canvas innerBackground = new Canvas(size2, size2);
-        GraphicsContext gc2 = innerBackground.getGraphicsContext2D();
-        gc2.setFill(color2);
-        gc2.fillOval(0, 0, size2, size2);
+        double innerSize = 22;
+        Canvas innerBackground = new Canvas(innerSize, innerSize);
+        GraphicsContext innerBackgroundGc = innerBackground.getGraphicsContext2D();
+        innerBackgroundGc.setFill(innerColor);
+        innerBackgroundGc.fillOval(0, 0, innerSize, innerSize);
         innerBackground.setLayoutY(3);
         innerBackground.setLayoutX(2);
 
         ImageView avatarImageView = new ImageView();
         avatarImageView.setId("avatar_" + index);
-        avatarImageView.setScaleX(intValue % 2 == 0 ? 1d : -1d);
+        avatarImageView.setLayoutX(0);
+        avatarImageView.setLayoutY(1);
 
         numTradesPane = new Pane();
         numTradesPane.relocate(18, 14);
@@ -138,11 +139,11 @@ public class PeerInfoIcon extends Group {
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
-                .hostName(hostName)
+                .hostName(address)
                 .numTrades(numTrades)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
-                    preferences.setTagForPeer(hostName, newTag);
+                    preferences.setTagForPeer(address, newTag);
                     updatePeerInfoIcon();
                 })
                 .show());
@@ -150,8 +151,8 @@ public class PeerInfoIcon extends Group {
 
     private void updatePeerInfoIcon() {
         String tag;
-        if (peerTagMap.containsKey(hostName)) {
-            tag = peerTagMap.get(hostName);
+        if (peerTagMap.containsKey(address)) {
+            tag = peerTagMap.get(address);
             Tooltip.install(this, new Tooltip(Res.get("peerInfoIcon.tooltip", tooltipText, tag)));
         } else {
             tag = "";

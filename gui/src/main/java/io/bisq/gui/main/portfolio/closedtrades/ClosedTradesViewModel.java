@@ -133,7 +133,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         ((Trade) tradable).getTradingPeerNodeAddress() != null &&
                         ((Trade) e).getTradingPeerNodeAddress() != null &&
                         ((Trade) tradable).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().getHostName().equals(((Trade) tradable).getTradingPeerNodeAddress().getHostName()))
+                        ((Trade) e).getTradingPeerNodeAddress().getFullAddress().equals(((Trade) tradable).getTradingPeerNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet())
                 .size();
     }

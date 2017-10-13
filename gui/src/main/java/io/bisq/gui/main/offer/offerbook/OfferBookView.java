@@ -45,6 +45,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -182,7 +183,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
-        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getHostName().compareTo(o2.getOffer().getOwnerNodeAddress().getHostName()));
+        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getFullAddress().compareTo(o2.getOffer().getOwnerNodeAddress().getFullAddress()));
 
         nrOfOffersLabel = new Label("");
         nrOfOffersLabel.setId("num-offers");
@@ -648,6 +649,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     field = new HyperlinkWithIcon(model.getPaymentMethod(item), true);
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
+                                    setPadding(new Insets(4, 0, 0, 0));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -792,29 +794,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             @Override
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
-
                                 if (newItem != null && !empty) {
-                                    String hostName = newItem.getOffer().getOwnerNodeAddress().getHostName();
-                                    int numPastTrades = model.getNumPastTrades(newItem.getOffer());
+                                    final Offer offer = newItem.getOffer();
+                                    final NodeAddress peerNodeAddress = offer.getOwnerNodeAddress();
+                                    String hostName = peerNodeAddress != null ? peerNodeAddress.getHostName() : "";
+                                    String address = peerNodeAddress != null ? peerNodeAddress.getFullAddress() : "";
+                                    int numPastTrades = model.getNumPastTrades(offer);
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ?
                                             Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :
                                             Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
 
-                                    final Optional<Long> accountAge = model.getAccountAge(newItem.getOffer());
-                                    if (accountAge.isPresent()) 
-                                        tooltipText += "\n" + Res.get("peerInfoIcon.tooltip.offer.accountAge", 
-                                                formatter.formatDurationAsWords(accountAge.get()));
-
-                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(hostName, 
-                                            tooltipText, 
+                                    final Optional<Long> accountAge = model.getAccountAge(offer);
+                                    final Long durationMillis = accountAge.isPresent() ? accountAge.get() : 0L;
+                                    tooltipText += "\n" + Res.get("peerInfoIcon.tooltip.offer.accountAge",
+                                            formatter.formatAccountAge(durationMillis));
+                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(address,
+                                            tooltipText,
                                             numPastTrades,
-                                            privateNotificationManager, 
-                                            newItem.getOffer(),
+                                            privateNotificationManager,
+                                            offer,
                                             model.preferences,
-                                            model.getAccountAgeCategory(newItem.getOffer()));
-
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                            model.getAccountAgeCategory(offer));
+                                    setPadding(new Insets(-3, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

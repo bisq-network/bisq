@@ -139,8 +139,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
                 NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
                 NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
-                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getHostName() : "";
-                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getHostName() : "";
+                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
+                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
                 return address1 != null && address2 != null ? address1.compareTo(address2) : 0;
             } else
                 return 0;
@@ -306,16 +306,17 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
-
-                                    int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     Trade trade = (Trade) newItem.getTradable();
-                                    String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().getHostName() : "";
-                                    Node peerInfoIcon = new PeerInfoIcon(hostName,
+                                    int numPastTrades = model.getNumPastTrades(trade);
+                                    final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                                    String hostName = tradingPeerNodeAddress != null ? tradingPeerNodeAddress.getHostName() : "";
+                                    String address = tradingPeerNodeAddress != null ? tradingPeerNodeAddress.getFullAddress() : "";
+                                    Node peerInfoIcon = new PeerInfoIcon(address,
                                             Res.get("portfolio.closed.peerInfoIcon", hostName),
                                             numPastTrades,
                                             privateNotificationManager,
-                                            newItem.getTradable().getOffer(), preferences);
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                            trade.getOffer(), preferences);
+                                    setPadding(new Insets(-3, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
