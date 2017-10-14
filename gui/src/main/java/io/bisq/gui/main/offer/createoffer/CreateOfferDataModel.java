@@ -332,8 +332,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
-
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
+      
+        long maxTradeLimit = accountAgeWitnessService.getTradeLimit(paymentAccount, currencyCode);
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
@@ -346,8 +346,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = new HashMap<>();
 
-        byte[] hashOfPaymentAccount = accountAgeWitnessService.getWitnessHash(paymentAccount.getPaymentAccountPayload());
-        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, Utilities.bytesAsHexString(hashOfPaymentAccount));
+        final String hashOfPaymentAccountAsHex = accountAgeWitnessService.getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, hashOfPaymentAccountAsHex);
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,

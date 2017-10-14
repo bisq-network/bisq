@@ -20,8 +20,10 @@ package io.bisq.core.payment;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
+import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -113,7 +115,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         }
     }
 
-    private Optional<AccountAgeWitness> findWitnessByHash(String hash) {
+    public Optional<AccountAgeWitness> findWitnessByHash(String hash) {
         return accountAgeWitnessMap.containsKey(hash) ? Optional.of(accountAgeWitnessMap.get(hash)) : Optional.<AccountAgeWitness>empty();
     }
 
@@ -130,8 +132,11 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         }
     }
 
-    public AccountAge getAccountAgeCategory(Offer offer) {
-        final long accountAge = getAccountAge(offer);
+    public long getAccountAge(AccountAgeWitness accountAgeWitness) {
+        return new Date().getTime() - accountAgeWitness.getDate();
+    }
+
+    public AccountAge getAccountAgeCategory(long accountAge) {
         if (accountAge < TimeUnit.DAYS.toMillis(30)) {
             return AccountAge.LESS_ONE_MONTH;
         } else if (accountAge < TimeUnit.DAYS.toMillis(60)) {
@@ -154,10 +159,67 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         return getWitnessHash(paymentAccountPayload, paymentAccountPayload.getSalt());
     }
 
+    public String getWitnessHashAsHex(PaymentAccountPayload paymentAccountPayload) {
+        return Utilities.bytesAsHexString(getWitnessHash(paymentAccountPayload));
+    }
+
     private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
         byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
         return Sha256Hash.hash(combined);
+    }
+
+    public long getTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
+        final long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            double factor;
+
+            Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitnessByHash(getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload()));
+            AccountAge accountAgeCategory = accountAgeWitnessOptional.isPresent() ?
+                    getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
+                    AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
+
+            // TODO Fade in by date can be removed after feb 2018
+            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when 
+            // we deploy that feature.
+            final Date now = new Date();
+            final Date dez = new GregorianCalendar(2017, GregorianCalendar.DECEMBER, 1).getTime();
+            final Date jan = new GregorianCalendar(2017, GregorianCalendar.JANUARY, 1).getTime();
+            final Date feb = new GregorianCalendar(2017, GregorianCalendar.FEBRUARY, 1).getTime();
+
+            switch (accountAgeCategory) {
+                case TWO_MONTHS_OR_MORE:
+                    factor = 1;
+                    break;
+                case ONE_TO_TWO_MONTHS:
+                    if (now.before(dez)) {
+                        factor = 1;
+                    } else if (now.before(jan)) {
+                        factor = 0.9;
+                    } else if (now.before(feb)) {
+                        factor = 0.75;
+                    } else {
+                        factor = 0.5;
+                    }
+                    break;
+                case LESS_ONE_MONTH:
+                default:
+                    if (now.before(dez)) {
+                        factor = 1;
+                    } else if (now.before(jan)) {
+                        factor = 0.8;
+                    } else if (now.before(feb)) {
+                        factor = 0.5;
+                    } else {
+                        factor = 0.25;
+                    }
+                    break;
+            }
+
+            return MathUtils.roundDoubleToLong((double) maxTradeLimit * factor);
+        } else {
+            return maxTradeLimit;
+        }
     }
 
     boolean verifyAgeWitness(byte[] peersAgeWitnessInputData,

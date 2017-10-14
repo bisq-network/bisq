@@ -57,7 +57,7 @@ public class PeerInfoIcon extends Group {
 
         // outer circle
         Color ringColor;
-        switch (accountAgeWitnessService.getAccountAgeCategory(offer)) {
+        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getAccountAge(offer))) {
             case TWO_MONTHS_OR_MORE:
                 ringColor = Color.rgb(0, 225, 0); // > 2 months green
                 break;
