@@ -24,6 +24,7 @@ import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
+import io.bisq.gui.util.validation.altcoins.XCNAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PNCParams;
