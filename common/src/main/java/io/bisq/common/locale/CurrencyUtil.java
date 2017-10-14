@@ -108,6 +108,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
+        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
