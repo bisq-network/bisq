@@ -3,8 +3,11 @@ package io.bisq.gui.components;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
+import io.bisq.gui.util.BSFormatter;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -22,7 +25,6 @@ import java.util.Map;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    private final String address;
     private final String tooltipText;
     private final int numTrades;
     private final Map<String, String> peerTagMap;
@@ -30,44 +32,41 @@ public class PeerInfoIcon extends Group {
     private final Label tagLabel;
     private final Pane tagPane;
     private final Pane numTradesPane;
+    private final String hostName;
 
-    public PeerInfoIcon(String address,
-                        String tooltipText,
-                        int numTrades,
-                        PrivateNotificationManager privateNotificationManager,
-                        Offer offer,
-                        Preferences preferences) {
-        this(address, tooltipText, numTrades, privateNotificationManager, offer, preferences, -1);
-    }
-
-    public PeerInfoIcon(String address,
-                        String tooltipText,
+    public PeerInfoIcon(NodeAddress nodeAddress,
+                        String role,
                         int numTrades,
                         PrivateNotificationManager privateNotificationManager,
                         Offer offer,
                         Preferences preferences,
-                        int accountAgeCategory) {
-        this.address = address;
-        this.tooltipText = tooltipText;
+                        AccountAgeWitnessService accountAgeWitnessService,
+                        BSFormatter formatter) {
         this.numTrades = numTrades;
+
+        hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
+        String address = nodeAddress != null ? nodeAddress.getFullAddress() : "";
 
         peerTagMap = preferences.getPeerTagMap();
 
+        boolean hasTraded = numTrades > 0;
+        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getAccountAge(offer));
+        tooltipText = hasTraded ?
+                Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
+                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
+
         // outer circle
         Color ringColor;
-        switch (accountAgeCategory) {
-            case 3:
-                ringColor = Color.rgb(0, 153, 0); // > 2 months green
+        switch (accountAgeWitnessService.getAccountAgeCategory(offer)) {
+            case TWO_MONTHS_OR_MORE:
+                ringColor = Color.rgb(0, 225, 0); // > 2 months green
                 break;
-            case 2:
-                ringColor = Color.rgb(204, 204, 51); // 1-2 months green/yellow
+            case ONE_TO_TWO_MONTHS:
+                ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
                 break;
-            case 1:
-                ringColor = Color.rgb(204, 153, 51); // < 1 month brown/gold
-                break;
-            case 0:
+            case LESS_ONE_MONTH:
             default:
-                ringColor = Color.rgb(255, 153, 51); // new account orange
+                ringColor = Color.rgb(255, 140, 0); //< 1 month orange
                 break;
         }
 
@@ -139,11 +138,12 @@ public class PeerInfoIcon extends Group {
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
-                .hostName(address)
+                .hostName(hostName)
                 .numTrades(numTrades)
+                .accountAge(accountAge)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
-                    preferences.setTagForPeer(address, newTag);
+                    preferences.setTagForPeer(hostName, newTag);
                     updatePeerInfoIcon();
                 })
                 .show());
@@ -151,9 +151,10 @@ public class PeerInfoIcon extends Group {
 
     private void updatePeerInfoIcon() {
         String tag;
-        if (peerTagMap.containsKey(address)) {
-            tag = peerTagMap.get(address);
-            Tooltip.install(this, new Tooltip(Res.get("peerInfoIcon.tooltip", tooltipText, tag)));
+        if (peerTagMap.containsKey(hostName)) {
+            tag = peerTagMap.get(hostName);
+            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
+            Tooltip.install(this, new Tooltip(text));
         } else {
             tag = "";
             Tooltip.install(this, new Tooltip(tooltipText));

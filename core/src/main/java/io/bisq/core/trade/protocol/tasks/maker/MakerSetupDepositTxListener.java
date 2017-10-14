@@ -54,7 +54,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
                 if (walletService.getBalanceForAddress(address).isZero()) {
                     trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
                     swapReservedForTradeEntry();
-                    processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade), trade);
+                    processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade));
                 } else {
                     listener = new BalanceListener(address) {
                         @Override
@@ -62,7 +62,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
                             if (balance.isZero() && trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED) {
                                 trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
                                 swapReservedForTradeEntry();
-                                processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade), trade);
+                                processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade));
                             }
                         }
                     };
@@ -89,7 +89,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
     }
 
     private void swapReservedForTradeEntry() {
-        log.error("swapReservedForTradeEntry, offerid={}, RESERVED_FOR_TRADE", trade.getId());
+        log.debug("swapReservedForTradeEntry, offerId={}, RESERVED_FOR_TRADE", trade.getId());
         processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 

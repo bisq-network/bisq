@@ -147,7 +147,7 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
-    final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
+    private final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
@@ -262,6 +262,7 @@ public class MainViewModel implements ViewModel {
         //noinspection ConstantConditions,ConstantConditions
         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
+        //noinspection ConstantConditions,ConstantConditions,PointlessBooleanExpression
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
@@ -718,7 +719,7 @@ public class MainViewModel implements ViewModel {
         checkIfLocalHostNodeIsRunningThread.start();
     }
 
-    private BooleanProperty checkCryptoSetup() {
+    private void checkCryptoSetup() {
         BooleanProperty result = new SimpleBooleanProperty();
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
@@ -761,8 +762,6 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
-
-        return result;
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
@@ -1050,7 +1049,7 @@ public class MainViewModel implements ViewModel {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
-                    log.error("swapPendingOfferFundingEntries, offerid={}, OFFER_FUNDING", addressEntry.getOfferId());
+                    log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
     }
@@ -1186,7 +1185,10 @@ public class MainViewModel implements ViewModel {
             okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
             okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
             user.addPaymentAccount(okPayAccount);
-
+            UserThread.runAfter(() -> {
+                accountAgeWitnessService.publishAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+            }, 1);
+            
             CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
             cryptoCurrencyAccount.init();
             cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev

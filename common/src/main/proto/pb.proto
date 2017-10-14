@@ -644,7 +644,7 @@ message AccountAgeWitness {
     bytes hash = 1;
     bytes sig_pub_key = 2;
     bytes signature = 3;
-    int64 trade_date = 4;
+    int64 date = 4;
     map<string, string> extra_data = 5;
 }
 

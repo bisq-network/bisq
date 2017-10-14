@@ -350,11 +350,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
+        final Coin takerFee = getTakerFee(false);
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getTakerFee(false) != null &&
+                takerFee != null &&
                 bsqWalletService.getAvailableBalance() != null &&
-                getTakerFee(false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(false)).isNegative();
+                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -472,7 +472,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        log.error("swapTradeToSavings, offerid={}", offer.getId());
+        log.debug("swapTradeToSavings, offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
@@ -531,10 +531,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public AddressEntry getAddressEntry() {
         return addressEntry;
-    }
-
-    public Preferences getPreferences() {
-        return preferences;
     }
 
     public Coin getSecurityDeposit() {

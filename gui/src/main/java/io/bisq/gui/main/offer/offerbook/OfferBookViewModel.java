@@ -30,7 +30,6 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.AccountAgeWitness;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -55,27 +54,23 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 class OfferBookViewModel extends ActivatableViewModel {
-    protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
-
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
     final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
-    private Set<String> tradeCurrencyCodes = new HashSet<>();
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
-    private final AccountAgeWitnessService accountAgeWitnessService;
+    final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
@@ -104,6 +99,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
@@ -129,17 +125,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> {
-            tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                    .map(TradeCurrency::getCode).collect(Collectors.toSet());
             fillAllTradeCurrencies();
         };
     }
 
     @Override
     protected void activate() {
-        tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                .map(TradeCurrency::getCode).collect(Collectors.toSet());
-
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
@@ -478,7 +469,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(GUIUtil.EDIT_FLAG);
     }
 
-    int getNumPastTrades(Offer offer) {
+    int getNumTrades(Offer offer) {
         return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
@@ -487,34 +478,5 @@ class OfferBookViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toSet())
                 .size();
-    }
-
-    Optional<Long> getAccountAge(Offer offer) {
-        if (offer.getAccountAgeWitnessHash().isPresent()) {
-            Optional<AccountAgeWitness> accountAgeWitness = accountAgeWitnessService.findWitnessByHash(offer.getAccountAgeWitnessHash().get());
-            if (accountAgeWitness.isPresent()) {
-                return Optional.of(new Date().getTime() - accountAgeWitness.get().getTradeDate());
-            } else {
-                return Optional.<Long>empty();
-            }
-        } else {
-            return Optional.<Long>empty();
-        }
-    }
-
-    int getAccountAgeCategory(Offer offer) {
-        final Optional<Long> accountAgeOptional = getAccountAge(offer);
-        if (accountAgeOptional.isPresent()) {
-            final Long accountAge = accountAgeOptional.get();
-            if (accountAge < TimeUnit.DAYS.toMillis(30)) {
-                return 1;
-            } else if (accountAge < TimeUnit.DAYS.toMillis(60)) {
-                return 2;
-            } else {
-                return 3;
-            }
-        } else {
-            return 0;
-        }
     }
 }

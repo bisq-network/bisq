@@ -23,11 +23,11 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
@@ -36,7 +36,6 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.Coin;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -57,7 +56,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     enum BuyerState implements State {
         UNDEFINED,
-        TRADE_INITIATING,
         STEP1,
         STEP2,
         STEP3,
@@ -66,7 +64,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     enum SellerState implements State {
         UNDEFINED,
-        TRADE_INITIATING,
         STEP1,
         STEP2,
         STEP3,
@@ -76,16 +73,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     public final BtcAddressValidator btcAddressValidator;
-
+    final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
-    public final User user;
     private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
-
-    private final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,8 +92,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
-                                  User user,
                                   ClosedTradableManager closedTradableManager,
+                                  AccountAgeWitnessService accountAgeWitnessService,
                                   Clock clock) {
         super(dataModel);
 
@@ -107,12 +101,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
-        this.user = user;
         this.closedTradableManager = closedTradableManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.clock = clock;
     }
-
-    private ChangeListener<Trade.State> tradeStateChangeListener;
 
     @Override
     protected void activate() {
@@ -150,10 +142,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     ReadOnlyObjectProperty<SellerState> getSellerState() {
         return sellerState;
-    }
-
-    public void withdrawAddressFocusOut(String text) {
-        withdrawalButtonDisable.set(!btcAddressValidator.validate(text).isValid);
     }
 
     public String getPayoutAmount() {
@@ -243,13 +231,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 result = method;
         }
         return result;
-    }
-
-    public String getPaymentMethod() {
-        if (dataModel.getTrade() != null && dataModel.getTrade().getContract() != null)
-            return Res.get(dataModel.getTrade().getContract().getPaymentMethodId());
-        else
-            return "";
     }
 
     // summary

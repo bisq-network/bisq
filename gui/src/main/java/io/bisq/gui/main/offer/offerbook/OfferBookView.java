@@ -66,7 +66,6 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
@@ -796,27 +795,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(newItem, empty);
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
-                                    final NodeAddress peerNodeAddress = offer.getOwnerNodeAddress();
-                                    String hostName = peerNodeAddress != null ? peerNodeAddress.getHostName() : "";
-                                    String address = peerNodeAddress != null ? peerNodeAddress.getFullAddress() : "";
-                                    int numPastTrades = model.getNumPastTrades(offer);
-                                    boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ?
-                                            Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :
-                                            Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
-
-                                    final Optional<Long> accountAge = model.getAccountAge(offer);
-                                    final Long durationMillis = accountAge.isPresent() ? accountAge.get() : 0L;
-                                    tooltipText += "\n" + Res.get("peerInfoIcon.tooltip.offer.accountAge",
-                                            formatter.formatAccountAge(durationMillis));
-                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(address,
-                                            tooltipText,
-                                            numPastTrades,
+                                    final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
+                                    String role = Res.get("peerInfoIcon.tooltip.maker");
+                                    int numTrades = model.getNumTrades(offer);
+                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(makersNodeAddress,
+                                            role,
+                                            numTrades,
                                             privateNotificationManager,
                                             offer,
                                             model.preferences,
-                                            model.getAccountAgeCategory(offer));
-                                    setPadding(new Insets(-3, 0, 0, 0));
+                                            model.accountAgeWitnessService, 
+                                            formatter);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

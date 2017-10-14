@@ -48,6 +48,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private final Offer offer;
     private final Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
+    private String accountAge;
 
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
@@ -73,6 +74,11 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     public PeerInfoWithTagEditor hostName(String hostName) {
         this.hostName = hostName;
+        return this;
+    }
+
+    public PeerInfoWithTagEditor accountAge(String accountAge) {
+        this.accountAge = accountAge;
         return this;
     }
 
@@ -141,11 +147,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         }
     }
 
-    protected void addContent() {
+    private void addContent() {
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++rowIndex,
                 Res.get("peerInfo.nrOfTrades"),
                 numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
+        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
 
         inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
         Map<String, String> peerTagMap = preferences.getPeerTagMap();

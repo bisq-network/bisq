@@ -35,16 +35,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-// Object has 118 raw bytes (not PB size)
+// Object has 529 raw bytes (535 bytes is size of PB.AccountAgeWitness -> extraDataMap is null)
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKey"})
 @Value
 public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
 
     private final byte[] hash;                      // 32 bytes
-    private final byte[] sigPubKey;                 // ? bytes
+    private final byte[] sigPubKey;                 // about 443 bytes
     private final byte[] signature;                 // 46 bytes
-    private final long tradeDate;                   // 8 byte
+    private final long date;                        // 8 byte
 
 
     // Only used as cache for getOwnerPubKey
@@ -58,13 +58,12 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
 
     public AccountAgeWitness(byte[] hash,
                              byte[] sigPubKey,
-                             byte[] signature,
-                             long tradeDate) {
+                             byte[] signature) {
 
         this(hash,
                 sigPubKey,
                 signature,
-                tradeDate,
+                new Date().getTime(),
                 null);
     }
 
@@ -72,15 +71,15 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    AccountAgeWitness(byte[] hash,
-                      byte[] sigPubKey,
-                      byte[] signature,
-                      long tradeDate,
-                      @Nullable Map<String, String> extraDataMap) {
+    private AccountAgeWitness(byte[] hash,
+                              byte[] sigPubKey,
+                              byte[] signature,
+                              long date,
+                              @Nullable Map<String, String> extraDataMap) {
         this.hash = hash;
         this.sigPubKey = sigPubKey;
         this.signature = signature;
-        this.tradeDate = tradeDate;
+        this.date = date;
         this.extraDataMap = extraDataMap;
 
         signaturePubKey = Sig.getPublicKeyFromBytes(sigPubKey);
@@ -92,7 +91,7 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
                 .setHash(ByteString.copyFrom(hash))
                 .setSigPubKey(ByteString.copyFrom(sigPubKey))
                 .setSignature(ByteString.copyFrom(signature))
-                .setTradeDate(tradeDate);
+                .setDate(date);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return PB.StoragePayload.newBuilder().setAccountAgeWitness(builder).build();
     }
@@ -106,7 +105,7 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
                 proto.getHash().toByteArray(),
                 proto.getSigPubKey().toByteArray(),
                 proto.getSignature().toByteArray(),
-                proto.getTradeDate(),
+                proto.getDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -128,8 +127,8 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persisted
 
     //TODO impl. here or in caller?
     // We allow max 1 day time difference
-    public boolean isTradeDateValid() {
-        return new Date().getTime() - tradeDate < TimeUnit.DAYS.toMillis(1);
+    public boolean isDateValid() {
+        return new Date().getTime() - date < TimeUnit.DAYS.toMillis(1);
     }
 
     public String getHashAsHex() {
