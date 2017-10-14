@@ -337,6 +337,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+		case "XCN": // https://bitcointalk.org/index.php?topic=1801595
+			return XCNAddressValidator.ValidateAddress(input);
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
