@@ -97,6 +97,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     }
 
     private void add(AccountAgeWitness accountAgeWitness, boolean storeLocally) {
+        log.debug("add (accountAgeWitnessMap.put) hash=" + accountAgeWitness.getHashAsHex());
         accountAgeWitnessMap.put(accountAgeWitness.getHashAsHex(), accountAgeWitness);
 
         //TODO do we need to store it? its in EntryMap anyway...
@@ -115,13 +116,17 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         }
     }
 
-    public Optional<AccountAgeWitness> findWitnessByHash(String hash) {
+    public Optional<AccountAgeWitness> getWitnessByHash(String hash) {
         return accountAgeWitnessMap.containsKey(hash) ? Optional.of(accountAgeWitnessMap.get(hash)) : Optional.<AccountAgeWitness>empty();
+    }
+
+    public Optional<AccountAgeWitness> getWitnessByPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
+        return getWitnessByHash(getWitnessHashAsHex(paymentAccountPayload));
     }
 
     public long getAccountAge(Offer offer) {
         if (offer.getAccountAgeWitnessHash().isPresent()) {
-            Optional<AccountAgeWitness> accountAgeWitness = findWitnessByHash(offer.getAccountAgeWitnessHash().get());
+            Optional<AccountAgeWitness> accountAgeWitness = getWitnessByHash(offer.getAccountAgeWitnessHash().get());
             if (accountAgeWitness.isPresent()) {
                 return new Date().getTime() - accountAgeWitness.get().getDate();
             } else {
@@ -166,7 +171,10 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
         byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        return Sha256Hash.hash(combined);
+        final byte[] hash = Sha256Hash.hash(combined);
+        log.debug("getWitnessHash paymentAccountPayload={}, salt={}, ageWitnessInputData={}, combined={}, hash={}",
+                paymentAccountPayload.getPaymentDetails(), Utilities.encodeToHex(salt), Utilities.encodeToHex(ageWitnessInputData), Utilities.encodeToHex(combined), Utilities.encodeToHex(hash));
+        return hash;
     }
 
     public long getTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
@@ -174,7 +182,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitnessByHash(getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload()));
+            Optional<AccountAgeWitness> accountAgeWitnessOptional = getWitnessByHash(getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload()));
             AccountAge accountAgeCategory = accountAgeWitnessOptional.isPresent() ?
                     getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
                     AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
@@ -187,6 +195,12 @@ public class AccountAgeWitnessService implements PersistedDataHost {
             final Date jan = new GregorianCalendar(2017, GregorianCalendar.JANUARY, 1).getTime();
             final Date feb = new GregorianCalendar(2017, GregorianCalendar.FEBRUARY, 1).getTime();
 
+            // testing
+           /* 
+           final Date dez = new GregorianCalendar(2016, GregorianCalendar.DECEMBER, 1).getTime();
+            final Date jan = new GregorianCalendar(2016, GregorianCalendar.JANUARY, 1).getTime();
+            final Date feb = new GregorianCalendar(2016, GregorianCalendar.FEBRUARY, 1).getTime();
+*/
             switch (accountAgeCategory) {
                 case TWO_MONTHS_OR_MORE:
                     factor = 1;
@@ -215,7 +229,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
                     }
                     break;
             }
-
+            log.debug("accountAgeCategory={}, factor={}", accountAgeCategory, factor);
             return MathUtils.roundDoubleToLong((double) maxTradeLimit * factor);
         } else {
             return maxTradeLimit;

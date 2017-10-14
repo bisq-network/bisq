@@ -29,9 +29,11 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -60,7 +62,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would 
     // fail the contract verification. 
     @JsonExclude
-    private final Map<String, String> excludeFromJsonDataMap;
+    @Nullable
+    protected final Map<String, String> excludeFromJsonDataMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,11 +100,14 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     }
 
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
-        return PB.PaymentAccountPayload.newBuilder()
+        final PB.PaymentAccountPayload.Builder builder = PB.PaymentAccountPayload.newBuilder()
                 .setPaymentMethodId(paymentMethodId)
                 .setId(id)
-                .setMaxTradePeriod(maxTradePeriod)
-                .putAllExcludeFromJsonData(excludeFromJsonDataMap);
+                .setMaxTradePeriod(maxTradePeriod);
+
+        Optional.ofNullable(excludeFromJsonDataMap).ifPresent(builder::putAllExcludeFromJsonData);
+
+        return builder;
     }
 
 

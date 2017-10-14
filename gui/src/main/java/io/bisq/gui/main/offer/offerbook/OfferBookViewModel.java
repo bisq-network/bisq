@@ -31,6 +31,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -58,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -361,6 +363,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
+    Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
+        return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -455,6 +460,19 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isNodeAddressBanned(Offer offer) {
         return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix());
+    }
+
+    boolean isInsufficientTradeLimit(Offer offer) {
+        Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
+        final long myTradeLimit = accountOptional.isPresent() ? accountAgeWitnessService.getTradeLimit(accountOptional.get(), offer.getCurrencyCode()) : 0L;
+        final long offerMinAmount = offer.getMinAmount().value;
+        log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
+                accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
+                Coin.valueOf(myTradeLimit).toFriendlyString(),
+                Coin.valueOf(offerMinAmount).toFriendlyString());
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                accountOptional.isPresent() &&
+                myTradeLimit < offerMinAmount;
     }
 
     boolean hasSameProtocolVersion(Offer offer) {

@@ -55,12 +55,12 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private final PersistenceProtoResolver persistenceProtoResolver;
 
     @Inject
-    public FiatAccountsDataModel(User user, 
-                                 Preferences preferences, 
+    public FiatAccountsDataModel(User user,
+                                 Preferences preferences,
                                  OpenOfferManager openOfferManager,
-                                 TradeManager tradeManager, 
+                                 TradeManager tradeManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 Stage stage, 
+                                 Stage stage,
                                  PersistenceProtoResolver persistenceProtoResolver) {
         this.user = user;
         this.preferences = preferences;
@@ -115,7 +115,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
             });
         }
-
+       
         accountAgeWitnessService.publishAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
 

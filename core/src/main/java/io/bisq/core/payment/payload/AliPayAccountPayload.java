@@ -24,7 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -49,10 +51,12 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     private AliPayAccountPayload(String paymentMethod,
                                  String id,
                                  long maxTradePeriod,
-                                 String accountNr) {
-        this(paymentMethod,
+                                 String accountNr, 
+                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
                 id,
-                maxTradePeriod);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.accountNr = accountNr;
     }
 
@@ -68,7 +72,8 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
         return new AliPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
-                proto.getAliPayAccountPayload().getAccountNr());
+                proto.getAliPayAccountPayload().getAccountNr(),
+                proto.getExcludeFromJsonDataMap());
     }
 
 

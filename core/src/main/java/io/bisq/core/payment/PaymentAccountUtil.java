@@ -7,10 +7,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,7 +42,9 @@ public class PaymentAccountUtil {
     //TODO not tested with all combinations yet....
     public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
         // check if we have  a matching currency
-        Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+        Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream()
+                .map(TradeCurrency::getCode)
+                .collect(Collectors.toSet());
         boolean matchesCurrencyCode = paymentAccountCurrencyCodes.contains(offer.getCurrencyCode());
         if (!matchesCurrencyCode)
             return false;
@@ -100,5 +100,32 @@ public class PaymentAccountUtil {
         } else {
             return arePaymentMethodsEqual;
         }
+    }
+
+    public static Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer,
+                                                                               Set<PaymentAccount> paymentAccounts,
+                                                                               AccountAgeWitnessService accountAgeWitnessService) {
+        List<PaymentAccount> list = paymentAccounts.stream()
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .sorted((o1, o2) -> {
+                    final Optional<AccountAgeWitness> witness1 = accountAgeWitnessService.getWitnessByPaymentAccountPayload(o1.getPaymentAccountPayload());
+                    log.debug("witness1 isPresent={}, HashAsHex={}, date={}", witness1.isPresent(), witness1.get().getHashAsHex(), new Date(witness1.get().getDate()));
+                    long age1 = witness1.isPresent() ? accountAgeWitnessService.getAccountAge(witness1.get()) : 0;
+
+                    final Optional<AccountAgeWitness> witness2 = accountAgeWitnessService.getWitnessByPaymentAccountPayload(o2.getPaymentAccountPayload());
+                    log.debug("witness2 isPresent={}, HashAsHex={}, date={}", witness2.isPresent(), witness2.get().getHashAsHex(), new Date(witness2.get().getDate()));
+                    long age2 = witness2.isPresent() ? accountAgeWitnessService.getAccountAge(witness2.get()) : 0;
+                    log.debug("AccountName 1 " + o1.getAccountName());
+                    log.debug("AccountName 2 " + o2.getAccountName());
+                    log.debug("age1 " + age1 / TimeUnit.DAYS.toMillis(1));
+                    log.debug("age2 " + age2 / TimeUnit.DAYS.toMillis(1));
+                    log.debug("result " + (new Long(age1).compareTo(age2)));
+                    log.debug(" ");
+                    return new Long(age2).compareTo(age1);
+                }).collect(Collectors.toList());
+        list.stream().forEach(e -> log.error("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), accountAgeWitnessService.getWitnessHashAsHex(e.getPaymentAccountPayload())));
+        final Optional<PaymentAccount> first = list.stream().findFirst();
+        log.debug("first={}", first.get().getAccountName());
+        return first;
     }
 }

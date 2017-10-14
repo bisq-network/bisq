@@ -332,7 +332,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
-      
+
         long maxTradeLimit = accountAgeWitnessService.getTradeLimit(paymentAccount, currencyCode);
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
@@ -345,9 +345,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = new HashMap<>();
-
-        final String hashOfPaymentAccountAsHex = accountAgeWitnessService.getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-        extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, hashOfPaymentAccountAsHex);
+        
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            final String hashOfPaymentAccountAsHex = accountAgeWitnessService.getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, hashOfPaymentAccountAsHex);
+        }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,

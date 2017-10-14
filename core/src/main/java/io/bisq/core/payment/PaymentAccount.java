@@ -58,10 +58,6 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Nullable
     protected TradeCurrency selectedTradeCurrency;
 
-    @Setter
-    @Nullable
-    protected AccountAgeWitness paymentAccountAgeWitness;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

@@ -189,7 +189,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
         if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
-                e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
+                e.getAccountName().equals(paymentAccount.getAccountName()))
+                .findAny()
+                .isPresent()) {
+
+            // TODO apply salt if user provided it
+            // testing
+            // paymentAccount.setSaltAsHex("a25b65f612e49ba6c4ab80a95fc9b723bcff9e7c6bd06f020d4bdffdac060eed");
+            
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
