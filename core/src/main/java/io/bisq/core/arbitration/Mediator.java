@@ -22,7 +22,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @Getter
-public final class Mediator implements StoragePayload {
+public final class Mediator implements ProtectedStoragePayload {
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;

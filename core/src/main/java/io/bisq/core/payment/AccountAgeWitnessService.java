@@ -31,7 +31,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -75,9 +75,9 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof AccountAgeWitness) {
-                    add((AccountAgeWitness) storagePayload, true);
+                final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof AccountAgeWitness) {
+                    add((AccountAgeWitness) protectedStoragePayload, true);
                 }
             }
 
@@ -90,9 +90,9 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
         final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getDataMap().values());
         list.forEach(e -> {
-            final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof AccountAgeWitness)
-                add((AccountAgeWitness) storagePayload, false);
+            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload instanceof AccountAgeWitness)
+                add((AccountAgeWitness) protectedStoragePayload, false);
         });
     }
 

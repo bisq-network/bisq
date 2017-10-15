@@ -121,15 +121,15 @@ public class ArbitratorManager {
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator)
+                if (data.getProtectedStoragePayload() instanceof Arbitrator)
                     updateArbitratorMap();
             }
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator) {
+                if (data.getProtectedStoragePayload() instanceof Arbitrator) {
                     updateArbitratorMap();
-                    final Arbitrator arbitrator = (Arbitrator) data.getStoragePayload();
+                    final Arbitrator arbitrator = (Arbitrator) data.getProtectedStoragePayload();
                     user.removeAcceptedArbitrator(arbitrator);
                     user.removeAcceptedMediator(getMediator(arbitrator));
                 }

@@ -21,7 +21,7 @@ import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -98,7 +98,7 @@ public class RequestDataHandler implements MessageListener {
             // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would 
             // miss that event if we do not load the full set or use some delta handling.
             Set<byte[]> excludedKeys = dataStorage.getMap().entrySet().stream()
-                    .filter(e -> e.getValue().getStoragePayload() instanceof PersistedStoragePayload)
+                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistedStoragePayload)
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
@@ -169,21 +169,21 @@ public class RequestDataHandler implements MessageListener {
                 Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelop;
-                    Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
+                    Map<String, Set<ProtectedStoragePayload>> payloadByClassName = new HashMap<>();
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     dataSet.stream().forEach(e -> {
-                        final StoragePayload storagePayload = e.getStoragePayload();
-                        if (storagePayload == null) {
+                        final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+                        if (protectedStoragePayload == null) {
                             log.warn("StoragePayload was null: {}", networkEnvelop.toString());
                             return;
                         }
 
                         // For logging different data types
-                        String className = storagePayload.getClass().getSimpleName();
+                        String className = protectedStoragePayload.getClass().getSimpleName();
                         if (!payloadByClassName.containsKey(className))
                             payloadByClassName.put(className, new HashSet<>());
 
-                        payloadByClassName.get(className).add(storagePayload);
+                        payloadByClassName.get(className).add(protectedStoragePayload);
                     });
                     // Log different data types
                     StringBuilder sb = new StringBuilder();
@@ -206,7 +206,7 @@ public class RequestDataHandler implements MessageListener {
 
                         List<ProtectedStorageEntry> processDelayedItems = new ArrayList<>();
                         dataSet.stream().forEach(e -> {
-                            if (e.getStoragePayload() instanceof LazyProcessedStoragePayload)
+                            if (e.getProtectedStoragePayload() instanceof LazyProcessedStoragePayload)
                                 processDelayedItems.add(e);
                             else {
                                 // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless

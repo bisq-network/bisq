@@ -21,7 +21,7 @@ import io.bisq.network.p2p.peers.keepalive.messages.Pong;
 import io.bisq.network.p2p.storage.messages.AddDataMessage;
 import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -249,9 +249,9 @@ public class Connection implements MessageListener {
 
     public boolean isCapabilitySupported(NetworkEnvelope networkEnvelop) {
         if (networkEnvelop instanceof AddDataMessage) {
-            final StoragePayload storagePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload();
-            if (storagePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+            final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload();
+            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
                 if (supportedCapabilities != null) {
                     for (int messageCapability : requiredCapabilities) {
@@ -264,13 +264,13 @@ public class Connection implements MessageListener {
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                             "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
                             "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                     return false;
                 } else {
                     log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                             "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                     return false;
                 }
             } else {
@@ -283,7 +283,7 @@ public class Connection implements MessageListener {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isCapabilityRequired(NetworkEnvelope networkEnvelop) {
-        return networkEnvelop instanceof AddDataMessage && (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload() instanceof CapabilityRequiringPayload;
+        return networkEnvelop instanceof AddDataMessage && (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload() instanceof CapabilityRequiringPayload;
     }
 
     public List<Integer> getSupportedCapabilities() {

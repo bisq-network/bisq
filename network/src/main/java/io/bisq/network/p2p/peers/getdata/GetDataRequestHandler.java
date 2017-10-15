@@ -16,7 +16,7 @@ import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,10 +83,10 @@ public class GetDataRequestHandler {
                 : new HashSet<>();
 
         for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getFilteredValues(excludedItems)) {
-            final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
+            final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
-            if (storagePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
                 if (supportedCapabilities != null) {
                     for (int messageCapability : requiredCapabilities) {
@@ -101,11 +101,11 @@ public class GetDataRequestHandler {
                         log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
                                 "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                                 "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                                "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                                "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 } else {
                     log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 }
             } else {
                 doAdd = true;
@@ -115,7 +115,7 @@ public class GetDataRequestHandler {
                 // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores 
                 // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not, 
                 // as we ignore the pubKey and data there in the hashCode method.
-                boolean notContained = lookupSet.add(storagePayload.hashCode());
+                boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
                 if (notContained)
                     filteredDataSet.add(protectedStorageEntry);
             }

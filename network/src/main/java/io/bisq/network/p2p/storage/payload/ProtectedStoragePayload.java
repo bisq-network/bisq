@@ -15,7 +15,7 @@ import java.util.Map;
  * io.bisq.arbitration.Arbitrator
  * io.bisq.trade.offer.OfferPayload
  */
-public interface StoragePayload extends ExpirablePayload {
+public interface ProtectedStoragePayload extends ExpirablePayload {
     /**
      * Used for check if the add or remove operation is permitted.
      * Only data owner can add or remove the data.
@@ -31,7 +31,7 @@ public interface StoragePayload extends ExpirablePayload {
     @Nullable
     Map<String, String> getExtraDataMap();
 
-    static StoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
-        return (StoragePayload) networkProtoResolver.fromProto(storagePayload);
+    static ProtectedStoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+        return (ProtectedStoragePayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

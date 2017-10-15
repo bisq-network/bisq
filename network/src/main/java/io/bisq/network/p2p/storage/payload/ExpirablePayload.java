@@ -9,7 +9,7 @@ import io.bisq.common.proto.persistable.PersistablePayload;
  * <p/>
  * Implementations:
  *
- * @see StoragePayload
+ * @see ProtectedStoragePayload
  * @see MailboxStoragePayload
  */
 // TODO PersistablePayload should not be here. 
