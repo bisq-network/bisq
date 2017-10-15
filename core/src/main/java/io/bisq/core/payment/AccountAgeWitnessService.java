@@ -18,6 +18,7 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.locale.CurrencyUtil;
@@ -33,7 +34,6 @@ import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.bitcoinj.core.Sha256Hash;
 
 import javax.inject.Inject;
 import java.math.BigInteger;
@@ -171,7 +171,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
         byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        final byte[] hash = Sha256Hash.hash(combined);
+        final byte[] hash =  Hash.getSha256Ripemd160hash(combined);
         log.debug("getWitnessHash paymentAccountPayload={}, salt={}, ageWitnessInputData={}, combined={}, hash={}",
                 paymentAccountPayload.getPaymentDetails(), Utilities.encodeToHex(salt), Utilities.encodeToHex(ageWitnessInputData), Utilities.encodeToHex(combined), Utilities.encodeToHex(hash));
         return hash;
@@ -254,7 +254,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
             return false;
 
         final byte[] combined = ArrayUtils.addAll(peersAgeWitnessInputData, peersSalt);
-        byte[] hash = Sha256Hash.hash(combined);
+        byte[] hash = Hash.getSha256Ripemd160hash(combined);
 
         // Check if the hash in the witness data matches the peer's payment account input data + salt
         if (!verifyWitnessHash(witness.getHash(), hash))

@@ -39,14 +39,13 @@ import java.util.concurrent.TimeUnit;
 // With 100 000 entries we get 53.5 MB of data. Old entries will be shipped with the MapEntry resource file, 
 // so only the newly added objects since the last release will not be loaded over the P2P network.
 // TODO Get rid of sigPubKey and replace by hash of sigPubKey. That will reduce the data size to 118 bytes.
-// We can also use RIPEMD160 aand wrap the SHA256 inside RIP(SHA(data)) to get 20 byte hashes and reduce even more.
-// Using EC sigs would be lionger (71 bytes)
+// Using EC signatures would produce longer signatures (71 bytes)
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKey"})
 @Value
 public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
 
-    private final byte[] hash;                      // 32 bytes -> 20
+    private final byte[] hash;                      // Ripemd160(Sha256(data)) hash 20 bytes
     private final byte[] sigPubKey;                 // about 443 bytes -> 20
     private final byte[] signature;                 // 46 bytes -> 
     private final long date;                        // 8 byte

@@ -18,17 +18,16 @@
 package io.bisq.common.crypto;
 
 import com.google.common.base.Charsets;
-import org.bouncycastle.util.encoders.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Utils;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
+@Slf4j
 public class Hash {
-    private static final Logger log = LoggerFactory.getLogger(Hash.class);
 
     /**
      * @param data Data as byte array
@@ -40,7 +39,7 @@ public class Hash {
             digest.update(data, 0, data.length);
             return digest.digest();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Could not create MessageDigest for hash. " + e.getMessage());
+            log.error("Could not create MessageDigest for hash. " + e.toString());
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -55,19 +54,18 @@ public class Hash {
     }
 
     /**
-     * @param message UTF-8 encoded message
-     * @return Hex string of hash of data
-     */
-    public static String getHashAsHex(String message) {
-        return Hex.toHexString(message.getBytes(Charsets.UTF_8));
-    }
-
-    /**
      * @param data data as Integer
      * @return Hash of data
      */
     public static byte[] getHash(Integer data) {
         return getHash(ByteBuffer.allocate(4).putInt(data).array());
+    }
+
+    /**
+     * Calculates RIPEMD160(SHA256(input)).
+     */
+    public static byte[] getSha256Ripemd160hash(byte[] data) {
+        return Utils.sha256hash160(data);
     }
 
 }

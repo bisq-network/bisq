@@ -1,10 +1,10 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.Sig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.bitcoinj.core.Sha256Hash;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,7 +85,7 @@ public class AccountAgeWitnessServiceTest {
         byte[] ageWitnessInputData = "test".getBytes(Charset.forName("UTF-8"));
         byte[] salt = "salt".getBytes(Charset.forName("UTF-8"));
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        byte[] hash = Sha256Hash.hash(combined);
+        byte[] hash = Hash.getSha256Ripemd160hash(combined);
         byte[] signature = Sig.sign(keypair.getPrivate(), hash);
         assertTrue(service.verifySignature(publicKey, hash, signature));
         assertFalse(service.verifySignature(publicKey, new byte[0], new byte[0]));
