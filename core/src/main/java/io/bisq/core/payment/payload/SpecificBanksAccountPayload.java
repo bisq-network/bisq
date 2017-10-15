@@ -24,8 +24,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -57,7 +61,8 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String holderTaxId,
                                         String bankId,
                                         String email,
-                                        ArrayList<String> acceptedBanks) {
+                                        ArrayList<String> acceptedBanks,
+                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -69,7 +74,9 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 accountType,
                 holderTaxId,
                 bankId,
-                email);
+                email,
+                excludeFromJsonDataMap);
+        
         this.acceptedBanks = acceptedBanks;
     }
 
@@ -108,8 +115,8 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
                 bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
-                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
-        );
+                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

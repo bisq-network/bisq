@@ -25,7 +25,9 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -40,8 +42,15 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
 
     }
 
-    protected CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
-        this(paymentMethodName, id, maxTradePeriod);
+    protected CountryBasedPaymentAccountPayload(String paymentMethodName,
+                                                String id,
+                                                long maxTradePeriod,
+                                                String countryCode,
+                                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName, 
+                id, 
+                maxTradePeriod, 
+                excludeFromJsonDataMap);
 
         this.countryCode = countryCode;
     }
@@ -53,7 +62,6 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
         return super.getPaymentAccountPayloadBuilder()
                 .setCountryBasedPaymentAccountPayload(builder);
     }
-
 
     abstract public String getPaymentDetails();
 

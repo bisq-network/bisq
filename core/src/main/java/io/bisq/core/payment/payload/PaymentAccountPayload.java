@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
 // If a field gets added it need to be be annotated with @JsonExclude (excluded from contract). 
@@ -76,7 +77,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
         this(paymentMethodId,
                 id,
                 maxTradePeriod,
-                new HashMap<>());
+                null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,11 +87,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     protected PaymentAccountPayload(String paymentMethodId,
                                     String id,
                                     long maxTradePeriod,
-                                    Map<String, String> excludeFromJsonDataMap) {
+                                    @Nullable Map<String, String> excludeFromJsonDataMapParam) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
-        this.excludeFromJsonDataMap = excludeFromJsonDataMap;
+        this.excludeFromJsonDataMap = excludeFromJsonDataMapParam == null ? new HashMap<>() : excludeFromJsonDataMapParam;
 
         // If not set (old versions) we set by default a random 256 bit salt. 
         // User can set salt as well by hex string.
@@ -120,11 +121,13 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     abstract public String getPaymentDetailsForTradePopup();
 
     public byte[] getSalt() {
+        checkNotNull(excludeFromJsonDataMap, "excludeFromJsonDataMap must not be null");
         checkArgument(excludeFromJsonDataMap.containsKey(SALT), "Salt must have been set in excludeFromJsonDataMap.");
         return Utilities.decodeFromHex(excludeFromJsonDataMap.get(SALT));
     }
 
     public void setSalt(byte[] salt) {
+        checkNotNull(excludeFromJsonDataMap, "excludeFromJsonDataMap must not be null");
         excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
     }
 

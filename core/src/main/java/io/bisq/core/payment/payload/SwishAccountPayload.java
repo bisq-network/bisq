@@ -24,8 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -48,9 +52,12 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     private SwishAccountPayload(String paymentMethod, String id,
                                 long maxTradePeriod,
                                 String mobileNr,
-                                String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                String holderName,
+                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.mobileNr = mobileNr;
         this.holderName = holderName;
     }
@@ -69,7 +76,8 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 proto.getSwishAccountPayload().getMobileNr(),
-                proto.getSwishAccountPayload().getHolderName());
+                proto.getSwishAccountPayload().getHolderName(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

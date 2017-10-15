@@ -27,11 +27,11 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
@@ -71,8 +71,14 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                                String iban,
                                String bic,
                                String email,
-                               List<String> acceptedCountryCodes) {
-        super(paymentMethodName, id, maxTradePeriod, countryCode);
+                               List<String> acceptedCountryCodes,
+                               @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName,
+                id,
+                maxTradePeriod,
+                countryCode,
+                excludeFromJsonDataMap);
+
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -108,7 +114,8 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 sepaAccountPayloadPB.getIban(),
                 sepaAccountPayloadPB.getBic(),
                 sepaAccountPayloadPB.getEmail(),
-                new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()));
+                new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

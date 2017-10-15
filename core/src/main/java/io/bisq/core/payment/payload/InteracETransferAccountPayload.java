@@ -25,8 +25,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -54,9 +58,12 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                                            String email,
                                            String holderName,
                                            String question,
-                                           String answer) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                           String answer,
+                                           @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.email = email;
         this.holderName = holderName;
         this.question = question;
@@ -81,7 +88,8 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 proto.getInteracETransferAccountPayload().getEmail(),
                 proto.getInteracETransferAccountPayload().getHolderName(),
                 proto.getInteracETransferAccountPayload().getQuestion(),
-                proto.getInteracETransferAccountPayload().getAnswer());
+                proto.getInteracETransferAccountPayload().getAnswer(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

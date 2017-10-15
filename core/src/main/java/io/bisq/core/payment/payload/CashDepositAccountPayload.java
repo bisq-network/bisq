@@ -27,9 +27,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -70,15 +73,20 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       long maxTradePeriod,
                                       String countryCode,
                                       String holderName,
-                                      @SuppressWarnings("NullableProblems") String holderEmail,
-                                      @SuppressWarnings("NullableProblems") String bankName,
-                                      @SuppressWarnings("NullableProblems") String branchId,
-                                      @SuppressWarnings("NullableProblems") String accountNr,
-                                      @SuppressWarnings("NullableProblems") String accountType,
-                                      @SuppressWarnings("NullableProblems") String requirements,
-                                      @SuppressWarnings("NullableProblems") String holderTaxId,
-                                      @SuppressWarnings("NullableProblems") String bankId) {
-        super(paymentMethodName, id, maxTradePeriod, countryCode);
+                                      @Nullable String holderEmail,
+                                      @Nullable String bankName,
+                                      @Nullable String branchId,
+                                      @Nullable String accountNr,
+                                      @Nullable String accountType,
+                                      @Nullable String requirements,
+                                      @Nullable String holderTaxId,
+                                      @Nullable String bankId,
+                                      @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName, id,
+                maxTradePeriod,
+                countryCode,
+                excludeFromJsonDataMap);
+        
         this.holderName = holderName;
         this.holderEmail = holderEmail;
         this.bankName = bankName;
@@ -127,7 +135,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 cashDepositAccountPayload.getAccountType().isEmpty() ? null : cashDepositAccountPayload.getAccountType(),
                 cashDepositAccountPayload.getRequirements().isEmpty() ? null : cashDepositAccountPayload.getRequirements(),
                 cashDepositAccountPayload.getHolderTaxId().isEmpty() ? null : cashDepositAccountPayload.getHolderTaxId(),
-                cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId());
+                cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

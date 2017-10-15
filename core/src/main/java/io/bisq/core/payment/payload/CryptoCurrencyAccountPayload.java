@@ -24,6 +24,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -45,10 +50,12 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     private CryptoCurrencyAccountPayload(String paymentMethod,
                                          String id,
                                          long maxTradePeriod,
-                                         String address) {
-        this(paymentMethod,
+                                         String address,
+                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
                 id,
-                maxTradePeriod);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.address = address;
     }
 
@@ -64,7 +71,8 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
-                proto.getCryptoCurrencyAccountPayload().getAddress());
+                proto.getCryptoCurrencyAccountPayload().getAddress(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

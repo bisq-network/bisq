@@ -78,6 +78,7 @@ import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWin
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.CloseConnectionReason;
@@ -1185,10 +1186,18 @@ public class MainViewModel implements ViewModel {
             okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
             okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
             user.addPaymentAccount(okPayAccount);
-            UserThread.runAfter(() -> {
+
+            if (p2PService.isBootstrapped()) {
                 accountAgeWitnessService.publishAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
-            }, 1);
-            
+            } else {
+                p2PService.addP2PServiceListener(new BootstrapListener() {
+                    @Override
+                    public void onBootstrapComplete() {
+                        accountAgeWitnessService.publishAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                    }
+                });
+            }
+
             CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
             cryptoCurrencyAccount.init();
             cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev

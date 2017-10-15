@@ -22,6 +22,11 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -49,7 +54,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                    String accountType,
                                    String holderTaxId,
                                    String bankId,
-                                   String email) {
+                                   String email,
+                                   @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -61,7 +67,9 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 accountType,
                 holderTaxId,
                 bankId,
-                email);
+                email,
+                excludeFromJsonDataMap);
+
     }
 
     @Override
@@ -94,7 +102,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail());
+                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

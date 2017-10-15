@@ -25,8 +25,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -49,9 +53,12 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     private USPostalMoneyOrderAccountPayload(String paymentMethod, String id,
                                              long maxTradePeriod,
                                              String postalAddress,
-                                             String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                             String holderName,
+                                             @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.postalAddress = postalAddress;
         this.holderName = holderName;
     }
@@ -70,7 +77,8 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
-                proto.getUSPostalMoneyOrderAccountPayload().getHolderName());
+                proto.getUSPostalMoneyOrderAccountPayload().getHolderName(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

@@ -72,7 +72,7 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getMaxTradePeriod(),
                 proto.getOKPayAccountPayload().getAccountNr(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? new HashMap<>() : proto.getExcludeFromJsonDataMap());
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

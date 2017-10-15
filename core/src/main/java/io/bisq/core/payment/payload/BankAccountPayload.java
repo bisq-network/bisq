@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -72,8 +73,14 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                                  String accountType,
                                  String holderTaxId,
                                  String bankId,
-                                 String email) {
-        super(paymentMethodName, id, maxTradePeriod, countryCode);
+                                 String email,
+                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName,
+                id,
+                maxTradePeriod,
+                countryCode,
+                excludeFromJsonDataMap);
+
         this.holderName = holderName;
         this.bankName = bankName;
         this.branchId = branchId;
