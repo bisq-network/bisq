@@ -22,7 +22,7 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKey"})
 @Value
-public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistedStoragePayload {
+public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistableNetworkPayload {
 
     private final byte[] hash;                      // Ripemd160(Sha256(data)) hash 20 bytes
     private final byte[] sigPubKey;                 // about 443 bytes -> 20

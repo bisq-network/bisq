@@ -4,8 +4,7 @@ import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
 
 /**
- * Marker interface for payload which gets persisted.
- * Used for TradeStatistics.
+ * Marker interface for NetworkPayload which gets persisted in EntryMap.
  */
-public interface PersistedStoragePayload extends NetworkPayload, PersistablePayload {
+public interface PersistableNetworkPayload extends NetworkPayload, PersistablePayload {
 }

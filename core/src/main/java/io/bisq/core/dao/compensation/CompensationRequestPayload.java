@@ -25,7 +25,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Data
 // TODO There will be another object for PersistableEnvelope
-public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
+public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistableNetworkPayload, PersistableEnvelope {
     private final String uid;
     private final String name;
     private final String title;

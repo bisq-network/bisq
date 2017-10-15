@@ -11,7 +11,7 @@ import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKeyBytes", "signaturePubKey"})
 @Value
-public final class TradeStatistics implements LazyProcessedStoragePayload, PersistedStoragePayload {
+public final class TradeStatistics implements LazyProcessedStoragePayload, PersistableNetworkPayload {
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
     private final String counterCurrency;

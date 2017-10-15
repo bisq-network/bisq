@@ -19,7 +19,7 @@ import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
@@ -98,7 +98,7 @@ public class RequestDataHandler implements MessageListener {
             // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would 
             // miss that event if we do not load the full set or use some delta handling.
             Set<byte[]> excludedKeys = dataStorage.getMap().entrySet().stream()
-                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistedStoragePayload)
+                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistableNetworkPayload)
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
