@@ -792,7 +792,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedData(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
+                ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
                 return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
@@ -824,7 +824,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedData(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
+                ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
                 return p2PDataStorage.remove(protectedStorageEntry, networkNode.getNodeAddress(), isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");

@@ -425,7 +425,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    public ProtectedStorageEntry getProtectedData(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
+    public ProtectedStorageEntry getProtectedStorageEntry(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfData = getHashAsByteArray(storagePayload);
         int sequenceNumber;
@@ -589,7 +589,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     storagePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(storagePayload.getOwnerPubKey().getEncoded(), true);
 
-            log.warn("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
+            log.warn("PublicKey of payload data and ProtectedStorageEntry are not matching. protectedStorageEntry=" + res1 +
                     "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
         }
         return result;

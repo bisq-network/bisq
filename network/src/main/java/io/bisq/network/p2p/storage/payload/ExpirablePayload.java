@@ -12,6 +12,7 @@ import io.bisq.common.proto.persistable.PersistablePayload;
  * @see StoragePayload
  * @see MailboxStoragePayload
  */
+// TODO PersistablePayload should not be here. 
 public interface ExpirablePayload extends NetworkPayload, PersistablePayload {
     /**
      * @return Time to live in milli seconds

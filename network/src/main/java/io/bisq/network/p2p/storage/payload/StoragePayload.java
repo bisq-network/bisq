@@ -19,7 +19,7 @@ public interface StoragePayload extends ExpirablePayload {
     /**
      * Used for check if the add or remove operation is permitted.
      * Only data owner can add or remove the data.
-     * OwnerPubKey has to be equal to the ownerPubKey of the ProtectedData
+     * OwnerPubKey has to be equal to the ownerPubKey of the ProtectedStorageEntry
      *
      * @return The public key of the data owner.
      */
