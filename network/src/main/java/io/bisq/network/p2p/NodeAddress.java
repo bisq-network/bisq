@@ -65,7 +65,7 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Re
     // We use just a few chars from the full address to blur the potential receiver for sent network_messages
     public byte[] getAddressPrefixHash() {
         if (addressPrefixHash == null)
-            addressPrefixHash = Hash.getHash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
+            addressPrefixHash = Hash.getSha256Hash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
         return addressPrefixHash;
     }
 

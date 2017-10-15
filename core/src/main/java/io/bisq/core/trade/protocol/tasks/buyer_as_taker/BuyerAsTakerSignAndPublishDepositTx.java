@@ -59,7 +59,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
                     + "\n------------------------------------------------------------\n");
 
 
-            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             List<RawTransactionInput> buyerInputs = checkNotNull(processModel.getRawTransactionInputs(), "buyerInputs must not be null");
             BtcWalletService walletService = processModel.getBtcWalletService();

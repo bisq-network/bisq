@@ -58,7 +58,7 @@ public class EncryptionService {
     public DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
         SecretKey secretKey = decryptSecretKey(sealedAndSigned.getEncryptedSecretKey(), privateKey);
         boolean isValid = Sig.verify(sealedAndSigned.getSigPublicKey(),
-                Hash.getHash(sealedAndSigned.getEncryptedPayloadWithHmac()),
+                Hash.getSha256Hash(sealedAndSigned.getEncryptedPayloadWithHmac()),
                 sealedAndSigned.getSignature());
         if (!isValid)
             throw new CryptoException("Signature verification failed.");
@@ -105,7 +105,7 @@ public class EncryptionService {
         byte[] encryptedPayloadWithHmac = encryptPayloadWithHmac(payload, secretKey);
 
         // sign hash of encryptedPayloadWithHmac
-        byte[] hash = Hash.getHash(encryptedPayloadWithHmac);
+        byte[] hash = Hash.getSha256Hash(encryptedPayloadWithHmac);
         byte[] signature = Sig.sign(signatureKeyPair.getPrivate(), hash);
 
         // Pack all together
@@ -118,7 +118,7 @@ public class EncryptionService {
      * @return Hash of data
      */
     public static byte[] getHash(NetworkPayload data) {
-        return Hash.getHash(data.toProtoMessage().toByteArray());
+        return Hash.getSha256Hash(data.toProtoMessage().toByteArray());
     }
 }
 

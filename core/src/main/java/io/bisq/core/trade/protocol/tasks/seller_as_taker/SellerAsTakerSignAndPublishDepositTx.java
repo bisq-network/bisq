@@ -57,7 +57,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
 
             List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");

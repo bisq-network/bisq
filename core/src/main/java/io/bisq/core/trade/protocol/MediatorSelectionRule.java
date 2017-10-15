@@ -40,7 +40,7 @@ public class MediatorSelectionRule {
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
-        int index = Math.abs(Arrays.hashCode(Hash.getHash(offer.getId().getBytes()))) % candidates.size();
+        int index = Math.abs(Arrays.hashCode(Hash.getSha256Hash(offer.getId().getBytes()))) % candidates.size();
         NodeAddress selectedMediator = candidates.get(index);
         log.debug("selectedMediator " + selectedMediator);
         return selectedMediator;

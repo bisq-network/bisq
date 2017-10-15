@@ -33,7 +33,7 @@ public class Hash {
      * @param data Data as byte array
      * @return Hash of data
      */
-    public static byte[] getHash(byte[] data) {
+    public static byte[] getSha256Hash(byte[] data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256", "BC");
             digest.update(data, 0, data.length);
@@ -49,16 +49,16 @@ public class Hash {
      * @param message UTF-8 encoded message
      * @return Hash of data
      */
-    public static byte[] getHash(String message) {
-        return getHash(message.getBytes(Charsets.UTF_8));
+    public static byte[] getSha256Hash(String message) {
+        return getSha256Hash(message.getBytes(Charsets.UTF_8));
     }
 
     /**
      * @param data data as Integer
      * @return Hash of data
      */
-    public static byte[] getHash(Integer data) {
-        return getHash(ByteBuffer.allocate(4).putInt(data).array());
+    public static byte[] getSha256Hash(Integer data) {
+        return getSha256Hash(ByteBuffer.allocate(4).putInt(data).array());
     }
 
     /**
