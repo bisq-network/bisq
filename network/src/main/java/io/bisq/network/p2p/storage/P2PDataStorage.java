@@ -63,8 +63,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private Timer removeExpiredEntriesTimer;
     private final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
-    private final Storage<PersistedEntryMap> persistedEntryMapStorage;
-    private PersistedEntryMap persistedEntryMap;
+    private final Storage<PersistableEntryMap> persistedEntryMapStorage;
+    private PersistableEntryMap persistableEntryMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,10 +121,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             log.debug(storageFileName + " file exists already.");
         }
         // takes about 4 seconds with PB! :-(
-        persistedEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
+        persistableEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
 
-        if (persistedEntryMap != null) {
-            map.putAll(persistedEntryMap.getMap());
+        if (persistableEntryMap != null) {
+            map.putAll(persistableEntryMap.getMap());
             log.info("persistedEntryMap size=" + map.size());
 
             // In case another object is already listening...
@@ -132,7 +132,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 map.values().stream()
                         .forEach(protectedStorageEntry -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry)));
         } else {
-            persistedEntryMap = new PersistedEntryMap();
+            persistableEntryMap = new PersistableEntryMap();
         }
     }
 
@@ -296,8 +296,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
                 // If we get a PersistedStoragePayload we save to disc
                 if (protectedStoragePayload instanceof PersistableNetworkPayload) {
-                    persistedEntryMap.put(hashOfPayload, protectedStorageEntry);
-                    persistedEntryMapStorage.queueUpForSave(persistedEntryMap, 2000);
+                    persistableEntryMap.put(hashOfPayload, protectedStorageEntry);
+                    persistedEntryMapStorage.queueUpForSave(persistableEntryMap, 2000);
                 }
 
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
