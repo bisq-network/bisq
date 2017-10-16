@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,10 +91,8 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
         return getPaymentDetails();
     }
 
-    // TODO test
     @Override
     public byte[] getAgeWitnessInputData() {
-        throw new UnsupportedOperationException("Must nto be called on CryptoCurrencyAccountPayload");
-       // return paymentMethodId.getBytes(Charset.forName("UTF-8"));
+        return super.getAgeWitnessInputData(address.getBytes(Charset.forName("UTF-8")));
     }
 }

@@ -46,29 +46,21 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
 
     public AccountAgeWitness(byte[] hash,
                              byte[] sigPubKeyHash,
-                             byte[] signature) {
+                             byte[] signature,
+                             long date) {
+        this.hash = hash;
+        this.sigPubKeyHash = sigPubKeyHash;
+        this.signature = signature;
+        this.date = date;
 
-        this(hash,
-                sigPubKeyHash,
-                signature,
-                new Date().getTime());
+        log.info("new AccountAgeWitness: hash={}, date={} ", Utilities.bytesAsHexString(hash), new Date(date));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AccountAgeWitness(byte[] hash,
-                              byte[] sigPubKeyHash,
-                              byte[] signature,
-                              long date) {
-        this.hash = hash;
-        this.sigPubKeyHash = sigPubKeyHash;
-        this.signature = signature;
-        this.date = date/* - TimeUnit.DAYS.toMillis(90)*/;
-
-        log.info("new AccountAgeWitness: hash={}, date={} ", Utilities.bytesAsHexString(hash), new Date(date));
-    }
 
     @Override
     public PB.PersistableNetworkPayload toProtoMessage() {

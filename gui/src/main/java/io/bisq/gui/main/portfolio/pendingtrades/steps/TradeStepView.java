@@ -175,7 +175,7 @@ public abstract class TradeStepView extends AnchorPane {
         else
             txIdTextField.cleanup();
 
-        PaymentMethodForm.addLimitations(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountPayload(),
+        PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountPayload(),
                 model.getDateForOpenDispute());
 
         timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;

@@ -96,13 +96,19 @@ public class AccountAgeWitnessService {
     }
 
     public long getAccountAge(Offer offer) {
-        if (offer.getAccountAgeWitnessHash().isPresent()) {
-            Optional<AccountAgeWitness> accountAgeWitness = getWitnessByHash(offer.getAccountAgeWitnessHash().get());
-            if (accountAgeWitness.isPresent()) {
-                return new Date().getTime() - accountAgeWitness.get().getDate();
-            } else {
-                return 0L;
-            }
+        if (offer.getAccountAgeWitnessHash().isPresent())
+            return getAccountAge(getWitnessByHash(offer.getAccountAgeWitnessHash().get()));
+        else
+            return 0L;
+    }
+
+    public long getAccountAge(PaymentAccountPayload paymentAccountPayload) {
+        return getAccountAge(getWitnessByPaymentAccountPayload(paymentAccountPayload));
+    }
+
+    private long getAccountAge(Optional<AccountAgeWitness> accountAgeWitnessOptional) {
+        if (accountAgeWitnessOptional.isPresent()) {
+            return new Date().getTime() - accountAgeWitnessOptional.get().getDate();
         } else {
             return 0L;
         }
@@ -126,9 +132,16 @@ public class AccountAgeWitnessService {
         byte[] hash = getWitnessHash(paymentAccountPayload);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
         byte[] sigPubKeyHash = Hash.getSha256Ripemd160hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
+        long now = new Date().getTime();
+
+        //TODO
+        // test
+        //now -= TimeUnit.DAYS.toMillis(75);
+
         return new AccountAgeWitness(hash,
                 sigPubKeyHash,
-                signature);
+                signature,
+                now);
     }
 
     public byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload) {
@@ -140,7 +153,6 @@ public class AccountAgeWitnessService {
     }
 
     private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
-        salt = new byte[]{};
         byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
         final byte[] hash = Hash.getSha256Ripemd160hash(combined);
@@ -158,7 +170,9 @@ public class AccountAgeWitnessService {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            Optional<AccountAgeWitness> accountAgeWitnessOptional = getWitnessByHash(getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload()));
+            Optional<AccountAgeWitness> accountAgeWitnessOptional = paymentAccount.getAccountName() != null ?
+                    getWitnessByHash(getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload())) :
+                    Optional.empty();
             AccountAge accountAgeCategory = accountAgeWitnessOptional.isPresent() ?
                     getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
                     AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
@@ -205,7 +219,7 @@ public class AccountAgeWitnessService {
                     }
                     break;
             }
-            log.debug("accountAgeCategory={}, factor={}", accountAgeCategory, factor);
+            log.info("accountAgeCategory={}, factor={}", accountAgeCategory, factor);
             return MathUtils.roundDoubleToLong((double) maxTradeLimit * factor);
         } else {
             return maxTradeLimit;

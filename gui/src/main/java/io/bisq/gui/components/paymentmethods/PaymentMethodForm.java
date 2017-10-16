@@ -21,6 +21,8 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
@@ -34,13 +36,17 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
+@Slf4j
 public abstract class PaymentMethodForm {
     protected final PaymentAccount paymentAccount;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;
     protected int gridRow;
@@ -52,8 +58,9 @@ public abstract class PaymentMethodForm {
     protected CheckBox useCustomAccountNameCheckBox;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
-    public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.inputValidator = inputValidator;
         this.gridPane = gridPane;
         this.gridRow = gridRow;
@@ -104,9 +111,9 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    public static void addLimitations(GridPane gridPane, int gridRow,
-                                      @Nullable PaymentAccountPayload paymentAccountPayload,
-                                      String dateFromBlocks) {
+    public static void addOpenTradeDuration(GridPane gridPane, int gridRow,
+                                            @Nullable PaymentAccountPayload paymentAccountPayload,
+                                            String dateFromBlocks) {
         if (paymentAccountPayload != null) {
             long hours = paymentAccountPayload.getMaxTradePeriod() / 3600_000;
             addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
@@ -137,12 +144,15 @@ public abstract class PaymentMethodForm {
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
-            tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+            tradeCurrency = paymentAccount instanceof CryptoCurrencyAccount ?
+                    CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
+                    CurrencyUtil.getDefaultTradeCurrency();
 
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"),
-                Res.get("payment.maxPeriodAndLimit",
-                        getTimeText(hours),
-                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(tradeCurrency.getCode()))));
+        final long accountAge = paymentAccount.getAccountName() != null ? accountAgeWitnessService.getAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
+                getTimeText(hours),
+                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+                formatter.formatAccountAge(accountAge)));
     }
 
     abstract protected void autoFillNameTextField();
