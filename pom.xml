@@ -1,40 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>parent</artifactId>
-        <groupId>io.bisq</groupId>
-        <version>0.5.3</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>api</artifactId>
+    <groupId>io.bisq</groupId>
+    <artifactId>bisq-api</artifactId>
+    <packaging>pom</packaging>
+    <version>0.1</version>
+    <description>API for Bisq - The decentralized exchange network</description>
+    <url>https://bisq.io</url>
+
+    <organization>
+        <name>bisq.io</name>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU AFFERO GENERAL PUBLIC LICENSE</name>
+            <url>http://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/mrosseel/bisq-api/issues</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/mrosseel/bisq-api</connection>
+        <developerConnection>scm:git:https://github.com/mrosseel/bisq-api</developerConnection>
+        <url>scm:git:https://github.com/github.com/mrosseel/bisq-api</url>
+    </scm>
+
 
     <properties>
         <dropwizard.version>1.1.4</dropwizard.version>
+        <bisq.version>0.5.3</bisq.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>sonatype-oss-snapshot</id>
+            <snapshots/>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
     <build>
-
-        <!--<resources>-->
-        <!--<resource>-->
-        <!--<filtering>false</filtering>-->
-        <!--<directory>${basedir}/src/main/java</directory>-->
-        <!--<includes>-->
-        <!--<include>**/*.fxml</include>-->
-        <!--<include>**/*.css</include>-->
-        <!--</includes>-->
-        <!--</resource>-->
-        <!--<resource>-->
-        <!--<filtering>false</filtering>-->
-        <!--<directory>${basedir}/src/main/resources</directory>-->
-        <!--<includes>-->
-        <!--<include>**/*.*</include>-->
-        <!--</includes>-->
-        <!--</resource>-->
-        <!--</resources>-->
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -43,23 +60,6 @@
                 <configuration>
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
-                    <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bisq.seednode.SeedNodeMain</mainClass>
-                        </transformer>
-                    </transformers>
-                    <filters>
-                        <filter>
-                            <!-- exclude signatures, the bundling process breaks them for some reason -->
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*.SF</exclude>
-                                <exclude>META-INF/*.DSA</exclude>
-                                <exclude>META-INF/*.RSA</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
                 </configuration>
                 <executions>
                     <execution>
@@ -70,7 +70,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>SeedNode</finalName>
+                            <finalName>bisq-api</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -81,9 +81,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>core</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>com.github.bisq-network</groupId>
+            <artifactId>bisq-exchange</artifactId>
+            <version>Development-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
