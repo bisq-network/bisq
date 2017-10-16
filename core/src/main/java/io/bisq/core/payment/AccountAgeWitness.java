@@ -66,6 +66,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
         this.sigPubKeyHash = sigPubKeyHash;
         this.signature = signature;
         this.date = date/* - TimeUnit.DAYS.toMillis(90)*/;
+
+        log.info("new AccountAgeWitness: hash={}, date={} ", Utilities.bytesAsHexString(hash), new Date(date));
     }
 
     @Override

@@ -32,6 +32,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -70,6 +71,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final FilterManager filterManager;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     private Coin txFeeFromFeeService;
@@ -107,7 +109,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                        User user, FeeService feeService, FilterManager filterManager,
                        Preferences preferences, PriceFeedService priceFeedService,
-                       BSFormatter formatter) {
+                       AccountAgeWitnessService accountAgeWitnessService, BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -116,6 +118,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
@@ -356,6 +359,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 bsqWalletService.getAvailableBalance() != null &&
                 !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
+
+    long getMaxTradeLimit() {
+        if (paymentAccount != null)
+            return accountAgeWitnessService.getTradeLimit(paymentAccount, getCurrencyCode());
+        else
+            return 0;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
