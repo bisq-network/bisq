@@ -72,7 +72,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         currencyComboBox.setItems(FXCollections.observableArrayList(new FiatCurrency("USD"), new FiatCurrency("EUR")));
         currencyComboBox.getSelectionModel().select(0);
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -98,7 +98,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

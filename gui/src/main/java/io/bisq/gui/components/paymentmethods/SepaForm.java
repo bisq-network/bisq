@@ -158,7 +158,7 @@ public class SepaForm extends PaymentMethodForm {
 
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
@@ -350,6 +350,6 @@ public class SepaForm extends PaymentMethodForm {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);
         }
-        addAllowedPeriod();
+        addLimitations();
     }
 }

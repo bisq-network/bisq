@@ -246,7 +246,7 @@ abstract class BankForm extends PaymentMethodForm {
             addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
                     bankAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override
@@ -492,7 +492,7 @@ abstract class BankForm extends PaymentMethodForm {
             }
         });
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         updateFromInputs();

@@ -269,7 +269,7 @@ public class CashDepositForm extends PaymentMethodForm {
             textArea.setText(requirements);
         }
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override
@@ -516,7 +516,7 @@ public class CashDepositForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         updateFromInputs();

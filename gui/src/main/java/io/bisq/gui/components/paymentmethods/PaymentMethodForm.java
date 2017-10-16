@@ -104,9 +104,9 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    public static void addAllowedPeriod(GridPane gridPane, int gridRow,
-                                        @Nullable PaymentAccountPayload paymentAccountPayload,
-                                        String dateFromBlocks) {
+    public static void addLimitations(GridPane gridPane, int gridRow,
+                                      @Nullable PaymentAccountPayload paymentAccountPayload,
+                                      String dateFromBlocks) {
         if (paymentAccountPayload != null) {
             long hours = paymentAccountPayload.getMaxTradePeriod() / 3600_000;
             addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
@@ -126,7 +126,7 @@ public abstract class PaymentMethodForm {
         return time;
     }
 
-    protected void addAllowedPeriod() {
+    protected void addLimitations() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
