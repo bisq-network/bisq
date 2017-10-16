@@ -21,11 +21,13 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple3;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.beans.property.BooleanProperty;
@@ -148,11 +150,34 @@ public abstract class PaymentMethodForm {
                     CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
                     CurrencyUtil.getDefaultTradeCurrency();
 
-        final long accountAge = paymentAccount.getAccountName() != null ? accountAgeWitnessService.getAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
+        final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
+        final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
                 getTimeText(hours),
                 formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                 formatter.formatAccountAge(accountAge)));
+
+        if (isAddAccountScreen) {
+            InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
+            inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+            inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.isEmpty()) {
+                    try {
+                        // test if input is hex
+                        Utilities.decodeFromHex(newValue);
+                        
+                        paymentAccount.setSaltAsHex(newValue);
+                    } catch (Throwable t) {
+                        new Popup().warning(Res.get("payment.error.noHexSalt")).show();
+                        inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+                        log.warn(t.toString());
+                    }
+                }
+            });
+        } else {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt", Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
+                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+        }
     }
 
     abstract protected void autoFillNameTextField();
