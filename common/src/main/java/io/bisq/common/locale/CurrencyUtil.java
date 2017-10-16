@@ -95,7 +95,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("DEC", "DECENT"));
+        result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));

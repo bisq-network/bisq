@@ -22,16 +22,12 @@ import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.proto.persistable.PersistedDataHost;
-import io.bisq.common.storage.Storage;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.network.p2p.P2PService;
-import io.bisq.network.p2p.storage.HashMapChangedListener;
-import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -42,7 +38,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class AccountAgeWitnessService implements PersistedDataHost {
+public class AccountAgeWitnessService {
 
     public enum AccountAge {
         LESS_ONE_MONTH,
@@ -51,73 +47,48 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     }
 
     private final KeyRing keyRing;
-    private final Storage<AccountAgeWitnessMap> storage;
     private final P2PService p2PService;
-    private final Map<String, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
     @Inject
-    public AccountAgeWitnessService(KeyRing keyRing, Storage<AccountAgeWitnessMap> storage, P2PService p2PService) {
+    public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService) {
         this.keyRing = keyRing;
-        this.storage = storage;
         this.p2PService = p2PService;
     }
 
-    @Override
-    public void readPersisted() {
-        //TODO remove?
-        AccountAgeWitnessMap persisted = storage.initAndGetPersistedWithFileName("AccountAgeWitnessMap");
-        //if (persisted != null)
-        //    accountAgeWitnessMap = persisted.getMap();
-        // else
-    }
-
     public void onAllServicesInitialized() {
-        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
-                if (protectedStoragePayload instanceof AccountAgeWitness) {
-                    add((AccountAgeWitness) protectedStoragePayload, true);
-                }
-            }
-
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                // We don't remove items
-            }
+        p2PService.getP2PDataStorage().addPersistableNetworkPayloadMapListener(payload -> {
+            if (payload instanceof AccountAgeWitness)
+                addToMap((AccountAgeWitness) payload);
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
-        final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getDataMap().values());
-        list.forEach(e -> {
-            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-            if (protectedStoragePayload instanceof AccountAgeWitness)
-                add((AccountAgeWitness) protectedStoragePayload, false);
+        p2PService.getP2PDataStorage().getPersistableNetworkPayloadCollection().getMap().entrySet().forEach(e -> {
+            if (e.getValue() instanceof AccountAgeWitness)
+                addToMap((AccountAgeWitness) e.getValue());
         });
     }
 
-    private void add(AccountAgeWitness accountAgeWitness, boolean storeLocally) {
-        log.debug("add (accountAgeWitnessMap.put) hash=" + accountAgeWitness.getHashAsHex());
-        accountAgeWitnessMap.put(accountAgeWitness.getHashAsHex(), accountAgeWitness);
-
-        //TODO do we need to store it? its in EntryMap anyway...
-        // if (storeLocally)
-        //    storage.queueUpForSave(new AccountAgeWitnessMap(accountAgeWitnessMap), 2000);
+    private void addToMap(AccountAgeWitness accountAgeWitness) {
+        log.debug("addToMap hash=" + Utilities.bytesAsHexString(accountAgeWitness.getHash()));
+        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+            accountAgeWitnessMap.put(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
     }
 
     public void publishAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
         try {
             AccountAgeWitness accountAgeWitness = getAccountAgeWitness(paymentAccountPayload);
-            if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsHex()))
-                p2PService.addData(accountAgeWitness, true);
+            if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+                p2PService.addPersistableNetworkPayload(accountAgeWitness);
         } catch (CryptoException e) {
             e.printStackTrace();
             log.error(e.toString());
         }
     }
 
-    public Optional<AccountAgeWitness> getWitnessByHash(String hash) {
-        return accountAgeWitnessMap.containsKey(hash) ? Optional.of(accountAgeWitnessMap.get(hash)) : Optional.<AccountAgeWitness>empty();
+    public Optional<AccountAgeWitness> getWitnessByHash(String hashAsHex) {
+        P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(Utilities.decodeFromHex(hashAsHex));
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
     }
 
     public Optional<AccountAgeWitness> getWitnessByPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
@@ -154,9 +125,9 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     private AccountAgeWitness getAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) throws CryptoException {
         byte[] hash = getWitnessHash(paymentAccountPayload);
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
-        byte[] sigPubKey = keyRing.getPubKeyRing().getSignaturePubKeyBytes();
+        byte[] sigPubKeyHash = Hash.getSha256Ripemd160hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
         return new AccountAgeWitness(hash,
-                sigPubKey,
+                sigPubKeyHash,
                 signature);
     }
 
@@ -169,11 +140,16 @@ public class AccountAgeWitnessService implements PersistedDataHost {
     }
 
     private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
+        salt = new byte[]{};
         byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        final byte[] hash =  Hash.getSha256Ripemd160hash(combined);
+        final byte[] hash = Hash.getSha256Ripemd160hash(combined);
         log.debug("getWitnessHash paymentAccountPayload={}, salt={}, ageWitnessInputData={}, combined={}, hash={}",
-                paymentAccountPayload.getPaymentDetails(), Utilities.encodeToHex(salt), Utilities.encodeToHex(ageWitnessInputData), Utilities.encodeToHex(combined), Utilities.encodeToHex(hash));
+                paymentAccountPayload.getPaymentDetails(),
+                Utilities.encodeToHex(salt),
+                Utilities.encodeToHex(ageWitnessInputData),
+                Utilities.encodeToHex(combined),
+                Utilities.encodeToHex(hash));
         return hash;
     }
 
@@ -191,16 +167,16 @@ public class AccountAgeWitnessService implements PersistedDataHost {
             // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when 
             // we deploy that feature.
             final Date now = new Date();
-            final Date dez = new GregorianCalendar(2017, GregorianCalendar.DECEMBER, 1).getTime();
+          /*  final Date dez = new GregorianCalendar(2017, GregorianCalendar.DECEMBER, 1).getTime();
             final Date jan = new GregorianCalendar(2017, GregorianCalendar.JANUARY, 1).getTime();
             final Date feb = new GregorianCalendar(2017, GregorianCalendar.FEBRUARY, 1).getTime();
-
+*/
             // testing
-           /* 
-           final Date dez = new GregorianCalendar(2016, GregorianCalendar.DECEMBER, 1).getTime();
+
+            final Date dez = new GregorianCalendar(2016, GregorianCalendar.DECEMBER, 1).getTime();
             final Date jan = new GregorianCalendar(2016, GregorianCalendar.JANUARY, 1).getTime();
             final Date feb = new GregorianCalendar(2016, GregorianCalendar.FEBRUARY, 1).getTime();
-*/
+
             switch (accountAgeCategory) {
                 case TWO_MONTHS_OR_MORE:
                     factor = 1;
@@ -250,7 +226,7 @@ public class AccountAgeWitnessService implements PersistedDataHost {
 
 
         // Check if peer's pubkey is matching the one from the witness data
-        if (!verifySigPubKey(witness.getSigPubKey(), peersPublicKey))
+        if (!verifySigPubKeyHash(witness.getSigPubKeyHash(), peersPublicKey))
             return false;
 
         final byte[] combined = ArrayUtils.addAll(peersAgeWitnessInputData, peersSalt);
@@ -279,12 +255,15 @@ public class AccountAgeWitnessService implements PersistedDataHost {
         return result;
     }
 
-    boolean verifySigPubKey(byte[] sigPubKey,
-                            PublicKey peersPublicKey) {
-        final boolean result = Arrays.equals(Sig.getPublicKeyBytes(peersPublicKey), sigPubKey);
+    boolean verifySigPubKeyHash(byte[] sigPubKeyHash,
+                                PublicKey peersPublicKey) {
+        final byte[] peersPublicKeyHash = Hash.getSha256Ripemd160hash(Sig.getPublicKeyBytes(peersPublicKey));
+        final boolean result = Arrays.equals(peersPublicKeyHash, sigPubKeyHash);
         if (!result)
-            log.warn("sigPubKey is not matching peers peersPublicKey. " +
-                    "sigPubKey={}, peersPublicKey={}", Utilities.bytesAsHexString(sigPubKey), peersPublicKey);
+            log.warn("sigPubKeyHash is not matching peers peersPublicKey. " +
+                            "sigPubKeyHash={}, peersPublicKeyHash={}",
+                    Utilities.bytesAsHexString(sigPubKeyHash),
+                    peersPublicKeyHash);
         return result;
     }
 

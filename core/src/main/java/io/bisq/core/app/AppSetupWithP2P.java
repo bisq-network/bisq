@@ -30,6 +30,9 @@ import io.bisq.network.p2p.network.ConnectionListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
     protected final AccountAgeWitnessService accountAgeWitnessService;
     protected BooleanProperty p2pNetWorkReady;
+    private MonadicBinding<Boolean> readMapsFromResourcesBinding;
+    private Subscription readMapsFromResourcesBindingSubscription;
 
     @Inject
     public AppSetupWithP2P(EncryptionService encryptionService,
@@ -57,7 +62,6 @@ public class AppSetupWithP2P extends AppSetup {
     public void initPersistedDataHosts() {
         ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
         persistedDataHosts.add(tradeStatisticsManager);
-        persistedDataHosts.add(accountAgeWitnessService);
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
@@ -73,14 +77,19 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
-        result.addListener((observable, oldValue, newValue) -> {
+        readMapsFromResourcesBinding = EasyBind.combine(SetupUtils.readPersistableNetworkPayloadMapFromResources(p2PService),
+                SetupUtils.readEntryMapFromResources(p2PService),
+                (result1, result2) -> {
+                    return result1 && result2;
+                });
+        readMapsFromResourcesBindingSubscription = readMapsFromResourcesBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 startInitP2PNetwork();
         });
     }
 
     private void startInitP2PNetwork() {
+        readMapsFromResourcesBindingSubscription.unsubscribe();
         p2pNetWorkReady = initP2PNetwork();
         p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
             if (newValue)
@@ -165,7 +174,7 @@ public class AppSetupWithP2P extends AppSetup {
         p2PService.onAllServicesInitialized();
 
         tradeStatisticsManager.onAllServicesInitialized();
-        
+
         accountAgeWitnessService.onAllServicesInitialized();
     }
 }

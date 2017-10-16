@@ -55,6 +55,8 @@ message NetworkEnvelope {
         GetBsqBlocksRequest get_bsq_blocks_request = 28;
         GetBsqBlocksResponse get_bsq_blocks_response = 29;
         NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 30;
+        
+        AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
     }
 }
 
@@ -69,6 +71,7 @@ message PreliminaryGetDataRequest {
     int32 nonce = 21;
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
+    repeated bytes excluded_pnp_keys = 4;
 }
 
 message GetDataResponse {
@@ -76,12 +79,14 @@ message GetDataResponse {
     bool is_get_updated_data_response = 2;
     repeated StorageEntryWrapper data_set = 3;
     repeated int32 supported_capabilities = 4;
+    repeated PersistableNetworkPayload persistable_network_payload_items = 5;
 }
 
 message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
+    repeated bytes excluded_pnp_keys = 4;
 }
 
 
@@ -145,6 +150,10 @@ message RemoveDataMessage {
 
 message RemoveMailboxDataMessage {
     ProtectedMailboxStorageEntry protected_storage_entry = 1;
+}
+
+message AddPersistableNetworkPayloadMessage {
+    PersistableNetworkPayload payload = 1;
 }
 
 
@@ -342,6 +351,12 @@ message StoragePayload {
         OfferPayload offer_payload = 7;
         CompensationRequestPayload compensation_request_payload = 8;
         AccountAgeWitness account_age_witness = 9;
+    }
+}
+
+message PersistableNetworkPayload {
+    oneof message {
+        AccountAgeWitness account_age_witness = 1;
     }
 }
 
@@ -642,10 +657,9 @@ message CompensationRequestPayload {
 
 message AccountAgeWitness {
     bytes hash = 1;
-    bytes sig_pub_key = 2;
+    bytes sig_pub_key_hash = 2;
     bytes signature = 3;
     int64 date = 4;
-    map<string, string> extra_data = 5;
 }
 
 
@@ -922,7 +936,7 @@ message PersistableEnvelope {
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
         
-        AccountAgeWitnessMap account_age_witness_map = 15;
+        PersistableNetworkPayloadList persistable_network_payload_list = 15;
     }
 }
 
@@ -951,6 +965,10 @@ message MapValue {
 
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
+}
+
+message PersistableNetworkPayloadList {
+    repeated PersistableNetworkPayload items = 1;
 }
 
 message PeerList {

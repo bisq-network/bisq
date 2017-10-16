@@ -20,7 +20,6 @@ package io.bisq.network.crypto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.*;
 import io.bisq.common.proto.network.NetworkEnvelope;
-import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMessageWithPubKey;
@@ -110,15 +109,6 @@ public class EncryptionService {
 
         // Pack all together
         return new SealedAndSigned(encryptedSecretKey, encryptedPayloadWithHmac, signature, signatureKeyPair.getPublic());
-    }
-
-
-    /**
-     * @param data
-     * @return Hash of data
-     */
-    public static byte[] getHash(NetworkPayload data) {
-        return Hash.getSha256Hash(data.toProtoMessage().toByteArray());
     }
 }
 

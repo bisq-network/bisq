@@ -7,11 +7,12 @@ import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.AltcoinExchangeRate;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKeyBytes", "signaturePubKey"})
 @Value
-public final class TradeStatistics implements LazyProcessedStoragePayload, PersistableNetworkPayload {
+public final class TradeStatistics implements LazyProcessedPayload, ProtectedStoragePayload, PersistablePayload {
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
     private final String counterCurrency;

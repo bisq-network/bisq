@@ -48,7 +48,7 @@ public class AccountAgeWitnessServiceTest {
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        service = new AccountAgeWitnessService(null, null, null);
+        service = new AccountAgeWitnessService(null, null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }
@@ -74,10 +74,10 @@ public class AccountAgeWitnessServiceTest {
 
     @Test
     public void testVerifySigPubKey() {
-        byte[] sigPubKey = Sig.getPublicKeyBytes(publicKey);
-        assertFalse(service.verifySigPubKey(new byte[0], publicKey));
-        assertFalse(service.verifySigPubKey(new byte[1], publicKey));
-        assertTrue(service.verifySigPubKey(sigPubKey, publicKey));
+        byte[] sigPubKeHash = Hash.getSha256Ripemd160hash(Sig.getPublicKeyBytes(publicKey));
+        assertFalse(service.verifySigPubKeyHash(new byte[0], publicKey));
+        assertFalse(service.verifySigPubKeyHash(new byte[1], publicKey));
+        assertTrue(service.verifySigPubKeyHash(sigPubKeHash, publicKey));
     }
 
     @Test

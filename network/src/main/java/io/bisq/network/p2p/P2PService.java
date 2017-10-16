@@ -37,10 +37,7 @@ import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.messages.AddDataMessage;
 import io.bisq.network.p2p.storage.messages.BroadcastMessage;
 import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
-import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
-import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
-import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import io.bisq.network.p2p.storage.payload.*;
 import javafx.beans.property.*;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -253,6 +250,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         p2PDataStorage.readEntryMapFromResources(resourceFileName);
     }
 
+    public void readPersistableNetworkPayloadMapFromResources(String resourceFileName) {
+        p2PDataStorage.readPersistableNetworkPayloadMapFromResources(resourceFileName);
+    }
+
     public void onAllServicesInitialized() {
         Log.traceCall();
         if (networkNode.getNodeAddress() != null) {
@@ -323,11 +324,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     /**
      * Startup sequence:
-     * <p/>
+     * <p>
      * Variant 1 (normal expected mode):
      * onTorNodeReady -> requestDataManager.firstDataRequestFromAnySeedNode()
      * RequestDataManager.Listener.onDataReceived && onHiddenServicePublished -> onNetworkReady()
-     * <p/>
+     * <p>
      * Variant 2 (no seed node available):
      * onTorNodeReady -> requestDataManager.firstDataRequestFromAnySeedNode
      * retry after 20-30 sec until we get at least one seed node connected
@@ -786,6 +787,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data storage
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload) {
+        return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), true, true);
+    }
 
     public boolean addData(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
         Log.traceCall();

@@ -166,6 +166,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> p2PNetworkInfoBinding;
+    private MonadicBinding<Boolean> readMapsFromResourcesBinding;
     final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
@@ -196,6 +197,7 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
+    private Subscription readMapsFromResourcesBindingSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -276,11 +278,15 @@ public class MainViewModel implements ViewModel {
         }
     }
 
-    private void startLoadEntryMap() {
-        log.info("startLoadEntryMap");
+    private void readMapsFromResources() {
+        log.info("readMapsFromResources");
 
-        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
-        result.addListener((observable, oldValue, newValue) -> {
+        readMapsFromResourcesBinding = EasyBind.combine(SetupUtils.readPersistableNetworkPayloadMapFromResources(p2PService),
+                SetupUtils.readEntryMapFromResources(p2PService),
+                (result1, result2) -> {
+                    return result1 && result2;
+                });
+        readMapsFromResourcesBindingSubscription = readMapsFromResourcesBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 startBasicServices();
         });
@@ -291,6 +297,8 @@ public class MainViewModel implements ViewModel {
 
     private void startBasicServices() {
         log.info("startBasicServices");
+
+        readMapsFromResourcesBindingSubscription.unsubscribe();
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -702,11 +710,11 @@ public class MainViewModel implements ViewModel {
                     log.info("Localhost peer detected.");
                     UserThread.execute(() -> {
                         bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
-                        startLoadEntryMap();
+                        readMapsFromResources();
                     });
                 } catch (Throwable e) {
                     log.info("Localhost peer not detected.");
-                    UserThread.execute(MainViewModel.this::startLoadEntryMap);
+                    UserThread.execute(MainViewModel.this::readMapsFromResources);
                 } finally {
                     if (socket != null) {
                         try {

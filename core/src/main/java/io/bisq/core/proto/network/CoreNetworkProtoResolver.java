@@ -31,10 +31,7 @@ import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import io.bisq.network.p2p.peers.keepalive.messages.Pong;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
-import io.bisq.network.p2p.storage.messages.AddDataMessage;
-import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
-import io.bisq.network.p2p.storage.messages.RemoveDataMessage;
-import io.bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
+import io.bisq.network.p2p.storage.messages.*;
 import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -120,7 +117,9 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetBsqBlocksResponse.fromProto(proto.getGetBsqBlocksResponse(), messageVersion);
                 case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
                     return NewBsqBlockBroadcastMessage.fromProto(proto.getNewBsqBlockBroadcastMessage(), messageVersion);
-
+               
+                case ADD_PERSISTABLE_NETWORK_PAYLOAD_MESSAGE:
+                    return AddPersistableNetworkPayloadMessage.fromProto(proto.getAddPersistableNetworkPayloadMessage(), this, messageVersion);
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" + proto.getMessageCase());
             }

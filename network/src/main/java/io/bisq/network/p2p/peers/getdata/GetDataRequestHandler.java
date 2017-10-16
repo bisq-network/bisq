@@ -15,6 +15,7 @@ import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -73,16 +75,16 @@ public class GetDataRequestHandler {
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
 
-        final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         final Set<Integer> lookupSet = new HashSet<>();
 
-        Set<P2PDataStorage.ByteArray> excludedItems = getDataRequest.getExcludedKeys() != null ?
-                getDataRequest.getExcludedKeys().stream()
-                        .map(P2PDataStorage.ByteArray::new)
-                        .collect(Collectors.toSet())
-                : new HashSet<>();
-
-        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getFilteredValues(excludedItems)) {
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =  P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        Set<ProtectedStorageEntry> filteredSet = dataStorage.getMap().entrySet().stream()
+                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+        
+        for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
             if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
@@ -120,7 +122,16 @@ public class GetDataRequestHandler {
                     filteredDataSet.add(protectedStorageEntry);
             }
         }
-        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(),
+
+        Set<P2PDataStorage.ByteArray> excludedPnpKeysAsByteArray =  P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedPnpKeys());
+        Set<PersistableNetworkPayload> filteredPnpSet = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
+                .filter(e -> !excludedPnpKeysAsByteArray.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+
+        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet,
+                filteredPnpSet,
+                getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
 
         if (timeoutTimer == null) {

@@ -47,7 +47,6 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
@@ -190,7 +189,6 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
             persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
-            persistedDataHosts.add(injector.getInstance(AccountAgeWitnessService.class));
             persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));

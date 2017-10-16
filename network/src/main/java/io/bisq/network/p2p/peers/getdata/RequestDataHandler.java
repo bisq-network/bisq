@@ -7,6 +7,8 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -18,7 +20,7 @@ import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
+import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -98,14 +100,18 @@ public class RequestDataHandler implements MessageListener {
             // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would 
             // miss that event if we do not load the full set or use some delta handling.
             Set<byte[]> excludedKeys = dataStorage.getMap().entrySet().stream()
-                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistableNetworkPayload)
+                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistablePayload)
+                    .map(e -> e.getKey().bytes)
+                    .collect(Collectors.toSet());
+
+            Set<byte[]> excludedPnpKeys = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
             if (isPreliminaryDataRequest)
-                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
+                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys, excludedPnpKeys);
             else
-                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys);
+                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys, excludedPnpKeys);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -169,8 +175,8 @@ public class RequestDataHandler implements MessageListener {
                 Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelop;
-                    Map<String, Set<ProtectedStoragePayload>> payloadByClassName = new HashMap<>();
-                    final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+                    Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
+                    final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     dataSet.stream().forEach(e -> {
                         final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                         if (protectedStoragePayload == null) {
@@ -185,10 +191,26 @@ public class RequestDataHandler implements MessageListener {
 
                         payloadByClassName.get(className).add(protectedStoragePayload);
                     });
+
+
+                    Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+                    if (persistableNetworkPayloadSet != null) {
+                        persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                            // For logging different data types
+                            String className = persistableNetworkPayload.getClass().getSimpleName();
+                            if (!payloadByClassName.containsKey(className))
+                                payloadByClassName.put(className, new HashSet<>());
+
+                            payloadByClassName.get(className).add(persistableNetworkPayload);
+                        });
+                    }
+
                     // Log different data types
                     StringBuilder sb = new StringBuilder();
                     sb.append("\n#################################################################");
-                    sb.append("\nReceived ").append(dataSet.size()).append(" instances of storage payload\n");
+                    final int items = dataSet.size() +
+                            (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
+                    sb.append("\nReceived ").append(items).append(" instances\n");
                     payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
                             .append(": ")
                             .append(e.getValue().size())
@@ -204,15 +226,26 @@ public class RequestDataHandler implements MessageListener {
 
                         final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
 
-                        List<ProtectedStorageEntry> processDelayedItems = new ArrayList<>();
+                        List<NetworkPayload> processDelayedItems = new ArrayList<>();
                         dataSet.stream().forEach(e -> {
-                            if (e.getProtectedStoragePayload() instanceof LazyProcessedStoragePayload)
+                            if (e.getProtectedStoragePayload() instanceof LazyProcessedPayload) {
                                 processDelayedItems.add(e);
-                            else {
+                            } else {
                                 // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
                                 dataStorage.add(e, sender, null, false, false);
                             }
                         });
+
+                        if (persistableNetworkPayloadSet != null) {
+                            persistableNetworkPayloadSet.stream().forEach(e -> {
+                                if (e instanceof LazyProcessedPayload) {
+                                    processDelayedItems.add(e);
+                                } else {
+                                    // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
+                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false);
+                                }
+                            });
+                        }
 
                         // We process the LazyProcessedStoragePayload items (TradeStatistics) in batches with a delay in between.
                         // We want avoid that the UI get stuck when processing many entries.
@@ -234,8 +267,13 @@ public class RequestDataHandler implements MessageListener {
                         for (int i = 0; i < chunks && startIndex < size; i++, startIndex += chunkSize) {
                             long delay = (i + 1) * 200;
                             int endIndex = Math.min(size, startIndex + chunkSize);
-                            List<ProtectedStorageEntry> subList = processDelayedItems.subList(startIndex, endIndex);
-                            UserThread.runAfter(() -> subList.stream().forEach(protectedStorageEntry -> dataStorage.add(protectedStorageEntry, sender, null, false, false)), delay, TimeUnit.MILLISECONDS);
+                            List<NetworkPayload> subList = processDelayedItems.subList(startIndex, endIndex);
+                            UserThread.runAfter(() -> subList.stream().forEach(item -> {
+                                if (item instanceof ProtectedStorageEntry)
+                                    dataStorage.add((ProtectedStorageEntry) item, sender, null, false, false);
+                                else if (item instanceof PersistableNetworkPayload)
+                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false);
+                            }), delay, TimeUnit.MILLISECONDS);
                         }
 
                         cleanup();

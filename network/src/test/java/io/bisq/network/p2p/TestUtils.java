@@ -149,6 +149,11 @@ public class TestUtils {
             }
 
             @Override
+            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
+                return null;
+            }
+
+            @Override
             public NetworkEnvelope fromProto(PB.NetworkEnvelope envelope) {
                 return null;
             }
@@ -174,6 +179,11 @@ public class TestUtils {
 
             @Override
             public PersistableEnvelope fromProto(PB.PersistableEnvelope persistable) {
+                return null;
+            }
+
+            @Override
+            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
                 return null;
             }
         };

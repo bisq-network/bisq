@@ -13,7 +13,6 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.VoteItemsList;
-import io.bisq.core.payment.AccountAgeWitnessMap;
 import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.TradableList;
@@ -23,6 +22,7 @@ import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
 import io.bisq.network.p2p.storage.PersistableEntryMap;
+import io.bisq.network.p2p.storage.PersistableNetworkPayloadCollection;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,8 +66,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             btcWalletService.get());
                 case TRADE_STATISTICS_LIST:
                     return TradeStatisticsList.fromProto(proto.getTradeStatisticsList());
-                case ACCOUNT_AGE_WITNESS_MAP:
-                    return AccountAgeWitnessMap.fromProto(proto.getAccountAgeWitnessMap());
                 case DISPUTE_LIST:
                     return DisputeList.fromProto(proto.getDisputeList(),
                             this,
@@ -86,6 +84,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return VoteItemsList.fromProto(proto.getVoteItemsList());
                 case BSQ_CHAIN_STATE:
                     return BsqChainState.fromProto(proto.getBsqChainState());
+                case PERSISTABLE_NETWORK_PAYLOAD_LIST:
+                    return PersistableNetworkPayloadCollection.fromProto(proto.getPersistableNetworkPayloadList(), this);
                 default:
                     throw new ProtobufferException("Unknown proto message case(PB.PersistableEnvelope). messageCase=" + proto.getMessageCase());
             }

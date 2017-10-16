@@ -18,57 +18,40 @@
 package io.bisq.core.payment;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.crypto.Sig;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
+import io.bisq.network.p2p.storage.P2PDataStorage;
+import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Nullable;
-import java.security.PublicKey;
 import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-// Object has 529 raw bytes (535 bytes is size of PB.AccountAgeWitness -> extraDataMap is null)
+// Object has about 94 raw bytes (about 101 bytes is size of PB object)
 // With 100 000 entries we get 53.5 MB of data. Old entries will be shipped with the MapEntry resource file, 
 // so only the newly added objects since the last release will not be loaded over the P2P network.
 // TODO Get rid of sigPubKey and replace by hash of sigPubKey. That will reduce the data size to 118 bytes.
 // Using EC signatures would produce longer signatures (71 bytes)
 @Slf4j
-@EqualsAndHashCode(exclude = {"signaturePubKey"})
 @Value
-public class AccountAgeWitness implements LazyProcessedStoragePayload, PersistableNetworkPayload {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
 
     private final byte[] hash;                      // Ripemd160(Sha256(data)) hash 20 bytes
-    private final byte[] sigPubKey;                 // about 443 bytes -> 20
-    private final byte[] signature;                 // 46 bytes -> 
+    private final byte[] sigPubKeyHash;             // Ripemd160(Sha256(sigPubKey)) hash 20 bytes
+    private final byte[] signature;                 // about 46 bytes
     private final long date;                        // 8 byte
 
-
-    // Only used as cache for getOwnerPubKey
-    transient private final PublicKey signaturePubKey;
-
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
-
     public AccountAgeWitness(byte[] hash,
-                             byte[] sigPubKey,
+                             byte[] sigPubKeyHash,
                              byte[] signature) {
 
         this(hash,
-                sigPubKey,
+                sigPubKeyHash,
                 signature,
-                new Date().getTime()/* - TimeUnit.DAYS.toMillis(0)*/, //for testing
-                null);
+                new Date().getTime());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,30 +59,23 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persistab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private AccountAgeWitness(byte[] hash,
-                              byte[] sigPubKey,
+                              byte[] sigPubKeyHash,
                               byte[] signature,
-                              long date,
-                              @Nullable Map<String, String> extraDataMap) {
+                              long date) {
         this.hash = hash;
-        this.sigPubKey = sigPubKey;
+        this.sigPubKeyHash = sigPubKeyHash;
         this.signature = signature;
-        this.date = date;
-        this.extraDataMap = extraDataMap;
-
-        log.debug("Date=" + new Date(date));
-
-        signaturePubKey = Sig.getPublicKeyFromBytes(sigPubKey);
+        this.date = date/* - TimeUnit.DAYS.toMillis(90)*/;
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
+    public PB.PersistableNetworkPayload toProtoMessage() {
         final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
-                .setSigPubKey(ByteString.copyFrom(sigPubKey))
+                .setSigPubKeyHash(ByteString.copyFrom(sigPubKeyHash))
                 .setSignature(ByteString.copyFrom(signature))
                 .setDate(date);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setAccountAgeWitness(builder).build();
+        return PB.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
     public PB.AccountAgeWitness toProtoAccountAgeWitness() {
@@ -109,10 +85,9 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persistab
     public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
         return new AccountAgeWitness(
                 proto.getHash().toByteArray(),
-                proto.getSigPubKey().toByteArray(),
+                proto.getSigPubKeyHash().toByteArray(),
                 proto.getSignature().toByteArray(),
-                proto.getDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                proto.getDate());
     }
 
 
@@ -120,16 +95,6 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persistab
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODO needed?
-    @Override
-    public long getTTL() {
-        return TimeUnit.SECONDS.toMillis(1);
-    }
-
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return signaturePubKey;
-    }
 
     //TODO impl. here or in caller?
     // We allow max 1 day time difference
@@ -137,7 +102,17 @@ public class AccountAgeWitness implements LazyProcessedStoragePayload, Persistab
         return new Date().getTime() - date < TimeUnit.DAYS.toMillis(1);
     }
 
-    public String getHashAsHex() {
-        return Utilities.encodeToHex(hash);
+    public P2PDataStorage.ByteArray getHashAsByteArray() {
+        return new P2PDataStorage.ByteArray(hash);
+    }
+
+    @Override
+    public String toString() {
+        return "AccountAgeWitness{" +
+                "\n     hash=" + Utilities.bytesAsHexString(hash) +
+                ",\n     sigPubKeyHash=" + Utilities.bytesAsHexString(sigPubKeyHash) +
+                ",\n     signature=" + Utilities.bytesAsHexString(signature) +
+                ",\n     date=" + new Date(date) +
+                "\n}";
     }
 }

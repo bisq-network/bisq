@@ -1,6 +1,7 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
 import javafx.collections.FXCollections;
@@ -109,11 +110,11 @@ public class PaymentAccountUtil {
                 .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
                 .sorted((o1, o2) -> {
                     final Optional<AccountAgeWitness> witness1 = accountAgeWitnessService.getWitnessByPaymentAccountPayload(o1.getPaymentAccountPayload());
-                    log.debug("witness1 isPresent={}, HashAsHex={}, date={}", witness1.isPresent(), witness1.get().getHashAsHex(), new Date(witness1.get().getDate()));
+                    log.debug("witness1 isPresent={}, HashAsHex={}, date={}", witness1.isPresent(), Utilities.bytesAsHexString(witness1.get().getHash()), new Date(witness1.get().getDate()));
                     long age1 = witness1.isPresent() ? accountAgeWitnessService.getAccountAge(witness1.get()) : 0;
 
                     final Optional<AccountAgeWitness> witness2 = accountAgeWitnessService.getWitnessByPaymentAccountPayload(o2.getPaymentAccountPayload());
-                    log.debug("witness2 isPresent={}, HashAsHex={}, date={}", witness2.isPresent(), witness2.get().getHashAsHex(), new Date(witness2.get().getDate()));
+                    log.debug("witness2 isPresent={}, HashAsHex={}, date={}", witness2.isPresent(), Utilities.bytesAsHexString(witness2.get().getHash()), new Date(witness2.get().getDate()));
                     long age2 = witness2.isPresent() ? accountAgeWitnessService.getAccountAge(witness2.get()) : 0;
                     log.debug("AccountName 1 " + o1.getAccountName());
                     log.debug("AccountName 2 " + o2.getAccountName());
@@ -125,7 +126,8 @@ public class PaymentAccountUtil {
                 }).collect(Collectors.toList());
         list.stream().forEach(e -> log.error("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), accountAgeWitnessService.getWitnessHashAsHex(e.getPaymentAccountPayload())));
         final Optional<PaymentAccount> first = list.stream().findFirst();
-        log.debug("first={}", first.get().getAccountName());
+        if (first.isPresent())
+            log.debug("first={}", first.get().getAccountName());
         return first;
     }
 }
