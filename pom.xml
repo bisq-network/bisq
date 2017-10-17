@@ -70,7 +70,7 @@
             <groupId>com.github.bisq-network</groupId>
             <artifactId>bisq-exchange</artifactId>
             <version>Development-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
      <!-- dependencies from bisq root pom -->
         <dependency>
