@@ -108,7 +108,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
-        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
@@ -132,8 +131,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("WAC", "WACoins"));
-        result.add(new CryptoCurrency("ZEC", "Zcash"));
+        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
+        result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
 
         result.sort(TradeCurrency::compareTo);
