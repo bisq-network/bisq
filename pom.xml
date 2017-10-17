@@ -55,28 +55,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
-                    <minimizeJar>false</minimizeJar>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>bisq-api</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
@@ -92,6 +70,7 @@
             <groupId>com.github.bisq-network</groupId>
             <artifactId>bisq-exchange</artifactId>
             <version>Development-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
      <!-- dependencies from bisq root pom -->
         <dependency>
