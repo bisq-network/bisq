@@ -17,8 +17,11 @@
 
 package io.bisq.core.arbitration;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
@@ -59,12 +62,18 @@ public class ArbitratorService {
 
     public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
-        boolean result = p2PService.addData(arbitrator, true);
-        if (result) {
-            log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
-            resultHandler.handleResult();
+        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() || 
+                !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
+            boolean result = p2PService.addData(arbitrator, true);
+            if (result) {
+                log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
+                resultHandler.handleResult();
+            } else {
+                errorMessageHandler.handleErrorMessage("Add arbitrator failed");
+            }
         } else {
-            errorMessageHandler.handleErrorMessage("Add arbitrator failed");
+            log.error("Attempt to publish dev arbitrator on mainnet.");
+            errorMessageHandler.handleErrorMessage("Add arbitrator failed. Attempt to publish dev arbitrator on mainnet.");
         }
     }
 
