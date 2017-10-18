@@ -37,8 +37,8 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class SwishAccountPayload extends PaymentAccountPayload {
-    private String mobileNr;
-    private String holderName;
+    private String mobileNr = "";
+    private String holderName = "";
 
     public SwishAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

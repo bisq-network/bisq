@@ -24,6 +24,7 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import io.bisq.network.p2p.storage.payload.PublishDateVerifiedPayload;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +38,8 @@ import java.util.concurrent.TimeUnit;
 // Using EC signatures would produce longer signatures (71 bytes)
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, PublishDateVerifiedPayload {
+    private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(data)) hash 20 bytes
     private final byte[] sigPubKeyHash;             // Ripemd160(Sha256(sigPubKey)) hash 20 bytes
@@ -82,6 +84,16 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
                 proto.getSigPubKeyHash().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getDate());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public boolean verifyPublishDate() {
+        return Math.abs(new Date().getTime() - date) <= TOLERANCE;
     }
 
 

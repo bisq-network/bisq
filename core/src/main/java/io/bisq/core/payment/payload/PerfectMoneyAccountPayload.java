@@ -37,7 +37,7 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
     public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

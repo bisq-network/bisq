@@ -40,11 +40,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload {
     @Setter
-    private String holderName;
+    private String holderName = "";
     @Setter
-    private String iban;
+    private String iban = "";
     @Setter
-    private String bic;
+    private String bic = "";
     private String email = ""; // not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match

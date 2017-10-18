@@ -325,14 +325,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         final ByteArray hashAsByteArray = new ByteArray(payload.getHash());
         boolean containsKey = persistableNetworkPayloadCollection.getMap().containsKey(hashAsByteArray);
         if (!containsKey) {
-            persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
-            persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);
-            persistableNetworkPayloadMapListeners.stream().forEach(e -> e.onAdded(payload));
-            if (allowBroadcast)
-                broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
-            return true;
+            if (!(payload instanceof PublishDateVerifiedPayload) || ((PublishDateVerifiedPayload) payload).verifyPublishDate()) {
+                persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
+                persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);
+                persistableNetworkPayloadMapListeners.stream().forEach(e -> e.onAdded(payload));
+                if (allowBroadcast)
+                    broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
+                return true;
+            } else {
+                log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
+                        "Payload={}; now={}", payload.toString(), new Date());
+                return false;
+            }
         } else {
-            log.trace("We have that payload already in our map");
+            log.trace("We have that payload already in our map.");
             return false;
         }
     }

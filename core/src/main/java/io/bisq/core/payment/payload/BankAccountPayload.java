@@ -37,7 +37,7 @@ import java.util.Optional;
 @ToString
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
-    protected String holderName;
+    protected String holderName = "";
     @Nullable
     protected String bankName;
     @Nullable

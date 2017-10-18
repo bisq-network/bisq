@@ -38,9 +38,9 @@ import java.util.Map;
 @Slf4j
 public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     @Setter
-    private String sortCode;
+    private String sortCode = "";
     @Setter
-    private String accountNr;
+    private String accountNr = "";
     private String email = "";// not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
 
     public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod) {

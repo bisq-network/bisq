@@ -35,7 +35,7 @@ import java.util.Map;
 @Getter
 @Slf4j
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
-    protected String countryCode;
+    protected String countryCode = "";
 
     CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
         super(paymentMethodName, id, maxTradePeriod);

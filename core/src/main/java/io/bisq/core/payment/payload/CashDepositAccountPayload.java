@@ -41,7 +41,7 @@ import java.util.Optional;
 @Getter
 @Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
-    private String holderName;
+    private String holderName = "";
     @Nullable
     private String holderEmail;
     @Nullable

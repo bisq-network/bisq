@@ -36,7 +36,7 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class OKPayAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
     public OKPayAccountPayload(String paymentMethod,
                                String id,

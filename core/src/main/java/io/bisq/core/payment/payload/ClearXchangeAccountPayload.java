@@ -37,8 +37,8 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
-    private String emailOrMobileNr;
-    private String holderName;
+    private String emailOrMobileNr = "";
+    private String holderName = "";
 
     public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

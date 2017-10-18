@@ -38,10 +38,10 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class InteracETransferAccountPayload extends PaymentAccountPayload {
-    private String email;
-    private String holderName;
-    private String question;
-    private String answer;
+    private String email = "";
+    private String holderName = "";
+    private String question = "";
+    private String answer = "";
 
     public InteracETransferAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

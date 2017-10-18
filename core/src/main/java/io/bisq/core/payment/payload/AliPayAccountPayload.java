@@ -35,7 +35,7 @@ import java.util.Map;
 @Setter
 @ToString
 public final class AliPayAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
     public AliPayAccountPayload(String paymentMethod,
                                 String id,
@@ -53,7 +53,7 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     private AliPayAccountPayload(String paymentMethod,
                                  String id,
                                  long maxTradePeriod,
-                                 String accountNr, 
+                                 String accountNr,
                                  @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,

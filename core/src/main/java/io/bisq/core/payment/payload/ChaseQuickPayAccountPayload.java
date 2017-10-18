@@ -37,8 +37,8 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
-    private String email;
-    private String holderName;
+    private String email = "";
+    private String holderName = "";
 
     public ChaseQuickPayAccountPayload(String paymentMethod,
                                        String id,

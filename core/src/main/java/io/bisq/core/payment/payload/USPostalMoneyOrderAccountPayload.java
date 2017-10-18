@@ -38,8 +38,8 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayload {
-    private String postalAddress;
-    private String holderName;
+    private String postalAddress = "";
+    private String holderName = "";
 
     public USPostalMoneyOrderAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
