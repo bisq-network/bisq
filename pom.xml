@@ -71,6 +71,7 @@
             <artifactId>bisq-exchange</artifactId>
             <version>Development-SNAPSHOT</version>
             <scope>provided</scope>
+            <optional>true</optional> <!-- value will be true or false only -->
         </dependency>
      <!-- dependencies from bisq root pom -->
         <dependency>
