@@ -3,9 +3,7 @@ package io.bisq.api.app;
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import io.bisq.api.service.DropwizardApplication;
+import io.bisq.api.service.BisqApiApplication;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -16,7 +14,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.app.*;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.user.User;
@@ -38,7 +35,6 @@ public class Api {
     private final Injector injector;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
-    //private final WalletService walletService;
     private final ApiModule apiModule;
     private final AppSetup appSetup;
     private final User user;
@@ -48,7 +44,7 @@ public class Api {
     }
 
     public Api() {
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
@@ -84,7 +80,6 @@ public class Api {
         injector = Guice.createInjector(apiModule);
         Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
         offerBookService = injector.getInstance(OfferBookService.class);
-        //walletService = injector.getInstance(WalletService.class);
         user = injector.getInstance(User.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
 
@@ -93,7 +88,7 @@ public class Api {
 
         try {
 
-            injector.getInstance(DropwizardApplication.class).run("server", "bisq-api.yml");
+            injector.getInstance(BisqApiApplication.class).run("server", "bisq-api.yml");
         } catch (Exception e) {
             e.printStackTrace();
         }

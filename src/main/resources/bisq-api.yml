@@ -1,5 +1,4 @@
-template: Hello, %s!
-defaultName: Stranger
+defaultName: Bisq-Api
 
 # the only required property is resourcePackage, for more config options see below
 swagger:

@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
                 version = "1"
         )
 )
-
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
@@ -52,15 +51,13 @@ import java.util.stream.Collectors;
  * Bisq logic is kept to a minimum here, everything is passed to the BisqProxy.
  */
 public class ApiResourceV1 {
-    private final String template;
     private final String defaultName;
     private final AtomicLong counter;
     private final BisqProxy bisqProxy;
     // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
     private static final String STRING_END_INT_MAX_VALUE = "2147483647";
 
-    public ApiResourceV1(String template, String defaultName, BisqProxy bisqProxy) {
-        this.template = template;
+    public ApiResourceV1(String defaultName, BisqProxy bisqProxy) {
         this.defaultName = defaultName;
         this.counter = new AtomicLong();
         this.bisqProxy = bisqProxy;

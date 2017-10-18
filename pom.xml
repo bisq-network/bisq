@@ -67,12 +67,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.bisq-network</groupId>
-            <artifactId>bisq-exchange</artifactId>
+            <groupId>com.github.bisq-network.bisq-exchange</groupId>
+            <artifactId>core</artifactId>
             <version>Development-SNAPSHOT</version>
-            <scope>provided</scope>
-            <optional>true</optional> <!-- value will be true or false only -->
         </dependency>
+
      <!-- dependencies from bisq root pom -->
         <dependency>
             <groupId>org.projectlombok</groupId>

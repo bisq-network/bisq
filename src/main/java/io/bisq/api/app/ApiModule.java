@@ -18,7 +18,7 @@
 package io.bisq.api.app;
 
 import com.google.inject.Singleton;
-import io.bisq.api.service.DropwizardApplication;
+import io.bisq.api.service.BisqApiApplication;
 import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
 import io.bisq.common.crypto.KeyRing;
@@ -27,7 +27,6 @@ import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
-import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
@@ -75,7 +74,7 @@ public class ApiModule extends AppModule {
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
-        bind(DropwizardApplication.class).in(Singleton.class);
+        bind(BisqApiApplication.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());

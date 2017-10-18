@@ -26,9 +26,8 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import org.eclipse.jetty.server.Authentication;
 
-public class DropwizardApplication extends Application<ApiConfiguration> {
+public class BisqApiApplication extends Application<ApiConfiguration> {
     @Inject
     BtcWalletService walletService;
 
@@ -74,7 +73,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     private BsqWalletService bsqWalletService;
 
     public static void main(String[] args) throws Exception {
-        new DropwizardApplication().run(args);
+        new BisqApiApplication().run(args);
     }
 
     @Override
@@ -108,11 +107,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
         BisqProxy bisqProxy = new BisqProxy(walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager);
-        final ApiResourceV1 resource = new ApiResourceV1(
-                configuration.getTemplate(),
-                configuration.getDefaultName(),
-                bisqProxy
-        );
+        final ApiResourceV1 resource = new ApiResourceV1(configuration.getDefaultName(), bisqProxy);
         preferences.readPersisted();
         environment.jersey().register(resource);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
