@@ -60,6 +60,10 @@ public final class TradingPeer implements PersistablePayload {
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
+    @Nullable
+    private byte[] accountAgeWitnessNonce;
+    @Nullable
+    private byte[] accountAgeWitnessSignatureOfNonce;
 
     public TradingPeer() {
     }

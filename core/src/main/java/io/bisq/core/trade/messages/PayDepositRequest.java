@@ -60,6 +60,12 @@ public final class PayDepositRequest extends TradeMessage {
     private final NodeAddress mediatorNodeAddress;
     private final String uid;
 
+    // added in v 0.6. can be null if we trade with an older peer
+    @Nullable
+    private final byte[] accountAgeWitnessNonce;
+    @Nullable
+    private final byte[] accountAgeWitnessSignatureOfNonce;
+
     public PayDepositRequest(String tradeId,
                              NodeAddress senderNodeAddress,
                              long tradeAmount,
@@ -81,7 +87,9 @@ public final class PayDepositRequest extends TradeMessage {
                              NodeAddress arbitratorNodeAddress,
                              NodeAddress mediatorNodeAddress,
                              String uid,
-                             int messageVersion) {
+                             int messageVersion,
+                             @Nullable byte[] accountAgeWitnessNonce,
+                             @Nullable byte[] accountAgeWitnessSignatureOfNonce) {
         super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -103,6 +111,8 @@ public final class PayDepositRequest extends TradeMessage {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.uid = uid;
+        this.accountAgeWitnessNonce = accountAgeWitnessNonce;
+        this.accountAgeWitnessSignatureOfNonce = accountAgeWitnessSignatureOfNonce;
     }
 
 
@@ -136,7 +146,11 @@ public final class PayDepositRequest extends TradeMessage {
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setUid(uid);
+      
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        Optional.ofNullable(accountAgeWitnessNonce).ifPresent(accountAgeWitnessNonce -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(accountAgeWitnessNonce)));
+        Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(accountAgeWitnessSignatureOfNonce -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(accountAgeWitnessSignatureOfNonce)));
+
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
 
@@ -171,9 +185,10 @@ public final class PayDepositRequest extends TradeMessage {
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                proto.getAccountAgeWitnessNonce().isEmpty() ? null : proto.getAccountAgeWitnessNonce().toByteArray(),
+                proto.getAccountAgeWitnessSignatureOfNonce().isEmpty() ? null : proto.getAccountAgeWitnessSignatureOfNonce().toByteArray());
     }
-
 
     @Override
     public String toString() {
@@ -198,6 +213,8 @@ public final class PayDepositRequest extends TradeMessage {
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     uid='" + uid + '\'' +
+                ",\n     accountAgeWitnessNonce=" + Utilities.bytesAsHexString(accountAgeWitnessNonce) +
+                ",\n     accountAgeWitnessSignatureOfNonce=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfNonce) +
                 "\n} " + super.toString();
     }
 }

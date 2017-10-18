@@ -18,6 +18,8 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.CryptoUtils;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -68,6 +70,9 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
+            byte[] accountAgeWitnessNonce = CryptoUtils.getRandomBytes(32);
+            byte[] accountAgeWitnessSignatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), accountAgeWitnessNonce);
+            
             PayDepositRequest message = new PayDepositRequest(
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
@@ -90,7 +95,9 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     UUID.randomUUID().toString(),
-                    Version.getP2PMessageVersion());
+                    Version.getP2PMessageVersion(),
+                    accountAgeWitnessNonce,
+                    accountAgeWitnessSignatureOfNonce);
 
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),

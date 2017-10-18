@@ -52,6 +52,8 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
             processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
             processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.getPreparedDepositTx()));
+            processModel.getTradingPeer().setAccountAgeWitnessNonce(publishDepositTxRequest.getAccountAgeWitnessNonce());
+            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(publishDepositTxRequest.getAccountAgeWitnessSignatureOfNonce());
             checkArgument(publishDepositTxRequest.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct

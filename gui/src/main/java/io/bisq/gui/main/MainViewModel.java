@@ -614,6 +614,9 @@ public class MainViewModel implements ViewModel {
             if (newValue)
                 applyTradePeriodState();
         });
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
+                .show());
 
         // walletService
         btcWalletService.addBalanceListener(new BalanceListener() {

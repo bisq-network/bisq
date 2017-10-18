@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyStoreException;
@@ -61,23 +60,23 @@ public class AccountAgeWitnessServiceTest {
     public void testIsTradeDateAfterReleaseDate() throws CryptoException {
         Date ageWitnessReleaseDate = new GregorianCalendar(2017, 9, 23).getTime();
         Date tradeDate = new GregorianCalendar(2017, 10, 1).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate));
+        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
         tradeDate = new GregorianCalendar(2017, 9, 23).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate));
+        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
         tradeDate = new GregorianCalendar(2017, 9, 22, 0, 0, 1).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate));
+        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
         tradeDate = new GregorianCalendar(2017, 9, 22).getTime();
-        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate));
+        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
         tradeDate = new GregorianCalendar(2017, 9, 21).getTime();
-        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate));
+        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
     }
 
     @Test
     public void testVerifySigPubKey() {
         byte[] sigPubKeHash = Hash.getSha256Ripemd160hash(Sig.getPublicKeyBytes(publicKey));
-        assertFalse(service.verifySigPubKeyHash(new byte[0], publicKey));
-        assertFalse(service.verifySigPubKeyHash(new byte[1], publicKey));
-        assertTrue(service.verifySigPubKeyHash(sigPubKeHash, publicKey));
+        assertFalse(service.verifySigPubKeyHash(new byte[0], publicKey, errorMessage -> {}));
+        assertFalse(service.verifySigPubKeyHash(new byte[1], publicKey, errorMessage -> {}));
+        assertTrue(service.verifySigPubKeyHash(sigPubKeHash, publicKey, errorMessage -> {}));
     }
 
     @Test
@@ -87,21 +86,20 @@ public class AccountAgeWitnessServiceTest {
         final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
         byte[] hash = Hash.getSha256Ripemd160hash(combined);
         byte[] signature = Sig.sign(keypair.getPrivate(), hash);
-        assertTrue(service.verifySignature(publicKey, hash, signature));
-        assertFalse(service.verifySignature(publicKey, new byte[0], new byte[0]));
-        assertFalse(service.verifySignature(publicKey, hash, "sig2".getBytes(Charset.forName("UTF-8"))));
-        assertFalse(service.verifySignature(publicKey, "hash2".getBytes(Charset.forName("UTF-8")), signature));
+        assertTrue(service.verifySignature(publicKey, hash, signature, errorMessage -> {}));
+        assertFalse(service.verifySignature(publicKey, new byte[0], new byte[0], errorMessage -> {}));
+        assertFalse(service.verifySignature(publicKey, hash, "sig2".getBytes(Charset.forName("UTF-8")), errorMessage -> {}));
+        assertFalse(service.verifySignature(publicKey, "hash2".getBytes(Charset.forName("UTF-8")), signature, errorMessage -> {}));
     }
 
     @Test
     public void testVerifySignatureOfNonce() throws CryptoException {
-        int nonce = 1234;
-        byte[] nonceAsBytes = BigInteger.valueOf(nonce).toByteArray();
-        byte[] signature = Sig.sign(keypair.getPrivate(), nonceAsBytes);
-        assertTrue(service.verifySignatureOfNonce(publicKey, nonce, signature));
-        assertFalse(service.verifySignatureOfNonce(publicKey, nonce, "sig2".getBytes(Charset.forName("UTF-8"))));
-        assertFalse(service.verifySignatureOfNonce(publicKey, 0, new byte[0]));
-        assertFalse(service.verifySignatureOfNonce(publicKey, 9999, signature));
+        byte[] nonce = new byte[]{0x01};
+        byte[] signature = Sig.sign(keypair.getPrivate(), nonce);
+        assertTrue(service.verifySignatureOfNonce(publicKey, nonce, signature, errorMessage -> {}));
+        assertFalse(service.verifySignatureOfNonce(publicKey, nonce, new byte[]{0x02}, errorMessage -> {}));
+        assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x03}, signature, errorMessage -> {}));
+        assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x02},  new byte[]{0x04}, errorMessage -> {}));
     }
 
 

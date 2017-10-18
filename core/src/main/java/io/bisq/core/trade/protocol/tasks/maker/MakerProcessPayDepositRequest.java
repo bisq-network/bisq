@@ -63,6 +63,10 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
+
+            processModel.getTradingPeer().setAccountAgeWitnessNonce(payDepositRequest.getAccountAgeWitnessNonce());
+            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
+            
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
             trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
 

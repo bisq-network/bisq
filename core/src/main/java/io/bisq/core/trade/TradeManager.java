@@ -55,6 +55,7 @@ import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import lombok.Setter;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -64,6 +65,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
@@ -96,6 +98,9 @@ public class TradeManager implements PersistedDataHost {
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private boolean stopped;
     private List<Trade> tradesForStatistics;
+    @Setter
+    @Nullable
+    private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -316,7 +321,10 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             tradableList.add(trade);
-            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
+            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress, errorMessage -> {
+                if (takeOfferRequestErrorMessageHandler != null)
+                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+            });
         } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.

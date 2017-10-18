@@ -17,6 +17,8 @@
 
 package io.bisq.core.trade.protocol.tasks.maker;
 
+import io.bisq.common.crypto.CryptoUtils;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -54,6 +56,9 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                             addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
+            byte[] accountAgeWitnessNonce = CryptoUtils.getRandomBytes(32);
+            byte[] accountAgeWitnessSignatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), accountAgeWitnessNonce);
+
             PublishDepositTxRequest message = new PublishDepositTxRequest(
                     processModel.getOfferId(),
                     processModel.getPaymentAccountPayload(trade),
@@ -65,8 +70,10 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     processModel.getPreparedDepositTx(),
                     processModel.getRawTransactionInputs(),
                     processModel.getMyNodeAddress(),
-                    UUID.randomUUID().toString()
-            );
+                    UUID.randomUUID().toString(),
+                    accountAgeWitnessNonce,
+                    accountAgeWitnessSignatureOfNonce);
+            
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
 
             processModel.getP2PService().sendEncryptedMailboxMessage(

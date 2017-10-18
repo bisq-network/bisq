@@ -29,6 +29,7 @@ import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.PublishAccountAgeWitness;
+import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
@@ -91,7 +92,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress sender) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress sender, ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
@@ -99,7 +100,10 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
                 () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
-                this::handleTaskRunnerFault);
+                errorMessage -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
 
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
@@ -107,6 +111,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 MakerVerifyArbitratorSelection.class,
                 MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
+                VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,
                 SellerAsMakerCreatesAndSignsDepositTx.class,

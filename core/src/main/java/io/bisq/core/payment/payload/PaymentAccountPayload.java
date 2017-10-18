@@ -97,7 +97,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
         // User can set salt as well by hex string.
         // Persisted value will overwrite that
         if (!this.excludeFromJsonDataMap.containsKey(SALT))
-            this.excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(CryptoUtils.getSalt(32)));
+            this.excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(CryptoUtils.getRandomBytes(32)));
     }
 
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {

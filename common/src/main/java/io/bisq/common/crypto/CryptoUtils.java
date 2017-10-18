@@ -31,10 +31,10 @@ public class CryptoUtils {
         return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
     }
 
-    public static byte[] getSalt(int size) {
-        byte[] salt = new byte[size];
-        new SecureRandom().nextBytes(salt);
-        return salt;
+    public static byte[] getRandomBytes(int size) {
+        byte[] bytes = new byte[size];
+        new SecureRandom().nextBytes(bytes);
+        return bytes;
     }
 }
 
