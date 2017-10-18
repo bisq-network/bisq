@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade.protocol.tasks.maker;
 
-import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
@@ -56,7 +55,11 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                             addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            byte[] accountAgeWitnessNonce = CryptoUtils.getRandomBytes(32);
+            final byte[] preparedDepositTx = processModel.getPreparedDepositTx();
+            
+            // Maker has to use preparedDepositTx as nonce. 
+            // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
+            byte[] accountAgeWitnessNonce = preparedDepositTx;
             byte[] accountAgeWitnessSignatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), accountAgeWitnessNonce);
 
             PublishDepositTxRequest message = new PublishDepositTxRequest(
@@ -67,7 +70,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     trade.getContractAsJson(),
                     trade.getMakerContractSignature(),
                     makerPayoutAddressEntry.getAddressString(),
-                    processModel.getPreparedDepositTx(),
+                    preparedDepositTx,
                     processModel.getRawTransactionInputs(),
                     processModel.getMyNodeAddress(),
                     UUID.randomUUID().toString(),

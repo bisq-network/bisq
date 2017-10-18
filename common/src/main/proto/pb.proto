@@ -1198,6 +1198,8 @@ message TradingPeer {
     repeated RawTransactionInput raw_transaction_inputs = 9;
     int64 change_output_value = 10;
     string change_output_address = 11;
+    bytes account_age_witness_nonce = 12;
+    bytes account_age_witness_signature_of_nonce = 13;
 }
 
 message AccountAgeWitnessMap {

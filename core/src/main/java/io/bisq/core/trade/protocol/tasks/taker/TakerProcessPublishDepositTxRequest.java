@@ -23,6 +23,8 @@ import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.util.Validator.checkTradeId;
@@ -51,9 +53,16 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             processModel.getTradingPeer().setContractSignature(nonEmptyStringOf(publishDepositTxRequest.getMakerContractSignature()));
             processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
             processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
-            processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.getPreparedDepositTx()));
-            processModel.getTradingPeer().setAccountAgeWitnessNonce(publishDepositTxRequest.getAccountAgeWitnessNonce());
+            final byte[] preparedDepositTx = publishDepositTxRequest.getPreparedDepositTx();
+            processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
+
+            final byte[] accountAgeWitnessNonce = publishDepositTxRequest.getAccountAgeWitnessNonce();
+            processModel.getTradingPeer().setAccountAgeWitnessNonce(accountAgeWitnessNonce);
             processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(publishDepositTxRequest.getAccountAgeWitnessSignatureOfNonce());
+            // Maker has to use preparedDepositTx as nonce. 
+            // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
+            checkArgument(Arrays.equals(accountAgeWitnessNonce, preparedDepositTx));
+
             checkArgument(publishDepositTxRequest.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct

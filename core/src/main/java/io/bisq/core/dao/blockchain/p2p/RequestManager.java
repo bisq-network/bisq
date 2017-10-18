@@ -141,7 +141,11 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
         if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
             final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             seedNodeAddresses.remove(nodeAddress);
-            requestBlocksHandlerMap.remove(nodeAddress);
+            requestBlocksHandlerMap.entrySet().stream()
+                    .filter(e -> e.getKey().first.equals(nodeAddress))
+                    .findAny()
+                    .map(Map.Entry::getValue)
+                    .ifPresent(requestBlocksHandlerMap::remove);
         }
     }
 

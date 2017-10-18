@@ -18,7 +18,6 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
@@ -70,11 +69,15 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
-            byte[] accountAgeWitnessNonce = CryptoUtils.getRandomBytes(32);
+            final String offerId = processModel.getOfferId();
+            
+            // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
+            // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
+            byte[] accountAgeWitnessNonce = offerId.getBytes();
             byte[] accountAgeWitnessSignatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), accountAgeWitnessNonce);
             
             PayDepositRequest message = new PayDepositRequest(
-                    processModel.getOfferId(),
+                    offerId,
                     processModel.getMyNodeAddress(),
                     trade.getTradeAmount().value,
                     trade.getTradePrice().getValue(),
