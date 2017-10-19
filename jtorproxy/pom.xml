@@ -12,11 +12,7 @@
     <artifactId>jtorproxy</artifactId>
 
     <properties>
-        <!-- change here to get the desired version, verify signature, unpack and package in a format used by Bisq
-
-        requirement are: gpg and 7z in path
-        -->
-        <torbrowser.version>7.0.2</torbrowser.version>
+        <tor-binary.version>7.0.6</tor-binary.version>
     </properties>
 
     <dependencies>
@@ -35,250 +31,99 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.ant</groupId>
-                        <artifactId>ant-compress</artifactId>
-                        <version>1.4</version>
-                    </dependency>
-                </dependencies>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>unpack-linux64</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <tasks>
-                                <taskdef resource="org/apache/ant/compress/antlib.xml"
-                                         classpathref="maven.plugin.classpath"/>
-
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
-                                     dest="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
-                                     skipexisting="true"/>
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc"
-                                     dest="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc"
-                                     skipexisting="true"/>
-
-                                <exec executable="gpg" failonerror="true">
-                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"></arg>
-                                </exec>
-
-                                <unxz src="${project.build.directory}/tor-browser-linux64-${torbrowser.version}_en-US.tar.xz"
-                                      dest="${project.build.directory}/linuxx64.tar"
-
-                                />
-                                <untar src="${project.build.directory}/linuxx64.tar"
-                                       dest="${project.build.directory}/linuxx64/"
-                                />
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>unpack-linux32</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <tasks>
-                                <taskdef resource="org/apache/ant/compress/antlib.xml"
-                                         classpathref="maven.plugin.classpath"/>
-
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
-                                     dest="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
-                                     skipexisting="true"/>
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc"
-                                     dest="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc"
-                                     skipexisting="true"/>
-
-                                <exec executable="gpg" failonerror="true">
-                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz.asc ${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"></arg>
-                                </exec>
-
-                                <unxz src="${project.build.directory}/tor-browser-linux32-${torbrowser.version}_en-US.tar.xz"
-                                      dest="${project.build.directory}/linuxx32.tar"
-
-                                />
-                                <untar src="${project.build.directory}/linuxx32.tar"
-                                       dest="${project.build.directory}/linuxx32/"
-                                />
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>unpack-windows</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <target>
-                                <taskdef resource="org/apache/ant/compress/antlib.xml"
-                                         classpathref="maven.plugin.classpath"/>
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/torbrowser-install-${torbrowser.version}_en-US.exe"
-                                     dest="${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe"
-                                     skipexisting="true"/>
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/torbrowser-install-${torbrowser.version}_en-US.exe.asc"
-                                     dest="${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe.asc"
-                                     skipexisting="true"/>
-
-                                <exec executable="gpg" failonerror="true">
-                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe.asc ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe"></arg>
-                                </exec>
-
-                                <!-- unpack Tor
-                                x unpack
-                                -o destination folder
-                                -aoa Overwrite all existing files without prompt.
-                                -->
-                                <exec executable="7z" failonerror="true">
-                                    <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/windows -aoa Browser/TorBrowser/Tor/*"></arg>
-                                </exec>
-
-                                <!-- unpack geoip6 and geoip -->
-                                <exec executable="7z" failonerror="true">
-                                    <arg line="x ${project.build.directory}/torbrowser-install-${torbrowser.version}_en-US.exe -o${project.build.directory}/geoip -aoa Browser/TorBrowser/Data/Tor/*"></arg>
-                                </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>unpack-osx</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <target>
-                                <taskdef resource="org/apache/ant/compress/antlib.xml"
-                                         classpathref="maven.plugin.classpath"/>
-
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"
-                                     dest="${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"
-                                     skipexisting="true"/>
-                                <get src="https://github.com/TheTorProject/gettorbrowser/releases/download/v${torbrowser.version}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc"
-                                     dest="${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc"
-                                     skipexisting="true"/>
-
-                                <exec executable="gpg" failonerror="true">
-                                    <arg line="--auto-key-locate keyserver --keyserver pgp.mit.edu --keyserver-options auto-key-retrieve --verify ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg.asc ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg"></arg>
-                                </exec>
-
-                                <!-- unpack Tor
-                                             x unpack
-                                             -o destination folder
-                                             -aoa Overwrite all existing files without prompt.
-                                             -->
-                                <exec executable="7z" failonerror="true">
-                                    <arg line="x ${project.build.directory}/TorBrowser-${torbrowser.version}-osx64_en-US.dmg -o${project.build.directory}/osx -aoa TorBrowser.app/Contents/MacOS/Tor/*"></arg>
-                                </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>package-osx</id>
+                        <id>copy</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/osx.xml</descriptor>
-                            </descriptors>
-                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
-                            <finalName>tor</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <outputDirectory>${project.build.directory}/classes/native/osx/x64</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-linux32</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/linux/x86
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-linux64</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/linux/x64
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-macos</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/osx/x64</outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-windows</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/windows/x86
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+
+                            </artifactItems>
+
                         </configuration>
                     </execution>
                     <execution>
-                        <id>package-linux64</id>
+                        <id>unpack</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/linux64.xml</descriptor>
-                            </descriptors>
-                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
-                            <finalName>tor</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <outputDirectory>${project.build.directory}/classes/native/linux/x64</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-geoip</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>package-linux32</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/linux32.xml</descriptor>
-                            </descriptors>
-                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
-                            <finalName>tor</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <outputDirectory>${project.build.directory}/classes/native/linux/x86</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package-windows</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/windows.xml</descriptor>
-                            </descriptors>
-                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
-                            <finalName>tor</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <outputDirectory>${project.build.directory}/classes/native/windows/x86</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>move</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/geoip.xml</descriptor>
-                            </descriptors>
-                            <attach>false</attach> <!-- don't attach because we override final name and that would not being unique in repository -->
-                            <finalName>classes</finalName> <!-- misuse as folder name destination -->
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                        </configuration>
-                    </execution>
+
                 </executions>
             </plugin>
         </plugins>
+
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.8</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.0.2</version>
                 </plugin>
-
             </plugins>
         </pluginManagement>
-
 
     </build>
 </project>
