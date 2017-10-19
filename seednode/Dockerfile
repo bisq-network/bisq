@@ -21,6 +21,6 @@ RUN mkdir -p /root/.local/share/seed_BTC_MAINNET_${ONION_ADDRESS}/btc_mainnet/to
 
 COPY hostname private_key /root/.local/share/seed_BTC_MAINNET_${ONION_ADDRESS}/btc_mainnet/tor/hiddenservice/
 
-CMD java -Xms1800m -Xmx1800m  -jar ./seednode/target/SeedNode.jar --maxConnections=30 --baseCurrencyNetwork=BTC_MAINNET --nodePort=8000 \
+CMD java -Xms1800m -Xmx1800m -jar ./seednode/target/SeedNode.jar --maxConnections=30 --baseCurrencyNetwork=BTC_MAINNET --nodePort=8000 \
     --myAddress=${ONION_ADDRESS}.onion:8000 --appName=seed_BTC_MAINNET_${ONION_ADDRESS} \
     2>error_seed_BTC_MAINNET_${ONION_ADDRESS}.log
