@@ -129,6 +129,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("TRC", "Terracoin"));
+
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
