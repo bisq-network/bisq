@@ -131,8 +131,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("WAC", "WACoins"));
-        result.add(new CryptoCurrency("ZEC", "Zcash"));
+        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
+        result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
 
         result.sort(TradeCurrency::compareTo);
