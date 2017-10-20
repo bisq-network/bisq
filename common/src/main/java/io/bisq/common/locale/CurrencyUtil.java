@@ -92,6 +92,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
+        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
@@ -131,7 +132,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("WAC", "WACoins"));
-        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
