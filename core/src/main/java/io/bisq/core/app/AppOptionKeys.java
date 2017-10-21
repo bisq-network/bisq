@@ -8,4 +8,5 @@ public class AppOptionKeys {
     public static final String MAX_MEMORY = "maxMemory";
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String IGNORE_DEV_MSG_KEY = "ignoreDevMsg";
+    public static final String ENABLE_API = "enableAPI";
 }
