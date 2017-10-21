@@ -96,7 +96,7 @@ Build bisq
 Now we have all prepared to build the correct bisq jar.
    
     $ git clone https://github.com/bisq-network/exchange.git bisq
-    $ cd bisq
+    $ cd exchange
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
