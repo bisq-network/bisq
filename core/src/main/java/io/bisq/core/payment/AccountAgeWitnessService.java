@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment;
 
+import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
@@ -28,6 +29,8 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.User;
+import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +52,7 @@ public class AccountAgeWitnessService {
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
+    private final User user;
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
 
@@ -58,9 +62,10 @@ public class AccountAgeWitnessService {
 
 
     @Inject
-    public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService) {
+    public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService, User user) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
+        this.user = user;
     }
 
 
@@ -79,12 +84,31 @@ public class AccountAgeWitnessService {
             if (e.getValue() instanceof AccountAgeWitness)
                 addToMap((AccountAgeWitness) e.getValue());
         });
+
+        if (p2PService.isBootstrapped()) {
+            republishAllFiatAccounts();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    republishAllFiatAccounts();
+                }
+            });
+        }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    // At startup we re-publish the witness data of all fiat accounts to ensure we got our data well distributed.
+    private void republishAllFiatAccounts() {
+        if (user.getPaymentAccounts() != null)
+            user.getPaymentAccounts().stream()
+                .filter(e -> !(e instanceof CryptoCurrencyAccount))
+                .forEach(e -> {
+                    // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
+                    // P2P network with publishing all at once at startup time.
+                    final int delayInSec = 20 + new Random().nextInt(40);
+                    UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(e.getPaymentAccountPayload()), true), delayInSec);
+                });
+    }
 
     private void addToMap(AccountAgeWitness accountAgeWitness) {
         log.debug("addToMap hash=" + Utilities.bytesAsHexString(accountAgeWitness.getHash()));
@@ -92,15 +116,16 @@ public class AccountAgeWitnessService {
             accountAgeWitnessMap.put(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
     }
 
-    public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
-        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
-        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
-            p2PService.addPersistableNetworkPayload(accountAgeWitness);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
+        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
+        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+            p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
+    }
 
     public byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
         return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
