@@ -60,6 +60,10 @@ public final class TradingPeer implements PersistablePayload {
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
+
+    // added in v 0.6
+    @Nullable
+    private byte[] accountAgeWitnessSignatureOfAccountData;
     @Nullable
     private byte[] accountAgeWitnessNonce;
     @Nullable
@@ -71,7 +75,7 @@ public final class TradingPeer implements PersistablePayload {
     @Override
     public Message toProtoMessage() {
         final PB.TradingPeer.Builder builder = PB.TradingPeer.newBuilder()
-                .setChangeOutputValue(changeOutputValue);
+            .setChangeOutputValue(changeOutputValue);
         Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
         Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((PB.PaymentAccountPayload) e.toProtoMessage()));
         Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
@@ -82,6 +86,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(e)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(e)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
         return builder.build();
@@ -102,12 +107,13 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setPubKeyRing(proto.hasPubKeyRing() ? PubKeyRing.fromProto(proto.getPubKeyRing()) : null);
             tradingPeer.setMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMultiSigPubKey()));
             List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
-                    null :
-                    proto.getRawTransactionInputsList().stream()
-                            .map(RawTransactionInput::fromProto)
-                            .collect(Collectors.toList());
+                null :
+                proto.getRawTransactionInputsList().stream()
+                    .map(RawTransactionInput::fromProto)
+                    .collect(Collectors.toList());
             tradingPeer.setRawTransactionInputs(rawTransactionInputs);
             tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
+            tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
             tradingPeer.setAccountAgeWitnessSignatureOfNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()));
             return tradingPeer;

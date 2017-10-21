@@ -67,7 +67,7 @@ public final class OfferPayload implements ProtectedStoragePayload, RequiresOwne
     }
 
     // Keys for extra map
-    public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitness";
+    public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,11 +134,11 @@ public final class OfferPayload implements ProtectedStoragePayload, RequiresOwne
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;
-    
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
-    
+
     // extraDataMap used from v0.6 on for hashOfPaymentAccount
     // key ACCOUNT_AGE_WITNESS, value: hex string of hashOfPaymentAccount byte array
     @Nullable
@@ -355,7 +355,7 @@ public final class OfferPayload implements ProtectedStoragePayload, RequiresOwne
     // In the offer we support base and counter currency
     // Fiat offers have base currency BTC and counterCurrency Fiat
     // Altcoins have base currency Altcoin and counterCurrency BTC
-    // The rest of the app does not support yet that concept of base currency and counter currencies 
+    // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
         return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();

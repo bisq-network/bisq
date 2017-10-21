@@ -66,13 +66,14 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
 
+            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfAccountData(payDepositRequest.getAccountAgeWitnessSignatureOfAccountData());
             final byte[] accountAgeWitnessNonce = payDepositRequest.getAccountAgeWitnessNonce();
             processModel.getTradingPeer().setAccountAgeWitnessNonce(accountAgeWitnessNonce);
             processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
             checkArgument(Arrays.equals(accountAgeWitnessNonce, trade.getOffer().getId().getBytes()));
-             
+
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
             trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
 

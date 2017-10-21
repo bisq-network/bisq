@@ -19,10 +19,12 @@ package io.bisq.core.trade.protocol.tasks;
 
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitness;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.protocol.TradingPeer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -45,49 +47,46 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
             runInterceptHook();
 
             final AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
-            final PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload(),
-                    "Peers peersPaymentAccountPayload must not be null");
-
-            final String[] errorMsg1 = new String[1];
-            boolean result = accountAgeWitnessService.verifyTradeLimit(trade.getOffer(), peersPaymentAccountPayload, errorMessage -> errorMsg1[0] = errorMessage);
-            if (result) {
-                byte[] nonce = processModel.getTradingPeer().getAccountAgeWitnessNonce();
-                byte[] signatureOfNonce = processModel.getTradingPeer().getAccountAgeWitnessSignatureOfNonce();
-                Optional<AccountAgeWitness> witnessOptional = accountAgeWitnessService.getWitnessByPaymentAccountPayload(peersPaymentAccountPayload);
-                if (witnessOptional.isPresent() && nonce != null && signatureOfNonce != null) {
-                    AccountAgeWitness witness = witnessOptional.get();
-                    final PubKeyRing pubKeyRing = processModel.getTradingPeer().getPubKeyRing();
-                    checkNotNull(pubKeyRing, "processModel.getTradingPeer().getPubKeyRing() must not be null");
-                    final String[] errorMsg2 = new String[1];
-                    result = accountAgeWitnessService.verifyAccountAgeWitness(peersPaymentAccountPayload.getAgeWitnessInputData(),
-                            witness,
-                            peersPaymentAccountPayload.getSalt(),
-                            pubKeyRing.getSignaturePubKey(),
-                            nonce,
-                            signatureOfNonce,
-                            errorMessage -> errorMsg2[0] = errorMessage);
-                    if (result)
-                        complete();
-                    else
-                        failed(errorMsg2[0]);
-                } else {
-                    String msg = !witnessOptional.isPresent() ?
-                            "Peers AccountAgeWitness is not found." :
-                            "Peer seems to uses a pre v0.6 application which does not support sending of account age witness verification nonce and signature.";
-                    msg += "\nTrade ID=" + trade.getId();
-                    if (new Date().after(new GregorianCalendar(2018, GregorianCalendar.FEBRUARY, 1).getTime())) {
-                        msg = "The account age witness verification failed.\nReason: " + msg;
-                        log.error(msg);
-                        failed(msg);
-                    } else {
-                        log.warn(msg + "\nWe tolerate that until 1. of Feb. 2018");
-                        complete();
-                    }
-                }
+            final TradingPeer tradingPeer = processModel.getTradingPeer();
+            final PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
+                "Peers peersPaymentAccountPayload must not be null");
+            final PubKeyRing peersPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "peersPubKeyRing must not be null");
+            final Offer offer = trade.getOffer();
+            final Optional<String> accountAgeWitnessHashAsHex = offer.getAccountAgeWitnessHashAsHex();
+            Optional<AccountAgeWitness> witnessOptional = accountAgeWitnessHashAsHex.isPresent() ?
+                accountAgeWitnessService.getPeersWitnessByHashAsHex(accountAgeWitnessHashAsHex.get())
+                : Optional.<AccountAgeWitness>empty();
+            byte[] nonce = tradingPeer.getAccountAgeWitnessNonce();
+            byte[] signatureOfNonce = tradingPeer.getAccountAgeWitnessSignatureOfNonce();
+            if (witnessOptional.isPresent() && nonce != null && signatureOfNonce != null) {
+                AccountAgeWitness witness = witnessOptional.get();
+                final String[] errorMsg = new String[1];
+                byte[] peersSignatureOfAccountHash = tradingPeer.getAccountAgeWitnessSignatureOfAccountData();
+                boolean result = accountAgeWitnessService.verifyPeersAccountAgeWitness(offer,
+                    peersPaymentAccountPayload,
+                    witness,
+                    peersPubKeyRing,
+                    peersSignatureOfAccountHash,
+                    nonce,
+                    signatureOfNonce,
+                    errorMessage -> errorMsg[0] = errorMessage);
+                if (result)
+                    complete();
+                else
+                    failed(errorMsg[0]);
             } else {
-                String msg = "The offer verification failed.\nReason: " + errorMsg1[0];
-                log.error(msg);
-                failed(msg);
+                String msg = !witnessOptional.isPresent() ?
+                    "Peers AccountAgeWitness is not found." :
+                    "Peer seems to uses a pre v0.6 application which does not support sending of account age witness verification nonce and signature.";
+                msg += "\nTrade ID=" + trade.getId();
+                if (new Date().after(new GregorianCalendar(2018, GregorianCalendar.FEBRUARY, 1).getTime())) {
+                    msg = "The account age witness verification failed.\nReason: " + msg;
+                    log.error(msg);
+                    failed(msg);
+                } else {
+                    log.warn(msg + "\nWe tolerate offers without account age witness until first of Feb. 2018");
+                    complete();
+                }
             }
         } catch (Throwable t) {
             failed(t);

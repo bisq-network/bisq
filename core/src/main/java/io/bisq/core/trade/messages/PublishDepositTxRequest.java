@@ -19,6 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -54,6 +55,8 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     // added in v 0.6. can be null if we trade with an older peer
     @Nullable
+    private final byte[] accountAgeWitnessSignatureOfAccountData;
+    @Nullable
     private final byte[] accountAgeWitnessNonce;
     @Nullable
     private final byte[] accountAgeWitnessSignatureOfNonce;
@@ -69,22 +72,24 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                    List<RawTransactionInput> makerInputs,
                                    NodeAddress senderNodeAddress,
                                    String uid,
+                                   @Nullable byte[] accountAgeWitnessSignatureOfAccountData,
                                    @Nullable byte[] accountAgeWitnessNonce,
                                    @Nullable byte[] accountAgeWitnessSignatureOfNonce) {
         this(tradeId,
-                makerPaymentAccountPayload,
-                makerAccountId,
-                makerMultiSigPubKey,
-                makerContractAsJson,
-                makerContractSignature,
-                makerPayoutAddressString,
-                preparedDepositTx,
-                makerInputs,
-                senderNodeAddress,
-                uid,
-                Version.getP2PMessageVersion(), 
-                accountAgeWitnessNonce,
-                accountAgeWitnessSignatureOfNonce);
+            makerPaymentAccountPayload,
+            makerAccountId,
+            makerMultiSigPubKey,
+            makerContractAsJson,
+            makerContractSignature,
+            makerPayoutAddressString,
+            preparedDepositTx,
+            makerInputs,
+            senderNodeAddress,
+            uid,
+            Version.getP2PMessageVersion(),
+            accountAgeWitnessSignatureOfAccountData,
+            accountAgeWitnessNonce,
+            accountAgeWitnessSignatureOfNonce);
     }
 
 
@@ -104,6 +109,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                     NodeAddress senderNodeAddress,
                                     String uid,
                                     int messageVersion,
+                                    @Nullable byte[] accountAgeWitnessSignatureOfAccountData,
                                     @Nullable byte[] accountAgeWitnessNonce,
                                     @Nullable byte[] accountAgeWitnessSignatureOfNonce) {
         super(messageVersion, tradeId);
@@ -117,6 +123,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         this.makerInputs = makerInputs;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
+        this.accountAgeWitnessSignatureOfAccountData = accountAgeWitnessSignatureOfAccountData;
         this.accountAgeWitnessNonce = accountAgeWitnessNonce;
         this.accountAgeWitnessSignatureOfNonce = accountAgeWitnessSignatureOfNonce;
     }
@@ -124,63 +131,66 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         final PB.PublishDepositTxRequest.Builder builder = PB.PublishDepositTxRequest.newBuilder()
-                .setTradeId(tradeId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                .setMakerAccountId(makerAccountId)
-                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
-                .setMakerContractAsJson(makerContractAsJson)
-                .setMakerContractSignature(makerContractSignature)
-                .setMakerPayoutAddressString(makerPayoutAddressString)
-                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid);
-        
-        Optional.ofNullable(accountAgeWitnessNonce).ifPresent(accountAgeWitnessNonce ->builder.setAccountAgeWitnessNonce(ByteString.copyFrom(accountAgeWitnessNonce)));
-        Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(accountAgeWitnessSignatureOfNonce ->builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(accountAgeWitnessSignatureOfNonce)));
+            .setTradeId(tradeId)
+            .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+            .setMakerAccountId(makerAccountId)
+            .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+            .setMakerContractAsJson(makerContractAsJson)
+            .setMakerContractSignature(makerContractSignature)
+            .setMakerPayoutAddressString(makerPayoutAddressString)
+            .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+            .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
+            .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+            .setUid(uid);
+
+        Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
+        Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
+        Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
 
         return getNetworkEnvelopeBuilder()
-                .setPublishDepositTxRequest(builder)
-                .build();
+            .setPublishDepositTxRequest(builder)
+            .build();
     }
 
     public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
-                .map(RawTransactionInput::fromProto)
-                .collect(Collectors.toList());
+            .map(RawTransactionInput::fromProto)
+            .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(proto.getTradeId(),
-                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
-                proto.getMakerAccountId(),
-                proto.getMakerMultiSigPubKey().toByteArray(),
-                proto.getMakerContractAsJson(),
-                proto.getMakerContractSignature(),
-                proto.getMakerPayoutAddressString(),
-                proto.getPreparedDepositTx().toByteArray(),
-                makerInputs,
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid(),
-                messageVersion,
-                proto.getAccountAgeWitnessNonce().isEmpty() ? null : proto.getAccountAgeWitnessNonce().toByteArray(),
-                proto.getAccountAgeWitnessSignatureOfNonce().isEmpty() ? null : proto.getAccountAgeWitnessSignatureOfNonce().toByteArray());
+            coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
+            proto.getMakerAccountId(),
+            proto.getMakerMultiSigPubKey().toByteArray(),
+            proto.getMakerContractAsJson(),
+            proto.getMakerContractSignature(),
+            proto.getMakerPayoutAddressString(),
+            proto.getPreparedDepositTx().toByteArray(),
+            makerInputs,
+            NodeAddress.fromProto(proto.getSenderNodeAddress()),
+            proto.getUid(),
+            messageVersion,
+            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()),
+            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()),
+            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()));
     }
 
 
     @Override
     public String toString() {
         return "PublishDepositTxRequest{" +
-                "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
-                ",\n     makerAccountId='" + makerAccountId + '\'' +
-                ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
-                ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
-                ",\n     makerContractSignature='" + makerContractSignature + '\'' +
-                ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
-                ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
-                ",\n     makerInputs=" + makerInputs +
-                ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
-                ",\n     accountAgeWitnessNonce=" + Utilities.bytesAsHexString(accountAgeWitnessNonce) +
-                ",\n     accountAgeWitnessSignatureOfNonce=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfNonce) +
-                "\n} " + super.toString();
+            "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
+            ",\n     makerAccountId='" + makerAccountId + '\'' +
+            ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
+            ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
+            ",\n     makerContractSignature='" + makerContractSignature + '\'' +
+            ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
+            ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
+            ",\n     makerInputs=" + makerInputs +
+            ",\n     senderNodeAddress=" + senderNodeAddress +
+            ",\n     uid='" + uid + '\'' +
+            ",\n     accountAgeWitnessSignatureOfAccountData=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfAccountData) +
+            ",\n     accountAgeWitnessNonce=" + Utilities.bytesAsHexString(accountAgeWitnessNonce) +
+            ",\n     accountAgeWitnessSignatureOfNonce=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfNonce) +
+            "\n} " + super.toString();
     }
 }

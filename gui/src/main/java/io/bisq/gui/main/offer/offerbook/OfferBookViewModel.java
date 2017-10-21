@@ -464,7 +464,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        final long myTradeLimit = accountOptional.isPresent() ? accountAgeWitnessService.getTradeLimit(accountOptional.get(), offer.getCurrencyCode()) : 0L;
+        final long myTradeLimit = accountOptional.isPresent() ? accountAgeWitnessService.getMyTradeLimit(accountOptional.get(), offer.getCurrencyCode()) : 0L;
         final long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",

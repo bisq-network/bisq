@@ -248,7 +248,7 @@ public class CurrencyUtil {
             if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent()) {
                 return Optional.of(cryptoCurrencyOptional.get());
             } else {
-                return Optional.empty();
+                return Optional.<TradeCurrency>empty();
             }
         }
     }

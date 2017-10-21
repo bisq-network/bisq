@@ -151,10 +151,10 @@ public abstract class PaymentMethodForm {
                     CurrencyUtil.getDefaultTradeCurrency();
 
         final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
-        final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
+        final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
                 getTimeText(hours),
-                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                 formatter.formatAccountAge(accountAge)));
 
         if (isAddAccountScreen) {
@@ -165,7 +165,7 @@ public abstract class PaymentMethodForm {
                     try {
                         // test if input is hex
                         Utilities.decodeFromHex(newValue);
-                        
+
                         paymentAccount.setSaltAsHex(newValue);
                     } catch (Throwable t) {
                         new Popup().warning(Res.get("payment.error.noHexSalt")).show();

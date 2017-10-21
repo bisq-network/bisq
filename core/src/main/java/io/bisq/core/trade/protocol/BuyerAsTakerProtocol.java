@@ -127,7 +127,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerProcessPublishDepositTxRequest.class,
                 CheckIfPeerIsBanned.class,
                 TakerVerifyMakerAccount.class,
-                TakerVerifyOffersAccountAgeWitnessHash.class,
                 VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,

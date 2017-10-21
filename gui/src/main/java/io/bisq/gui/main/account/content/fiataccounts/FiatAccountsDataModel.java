@@ -115,8 +115,8 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
             });
         }
-       
-        accountAgeWitnessService.publishAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
+
+        accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {

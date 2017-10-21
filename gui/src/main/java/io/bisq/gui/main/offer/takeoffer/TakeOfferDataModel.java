@@ -362,7 +362,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     long getMaxTradeLimit() {
         if (paymentAccount != null)
-            return accountAgeWitnessService.getTradeLimit(paymentAccount, getCurrencyCode());
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
         else
             return 0;
     }

@@ -103,7 +103,7 @@ public class Connection implements MessageListener {
     private OutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
-    private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
+    private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
     private volatile boolean stopped;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();

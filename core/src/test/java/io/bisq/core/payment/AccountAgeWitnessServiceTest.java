@@ -72,14 +72,6 @@ public class AccountAgeWitnessServiceTest {
     }
 
     @Test
-    public void testVerifySigPubKey() {
-        byte[] sigPubKeHash = Hash.getSha256Ripemd160hash(Sig.getPublicKeyBytes(publicKey));
-        assertFalse(service.verifySigPubKeyHash(new byte[0], publicKey, errorMessage -> {}));
-        assertFalse(service.verifySigPubKeyHash(new byte[1], publicKey, errorMessage -> {}));
-        assertTrue(service.verifySigPubKeyHash(sigPubKeHash, publicKey, errorMessage -> {}));
-    }
-
-    @Test
     public void testVerifySignature() throws CryptoException {
         byte[] ageWitnessInputData = "test".getBytes(Charset.forName("UTF-8"));
         byte[] salt = "salt".getBytes(Charset.forName("UTF-8"));

@@ -18,8 +18,8 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -31,7 +31,6 @@ import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -52,11 +51,22 @@ public class AccountAgeWitnessService {
     private final P2PService p2PService;
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     @Inject
     public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
         p2PService.getP2PDataStorage().addPersistableNetworkPayloadMapListener(payload -> {
@@ -71,49 +81,29 @@ public class AccountAgeWitnessService {
         });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void addToMap(AccountAgeWitness accountAgeWitness) {
         log.debug("addToMap hash=" + Utilities.bytesAsHexString(accountAgeWitness.getHash()));
         if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
             accountAgeWitnessMap.put(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
     }
 
-    public void publishAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
-        try {
-            AccountAgeWitness accountAgeWitness = getAccountAgeWitness(paymentAccountPayload);
-            if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
-                p2PService.addPersistableNetworkPayload(accountAgeWitness);
-        } catch (CryptoException e) {
-            e.printStackTrace();
-            log.error(e.toString());
-        }
+    public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
+        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
+        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+            p2PService.addPersistableNetworkPayload(accountAgeWitness);
     }
 
-    public Optional<AccountAgeWitness> getWitnessByHash(String hashAsHex) {
-        P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(Utilities.decodeFromHex(hashAsHex));
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Generic
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<AccountAgeWitness> getWitnessByPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
-        return getWitnessByHash(getWitnessHashAsHex(paymentAccountPayload));
-    }
-
-    public long getAccountAge(Offer offer) {
-        if (offer.getAccountAgeWitnessHash().isPresent())
-            return getAccountAge(getWitnessByHash(offer.getAccountAgeWitnessHash().get()));
-        else
-            return 0L;
-    }
-
-    public long getAccountAge(PaymentAccountPayload paymentAccountPayload) {
-        return getAccountAge(getWitnessByPaymentAccountPayload(paymentAccountPayload));
-    }
-
-    private long getAccountAge(Optional<AccountAgeWitness> accountAgeWitnessOptional) {
-        if (accountAgeWitnessOptional.isPresent()) {
-            return new Date().getTime() - accountAgeWitnessOptional.get().getDate();
-        } else {
-            return 0L;
-        }
+    public byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
+        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
     }
 
     public long getAccountAge(AccountAgeWitness accountAgeWitness) {
@@ -130,65 +120,17 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private AccountAgeWitness getAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) throws CryptoException {
-        byte[] hash = getWitnessHash(paymentAccountPayload);
-        byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), hash);
-        byte[] sigPubKeyHash = Hash.getSha256Ripemd160hash(keyRing.getPubKeyRing().getSignaturePubKeyBytes());
-        long now = new Date().getTime();
-
-        //TODO
-        // test
-        //now -= TimeUnit.DAYS.toMillis(75);
-
-        return new AccountAgeWitness(hash,
-                sigPubKeyHash,
-                signature,
-                now);
-    }
-
-    public byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload) {
-        return getWitnessHash(paymentAccountPayload, paymentAccountPayload.getSalt());
-    }
-
-    public String getWitnessHashAsHex(PaymentAccountPayload paymentAccountPayload) {
-        return Utilities.bytesAsHexString(getWitnessHash(paymentAccountPayload));
-    }
-
-    private byte[] getWitnessHash(PaymentAccountPayload paymentAccountPayload, byte[] salt) {
-        byte[] ageWitnessInputData = paymentAccountPayload.getAgeWitnessInputData();
-        final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        final byte[] hash = Hash.getSha256Ripemd160hash(combined);
-        log.debug("getWitnessHash paymentAccountPayload={}, salt={}, ageWitnessInputData={}, combined={}, hash={}",
-                paymentAccountPayload.getPaymentDetails(),
-                Utilities.encodeToHex(salt),
-                Utilities.encodeToHex(ageWitnessInputData),
-                Utilities.encodeToHex(combined),
-                Utilities.encodeToHex(hash));
-        return hash;
-    }
-
-    public long getTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
-        return getTradeLimit(paymentAccount.getPaymentAccountPayload(), currencyCode);
-    }
-
-    public long getTradeLimit(PaymentAccountPayload paymentAccountPayload, String currencyCode) {
-        final long maxTradeLimit = PaymentMethod.getPaymentMethodById(paymentAccountPayload.getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode).value;
+    private long getTradeLimit(PaymentMethod paymentMethod, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
+        final long maxTradeLimit = paymentMethod.getMaxTradeLimitAsCoin(currencyCode).value;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            // TODO test
-            /*Optional<AccountAgeWitness> accountAgeWitnessOptional = paymentAccount.getName() != null ?
-                    getWitnessByHash(getWitnessHashAsHex(paymentAccountPayload)) :
-                    Optional.empty();*/
-
-            Optional<AccountAgeWitness> accountAgeWitnessOptional = getWitnessByHash(getWitnessHashAsHex(paymentAccountPayload));
-
             AccountAge accountAgeCategory = accountAgeWitnessOptional.isPresent() ?
-                    getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
-                    AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
+                getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
+                AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
 
             // TODO Fade in by date can be removed after feb 2018
-            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when 
+            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when
             // we deploy that feature.
             final Date now = new Date();
           /*  final Date dez = new GregorianCalendar(2017, GregorianCalendar.DECEMBER, 1).getTime();
@@ -236,37 +178,112 @@ public class AccountAgeWitnessService {
         }
     }
 
-    public boolean verifyAccountAgeWitness(byte[] peersAgeWitnessInputData,
-                                           AccountAgeWitness witness,
-                                           byte[] peersSalt,
-                                           PublicKey peersPublicKey,
-                                           byte[] nonce,
-                                           byte[] signatureOfNonce,
-                                           ErrorMessageHandler errorMessageHandler) {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // My witness
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
+        try {
+            byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+            byte[] hash = Utilities.concatenateByteArrays(accountInputDataWithSalt,
+                Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountInputDataWithSalt),
+                keyRing.getPubKeyRing().getSignaturePubKeyBytes());
+            long date = new Date().getTime();
+            //TODO
+            // test
+            //date -= TimeUnit.DAYS.toMillis(75);
+            return new AccountAgeWitness(hash, date);
+        } catch (CryptoException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
+        return getMyWitness(paymentAccountPayload).getHash();
+    }
+
+    public String getMyWitnessHashAsHex(PaymentAccountPayload paymentAccountPayload) {
+        return Utilities.bytesAsHexString(getMyWitnessHash(paymentAccountPayload));
+    }
+
+    public long getMyAccountAge(PaymentAccountPayload paymentAccountPayload) {
+        return getAccountAge(getMyWitness(paymentAccountPayload));
+    }
+
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
+        return getTradeLimit(paymentAccount.getPaymentMethod(), currencyCode, Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload())));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Peers witness
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<AccountAgeWitness> getPeersWitnessByHash(byte[] hash) {
+        P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
+    }
+
+    public Optional<AccountAgeWitness> getPeersWitnessByHashAsHex(String hashAsHex) {
+        return getPeersWitnessByHash(Utilities.decodeFromHex(hashAsHex));
+    }
+
+    public long getPeersAccountAge(Offer offer) {
+        final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
+            getPeersWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+            Optional.<AccountAgeWitness>empty();
+        return witnessByHashAsHex.isPresent() ? getAccountAge(witnessByHashAsHex.get()) : 0L;
+    }
+
+    public long getPeersTradeLimit(PaymentAccountPayload paymentAccountPayload, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
+        return getTradeLimit(PaymentMethod.getPaymentMethodById(paymentAccountPayload.getPaymentMethodId()), currencyCode, accountAgeWitnessOptional);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Verification
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean verifyPeersAccountAgeWitness(Offer offer,
+                                                PaymentAccountPayload peersPaymentAccountPayload,
+                                                AccountAgeWitness witness,
+                                                PubKeyRing peersPubKeyRing,
+                                                byte[] peersSignatureOfAccountHash,
+                                                byte[] nonce,
+                                                byte[] signatureOfNonce,
+                                                ErrorMessageHandler errorMessageHandler) {
         // Check if trade date in witness is not older than the release date of that feature (was added in v0.6)
         // TODO set date before releasing
         if (!isTradeDateAfterReleaseDate(witness.getDate(), new GregorianCalendar(2017, GregorianCalendar.OCTOBER, 17).getTime(), errorMessageHandler))
             return false;
 
-        // Check if peer's pubkey is matching the one from the witness data
-        if (!verifySigPubKeyHash(witness.getSigPubKeyHash(), peersPublicKey, errorMessageHandler))
-            return false;
+        final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
+        byte[] hash = Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersSignatureOfAccountHash, peersPubKeyRing.getSignaturePubKeyBytes());
 
-        final byte[] combined = ArrayUtils.addAll(peersAgeWitnessInputData, peersSalt);
-        byte[] hash = Hash.getSha256Ripemd160hash(combined);
-
-        // Check if the hash in the witness data matches the peer's payment account input data + salt
+        // Check if the hash in the witness data matches the hash derived from the data provided by the peer
         if (!verifyWitnessHash(witness.getHash(), hash, errorMessageHandler))
             return false;
 
-        // Check if the witness signature is correct 
-        if (!verifySignature(peersPublicKey, hash, witness.getSignature(), errorMessageHandler))
+        // Check if the witness signature is correct
+        if (!verifyPeersTradeLimit(offer, peersPaymentAccountPayload, errorMessageHandler))
             return false;
 
-        // Check if the signature of the nonce is correct 
-        return verifySignatureOfNonce(peersPublicKey, nonce, signatureOfNonce, errorMessageHandler);
+        // Check if the witness signature is correct
+        if (!verifySignature(peersPubKeyRing.getSignaturePubKey(), peersAccountInputDataWithSalt, peersSignatureOfAccountHash, errorMessageHandler))
+            return false;
+
+        // Check if the signature of the nonce is correct
+        return verifySignatureOfNonce(peersPubKeyRing.getSignaturePubKey(), nonce, signatureOfNonce, errorMessageHandler);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Package scope verification subroutines
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean isTradeDateAfterReleaseDate(long witnessDateAsLong, Date ageWitnessReleaseDate, ErrorMessageHandler errorMessageHandler) {
         // Release date minus 1 day as tolerance for not synced clocks
@@ -275,35 +292,38 @@ public class AccountAgeWitnessService {
         final boolean result = witnessDate.after(releaseDateWithTolerance);
         if (!result) {
             final String msg = "Trade date is earlier than release date of ageWitness minus 1 day. " +
-                    "ageWitnessReleaseDate=" + ageWitnessReleaseDate + ", witnessDate=" + witnessDate;
+                "ageWitnessReleaseDate=" + ageWitnessReleaseDate + ", witnessDate=" + witnessDate;
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
         return result;
     }
 
-    boolean verifySigPubKeyHash(byte[] sigPubKeyHash,
-                                PublicKey peersPublicKey,
-                                ErrorMessageHandler errorMessageHandler) {
-        final byte[] peersPublicKeyHash = Hash.getSha256Ripemd160hash(Sig.getPublicKeyBytes(peersPublicKey));
-        final boolean result = Arrays.equals(peersPublicKeyHash, sigPubKeyHash);
-        if (!result) {
-            final String msg = "sigPubKeyHash is not matching peers peersPublicKey. " +
-                    "sigPubKeyHash=" + Utilities.bytesAsHexString(sigPubKeyHash) + ", peersPublicKeyHash=" +
-                    Utilities.bytesAsHexString(peersPublicKeyHash);
-            log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-        }
-        return result;
-    }
-
-    private boolean verifyWitnessHash(byte[] witnessHash,
-                                      byte[] hash,
-                                      ErrorMessageHandler errorMessageHandler) {
+    boolean verifyWitnessHash(byte[] witnessHash,
+                              byte[] hash,
+                              ErrorMessageHandler errorMessageHandler) {
         final boolean result = Arrays.equals(witnessHash, hash);
         if (!result) {
             final String msg = "witnessHash is not matching peers hash. " +
-                    "witnessHash=" + Utilities.bytesAsHexString(witnessHash) + ", hash=" + Utilities.bytesAsHexString(hash);
+                "witnessHash=" + Utilities.bytesAsHexString(witnessHash) + ", hash=" + Utilities.bytesAsHexString(hash);
+            log.warn(msg);
+            errorMessageHandler.handleErrorMessage(msg);
+        }
+        return result;
+    }
+
+    private boolean verifyPeersTradeLimit(Offer offer,
+                                          PaymentAccountPayload paymentAccountPayload,
+                                          ErrorMessageHandler errorMessageHandler) {
+        final Optional<String> offerHashAsHexOptional = offer.getAccountAgeWitnessHashAsHex();
+        Optional<AccountAgeWitness> accountAgeWitnessOptional = offerHashAsHexOptional.isPresent() ? getPeersWitnessByHashAsHex(offerHashAsHexOptional.get()) : Optional.<AccountAgeWitness>empty();
+        long maxTradeLimit = getPeersTradeLimit(paymentAccountPayload, offer.getCurrencyCode(), accountAgeWitnessOptional);
+        final Coin offerMaxTradeLimit = offer.getMaxTradeLimit();
+        boolean result = offerMaxTradeLimit.value == maxTradeLimit;
+        if (!result) {
+            String msg = "Offers max trade limit does not match with the one based on his account age.\n" +
+                "OfferMaxTradeLimit=" + offerMaxTradeLimit.toFriendlyString() +
+                "; Account age based MaxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
@@ -323,8 +343,8 @@ public class AccountAgeWitnessService {
         }
         if (!result) {
             final String msg = "Signature of PaymentAccountAgeWitness is not correct. " +
-                    "peersPublicKey=" + peersPublicKey + ", data=" + Utilities.bytesAsHexString(data) +
-                    ", signature=" + Utilities.bytesAsHexString(signature);
+                "peersPublicKey=" + peersPublicKey + ", data=" + Utilities.bytesAsHexString(data) +
+                ", signature=" + Utilities.bytesAsHexString(signature);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
@@ -344,38 +364,8 @@ public class AccountAgeWitnessService {
         }
         if (!result) {
             final String msg = "Signature of nonce is not correct. " +
-                    "peersPublicKey=" + peersPublicKey + ", nonce(hex)=" + Utilities.bytesAsHexString(nonce) +
-                    ", signature=" + Utilities.bytesAsHexString(signature);
-            log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-        }
-        return result;
-    }
-
-    public boolean verifyOffersAccountAgeWitness(PaymentAccountPayload paymentAccountPayload,
-                                                 byte[] offersWitness,
-                                                 ErrorMessageHandler errorMessageHandler) {
-        byte[] witnessHash = getWitnessHash(paymentAccountPayload, paymentAccountPayload.getSalt());
-        final boolean result = Arrays.equals(witnessHash, offersWitness);
-        if (!result) {
-            final String msg = "witnessHash is not matching peers offersWitness. " +
-                    "witnessHash=" + Utilities.bytesAsHexString(witnessHash) + ", offersWitness=" + Utilities.bytesAsHexString(offersWitness);
-            log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-        }
-        return result;
-    }
-
-    public boolean verifyTradeLimit(Offer offer,
-                                    PaymentAccountPayload paymentAccountPayload,
-                                    ErrorMessageHandler errorMessageHandler) {
-        long maxTradeLimit = getTradeLimit(paymentAccountPayload, offer.getCurrencyCode());
-        final Coin offerMaxTradeLimit = offer.getMaxTradeLimit();
-        final boolean result = offerMaxTradeLimit.value == maxTradeLimit;
-        if (!result) {
-            String msg = "Offers max trade limit does not match with the one we calculated.\n" +
-                    "OfferMaxTradeLimit=" + offerMaxTradeLimit.toFriendlyString() +
-                    "; MaxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString();
+                "peersPublicKey=" + peersPublicKey + ", nonce(hex)=" + Utilities.bytesAsHexString(nonce) +
+                ", signature=" + Utilities.bytesAsHexString(signature);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }

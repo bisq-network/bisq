@@ -1199,12 +1199,12 @@ public class MainViewModel implements ViewModel {
             user.addPaymentAccount(okPayAccount);
 
             if (p2PService.isBootstrapped()) {
-                accountAgeWitnessService.publishAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onBootstrapComplete() {
-                        accountAgeWitnessService.publishAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                        accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
                     }
                 });
             }

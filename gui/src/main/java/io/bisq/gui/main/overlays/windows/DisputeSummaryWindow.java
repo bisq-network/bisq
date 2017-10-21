@@ -66,7 +66,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
-    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
+    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.<Runnable>empty();
     private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,

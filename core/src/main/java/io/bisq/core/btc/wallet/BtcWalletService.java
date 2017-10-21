@@ -787,7 +787,7 @@ public class BtcWalletService extends WalletService {
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
         sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
-        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+        Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
             addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);

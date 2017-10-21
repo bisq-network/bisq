@@ -32,7 +32,7 @@ public class PublishAccountAgeWitness extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            processModel.getAccountAgeWitnessService().publishAccountAgeWitness(processModel.getPaymentAccountPayload(trade));
+            processModel.getAccountAgeWitnessService().publishMyAccountAgeWitness(processModel.getPaymentAccountPayload(trade));
             complete();
         } catch (Throwable t) {
             failed(t);

@@ -347,8 +347,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         HashMap<String, String> extraDataMap = new HashMap<>();
 
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            final String hashOfPaymentAccountAsHex = accountAgeWitnessService.getWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, hashOfPaymentAccountAsHex);
+            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
         }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
@@ -553,7 +553,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     long getMaxTradeLimit() {
         if (paymentAccount != null)
-            return accountAgeWitnessService.getTradeLimit(paymentAccount, tradeCurrencyCode.get());
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
         else
             return 0;
     }

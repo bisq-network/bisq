@@ -55,7 +55,7 @@ message NetworkEnvelope {
         GetBsqBlocksRequest get_bsq_blocks_request = 28;
         GetBsqBlocksResponse get_bsq_blocks_response = 29;
         NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 30;
-        
+
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
     }
 }
@@ -131,10 +131,10 @@ message OfferAvailabilityResponse {
 }
 
 message RefreshOfferMessage {
-    bytes hash_of_data_and_seq_nr = 1; 
-    bytes signature = 2; 
-    bytes hash_of_payload = 3; 
-    int32 sequence_number = 4; 
+    bytes hash_of_data_and_seq_nr = 1;
+    bytes signature = 2;
+    bytes hash_of_payload = 3;
+    int32 sequence_number = 4;
 }
 
 
@@ -195,8 +195,9 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 19;
     NodeAddress mediator_node_address = 20;
     string uid = 21;
-    bytes account_age_witness_nonce = 22;
-    bytes account_age_witness_signature_of_nonce = 23;
+    bytes account_age_witness_signature_of_account_data = 22;
+    bytes account_age_witness_nonce = 23;
+    bytes account_age_witness_signature_of_nonce = 24;
 }
 
 message PublishDepositTxRequest {
@@ -211,8 +212,9 @@ message PublishDepositTxRequest {
     bytes maker_multi_sig_pub_key = 9;
     NodeAddress sender_node_address = 10;
     string uid = 11;
-    bytes account_age_witness_nonce = 12;
-    bytes account_age_witness_signature_of_nonce = 13;
+    bytes account_age_witness_signature_of_account_data = 12;
+    bytes account_age_witness_nonce = 13;
+    bytes account_age_witness_signature_of_nonce = 14;
 }
 
 message DepositTxPublishedMessage {
@@ -498,7 +500,7 @@ message Tx {
     int64 burnt_fee = 4;
     TxType tx_type = 5;
 }
-    
+
 message BsqBlock {
     int32 height = 1;
     string hash = 2;
@@ -560,7 +562,7 @@ message Filter {
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
-    repeated string banned_payment_methods = 8;    
+    repeated string banned_payment_methods = 8;
 }
 
 message TradeStatistics {
@@ -606,7 +608,7 @@ message OfferPayload {
     double market_price_margin = 7;
     bool use_market_based_price = 8;
     int64 amount = 9;
-    int64 min_amount = 10;   
+    int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
     repeated NodeAddress arbitrator_node_addresses = 13;
@@ -661,9 +663,7 @@ message CompensationRequestPayload {
 
 message AccountAgeWitness {
     bytes hash = 1;
-    bytes sig_pub_key_hash = 2;
-    bytes signature = 3;
-    int64 date = 4;
+    int64 date = 2;
 }
 
 
@@ -926,20 +926,20 @@ message PersistableEnvelope {
         PeerList peer_list = 3;
         AddressEntryList address_entry_list = 4;
         NavigationPath navigation_path = 5;
-        
+
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7;
         DisputeList dispute_list = 8;
-        
+
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
-        
+
         // TODO not fully implemented yet
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
-        
+
         PersistableNetworkPayloadList persistable_network_payload_list = 15;
     }
 }
@@ -1198,8 +1198,9 @@ message TradingPeer {
     repeated RawTransactionInput raw_transaction_inputs = 9;
     int64 change_output_value = 10;
     string change_output_address = 11;
-    bytes account_age_witness_nonce = 12;
-    bytes account_age_witness_signature_of_nonce = 13;
+    bytes account_age_witness_signature_of_account_data = 12;
+    bytes account_age_witness_nonce = 13;
+    bytes account_age_witness_signature_of_nonce = 14;
 }
 
 message AccountAgeWitnessMap {

@@ -50,14 +50,14 @@ public class PeerInfoIcon extends Group {
         peerTagMap = preferences.getPeerTagMap();
 
         boolean hasTraded = numTrades > 0;
-        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getAccountAge(offer));
+        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getPeersAccountAge(offer));
         tooltipText = hasTraded ?
                 Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
                 Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
 
         // outer circle
         Color ringColor;
-        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getAccountAge(offer))) {
+        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getPeersAccountAge(offer))) {
             case TWO_MONTHS_OR_MORE:
                 ringColor = Color.rgb(0, 225, 0); // > 2 months green
                 break;

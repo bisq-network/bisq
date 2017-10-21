@@ -60,7 +60,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                                     OpenOfferManager openOfferManager,
                                     TradeManager tradeManager,
                                     AccountAgeWitnessService accountAgeWitnessService,
-                                    Stage stage, 
+                                    Stage stage,
                                     PersistenceProtoResolver persistenceProtoResolver) {
         this.user = user;
         this.preferences = preferences;
@@ -115,7 +115,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             });
         }
 
-        accountAgeWitnessService.publishAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
+        accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {

@@ -56,10 +56,11 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             final byte[] preparedDepositTx = publishDepositTxRequest.getPreparedDepositTx();
             processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
 
+            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfAccountData(publishDepositTxRequest.getAccountAgeWitnessSignatureOfAccountData());
             final byte[] accountAgeWitnessNonce = publishDepositTxRequest.getAccountAgeWitnessNonce();
             processModel.getTradingPeer().setAccountAgeWitnessNonce(accountAgeWitnessNonce);
             processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(publishDepositTxRequest.getAccountAgeWitnessSignatureOfNonce());
-            // Maker has to use preparedDepositTx as nonce. 
+            // Maker has to use preparedDepositTx as nonce.
             // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
             checkArgument(Arrays.equals(accountAgeWitnessNonce, preparedDepositTx));
 
