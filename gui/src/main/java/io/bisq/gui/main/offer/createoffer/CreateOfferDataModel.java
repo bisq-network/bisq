@@ -147,8 +147,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.formatter = formatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
-                UUID.randomUUID().toString() + "-" +
-                Version.VERSION.replace(".", "");
+            UUID.randomUUID().toString() + "-" +
+            Version.VERSION.replace(".", "");
         shortOfferId = Utilities.getShortId(offerId);
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
@@ -235,8 +235,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         PaymentAccount account;
         PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
         if (lastSelectedPaymentAccount != null &&
-                user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
+            user.getPaymentAccounts() != null &&
+            user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
@@ -344,64 +344,64 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = new HashMap<>();
-
+        HashMap<String, String> extraDataMap = null;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            extraDataMap = new HashMap<>();
             final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
             extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
         }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
-                "securityDeposit must be not exceed " +
-                        Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
+            "securityDeposit must be not exceed " +
+                Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
-                "securityDeposit must be not be less than " +
-                        Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
+            "securityDeposit must be not be less than " +
+                Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
 
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
-                Res.get("offerbook.warning.currencyBanned"));
+            Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
-                Res.get("offerbook.warning.paymentMethodBanned"));
+            Res.get("offerbook.warning.paymentMethodBanned"));
 
         OfferPayload offerPayload = new OfferPayload(offerId,
-                new Date().getTime(),
-                p2PService.getAddress(),
-                keyRing.getPubKeyRing(),
-                OfferPayload.Direction.valueOf(direction.name()),
-                priceAsLong,
-                marketPriceMarginParam,
-                useMarketBasedPriceValue,
-                amount,
-                minAmount,
-                baseCurrencyCode,
-                counterCurrencyCode,
-                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
-                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
-                paymentAccount.getPaymentMethod().getId(),
-                paymentAccount.getId(),
-                null,
-                countryCode,
-                acceptedCountryCodes,
-                bankId,
-                acceptedBanks,
-                Version.VERSION,
-                btcWalletService.getLastBlockSeenHeight(),
-                txFeeFromFeeService.value,
-                getMakerFee().value,
-                isCurrencyForMakerFeeBtc(),
-                buyerSecurityDepositAsCoin.value,
-                sellerSecurityDeposit.value,
-                maxTradeLimit,
-                maxTradePeriod,
-                useAutoClose,
-                useReOpenAfterAutoClose,
-                upperClosePrice,
-                lowerClosePrice,
-                isPrivateOffer,
-                hashOfChallenge,
-                extraDataMap,
-                Version.TRADE_PROTOCOL_VERSION);
+            new Date().getTime(),
+            p2PService.getAddress(),
+            keyRing.getPubKeyRing(),
+            OfferPayload.Direction.valueOf(direction.name()),
+            priceAsLong,
+            marketPriceMarginParam,
+            useMarketBasedPriceValue,
+            amount,
+            minAmount,
+            baseCurrencyCode,
+            counterCurrencyCode,
+            Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
+            Lists.newArrayList(user.getAcceptedMediatorAddresses()),
+            paymentAccount.getPaymentMethod().getId(),
+            paymentAccount.getId(),
+            null,
+            countryCode,
+            acceptedCountryCodes,
+            bankId,
+            acceptedBanks,
+            Version.VERSION,
+            btcWalletService.getLastBlockSeenHeight(),
+            txFeeFromFeeService.value,
+            getMakerFee().value,
+            isCurrencyForMakerFeeBtc(),
+            buyerSecurityDepositAsCoin.value,
+            sellerSecurityDeposit.value,
+            maxTradeLimit,
+            maxTradePeriod,
+            useAutoClose,
+            useReOpenAfterAutoClose,
+            upperClosePrice,
+            lowerClosePrice,
+            isPrivateOffer,
+            hashOfChallenge,
+            extraDataMap,
+            Version.TRADE_PROTOCOL_VERSION);
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
         return offer;
@@ -415,10 +415,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
 
         openOfferManager.placeOffer(offer,
-                reservedFundsForOffer,
-                useSavingsWallet,
-                resultHandler,
-                log::error);
+            reservedFundsForOffer,
+            useSavingsWallet,
+            resultHandler,
+            log::error);
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -564,9 +564,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (price.get() != null &&
-                amount.get() != null &&
-                !amount.get().isZero() &&
-                !price.get().isZero()) {
+            amount.get() != null &&
+            !amount.get().isZero() &&
+            !price.get().isZero()) {
             try {
                 volume.set(price.get().getVolumeByAmount(amount.get()));
             } catch (Throwable t) {
@@ -579,9 +579,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateAmount() {
         if (volume.get() != null &&
-                price.get() != null &&
-                !volume.get().isZero() &&
-                !price.get().isZero()) {
+            price.get() != null &&
+            !volume.get().isZero() &&
+            !price.get().isZero()) {
             try {
                 amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
                 calculateTotalToPay();
@@ -641,9 +641,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         //noinspection PointlessBooleanExpression,ConstantConditions
         if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
+                .headLine(Res.get("notification.walletUpdate.headline"))
+                .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
+                .autoClose();
 
             walletFundedNotification.show();
         }
@@ -672,15 +672,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private void fillPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                    .filter(this::isNotUSBankAccount)
-                    .collect(Collectors.toSet()));
+                .filter(this::isNotUSBankAccount)
+                .collect(Collectors.toSet()));
         }
     }
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
         if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
-                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
+            paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;
