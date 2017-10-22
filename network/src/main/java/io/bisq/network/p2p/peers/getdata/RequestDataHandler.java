@@ -97,7 +97,7 @@ public class RequestDataHandler implements MessageListener {
 
             // We collect the keys of the PersistedStoragePayload items so we exclude them in our request.
             // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
-            // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would 
+            // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
             // miss that event if we do not load the full set or use some delta handling.
             Set<byte[]> excludedKeys = dataStorage.getMap().entrySet().stream()
                     .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistablePayload)
@@ -241,8 +241,8 @@ public class RequestDataHandler implements MessageListener {
                                 if (e instanceof LazyProcessedPayload) {
                                     processDelayedItems.add(e);
                                 } else {
-                                    // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
-                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false);
+                                    // We dont broadcast here as we are only connected to the seed node and would be pointless
+                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false, false);
                                 }
                             });
                         }
@@ -251,10 +251,10 @@ public class RequestDataHandler implements MessageListener {
                         // We want avoid that the UI get stuck when processing many entries.
                         // The dataStorage.add call is a bit expensive as sig checks is done there.
 
-                        // Using a background thread might be an alternative but it would require much more effort and 
+                        // Using a background thread might be an alternative but it would require much more effort and
                         // it would also decrease user experience if the app gets under heavy load (like at startup with wallet sync).
-                        // Beside that we mitigated the problem already as we will not get the whole TradeStatistics as we 
-                        // pass the excludeKeys and we pack the latest data dump 
+                        // Beside that we mitigated the problem already as we will not get the whole TradeStatistics as we
+                        // pass the excludeKeys and we pack the latest data dump
                         // into the resources, so a new user do not need to request all data.
 
                         // In future we will probably limit by date or load on demand from user intent to not get too much data.
@@ -272,7 +272,7 @@ public class RequestDataHandler implements MessageListener {
                                 if (item instanceof ProtectedStorageEntry)
                                     dataStorage.add((ProtectedStorageEntry) item, sender, null, false, false);
                                 else if (item instanceof PersistableNetworkPayload)
-                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false);
+                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false, false);
                             }), delay, TimeUnit.MILLISECONDS);
                         }
 

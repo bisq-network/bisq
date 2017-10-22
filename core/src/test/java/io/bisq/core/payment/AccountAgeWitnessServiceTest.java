@@ -47,7 +47,7 @@ public class AccountAgeWitnessServiceTest {
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        service = new AccountAgeWitnessService(null, null);
+        service = new AccountAgeWitnessService(null, null, null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }

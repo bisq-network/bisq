@@ -18,10 +18,7 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.crypto.Sig;
+import io.bisq.common.crypto.*;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
@@ -211,9 +208,9 @@ public class AccountAgeWitnessService {
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
         try {
             byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
-            byte[] hash = Utilities.concatenateByteArrays(accountInputDataWithSalt,
+            byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountInputDataWithSalt),
-                keyRing.getPubKeyRing().getSignaturePubKeyBytes());
+                keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
             long date = new Date().getTime();
             //TODO
             // test

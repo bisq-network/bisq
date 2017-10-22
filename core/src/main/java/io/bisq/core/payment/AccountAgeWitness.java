@@ -31,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-// Object has about 28 raw bytes (29 bytes is size of PB object)
-// With 1 000 000 entries we get 29 MB of data. Old entries will be shipped with the MapEntry resource file,
+// Object has 28 raw bytes (33 bytes is size of ProtoBuffer object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
+// With 1 000 000 entries we get about 33 MB of data. Old entries will be shipped with the resource file,
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
