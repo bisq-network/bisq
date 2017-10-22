@@ -324,25 +324,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                 boolean reBroadcast,
                                                 boolean checkDate) {
         log.debug("addPersistableNetworkPayload payload={}", payload);
-        final ByteArray hashAsByteArray = new ByteArray(payload.getHash());
-        boolean containsKey = persistableNetworkPayloadCollection.getMap().containsKey(hashAsByteArray);
-        if (!containsKey || reBroadcast) {
-            if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
-                if (!containsKey) {
-                    persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
-                    persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);
-                    persistableNetworkPayloadMapListeners.stream().forEach(e -> e.onAdded(payload));
+        final byte[] hash = payload.getHash();
+        if (payload.verifyHashSize()) {
+            final ByteArray hashAsByteArray = new ByteArray(hash);
+            boolean containsKey = persistableNetworkPayloadCollection.getMap().containsKey(hashAsByteArray);
+            if (!containsKey || reBroadcast) {
+                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
+                    if (!containsKey) {
+                        persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
+                        persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);
+                        persistableNetworkPayloadMapListeners.stream().forEach(e -> e.onAdded(payload));
+                    }
+                    if (allowBroadcast)
+                        broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
+                    return true;
+                } else {
+                    log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
+                        "Payload={}; now={}", payload.toString(), new Date());
+                    return false;
                 }
-                if (allowBroadcast)
-                    broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
-                return true;
             } else {
-                log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
-                    "Payload={}; now={}", payload.toString(), new Date());
+                log.trace("We have that payload already in our map.");
                 return false;
             }
         } else {
-            log.trace("We have that payload already in our map.");
+            log.warn("We got a hash exceeding our permitted size");
             return false;
         }
     }

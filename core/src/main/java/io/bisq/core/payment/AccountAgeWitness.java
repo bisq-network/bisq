@@ -67,8 +67,13 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     }
 
     public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
+        byte[] hash = proto.getHash().toByteArray();
+        if (hash.length != 20) {
+            log.warn("We got a a hash which is not 20 bytes");
+            hash = new byte[0];
+        }
         return new AccountAgeWitness(
-            proto.getHash().toByteArray(),
+            hash,
             proto.getDate());
     }
 
@@ -82,6 +87,11 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
         // We don't allow older or newer then 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;
+    }
+
+    @Override
+    public boolean verifyHashSize() {
+        return hash.length == 20;
     }
 
 

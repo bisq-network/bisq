@@ -22,4 +22,6 @@ public interface PersistableNetworkPayload extends NetworkPayload, PersistablePa
 
     // Hash which will be used as key in the in-memory hashMap
     byte [] getHash();
+
+    boolean verifyHashSize();
 }
