@@ -25,7 +25,6 @@ import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
@@ -142,8 +141,7 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private long getTradeLimit(PaymentMethod paymentMethod, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
-        final long maxTradeLimit = paymentMethod.getMaxTradeLimitAsCoin(currencyCode).value;
+    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
@@ -194,9 +192,9 @@ public class AccountAgeWitnessService {
                     break;
             }
             log.info("accountAgeCategory={}, factor={}", accountAgeCategory, factor);
-            return MathUtils.roundDoubleToLong((double) maxTradeLimit * factor);
+            return MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
         } else {
-            return maxTradeLimit;
+            return maxTradeLimit.value;
         }
     }
 
@@ -236,7 +234,7 @@ public class AccountAgeWitnessService {
     }
 
     public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
-        return getTradeLimit(paymentAccount.getPaymentMethod(), currencyCode, Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload())));
+        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode), currencyCode, Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload())));
     }
 
 
@@ -261,8 +259,8 @@ public class AccountAgeWitnessService {
         return witnessByHashAsHex.isPresent() ? getAccountAge(witnessByHashAsHex.get()) : 0L;
     }
 
-    public long getPeersTradeLimit(PaymentAccountPayload paymentAccountPayload, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
-        return getTradeLimit(PaymentMethod.getPaymentMethodById(paymentAccountPayload.getPaymentMethodId()), currencyCode, accountAgeWitnessOptional);
+    public long getPeersTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
+        return getTradeLimit(maxTradeLimit, currencyCode, accountAgeWitnessOptional);
     }
 
 
@@ -340,7 +338,7 @@ public class AccountAgeWitnessService {
                                           ErrorMessageHandler errorMessageHandler) {
         final Optional<String> offerHashAsHexOptional = offer.getAccountAgeWitnessHashAsHex();
         Optional<AccountAgeWitness> accountAgeWitnessOptional = offerHashAsHexOptional.isPresent() ? getPeersWitnessByHashAsHex(offerHashAsHexOptional.get()) : Optional.<AccountAgeWitness>empty();
-        long maxTradeLimit = getPeersTradeLimit(paymentAccountPayload, offer.getCurrencyCode(), accountAgeWitnessOptional);
+        long maxTradeLimit = getPeersTradeLimit(offer.getMaxTradeLimit(), offer.getCurrencyCode(), accountAgeWitnessOptional);
         final Coin offerMaxTradeLimit = offer.getMaxTradeLimit();
         boolean result = offerMaxTradeLimit.value == maxTradeLimit;
         if (!result) {
