@@ -60,15 +60,20 @@ public class AccountAgeWitnessServiceTest {
     public void testIsTradeDateAfterReleaseDate() throws CryptoException {
         Date ageWitnessReleaseDate = new GregorianCalendar(2017, 9, 23).getTime();
         Date tradeDate = new GregorianCalendar(2017, 10, 1).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
+        assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
         tradeDate = new GregorianCalendar(2017, 9, 23).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
+        assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
         tradeDate = new GregorianCalendar(2017, 9, 22, 0, 0, 1).getTime();
-        assertTrue(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
+        assertTrue(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
         tradeDate = new GregorianCalendar(2017, 9, 22).getTime();
-        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
+        assertFalse(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
         tradeDate = new GregorianCalendar(2017, 9, 21).getTime();
-        assertFalse(service.isTradeDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {}));
+        assertFalse(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
     }
 
     @Test

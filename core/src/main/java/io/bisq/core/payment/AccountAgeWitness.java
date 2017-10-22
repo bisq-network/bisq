@@ -79,6 +79,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
 
     @Override
     public boolean isDateInTolerance() {
+        // We don't allow older or newer then 1 day.
+        // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;
     }
 

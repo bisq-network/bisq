@@ -245,7 +245,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     refreshTTL((RefreshOfferMessage) networkEnvelop, peersNodeAddress, false);
                 } else if (networkEnvelop instanceof AddPersistableNetworkPayloadMessage) {
                     addPersistableNetworkPayload(((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload(),
-                        peersNodeAddress, false, true, false);
+                        peersNodeAddress, false, true, false, true);
                 }
             });
         }
@@ -321,12 +321,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                 @Nullable NodeAddress sender,
                                                 boolean isDataOwner,
                                                 boolean allowBroadcast,
-                                                boolean reBroadcast) {
+                                                boolean reBroadcast,
+                                                boolean checkDate) {
         log.debug("addPersistableNetworkPayload payload={}", payload);
         final ByteArray hashAsByteArray = new ByteArray(payload.getHash());
         boolean containsKey = persistableNetworkPayloadCollection.getMap().containsKey(hashAsByteArray);
         if (!containsKey || reBroadcast) {
-            if (!(payload instanceof DateTolerantPayload) || ((DateTolerantPayload) payload).isDateInTolerance()) {
+            if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
                 if (!containsKey) {
                     persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
                     persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);

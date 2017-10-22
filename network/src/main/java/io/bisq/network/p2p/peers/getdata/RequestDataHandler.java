@@ -242,7 +242,7 @@ public class RequestDataHandler implements MessageListener {
                                     processDelayedItems.add(e);
                                 } else {
                                     // We dont broadcast here as we are only connected to the seed node and would be pointless
-                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false, false);
+                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false, false, false);
                                 }
                             });
                         }
@@ -272,7 +272,7 @@ public class RequestDataHandler implements MessageListener {
                                 if (item instanceof ProtectedStorageEntry)
                                     dataStorage.add((ProtectedStorageEntry) item, sender, null, false, false);
                                 else if (item instanceof PersistableNetworkPayload)
-                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false, false);
+                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false, false, false);
                             }), delay, TimeUnit.MILLISECONDS);
                         }
 

@@ -280,7 +280,7 @@ public class AccountAgeWitnessService {
                                                 ErrorMessageHandler errorMessageHandler) {
         // Check if trade date in witness is not older than the release date of that feature (was added in v0.6)
         // TODO set date before releasing
-        if (!isTradeDateAfterReleaseDate(witness.getDate(), new GregorianCalendar(2017, GregorianCalendar.OCTOBER, 17).getTime(), errorMessageHandler))
+        if (!isDateAfterReleaseDate(witness.getDate(), new GregorianCalendar(2017, GregorianCalendar.OCTOBER, 17).getTime(), errorMessageHandler))
             return false;
 
         final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
@@ -307,7 +307,7 @@ public class AccountAgeWitnessService {
     // Package scope verification subroutines
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean isTradeDateAfterReleaseDate(long witnessDateAsLong, Date ageWitnessReleaseDate, ErrorMessageHandler errorMessageHandler) {
+    boolean isDateAfterReleaseDate(long witnessDateAsLong, Date ageWitnessReleaseDate, ErrorMessageHandler errorMessageHandler) {
         // Release date minus 1 day as tolerance for not synced clocks
         Date releaseDateWithTolerance = new Date(ageWitnessReleaseDate.getTime() - TimeUnit.DAYS.toMillis(1));
         final Date witnessDate = new Date(witnessDateAsLong);
@@ -334,6 +334,7 @@ public class AccountAgeWitnessService {
         return result;
     }
 
+    // TODO use peers local date and check tolerance
     private boolean verifyPeersTradeLimit(Offer offer,
                                           PaymentAccountPayload paymentAccountPayload,
                                           ErrorMessageHandler errorMessageHandler) {

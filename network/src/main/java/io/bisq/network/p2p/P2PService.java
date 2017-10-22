@@ -789,7 +789,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload, boolean reBroadcast) {
-        return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), true, true, reBroadcast);
+        return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), true, true, reBroadcast, false);
     }
 
     public boolean addData(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
