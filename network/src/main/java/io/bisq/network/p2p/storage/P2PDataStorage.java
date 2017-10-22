@@ -326,7 +326,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         final ByteArray hashAsByteArray = new ByteArray(payload.getHash());
         boolean containsKey = persistableNetworkPayloadCollection.getMap().containsKey(hashAsByteArray);
         if (!containsKey || reBroadcast) {
-            if (!(payload instanceof PublishDateVerifiedPayload) || ((PublishDateVerifiedPayload) payload).verifyPublishDate()) {
+            if (!(payload instanceof DateTolerantPayload) || ((DateTolerantPayload) payload).isDateInTolerance()) {
                 if (!containsKey) {
                     persistableNetworkPayloadCollection.getMap().put(hashAsByteArray, payload);
                     persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);

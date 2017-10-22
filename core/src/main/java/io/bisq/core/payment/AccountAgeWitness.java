@@ -24,7 +24,7 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import io.bisq.network.p2p.storage.payload.PublishDateVerifiedPayload;
+import io.bisq.network.p2p.storage.payload.DateTolerantPayload;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, PublishDateVerifiedPayload {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
@@ -78,7 +78,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean verifyPublishDate() {
+    public boolean isDateInTolerance() {
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;
     }
 
