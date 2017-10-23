@@ -320,9 +320,9 @@ public class AccountAgeWitnessService {
     }
 
     boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
-        final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) > TimeUnit.DAYS.toMillis(1);
+        final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
         if (!result) {
-            final String msg = "Peers current data is further then 1 day off to our current date. " +
+            final String msg = "Peers current date is further then 1 day off to our current date. " +
                 "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
