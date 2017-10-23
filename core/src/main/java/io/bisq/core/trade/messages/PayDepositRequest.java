@@ -30,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,6 +68,7 @@ public final class PayDepositRequest extends TradeMessage {
     private final byte[] accountAgeWitnessNonce;
     @Nullable
     private final byte[] accountAgeWitnessSignatureOfNonce;
+    private final long currentDate;
 
     public PayDepositRequest(String tradeId,
                              NodeAddress senderNodeAddress,
@@ -92,7 +94,8 @@ public final class PayDepositRequest extends TradeMessage {
                              int messageVersion,
                              @Nullable byte[] accountAgeWitnessSignatureOfAccountData,
                              @Nullable byte[] accountAgeWitnessNonce,
-                             @Nullable byte[] accountAgeWitnessSignatureOfNonce) {
+                             @Nullable byte[] accountAgeWitnessSignatureOfNonce,
+                             long currentDate) {
         super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -117,6 +120,7 @@ public final class PayDepositRequest extends TradeMessage {
         this.accountAgeWitnessSignatureOfAccountData = accountAgeWitnessSignatureOfAccountData;
         this.accountAgeWitnessNonce = accountAgeWitnessNonce;
         this.accountAgeWitnessSignatureOfNonce = accountAgeWitnessSignatureOfNonce;
+        this.currentDate = currentDate;
     }
 
 
@@ -155,6 +159,7 @@ public final class PayDepositRequest extends TradeMessage {
         Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
+        builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
@@ -193,7 +198,8 @@ public final class PayDepositRequest extends TradeMessage {
             messageVersion,
             ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()),
             ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()),
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()));
+            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()),
+            proto.getCurrentDate());
     }
 
     @Override
@@ -222,6 +228,7 @@ public final class PayDepositRequest extends TradeMessage {
             ",\n     accountAgeWitnessSignatureOfAccountData=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfAccountData) +
             ",\n     accountAgeWitnessNonce=" + Utilities.bytesAsHexString(accountAgeWitnessNonce) +
             ",\n     accountAgeWitnessSignatureOfNonce=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfNonce) +
+            ",\n     currentDate=" + new Date(currentDate) +
             "\n} " + super.toString();
     }
 }

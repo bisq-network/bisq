@@ -32,6 +32,7 @@ import io.bisq.network.p2p.SendDirectMessageListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -105,7 +106,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
                 Version.getP2PMessageVersion(),
                 accountAgeWitnessSignatureOfAccountData,
                 accountAgeWitnessNonce,
-                accountAgeWitnessSignatureOfNonce);
+                accountAgeWitnessSignatureOfNonce,
+                new Date().getTime());
 
             processModel.getP2PService().sendEncryptedDirectMessage(
                 trade.getTradingPeerNodeAddress(),

@@ -198,6 +198,7 @@ message PayDepositRequest {
     bytes account_age_witness_signature_of_account_data = 22;
     bytes account_age_witness_nonce = 23;
     bytes account_age_witness_signature_of_nonce = 24;
+    int64 current_date = 25;
 }
 
 message PublishDepositTxRequest {
@@ -215,6 +216,7 @@ message PublishDepositTxRequest {
     bytes account_age_witness_signature_of_account_data = 12;
     bytes account_age_witness_nonce = 13;
     bytes account_age_witness_signature_of_nonce = 14;
+    int64 current_date = 15;
 }
 
 message DepositTxPublishedMessage {
@@ -1201,6 +1203,7 @@ message TradingPeer {
     bytes account_age_witness_signature_of_account_data = 12;
     bytes account_age_witness_nonce = 13;
     bytes account_age_witness_signature_of_nonce = 14;
+    int64 current_date = 15;
 }
 
 message AccountAgeWitnessMap {

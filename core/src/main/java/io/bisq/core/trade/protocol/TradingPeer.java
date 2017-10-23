@@ -68,6 +68,7 @@ public final class TradingPeer implements PersistablePayload {
     private byte[] accountAgeWitnessNonce;
     @Nullable
     private byte[] accountAgeWitnessSignatureOfNonce;
+    private long currentDate;
 
     public TradingPeer() {
     }
@@ -89,6 +90,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
+        builder.setCurrentDate(currentDate);
         return builder.build();
     }
 
@@ -116,6 +118,7 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
             tradingPeer.setAccountAgeWitnessSignatureOfNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()));
+            tradingPeer.setCurrentDate(proto.getCurrentDate());
             return tradingPeer;
         }
     }

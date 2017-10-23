@@ -107,8 +107,8 @@ public class PaymentAccountUtil {
         List<PaymentAccount> list = paymentAccounts.stream()
             .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
             .sorted((o1, o2) -> {
-                return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload())))
-                    .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload())));
+                return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload()), new Date()))
+                    .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload()), new Date()));
             }).collect(Collectors.toList());
         list.stream().forEach(e -> log.error("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), service.getMyWitnessHashAsHex(e.getPaymentAccountPayload())));
         final Optional<PaymentAccount> first = list.stream().findFirst();

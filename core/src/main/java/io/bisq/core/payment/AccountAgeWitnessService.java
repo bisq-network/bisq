@@ -127,8 +127,8 @@ public class AccountAgeWitnessService {
         return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
     }
 
-    public long getAccountAge(AccountAgeWitness accountAgeWitness) {
-        return new Date().getTime() - accountAgeWitness.getDate();
+    public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
+        return now.getTime() - accountAgeWitness.getDate();
     }
 
     public AccountAge getAccountAgeCategory(long accountAge) {
@@ -141,18 +141,17 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
+    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
             AccountAge accountAgeCategory = accountAgeWitnessOptional.isPresent() ?
-                getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()))) :
+                getAccountAgeCategory(getAccountAge((accountAgeWitnessOptional.get()), now)) :
                 AccountAgeWitnessService.AccountAge.LESS_ONE_MONTH;
 
             // TODO Fade in by date can be removed after feb 2018
             // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when
             // we deploy that feature.
-            final Date now = new Date();
           /*  final Date dez = new GregorianCalendar(2017, GregorianCalendar.DECEMBER, 1).getTime();
             final Date jan = new GregorianCalendar(2017, GregorianCalendar.JANUARY, 1).getTime();
             final Date feb = new GregorianCalendar(2017, GregorianCalendar.FEBRUARY, 1).getTime();
@@ -230,11 +229,11 @@ public class AccountAgeWitnessService {
     }
 
     public long getMyAccountAge(PaymentAccountPayload paymentAccountPayload) {
-        return getAccountAge(getMyWitness(paymentAccountPayload));
+        return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
     public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
-        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode), currencyCode, Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload())));
+        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode), currencyCode, Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload())), new Date());
     }
 
 
@@ -251,16 +250,16 @@ public class AccountAgeWitnessService {
         return getPeersWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
-    public long getPeersAccountAge(Offer offer) {
+    public long getPeersAccountAge(Offer offer, Date peersCurrentDate) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
             getPeersWitnessByHashAsHex(accountAgeWitnessHash.get()) :
             Optional.<AccountAgeWitness>empty();
-        return witnessByHashAsHex.isPresent() ? getAccountAge(witnessByHashAsHex.get()) : 0L;
+        return witnessByHashAsHex.isPresent() ? getAccountAge(witnessByHashAsHex.get(), peersCurrentDate) : 0L;
     }
 
-    public long getPeersTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional) {
-        return getTradeLimit(maxTradeLimit, currencyCode, accountAgeWitnessOptional);
+    public long getPeersTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date peersCurrentDate) {
+        return getTradeLimit(maxTradeLimit, currencyCode, accountAgeWitnessOptional, peersCurrentDate);
     }
 
 
@@ -270,6 +269,7 @@ public class AccountAgeWitnessService {
 
     public boolean verifyPeersAccountAgeWitness(Offer offer,
                                                 PaymentAccountPayload peersPaymentAccountPayload,
+                                                Date peersCurrentDate,
                                                 AccountAgeWitness witness,
                                                 PubKeyRing peersPubKeyRing,
                                                 byte[] peersSignatureOfAccountHash,
@@ -281,6 +281,10 @@ public class AccountAgeWitnessService {
         if (!isDateAfterReleaseDate(witness.getDate(), new GregorianCalendar(2017, GregorianCalendar.OCTOBER, 17).getTime(), errorMessageHandler))
             return false;
 
+        // Check if peer current date is in tolerance range
+        if (!verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
+            return false;
+
         final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
         byte[] hash = Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersSignatureOfAccountHash, peersPubKeyRing.getSignaturePubKeyBytes());
 
@@ -289,7 +293,7 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if the witness signature is correct
-        if (!verifyPeersTradeLimit(offer, peersPaymentAccountPayload, errorMessageHandler))
+        if (!verifyPeersTradeLimit(offer, peersCurrentDate, errorMessageHandler))
             return false;
 
         // Check if the witness signature is correct
@@ -319,6 +323,18 @@ public class AccountAgeWitnessService {
         return result;
     }
 
+    boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
+        final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) > TimeUnit.DAYS.toMillis(1);
+        if (!result) {
+            final String msg = "Peers current data is further then 1 day off to our current date. " +
+                "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
+            log.warn(msg);
+            errorMessageHandler.handleErrorMessage(msg);
+        }
+        return result;
+    }
+
+
     boolean verifyWitnessHash(byte[] witnessHash,
                               byte[] hash,
                               ErrorMessageHandler errorMessageHandler) {
@@ -332,13 +348,12 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    // TODO use peers local date and check tolerance
     private boolean verifyPeersTradeLimit(Offer offer,
-                                          PaymentAccountPayload paymentAccountPayload,
+                                          Date peersCurrentDate,
                                           ErrorMessageHandler errorMessageHandler) {
         final Optional<String> offerHashAsHexOptional = offer.getAccountAgeWitnessHashAsHex();
         Optional<AccountAgeWitness> accountAgeWitnessOptional = offerHashAsHexOptional.isPresent() ? getPeersWitnessByHashAsHex(offerHashAsHexOptional.get()) : Optional.<AccountAgeWitness>empty();
-        long maxTradeLimit = getPeersTradeLimit(offer.getMaxTradeLimit(), offer.getCurrencyCode(), accountAgeWitnessOptional);
+        long maxTradeLimit = getPeersTradeLimit(offer.getMaxTradeLimit(), offer.getCurrencyCode(), accountAgeWitnessOptional, peersCurrentDate);
         final Coin offerMaxTradeLimit = offer.getMaxTradeLimit();
         boolean result = offerMaxTradeLimit.value == maxTradeLimit;
         if (!result) {

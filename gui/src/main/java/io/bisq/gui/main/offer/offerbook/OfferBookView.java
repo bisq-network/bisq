@@ -68,7 +68,7 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
-
+import java.util.Date;
 import java.util.Optional;
 
 import static io.bisq.gui.util.FormBuilder.*;
@@ -404,7 +404,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(), offer.getCurrencyCode());
                 new Popup<>()
                         .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
-                                formatter.formatAccountAge(model.accountAgeWitnessService.getPeersAccountAge(offer)),
+                                formatter.formatAccountAge(model.accountAgeWitnessService.getPeersAccountAge(offer, new Date())),
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
                                 formatter.formatCoinWithCode(offer.getMinAmount())))
                         .show();

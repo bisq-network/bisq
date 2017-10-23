@@ -62,8 +62,12 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
                 AccountAgeWitness witness = witnessOptional.get();
                 final String[] errorMsg = new String[1];
                 byte[] peersSignatureOfAccountHash = tradingPeer.getAccountAgeWitnessSignatureOfAccountData();
+                long currentDateAsLong = tradingPeer.getCurrentDate();
+                // In case the peer has an older version we get 0, so we use our time instead
+                final Date peersCurrentDate = currentDateAsLong > 0 ? new Date(currentDateAsLong) : new Date();
                 boolean result = accountAgeWitnessService.verifyPeersAccountAgeWitness(offer,
                     peersPaymentAccountPayload,
+                    peersCurrentDate,
                     witness,
                     peersPubKeyRing,
                     peersSignatureOfAccountHash,

@@ -21,6 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayDepositRequest;
+import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -48,31 +49,34 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             checkNotNull(payDepositRequest);
             checkTradeId(processModel.getOfferId(), payDepositRequest);
 
-            processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(payDepositRequest.getTakerPaymentAccountPayload()));
-            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
+            final TradingPeer tradingPeer = processModel.getTradingPeer();
+            tradingPeer.setPaymentAccountPayload(checkNotNull(payDepositRequest.getTakerPaymentAccountPayload()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
             checkArgument(payDepositRequest.getRawTransactionInputs().size() > 0);
 
-            processModel.getTradingPeer().setChangeOutputValue(payDepositRequest.getChangeOutputValue());
-            processModel.getTradingPeer().setChangeOutputAddress(payDepositRequest.getChangeOutputAddress());
+            tradingPeer.setChangeOutputValue(payDepositRequest.getChangeOutputValue());
+            tradingPeer.setChangeOutputAddress(payDepositRequest.getChangeOutputAddress());
 
-            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(payDepositRequest.getTakerMultiSigPubKey()));
-            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(payDepositRequest.getTakerPayoutAddressString()));
-            processModel.getTradingPeer().setPubKeyRing(checkNotNull(payDepositRequest.getTakerPubKeyRing()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.getTakerMultiSigPubKey()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.getTakerPayoutAddressString()));
+            tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.getTakerPubKeyRing()));
 
-            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(payDepositRequest.getTakerAccountId()));
+            tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.getTakerAccountId()));
             trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.getTakerFeeTxId()));
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedArbitratorNodeAddresses()));
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
 
-            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfAccountData(payDepositRequest.getAccountAgeWitnessSignatureOfAccountData());
+            tradingPeer.setAccountAgeWitnessSignatureOfAccountData(payDepositRequest.getAccountAgeWitnessSignatureOfAccountData());
             final byte[] accountAgeWitnessNonce = payDepositRequest.getAccountAgeWitnessNonce();
-            processModel.getTradingPeer().setAccountAgeWitnessNonce(accountAgeWitnessNonce);
-            processModel.getTradingPeer().setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
+            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
+            tradingPeer.setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
             checkArgument(Arrays.equals(accountAgeWitnessNonce, trade.getOffer().getId().getBytes()));
+
+            tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
             trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));

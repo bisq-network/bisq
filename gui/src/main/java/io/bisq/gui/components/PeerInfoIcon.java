@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -50,14 +51,14 @@ public class PeerInfoIcon extends Group {
         peerTagMap = preferences.getPeerTagMap();
 
         boolean hasTraded = numTrades > 0;
-        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getPeersAccountAge(offer));
+        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getPeersAccountAge(offer, new Date()));
         tooltipText = hasTraded ?
                 Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
                 Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
 
         // outer circle
         Color ringColor;
-        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getPeersAccountAge(offer))) {
+        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getPeersAccountAge(offer, new Date()))) {
             case TWO_MONTHS_OR_MORE:
                 ringColor = Color.rgb(0, 225, 0); // > 2 months green
                 break;

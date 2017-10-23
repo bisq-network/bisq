@@ -29,6 +29,7 @@ import io.bisq.network.p2p.SendMailboxMessageListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -83,7 +84,8 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                 UUID.randomUUID().toString(),
                 accountAgeWitnessSignatureOfAccountData,
                 accountAgeWitnessNonce,
-                accountAgeWitnessSignatureOfNonce);
+                accountAgeWitnessSignatureOfNonce,
+                new Date().getTime());
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
 
