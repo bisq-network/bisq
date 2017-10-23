@@ -24,8 +24,6 @@ import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.util.Validator.checkTradeId;
@@ -58,13 +56,10 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             final byte[] preparedDepositTx = publishDepositTxRequest.getPreparedDepositTx();
             processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
 
-            tradingPeer.setAccountAgeWitnessSignatureOfAccountData(publishDepositTxRequest.getAccountAgeWitnessSignatureOfAccountData());
-            final byte[] accountAgeWitnessNonce = publishDepositTxRequest.getAccountAgeWitnessNonce();
-            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
-            tradingPeer.setAccountAgeWitnessSignatureOfNonce(publishDepositTxRequest.getAccountAgeWitnessSignatureOfNonce());
-            // Maker has to use preparedDepositTx as nonce.
-            // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            checkArgument(Arrays.equals(accountAgeWitnessNonce, preparedDepositTx), "Peers nonce does not match preparedDepositTx");
+            // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
+            // challenge protocol for passing the nonce we want to get signed.
+            tradingPeer.setAccountAgeWitnessNonce(publishDepositTxRequest.getPreparedDepositTx());
+            tradingPeer.setAccountAgeWitnessSignature(publishDepositTxRequest.getAccountAgeWitnessSignatureOfPreparedDepositTx());
 
             tradingPeer.setCurrentDate(publishDepositTxRequest.getCurrentDate());
 

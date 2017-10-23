@@ -26,8 +26,6 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
-import java.util.Arrays;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.util.Validator.checkTradeId;
@@ -68,14 +66,9 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNodeAddresses must not be empty");
 
-            tradingPeer.setAccountAgeWitnessSignatureOfAccountData(payDepositRequest.getAccountAgeWitnessSignatureOfAccountData());
-            final byte[] accountAgeWitnessNonce = payDepositRequest.getAccountAgeWitnessNonce();
-            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
-            tradingPeer.setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
-            // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
-            // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            checkArgument(Arrays.equals(accountAgeWitnessNonce, trade.getOffer().getId().getBytes()), "Peers nonce does not match offer ID");
-
+            // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
+            tradingPeer.setAccountAgeWitnessNonce(trade.getOffer().getId().getBytes());
+            tradingPeer.setAccountAgeWitnessSignature(payDepositRequest.getAccountAgeWitnessSignatureOfOfferId());
             tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));

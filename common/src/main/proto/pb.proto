@@ -195,10 +195,8 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 19;
     NodeAddress mediator_node_address = 20;
     string uid = 21;
-    bytes account_age_witness_signature_of_account_data = 22;
-    bytes account_age_witness_nonce = 23;
-    bytes account_age_witness_signature_of_nonce = 24;
-    int64 current_date = 25;
+    bytes account_age_witness_signature_of_offer_id = 22;
+    int64 current_date = 23;
 }
 
 message PublishDepositTxRequest {
@@ -213,10 +211,8 @@ message PublishDepositTxRequest {
     bytes maker_multi_sig_pub_key = 9;
     NodeAddress sender_node_address = 10;
     string uid = 11;
-    bytes account_age_witness_signature_of_account_data = 12;
-    bytes account_age_witness_nonce = 13;
-    bytes account_age_witness_signature_of_nonce = 14;
-    int64 current_date = 15;
+    bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
+    int64 current_date = 13;
 }
 
 message DepositTxPublishedMessage {
@@ -1200,10 +1196,9 @@ message TradingPeer {
     repeated RawTransactionInput raw_transaction_inputs = 9;
     int64 change_output_value = 10;
     string change_output_address = 11;
-    bytes account_age_witness_signature_of_account_data = 12;
-    bytes account_age_witness_nonce = 13;
-    bytes account_age_witness_signature_of_nonce = 14;
-    int64 current_date = 15;
+    bytes account_age_witness_nonce = 12;
+    bytes account_age_witness_signature = 13;
+    int64 current_date = 14;
 }
 
 message AccountAgeWitnessMap {

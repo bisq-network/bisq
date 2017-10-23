@@ -1,16 +1,13 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.Sig;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +37,6 @@ import static org.junit.Assert.assertTrue;
  */
 @Slf4j
 public class AccountAgeWitnessServiceTest {
-
     private PublicKey publicKey;
     private KeyPair keypair;
     private AccountAgeWitnessService service;
@@ -77,19 +73,6 @@ public class AccountAgeWitnessServiceTest {
     }
 
     @Test
-    public void testVerifySignature() throws CryptoException {
-        byte[] ageWitnessInputData = "test".getBytes(Charset.forName("UTF-8"));
-        byte[] salt = "salt".getBytes(Charset.forName("UTF-8"));
-        final byte[] combined = ArrayUtils.addAll(ageWitnessInputData, salt);
-        byte[] hash = Hash.getSha256Ripemd160hash(combined);
-        byte[] signature = Sig.sign(keypair.getPrivate(), hash);
-        assertTrue(service.verifySignature(publicKey, hash, signature, errorMessage -> {}));
-        assertFalse(service.verifySignature(publicKey, new byte[0], new byte[0], errorMessage -> {}));
-        assertFalse(service.verifySignature(publicKey, hash, "sig2".getBytes(Charset.forName("UTF-8")), errorMessage -> {}));
-        assertFalse(service.verifySignature(publicKey, "hash2".getBytes(Charset.forName("UTF-8")), signature, errorMessage -> {}));
-    }
-
-    @Test
     public void testVerifySignatureOfNonce() throws CryptoException {
         byte[] nonce = new byte[]{0x01};
         byte[] signature = Sig.sign(keypair.getPrivate(), nonce);
@@ -98,6 +81,4 @@ public class AccountAgeWitnessServiceTest {
         assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x03}, signature, errorMessage -> {}));
         assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x02},  new byte[]{0x04}, errorMessage -> {}));
     }
-
-
 }

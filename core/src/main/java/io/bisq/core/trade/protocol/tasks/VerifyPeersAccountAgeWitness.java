@@ -57,11 +57,10 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
                 accountAgeWitnessService.getPeersWitnessByHashAsHex(accountAgeWitnessHashAsHex.get())
                 : Optional.<AccountAgeWitness>empty();
             byte[] nonce = tradingPeer.getAccountAgeWitnessNonce();
-            byte[] signatureOfNonce = tradingPeer.getAccountAgeWitnessSignatureOfNonce();
-            if (witnessOptional.isPresent() && nonce != null && signatureOfNonce != null) {
+            byte[] signature = tradingPeer.getAccountAgeWitnessSignature();
+            if (witnessOptional.isPresent() && nonce != null && signature != null) {
                 AccountAgeWitness witness = witnessOptional.get();
                 final String[] errorMsg = new String[1];
-                byte[] peersSignatureOfAccountHash = tradingPeer.getAccountAgeWitnessSignatureOfAccountData();
                 long currentDateAsLong = tradingPeer.getCurrentDate();
                 // In case the peer has an older version we get 0, so we use our time instead
                 final Date peersCurrentDate = currentDateAsLong > 0 ? new Date(currentDateAsLong) : new Date();
@@ -70,9 +69,8 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
                     peersCurrentDate,
                     witness,
                     peersPubKeyRing,
-                    peersSignatureOfAccountHash,
                     nonce,
-                    signatureOfNonce,
+                    signature,
                     errorMessage -> errorMsg[0] = errorMessage);
                 if (result)
                     complete();

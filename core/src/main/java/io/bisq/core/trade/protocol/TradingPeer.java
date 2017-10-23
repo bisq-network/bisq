@@ -63,11 +63,9 @@ public final class TradingPeer implements PersistablePayload {
 
     // added in v 0.6
     @Nullable
-    private byte[] accountAgeWitnessSignatureOfAccountData;
-    @Nullable
     private byte[] accountAgeWitnessNonce;
     @Nullable
-    private byte[] accountAgeWitnessSignatureOfNonce;
+    private byte[] accountAgeWitnessSignature;
     private long currentDate;
 
     public TradingPeer() {
@@ -87,9 +85,8 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(e)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(e)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-        Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
-        Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
+        Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
@@ -115,9 +112,8 @@ public final class TradingPeer implements PersistablePayload {
                     .collect(Collectors.toList());
             tradingPeer.setRawTransactionInputs(rawTransactionInputs);
             tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
-            tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
-            tradingPeer.setAccountAgeWitnessSignatureOfNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()));
+            tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
             return tradingPeer;
         }

@@ -63,12 +63,8 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
             // Maker has to use preparedDepositTx as nonce.
             // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
             final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
-            byte[] accountAgeWitnessSignatureOfAccountData = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
-                processModel.getAccountAgeWitnessService().getAccountInputDataWithSalt(paymentAccountPayload));
 
-            //noinspection UnnecessaryLocalVariable
-            byte[] accountAgeWitnessNonce = preparedDepositTx;
-            byte[] accountAgeWitnessSignatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), accountAgeWitnessNonce);
+            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), preparedDepositTx);
 
             PublishDepositTxRequest message = new PublishDepositTxRequest(
                 processModel.getOfferId(),
@@ -82,9 +78,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                 processModel.getRawTransactionInputs(),
                 processModel.getMyNodeAddress(),
                 UUID.randomUUID().toString(),
-                accountAgeWitnessSignatureOfAccountData,
-                accountAgeWitnessNonce,
-                accountAgeWitnessSignatureOfNonce,
+                sig,
                 new Date().getTime());
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);

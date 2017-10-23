@@ -204,21 +204,14 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
-        try {
-            byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
-            byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
-                Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountInputDataWithSalt),
-                keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-            long date = new Date().getTime();
-            //TODO
-            // test
-            //date -= TimeUnit.DAYS.toMillis(75);
-            return new AccountAgeWitness(hash, date);
-        } catch (CryptoException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+            keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
+        long date = new Date().getTime();
+        //TODO
+        // test
+        //date -= TimeUnit.DAYS.toMillis(75);
+        return new AccountAgeWitness(hash, date);
     }
 
     public byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
@@ -273,7 +266,6 @@ public class AccountAgeWitnessService {
                                                 Date peersCurrentDate,
                                                 AccountAgeWitness witness,
                                                 PubKeyRing peersPubKeyRing,
-                                                byte[] peersSignatureOfAccountHash,
                                                 byte[] nonce,
                                                 byte[] signatureOfNonce,
                                                 ErrorMessageHandler errorMessageHandler) {
@@ -287,7 +279,7 @@ public class AccountAgeWitnessService {
             return false;
 
         final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
-        byte[] hash = Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersSignatureOfAccountHash, peersPubKeyRing.getSignaturePubKeyBytes());
+        byte[] hash = Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersPubKeyRing.getSignaturePubKeyBytes());
 
         // Check if the hash in the witness data matches the hash derived from the data provided by the peer
         if (!verifyWitnessHash(witness.getHash(), hash, errorMessageHandler))
@@ -295,10 +287,6 @@ public class AccountAgeWitnessService {
 
         // Check if the witness signature is correct
         if (!verifyPeersTradeLimit(offer, peersCurrentDate, errorMessageHandler))
-            return false;
-
-        // Check if the witness signature is correct
-        if (!verifySignature(peersPubKeyRing.getSignaturePubKey(), peersAccountInputDataWithSalt, peersSignatureOfAccountHash, errorMessageHandler))
             return false;
 
         // Check if the signature of the nonce is correct
@@ -361,27 +349,6 @@ public class AccountAgeWitnessService {
             String msg = "Offers max trade limit does not match with the one based on his account age.\n" +
                 "OfferMaxTradeLimit=" + offerMaxTradeLimit.toFriendlyString() +
                 "; Account age based MaxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString();
-            log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-        }
-        return result;
-    }
-
-    boolean verifySignature(PublicKey peersPublicKey,
-                            byte[] data,
-                            byte[] signature,
-                            ErrorMessageHandler errorMessageHandler) {
-        boolean result;
-        try {
-            result = Sig.verify(peersPublicKey, data, signature);
-        } catch (CryptoException e) {
-            log.warn(e.toString());
-            result = false;
-        }
-        if (!result) {
-            final String msg = "Signature of PaymentAccountAgeWitness is not correct. " +
-                "peersPublicKey=" + peersPublicKey + ", data=" + Utilities.bytesAsHexString(data) +
-                ", signature=" + Utilities.bytesAsHexString(signature);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }

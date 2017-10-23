@@ -63,11 +63,7 @@ public final class PayDepositRequest extends TradeMessage {
 
     // added in v 0.6. can be null if we trade with an older peer
     @Nullable
-    private final byte[] accountAgeWitnessSignatureOfAccountData;
-    @Nullable
-    private final byte[] accountAgeWitnessNonce;
-    @Nullable
-    private final byte[] accountAgeWitnessSignatureOfNonce;
+    private final byte[] accountAgeWitnessSignatureOfOfferId;
     private final long currentDate;
 
     public PayDepositRequest(String tradeId,
@@ -92,9 +88,7 @@ public final class PayDepositRequest extends TradeMessage {
                              NodeAddress mediatorNodeAddress,
                              String uid,
                              int messageVersion,
-                             @Nullable byte[] accountAgeWitnessSignatureOfAccountData,
-                             @Nullable byte[] accountAgeWitnessNonce,
-                             @Nullable byte[] accountAgeWitnessSignatureOfNonce,
+                             @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
                              long currentDate) {
         super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
@@ -117,9 +111,7 @@ public final class PayDepositRequest extends TradeMessage {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.uid = uid;
-        this.accountAgeWitnessSignatureOfAccountData = accountAgeWitnessSignatureOfAccountData;
-        this.accountAgeWitnessNonce = accountAgeWitnessNonce;
-        this.accountAgeWitnessSignatureOfNonce = accountAgeWitnessSignatureOfNonce;
+        this.accountAgeWitnessSignatureOfOfferId = accountAgeWitnessSignatureOfOfferId;
         this.currentDate = currentDate;
     }
 
@@ -156,9 +148,7 @@ public final class PayDepositRequest extends TradeMessage {
             .setUid(uid);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-        Optional.ofNullable(accountAgeWitnessSignatureOfAccountData).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfAccountData(ByteString.copyFrom(e)));
-        Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
-        Optional.ofNullable(accountAgeWitnessSignatureOfNonce).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfNonce(ByteString.copyFrom(e)));
+        Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
@@ -196,9 +186,7 @@ public final class PayDepositRequest extends TradeMessage {
             NodeAddress.fromProto(proto.getMediatorNodeAddress()),
             proto.getUid(),
             messageVersion,
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfAccountData()),
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()),
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfNonce()),
+            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
             proto.getCurrentDate());
     }
 
@@ -225,9 +213,7 @@ public final class PayDepositRequest extends TradeMessage {
             ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
             ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
             ",\n     uid='" + uid + '\'' +
-            ",\n     accountAgeWitnessSignatureOfAccountData=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfAccountData) +
-            ",\n     accountAgeWitnessNonce=" + Utilities.bytesAsHexString(accountAgeWitnessNonce) +
-            ",\n     accountAgeWitnessSignatureOfNonce=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfNonce) +
+            ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
             ",\n     currentDate=" + new Date(currentDate) +
             "\n} " + super.toString();
     }
