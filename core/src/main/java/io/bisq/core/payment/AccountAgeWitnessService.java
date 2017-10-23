@@ -127,7 +127,30 @@ public class AccountAgeWitnessService {
         return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
     }
 
+    public AccountAgeWitness getWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+            pubKeyRing.getSignaturePubKeyBytes()));
+        long date = new Date().getTime();
+        return new AccountAgeWitness(hash, date);
+    }
+
+    public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
+        P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
+
+        final boolean containsKey = accountAgeWitnessMap.containsKey(hashAsByteArray);
+        if (!containsKey)
+            log.warn("hash not found in accountAgeWitnessMap");
+
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
+    }
+
+    public Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
+        return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
+    }
+
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
+        log.info("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
         return now.getTime() - accountAgeWitness.getDate();
     }
 
@@ -204,14 +227,7 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
-        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
-        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
-            keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-        long date = new Date().getTime();
-        //TODO
-        // test
-        //date -= TimeUnit.DAYS.toMillis(75);
-        return new AccountAgeWitness(hash, date);
+        return getWitness(paymentAccountPayload, keyRing.getPubKeyRing());
     }
 
     public byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
@@ -235,19 +251,10 @@ public class AccountAgeWitnessService {
     // Peers witness
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<AccountAgeWitness> getPeersWitnessByHash(byte[] hash) {
-        P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
-    }
-
-    public Optional<AccountAgeWitness> getPeersWitnessByHashAsHex(String hashAsHex) {
-        return getPeersWitnessByHash(Utilities.decodeFromHex(hashAsHex));
-    }
-
-    public long getPeersAccountAge(Offer offer, Date peersCurrentDate) {
+    public long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
-            getPeersWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+            getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
             Optional.<AccountAgeWitness>empty();
         return witnessByHashAsHex.isPresent() ? getAccountAge(witnessByHashAsHex.get(), peersCurrentDate) : 0L;
     }
@@ -261,15 +268,15 @@ public class AccountAgeWitnessService {
     // Verification
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean verifyPeersAccountAgeWitness(Offer offer,
-                                                PaymentAccountPayload peersPaymentAccountPayload,
-                                                Date peersCurrentDate,
-                                                AccountAgeWitness witness,
-                                                PubKeyRing peersPubKeyRing,
-                                                byte[] nonce,
-                                                byte[] signatureOfNonce,
-                                                ErrorMessageHandler errorMessageHandler) {
-        // Check if trade date in witness is not older than the release date of that feature (was added in v0.6)
+    public boolean verifyAccountAgeWitness(Offer offer,
+                                           PaymentAccountPayload peersPaymentAccountPayload,
+                                           Date peersCurrentDate,
+                                           AccountAgeWitness witness,
+                                           PubKeyRing peersPubKeyRing,
+                                           byte[] nonce,
+                                           byte[] signatureOfNonce,
+                                           ErrorMessageHandler errorMessageHandler) {
+        // Check if date in witness is not older than the release date of that feature (was added in v0.6)
         // TODO set date before releasing
         if (!isDateAfterReleaseDate(witness.getDate(), new GregorianCalendar(2017, GregorianCalendar.OCTOBER, 17).getTime(), errorMessageHandler))
             return false;
@@ -341,7 +348,7 @@ public class AccountAgeWitnessService {
                                           Date peersCurrentDate,
                                           ErrorMessageHandler errorMessageHandler) {
         final Optional<String> offerHashAsHexOptional = offer.getAccountAgeWitnessHashAsHex();
-        Optional<AccountAgeWitness> accountAgeWitnessOptional = offerHashAsHexOptional.isPresent() ? getPeersWitnessByHashAsHex(offerHashAsHexOptional.get()) : Optional.<AccountAgeWitness>empty();
+        Optional<AccountAgeWitness> accountAgeWitnessOptional = offerHashAsHexOptional.isPresent() ? getWitnessByHashAsHex(offerHashAsHexOptional.get()) : Optional.<AccountAgeWitness>empty();
         long maxTradeLimit = getPeersTradeLimit(offer.getMaxTradeLimit(), offer.getCurrencyCode(), accountAgeWitnessOptional, peersCurrentDate);
         final Coin offerMaxTradeLimit = offer.getMaxTradeLimit();
         boolean result = offerMaxTradeLimit.value == maxTradeLimit;

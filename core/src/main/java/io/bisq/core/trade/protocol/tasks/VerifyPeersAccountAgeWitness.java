@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,19 +51,16 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
                 "Peers peersPaymentAccountPayload must not be null");
             final PubKeyRing peersPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "peersPubKeyRing must not be null");
             final Offer offer = trade.getOffer();
-            final Optional<String> accountAgeWitnessHashAsHex = offer.getAccountAgeWitnessHashAsHex();
-            Optional<AccountAgeWitness> witnessOptional = accountAgeWitnessHashAsHex.isPresent() ?
-                accountAgeWitnessService.getPeersWitnessByHashAsHex(accountAgeWitnessHashAsHex.get())
-                : Optional.<AccountAgeWitness>empty();
+
+            AccountAgeWitness witness = accountAgeWitnessService.getWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
             byte[] nonce = tradingPeer.getAccountAgeWitnessNonce();
             byte[] signature = tradingPeer.getAccountAgeWitnessSignature();
-            if (witnessOptional.isPresent() && nonce != null && signature != null) {
-                AccountAgeWitness witness = witnessOptional.get();
+            if (nonce != null && signature != null) {
                 final String[] errorMsg = new String[1];
                 long currentDateAsLong = tradingPeer.getCurrentDate();
                 // In case the peer has an older version we get 0, so we use our time instead
                 final Date peersCurrentDate = currentDateAsLong > 0 ? new Date(currentDateAsLong) : new Date();
-                boolean result = accountAgeWitnessService.verifyPeersAccountAgeWitness(offer,
+                boolean result = accountAgeWitnessService.verifyAccountAgeWitness(offer,
                     peersPaymentAccountPayload,
                     peersCurrentDate,
                     witness,
@@ -77,9 +73,7 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
                 else
                     failed(errorMsg[0]);
             } else {
-                String msg = !witnessOptional.isPresent() ?
-                    "Peers AccountAgeWitness is not found." :
-                    "Peer seems to uses a pre v0.6 application which does not support sending of account age witness verification nonce and signature.";
+                String msg = "Peer seems to uses a pre v0.6 application which does not support sending of account age witness verification nonce and signature.";
                 msg += "\nTrade ID=" + trade.getId();
                 if (new Date().after(new GregorianCalendar(2018, GregorianCalendar.FEBRUARY, 1).getTime())) {
                     msg = "The account age witness verification failed.\nReason: " + msg;
