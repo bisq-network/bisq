@@ -190,8 +190,9 @@ public class AccountAgeWitnessService {
                     }
                     break;
             }
-            log.info("accountAgeCategory={}, factor={}", accountAgeCategory, factor);
-            return MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
+            final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
+            log.info("accountAgeCategory={}, factor={}, limit={}", accountAgeCategory, factor, Coin.valueOf(limit).toFriendlyString());
+            return limit;
         } else {
             return maxTradeLimit.value;
         }

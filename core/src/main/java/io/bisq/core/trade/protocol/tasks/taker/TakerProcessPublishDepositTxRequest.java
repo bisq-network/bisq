@@ -64,7 +64,7 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             tradingPeer.setAccountAgeWitnessSignatureOfNonce(publishDepositTxRequest.getAccountAgeWitnessSignatureOfNonce());
             // Maker has to use preparedDepositTx as nonce.
             // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            checkArgument(Arrays.equals(accountAgeWitnessNonce, preparedDepositTx));
+            checkArgument(Arrays.equals(accountAgeWitnessNonce, preparedDepositTx), "Peers nonce does not match preparedDepositTx");
 
             tradingPeer.setCurrentDate(publishDepositTxRequest.getCurrentDate());
 

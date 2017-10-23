@@ -66,7 +66,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedArbitratorNodeAddresses()));
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
-                failed("acceptedArbitratorNames must not be empty");
+                failed("acceptedArbitratorNodeAddresses must not be empty");
 
             tradingPeer.setAccountAgeWitnessSignatureOfAccountData(payDepositRequest.getAccountAgeWitnessSignatureOfAccountData());
             final byte[] accountAgeWitnessNonce = payDepositRequest.getAccountAgeWitnessNonce();
@@ -74,7 +74,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             tradingPeer.setAccountAgeWitnessSignatureOfNonce(payDepositRequest.getAccountAgeWitnessSignatureOfNonce());
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            checkArgument(Arrays.equals(accountAgeWitnessNonce, trade.getOffer().getId().getBytes()));
+            checkArgument(Arrays.equals(accountAgeWitnessNonce, trade.getOffer().getId().getBytes()), "Peers nonce does not match offer ID");
 
             tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 

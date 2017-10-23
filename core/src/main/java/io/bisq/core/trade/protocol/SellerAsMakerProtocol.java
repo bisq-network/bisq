@@ -28,7 +28,6 @@ import io.bisq.core.trade.messages.DepositTxPublishedMessage;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
-import io.bisq.core.trade.protocol.tasks.PublishAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
@@ -60,8 +59,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
-                    this::handleTaskRunnerFault);
+                () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
+                this::handleTaskRunnerFault);
 
             taskRunner.addTasks(MakerSetupDepositTxListener.class);
             taskRunner.run();
@@ -99,24 +98,24 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
-                errorMessage -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
+            () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
+            errorMessage -> {
+                errorMessageHandler.handleErrorMessage(errorMessage);
+                handleTaskRunnerFault(errorMessage);
+            });
 
         taskRunner.addTasks(
-                MakerProcessPayDepositRequest.class,
-                CheckIfPeerIsBanned.class,
-                MakerVerifyArbitratorSelection.class,
-                MakerVerifyMediatorSelection.class,
-                MakerVerifyTakerAccount.class,
-                VerifyPeersAccountAgeWitness.class,
-                MakerVerifyTakerFeePayment.class,
-                MakerCreateAndSignContract.class,
-                SellerAsMakerCreatesAndSignsDepositTx.class,
-                MakerSetupDepositTxListener.class,
-                MakerSendPublishDepositTxRequest.class
+            MakerProcessPayDepositRequest.class,
+            CheckIfPeerIsBanned.class,
+            MakerVerifyArbitratorSelection.class,
+            MakerVerifyMediatorSelection.class,
+            MakerVerifyTakerAccount.class,
+            VerifyPeersAccountAgeWitness.class,
+            MakerVerifyTakerFeePayment.class,
+            MakerCreateAndSignContract.class,
+            SellerAsMakerCreatesAndSignsDepositTx.class,
+            MakerSetupDepositTxListener.class,
+            MakerSendPublishDepositTxRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -124,7 +123,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling 
+    // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
@@ -132,18 +131,17 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> {
-                    stopTimeout();
-                    handleTaskRunnerSuccess("DepositTxPublishedMessage");
-                },
-                this::handleTaskRunnerFault);
+            () -> {
+                stopTimeout();
+                handleTaskRunnerSuccess("DepositTxPublishedMessage");
+            },
+            this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                MakerProcessDepositTxPublishedMessage.class,
-                PublishAccountAgeWitness.class,
-                MakerPublishTradeStatistics.class,
-                MakerVerifyTakerAccount.class,
-                MakerVerifyTakerFeePayment.class
+            MakerProcessDepositTxPublishedMessage.class,
+            MakerPublishTradeStatistics.class,
+            MakerVerifyTakerAccount.class,
+            MakerVerifyTakerFeePayment.class
         );
         taskRunner.run();
     }
@@ -158,13 +156,13 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
-                this::handleTaskRunnerFault);
+            () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
+            this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SellerProcessCounterCurrencyTransferStartedMessage.class,
-                MakerVerifyTakerAccount.class,
-                MakerVerifyTakerFeePayment.class
+            SellerProcessCounterCurrencyTransferStartedMessage.class,
+            MakerVerifyTakerAccount.class,
+            MakerVerifyTakerFeePayment.class
         );
         taskRunner.run();
     }
@@ -180,28 +178,28 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         if (trade.isFiatSent() && !trade.isFiatReceived()) {
             sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-                    () -> {
-                        resultHandler.handleResult();
-                        handleTaskRunnerSuccess("onFiatPaymentReceived");
-                    },
-                    (errorMessage) -> {
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                        handleTaskRunnerFault(errorMessage);
-                    });
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onFiatPaymentReceived");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
 
             taskRunner.addTasks(
-                    CheckIfPeerIsBanned.class,
-                    MakerVerifyTakerAccount.class,
-                    MakerVerifyTakerFeePayment.class,
-                    SellerSignAndFinalizePayoutTx.class,
-                    SellerBroadcastPayoutTx.class,
-                    SellerSendPayoutTxPublishedMessage.class
+                CheckIfPeerIsBanned.class,
+                MakerVerifyTakerAccount.class,
+                MakerVerifyTakerFeePayment.class,
+                SellerSignAndFinalizePayoutTx.class,
+                SellerBroadcastPayoutTx.class,
+                SellerSendPayoutTxPublishedMessage.class
             );
             taskRunner.run();
         } else {
             log.warn("onFiatPaymentReceived called twice. " +
-                    "That should not happen.\n" +
-                    "state=" + sellerAsMakerTrade.getState());
+                "That should not happen.\n" +
+                "state=" + sellerAsMakerTrade.getState());
         }
     }
 
