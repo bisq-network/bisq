@@ -1,4 +1,4 @@
-﻿﻿﻿Building From Source
+﻿﻿Building From Source
 ====================
 
 This guide will walk you through the process of building bisq from source.
