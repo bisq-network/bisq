@@ -21,6 +21,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CryptoCurrencyAccountPayload;
@@ -54,17 +55,23 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     private ComboBox<TradeCurrency> currencyComboBox;
     private Label addressLabel;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountPayload paymentAccountPayload, String labelTitle) {
+    public static int addFormForBuyer(GridPane gridPane,
+                                      int gridRow,
+                                      PaymentAccountPayload paymentAccountPayload,
+                                      String labelTitle) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
                 ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
         return gridRow;
     }
 
-    public CryptoCurrencyForm(PaymentAccount paymentAccount, AltCoinAddressValidator altCoinAddressValidator,
-                              InputValidator inputValidator, GridPane gridPane,
-                              int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+    public CryptoCurrencyForm(PaymentAccount paymentAccount,
+                              AccountAgeWitnessService accountAgeWitnessService,
+                              AltCoinAddressValidator altCoinAddressValidator,
+                              InputValidator inputValidator,
+                              GridPane gridPane,
+                              int gridRow,
+                              BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
     }
@@ -86,7 +93,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -126,7 +133,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

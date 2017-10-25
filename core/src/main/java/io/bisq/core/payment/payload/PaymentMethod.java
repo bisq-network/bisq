@@ -124,9 +124,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
                     // av. price June 2017: 2500 EUR/BTC
-                    maxTradeLimitMidRisk = Coin.parseCoin("0.5");
-                    maxTradeLimitLowRisk = Coin.parseCoin("1");
-                    maxTradeLimitVeryLowRisk = Coin.parseCoin("2");
+                    // av. price Oct 2017: 4700 EUR/BTC
+                    maxTradeLimitMidRisk = Coin.parseCoin("0.25");
+                    maxTradeLimitLowRisk = Coin.parseCoin("0.5");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
                     break;
                 case "LTC":
                     // av. price June 2017: 40 EUR/LTC
@@ -231,7 +232,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
         if (currencyCode.equals("SF") || currencyCode.equals("BSQ"))
-            return Coin.parseCoin("5");
+            return Coin.parseCoin("4");
         else
             return Coin.valueOf(maxTradeLimit);
     }

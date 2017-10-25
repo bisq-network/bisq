@@ -32,6 +32,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -70,6 +71,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final FilterManager filterManager;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     private Coin txFeeFromFeeService;
@@ -107,7 +109,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                        User user, FeeService feeService, FilterManager filterManager,
                        Preferences preferences, PriceFeedService priceFeedService,
-                       BSFormatter formatter) {
+                       AccountAgeWitnessService accountAgeWitnessService, BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -116,6 +118,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
@@ -140,9 +143,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
-                () -> {
-                },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+            () -> {
+            },
+            errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
     @Override
@@ -168,14 +171,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
         paymentAccount = possiblePaymentAccounts.get(0);
 
-        amount.set(offer.getAmount());
-
-        if (DevEnv.DEV_MODE)
-            amount.set(offer.getAmount());
+        long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+        this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, myLimit)));
 
         securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
-                getBuyerSecurityDeposit() :
-                getSellerSecurityDeposit();
+            getBuyerSecurityDeposit() :
+            getSellerSecurityDeposit();
 
         // We request to get the actual estimated fee
         requestTxFee();
@@ -287,26 +288,30 @@ class TakeOfferDataModel extends ActivatableDataModel {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
-                    txFeeFromFeeService,
-                    getTakerFee(),
-                    isCurrencyForTakerFeeBtc(),
-                    tradePrice.getValue(),
-                    fundsNeededForTrade,
-                    offer,
-                    paymentAccount.getId(),
-                    useSavingsWallet,
-                    tradeResultHandler,
-                    errorMessage -> {
-                        log.warn(errorMessage);
-                        new Popup<>().warning(errorMessage).show();
-                    }
+                txFeeFromFeeService,
+                getTakerFee(),
+                isCurrencyForTakerFeeBtc(),
+                tradePrice.getValue(),
+                fundsNeededForTrade,
+                offer,
+                paymentAccount.getId(),
+                useSavingsWallet,
+                tradeResultHandler,
+                errorMessage -> {
+                    log.warn(errorMessage);
+                    new Popup<>().warning(errorMessage).show();
+                }
             );
         }
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null)
+        if (paymentAccount != null) {
             this.paymentAccount = paymentAccount;
+
+            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+            this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+        }
     }
 
     void fundFromSavingsWallet() {
@@ -350,12 +355,20 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
+        final Coin takerFee = getTakerFee(false);
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getTakerFee(false) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getTakerFee(false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(false)).isNegative();
+            takerFee != null &&
+            bsqWalletService.getAvailableBalance() != null &&
+            !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
+
+    long getMaxTradeLimit() {
+        if (paymentAccount != null)
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+        else
+            return 0;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
@@ -376,8 +389,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (tradePrice != null && offer != null &&
-                amount.get() != null &&
-                !amount.get().isZero()) {
+            amount.get() != null &&
+            !amount.get().isZero()) {
             volume.set(tradePrice.getVolumeByAmount(amount.get()));
             //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
@@ -386,7 +399,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void applyAmount(Coin amount) {
-        this.amount.set(amount);
+        long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+        this.amount.set(Coin.valueOf(Math.min(amount.value, myLimit)));
 
         calculateTotalToPay();
     }
@@ -459,9 +473,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection ConstantConditions,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
+                .headLine(Res.get("notification.walletUpdate.headline"))
+                .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
+                .autoClose();
 
             walletFundedNotification.show();
         }
@@ -472,7 +486,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        log.error("swapTradeToSavings, offerid={}", offer.getId());
+        log.debug("swapTradeToSavings, offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
@@ -531,10 +545,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public AddressEntry getAddressEntry() {
         return addressEntry;
-    }
-
-    public Preferences getPreferences() {
-        return preferences;
     }
 
     public Coin getSecurityDeposit() {

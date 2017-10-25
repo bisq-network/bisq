@@ -59,7 +59,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             // params
             final boolean makerIsBuyer = true;
 
-            final byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            final byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"

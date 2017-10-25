@@ -79,7 +79,7 @@ public class BisqInstaller {
         try {
             return Optional.of(downloadFiles(fileDescriptors, Utilities.getDownloadOfHomeDir()));
         } catch (IOException exception) {
-            return Optional.empty();
+            return Optional.<DownloadTask>empty();
         }
     }
 

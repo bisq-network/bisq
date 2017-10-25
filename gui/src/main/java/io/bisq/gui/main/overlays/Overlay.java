@@ -119,8 +119,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Pane owner;
     protected GridPane gridPane;
     protected Button closeButton;
-    protected Optional<Runnable> closeHandlerOptional = Optional.empty();
-    protected Optional<Runnable> actionHandlerOptional = Optional.empty();
+    protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
     protected Stage stage;
     protected boolean showReportErrorButtons;
     protected Label messageLabel;

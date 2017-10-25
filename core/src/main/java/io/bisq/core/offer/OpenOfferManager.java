@@ -94,6 +94,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Constructor, Initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public OpenOfferManager(KeyRing keyRing,
                             User user,
@@ -149,7 +150,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         cleanUpAddressEntries();
     }
 
-    public void cleanUpAddressEntries() {
+    private void cleanUpAddressEntries() {
         Set<String> openTradesIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
         btcWalletService.getAddressEntriesForOpenOffer().stream()
                 .filter(e -> !openTradesIdSet.contains(e.getOfferId()))
@@ -309,9 +310,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
                 },
-                error -> {
-                    errorMessageHandler.handleErrorMessage(error);
-                }
+                errorMessageHandler::handleErrorMessage
         );
         placeOfferProtocol.placeOffer();
     }
@@ -340,7 +339,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    log.error("removeOpenOffer, offerid={}", offer.getId());
+                    log.debug("removeOpenOffer, offerId={}", offer.getId());
                     btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
                     resultHandler.handleResult();
                 },

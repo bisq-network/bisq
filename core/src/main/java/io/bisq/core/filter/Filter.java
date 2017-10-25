@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class Filter implements StoragePayload {
+public final class Filter implements ProtectedStoragePayload {
     private final List<String> bannedOfferIds;
     private final List<String> bannedNodeAddress;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;

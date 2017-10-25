@@ -24,6 +24,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.BootstrapListener;
@@ -121,15 +122,15 @@ public class ArbitratorManager {
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator)
+                if (data.getProtectedStoragePayload() instanceof Arbitrator)
                     updateArbitratorMap();
             }
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator) {
+                if (data.getProtectedStoragePayload() instanceof Arbitrator) {
                     updateArbitratorMap();
-                    final Arbitrator arbitrator = (Arbitrator) data.getStoragePayload();
+                    final Arbitrator arbitrator = (Arbitrator) data.getProtectedStoragePayload();
                     user.removeAcceptedArbitrator(arbitrator);
                     user.removeAcceptedMediator(getMediator(arbitrator));
                 }
@@ -173,7 +174,9 @@ public class ArbitratorManager {
                 .filter(e -> {
                     final boolean isInPublicKeyInList = isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()));
                     if (!isInPublicKeyInList)
-                        log.warn("We got an arbitrator which is not in our list of publicKeys. Arbitrator={}", e.toString());
+                        log.warn("We got an arbitrator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                                Utilities.bytesAsHexString(e.getRegistrationPubKey()),
+                                e.getNodeAddress().getFullAddress());
                     final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
                             e.getRegistrationPubKey(),
                             e.getRegistrationSignature());

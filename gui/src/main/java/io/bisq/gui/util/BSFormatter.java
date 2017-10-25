@@ -479,6 +479,14 @@ public class BSFormatter {
         return input;
     }
 
+    public String formatAccountAge(long durationMillis) {
+        durationMillis = Math.max(0, durationMillis);
+        String day = Res.get("time.day").toLowerCase();
+        String days = Res.get("time.days");
+        String format = "d\' " + days + "\'";
+        return StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), "1 " + days, "1 " + day);
+    }
+
     public String formatDurationAsWords(long durationMillis) {
         return formatDurationAsWords(durationMillis, false);
     }

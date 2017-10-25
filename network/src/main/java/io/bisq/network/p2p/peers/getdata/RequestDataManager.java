@@ -56,7 +56,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
     private final Map<String, GetDataRequestHandler> getDataRequestHandlers = new HashMap<>();
-    private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
+    private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.<NodeAddress>empty();
     private Timer retryTimer;
     private boolean dataUpdateRequested;
     private boolean stopped;

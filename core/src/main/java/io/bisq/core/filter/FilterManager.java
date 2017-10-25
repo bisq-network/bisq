@@ -76,8 +76,8 @@ public class FilterManager {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getStoragePayload();
+                    if (data.getProtectedStoragePayload() instanceof Filter) {
+                        Filter filter = (Filter) data.getProtectedStoragePayload();
                         if (verifySignature(filter))
                             filterProperty.set(filter);
                     }
@@ -85,8 +85,8 @@ public class FilterManager {
 
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getStoragePayload();
+                    if (data.getProtectedStoragePayload() instanceof Filter) {
+                        Filter filter = (Filter) data.getProtectedStoragePayload();
                         if (verifySignature(filter))
                             filterProperty.set(null);
                     }

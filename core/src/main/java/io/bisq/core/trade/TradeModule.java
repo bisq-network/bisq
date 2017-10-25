@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -39,6 +40,7 @@ public class TradeModule extends AppModule {
         bind(TradeStatisticsManager.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
+        bind(AccountAgeWitnessService.class).in(Singleton.class);
         bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(environment.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
     }
 }

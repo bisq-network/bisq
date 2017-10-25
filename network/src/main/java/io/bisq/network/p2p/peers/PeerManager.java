@@ -165,7 +165,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
         log.debug("onConnection: peer = {}{}",
-                (addressOptional.isPresent() ? addressOptional.get().getHostName() : "not known yet (connection id=" + connection.getUid() + ")"),
+                (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
                 seedNode ? " (SeedNode)" : "");
 
         if (seedNode)
@@ -189,7 +189,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
         log.debug("onDisconnect: peer = {}{} / closeConnectionReason: {}",
-                (addressOptional.isPresent() ? addressOptional.get().getHostName() : "not known yet (connection id=" + connection.getUid() + ")"),
+                (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
                 isSeedNode(connection) ? " (SeedNode)" : "",
                 closeConnectionReason);
 
