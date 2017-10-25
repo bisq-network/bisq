@@ -38,10 +38,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -394,6 +391,12 @@ public class Utilities {
 
     public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4, byte[] array5) {
         return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, ArrayUtils.addAll(array4, array5))));
+    }
+
+    public static Date getUTCDate(int year, int month, int dayOfMonth) {
+        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {

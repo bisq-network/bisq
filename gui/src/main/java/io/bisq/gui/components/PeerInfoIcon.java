@@ -1,5 +1,6 @@
 package io.bisq.gui.components;
 
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
@@ -51,24 +52,36 @@ public class PeerInfoIcon extends Group {
         peerTagMap = preferences.getPeerTagMap();
 
         boolean hasTraded = numTrades > 0;
-        String accountAge = formatter.formatAccountAge(accountAgeWitnessService.getMakersAccountAge(offer, new Date()));
+        final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
+        final long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+        final String accountAge = isFiatCurrency ?
+            makersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(makersAccountAge)) :
+                Res.get("peerInfoIcon.tooltip.unknownAge") :
+            "";
         tooltipText = hasTraded ?
-                Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
-                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
+            Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
+            Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
 
         // outer circle
         Color ringColor;
-        switch (accountAgeWitnessService.getAccountAgeCategory(accountAgeWitnessService.getMakersAccountAge(offer, new Date()))) {
-            case TWO_MONTHS_OR_MORE:
-                ringColor = Color.rgb(0, 225, 0); // > 2 months green
-                break;
-            case ONE_TO_TWO_MONTHS:
-                ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
-                break;
-            case LESS_ONE_MONTH:
-            default:
-                ringColor = Color.rgb(255, 140, 0); //< 1 month orange
-                break;
+        if (isFiatCurrency) {
+            switch (accountAgeWitnessService.getAccountAgeCategory(makersAccountAge)) {
+                case TWO_MONTHS_OR_MORE:
+                    ringColor = Color.rgb(0, 225, 0); // > 2 months green
+                    break;
+                case ONE_TO_TWO_MONTHS:
+                    ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
+                    break;
+                case LESS_ONE_MONTH:
+                default:
+                    ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    break;
+            }
+
+
+        } else {
+            // for altcoins we always display green
+            ringColor = Color.rgb(0, 225, 0);
         }
 
         double outerSize = 26;
@@ -85,7 +98,7 @@ public class PeerInfoIcon extends Group {
             MessageDigest md = MessageDigest.getInstance("SHA1");
             byte[] bytes = md.digest(address.getBytes());
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
-                    | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
+                | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -138,16 +151,21 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
+        final String accountAgeTagEditor = isFiatCurrency ?
+            makersAccountAge > -1 ?
+                formatter.formatAccountAge(makersAccountAge) :
+                Res.get("peerInfo.unknownAge") :
+            null;
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
-                .hostName(hostName)
-                .numTrades(numTrades)
-                .accountAge(accountAge)
-                .position(localToScene(new Point2D(0, 0)))
-                .onSave(newTag -> {
-                    preferences.setTagForPeer(hostName, newTag);
-                    updatePeerInfoIcon();
-                })
-                .show());
+            .hostName(hostName)
+            .numTrades(numTrades)
+            .accountAge(accountAgeTagEditor)
+            .position(localToScene(new Point2D(0, 0)))
+            .onSave(newTag -> {
+                preferences.setTagForPeer(hostName, newTag);
+                updatePeerInfoIcon();
+            })
+            .show());
     }
 
     private void updatePeerInfoIcon() {

@@ -293,6 +293,7 @@ public final class OfferPayload implements ProtectedStoragePayload, RequiresOwne
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
+
         return new OfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),

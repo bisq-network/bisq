@@ -76,9 +76,13 @@ public class AccountAgeWitnessServiceTest {
     public void testVerifySignatureOfNonce() throws CryptoException {
         byte[] nonce = new byte[]{0x01};
         byte[] signature = Sig.sign(keypair.getPrivate(), nonce);
-        assertTrue(service.verifySignatureOfNonce(publicKey, nonce, signature, errorMessage -> {}));
-        assertFalse(service.verifySignatureOfNonce(publicKey, nonce, new byte[]{0x02}, errorMessage -> {}));
-        assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x03}, signature, errorMessage -> {}));
-        assertFalse(service.verifySignatureOfNonce(publicKey, new byte[]{0x02},  new byte[]{0x04}, errorMessage -> {}));
+        assertTrue(service.verifySignature(publicKey, nonce, signature, errorMessage -> {
+        }));
+        assertFalse(service.verifySignature(publicKey, nonce, new byte[]{0x02}, errorMessage -> {
+        }));
+        assertFalse(service.verifySignature(publicKey, new byte[]{0x03}, signature, errorMessage -> {
+        }));
+        assertFalse(service.verifySignature(publicKey, new byte[]{0x02}, new byte[]{0x04}, errorMessage -> {
+        }));
     }
 }

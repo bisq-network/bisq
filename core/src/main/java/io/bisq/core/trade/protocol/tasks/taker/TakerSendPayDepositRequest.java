@@ -76,7 +76,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
             final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
-            byte[] accountAgeWitnessSignatureOfOfferId = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes());
+            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes());
 
             PayDepositRequest message = new PayDepositRequest(
                 offerId,
@@ -101,7 +101,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
                 trade.getMediatorNodeAddress(),
                 UUID.randomUUID().toString(),
                 Version.getP2PMessageVersion(),
-                accountAgeWitnessSignatureOfOfferId,
+                sig,
                 new Date().getTime());
 
             processModel.getP2PService().sendEncryptedDirectMessage(

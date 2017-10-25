@@ -430,6 +430,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
             this.paymentAccount = paymentAccount;
 
             setTradeCurrencyFromPaymentAccount(paymentAccount);
+
+            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
+            this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
         }
     }
 

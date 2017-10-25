@@ -306,8 +306,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null)
+        if (paymentAccount != null) {
             this.paymentAccount = paymentAccount;
+
+            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+            this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+        }
     }
 
     void fundFromSavingsWallet() {
