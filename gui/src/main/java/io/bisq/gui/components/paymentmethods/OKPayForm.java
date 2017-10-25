@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.OKPayAccountPayload;
@@ -56,9 +57,9 @@ public class OKPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public OKPayForm(PaymentAccount paymentAccount, OKPayValidator okPayValidator,
+    public OKPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, OKPayValidator okPayValidator,
                      InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.okPayAccount = (OKPayAccount) paymentAccount;
         this.okPayValidator = okPayValidator;
     }
@@ -75,7 +76,7 @@ public class OKPayForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -136,7 +137,7 @@ public class OKPayForm extends PaymentMethodForm {
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
                 okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addAllowedPeriod();
+        addLimitations();
         addCurrenciesGrid(false);
     }
 

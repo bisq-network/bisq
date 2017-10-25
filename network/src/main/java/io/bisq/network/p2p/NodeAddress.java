@@ -4,6 +4,7 @@ import io.bisq.common.crypto.Hash;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
+import io.bisq.consensus.RestrictedByContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class NodeAddress implements PersistablePayload, NetworkPayload {
+public final class NodeAddress implements PersistablePayload, NetworkPayload, RestrictedByContractJson {
     private final String hostName;
     private final int port;
 
@@ -64,7 +65,7 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
     // We use just a few chars from the full address to blur the potential receiver for sent network_messages
     public byte[] getAddressPrefixHash() {
         if (addressPrefixHash == null)
-            addressPrefixHash = Hash.getHash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
+            addressPrefixHash = Hash.getSha256Hash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
         return addressPrefixHash;
     }
 

@@ -31,7 +31,7 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
+    protected PaymentAccountPayload createPayload() {
         return new SpecificBanksAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

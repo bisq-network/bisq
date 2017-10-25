@@ -23,7 +23,7 @@ import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public final class Arbitrator implements StoragePayload {
+public final class Arbitrator implements ProtectedStoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     private final NodeAddress nodeAddress;

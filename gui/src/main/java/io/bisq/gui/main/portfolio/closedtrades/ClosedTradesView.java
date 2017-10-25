@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
@@ -32,6 +33,7 @@ import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
+import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -59,15 +61,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     Button exportButton;
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
+    private final BSFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final Stage stage;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow, Preferences preferences,
+    public ClosedTradesView(ClosedTradesViewModel model,
+                            OfferDetailsWindow offerDetailsWindow,
+                            Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
-                            PrivateNotificationManager privateNotificationManager, Stage stage) {
+                            PrivateNotificationManager privateNotificationManager,
+                            Stage stage,
+                            BSFormatter formatter) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
@@ -75,6 +82,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.privateNotificationManager = privateNotificationManager;
         this.stage = stage;
         this.preferences = preferences;
+        this.formatter = formatter;
     }
 
     @Override
@@ -139,8 +147,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
                 NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
                 NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
-                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getHostName() : "";
-                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getHostName() : "";
+                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
+                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
                 return address1 != null && address2 != null ? address1.compareTo(address2) : 0;
             } else
                 return 0;
@@ -306,16 +314,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
-
-                                    int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     Trade trade = (Trade) newItem.getTradable();
-                                    String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().getHostName() : "";
-                                    Node peerInfoIcon = new PeerInfoIcon(hostName,
-                                            Res.get("portfolio.closed.peerInfoIcon", hostName),
+                                    int numPastTrades = model.getNumPastTrades(trade);
+                                    final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                                    final Offer offer = trade.getOffer();
+                                    String role = Res.get("peerInfoIcon.tooltip.tradePeer");
+                                    Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
+                                            role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            newItem.getTradable().getOffer(), preferences);
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                            offer,
+                                            preferences,
+                                            model.accountAgeWitnessService,
+                                            formatter);
+                                    setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

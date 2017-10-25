@@ -401,7 +401,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } else if (failedTradesManager.getTradeById(offerId).isPresent()) {
             return Optional.of(failedTradesManager.getTradeById(offerId).get());
         } else {
-            return Optional.empty();
+            return Optional.<Tradable>empty();
         }
     }
 

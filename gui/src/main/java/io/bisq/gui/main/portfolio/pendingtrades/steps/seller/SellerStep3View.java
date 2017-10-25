@@ -147,7 +147,7 @@ public class SellerStep3View extends TradeStepView {
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step3_seller.amountToReceive"),
-                model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+            model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";
@@ -219,8 +219,8 @@ public class SellerStep3View extends TradeStepView {
     protected String getWarningText() {
         setWarningHeadline();
         String substitute = model.isBlockChainMethod() ?
-                Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
-                Res.get("portfolio.pending.step3_seller.warn.part1b");
+            Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
+            Res.get("portfolio.pending.step3_seller.warn.part1b");
         return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
 
 
@@ -266,13 +266,13 @@ public class SellerStep3View extends TradeStepView {
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
                 new Popup<>()
-                        .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
-                        .confirmation(message)
-                        .width(700)
-                        .actionButtonText(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.yes"))
-                        .onAction(this::confirmPaymentReceived)
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
+                    .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
+                    .confirmation(message)
+                    .width(700)
+                    .actionButtonText(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.yes"))
+                    .onAction(this::confirmPaymentReceived)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
             } else {
                 confirmPaymentReceived();
             }
@@ -316,8 +316,8 @@ public class SellerStep3View extends TradeStepView {
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
-                    .attention(message)
-                    .show();
+                .attention(message)
+                .show();
         }
     }
 
@@ -350,9 +350,9 @@ public class SellerStep3View extends TradeStepView {
             else if (paymentAccountPayload instanceof SepaAccountPayload)
                 return Optional.of(((SepaAccountPayload) paymentAccountPayload).getHolderName());
             else
-                return Optional.empty();
+                return Optional.<String>empty();
         } else {
-            return Optional.empty();
+            return Optional.<String>empty();
         }
     }
 }

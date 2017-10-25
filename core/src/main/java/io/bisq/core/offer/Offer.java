@@ -33,6 +33,7 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -104,16 +105,16 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
-                () -> {
-                    cancelAvailabilityRequest();
-                    resultHandler.handleResult();
-                },
-                (errorMessage) -> {
-                    if (availabilityProtocol != null)
-                        availabilityProtocol.cancel();
-                    log.error(errorMessage);
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                });
+            () -> {
+                cancelAvailabilityRequest();
+                resultHandler.handleResult();
+            },
+            (errorMessage) -> {
+                if (availabilityProtocol != null)
+                    availabilityProtocol.cancel();
+                log.error(errorMessage);
+                errorMessageHandler.handleErrorMessage(errorMessage);
+            });
         availabilityProtocol.sendOfferAvailabilityRequest();
     }
 
@@ -133,28 +134,28 @@ public class Offer implements NetworkPayload, PersistablePayload {
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     factor = getDirection() == OfferPayload.Direction.SELL ?
-                            1 - marketPriceMargin : 1 + marketPriceMargin;
+                        1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
                     factor = getDirection() == OfferPayload.Direction.BUY ?
-                            1 - marketPriceMargin : 1 + marketPriceMargin;
+                        1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
                 double marketPriceAsDouble = marketPrice.getPrice();
                 double targetPriceAsDouble = marketPriceAsDouble * factor;
                 try {
                     int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
-                            Altcoin.SMALLEST_UNIT_EXPONENT :
-                            Fiat.SMALLEST_UNIT_EXPONENT;
+                        Altcoin.SMALLEST_UNIT_EXPONENT :
+                        Fiat.SMALLEST_UNIT_EXPONENT;
                     double scaled = MathUtils.scaleUpByPowerOf10(targetPriceAsDouble, precision);
                     final long roundedToLong = MathUtils.roundDoubleToLong(scaled);
                     return Price.valueOf(currencyCode, roundedToLong);
                 } catch (Exception e) {
                     log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
-                            "That case should never happen.");
+                        "That case should never happen.");
                     return null;
                 }
             } else {
                 log.debug("We don't have a market price.\n" +
-                        "That case could only happen if you don't have a price feed.");
+                    "That case could only happen if you don't have a price feed.");
                 return null;
             }
         } else {
@@ -163,7 +164,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
-            MarketPriceNotAvailableException, IllegalArgumentException {
+        MarketPriceNotAvailableException, IllegalArgumentException {
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
         Price offerPrice = getPrice();
         if (offerPrice == null)
@@ -178,8 +179,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
         // from one provider.
         if (Math.abs(1 - factor) > 0.01) {
             String msg = "Taker's trade price is too far away from our calculated price based on the market price.\n" +
-                    "tradePrice=" + tradePrice.getValue() + "\n" +
-                    "offerPrice=" + offerPrice.getValue();
+                "tradePrice=" + tradePrice.getValue() + "\n" +
+                "offerPrice=" + offerPrice.getValue();
             log.warn(msg);
             throw new TradePriceOutOfToleranceException(msg);
         }
@@ -269,8 +270,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public PaymentMethod getPaymentMethod() {
         return new PaymentMethod(offerPayload.getPaymentMethodId(),
-                offerPayload.getMaxTradePeriod(),
-                Coin.valueOf(offerPayload.getMaxTradeLimit()));
+            offerPayload.getMaxTradePeriod(),
+            Coin.valueOf(offerPayload.getMaxTradeLimit()));
     }
 
     // utils
@@ -300,6 +301,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
+
+    public Optional<String> getAccountAgeWitnessHashAsHex() {
+        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
+            return Optional.of(getExtraDataMap().get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
+        else
+            return Optional.<String>empty();
+    }
 
     // domain properties
     public Offer.State getState() {
@@ -357,8 +365,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public String getCurrencyCode() {
         return CurrencyUtil.isCryptoCurrency(offerPayload.getBaseCurrencyCode()) ?
-                offerPayload.getBaseCurrencyCode() :
-                offerPayload.getCounterCurrencyCode();
+            offerPayload.getBaseCurrencyCode() :
+            offerPayload.getCounterCurrencyCode();
     }
 
     public long getProtocolVersion() {
@@ -465,9 +473,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Override
     public String toString() {
         return "Offer{" +
-                "getErrorMessage()='" + getErrorMessage() + '\'' +
-                ", state=" + getState() +
-                ", offerPayload=" + offerPayload +
-                '}';
+            "getErrorMessage()='" + getErrorMessage() + '\'' +
+            ", state=" + getState() +
+            ", offerPayload=" + offerPayload +
+            '}';
     }
 }

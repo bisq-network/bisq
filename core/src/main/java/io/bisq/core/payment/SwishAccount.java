@@ -31,7 +31,7 @@ public final class SwishAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
+    protected PaymentAccountPayload createPayload() {
         return new SwishAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

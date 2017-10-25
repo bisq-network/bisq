@@ -27,6 +27,7 @@ import io.bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -83,18 +84,18 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     @Override
     public void takeAvailableOffer() {
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("takeAvailableOffer"),
-                this::handleTaskRunnerFault);
+            () -> handleTaskRunnerSuccess("takeAvailableOffer"),
+            this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class,
-                TakerSelectArbitrator.class,
-                TakerSelectMediator.class,
-                CreateTakerFeeTx.class,
-                TakerPublishTakerFeeTx.class,
-                SellerAsTakerCreatesDepositTxInputs.class,
-                TakerSendPayDepositRequest.class
+            TakerVerifyMakerAccount.class,
+            TakerVerifyMakerFeePayment.class,
+            TakerSelectArbitrator.class,
+            TakerSelectMediator.class,
+            CreateTakerFeeTx.class,
+            TakerPublishTakerFeeTx.class,
+            SellerAsTakerCreatesDepositTxInputs.class,
+            TakerSendPayDepositRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -110,20 +111,21 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> {
-                    stopTimeout();
-                    handleTaskRunnerSuccess("PublishDepositTxRequest");
-                },
-                this::handleTaskRunnerFault);
+            () -> {
+                stopTimeout();
+                handleTaskRunnerSuccess("PublishDepositTxRequest");
+            },
+            this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                TakerProcessPublishDepositTxRequest.class,
-                CheckIfPeerIsBanned.class,
-                TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class,
-                TakerVerifyAndSignContract.class,
-                SellerAsTakerSignAndPublishDepositTx.class,
-                TakerSendDepositTxPublishedMessage.class
+            TakerProcessPublishDepositTxRequest.class,
+            CheckIfPeerIsBanned.class,
+            TakerVerifyMakerAccount.class,
+            VerifyPeersAccountAgeWitness.class,
+            TakerVerifyMakerFeePayment.class,
+            TakerVerifyAndSignContract.class,
+            SellerAsTakerSignAndPublishDepositTx.class,
+            TakerSendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
@@ -138,13 +140,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
-                this::handleTaskRunnerFault);
+            () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
+            this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SellerProcessCounterCurrencyTransferStartedMessage.class,
-                TakerVerifyMakerAccount.class,
-                TakerVerifyMakerFeePayment.class
+            SellerProcessCounterCurrencyTransferStartedMessage.class,
+            TakerVerifyMakerAccount.class,
+            TakerVerifyMakerFeePayment.class
         );
         taskRunner.run();
     }
@@ -160,28 +162,28 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         if (trade.isFiatSent() && !trade.isFiatReceived()) {
             sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                    () -> {
-                        resultHandler.handleResult();
-                        handleTaskRunnerSuccess("onFiatPaymentReceived");
-                    },
-                    (errorMessage) -> {
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                        handleTaskRunnerFault(errorMessage);
-                    });
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onFiatPaymentReceived");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
 
             taskRunner.addTasks(
-                    CheckIfPeerIsBanned.class,
-                    TakerVerifyMakerAccount.class,
-                    TakerVerifyMakerFeePayment.class,
-                    SellerSignAndFinalizePayoutTx.class,
-                    SellerBroadcastPayoutTx.class,
-                    SellerSendPayoutTxPublishedMessage.class
+                CheckIfPeerIsBanned.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                SellerSignAndFinalizePayoutTx.class,
+                SellerBroadcastPayoutTx.class,
+                SellerSendPayoutTxPublishedMessage.class
             );
             taskRunner.run();
         } else {
             log.warn("onFiatPaymentReceived called twice. " +
-                    "That should not happen.\n" +
-                    "state=" + sellerAsTakerTrade.getState());
+                "That should not happen.\n" +
+                "state=" + sellerAsTakerTrade.getState());
         }
     }
 

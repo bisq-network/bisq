@@ -23,13 +23,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
 @ToString
 public final class AliPayAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
     public AliPayAccountPayload(String paymentMethod,
                                 String id,
@@ -47,10 +53,12 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     private AliPayAccountPayload(String paymentMethod,
                                  String id,
                                  long maxTradePeriod,
-                                 String accountNr) {
-        this(paymentMethod,
+                                 String accountNr,
+                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
                 id,
-                maxTradePeriod);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.accountNr = accountNr;
     }
 
@@ -66,7 +74,8 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
         return new AliPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMaxTradePeriod(),
-                proto.getAliPayAccountPayload().getAccountNr());
+                proto.getAliPayAccountPayload().getAccountNr(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -82,5 +91,10 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

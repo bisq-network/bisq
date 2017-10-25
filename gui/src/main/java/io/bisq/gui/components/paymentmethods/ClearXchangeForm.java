@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
@@ -46,8 +47,8 @@ public class ClearXchangeForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public ClearXchangeForm(PaymentAccount paymentAccount, ClearXchangeValidator clearXchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+    public ClearXchangeForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ClearXchangeValidator clearXchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.clearXchangeAccount = (ClearXchangeAccount) paymentAccount;
         this.clearXchangeValidator = clearXchangeValidator;
     }
@@ -75,7 +76,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -105,7 +106,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

@@ -11,7 +11,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.Broadcaster;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -39,7 +39,7 @@ public class P2PDataStorageTest {
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
     private KeyRing keyRing1, keyRing2;
-    private StoragePayload storagePayload;
+    private ProtectedStoragePayload protectedStoragePayload;
     private File dir1;
     private File dir2;
 

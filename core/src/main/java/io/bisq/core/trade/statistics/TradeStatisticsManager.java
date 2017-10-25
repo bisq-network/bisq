@@ -17,7 +17,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
@@ -98,10 +98,10 @@ public class TradeStatisticsManager implements PersistedDataHost {
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics) {
+                final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof TradeStatistics) {
                     if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
-                        add((TradeStatistics) storagePayload, true);
+                        add((TradeStatistics) protectedStoragePayload, true);
                     } else {
                         // We filter old data items delivered by nodes which still 
                         // have 0.5.0 running (we got BTC trade statistic items in v0.5.0)
@@ -111,7 +111,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
                         calendar.set(Calendar.YEAR, 2017);
                         calendar.setTimeZone(TimeZone.getDefault());
 
-                        final TradeStatistics tradeStatistics = (TradeStatistics) storagePayload;
+                        final TradeStatistics tradeStatistics = (TradeStatistics) protectedStoragePayload;
                         if (tradeStatistics.getTradeDate().after(calendar.getTime()))
                             add(tradeStatistics, true);
                     }
@@ -127,9 +127,9 @@ public class TradeStatisticsManager implements PersistedDataHost {
         // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
         final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
         list.forEach(e -> {
-            final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof TradeStatistics)
-                add((TradeStatistics) storagePayload, false);
+            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload instanceof TradeStatistics)
+                add((TradeStatistics) protectedStoragePayload, false);
 
         });
 

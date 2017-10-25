@@ -196,8 +196,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("0.0101");
-                        price.set("3500");
+                        amount.set("0.125");
+                        price.set("5400");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -522,11 +522,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
-        if (dataModel.paymentAccount != null) {
-            final String currencyCode = dataModel.getTradeCurrencyCode().get();
-            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
-        }
-
+        if (dataModel.paymentAccount != null)
+            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
+        btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
         btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
         final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
@@ -595,8 +593,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (amount.get() != null)
             amountValidationResult.set(isBtcInputValid(amount.get()));
 
-        final String currencyCode = dataModel.getTradeCurrencyCode().get();
-        btcValidator.setMaxValue(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
+        btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
+        btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {

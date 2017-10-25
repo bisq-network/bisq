@@ -30,7 +30,7 @@ public final class SameBankAccount extends CountryBasedPaymentAccount implements
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
+    protected PaymentAccountPayload createPayload() {
         return new SameBankAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

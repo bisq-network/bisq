@@ -55,6 +55,8 @@ message NetworkEnvelope {
         GetBsqBlocksRequest get_bsq_blocks_request = 28;
         GetBsqBlocksResponse get_bsq_blocks_response = 29;
         NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 30;
+
+        AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
     }
 }
 
@@ -69,6 +71,7 @@ message PreliminaryGetDataRequest {
     int32 nonce = 21;
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
+    repeated bytes excluded_pnp_keys = 4;
 }
 
 message GetDataResponse {
@@ -76,12 +79,14 @@ message GetDataResponse {
     bool is_get_updated_data_response = 2;
     repeated StorageEntryWrapper data_set = 3;
     repeated int32 supported_capabilities = 4;
+    repeated PersistableNetworkPayload persistable_network_payload_items = 5;
 }
 
 message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
+    repeated bytes excluded_pnp_keys = 4;
 }
 
 
@@ -126,10 +131,10 @@ message OfferAvailabilityResponse {
 }
 
 message RefreshOfferMessage {
-    bytes hash_of_data_and_seq_nr = 1; 
-    bytes signature = 2; 
-    bytes hash_of_payload = 3; 
-    int32 sequence_number = 4; 
+    bytes hash_of_data_and_seq_nr = 1;
+    bytes signature = 2;
+    bytes hash_of_payload = 3;
+    int32 sequence_number = 4;
 }
 
 
@@ -145,6 +150,10 @@ message RemoveDataMessage {
 
 message RemoveMailboxDataMessage {
     ProtectedMailboxStorageEntry protected_storage_entry = 1;
+}
+
+message AddPersistableNetworkPayloadMessage {
+    PersistableNetworkPayload payload = 1;
 }
 
 
@@ -186,6 +195,8 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 19;
     NodeAddress mediator_node_address = 20;
     string uid = 21;
+    bytes account_age_witness_signature_of_offer_id = 22;
+    int64 current_date = 23;
 }
 
 message PublishDepositTxRequest {
@@ -200,6 +211,8 @@ message PublishDepositTxRequest {
     bytes maker_multi_sig_pub_key = 9;
     NodeAddress sender_node_address = 10;
     string uid = 11;
+    bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
+    int64 current_date = 13;
 }
 
 message DepositTxPublishedMessage {
@@ -341,6 +354,13 @@ message StoragePayload {
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
         CompensationRequestPayload compensation_request_payload = 8;
+        AccountAgeWitness account_age_witness = 9;
+    }
+}
+
+message PersistableNetworkPayload {
+    oneof message {
+        AccountAgeWitness account_age_witness = 1;
     }
 }
 
@@ -478,7 +498,7 @@ message Tx {
     int64 burnt_fee = 4;
     TxType tx_type = 5;
 }
-    
+
 message BsqBlock {
     int32 height = 1;
     string hash = 2;
@@ -540,7 +560,7 @@ message Filter {
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
-    repeated string banned_payment_methods = 8;    
+    repeated string banned_payment_methods = 8;
 }
 
 message TradeStatistics {
@@ -586,7 +606,7 @@ message OfferPayload {
     double market_price_margin = 7;
     bool use_market_based_price = 8;
     int64 amount = 9;
-    int64 min_amount = 10;   
+    int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
     repeated NodeAddress arbitrator_node_addresses = 13;
@@ -637,6 +657,11 @@ message CompensationRequestPayload {
     string signature = 16;
     string fee_tx_id = 17;
     map<string, string> extra_data = 18;
+}
+
+message AccountAgeWitness {
+    bytes hash = 1;
+    int64 date = 2;
 }
 
 
@@ -779,6 +804,7 @@ message PaymentAccountPayload {
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
     }
+    map<string, string> exclude_from_json_data = 15;
 }
 
 message AliPayAccountPayload {
@@ -898,19 +924,21 @@ message PersistableEnvelope {
         PeerList peer_list = 3;
         AddressEntryList address_entry_list = 4;
         NavigationPath navigation_path = 5;
-        
+
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7;
         DisputeList dispute_list = 8;
-        
+
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
-        
+
         // TODO not fully implemented yet
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
+
+        PersistableNetworkPayloadList persistable_network_payload_list = 15;
     }
 }
 
@@ -939,6 +967,10 @@ message MapValue {
 
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
+}
+
+message PersistableNetworkPayloadList {
+    repeated PersistableNetworkPayload items = 1;
 }
 
 message PeerList {
@@ -1164,7 +1196,15 @@ message TradingPeer {
     repeated RawTransactionInput raw_transaction_inputs = 9;
     int64 change_output_value = 10;
     string change_output_address = 11;
+    bytes account_age_witness_nonce = 12;
+    bytes account_age_witness_signature = 13;
+    int64 current_date = 14;
 }
+
+message AccountAgeWitnessMap {
+   map<string, AccountAgeWitness> account_age_witness_map = 1;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////

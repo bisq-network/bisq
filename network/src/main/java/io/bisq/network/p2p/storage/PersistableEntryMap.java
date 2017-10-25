@@ -31,14 +31,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PersistedEntryMap implements PersistableEnvelope {
+public class PersistableEntryMap implements PersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
 
-    public PersistedEntryMap() {
+    public PersistableEntryMap() {
     }
 
-    public PersistedEntryMap(Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map) {
+    public PersistableEntryMap(Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map) {
         this.map.putAll(map);
     }
 
@@ -64,7 +64,7 @@ public class PersistedEntryMap implements PersistableEnvelope {
                         e -> new P2PDataStorage.ByteArray(e.getKey()),
                         e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
                 ));
-        return new PersistedEntryMap(new HashMap<>(map));
+        return new PersistableEntryMap(new HashMap<>(map));
     }
 
     public void put(P2PDataStorage.ByteArray key, ProtectedStorageEntry value) {

@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.FasterPaymentsAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.FasterPaymentsAccountPayload;
@@ -56,9 +57,9 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
     private InputTextField sortCodeInputTextField;
 
-    public FasterPaymentsForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane,
+    public FasterPaymentsForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane,
                               int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.fasterPaymentsAccount = (FasterPaymentsAccount) paymentAccount;
     }
 
@@ -85,7 +86,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -114,7 +115,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override
