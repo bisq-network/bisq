@@ -128,7 +128,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>${artifactId}-${version}-app</finalName>
+                            <finalName>${project.artifactId}-${project.version}-app</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -233,7 +233,7 @@
                                         <argument>-appclass</argument>
                                         <argument>io.bisq.gui.app.BisqAppMain</argument>
                                         <argument>-srcfiles</argument>
-                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-app.jar</argument>
                                         <argument>-outfile</argument>
                                         <argument>${project.artifactId}-app</argument>
 
@@ -357,7 +357,7 @@
                                         <argument>-appclass</argument>
                                         <argument>io.bisq.gui.app.BisqAppMain</argument>
                                         <argument>-srcfiles</argument>
-                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar:linux/LICENSE</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-app.jar:linux/LICENSE</argument>
                                         <argument>-outfile</argument>
                                         <argument>${project.artifactId}-app</argument>
 
@@ -490,7 +490,7 @@
                                         <argument>-appclass</argument>
                                         <argument>io.bisq.gui.app.BisqAppMain</argument>
                                         <argument>-srcfiles</argument>
-                                        <argument>${project.build.directory}/${artifactId}-${version}-app.jar</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-app.jar</argument>
                                         <argument>-outfile</argument>
                                         <argument>${project.artifactId}-app</argument>
 
@@ -498,7 +498,7 @@
                                         <argument>${project.build.directory}/osx</argument>
 
                                         <argument>-v</argument>
-                                        <argument>-Bruntime=${env.JAVA_HOME}\jre</argument>
+                                        <argument>-Bruntime=${env.JAVA_HOME}/jre</argument>
 
                                         <!--TODO add java.security-->
                                         <!--<argument>-BjvmOptions=-Djava.security.manager</argument>-->
