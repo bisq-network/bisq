@@ -89,7 +89,7 @@ public class Restrictions {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(100_000); // 5 EUR @ 5000 EUR/BTC
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000); // 2.5 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(6_000_000); // 2.4 EUR @ 40 EUR/LTC
