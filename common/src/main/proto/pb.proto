@@ -561,6 +561,9 @@ message Filter {
     map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
     repeated string banned_payment_methods = 8;
+    repeated string arbitrators = 9;
+    repeated string seed_nodes = 10;
+    repeated string price_relay_nodes = 11;
 }
 
 message TradeStatistics {

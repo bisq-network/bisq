@@ -22,6 +22,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ public class ArbitratorService {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorService.class);
 
     private final P2PService p2PService;
+    private final FilterManager filterManager;
 
     interface ArbitratorMapResultHandler {
         void handleResult(Map<String, Arbitrator> arbitratorsMap);
@@ -52,8 +55,9 @@ public class ArbitratorService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorService(P2PService p2PService) {
+    public ArbitratorService(P2PService p2PService, FilterManager filterManager) {
         this.p2PService = p2PService;
+        this.filterManager = filterManager;
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
@@ -62,8 +66,8 @@ public class ArbitratorService {
 
     public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
-        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() || 
-                !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
+        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
+            !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
             boolean result = p2PService.addData(arbitrator, true);
             if (result) {
                 log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
@@ -92,10 +96,15 @@ public class ArbitratorService {
     }
 
     public Map<NodeAddress, Arbitrator> getArbitrators() {
+        final List<String> bannedArbitrators = filterManager.getFilter() != null ? filterManager.getFilter().getArbitrators() : null;
+        if (bannedArbitrators != null)
+            log.warn("bannedArbitrators=" + bannedArbitrators);
         Set<Arbitrator> arbitratorSet = p2PService.getDataMap().values().stream()
-                .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
-                .map(data -> (Arbitrator) data.getProtectedStoragePayload())
-                .collect(Collectors.toSet());
+            .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
+            .map(data -> (Arbitrator) data.getProtectedStoragePayload())
+            .filter(a -> bannedArbitrators == null ||
+                !bannedArbitrators.contains(a.getNodeAddress().getHostName()))
+            .collect(Collectors.toSet());
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();
         for (Arbitrator arbitrator : arbitratorSet) {
