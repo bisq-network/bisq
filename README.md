@@ -1,4 +1,4 @@
-<img src="https://bisq.network/images/logo_white_bg.png" style="width: 205px;" />
+<img src="https://bisq.network/images/logo_white_bg.png" width="410" />
 
 
 What is Bisq?
