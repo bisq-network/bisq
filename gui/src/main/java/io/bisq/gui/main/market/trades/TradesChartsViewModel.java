@@ -20,6 +20,7 @@ package io.bisq.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.GlobalSettings;
+import io.bisq.common.app.Log;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
@@ -135,14 +136,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
     }
-
-    @VisibleForTesting
-    TradesChartsViewModel() {
-        setChangeListener = null;
-        preferences = null;
-        tradeStatisticsManager = null;
-    }
-
 
     @Override
     protected void activate() {
