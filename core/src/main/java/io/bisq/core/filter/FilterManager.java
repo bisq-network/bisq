@@ -24,6 +24,8 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
@@ -40,6 +42,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -51,6 +54,9 @@ public class FilterManager {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
+    private final Preferences preferences;
+    private final ProvidersRepository providersRepository;
+    private boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
     @SuppressWarnings("ConstantConditions")
@@ -65,20 +71,40 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, User user,
+    public FilterManager(P2PService p2PService,
+                         KeyRing keyRing,
+                         User user,
+                         Preferences preferences,
+                         ProvidersRepository providersRepository,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
+        this.preferences = preferences;
+        this.providersRepository = providersRepository;
+        this.ignoreDevMsg = ignoreDevMsg;
+    }
 
+    public void onAllServicesInitialized() {
         if (!ignoreDevMsg) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter))
+                        if (verifySignature(filter)) {
+                            // Seed nodes are requested at startup before we get the filter so we only apply the banned
+                            // nodes at the next startup and don't update the list in the P2P network domain
+                            preferences.setBannedSeedNodes(filter.getSeedNodes());
+
+                            final List<String> priceRelayNodes = filter.getPriceRelayNodes();
+                            preferences.setBannedPriceRelayNodes(priceRelayNodes);
+                            providersRepository.setBannedNodes(priceRelayNodes);
+                            providersRepository.fillProviderList();
+                            providersRepository.setNewRandomBaseUrl();
+
                             filterProperty.set(filter);
+                        }
                     }
                 }
 
@@ -86,8 +112,16 @@ public class FilterManager {
                 public void onRemoved(ProtectedStorageEntry data) {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter))
+                        if (verifySignature(filter)) {
+                            preferences.setBannedSeedNodes(null);
+
+                            preferences.setBannedPriceRelayNodes(null);
+                            providersRepository.setBannedNodes(null);
+                            providersRepository.fillProviderList();
+                            providersRepository.setNewRandomBaseUrl();
+
                             filterProperty.set(null);
+                        }
                     }
                 }
             });

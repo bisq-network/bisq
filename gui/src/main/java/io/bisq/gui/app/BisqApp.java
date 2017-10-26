@@ -66,6 +66,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -184,7 +185,8 @@ public class BisqApp extends Application {
             // All classes which are persisting objects need to be added here
             // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
-            persistedDataHosts.add(injector.getInstance(Preferences.class));
+            final Preferences preferences = injector.getInstance(Preferences.class);
+            persistedDataHosts.add(preferences);
             persistedDataHosts.add(injector.getInstance(User.class));
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
@@ -207,6 +209,8 @@ public class BisqApp extends Application {
                     log.error("readPersisted error", e1);
                 }
             });
+            //TODO
+            SeedNodesRepository.setBannedNodes(preferences.getBannedSeedNodes());
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();

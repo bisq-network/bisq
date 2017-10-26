@@ -5,6 +5,8 @@ import io.bisq.network.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,50 +14,57 @@ import java.util.stream.Stream;
 public class SeedNodesRepository {
     private static final Logger log = LoggerFactory.getLogger(SeedNodesRepository.class);
 
+    @Nullable
+    private static List<String> bannedNodes;
+
+    public static void setBannedNodes(@Nullable List<String> bannedNodes) {
+        SeedNodesRepository.bannedNodes = bannedNodes;
+    }
+
     // Addresses are used if their port match the network id:
     // - mainnet uses port 8000
     // - testnet uses port 8001
     // - regtest uses port 8002
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
-            // BTC mainnet
+        // BTC mainnet
 
-            //TODO dev dont use live nodes atm!
-            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
-            new NodeAddress("723ljisnynbtdohi.onion:8000"),
-            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
-            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
+        //TODO dev dont use live nodes atm!
+        new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
+        new NodeAddress("723ljisnynbtdohi.onion:8000"),
+        new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
+        new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
 
-            //TODO dev
-            // local dev
-            // new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
+        //TODO dev
+        // local dev
+        // new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
 
-            // BTC testnet
-            new NodeAddress("nbphlanpgbei4okt.onion:8001"),
+        // BTC testnet
+        new NodeAddress("nbphlanpgbei4okt.onion:8001"),
 
-            // BTC regtest
-            // For development you need to change that to your local onion addresses
-            // 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=8002 --myAddress=rxdkppp3vicnbgqt:8002 --appName=bisq_seed_node_rxdkppp3vicnbgqt.onion_8002
-            // 2. Find your local onion address in bisq_seed_node_rxdkppp3vicnbgqt.onion_8002/regtest/tor/hiddenservice/hostname
-            // 3. Shut down the seed node
-            // 4. Rename the directory with your local onion address
-            // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
-            new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
+        // BTC regtest
+        // For development you need to change that to your local onion addresses
+        // 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=8002 --myAddress=rxdkppp3vicnbgqt:8002 --appName=bisq_seed_node_rxdkppp3vicnbgqt.onion_8002
+        // 2. Find your local onion address in bisq_seed_node_rxdkppp3vicnbgqt.onion_8002/regtest/tor/hiddenservice/hostname
+        // 3. Shut down the seed node
+        // 4. Rename the directory with your local onion address
+        // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
+        new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
 
-            // LTC mainnet
-            new NodeAddress("acyvotgewx46pebw.onion:8003"),
-            // new NodeAddress("pklgy3vdfn3obkur.onion:8003"), removed in version 0.6
+        // LTC mainnet
+        new NodeAddress("acyvotgewx46pebw.onion:8003"),
+        // new NodeAddress("pklgy3vdfn3obkur.onion:8003"), removed in version 0.6
 
-            // keep the below but we don't run them atm
+        // keep the below but we don't run them atm
             /*  new NodeAddress("cfciqxcowuhjdnkl.onion:8003"),
             new NodeAddress("bolqw3hs55uii7ku.onion:8003"),*/
 
-            // DOGE mainnet 
-            // new NodeAddress("t6bwuj75mvxswavs.onion:8006"), removed in version 0.6 (DOGE not supported anymore)
+        // DOGE mainnet
+        // new NodeAddress("t6bwuj75mvxswavs.onion:8006"), removed in version 0.6 (DOGE not supported anymore)
 
-            //DASH mainnet
-            new NodeAddress("toeu5ikb27ydscxt.onion:8009")
-            //new NodeAddress("ae4yvaivhnekkhqf.onion:8009")  removed in version 0.6
+        //DASH mainnet
+        new NodeAddress("toeu5ikb27ydscxt.onion:8009")
+        //new NodeAddress("ae4yvaivhnekkhqf.onion:8009")  removed in version 0.6
     );
 
     // Addresses are used if the last digit of their port match the network id:
@@ -63,47 +72,52 @@ public class SeedNodesRepository {
     // - testnet use port ends in 1
     // - regtest use port ends in 2
     private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
-            // BTC
-            // mainnet
-            new NodeAddress("localhost:2000"),
-            new NodeAddress("localhost:3000"),
-            new NodeAddress("localhost:4000"),
+        // BTC
+        // mainnet
+        new NodeAddress("localhost:2000"),
+        new NodeAddress("localhost:3000"),
+        new NodeAddress("localhost:4000"),
 
-            // testnet
-            new NodeAddress("localhost:2001"),
-            new NodeAddress("localhost:3001"),
-            new NodeAddress("localhost:4001"),
+        // testnet
+        new NodeAddress("localhost:2001"),
+        new NodeAddress("localhost:3001"),
+        new NodeAddress("localhost:4001"),
 
-            // regtest
-            new NodeAddress("localhost:2002"),
-          /*  new NodeAddress("localhost:3002"),
-            new NodeAddress("localhost:4002"),*/
+        // regtest
+        new NodeAddress("localhost:2002"),
+        new NodeAddress("localhost:3002"),
+         /*    new NodeAddress("localhost:4002"),*/
 
-            // LTC
-            // mainnet
-            new NodeAddress("localhost:2003"),
+        // LTC
+        // mainnet
+        new NodeAddress("localhost:2003"),
 
-            // regtest
-            new NodeAddress("localhost:2005"),
+        // regtest
+        new NodeAddress("localhost:2005"),
 
-            // DOGE regtest
-            new NodeAddress("localhost:2008"),
+        // DOGE regtest
+        new NodeAddress("localhost:2008"),
 
-            // DASH regtest
-            new NodeAddress("localhost:2011")
+        // DASH regtest
+        new NodeAddress("localhost:2011")
     );
     private NodeAddress nodeAddressToExclude;
+
 
     public Set<NodeAddress> getSeedNodeAddresses(boolean useLocalhostForP2P, int networkId) {
         String networkIdAsString = String.valueOf(networkId);
         Set<NodeAddress> nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
-        Set<NodeAddress> filtered = nodeAddresses.stream()
-                .filter(e -> String.valueOf(e.getPort()).endsWith("0" + networkIdAsString))
-                .filter(e -> !e.equals(nodeAddressToExclude))
-                .collect(Collectors.toSet());
-        log.debug("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}:\nnetworkId={}",
-                useLocalhostForP2P, networkId, filtered);
-        return filtered;
+        Set<NodeAddress> nodes = nodeAddresses.stream()
+            .filter(e -> String.valueOf(e.getPort()).endsWith("0" + networkIdAsString))
+            .filter(e -> !e.equals(nodeAddressToExclude))
+            .filter(e -> bannedNodes == null || !bannedNodes.contains(e.getFullAddress())) //TODO
+            .collect(Collectors.toSet());
+
+        if (bannedNodes != null)
+            log.warn("banned seed nodes=" + bannedNodes);
+        log.info("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}) nodes={}",
+            useLocalhostForP2P, networkId, nodes);
+        return nodes;
     }
 
     public void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses) {
@@ -116,7 +130,7 @@ public class SeedNodesRepository {
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
         return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
-                .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
+            .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
     }
 
     public void setNodeAddressToExclude(NodeAddress nodeAddress) {

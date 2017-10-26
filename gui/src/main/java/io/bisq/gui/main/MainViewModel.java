@@ -55,6 +55,7 @@ import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -140,6 +141,7 @@ public class MainViewModel implements ViewModel {
     private final FailedTradesManager failedTradesManager;
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final ProvidersRepository providersRepository;
     private final BSFormatter formatter;
 
     // BTC network
@@ -216,7 +218,7 @@ public class MainViewModel implements ViewModel {
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         BSFormatter formatter) {
+                         ProvidersRepository providersRepository, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -244,6 +246,7 @@ public class MainViewModel implements ViewModel {
         this.failedTradesManager = failedTradesManager;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.providersRepository = providersRepository;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
@@ -647,6 +650,11 @@ public class MainViewModel implements ViewModel {
         accountAgeWitnessService.onAllServicesInitialized();
 
         priceFeedService.onAllServicesInitialized();
+
+        filterManager.onAllServicesInitialized();
+
+        providersRepository.setBannedNodes(preferences.getBannedPriceRelayNodes());
+        providersRepository.onAllServicesInitialized();
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
