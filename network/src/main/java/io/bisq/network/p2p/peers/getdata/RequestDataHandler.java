@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class RequestDataHandler implements MessageListener {
+class RequestDataHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataHandler.class);
 
     private static final long TIME_OUT_SEC = 60;
@@ -65,14 +65,15 @@ public class RequestDataHandler implements MessageListener {
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
     private boolean stopped;
-    private Connection connection;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDataHandler(NetworkNode networkNode, P2PDataStorage dataStorage, PeerManager peerManager,
+    public RequestDataHandler(NetworkNode networkNode,
+                              P2PDataStorage dataStorage,
+                              PeerManager peerManager,
                               Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
@@ -135,7 +136,6 @@ public class RequestDataHandler implements MessageListener {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        RequestDataHandler.this.connection = connection;
                         log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +

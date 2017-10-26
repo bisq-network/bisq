@@ -34,4 +34,11 @@ public abstract class HttpClientProvider {
 
         httpClient.setIgnoreSocks5Proxy(ignoreSocks5Proxy);
     }
+
+    @Override
+    public String toString() {
+        return "HttpClientProvider{" +
+            "\n     httpClient=" + httpClient +
+            "\n}";
+    }
 }

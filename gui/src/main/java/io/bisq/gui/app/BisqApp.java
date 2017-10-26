@@ -66,7 +66,6 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.network.p2p.P2PService;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -136,10 +135,10 @@ public class BisqApp extends Application {
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
-                    throwable.getCause().getCause() instanceof BlockStoreException) {
+                throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());
             } else if (throwable instanceof ClassCastException &&
-                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
+                "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
@@ -173,14 +172,6 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-/*
-            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
-            Injector injector = Guice.createInjector(new GraphvizModule());
-            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
-            grapher.setOut(out);
-            grapher.setRankdir("TB");
-            grapher.graph(injector);
-*/
 
             // All classes which are persisting objects need to be added here
             // Maintain order!
@@ -209,8 +200,6 @@ public class BisqApp extends Application {
                     log.error("readPersisted error", e1);
                 }
             });
-            //TODO
-            SeedNodesRepository.setBannedNodes(preferences.getBannedSeedNodes());
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
@@ -242,9 +231,9 @@ public class BisqApp extends Application {
             Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
-                    "/io/bisq/gui/bisq.css",
-                    "/io/bisq/gui/images.css",
-                    "/io/bisq/gui/CandleStickChart.css");
+                "/io/bisq/gui/bisq.css",
+                "/io/bisq/gui/images.css",
+                "/io/bisq/gui/CandleStickChart.css");
 
             // configure the system tray
             SystemTray.create(primaryStage, shutDownHandler);
@@ -256,7 +245,7 @@ public class BisqApp extends Application {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
                 if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
-                        Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                    Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
                     stop();
                 } else {
                     if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
@@ -321,10 +310,10 @@ public class BisqApp extends Application {
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
                 new Popup<>().warning(Res.get("popup.warning.wrongVersion",
-                        osArchitecture,
-                        Utilities.getJVMArchitecture(),
-                        osArchitecture))
-                        .show();
+                    osArchitecture,
+                    Utilities.getJVMArchitecture(),
+                    osArchitecture))
+                    .show();
             }
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
@@ -336,17 +325,17 @@ public class BisqApp extends Application {
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         new SendAlertMessageWindow()
-                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
-                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
-                .show();
+            .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
+            .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
+            .show();
     }
 
     private void showFilterPopup() {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
         new FilterWindow(filterManager)
-                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
-                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
-                .show();
+            .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
+            .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
+            .show();
     }
 
     private void showEmptyWalletPopup(WalletService walletService) {
@@ -361,8 +350,8 @@ public class BisqApp extends Application {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
-                        "/io/bisq/gui/bisq.css",
-                        "/io/bisq/gui/images.css");
+                    "/io/bisq/gui/bisq.css",
+                    "/io/bisq/gui/images.css");
                 primaryStage.setScene(scene);
                 primaryStage.show();
             }
@@ -410,13 +399,13 @@ public class BisqApp extends Application {
     private void showFPSWindow() {
         Label label = new Label();
         EventStreams.animationTicks()
-                .latestN(100)
-                .map(ticks -> {
-                    int n = ticks.size() - 1;
-                    return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
-                })
-                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
-                .feedTo(label.textProperty());
+            .latestN(100)
+            .map(ticks -> {
+                int n = ticks.size() - 1;
+                return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
+            })
+            .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
+            .feedTo(label.textProperty());
 
         Pane root = new StackPane();
         root.getChildren().add(label);
@@ -438,10 +427,10 @@ public class BisqApp extends Application {
     public void stop() {
         if (!shutDownRequested) {
             new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
-                    .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
-                    .hideCloseButton()
-                    .useAnimation(false)
-                    .show();
+                .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
+                .hideCloseButton()
+                .useAnimation(false)
+                .show();
             //noinspection CodeBlock2Expr
             UserThread.runAfter(() -> {
                 gracefulShutDown(() -> {

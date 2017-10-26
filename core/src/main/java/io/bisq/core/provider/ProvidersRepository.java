@@ -18,7 +18,9 @@ package io.bisq.core.provider;
 
 import com.google.inject.Inject;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.NetworkOptionKeys;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,15 +33,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ProvidersRepository {
+    private static final String NODES = "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/";
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 
     private List<String> providerList;
+    @Getter
     private String baseUrl = "";
-
-    // added in v0.6
-    @Nullable
-    private List<String> bannedNodes;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,23 +47,17 @@ public class ProvidersRepository {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProvidersRepository(@Named(AppOptionKeys.PROVIDERS) String providers,
+    public ProvidersRepository(BisqEnvironment bisqEnvironment,
+                               @Named(AppOptionKeys.PROVIDERS) String providers,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
+
+        init(bisqEnvironment.getBannedSeedNodes());
     }
 
-    public void setBannedNodes(@Nullable List<String> bannedNodes) {
-        this.bannedNodes = bannedNodes;
-    }
-
-    public void onAllServicesInitialized() {
-        fillProviderList();
-        setBaseUrl();
-    }
-
-    public void fillProviderList() {
+    public void init(@Nullable List<String> bannedNodes) {
         String providerAsString;
         if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
@@ -73,21 +67,21 @@ public class ProvidersRepository {
                 // providerAsString = "http://localhost:8080/, http://37.139.14.34:8080/";
                 providerAsString = "http://37.139.14.34:8080/";
             } else {
-                providerAsString = "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/";
+                providerAsString = NODES;
             }
         } else {
             providerAsString = providersFromProgramArgs;
         }
+
         if (bannedNodes != null)
             log.info("banned provider nodes: " + bannedNodes);
+
         providerList = Arrays.asList(StringUtils.deleteWhitespace(providerAsString).split(","))
             .stream()
             .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
             .collect(Collectors.toList());
         log.info("providerList={}", providerList);
-    }
 
-    private void setBaseUrl() {
         if (!providerList.isEmpty())
             baseUrl = providerList.get(new Random().nextInt(providerList.size()));
 
@@ -107,12 +101,7 @@ public class ProvidersRepository {
         log.info("Use new provider baseUrl: " + baseUrl);
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
     public boolean hasMoreProviders() {
         return !providerList.isEmpty();
     }
-
 }

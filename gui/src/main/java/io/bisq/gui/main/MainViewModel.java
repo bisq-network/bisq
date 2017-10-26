@@ -653,9 +653,6 @@ public class MainViewModel implements ViewModel {
 
         filterManager.onAllServicesInitialized();
 
-        providersRepository.setBannedNodes(preferences.getBannedPriceRelayNodes());
-        providersRepository.onAllServicesInitialized();
-
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();

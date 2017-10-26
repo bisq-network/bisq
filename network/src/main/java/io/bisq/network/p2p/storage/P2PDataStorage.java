@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -51,13 +53,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * How many days to keep an entry before it is purged.
      */
-    public static final int PURGE_AGE_DAYS = 10;
+    private static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
 
     private final Broadcaster broadcaster;
     private final File storageDir;
+
     @Getter
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
@@ -79,9 +82,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(Broadcaster broadcaster,
-                          NetworkNode networkNode,
-                          File storageDir,
+    @Inject
+    public P2PDataStorage(NetworkNode networkNode,
+                          Broadcaster broadcaster,
+                          @Named(Storage.STORAGE_DIR) File storageDir,
                           PersistenceProtoResolver persistenceProtoResolver) {
         this.broadcaster = broadcaster;
         this.storageDir = storageDir;
@@ -627,7 +631,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    boolean checkSignature(PublicKey ownerPubKey, byte[] hashOfDataAndSeqNr, byte[] signature) {
+    private boolean checkSignature(PublicKey ownerPubKey, byte[] hashOfDataAndSeqNr, byte[] signature) {
         try {
             boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
             if (!result)
@@ -648,7 +652,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
     // in the contained mailbox message, or the pubKey of other kinds of network_messages.
-    boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
+    private boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof MailboxStoragePayload) {

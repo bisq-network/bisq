@@ -95,7 +95,7 @@ public class FeeService {
 
         /* How to calculate:
               MIN_MAKER_FEE_IN_BASE_CUR = target fiat price * 100000000 / price (in btc: 0.5*100000000/2500)
-              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount 
+              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount
                                              (in btc: 5*100000000/2500 / 1)
                                              (in ltc: 5*100000000/40 / 50)
          */
@@ -115,10 +115,10 @@ public class FeeService {
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD 
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000_000_000L;
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at DOGE price 0.003 USD  for 800 000 DOGE (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD 
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             case "DASH":
@@ -161,7 +161,7 @@ public class FeeService {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.warn("Could not load fees. " + throwable.toString());
+                    log.warn("Could not load fees. feeProvider={}, error={}", feeProvider.toString(), throwable.toString());
                     if (faultHandler != null)
                         UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
                 }

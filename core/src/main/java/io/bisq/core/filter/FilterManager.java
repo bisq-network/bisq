@@ -22,10 +22,10 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.ProvidersRepository;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
@@ -51,10 +51,13 @@ import static org.bitcoinj.core.Utils.HEX;
 public class FilterManager {
     private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
 
+    public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
+    public static final String BANNED_SEED_NODES = "bannedSeedNodes";
+
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
-    private final Preferences preferences;
+    private final BisqEnvironment bisqEnvironment;
     private final ProvidersRepository providersRepository;
     private boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
@@ -74,13 +77,13 @@ public class FilterManager {
     public FilterManager(P2PService p2PService,
                          KeyRing keyRing,
                          User user,
-                         Preferences preferences,
+                         BisqEnvironment bisqEnvironment,
                          ProvidersRepository providersRepository,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
-        this.preferences = preferences;
+        this.bisqEnvironment = bisqEnvironment;
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
     }
@@ -94,13 +97,15 @@ public class FilterManager {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
                         if (verifySignature(filter)) {
                             // Seed nodes are requested at startup before we get the filter so we only apply the banned
-                            // nodes at the next startup and don't update the list in the P2P network domain
-                            preferences.setBannedSeedNodes(filter.getSeedNodes());
+                            // nodes at the next startup and don't update the list in the P2P network domain.
+                            // We persist it to the property file which is read before any other initialisation.
+                            final List<String> seedNodes = filter.getSeedNodes();
+                            bisqEnvironment.saveBannedSeedNodes(seedNodes);
 
+                            // Banned price relay nodes we can apply at runtime
                             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
-                            preferences.setBannedPriceRelayNodes(priceRelayNodes);
-                            providersRepository.setBannedNodes(priceRelayNodes);
-                            providersRepository.fillProviderList();
+                            bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+                            providersRepository.init(priceRelayNodes);
                             providersRepository.setNewRandomBaseUrl();
 
                             filterProperty.set(filter);
@@ -113,11 +118,10 @@ public class FilterManager {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
                         if (verifySignature(filter)) {
-                            preferences.setBannedSeedNodes(null);
+                            bisqEnvironment.saveBannedSeedNodes(null);
 
-                            preferences.setBannedPriceRelayNodes(null);
-                            providersRepository.setBannedNodes(null);
-                            providersRepository.fillProviderList();
+                            bisqEnvironment.saveBannedPriceRelayNodes(null);
+                            providersRepository.init(null);
                             providersRepository.setNewRandomBaseUrl();
 
                             filterProperty.set(null);

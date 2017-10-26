@@ -65,12 +65,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBtc = true;
 
-    // added in v0.6
-    @Nullable
-    private List<String> bannedSeedNodes;
-    @Nullable
-    private List<String> bannedPriceRelayNodes;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -116,9 +110,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                                long buyerSecurityDepositAsLong,
                                boolean useAnimations,
                                @Nullable PaymentAccount selectedPaymentAccountForCreateOffer,
-                               boolean payFeeInBtc,
-                               @Nullable List<String> bannedSeedNodes,
-                               @Nullable List<String> bannedPriceRelayNodes) {
+                               boolean payFeeInBtc) {
         this.userLanguage = userLanguage;
         this.userCountry = userCountry;
         this.fiatCurrencies = fiatCurrencies;
@@ -152,8 +144,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
         this.useAnimations = useAnimations;
         this.selectedPaymentAccountForCreateOffer = selectedPaymentAccountForCreateOffer;
         this.payFeeInBtc = payFeeInBtc;
-        this.bannedSeedNodes = bannedSeedNodes;
-        this.bannedPriceRelayNodes = bannedPriceRelayNodes;
     }
 
     @Override
@@ -198,8 +188,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(builder::setSellScreenCurrencyCode);
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
             account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
-        Optional.ofNullable(bannedSeedNodes).ifPresent(e -> builder.addAllBannedSeedNodes(e.stream().collect(Collectors.toList())));
-        Optional.ofNullable(bannedPriceRelayNodes).ifPresent(e -> builder.addAllBannedPriceRelayNodes(e.stream().collect(Collectors.toList())));
 
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
@@ -249,10 +237,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
             proto.getBuyerSecurityDepositAsLong(),
             proto.getUseAnimations(),
             paymentAccount,
-            proto.getPayFeeInBtc(),
-            proto.getBannedSeedNodesList().isEmpty() ? null :
-                new ArrayList<>(proto.getBannedSeedNodesList()),
-            proto.getBannedPriceRelayNodesList().isEmpty() ? null :
-                new ArrayList<>(proto.getBannedPriceRelayNodesList()));
+            proto.getPayFeeInBtc());
     }
 }

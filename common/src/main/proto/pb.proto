@@ -1257,8 +1257,6 @@ message PreferencesPayload {
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
-    repeated string banned_seed_nodes = 34;
-    repeated string banned_price_relay_nodes = 35;
 }
 
 

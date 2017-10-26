@@ -480,16 +480,6 @@ public final class Preferences implements PersistedDataHost {
         persist();
     }
 
-    public void setBannedSeedNodes(@Nullable List<String> seedNodes) {
-        prefPayload.setBannedSeedNodes(seedNodes);
-        persist();
-    }
-
-    public void setBannedPriceRelayNodes(@Nullable List<String> priceRelayNodes) {
-        prefPayload.setBannedPriceRelayNodes(priceRelayNodes);
-        persist();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -660,9 +650,5 @@ public final class Preferences implements PersistedDataHost {
         void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
 
         void setPeerTagMap(Map<String, String> peerTagMap);
-
-        void setBannedSeedNodes(List<String> bannedSeedNodes);
-
-        void setBannedPriceRelayNodes(List<String> bannedPriceRelayNodes);
     }
 }
