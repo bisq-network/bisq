@@ -4,15 +4,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
-import io.nucleo.net.HiddenServiceDescriptor;
-import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -54,7 +50,7 @@ public class LocalhostNetworkNode extends NetworkNode {
             addSetupListener(setupListener);
 
         createExecutorService();
-
+/*
         //Tor delay simulation
         createTorNode(torNode -> {
             Log.traceCall("torNode created");
@@ -74,6 +70,7 @@ public class LocalhostNetworkNode extends NetworkNode {
                 setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
             });
         });
+        */
     }
 
     // Called from NetworkNode thread
@@ -85,6 +82,7 @@ public class LocalhostNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tor delay simulation
     ///////////////////////////////////////////////////////////////////////////////////////////
+        /*
 
     private void createTorNode(final Consumer<TorNode> resultHandler) {
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
@@ -143,4 +141,5 @@ public class LocalhostNetworkNode extends NetworkNode {
             }
         });
     }
+        */
 }

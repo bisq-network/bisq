@@ -18,10 +18,26 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>jtorproxy</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.github.mrosseel.netlayer</groupId>
+            <artifactId>core</artifactId>
+            <version>-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.mrosseel.netlayer</groupId>
+            <artifactId>native-desktop</artifactId>
+            <version>-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.JesusMcCloud</groupId>
+            <artifactId>jtorctl</artifactId>
+            <version>-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ravn</groupId>
+            <artifactId>jsocks</artifactId>
+            <version>-SNAPSHOT</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
