@@ -42,6 +42,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -293,12 +294,12 @@ public class BisqEnvironment extends StandardEnvironment {
         setProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK, baseCurrencyNetwork.name());
     }
 
-    public void saveBannedSeedNodes(List<String> bannedNodes) {
-        setProperty(FilterManager.BANNED_SEED_NODES, String.join(",", bannedNodes));
+    public void saveBannedSeedNodes(@Nullable List<String> bannedNodes) {
+        setProperty(FilterManager.BANNED_SEED_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
     }
 
-    public void saveBannedPriceRelayNodes(List<String> bannedNodes) {
-        setProperty(FilterManager.BANNED_PRICE_RELAY_NODES, String.join(",", bannedNodes));
+    public void saveBannedPriceRelayNodes(@Nullable List<String> bannedNodes) {
+        setProperty(FilterManager.BANNED_PRICE_RELAY_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
     }
 
     private void setProperty(String key, String value) {

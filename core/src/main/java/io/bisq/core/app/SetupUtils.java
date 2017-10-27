@@ -103,7 +103,7 @@ public class SetupUtils {
         Thread thread = new Thread() {
             @Override
             public void run() {
-                Thread.currentThread().setName("readPersistableNetworkPayloadMapFromResources");
+                Thread.currentThread().setName("readPersistableNetworkPayloadMapFromResources thread");
                 // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
                 final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
                 final String storageFileName = "PersistableNetworkPayloadMap_"

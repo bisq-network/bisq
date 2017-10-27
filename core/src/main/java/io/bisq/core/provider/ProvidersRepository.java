@@ -54,17 +54,17 @@ public class ProvidersRepository {
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
 
-        init(bisqEnvironment.getBannedSeedNodes());
+        applyBannedNodes(bisqEnvironment.getBannedPriceRelayNodes());
     }
 
-    public void init(@Nullable List<String> bannedNodes) {
+    public void applyBannedNodes(@Nullable List<String> bannedNodes) {
         String providerAsString;
         if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
                 // providerAsString = "http://localhost:8080/";
-                // providerAsString = "http://localhost:8080/, http://37.139.14.34:8080/";
+                //  providerAsString = "http://localhost:8080/, http://37.139.14.34:8080/";
                 providerAsString = "http://37.139.14.34:8080/";
             } else {
                 providerAsString = NODES;
@@ -73,22 +73,23 @@ public class ProvidersRepository {
             providerAsString = providersFromProgramArgs;
         }
 
-        if (bannedNodes != null)
-            log.info("banned provider nodes: " + bannedNodes);
-
         providerList = Arrays.asList(StringUtils.deleteWhitespace(providerAsString).split(","))
             .stream()
             .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
             .collect(Collectors.toList());
-        log.info("providerList={}", providerList);
 
         if (!providerList.isEmpty())
             baseUrl = providerList.get(new Random().nextInt(providerList.size()));
 
-        log.info("selected baseUrl={}", baseUrl);
+        if (bannedNodes == null)
+            log.info("selected baseUrl={}, providerList={}", baseUrl, providerList);
+        else
+            log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
+                bannedNodes, baseUrl, providerList);
+
     }
 
-    public void setNewRandomBaseUrl() {
+    public void selectNewRandomBaseUrl() {
         int counter = 0;
         String newBaseUrl = "";
         do {

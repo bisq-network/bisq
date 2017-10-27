@@ -120,7 +120,7 @@ public class PriceFeedService {
         }, (errorMessage, throwable) -> {
             // Try other provider if more then 1 is available
             if (providersRepository.hasMoreProviders()) {
-                providersRepository.setNewRandomBaseUrl();
+                providersRepository.selectNewRandomBaseUrl();
                 priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
             }
             UserThread.runAfter(() -> {
@@ -140,7 +140,7 @@ public class PriceFeedService {
         else
             return null;
     }
-    
+
     public void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,

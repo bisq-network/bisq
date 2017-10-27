@@ -46,10 +46,12 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
         seedNodeAddresses = nodeAddresses.stream()
             .filter(e -> myAddress == null || myAddress.isEmpty() || !e.getFullAddress().equals(myAddress))
-            .filter(e -> bannedNodes == null || !bannedNodes.contains(e.getFullAddress())) //TODO
+            .filter(e -> bannedNodes == null || !bannedNodes.contains(e.getHostName()))
             .collect(Collectors.toSet());
 
-        if (bannedNodes != null)
+        if (bannedNodes == null)
+            log.info("seedNodeAddresses={}", seedNodeAddresses);
+        else
             log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
     }
 

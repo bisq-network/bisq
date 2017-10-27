@@ -19,6 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
@@ -37,12 +38,14 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  P2PService p2PService,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
+                                 FilterManager filterManager,
                                  BsqBlockchainManager bsqBlockchainManager) {
         super(encryptionService,
-                keyRing,
-                p2PService,
-                tradeStatisticsManager,
-                accountAgeWitnessService);
+            keyRing,
+            p2PService,
+            tradeStatisticsManager,
+            accountAgeWitnessService,
+            filterManager);
         this.bsqBlockchainManager = bsqBlockchainManager;
     }
 

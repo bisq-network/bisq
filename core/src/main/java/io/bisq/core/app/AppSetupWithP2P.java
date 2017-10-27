@@ -19,6 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
     protected final AccountAgeWitnessService accountAgeWitnessService;
+    protected final FilterManager filterManager;
     protected BooleanProperty p2pNetWorkReady;
     private MonadicBinding<Boolean> readMapsFromResourcesBinding;
     private Subscription readMapsFromResourcesBindingSubscription;
@@ -50,12 +52,14 @@ public class AppSetupWithP2P extends AppSetup {
                            KeyRing keyRing,
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
-                           AccountAgeWitnessService accountAgeWitnessService) {
+                           AccountAgeWitnessService accountAgeWitnessService,
+                           FilterManager filterManager) {
         super(encryptionService,
-                keyRing,
-                tradeStatisticsManager);
+            keyRing,
+            tradeStatisticsManager);
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.filterManager = filterManager;
     }
 
     @Override
@@ -78,10 +82,10 @@ public class AppSetupWithP2P extends AppSetup {
     @Override
     protected void initBasicServices() {
         readMapsFromResourcesBinding = EasyBind.combine(SetupUtils.readPersistableNetworkPayloadMapFromResources(p2PService),
-                SetupUtils.readEntryMapFromResources(p2PService),
-                (result1, result2) -> {
-                    return result1 && result2;
-                });
+            SetupUtils.readEntryMapFromResources(p2PService),
+            (result1, result2) -> {
+                return result1 && result2;
+            });
         readMapsFromResourcesBindingSubscription = readMapsFromResourcesBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 startInitP2PNetwork();
@@ -114,7 +118,7 @@ public class AppSetupWithP2P extends AppSetup {
                 // We only check at seed nodes as they are running the latest version
                 // Other disconnects might be caused by peers running an older version
                 if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
-                        closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
+                    closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("RULE_VIOLATION onDisconnect connection=" + connection);
                 }
@@ -176,5 +180,7 @@ public class AppSetupWithP2P extends AppSetup {
         tradeStatisticsManager.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+
+        filterManager.onAllServicesInitialized();
     }
 }

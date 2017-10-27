@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,6 +55,15 @@ public class FilterManager {
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     public static final String BANNED_SEED_NODES = "bannedSeedNodes";
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface Listener {
+        void onFilterAdded(Filter filter);
+    }
+
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
@@ -61,6 +71,7 @@ public class FilterManager {
     private final ProvidersRepository providersRepository;
     private boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
+    private final List<Listener> listeners = new ArrayList<>();
 
     @SuppressWarnings("ConstantConditions")
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
@@ -99,16 +110,17 @@ public class FilterManager {
                             // Seed nodes are requested at startup before we get the filter so we only apply the banned
                             // nodes at the next startup and don't update the list in the P2P network domain.
                             // We persist it to the property file which is read before any other initialisation.
-                            final List<String> seedNodes = filter.getSeedNodes();
-                            bisqEnvironment.saveBannedSeedNodes(seedNodes);
+                            bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
 
                             // Banned price relay nodes we can apply at runtime
                             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
                             bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
-                            providersRepository.init(priceRelayNodes);
-                            providersRepository.setNewRandomBaseUrl();
+                            providersRepository.applyBannedNodes(priceRelayNodes);
+                            providersRepository.selectNewRandomBaseUrl();
 
                             filterProperty.set(filter);
+
+                            listeners.stream().forEach(e -> e.onFilterAdded(filter));
                         }
                     }
                 }
@@ -121,8 +133,8 @@ public class FilterManager {
                             bisqEnvironment.saveBannedSeedNodes(null);
 
                             bisqEnvironment.saveBannedPriceRelayNodes(null);
-                            providersRepository.init(null);
-                            providersRepository.setNewRandomBaseUrl();
+                            providersRepository.applyBannedNodes(null);
+                            providersRepository.selectNewRandomBaseUrl();
 
                             filterProperty.set(null);
                         }
@@ -136,6 +148,10 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
 
     public ObjectProperty<Filter> filterProperty() {
         return filterProperty;

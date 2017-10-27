@@ -282,8 +282,6 @@ public class MainViewModel implements ViewModel {
     }
 
     private void readMapsFromResources() {
-        log.info("readMapsFromResources");
-
         readMapsFromResourcesBinding = EasyBind.combine(SetupUtils.readPersistableNetworkPayloadMapFromResources(p2PService),
             SetupUtils.readEntryMapFromResources(p2PService),
             (result1, result2) -> {
@@ -326,7 +324,7 @@ public class MainViewModel implements ViewModel {
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady,
             (a, b) -> {
-                log.info("\nwalletInitialized={}\n" +
+                log.debug("\nwalletInitialized={}\n" +
                         "p2pNetWorkReady={}",
                     a, b);
                 return a && b;
@@ -420,7 +418,7 @@ public class MainViewModel implements ViewModel {
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
-                log.info("onTorNodeReady");
+                log.debug("onTorNodeReady");
                 bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
 
@@ -430,14 +428,14 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onHiddenServicePublished() {
-                log.info("onHiddenServicePublished");
+                log.debug("onHiddenServicePublished");
                 hiddenServicePublished.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.hiddenServicePublished"));
             }
 
             @Override
             public void onRequestingDataCompleted() {
-                log.info("onRequestingDataCompleted");
+                log.debug("onRequestingDataCompleted");
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
                 splashP2PNetworkAnimationVisible.set(false);
@@ -446,7 +444,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoSeedNodeAvailable() {
-                log.info("onNoSeedNodeAvailable");
+                log.warn("onNoSeedNodeAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0)
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noSeedNodesAvailable"));
                 else
@@ -458,7 +456,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoPeersAvailable() {
-                log.info("onNoPeersAvailable");
+                log.warn("onNoPeersAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.noNodesAvailable"));
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noNodesAvailable"));
@@ -473,7 +471,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onBootstrapComplete() {
-                log.info("onBootstrapComplete");
+                log.debug("onBootstrapComplete");
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
             }
@@ -561,7 +559,7 @@ public class MainViewModel implements ViewModel {
 
         walletsSetup.initialize(null,
             () -> {
-                log.info("walletsSetup.onInitialized");
+                log.debug("walletsSetup.onInitialized");
                 numBtcPeers = walletsSetup.numPeersProperty().get();
 
                 // We only check one as we apply encryption to all or none
@@ -652,6 +650,15 @@ public class MainViewModel implements ViewModel {
         priceFeedService.onAllServicesInitialized();
 
         filterManager.onAllServicesInitialized();
+        filterManager.addListener(filter -> {
+            if (filter != null) {
+                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
+                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed"))).show();
+
+                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
+                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay"))).show();
+            }
+        });
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
