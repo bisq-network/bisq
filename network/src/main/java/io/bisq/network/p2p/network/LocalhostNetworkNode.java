@@ -50,6 +50,7 @@ public class LocalhostNetworkNode extends NetworkNode {
             addSetupListener(setupListener);
 
         createExecutorService();
+        // userthread run after delay
 /*
         //Tor delay simulation
         createTorNode(torNode -> {
