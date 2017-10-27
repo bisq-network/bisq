@@ -155,7 +155,7 @@ public class AccountAgeWitnessService {
 
         final boolean containsKey = accountAgeWitnessMap.containsKey(hashAsByteArray);
         if (!containsKey)
-            log.warn("hash not found in accountAgeWitnessMap");
+            log.debug("hash not found in accountAgeWitnessMap");
 
         return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
     }
