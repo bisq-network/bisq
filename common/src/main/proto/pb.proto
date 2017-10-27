@@ -793,7 +793,7 @@ enum AvailabilityResult {
 message PaymentAccountPayload {
     string id = 1;
     string payment_method_id = 2;
-    int64 max_trade_period = 3;
+    int64 max_trade_period = 3; // not used anymore but we need to keep it in PB for backward compatibility
     oneof message {
         AliPayAccountPayload ali_pay_account_payload = 4;
         ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;

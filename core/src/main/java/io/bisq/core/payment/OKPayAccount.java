@@ -33,7 +33,7 @@ public final class OKPayAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new OKPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new OKPayAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setAccountNr(String accountNr) {

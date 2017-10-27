@@ -32,7 +32,7 @@ public final class ChaseQuickPayAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new ChaseQuickPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new ChaseQuickPayAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setEmail(String email) {

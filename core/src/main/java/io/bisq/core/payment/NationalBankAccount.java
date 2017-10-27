@@ -31,7 +31,7 @@ public final class NationalBankAccount extends CountryBasedPaymentAccount implem
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new NationalBankAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new NationalBankAccountPayload(paymentMethod.getId(), id);
     }
 
     @Override

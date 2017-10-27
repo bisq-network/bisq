@@ -39,7 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
-// If a field gets added it need to be be annotated with @JsonExclude (excluded from contract). 
+// If a field gets added it need to be be annotated with @JsonExclude (excluded from contract).
 // We should add an extraDataMap as in StoragePayload objects
 
 @Getter
@@ -54,14 +54,12 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     protected final String paymentMethodId;
     protected final String id;
 
-    // That is problematic and should be removed in next hard fork. 
-    // Any change in maxTradePeriod would make existing payment accounts incompatible.
-    // TODO prepare backward compatible change
-    protected final long maxTradePeriod;
+    // In v0.6 we removed maxTradePeriod but we need to keep it in the PB file for backward compatibility
+    // protected final long maxTradePeriod;
 
-    // Used for new data (e.g. salt introduced in v0.6) which would break backward compatibility as 
-    // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would 
-    // fail the contract verification. 
+    // Used for new data (e.g. salt introduced in v0.6) which would break backward compatibility as
+    // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would
+    // fail the contract verification.
     @JsonExclude
     @Nullable
     protected final Map<String, String> excludeFromJsonDataMap;
@@ -71,13 +69,10 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountPayload(String paymentMethodId,
-                          String id,
-                          long maxTradePeriod) {
+    PaymentAccountPayload(String paymentMethodId, String id) {
         this(paymentMethodId,
-                id,
-                maxTradePeriod,
-                null);
+            id,
+            null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,14 +81,12 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     protected PaymentAccountPayload(String paymentMethodId,
                                     String id,
-                                    long maxTradePeriod,
                                     @Nullable Map<String, String> excludeFromJsonDataMapParam) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
-        this.maxTradePeriod = maxTradePeriod;
         this.excludeFromJsonDataMap = excludeFromJsonDataMapParam == null ? new HashMap<>() : excludeFromJsonDataMapParam;
 
-        // If not set (old versions) we set by default a random 256 bit salt. 
+        // If not set (old versions) we set by default a random 256 bit salt.
         // User can set salt as well by hex string.
         // Persisted value will overwrite that
         if (!this.excludeFromJsonDataMap.containsKey(SALT))
@@ -102,9 +95,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         final PB.PaymentAccountPayload.Builder builder = PB.PaymentAccountPayload.newBuilder()
-                .setPaymentMethodId(paymentMethodId)
-                .setId(id)
-                .setMaxTradePeriod(maxTradePeriod);
+            .setPaymentMethodId(paymentMethodId)
+            .setId(id);
 
         Optional.ofNullable(excludeFromJsonDataMap).ifPresent(builder::putAllExcludeFromJsonData);
 
@@ -131,8 +123,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
         excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
     }
 
-    // Identifying data of payment account (e.g. IBAN). 
-    // This is critical code for verifying age of payment account. 
+    // Identifying data of payment account (e.g. IBAN).
+    // This is critical code for verifying age of payment account.
     // Any change would break validation of historical data!
     public abstract byte[] getAgeWitnessInputData();
 

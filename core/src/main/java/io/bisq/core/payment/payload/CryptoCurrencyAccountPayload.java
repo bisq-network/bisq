@@ -39,8 +39,8 @@ import java.util.Map;
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     private String address = "";
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -50,30 +50,27 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
 
     private CryptoCurrencyAccountPayload(String paymentMethod,
                                          String id,
-                                         long maxTradePeriod,
                                          String address,
                                          @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-                id,
-                maxTradePeriod,
-                excludeFromJsonDataMap);
+            id,
+            excludeFromJsonDataMap);
         this.address = address;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
-                        .setAddress(address))
-                .build();
+            .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                .setAddress(address))
+            .build();
     }
 
     public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getCryptoCurrencyAccountPayload().getAddress(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getCryptoCurrencyAccountPayload().getAddress(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

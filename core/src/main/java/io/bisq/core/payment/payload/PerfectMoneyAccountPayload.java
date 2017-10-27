@@ -39,8 +39,8 @@ import java.util.Map;
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     private String accountNr = "";
 
-    public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public PerfectMoneyAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -49,13 +49,11 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PerfectMoneyAccountPayload(String paymentMethod, String id,
-                                       long maxTradePeriod,
                                        String accountNr,
                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-                id,
-                maxTradePeriod,
-                excludeFromJsonDataMap);
+            id,
+            excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -63,17 +61,16 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
-                        .setAccountNr(accountNr))
-                .build();
+            .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                .setAccountNr(accountNr))
+            .build();
     }
 
     public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getPerfectMoneyAccountPayload().getAccountNr(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getPerfectMoneyAccountPayload().getAccountNr(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

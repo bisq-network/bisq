@@ -37,20 +37,17 @@ import java.util.Map;
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
     protected String countryCode = "";
 
-    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
-        super(paymentMethodName, id, maxTradePeriod);
-
+    CountryBasedPaymentAccountPayload(String paymentMethodName, String id) {
+        super(paymentMethodName, id);
     }
 
     protected CountryBasedPaymentAccountPayload(String paymentMethodName,
                                                 String id,
-                                                long maxTradePeriod,
                                                 String countryCode,
                                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
-        super(paymentMethodName, 
-                id, 
-                maxTradePeriod, 
-                excludeFromJsonDataMap);
+        super(paymentMethodName,
+            id,
+            excludeFromJsonDataMap);
 
         this.countryCode = countryCode;
     }
@@ -58,9 +55,9 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     @Override
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         PB.CountryBasedPaymentAccountPayload.Builder builder = PB.CountryBasedPaymentAccountPayload.newBuilder()
-                .setCountryCode(countryCode);
+            .setCountryCode(countryCode);
         return super.getPaymentAccountPayloadBuilder()
-                .setCountryBasedPaymentAccountPayload(builder);
+            .setCountryBasedPaymentAccountPayload(builder);
     }
 
     abstract public String getPaymentDetails();

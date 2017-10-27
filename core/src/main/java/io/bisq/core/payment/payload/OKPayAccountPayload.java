@@ -38,10 +38,8 @@ import java.util.Map;
 public final class OKPayAccountPayload extends PaymentAccountPayload {
     private String accountNr = "";
 
-    public OKPayAccountPayload(String paymentMethod,
-                               String id,
-                               long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public OKPayAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -51,10 +49,11 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
 
     private OKPayAccountPayload(String paymentMethod,
                                 String id,
-                                long maxTradePeriod,
                                 String accountNr,
                                 Map<String, String> excludeFromJsonDataMap) {
-        super(paymentMethod, id, maxTradePeriod, excludeFromJsonDataMap);
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -62,17 +61,16 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
-                        .setAccountNr(accountNr))
-                .build();
+            .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
+                .setAccountNr(accountNr))
+            .build();
     }
 
     public static OKPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new OKPayAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getOKPayAccountPayload().getAccountNr(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getOKPayAccountPayload().getAccountNr(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

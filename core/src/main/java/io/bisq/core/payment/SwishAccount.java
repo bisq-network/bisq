@@ -32,7 +32,7 @@ public final class SwishAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new SwishAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new SwishAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setMobileNr(String mobileNr) {

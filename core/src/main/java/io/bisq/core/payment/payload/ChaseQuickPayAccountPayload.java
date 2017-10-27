@@ -40,10 +40,8 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     private String email = "";
     private String holderName = "";
 
-    public ChaseQuickPayAccountPayload(String paymentMethod,
-                                       String id,
-                                       long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public ChaseQuickPayAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -52,14 +50,12 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ChaseQuickPayAccountPayload(String paymentMethod, String id,
-                                        long maxTradePeriod,
                                         String email,
                                         String holderName,
                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-                id,
-                maxTradePeriod,
-                excludeFromJsonDataMap);
+            id,
+            excludeFromJsonDataMap);
 
         this.email = email;
         this.holderName = holderName;
@@ -68,19 +64,18 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
-                        .setEmail(email)
-                        .setHolderName(holderName))
-                .build();
+            .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
+                .setEmail(email)
+                .setHolderName(holderName))
+            .build();
     }
 
     public static ChaseQuickPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new ChaseQuickPayAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getChaseQuickPayAccountPayload().getEmail(),
-                proto.getChaseQuickPayAccountPayload().getHolderName(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getChaseQuickPayAccountPayload().getEmail(),
+            proto.getChaseQuickPayAccountPayload().getHolderName(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -96,7 +91,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email: " + email;
+            "Email: " + email;
     }
 
     @Override

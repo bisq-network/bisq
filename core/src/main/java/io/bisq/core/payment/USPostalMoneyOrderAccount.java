@@ -32,7 +32,7 @@ public final class USPostalMoneyOrderAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new USPostalMoneyOrderAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new USPostalMoneyOrderAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setPostalAddress(String postalAddress) {

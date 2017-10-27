@@ -59,8 +59,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     @Nullable
     private String bankId;
 
-    public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public CashDepositAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -70,7 +70,6 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
 
     private CashDepositAccountPayload(String paymentMethodName,
                                       String id,
-                                      long maxTradePeriod,
                                       String countryCode,
                                       String holderName,
                                       @Nullable String holderEmail,
@@ -83,10 +82,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       @Nullable String bankId,
                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName, id,
-                maxTradePeriod,
                 countryCode,
                 excludeFromJsonDataMap);
-        
         this.holderName = holderName;
         this.holderEmail = holderEmail;
         this.bankName = bankName;
@@ -125,7 +122,6 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
         PB.CashDepositAccountPayload cashDepositAccountPayload = countryBasedPaymentAccountPayload.getCashDepositAccountPayload();
         return new CashDepositAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 cashDepositAccountPayload.getHolderName(),
                 cashDepositAccountPayload.getHolderEmail().isEmpty() ? null : cashDepositAccountPayload.getHolderEmail(),

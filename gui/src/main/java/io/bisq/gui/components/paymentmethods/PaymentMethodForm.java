@@ -22,10 +22,10 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -40,8 +40,6 @@ import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-
-import javax.annotation.Nullable;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
@@ -93,7 +91,7 @@ public abstract class PaymentMethodForm {
 
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow,
-                Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
+            Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
         accountNameTextField.setEditable(false);
@@ -113,14 +111,13 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    public static void addOpenTradeDuration(GridPane gridPane, int gridRow,
-                                            @Nullable PaymentAccountPayload paymentAccountPayload,
+    public static void addOpenTradeDuration(GridPane gridPane,
+                                            int gridRow,
+                                            Offer offer,
                                             String dateFromBlocks) {
-        if (paymentAccountPayload != null) {
-            long hours = paymentAccountPayload.getMaxTradePeriod() / 3600_000;
-            addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                    getTimeText(hours) + " / " + dateFromBlocks);
-        }
+        long hours = offer.getMaxTradePeriod() / 3600_000;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
+            getTimeText(hours) + " / " + dateFromBlocks);
     }
 
     protected static String getTimeText(long hours) {
@@ -147,15 +144,15 @@ public abstract class PaymentMethodForm {
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
             tradeCurrency = paymentAccount instanceof CryptoCurrencyAccount ?
-                    CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
-                    CurrencyUtil.getDefaultTradeCurrency();
+                CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
+                CurrencyUtil.getDefaultTradeCurrency();
 
         final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
         final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
-                getTimeText(hours),
-                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
-                formatter.formatAccountAge(accountAge)));
+            getTimeText(hours),
+            formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+            formatter.formatAccountAge(accountAge)));
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
@@ -175,8 +172,9 @@ public abstract class PaymentMethodForm {
                 }
             });
         } else {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt", Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
-                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
+                Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
         }
     }
 

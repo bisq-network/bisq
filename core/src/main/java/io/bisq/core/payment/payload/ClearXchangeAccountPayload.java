@@ -40,8 +40,8 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     private String emailOrMobileNr = "";
     private String holderName = "";
 
-    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public ClearXchangeAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -51,14 +51,12 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
 
     private ClearXchangeAccountPayload(String paymentMethod,
                                        String id,
-                                       long maxTradePeriod,
                                        String emailOrMobileNr,
                                        String holderName,
                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
-        super(paymentMethod, 
-                id, 
-                maxTradePeriod,
-                excludeFromJsonDataMap);
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
 
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
@@ -67,19 +65,18 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setClearXchangeAccountPayload(PB.ClearXchangeAccountPayload.newBuilder()
-                        .setEmailOrMobileNr(emailOrMobileNr)
-                        .setHolderName(holderName))
-                .build();
+            .setClearXchangeAccountPayload(PB.ClearXchangeAccountPayload.newBuilder()
+                .setEmailOrMobileNr(emailOrMobileNr)
+                .setHolderName(holderName))
+            .build();
     }
 
     public static ClearXchangeAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new ClearXchangeAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getClearXchangeAccountPayload().getEmailOrMobileNr(),
-                proto.getClearXchangeAccountPayload().getHolderName(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getClearXchangeAccountPayload().getEmailOrMobileNr(),
+            proto.getClearXchangeAccountPayload().getHolderName(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -95,7 +92,7 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email or mobile no.: " + emailOrMobileNr;
+            "Email or mobile no.: " + emailOrMobileNr;
     }
 
     @Override

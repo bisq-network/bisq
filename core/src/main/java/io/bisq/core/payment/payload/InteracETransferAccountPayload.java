@@ -43,8 +43,8 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     private String question = "";
     private String answer = "";
 
-    public InteracETransferAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public InteracETransferAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -54,16 +54,14 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
 
     private InteracETransferAccountPayload(String paymentMethod,
                                            String id,
-                                           long maxTradePeriod,
                                            String email,
                                            String holderName,
                                            String question,
                                            String answer,
                                            @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-                id,
-                maxTradePeriod,
-                excludeFromJsonDataMap);
+            id,
+            excludeFromJsonDataMap);
         this.email = email;
         this.holderName = holderName;
         this.question = question;
@@ -73,23 +71,22 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
-                        .setEmail(email)
-                        .setHolderName(holderName)
-                        .setQuestion(question)
-                        .setAnswer(answer))
-                .build();
+            .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
+                .setEmail(email)
+                .setHolderName(holderName)
+                .setQuestion(question)
+                .setAnswer(answer))
+            .build();
     }
 
     public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getInteracETransferAccountPayload().getEmail(),
-                proto.getInteracETransferAccountPayload().getHolderName(),
-                proto.getInteracETransferAccountPayload().getQuestion(),
-                proto.getInteracETransferAccountPayload().getAnswer(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+            proto.getId(),
+            proto.getInteracETransferAccountPayload().getEmail(),
+            proto.getInteracETransferAccountPayload().getHolderName(),
+            proto.getInteracETransferAccountPayload().getQuestion(),
+            proto.getInteracETransferAccountPayload().getAnswer(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -105,15 +102,15 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email: " + email + "\n" +
-                "Secret question: " + question + "\n" +
-                "Answer: " + answer;
+            "Email: " + email + "\n" +
+            "Secret question: " + question + "\n" +
+            "Answer: " + answer;
     }
 
     @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(Charset.forName("UTF-8")),
-                ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
-                        answer.getBytes(Charset.forName("UTF-8")))));
+            ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
+                answer.getBytes(Charset.forName("UTF-8")))));
     }
 }
