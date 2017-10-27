@@ -77,6 +77,7 @@ import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.BootstrapListener;
@@ -640,6 +641,7 @@ public class MainViewModel implements ViewModel {
         p2PService.onAllServicesInitialized();
 
         feeService.onAllServicesInitialized();
+        GUIUtil.setFeeService(feeService);
 
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
