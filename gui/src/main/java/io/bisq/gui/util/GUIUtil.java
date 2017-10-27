@@ -92,10 +92,10 @@ public class GUIUtil {
         //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
-                    .dontShowAgainId(key)
-                    .onClose(runnable::run)
-                    .useIUnderstandButton()
-                    .show();
+                .onClose(runnable::run)
+                .useIUnderstandButton()
+                .show();
+            DontShowAgainLookup.dontShowAgain(key, true);
         } else {
             runnable.run();
         }
