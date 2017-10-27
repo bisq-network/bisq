@@ -200,7 +200,7 @@ public class AccountAgeWitnessService {
                     if (now.before(FIRST_PHASE)) {
                         factor = 1;
                     } else if (now.before(SECOND_PHASE)) {
-                        factor = 0.9;
+                        factor = 1;
                     } else if (now.before(FULL_ACTIVATION)) {
                         factor = 0.75;
                     } else {
