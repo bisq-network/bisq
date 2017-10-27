@@ -20,7 +20,6 @@ package io.bisq.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.GlobalSettings;
-import io.bisq.common.app.Log;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
@@ -47,12 +46,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import javafx.scene.chart.XYChart;
+import javafx.util.Pair;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class TradesChartsViewModel extends ActivatableViewModel {
@@ -87,6 +88,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
+    private Map<Long, Pair<Date, Set<TradeStatistics>>> itemsPerInterval;
 
     TickUnit tickUnit = TickUnit.DAY;
     final int maxTicks = 30;
@@ -234,27 +236,32 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrencyCode().equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
 
+        // Generate date range and create sets for all ticks
+        itemsPerInterval = new HashMap<>();
+        Date time = new Date();
+        for (long i = maxTicks + 1; i >= 0; --i) {
+            Set<TradeStatistics> set = new HashSet<>();
+            Pair<Date, Set<TradeStatistics>> pair = new Pair<>((Date) time.clone(), set);
+            itemsPerInterval.put(i, pair);
+            time.setTime(time.getTime() - 1);
+            time = roundToTick(time,  tickUnit);
+        }
+
         // Get all entries for the defined time interval
-        Map<Long, Set<TradeStatistics>> itemsPerInterval = new HashMap<>();
-        final long dateAsTime = new Date().getTime();
         tradeStatisticsByCurrency.stream().forEach(e -> {
-            Set<TradeStatistics> set;
-            final long time = getTickFromTime(e.getTradeDate().getTime(), tickUnit);
-            final long now = getTickFromTime(dateAsTime, tickUnit);
-            long index = maxTicks - (now - time);
-            if (itemsPerInterval.containsKey(index)) {
-                set = itemsPerInterval.get(index);
-            } else {
-                set = new HashSet<>();
-                itemsPerInterval.put(index, set);
+            for (long i = maxTicks; i > 0; --i) {
+                Pair<Date, Set<TradeStatistics>> p = itemsPerInterval.get(i);
+                if (e.getTradeDate().after(p.getKey())) {
+                    p.getValue().add(e);
+                    break;
+                }
             }
-            set.add(e);
         });
 
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
-                .filter(entry -> entry.getKey() >= 0)
-                .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
+                .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
+                .map(entry -> getCandleData(entry.getKey(), entry.getValue().getValue()))
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
@@ -321,48 +328,38 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 numTrades, isBullish, dateString);
     }
 
-    long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
+    Date roundToTick(Date time, TickUnit tickUnit) {
+        ZonedDateTime zdt = time.toInstant().atZone(ZoneId.systemDefault());
+        LocalDateTime tradeLocal = zdt.toLocalDateTime();
+
         switch (tickUnit) {
             case YEAR:
-                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 365;
+                return Date.from(tradeLocal.withMonth(1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             case MONTH:
-                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 31;
+                return Date.from(tradeLocal.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             case WEEK:
-                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 7;
+                int dayOfWeek = tradeLocal.getDayOfWeek().getValue();
+                LocalDateTime firstDayOfWeek = ChronoUnit.DAYS.addTo(tradeLocal, 1 - dayOfWeek);
+                return Date.from(firstDayOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             case DAY:
-                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime);
+                return Date.from(tradeLocal.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             case HOUR:
-                return TimeUnit.MILLISECONDS.toHours(tradeDateAsTime);
+                return Date.from(tradeLocal.withMinute(0).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             case MINUTE_10:
-                return TimeUnit.MILLISECONDS.toMinutes(tradeDateAsTime) / 10;
+                return Date.from(tradeLocal.withMinute(tradeLocal.getMinute() - tradeLocal.getMinute() % 10).withSecond(0).withNano(0).atZone(ZoneId.systemDefault()).toInstant());
             default:
-                return tradeDateAsTime;
+                return Date.from(tradeLocal.atZone(ZoneId.systemDefault()).toInstant());
         }
     }
 
-    private long getTimeFromTick(long tick, TickUnit tickUnit) {
-        switch (tickUnit) {
-            case YEAR:
-                return TimeUnit.DAYS.toMillis(tick) * 365;
-            case MONTH:
-                return TimeUnit.DAYS.toMillis(tick) * 31;
-            case WEEK:
-                return TimeUnit.DAYS.toMillis(tick) * 7;
-            case DAY:
-                return TimeUnit.DAYS.toMillis(tick);
-            case HOUR:
-                return TimeUnit.HOURS.toMillis(tick);
-            case MINUTE_10:
-                return TimeUnit.MINUTES.toMillis(tick) * 10;
-            default:
-                return tick;
-        }
+    private long getTimeFromTick(long tick) {
+        if (itemsPerInterval == null || itemsPerInterval.get(tick) == null) return 0;
+        return itemsPerInterval.get(tick).getKey().getTime();
     }
 
     long getTimeFromTickIndex(long index) {
-        long now = getTickFromTime(new Date().getTime(), tickUnit);
-        long tick = now - (maxTicks - index);
-        return getTimeFromTick(tick, tickUnit);
+        if (index > maxTicks + 1) return 0;
+        return getTimeFromTick(index);
     }
 
     private boolean isShowAllEntry(String id) {

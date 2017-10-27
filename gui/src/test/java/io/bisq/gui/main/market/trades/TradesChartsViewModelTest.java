@@ -45,7 +45,7 @@ public class TradesChartsViewModelTest {
     @Injectable TradeStatisticsManager tsm;
 
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);
-    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss Z");
+    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private KeyRing keyRing;
     private File dir;
     OfferPayload offer = new OfferPayload(null,
@@ -120,7 +120,7 @@ public class TradesChartsViewModelTest {
         set.add(new TradeStatistics(offer, Price.parse("EUR","600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
         set.add(new TradeStatistics(offer, Price.parse("EUR","580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
 
-        CandleData candleData = model.getCandleData(model.getTickFromTime(now.getTime(), TradesChartsViewModel.TickUnit.DAY), set);
+        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set);
         assertEquals(open, candleData.open);
         assertEquals(close, candleData.close);
         assertEquals(high, candleData.high);
@@ -157,15 +157,14 @@ public class TradesChartsViewModelTest {
         ArrayList<Trade> trades = new ArrayList<Trade>();
 
         // Set predetermined time to use as "now" during test
-        Date test_time = dateFormat.parse("2018-01-01T00:00:05 -0000");  // Monday
+        Date test_time = dateFormat.parse("2018-01-01T00:00:05");  // Monday
         new MockUp<System>() {
             @Mock long currentTimeMillis() { return test_time.getTime(); }
         };
-        // 10 seconds ago, different YEAR, MONTH, WEEK, DAY, HOUR, MINUTE_10
-        trades.add(new Trade("2017-12-31T23:59:50 +0000", "1", "100", "EUR"));
-        trades.add(new Trade("2018-01-01T00:00:02 +0000", "1", "110", "EUR"));
 
-        final Date now = new Date();
+        // Two trades 10 seconds apart, different YEAR, MONTH, WEEK, DAY, HOUR, MINUTE_10
+        trades.add(new Trade("2017-12-31T23:59:52", "1", "100", "EUR"));
+        trades.add(new Trade("2018-01-01T00:00:02", "1", "110", "EUR"));
         Set<TradeStatistics> set = new HashSet<>();
         trades.forEach (t ->
             {
