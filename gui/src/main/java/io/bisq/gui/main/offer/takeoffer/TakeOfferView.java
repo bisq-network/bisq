@@ -192,9 +192,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             waitingForFundsLabel.setManaged(false);
         }
 
-        volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
         String currencyCode = model.dataModel.getCurrencyCode();
-        priceDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));
+        volumeCurrencyLabel.setText(currencyCode);
+        priceDescriptionLabel.setText(formatter.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
@@ -483,7 +483,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + Res.getBaseCurrencyCode()));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCurrencyPair(model.dataModel.getCurrencyCode())));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
         if (model.dataModel.isBsqForFeeAvailable()) {
