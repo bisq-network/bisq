@@ -18,15 +18,31 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>consensus</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.github.JesusMcCloud.netlayer</groupId>
+            <artifactId>tor.native</artifactId>
+            <version>491fb0b408</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <!--
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>jtorproxy</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.github.mrosseel</groupId>
+            <artifactId>netlayer</artifactId>
+            <version>-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+
         </dependency>
+        -->
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

@@ -4,8 +4,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -15,11 +13,9 @@ import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;
-import io.nucleo.net.HiddenServiceDescriptor;
-import io.nucleo.net.JavaTorNode;
-import io.nucleo.net.TorNode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import org.berndpruenster.netlayer.tor.*;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +28,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -43,9 +38,8 @@ public class TorNetworkNode extends NetworkNode {
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
 
+    private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
-    private TorNode torNetworkNode;
-    private HiddenServiceDescriptor hiddenServiceDescriptor;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
@@ -76,36 +70,23 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorNode(torDir,
-            torNode -> {
-                Log.traceCall("torNode created");
-                TorNetworkNode.this.torNetworkNode = torNode;
-
-                setupListeners.stream().forEach(SetupListener::onTorNodeReady);
-
-                // Create Hidden Service (takes about 40 sec.)
-                createHiddenService(torNode,
-                    Utils.findFreeSystemPort(),
-                    servicePort,
-                    hiddenServiceDescriptor -> {
-                        Log.traceCall("hiddenService created");
-                        TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
-                        nodeAddressProperty.set(new NodeAddress(hiddenServiceDescriptor.getFullAddress()));
-                        startServer(hiddenServiceDescriptor.getServerSocket());
-                        setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
-                    });
-            });
+        createNewTorNode(torDir, Utils.findFreeSystemPort(), servicePort);
     }
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
-
-        return torNetworkNode.connectToHiddenService(peerNodeAddress.getHostName(), peerNodeAddress.getPort());
+        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), "Foo");
     }
 
+    // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
-        return torNetworkNode != null ? torNetworkNode.getSocksProxy() : null;
+        try {
+            return Tor.getDefault() != null ? Tor.getDefault().getProxy() : null;
+        } catch (TorCtlException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
@@ -144,8 +125,8 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown torNetworkNode");
                 try {
-                    if (torNetworkNode != null)
-                        torNetworkNode.shutdown();
+                    if (Tor.getDefault() != null)
+                        Tor.getDefault().shutdown();
                     log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
                 } catch (Throwable e) {
                     log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
@@ -176,9 +157,9 @@ public class TorNetworkNode extends NetworkNode {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // shutdown, restart
-    ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+// shutdown, restart
+///////////////////////////////////////////////////////////////////////////////////////////
 
     private void restartTor(String errorMessage) {
         Log.traceCall();
@@ -191,12 +172,14 @@ public class TorNetworkNode extends NetworkNode {
             log.error(msg);
             throw new RuntimeException(msg);
         }
+        //start();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // create tor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+// create tor
+///////////////////////////////////////////////////////////////////////////////////////////
 
+    /*
     private void createTorNode(final File torDir, final Consumer<TorNode> resultHandler) {
         Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
@@ -253,6 +236,57 @@ public class TorNetworkNode extends NetworkNode {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
                     log.error("Hidden service creation failed");
+                    restartTor(throwable.getMessage());
+                });
+            }
+        });
+    }
+*/
+
+    private void createNewTorNode(final File torDir, int localPort, int servicePort) {
+        Log.traceCall();
+        ListenableFuture<Object> future = (ListenableFuture<Object>) executorService.submit(() -> {
+            try {
+                Tor.setDefault(new NativeTor(torDir, null));
+            } catch (TorCtlException e) {
+                log.error("Tor node creation failed", e);
+                restartTor(e.getMessage());
+            }
+            UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
+
+            hiddenServiceSocket = new HiddenServiceSocket(localPort, "hiddenservicedir_changeme", servicePort);
+            hiddenServiceSocket.addReadyListener(socket -> {
+                Socket con;
+                try {
+                    log.info("Hidden Service " + socket + " is ready");
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                Log.traceCall("hiddenService created");
+                                nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
+                                startServer(socket);
+                                UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onHiddenServicePublished));
+                            } catch (final Exception e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                    }.start();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            });
+            log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
+        });
+        Futures.addCallback(future, new FutureCallback<Object>() {
+            public void onSuccess(Object hiddenServiceDescriptor) {
+                log.debug("HiddenServiceDescriptor created. Wait for publishing.");
+            }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> {
+                    log.error("Hidden service creation failed", throwable);
                     restartTor(throwable.getMessage());
                 });
             }
