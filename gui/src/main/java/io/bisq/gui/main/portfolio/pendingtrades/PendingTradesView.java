@@ -21,6 +21,8 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -29,6 +31,7 @@ import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
@@ -65,7 +68,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Scene scene;
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
-    private Subscription appFocusSubscription;
     private final Preferences preferences;
 
 
@@ -126,7 +128,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
         avatarColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
-                return o1.getTrade().getTradingPeerNodeAddress().getHostName().compareTo(o2.getTrade().getTradingPeerNodeAddress().getHostName());
+                return o1.getTrade().getTradingPeerNodeAddress().getFullAddress().compareTo(o2.getTrade().getTradingPeerNodeAddress().getFullAddress());
             else
                 return 0;
         });
@@ -222,8 +224,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         sortedList.comparatorProperty().unbind();
         selectedItemSubscription.unsubscribe();
         selectedTableItemSubscription.unsubscribe();
-        if (appFocusSubscription != null)
-            appFocusSubscription.unsubscribe();
 
         removeSelectedSubView();
 
@@ -467,17 +467,21 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
-
-                                if (newItem != null && !empty && newItem.getTrade().getTradingPeerNodeAddress() != null) {
-                                    String hostName = newItem.getTrade().getTradingPeerNodeAddress().getHostName();
-                                    int numPastTrades = model.getNumPastTrades(newItem.getTrade());
-                                    boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ?
-                                            Res.get("peerInfoIcon.tooltip.trade.traded", hostName, numPastTrades) :
-                                            Res.get("peerInfoIcon.tooltip.trade.notTraded", hostName);
-                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
-                                            privateNotificationManager, newItem.getTrade().getOffer(), preferences);
-                                    setPadding(new Insets(-2, 0, -2, 0));
+                                if (!empty && newItem != null) {
+                                    final Trade trade = newItem.getTrade();
+                                    final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                                    int numPastTrades = model.getNumPastTrades(trade);
+                                    final Offer offer = trade.getOffer();
+                                    String role = Res.get("peerInfoIcon.tooltip.tradePeer");
+                                    Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
+                                            role,
+                                            numPastTrades,
+                                            privateNotificationManager,
+                                            offer,
+                                            preferences,
+                                            model.accountAgeWitnessService,
+                                            formatter);
+                                    setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

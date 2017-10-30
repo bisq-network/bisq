@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,13 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
-    private String email;
-    private String holderName;
+    private String email = "";
+    private String holderName = "";
 
-    public ChaseQuickPayAccountPayload(String paymentMethod,
-                                       String id,
-                                       long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public ChaseQuickPayAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -46,10 +50,12 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ChaseQuickPayAccountPayload(String paymentMethod, String id,
-                                        long maxTradePeriod,
                                         String email,
-                                        String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
+                                        String holderName,
+                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
 
         this.email = email;
         this.holderName = holderName;
@@ -58,18 +64,18 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
-                        .setEmail(email)
-                        .setHolderName(holderName))
-                .build();
+            .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
+                .setEmail(email)
+                .setHolderName(holderName))
+            .build();
     }
 
     public static ChaseQuickPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new ChaseQuickPayAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getChaseQuickPayAccountPayload().getEmail(),
-                proto.getChaseQuickPayAccountPayload().getHolderName());
+            proto.getId(),
+            proto.getChaseQuickPayAccountPayload().getEmail(),
+            proto.getChaseQuickPayAccountPayload().getHolderName(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -85,6 +91,13 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email: " + email;
+            "Email: " + email;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return super.getAgeWitnessInputData(email.getBytes(Charset.forName("UTF-8")));
     }
 }

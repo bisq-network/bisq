@@ -31,8 +31,8 @@ public final class ClearXchangeAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new ClearXchangeAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload createPayload() {
+        return new ClearXchangeAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setEmailOrMobileNr(String mobileNr) {

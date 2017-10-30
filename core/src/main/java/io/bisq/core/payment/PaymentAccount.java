@@ -20,6 +20,7 @@ package io.bisq.core.payment;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -69,7 +70,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     public void init() {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
-        paymentAccountPayload = getPayload();
+        paymentAccountPayload = createPayload();
     }
 
 
@@ -99,8 +100,10 @@ public abstract class PaymentAccount implements PersistablePayload {
         account.setAccountName(proto.getAccountName());
         account.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
         account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
+
         if (proto.hasSelectedTradeCurrency())
             account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
+
         return account;
     }
 
@@ -141,5 +144,21 @@ public abstract class PaymentAccount implements PersistablePayload {
             return null;
     }
 
-    protected abstract PaymentAccountPayload getPayload();
+    protected abstract PaymentAccountPayload createPayload();
+
+    public void setSalt(byte[] salt) {
+        paymentAccountPayload.setSalt(salt);
+    }
+
+    public byte[] getSalt() {
+        return paymentAccountPayload.getSalt();
+    }
+
+    public void setSaltAsHex(String saltAsHex) {
+        setSalt(Utilities.decodeFromHex(saltAsHex));
+    }
+
+    public String getSaltAsHex() {
+        return Utilities.bytesAsHexString(getSalt());
+    }
 }

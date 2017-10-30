@@ -20,6 +20,7 @@ package io.bisq.core.trade.protocol.tasks.taker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
+import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,14 +45,24 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), publishDepositTxRequest);
             checkNotNull(publishDepositTxRequest);
 
-            processModel.getTradingPeer().setPaymentAccountPayload(checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload()));
-            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
-            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
-            processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));
-            processModel.getTradingPeer().setContractSignature(nonEmptyStringOf(publishDepositTxRequest.getMakerContractSignature()));
-            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
-            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
-            processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.getPreparedDepositTx()));
+            final TradingPeer tradingPeer = processModel.getTradingPeer();
+            tradingPeer.setPaymentAccountPayload(checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload()));
+            tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
+            tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));
+            tradingPeer.setContractSignature(nonEmptyStringOf(publishDepositTxRequest.getMakerContractSignature()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
+            final byte[] preparedDepositTx = publishDepositTxRequest.getPreparedDepositTx();
+            processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
+
+            // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
+            // challenge protocol for passing the nonce we want to get signed.
+            tradingPeer.setAccountAgeWitnessNonce(publishDepositTxRequest.getPreparedDepositTx());
+            tradingPeer.setAccountAgeWitnessSignature(publishDepositTxRequest.getAccountAgeWitnessSignatureOfPreparedDepositTx());
+
+            tradingPeer.setCurrentDate(publishDepositTxRequest.getCurrentDate());
+
             checkArgument(publishDepositTxRequest.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct

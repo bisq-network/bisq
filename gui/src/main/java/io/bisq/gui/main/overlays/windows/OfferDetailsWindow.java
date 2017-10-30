@@ -65,8 +65,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private Offer offer;
     private Coin tradeAmount;
     private Price tradePrice;
-    private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
-    private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
+    private Optional<Runnable> placeOfferHandlerOptional = Optional.<Runnable>empty();
+    private Optional<Runnable> takeOfferHandlerOptional = Optional.<Runnable>empty();
     private BusyAnimation busyAnimation;
 
 

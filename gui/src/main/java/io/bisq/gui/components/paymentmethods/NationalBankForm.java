@@ -17,6 +17,7 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.util.BSFormatter;
@@ -28,8 +29,8 @@ public class NationalBankForm extends BankForm {
         return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
-    public NationalBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
+    public NationalBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
                             GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter, closeHandler);
     }
 }

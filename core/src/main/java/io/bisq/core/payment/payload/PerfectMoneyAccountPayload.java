@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,10 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
-    public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public PerfectMoneyAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -43,9 +49,11 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PerfectMoneyAccountPayload(String paymentMethod, String id,
-                                       long maxTradePeriod,
-                                       String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
+                                       String accountNr,
+                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -53,16 +61,16 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
-                        .setAccountNr(accountNr))
-                .build();
+            .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                .setAccountNr(accountNr))
+            .build();
     }
 
     public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getPerfectMoneyAccountPayload().getAccountNr());
+            proto.getId(),
+            proto.getPerfectMoneyAccountPayload().getAccountNr(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -78,5 +86,10 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

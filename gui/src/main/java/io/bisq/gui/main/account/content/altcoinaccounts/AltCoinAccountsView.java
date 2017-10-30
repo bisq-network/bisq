@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -61,6 +62,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -73,11 +75,13 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
                                InputValidator inputValidator,
                                AltCoinAddressValidator altCoinAddressValidator,
+                               AccountAgeWitnessService accountAgeWitnessService,
                                BSFormatter formatter) {
         super(model);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 
@@ -279,7 +283,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new CryptoCurrencyForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
+        return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
     }
 
     private void removeNewAccountForm() {

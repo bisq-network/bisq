@@ -9,6 +9,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkProtoResolver;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -60,6 +62,8 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
+        FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
+
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -67,7 +71,6 @@ public class TorNetworkNode extends NetworkNode {
 
         // Create the tor node (takes about 6 sec.)
         createNewTorNode(torDir, Utils.findFreeSystemPort(), servicePort);
-
     }
 
     @Override
@@ -163,9 +166,9 @@ public class TorNetworkNode extends NetworkNode {
         restartCounter++;
         if (restartCounter > MAX_RESTART_ATTEMPTS) {
             String msg = "We tried to restart Tor " + restartCounter +
-                    " times, but it continued to fail with error message:\n" +
-                    errorMessage + "\n\n" +
-                    "Please check your internet connection and firewall and try to start again.";
+                " times, but it continued to fail with error message:\n" +
+                errorMessage + "\n\n" +
+                "Please check your internet connection and firewall and try to start again.";
             log.error(msg);
             throw new RuntimeException(msg);
         }
@@ -186,9 +189,9 @@ public class TorNetworkNode extends NetworkNode {
                 log.trace("Created directory for tor at {}", torDir.getAbsolutePath());
             TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
             log.debug("\n\n############################################################\n" +
-                    "TorNode created:" +
-                    "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                    + "\n############################################################\n");
+                "TorNode created:" +
+                "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                + "\n############################################################\n");
             return torNode;
         });
         Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
@@ -215,10 +218,10 @@ public class TorNetworkNode extends NetworkNode {
                 HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
                 torNode.addHiddenServiceReadyListener(hiddenServiceDescriptor, descriptor -> {
                     log.debug("\n\n############################################################\n" +
-                            "Hidden service published:" +
-                            "\nAddress=" + descriptor.getFullAddress() +
-                            "\nTook " + (System.currentTimeMillis() - ts) + " ms"
-                            + "\n############################################################\n");
+                        "Hidden service published:" +
+                        "\nAddress=" + descriptor.getFullAddress() +
+                        "\nTook " + (System.currentTimeMillis() - ts) + " ms"
+                        + "\n############################################################\n");
 
                     UserThread.execute(() -> resultHandler.accept(hiddenServiceDescriptor));
                 });

@@ -23,26 +23,27 @@ import lombok.Setter;
 import lombok.experimental.Delegate;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
-public class PersistableHashMap<K extends PersistablePayload, V extends PersistablePayload> implements PersistableEnvelope {
+public class PersistableHashMap<K, V extends PersistablePayload> implements PersistableEnvelope {
     @Delegate
     @Getter
-    private HashMap<K, V> hashMap = new HashMap<>();
+    private Map<K, V> map = new HashMap<>();
     @Setter
-    private Function<HashMap<K, V>, Message> toProto;
+    private Function<Map<K, V>, Message> toProto;
 
-    public PersistableHashMap(HashMap<K, V> hashMap) {
-        this.hashMap = hashMap;
+    public PersistableHashMap(Map<K, V> map) {
+        this.map = map;
     }
 
-    public PersistableHashMap(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
-        this(hashMap);
+    public PersistableHashMap(Map<K, V> map, Function<Map<K, V>, Message> toProto) {
+        this(map);
         this.toProto = toProto;
     }
 
     @Override
     public Message toProtoMessage() {
-        return toProto.apply(hashMap);
+        return toProto.apply(map);
     }
 }

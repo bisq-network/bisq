@@ -1,20 +1,15 @@
 package io.bisq.network.p2p;
 
-import io.bisq.common.Clock;
 import io.bisq.common.Payload;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -91,7 +86,7 @@ public class TestUtils {
         return seedNode;
     }
 
-    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
+  /*  public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
                                                           boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
             throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -140,11 +135,16 @@ public class TestUtils {
         Thread.sleep(2000);
         return p2PService;
     }
-
+*/
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override
             public Payload fromProto(PB.PaymentAccountPayload proto) {
+                return null;
+            }
+
+            @Override
+            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
                 return null;
             }
 
@@ -174,6 +174,11 @@ public class TestUtils {
 
             @Override
             public PersistableEnvelope fromProto(PB.PersistableEnvelope persistable) {
+                return null;
+            }
+
+            @Override
+            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
                 return null;
             }
         };

@@ -18,9 +18,11 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
@@ -30,6 +32,7 @@ import io.bisq.network.p2p.SendDirectMessageListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,7 +63,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             String id = processModel.getOffer().getId();
 
             checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
-                    "addressEntry must not be set here.");
+                "addressEntry must not be set here.");
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
@@ -68,47 +71,56 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 
+            final String offerId = processModel.getOfferId();
+
+            // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
+            // He cannot manipulate the offerId - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
+            final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
+            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes());
+
             PayDepositRequest message = new PayDepositRequest(
-                    processModel.getOfferId(),
-                    processModel.getMyNodeAddress(),
-                    trade.getTradeAmount().value,
-                    trade.getTradePrice().getValue(),
-                    trade.getTxFee().getValue(),
-                    trade.getTakerFee().getValue(),
-                    trade.isCurrencyForTakerFeeBtc(),
-                    processModel.getRawTransactionInputs(),
-                    processModel.getChangeOutputValue(),
-                    processModel.getChangeOutputAddress(),
-                    takerMultiSigPubKey,
-                    takerPayoutAddressString,
-                    processModel.getPubKeyRing(),
-                    processModel.getPaymentAccountPayload(trade),
-                    processModel.getAccountId(),
-                    trade.getTakerFeeTxId(),
-                    new ArrayList<>(acceptedArbitratorAddresses),
-                    new ArrayList<>(acceptedMediatorAddresses),
-                    trade.getArbitratorNodeAddress(),
-                    trade.getMediatorNodeAddress(),
-                    UUID.randomUUID().toString(),
-                    Version.getP2PMessageVersion());
+                offerId,
+                processModel.getMyNodeAddress(),
+                trade.getTradeAmount().value,
+                trade.getTradePrice().getValue(),
+                trade.getTxFee().getValue(),
+                trade.getTakerFee().getValue(),
+                trade.isCurrencyForTakerFeeBtc(),
+                processModel.getRawTransactionInputs(),
+                processModel.getChangeOutputValue(),
+                processModel.getChangeOutputAddress(),
+                takerMultiSigPubKey,
+                takerPayoutAddressString,
+                processModel.getPubKeyRing(),
+                paymentAccountPayload,
+                processModel.getAccountId(),
+                trade.getTakerFeeTxId(),
+                new ArrayList<>(acceptedArbitratorAddresses),
+                new ArrayList<>(acceptedMediatorAddresses),
+                trade.getArbitratorNodeAddress(),
+                trade.getMediatorNodeAddress(),
+                UUID.randomUUID().toString(),
+                Version.getP2PMessageVersion(),
+                sig,
+                new Date().getTime());
 
             processModel.getP2PService().sendEncryptedDirectMessage(
-                    trade.getTradingPeerNodeAddress(),
-                    processModel.getTradingPeer().getPubKeyRing(),
-                    message,
-                    new SendDirectMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault() {
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                            failed();
-                        }
+                trade.getTradingPeerNodeAddress(),
+                processModel.getTradingPeer().getPubKeyRing(),
+                message,
+                new SendDirectMessageListener() {
+                    @Override
+                    public void onArrived() {
+                        log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
+                        complete();
                     }
+
+                    @Override
+                    public void onFault() {
+                        appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                        failed();
+                    }
+                }
             );
         } catch (Throwable t) {
             failed(t);

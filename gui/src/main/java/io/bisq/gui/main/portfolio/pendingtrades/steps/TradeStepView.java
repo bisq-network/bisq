@@ -175,8 +175,8 @@ public abstract class TradeStepView extends AnchorPane {
         else
             txIdTextField.cleanup();
 
-        PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountPayload(),
-                model.getDateForOpenDispute());
+        PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer(),
+            model.getDateForOpenDispute());
 
         timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
@@ -298,8 +298,8 @@ public abstract class TradeStepView extends AnchorPane {
             notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
         new Popup<>().warning(trade.errorMessageProperty().getValue()
-                + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
-                .show();
+            + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
+            .show();
 
     }
 
@@ -404,7 +404,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
         if (trade.getDisputeState() != Trade.DisputeState.DISPUTE_REQUESTED &&
-                trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
+            trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
             switch (tradePeriodState) {
                 case FIRST_HALF:
                     break;

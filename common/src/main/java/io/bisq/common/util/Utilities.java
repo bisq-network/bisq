@@ -24,6 +24,7 @@ import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
@@ -37,10 +38,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -56,11 +54,11 @@ public class Utilities {
     // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
-                .setExclusionStrategies(new AnnotationExclusionStrategy())
+            .setExclusionStrategies(new AnnotationExclusionStrategy())
                 /*.excludeFieldsWithModifiers(Modifier.TRANSIENT)*/
               /*  .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)*/
-                .setPrettyPrinting()
-                .create();
+            .setPrettyPrinting()
+            .create();
         return gson.toJson(object);
     }
 
@@ -76,11 +74,11 @@ public class Utilities {
                                                            int maximumPoolSize,
                                                            long keepAliveTimeInSec) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
-                .setDaemon(true)
-                .build();
+            .setNameFormat(name)
+            .setDaemon(true)
+            .build();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
+            TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
         executor.allowCoreThreadTimeOut(true);
         executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
@@ -93,10 +91,10 @@ public class Utilities {
                                                                              int maximumPoolSize,
                                                                              long keepAliveTimeInSec) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
-                .setDaemon(true)
-                .setPriority(Thread.MIN_PRIORITY)
-                .build();
+            .setNameFormat(name)
+            .setDaemon(true)
+            .setPriority(Thread.MIN_PRIORITY)
+            .build();
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
         executor.setKeepAliveTime(keepAliveTimeInSec, TimeUnit.SECONDS);
         executor.allowCoreThreadTimeOut(true);
@@ -134,8 +132,8 @@ public class Utilities {
             String arch = System.getenv("PROCESSOR_ARCHITECTURE");
             String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
             return arch.endsWith("64")
-                    || wow64Arch != null && wow64Arch.endsWith("64")
-                    ? "64" : "32";
+                || wow64Arch != null && wow64Arch.endsWith("64")
+                ? "64" : "32";
         } else if (osArch.contains("arm")) {
             // armv8 is 64 bit, armv7l is 32 bit
             return osArch.contains("64") || osArch.contains("v8") ? "64" : "32";
@@ -148,12 +146,12 @@ public class Utilities {
 
     public static void printSysInfo() {
         log.info("System info: os.name={}; os.version={}; os.arch={}; sun.arch.data.model={}; JRE={}; JVM={}",
-                System.getProperty("os.name"),
-                System.getProperty("os.version"),
-                System.getProperty("os.arch"),
-                getJVMArchitecture(),
-                (System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")"),
-                (System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")")
+            System.getProperty("os.name"),
+            System.getProperty("os.version"),
+            System.getProperty("os.arch"),
+            getJVMArchitecture(),
+            (System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")"),
+            (System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")")
         );
     }
 
@@ -175,8 +173,8 @@ public class Utilities {
 
     public static void openURI(URI uri) throws IOException {
         if (!isLinux()
-                && isDesktopSupported()
-                && getDesktop().isSupported(Action.BROWSE)) {
+            && isDesktopSupported()
+            && getDesktop().isSupported(Action.BROWSE)) {
             getDesktop().browse(uri);
         } else {
             // Maybe Application.HostServices works in those cases?
@@ -192,8 +190,8 @@ public class Utilities {
 
     public static void openFile(File file) throws IOException {
         if (!isLinux()
-                && isDesktopSupported()
-                && getDesktop().isSupported(Action.OPEN)) {
+            && isDesktopSupported()
+            && getDesktop().isSupported(Action.OPEN)) {
             getDesktop().open(file);
         } else {
             // Maybe Application.HostServices works in those cases?
@@ -258,7 +256,7 @@ public class Utilities {
 
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
         Gson gson =
-                new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
+            new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
         return gson.fromJson(jsonString, classOfT);
     }
 
@@ -372,11 +370,33 @@ public class Utilities {
 
     public static boolean isCtrlPressed(KeyCode keyCode, KeyEvent keyEvent) {
         return new KeyCodeCombination(keyCode, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
-                new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN).match(keyEvent);
+            new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN).match(keyEvent);
     }
 
     public static boolean isAltPressed(KeyCode keyCode, KeyEvent keyEvent) {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
+        return ArrayUtils.addAll(array1, array2);
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, array3));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, array4)));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4, byte[] array5) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, ArrayUtils.addAll(array4, array5))));
+    }
+
+    public static Date getUTCDate(int year, int month, int dayOfMonth) {
+        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
@@ -503,6 +523,6 @@ public class Utilities {
         final String name = System.getProperty("java.runtime.name");
         final String ver = System.getProperty("java.version");
         return name != null && name.equals("Java(TM) SE Runtime Environment")
-                && ver != null && (ver.startsWith("1.7") || ver.startsWith("1.8"));
+            && ver != null && (ver.startsWith("1.7") || ver.startsWith("1.8"));
     }
 }

@@ -182,7 +182,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("mWvZ7nZAUzpRMFp2Bfjxz27Va47nUfB79E").isValid);
         assertFalse(validator.validate("WemK3MgwREsE23fgsadtYLxmMqAX9C2LYQ").isValid);
     }
-   
+
     @Test
     public void testDCT() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -214,7 +214,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("65767ec6d4d3d18a200842352485cdc37cbf3a2g").isValid);
         assertFalse(validator.validate("").isValid);
     }
-	
+
 	@Test
     public void testXCN() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -234,5 +234,24 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("asdasd").isValid);
         assertFalse(validator.validate("cT49DTNo5itqYoAD6XTGyTKbe8z5nGY2Da").isValid);
         assertFalse(validator.validate("No5itqYoAD6XTGyTKbe8z5nGY2Da").isValid);
+    }
+
+    @Test
+    public void testTRC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("TRC");
+
+        assertTrue(validator.validate("1Bys8pZaKo4GTWcpArMg92cBgYqij8mKXt").isValid);
+        assertTrue(validator.validate("12Ycuof6g5GRyWy56eQ3NvJpwAM8z9pb4g").isValid);
+        assertTrue(validator.validate("1DEBTTVCn1h9bQS9scVP6UjoSsjbtJBvXF").isValid);
+        assertTrue(validator.validate("18s142HdWDfDQXYBpuyMvsU3KHwryLxnCr").isValid);
+
+        assertFalse(validator.validate("18s142HdWDfDQXYBpyuMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("18s142HdWDfDQXYBpuyMvsU3KHwryLxnC").isValid);
+        assertFalse(validator.validate("8s142HdWDfDQXYBpuyMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("18s142HdWDfDQXYBuyMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("1asdasd").isValid);
+        assertFalse(validator.validate("asdasd").isValid);
     }
 }

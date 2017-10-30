@@ -57,7 +57,7 @@ public class SeedNodeMain extends BisqExecutable {
 
         Utilities.removeCryptographyRestrictions();
     }
-    
+
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("SeedNodeMain")

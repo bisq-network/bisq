@@ -40,6 +40,7 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
@@ -477,6 +478,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      FilterManager filterManager,
+                     AccountAgeWitnessService accountAgeWitnessService,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
@@ -490,6 +492,7 @@ public abstract class Trade implements Tradable, Model {
                 tradeWalletService,
                 user,
                 filterManager,
+                accountAgeWitnessService,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);

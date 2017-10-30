@@ -33,8 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-// Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
-
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
 @Slf4j
@@ -124,9 +122,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
                     // av. price June 2017: 2500 EUR/BTC
-                    maxTradeLimitMidRisk = Coin.parseCoin("0.5");
-                    maxTradeLimitLowRisk = Coin.parseCoin("1");
-                    maxTradeLimitVeryLowRisk = Coin.parseCoin("2");
+                    // av. price Oct 2017: 4700 EUR/BTC
+                    maxTradeLimitMidRisk = Coin.parseCoin("0.25");
+                    maxTradeLimitLowRisk = Coin.parseCoin("0.5");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
                     break;
                 case "LTC":
                     // av. price June 2017: 40 EUR/LTC
@@ -153,38 +152,38 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             }
 
             ALL_VALUES = new ArrayList<>(Arrays.asList(
-                    // EUR
-                    SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
+                // EUR
+                SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
 
-                    // UK
-                    FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
+                // UK
+                FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
 
-                    // Sweden
-                    SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
+                // Sweden
+                SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
 
-                    // US
-                    CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                    US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
+                // US
+                CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
+                CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
+                US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
-                    // Canada
-                    INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
+                // Canada
+                INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
 
-                    // Global
-                    CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                    SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
+                // Global
+                CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
+                NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
+                SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
+                SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
 
-                    // Trans national
-                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
-                    PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
+                // Trans national
+                OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
+                PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
-                    // China
-                    ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
+                // China
+                ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
 
-                    // Altcoins
-                    BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
+                // Altcoins
+                BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
             ));
         }
         return ALL_VALUES;
@@ -198,16 +197,16 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     @Override
     public PB.PaymentMethod toProtoMessage() {
         return PB.PaymentMethod.newBuilder()
-                .setId(id)
-                .setMaxTradePeriod(maxTradePeriod)
-                .setMaxTradeLimit(maxTradeLimit)
-                .build();
+            .setId(id)
+            .setMaxTradePeriod(maxTradePeriod)
+            .setMaxTradeLimit(maxTradeLimit)
+            .build();
     }
 
     public static PaymentMethod fromProto(PB.PaymentMethod proto) {
         return new PaymentMethod(proto.getId(),
-                proto.getMaxTradePeriod(),
-                Coin.valueOf(proto.getMaxTradeLimit()));
+            proto.getMaxTradePeriod(),
+            Coin.valueOf(proto.getMaxTradeLimit()));
     }
 
 
@@ -231,7 +230,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
         if (currencyCode.equals("SF") || currencyCode.equals("BSQ"))
-            return Coin.parseCoin("5");
+            return Coin.parseCoin("4");
         else
             return Coin.valueOf(maxTradeLimit);
     }
