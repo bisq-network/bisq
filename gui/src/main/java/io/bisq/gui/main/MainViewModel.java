@@ -157,6 +157,7 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
     final BooleanProperty isExternallyProvidedPrice = new SimpleBooleanProperty(true);
     final BooleanProperty isPriceAvailable = new SimpleBooleanProperty(false);
+    final IntegerProperty marketPriceUpdated = new SimpleIntegerProperty(0);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -1006,6 +1007,16 @@ public class MainViewModel implements ViewModel {
                 item.setPriceAvailable(false);
             }
             item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
+
+            final String code = item.currencyCode;
+            if (selectedPriceFeedComboBoxItemProperty.get()!=null&&
+                selectedPriceFeedComboBoxItemProperty.get().currencyCode.equals(code)) {
+                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());
+                isPriceAvailable.set(item.isPriceAvailable());
+                marketPriceUpdated.set(marketPriceUpdated.get() + 1);
+            }
         });
     }
 
@@ -1023,18 +1034,6 @@ public class MainViewModel implements ViewModel {
             findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                 .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
         }
-
-        // Need a delay a bit as we get item.isPriceAvailable() set after that call.
-        // (In case we add a new currency in settings)
-        UserThread.runAfter(() -> {
-            if (item != null) {
-                String code = item.currencyCode;
-                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
-                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
-                isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());
-                isPriceAvailable.set(item.isPriceAvailable());
-            }
-        }, 100, TimeUnit.MILLISECONDS);
     }
 
     private Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {

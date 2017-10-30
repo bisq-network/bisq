@@ -58,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 
-import static javafx.beans.binding.Bindings.createBooleanBinding;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
@@ -193,8 +192,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
         HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
-                reservedBalanceBox.second, lockedBalanceBox.second,
-                settingsButton, accountButton, daoButton) {{
+            reservedBalanceBox.second, lockedBalanceBox.second,
+            settingsButton, accountButton, daoButton) {{
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
@@ -237,11 +236,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             contentContainer.getChildren().setAll(view.getRoot());
 
             navButtons.getToggles().stream()
-                    .filter(toggle -> toggle instanceof NavButton)
-                    .filter(button -> viewClass == ((NavButton) button).viewClass)
-                    .findFirst()
-                    .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
-                    .setSelected(true);
+                .filter(toggle -> toggle instanceof NavButton)
+                .filter(button -> viewClass == ((NavButton) button).viewClass)
+                .findFirst()
+                .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
+                .setSelected(true);
         });
 
         VBox splashScreen = createSplashScreen();
@@ -256,14 +255,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("ViewPathAsString")) {
                         // show warning that some files has been corrupted
                         new Popup<>()
-                                .warning(Res.get("popup.warning.incompatibleDB",
-                                        persistedFilesCorrupted.toString(),
-                                        model.getAppDateDir()))
-                                .useShutDownButton()
-                                .show();
+                            .warning(Res.get("popup.warning.incompatibleDB",
+                                persistedFilesCorrupted.toString(),
+                                model.getAppDateDir()))
+                            .useShutDownButton()
+                            .show();
                     } else {
                         log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
-                                "and we don't display a warning popup to the user.");
+                            "and we don't display a warning popup to the user.");
                     }
                 }
 
@@ -334,15 +333,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setOnMouseEntered(e -> {
-                    String res = Res.get("mainView.marketPrice.tooltip",
-                            "https://bitcoinaverage.com",
-                            "",
-                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()),
-                            model.priceFeedService.getProviderNodeAddress());
-                    btcAverageIconButton.setTooltip(
-                            new Tooltip(res)
-                    );
-                }
+                String res = Res.get("mainView.marketPrice.tooltip",
+                    "https://bitcoinaverage.com",
+                    "",
+                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()),
+                    model.priceFeedService.getProviderNodeAddress());
+                btcAverageIconButton.setTooltip(
+                    new Tooltip(res)
+                );
+            }
         );
 
         final ImageView poloniexIcon = new ImageView();
@@ -360,38 +359,21 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setOnMouseEntered(e -> {
             String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
             String res = Res.get("mainView.marketPrice.tooltip",
-                    "https://poloniex.com",
-                    altcoinExtra,
-                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()),
-                    model.priceFeedService.getProviderNodeAddress());
+                "https://poloniex.com",
+                altcoinExtra,
+                formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()),
+                model.priceFeedService.getProviderNodeAddress());
             poloniexIconButton.setTooltip(
-                    new Tooltip(res)
+                new Tooltip(res)
             );
         });
 
         Label label = new Label(Res.get("mainView.marketPrice.provider"));
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
-        label.visibleProperty().bind(createBooleanBinding(() -> model.isPriceAvailable.get() &&
-                        (model.isCryptoCurrencyPriceFeedSelected.get() ||
-                                model.isFiatCurrencyPriceFeedSelected.get() ||
-                                !model.isExternallyProvidedPrice.get()),
-                model.isPriceAvailable,
-                model.isCryptoCurrencyPriceFeedSelected,
-                model.isFiatCurrencyPriceFeedSelected,
-                model.isExternallyProvidedPrice));
-        label.managedProperty().bind(label.visibleProperty());
 
-        model.isExternallyProvidedPrice.addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                label.setText(Res.get("mainView.marketPrice.provider"));
-                label.setTooltip(null);
-            } else {
-                label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
-                final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
-                tooltip.setStyle("-fx-font-size: 12");
-                label.setTooltip(tooltip);
-            }
+        model.marketPriceUpdated.addListener((observable, oldValue, newValue) -> {
+            updateMarketPriceLabel(label);
         });
 
         HBox hBox2 = new HBox();
@@ -402,6 +384,23 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setPadding(new Insets(11, 0, 0, 0));
         vBox.getChildren().addAll(priceComboBox, hBox2);
         return new Tuple2<>(priceComboBox, vBox);
+    }
+
+    private void updateMarketPriceLabel(Label label) {
+        if (model.isPriceAvailable.get()) {
+            if (model.isExternallyProvidedPrice.get()) {
+                label.setText(Res.get("mainView.marketPrice.provider"));
+                label.setTooltip(null);
+            } else {
+                label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
+                final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
+                tooltip.setStyle("-fx-font-size: 12");
+                label.setTooltip(tooltip);
+            }
+        } else {
+            label.setText("");
+            label.setTooltip(null);
+        }
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
