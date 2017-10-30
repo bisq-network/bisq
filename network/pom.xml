@@ -20,8 +20,15 @@
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
-            <version>0.3.1</version>
+            <version>491fb0b408</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
         <!--
         <dependency>
             <groupId>com.github.mrosseel</groupId>
@@ -35,17 +42,6 @@
             </exclusions>
         </dependency>
         -->
-        <!--<dependency>-->
-        <!--<groupId>com.github.JesusMcCloud</groupId>-->
-        <!--<artifactId>jtorctl</artifactId>-->
-        <!--<version>-SNAPSHOT</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>com.github.ravn</groupId>-->
-        <!--<artifactId>jsocks</artifactId>-->
-        <!--<version>-SNAPSHOT</version>-->
-        <!--</dependency>-->
-
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

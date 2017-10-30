@@ -260,10 +260,6 @@ public class TorNetworkNode extends NetworkNode {
                         @Override
                         public void run() {
                             try {
-                                log.info("we'll try and connect to the just-published hidden service");
-                                new TorSocket(socket.getServiceName(), socket.getHiddenServicePort(), "Foo");
-                                log.info("Connected to " + hiddenServiceSocket + ". exiting...");
-                                socket.close();
                                 Log.traceCall("hiddenService created");
                                 nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                                 startServer(socket);
@@ -273,9 +269,6 @@ public class TorNetworkNode extends NetworkNode {
                             }
                         }
                     }.start();
-                    con = socket.accept();
-                    log.info(socket + " got a connection");
-
                 } catch (final Exception e) {
                     e.printStackTrace();
                 }
