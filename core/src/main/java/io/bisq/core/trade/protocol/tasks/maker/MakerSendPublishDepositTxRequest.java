@@ -111,7 +111,6 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     }
                 }
             );
-
         } catch (Throwable t) {
             failed(t);
         }

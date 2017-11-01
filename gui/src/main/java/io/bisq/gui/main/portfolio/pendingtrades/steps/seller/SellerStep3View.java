@@ -325,7 +325,7 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
-        if (trade.isPayoutPublished())
+        if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
         model.dataModel.onFiatPaymentReceived(() -> {

@@ -54,6 +54,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
             );
             log.info("Send message to peer. tradeId={}, message{}", id, message);
             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.getTradingPeer().getPubKeyRing(),
