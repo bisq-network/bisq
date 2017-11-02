@@ -117,6 +117,10 @@ public class PeerServiceTest {
                 @Override
                 public void onSetupFailed(Throwable throwable) {
                 }
+
+                @Override
+                public void onRequestCustomBridges(Runnable resultHandler) {
+                }
             });
         }
         Thread.sleep(30_000);
@@ -208,6 +212,11 @@ public class PeerServiceTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
 
@@ -244,6 +253,11 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
             }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
@@ -479,6 +493,10 @@ public class PeerServiceTest {
 
                     @Override
                     public void onSetupFailed(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
                     }
                 });
         latch.await();
