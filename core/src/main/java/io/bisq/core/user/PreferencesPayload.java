@@ -114,8 +114,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
             .setDirectoryChooserPath(directoryChooserPath)
             .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
             .setUseAnimations(useAnimations)
-            .setPayFeeInBtc(payFeeInBtc)
-            .addAllBridgeAddresses(bridgeAddresses);
+            .setPayFeeInBtc(payFeeInBtc);
+        Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
