@@ -333,6 +333,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        dateColumn.setMaxWidth(200);
+        dateColumn.setMinWidth(dateColumn.getMaxWidth());
         dateColumn.setCellFactory(
                 new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
                         TransactionsListItem>>() {

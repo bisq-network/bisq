@@ -125,8 +125,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 MakerSetupDepositTxListener.class,
                 MakerSendPublishDepositTxRequest.class
         );
-
-        startTimeout();
+        // We don't use a timeout here because if the DepositTxPublishedMessage does not arrive we
+        // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network
         taskRunner.run();
     }
 
@@ -141,7 +141,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> {
-                    stopTimeout();
                     handleTaskRunnerSuccess("handle DepositTxPublishedMessage");
                 },
                 this::handleTaskRunnerFault);

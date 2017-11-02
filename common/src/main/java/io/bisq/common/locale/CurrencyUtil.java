@@ -106,6 +106,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("IOP", "Internet Of People"));
+        result.add(new CryptoCurrency("INXT", "Internext", true));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));

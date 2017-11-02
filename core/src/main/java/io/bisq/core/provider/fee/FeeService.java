@@ -101,10 +101,10 @@ public class FeeService {
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at BTC price 2500 USD for 1 BTC (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at BTC price 2500 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 10_000; // 0.5 USD at BTC price 5000 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 10_000;
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 100_000; // 5 USD at BTC price 5000 USD for 1 BTC (maxTradeAmount)
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 150_000; // 7.5 USD at BTC price 5000 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":

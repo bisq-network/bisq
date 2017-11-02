@@ -103,6 +103,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 BuyerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class
         );
+
+        //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
+        // We should add an error message the peer sends us in such cases.
         startTimeout();
         taskRunner.run();
     }

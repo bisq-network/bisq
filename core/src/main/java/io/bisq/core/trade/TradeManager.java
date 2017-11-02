@@ -528,6 +528,7 @@ public class TradeManager implements PersistedDataHost {
             Trade trade = tradeOptional.get();
             trade.setDisputeState(Trade.DisputeState.DISPUTE_CLOSED);
             addTradeToClosedTrades(trade);
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }
     }
 
