@@ -10,6 +10,7 @@ import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.network.BridgeProvider;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -175,6 +176,7 @@ public final class Preferences implements PersistedDataHost {
             setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+            setBridgeAddresses(prefPayload.getBridgeAddresses());
 
         } else {
             prefPayload = new PreferencesPayload();
@@ -474,6 +476,13 @@ public final class Preferences implements PersistedDataHost {
         storage.queueUpForSave(prefPayload, 1);
     }
 
+    public void setBridgeAddresses(List<String> bridgeAddresses) {
+        prefPayload.setBridgeAddresses(bridgeAddresses);
+        BridgeProvider.setBridges(bridgeAddresses);
+        // We call that before shutdown so we dont want a delay here
+        storage.queueUpForSave(prefPayload, 1);
+    }
+
     // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
         prefPayload.setPeerTagMap(peerTagMap);
@@ -650,5 +659,7 @@ public final class Preferences implements PersistedDataHost {
         void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
 
         void setPeerTagMap(Map<String, String> peerTagMap);
+
+        void setBridgeAddresses(List<String> bridgeAddresses);
     }
 }

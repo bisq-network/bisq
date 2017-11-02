@@ -52,6 +52,11 @@ public class LocalhostNetworkNodeTest {
             public void onSetupFailed(Throwable throwable) {
                 log.debug("onSetupFailed");
             }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
         });
 
         LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getNetworkProtoResolver());
@@ -74,6 +79,11 @@ public class LocalhostNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
                 log.debug("onSetupFailed 2");
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
             }
         });
         startupLatch.await();

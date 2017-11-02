@@ -80,6 +80,11 @@ public class TestUtils {
                     @Override
                     public void onSetupFailed(Throwable throwable) {
                     }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
+
+                    }
                 });
         latch.await();
         Thread.sleep(sleepTime);

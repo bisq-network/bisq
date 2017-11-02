@@ -167,6 +167,11 @@ public class AppSetupWithP2P extends AppSetup {
             public void onSetupFailed(Throwable throwable) {
                 log.error(throwable.toString());
             }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
         });
 
         return p2pNetworkInitialized;
