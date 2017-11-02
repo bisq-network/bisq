@@ -302,7 +302,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 trade != null ? trade.getShortId() : "trade is null");
 
         switch (tradeState) {
-            // #################### Phase PREPARATION 
+            // #################### Phase PREPARATION
             case PREPARATION:
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);
@@ -310,7 +310,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             // At first part maker/taker have different roles
             // taker perspective
-            // #################### Phase TAKER_FEE_PAID 
+            // #################### Phase TAKER_FEE_PAID
             case TAKER_PUBLISHED_TAKER_FEE_TX:
 
                 // PUBLISH_DEPOSIT_TX_REQUEST
@@ -328,7 +328,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
 
-            // #################### Phase DEPOSIT_PAID 
+            // #################### Phase DEPOSIT_PAID
             case TAKER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG
@@ -383,11 +383,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
             case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
+            case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed -  payout tx is published, peer will see it in network so we ignore failure and complete
                 sellerState.set(SellerState.STEP4);
-                break;
-            case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
-                // if failed we need to repeat sending so back to step 3
-                sellerState.set(SellerState.STEP3);
                 break;
 
             // buyer step 4

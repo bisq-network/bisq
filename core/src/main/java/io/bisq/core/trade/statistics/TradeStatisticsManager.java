@@ -53,8 +53,8 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         this.statisticsStorage.setNumMaxBackupFiles(1);
 
-        // TODO can be removed later. Just to clean up the old PersistedEntryMap and TradeStatisticsList which did 
-        // not support multi base currencies 
+        // TODO can be removed later. Just to clean up the old PersistedEntryMap and TradeStatisticsList which did
+        // not support multi base currencies
         UserThread.runAfter(() -> {
             String pathname = Paths.get(storageDir.getAbsolutePath(), "TradeStatisticsList").toString();
             try {
@@ -81,13 +81,13 @@ public class TradeStatisticsManager implements PersistedDataHost {
     public void onAllServicesInitialized() {
         if (dumpStatistics) {
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                    .collect(Collectors.toList()));
+                .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                .collect(Collectors.toList()));
             jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
 
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                    .collect(Collectors.toList()));
+                .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                .collect(Collectors.toList()));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
             jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
@@ -103,7 +103,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
                     if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
                         add((TradeStatistics) protectedStoragePayload, true);
                     } else {
-                        // We filter old data items delivered by nodes which still 
+                        // We filter old data items delivered by nodes which still
                         // have 0.5.0 running (we got BTC trade statistic items in v0.5.0)
                         Calendar calendar = Calendar.getInstance();
                         calendar.set(Calendar.DATE, 28);
@@ -144,13 +144,27 @@ public class TradeStatisticsManager implements PersistedDataHost {
     }
 
     private void applyBisqMarketPrice() {
-        List<TradeStatistics> sortedList = new ArrayList<>(tradeStatisticsSet);
-        // sort by date so we have most recent as last entry which we use for displaying the latest price
-        sortedList.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
-        if (!sortedList.isEmpty()) {
-            TradeStatistics tradeStatistics = sortedList.get(sortedList.size() - 1);
-            priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
-        }
+        // takes about 10 ms for 5000 items
+        Map<String, List<TradeStatistics>> mapByCurrencyCode = new HashMap<>();
+        tradeStatisticsSet.stream().forEach(e -> {
+            final List<TradeStatistics> list;
+            final String currencyCode = e.getCurrencyCode();
+            if (mapByCurrencyCode.containsKey(currencyCode)) {
+                list = mapByCurrencyCode.get(currencyCode);
+            } else {
+                list = new ArrayList<>();
+                mapByCurrencyCode.put(currencyCode, list);
+            }
+            list.add(e);
+        });
+
+        mapByCurrencyCode.values().stream()
+            .filter(list -> !list.isEmpty())
+            .forEach(list -> {
+                list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+                TradeStatistics tradeStatistics = list.get(list.size() - 1);
+                priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
+            });
     }
 
     public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
@@ -208,8 +222,8 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
         map1.entrySet().stream()
-                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-                .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+            .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+            .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
         log.error(sb1.toString());
 
         Map<String, Set<TradeStatistics>> map2 = new HashMap<>();
@@ -240,7 +254,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         coinsWithValidator.add("ZEN");
         coinsWithValidator.add("WAC");
         coinsWithValidator.add("DEC");
-        
+
         // As of: 17.Sept 2017
         Set<String> newlyAdded = new HashSet<>();
         newlyAdded.add("PNC");
@@ -249,30 +263,30 @@ public class TradeStatisticsManager implements PersistedDataHost {
         newlyAdded.add("DEC");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
+            .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
         StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
         StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
         map2.entrySet().stream()
-                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-                .forEach(e -> {
-                    final String key = e.getKey();
-                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
-                    // key is: USD Tether (USDT)
-                    String code = key.substring(key.indexOf("(")+1, key.length() - 1);
-                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                        allCryptoCurrencies.remove(key);
-                });
+            .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+            .forEach(e -> {
+                final String key = e.getKey();
+                sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
+                // key is: USD Tether (USDT)
+                String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
+                if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                    allCryptoCurrencies.remove(key);
+            });
         log.error(sb2.toString());
 
         // Not considered age of newly added coins, so take care with removal if coin was added recently.
         allCryptoCurrencies.sort(String::compareTo);
         allCryptoCurrencies.stream()
-                .forEach(e -> {
-                    // key is: USD Tether (USDT)
-                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
-                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                        sb3.append(e).append("\n");
-                });
+            .forEach(e -> {
+                // key is: USD Tether (USDT)
+                String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
+                if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                    sb3.append(e).append("\n");
+            });
         log.error(sb3.toString());
     }
 }

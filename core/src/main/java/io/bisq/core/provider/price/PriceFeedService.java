@@ -144,9 +144,9 @@ public class PriceFeedService {
     public void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,
-                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
-                    0,
-                    false));
+                MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                0,
+                false));
             updateCounter.set(updateCounter.get() + 1);
         }
     }
@@ -261,10 +261,10 @@ public class PriceFeedService {
                                             else
                                                 convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
                                             convertedPriceMap.put(e.getKey(),
-                                                    new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
+                                                new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
                                         } else {
                                             log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +
-                                                    "baseCurrencyPriceAsDouble={}", marketPriceAsDouble, baseCurrencyPriceAsDouble);
+                                                "baseCurrencyPriceAsDouble={}", marketPriceAsDouble, baseCurrencyPriceAsDouble);
                                         }
                                     } else {
                                         log.warn("marketPrice is null");

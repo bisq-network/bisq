@@ -46,18 +46,21 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
             checkArgument(message.getPayoutTx() != null);
-            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
-            trade.setPayoutTx(walletTx);
-            BtcWalletService.printTx("payoutTx received from peer", walletTx);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            if (trade.getPayoutTx() == null) {
+                Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
+                trade.setPayoutTx(walletTx);
+                BtcWalletService.printTx("payoutTx received from peer", walletTx);
+
+                trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
+                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+            } else {
+                log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
+            }
             processModel.removeMailboxMessageAfterProcessing(trade);
-
-            trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
-            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-
             complete();
         } catch (Throwable t) {
             failed(t);

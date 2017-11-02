@@ -30,10 +30,7 @@ import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.maker.*;
-import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
-import io.bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
-import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller.*;
 import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.MailboxMessage;
@@ -117,7 +114,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             MakerSetupDepositTxListener.class,
             MakerSendPublishDepositTxRequest.class
         );
-        startTimeout();
+
+        // We don't start a timeout because if we don't receive the peers DepositTxPublishedMessage we still
+        // will get set the deposit tx in MakerSetupDepositTxListener once seen in the network
         taskRunner.run();
     }
 
@@ -131,11 +130,10 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
-            () -> {
-                stopTimeout();
-                handleTaskRunnerSuccess("DepositTxPublishedMessage");
-            },
-            this::handleTaskRunnerFault);
+                () -> {
+                    handleTaskRunnerSuccess("DepositTxPublishedMessage");
+                },
+                this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
             MakerProcessDepositTxPublishedMessage.class,
@@ -175,12 +173,12 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.isFiatSent() && !trade.isFiatReceived()) {
+        if (trade.getPayoutTx() == null) {
             sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
                 () -> {
                     resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onFiatPaymentReceived");
+                    handleTaskRunnerSuccess("onFiatPaymentReceived 1");
                 },
                 (errorMessage) -> {
                     errorMessageHandler.handleErrorMessage(errorMessage);
@@ -197,9 +195,28 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             );
             taskRunner.run();
         } else {
-            log.warn("onFiatPaymentReceived called twice. " +
-                "That should not happen.\n" +
+            // we don't set the state as we have already a later phase reached
+            log.info("onFiatPaymentReceived called twice. " +
+                "That can happen if message did not arrive first time and we send msg again.\n" +
                 "state=" + sellerAsMakerTrade.getState());
+
+            TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onFiatPaymentReceived 2");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
+
+            taskRunner.addTasks(
+                CheckIfPeerIsBanned.class,
+                MakerVerifyTakerAccount.class,
+                MakerVerifyTakerFeePayment.class,
+                SellerSendPayoutTxPublishedMessage.class
+            );
+            taskRunner.run();
         }
     }
 
