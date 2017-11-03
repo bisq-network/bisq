@@ -117,7 +117,7 @@ public class AddBridgeEntriesWindow extends Overlay<AddBridgeEntriesWindow> {
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);
-            GridPane.setRowIndex(hBox, rowIndex);
+            GridPane.setRowIndex(hBox, ++rowIndex);
             GridPane.setColumnSpan(hBox, 2);
             GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(hBox);
@@ -158,7 +158,7 @@ public class AddBridgeEntriesWindow extends Overlay<AddBridgeEntriesWindow> {
         GridPane.setColumnIndex(label, 0);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, rowIndex, "Bridge entries:", "");
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Bridge entries:", "");
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
     }
 
