@@ -55,8 +55,11 @@ If `$JAVA_HOME` is not present, open your `.bashrc` file:
     $ touch ~/.bashrc
     $ gedit ~/.bashrc
 
-For OpenJDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
-For Oracle JDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-oracle`
+* For OpenJDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
+* For Oracle JDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-oracle`
+* For your current *alternative* JDK add: `export JAVA_HOME=/usr/lib/jvm/default-java`  
+  (or `/usr/lib/jvm/default` for Arch or `/usr/lib/jvm/java` for Fedora)
+
 Save and close the file.
 
 Reload the file in your shell:
