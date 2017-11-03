@@ -79,12 +79,12 @@ public class SetupUtils {
         checkCryptoThread.start();
     }
 
-    public static BooleanProperty loadEntryMap(P2PService p2PService) {
+    public static BooleanProperty readEntryMapFromResources(P2PService p2PService) {
         BooleanProperty result = new SimpleBooleanProperty();
-        Thread loadEntryMapThread = new Thread() {
+        Thread thread = new Thread() {
             @Override
             public void run() {
-                Thread.currentThread().setName("loadEntryMapThread");
+                Thread.currentThread().setName("readEntryMapFromResources");
                 // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
                 final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
                 final String storageFileName = "EntryMap_"
@@ -94,7 +94,26 @@ public class SetupUtils {
                 UserThread.execute(() -> result.set(true));
             }
         };
-        loadEntryMapThread.start();
+        thread.start();
+        return result;
+    }
+
+    public static BooleanProperty readPersistableNetworkPayloadMapFromResources(P2PService p2PService) {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("readPersistableNetworkPayloadMapFromResources thread");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
+                final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+                final String storageFileName = "PersistableNetworkPayloadMap_"
+                        + baseCurrencyNetwork.getCurrencyCode() + "_"
+                        + baseCurrencyNetwork.getNetwork();
+                p2PService.readPersistableNetworkPayloadMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        thread.start();
         return result;
     }
 }

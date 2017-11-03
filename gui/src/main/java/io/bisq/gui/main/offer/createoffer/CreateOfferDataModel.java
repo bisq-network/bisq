@@ -27,7 +27,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
-import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.AddressEntry;
@@ -39,6 +38,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.offer.OfferUtil;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.BankAccountPayload;
@@ -47,7 +47,6 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
@@ -59,7 +58,6 @@ import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -82,6 +80,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
     private final FilterManager filterManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final String offerId;
@@ -132,6 +131,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                          PriceFeedService priceFeedService, FilterManager filterManager,
+                         AccountAgeWitnessService accountAgeWitnessService,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
@@ -142,12 +142,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.feeService = feeService;
         this.formatter = formatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
-                UUID.randomUUID().toString() + "-" +
-                Version.VERSION.replace(".", "");
+            UUID.randomUUID().toString() + "-" +
+            Version.VERSION.replace(".", "");
         shortOfferId = Utilities.getShortId(offerId);
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
@@ -234,8 +235,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         PaymentAccount account;
         PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
         if (lastSelectedPaymentAccount != null &&
-                user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
+            user.getPaymentAccounts() != null &&
+            user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
@@ -332,7 +333,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
 
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value;
+        long maxTradeLimit = getMaxTradeLimit();
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
@@ -344,58 +345,63 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = null;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            extraDataMap = new HashMap<>();
+            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+        }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
-                "securityDeposit must be not exceed " +
-                        Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
+            "securityDeposit must be not exceed " +
+                Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
-                "securityDeposit must be not be less than " +
-                        Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
+            "securityDeposit must be not be less than " +
+                Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
 
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
-                Res.get("offerbook.warning.currencyBanned"));
+            Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
-                Res.get("offerbook.warning.paymentMethodBanned"));
+            Res.get("offerbook.warning.paymentMethodBanned"));
 
         OfferPayload offerPayload = new OfferPayload(offerId,
-                new Date().getTime(),
-                p2PService.getAddress(),
-                keyRing.getPubKeyRing(),
-                OfferPayload.Direction.valueOf(direction.name()),
-                priceAsLong,
-                marketPriceMarginParam,
-                useMarketBasedPriceValue,
-                amount,
-                minAmount,
-                baseCurrencyCode,
-                counterCurrencyCode,
-                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
-                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
-                paymentAccount.getPaymentMethod().getId(),
-                paymentAccount.getId(),
-                null,
-                countryCode,
-                acceptedCountryCodes,
-                bankId,
-                acceptedBanks,
-                Version.VERSION,
-                btcWalletService.getLastBlockSeenHeight(),
-                txFeeFromFeeService.value,
-                getMakerFee().value,
-                isCurrencyForMakerFeeBtc(),
-                buyerSecurityDepositAsCoin.value,
-                sellerSecurityDeposit.value,
-                maxTradeLimit,
-                maxTradePeriod,
-                useAutoClose,
-                useReOpenAfterAutoClose,
-                upperClosePrice,
-                lowerClosePrice,
-                isPrivateOffer,
-                hashOfChallenge,
-                extraDataMap,
-                Version.TRADE_PROTOCOL_VERSION);
+            new Date().getTime(),
+            p2PService.getAddress(),
+            keyRing.getPubKeyRing(),
+            OfferPayload.Direction.valueOf(direction.name()),
+            priceAsLong,
+            marketPriceMarginParam,
+            useMarketBasedPriceValue,
+            amount,
+            minAmount,
+            baseCurrencyCode,
+            counterCurrencyCode,
+            Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
+            Lists.newArrayList(user.getAcceptedMediatorAddresses()),
+            paymentAccount.getPaymentMethod().getId(),
+            paymentAccount.getId(),
+            null,
+            countryCode,
+            acceptedCountryCodes,
+            bankId,
+            acceptedBanks,
+            Version.VERSION,
+            btcWalletService.getLastBlockSeenHeight(),
+            txFeeFromFeeService.value,
+            getMakerFee().value,
+            isCurrencyForMakerFeeBtc(),
+            buyerSecurityDepositAsCoin.value,
+            sellerSecurityDeposit.value,
+            maxTradeLimit,
+            maxTradePeriod,
+            useAutoClose,
+            useReOpenAfterAutoClose,
+            upperClosePrice,
+            lowerClosePrice,
+            isPrivateOffer,
+            hashOfChallenge,
+            extraDataMap,
+            Version.TRADE_PROTOCOL_VERSION);
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
         return offer;
@@ -409,9 +415,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
 
         openOfferManager.placeOffer(offer,
-                reservedFundsForOffer,
-                useSavingsWallet,
-                resultHandler);
+            reservedFundsForOffer,
+            useSavingsWallet,
+            resultHandler,
+            log::error);
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -423,6 +430,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             this.paymentAccount = paymentAccount;
 
             setTradeCurrencyFromPaymentAccount(paymentAccount);
+
+            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
+            if (amount.get() != null)
+                this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
         }
     }
 
@@ -507,10 +518,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return direction;
     }
 
-    String getOfferId() {
-        return offerId;
-    }
-
     AddressEntry getAddressEntry() {
         return addressEntry;
     }
@@ -544,22 +551,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return marketPriceMargin;
     }
 
-    boolean isCurrencyForMakerFeeBtc() {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable();
-    }
-
     boolean isMakerFeeValid() {
         return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
     }
 
-    boolean isBsqForFeeAvailable() {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getMakerFee(false) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getMakerFee(false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false)).isNegative();
+    long getMaxTradeLimit() {
+        if (paymentAccount != null)
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
+        else
+            return 0;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -567,9 +568,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (price.get() != null &&
-                amount.get() != null &&
-                !amount.get().isZero() &&
-                !price.get().isZero()) {
+            amount.get() != null &&
+            !amount.get().isZero() &&
+            !price.get().isZero()) {
             try {
                 volume.set(price.get().getVolumeByAmount(amount.get()));
             } catch (Throwable t) {
@@ -582,9 +583,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateAmount() {
         if (volume.get() != null &&
-                price.get() != null &&
-                !volume.get().isZero() &&
-                !price.get().isZero()) {
+            price.get() != null &&
+            !volume.get().isZero() &&
+            !price.get().isZero()) {
             try {
                 amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
                 calculateTotalToPay();
@@ -613,8 +614,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return isBuyOffer() ? buyerSecurityDeposit.get() : sellerSecurityDeposit;
     }
 
-    boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
+    public boolean isBuyOffer() {
+        return OfferUtil.isBuyOffer(getDirection());
     }
 
     private void updateBalance() {
@@ -644,9 +645,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         //noinspection PointlessBooleanExpression,ConstantConditions
         if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
+                .headLine(Res.get("notification.walletUpdate.headline"))
+                .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
+                .autoClose();
 
             walletFundedNotification.show();
         }
@@ -668,22 +669,22 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        log.error("swapTradeToSavings, offerid={}", offerId);
+        log.error("swapTradeToSavings, offerId={}", offerId);
         btcWalletService.resetAddressEntriesForOpenOffer(offerId);
     }
 
     private void fillPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                    .filter(this::isNotUSBankAccount)
-                    .collect(Collectors.toSet()));
+                .filter(this::isNotUSBankAccount)
+                .collect(Collectors.toSet()));
         }
     }
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
         if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
-                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
+            paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;
@@ -706,32 +707,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         preferences.setBuyerSecurityDepositAsLong(buyerSecurityDeposit.value);
     }
 
-    @Nullable
-    public Coin getMakerFee() {
-        return getMakerFee(isCurrencyForMakerFeeBtc());
-    }
-
-    @Nullable
-    Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        Coin amount = this.amount.get();
-        if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            double makerFeeAsDouble = (double) feePerBtc.value;
-            if (marketPriceAvailable) {
-                if (marketPriceMargin > 0)
-                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
-                else
-                    makerFeeAsDouble = 0;
-                // For BTC we round so min value change is 100 satoshi
-                if (isCurrencyForMakerFeeBtc)
-                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
-            }
-
-            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -755,10 +730,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void setMinAmount(Coin minAmount) {
         this.minAmount.set(minAmount);
-    }
-
-    void setDirection(OfferPayload.Direction direction) {
-        this.direction = direction;
     }
 
     ReadOnlyStringProperty getTradeCurrencyCode() {
@@ -799,5 +770,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {
         this.marketPriceAvailable = marketPriceAvailable;
+    }
+
+    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
+        return OfferUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public Coin getMakerFee() {
+        return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isCurrencyForMakerFeeBtc() {
+        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isBsqForFeeAvailable() {
+        return OfferUtil.isBsqForFeeAvailable(bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 }

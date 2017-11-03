@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class SwishAccountPayload extends PaymentAccountPayload {
-    private String mobileNr;
-    private String holderName;
+    private String mobileNr = "";
+    private String holderName = "";
 
-    public SwishAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public SwishAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -44,11 +50,12 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private SwishAccountPayload(String paymentMethod, String id,
-                                long maxTradePeriod,
                                 String mobileNr,
-                                String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                String holderName,
+                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
         this.mobileNr = mobileNr;
         this.holderName = holderName;
     }
@@ -56,18 +63,18 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
-                        .setMobileNr(mobileNr)
-                        .setHolderName(holderName))
-                .build();
+            .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
+                .setMobileNr(mobileNr)
+                .setHolderName(holderName))
+            .build();
     }
 
     public static SwishAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new SwishAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getSwishAccountPayload().getMobileNr(),
-                proto.getSwishAccountPayload().getHolderName());
+            proto.getId(),
+            proto.getSwishAccountPayload().getMobileNr(),
+            proto.getSwishAccountPayload().getHolderName(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -83,6 +90,13 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Mobile no.: " + mobileNr;
+            "Mobile no.: " + mobileNr;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return super.getAgeWitnessInputData(mobileNr.getBytes(Charset.forName("UTF-8")));
     }
 }

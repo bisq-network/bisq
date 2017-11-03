@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.AliPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.AliPayAccountPayload;
@@ -48,8 +49,8 @@ public class AliPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public AliPayForm(PaymentAccount paymentAccount, AliPayValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+    public AliPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AliPayValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.aliPayAccount = (AliPayAccount) paymentAccount;
         this.aliPayValidator = aliPayValidator;
     }
@@ -68,7 +69,7 @@ public class AliPayForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -92,7 +93,7 @@ public class AliPayForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

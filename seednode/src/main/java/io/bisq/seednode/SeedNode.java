@@ -46,7 +46,7 @@ public class SeedNode {
     public SeedNode() {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
-        log.info("Log files under: " + logPath);
+        log.info("Log files under: {}.log", logPath);
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 

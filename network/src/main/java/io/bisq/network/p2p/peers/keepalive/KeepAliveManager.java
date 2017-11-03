@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -28,6 +29,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Map<String, KeepAliveHandler> handlerMap = new HashMap<>();
+
     private boolean stopped;
     private Timer keepAliveTimer;
 
@@ -36,13 +38,15 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public KeepAliveManager(NetworkNode networkNode, PeerManager peerManager) {
+    @Inject
+    public KeepAliveManager(NetworkNode networkNode,
+                            PeerManager peerManager) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
 
-        networkNode.addMessageListener(this);
-        networkNode.addConnectionListener(this);
-        peerManager.addListener(this);
+        this.networkNode.addMessageListener(this);
+        this.networkNode.addConnectionListener(this);
+        this.peerManager.addListener(this);
     }
 
     public void shutDown() {
@@ -91,8 +95,8 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                     public void onFailure(@NotNull Throwable throwable) {
                         if (!stopped) {
                             String errorMessage = "Sending pong to " + connection +
-                                    " failed. That is expected if the peer is offline. pong=" + pong + "." +
-                                    "Exception: " + throwable.getMessage();
+                                " failed. That is expected if the peer is offline. pong=" + pong + "." +
+                                "Exception: " + throwable.getMessage();
                             log.debug(errorMessage);
                             peerManager.handleConnectionFault(connection);
                         } else {
@@ -174,36 +178,36 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
         if (!stopped) {
             Log.traceCall();
             networkNode.getConfirmedConnections().stream()
-                    .filter(connection -> connection instanceof OutboundConnection &&
-                            connection.getStatistic().getLastActivityAge() > LAST_ACTIVITY_AGE_MS)
-                    .forEach(connection -> {
-                        final String uid = connection.getUid();
-                        if (!handlerMap.containsKey(uid)) {
-                            KeepAliveHandler keepAliveHandler = new KeepAliveHandler(networkNode, peerManager, new KeepAliveHandler.Listener() {
-                                @Override
-                                public void onComplete() {
-                                    handlerMap.remove(uid);
-                                }
+                .filter(connection -> connection instanceof OutboundConnection &&
+                    connection.getStatistic().getLastActivityAge() > LAST_ACTIVITY_AGE_MS)
+                .forEach(connection -> {
+                    final String uid = connection.getUid();
+                    if (!handlerMap.containsKey(uid)) {
+                        KeepAliveHandler keepAliveHandler = new KeepAliveHandler(networkNode, peerManager, new KeepAliveHandler.Listener() {
+                            @Override
+                            public void onComplete() {
+                                handlerMap.remove(uid);
+                            }
 
-                                @Override
-                                public void onFault(String errorMessage) {
-                                    handlerMap.remove(uid);
-                                }
-                            });
-                            handlerMap.put(uid, keepAliveHandler);
-                            keepAliveHandler.sendPingAfterRandomDelay(connection);
-                        } else {
-                            // TODO check if this situation causes any issues
-                            log.debug("Connection with id {} has not completed and is still in our map. " +
-                                    "We will try to ping that peer at the next schedule.", uid);
-                        }
-                    });
+                            @Override
+                            public void onFault(String errorMessage) {
+                                handlerMap.remove(uid);
+                            }
+                        });
+                        handlerMap.put(uid, keepAliveHandler);
+                        keepAliveHandler.sendPingAfterRandomDelay(connection);
+                    } else {
+                        // TODO check if this situation causes any issues
+                        log.debug("Connection with id {} has not completed and is still in our map. " +
+                            "We will try to ping that peer at the next schedule.", uid);
+                    }
+                });
 
             int size = handlerMap.size();
             log.debug("handlerMap size=" + size);
             if (size > peerManager.getMaxConnections())
                 log.warn("Seems we didn't clean up out map correctly.\n" +
-                        "handlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
+                    "handlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
         } else {
             log.warn("We have stopped already. We ignore that keepAlive call.");
         }

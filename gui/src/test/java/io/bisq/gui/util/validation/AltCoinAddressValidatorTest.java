@@ -182,7 +182,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("mWvZ7nZAUzpRMFp2Bfjxz27Va47nUfB79E").isValid);
         assertFalse(validator.validate("WemK3MgwREsE23fgsadtYLxmMqAX9C2LYQ").isValid);
     }
-   
+
     @Test
     public void testDCT() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -200,4 +200,74 @@ public class AltCoinAddressValidatorTest {
 	    assertFalse(validator.validate("decent-").isValid);
         assertFalse(validator.validate("").isValid);
     }
+
+    @Test
+    public void testELLA() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("ELLA");
+
+        assertTrue(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a21").isValid);
+        assertTrue(validator.validate("65767ec6d4d3d18a200842352485cdc37cbf3a21").isValid);
+
+        assertFalse(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a216").isValid);
+        assertFalse(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a2g").isValid);
+        assertFalse(validator.validate("65767ec6d4d3d18a200842352485cdc37cbf3a2g").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
+
+	@Test
+    public void testXCN() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("XCN");
+
+        assertTrue(validator.validate("CT49DTNo5itqYoAD6XTGyTKbe8z5nGY2D5").isValid);
+        assertTrue(validator.validate("CGTta3M4t3yXu8uRgkKvaWd2d8DQvDPnpL").isValid);
+        assertTrue(validator.validate("Cco3zGiEJMyz3wrndEr6wg5cm1oUAbBoR2").isValid);
+        assertTrue(validator.validate("CPzmjGCDEdQuRffmbpkrYQtSiUAm4oZJgt").isValid);
+
+        assertFalse(validator.validate("CT49DTNo5itqYoAD6XTGyTKbe8z5nGY2D4").isValid);
+        assertFalse(validator.validate("CGTta3M4t3yXu8uRgkKvaWd2d8DQvDPnpl").isValid);
+        assertFalse(validator.validate("Cco3zGiEJMyz3wrndEr6wg5cm1oUAbBoR1").isValid);
+        assertFalse(validator.validate("CPzmjGCDEdQuRffmbpkrYQtSiUAm4oZJgT").isValid);
+        assertFalse(validator.validate("CT49DTNo5itqYoAD6XTGyTKbe8z5nGY2Da").isValid);
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("asdasd").isValid);
+        assertFalse(validator.validate("cT49DTNo5itqYoAD6XTGyTKbe8z5nGY2Da").isValid);
+        assertFalse(validator.validate("No5itqYoAD6XTGyTKbe8z5nGY2Da").isValid);
+    }
+
+    @Test
+    public void testTRC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("TRC");
+
+        assertTrue(validator.validate("1Bys8pZaKo4GTWcpArMg92cBgYqij8mKXt").isValid);
+        assertTrue(validator.validate("12Ycuof6g5GRyWy56eQ3NvJpwAM8z9pb4g").isValid);
+        assertTrue(validator.validate("1DEBTTVCn1h9bQS9scVP6UjoSsjbtJBvXF").isValid);
+        assertTrue(validator.validate("18s142HdWDfDQXYBpuyMvsU3KHwryLxnCr").isValid);
+
+        assertFalse(validator.validate("18s142HdWDfDQXYBpyuMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("18s142HdWDfDQXYBpuyMvsU3KHwryLxnC").isValid);
+        assertFalse(validator.validate("8s142HdWDfDQXYBpuyMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("18s142HdWDfDQXYBuyMvsU3KHwryLxnCr").isValid);
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("1asdasd").isValid);
+        assertFalse(validator.validate("asdasd").isValid);
+    }
+
+
+    @Test
+    public void testINXT() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("INXT");
+
+        assertTrue(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+        assertTrue(validator.validate("2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d1641353982266").isValid);
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
+        assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
+
 }

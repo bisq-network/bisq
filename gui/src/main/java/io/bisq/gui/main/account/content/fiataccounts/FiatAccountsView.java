@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
@@ -72,6 +73,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
 
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -93,6 +95,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
+                            AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
 
@@ -107,6 +110,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.chaseQuickPayValidator = chaseQuickPayValidator;
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 
@@ -189,7 +193,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
         if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
-                e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
+                e.getAccountName().equals(paymentAccount.getAccountName()))
+                .findAny()
+                .isPresent()) {
+
+            // TODO apply salt if user provided it
+            // testing
+            // paymentAccount.setSaltAsHex("a25b65f612e49ba6c4ab80a95fc9b723bcff9e7c6bd06f020d4bdffdac060eed");
+
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
@@ -352,33 +363,33 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.OK_PAY_ID:
-                return new OKPayForm(paymentAccount, okPayValidator, inputValidator, root, gridRow, formatter);
+                return new OKPayForm(paymentAccount, accountAgeWitnessService, okPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
-                return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
+                return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
-                return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
+                return new SepaForm(paymentAccount, accountAgeWitnessService, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.FASTER_PAYMENTS_ID:
-                return new FasterPaymentsForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new FasterPaymentsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new NationalBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SameBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.ALI_PAY_ID:
-                return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow, formatter);
+                return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
-                return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow, formatter);
+                return new SwishForm(paymentAccount, accountAgeWitnessService, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                return new ClearXchangeForm(paymentAccount, clearXchangeValidator, inputValidator, root, gridRow, formatter);
+                return new ClearXchangeForm(paymentAccount, accountAgeWitnessService, clearXchangeValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CHASE_QUICK_PAY_ID:
-                return new ChaseQuickPayForm(paymentAccount, chaseQuickPayValidator, inputValidator, root, gridRow, formatter);
+                return new ChaseQuickPayForm(paymentAccount, accountAgeWitnessService, chaseQuickPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.INTERAC_E_TRANSFER_ID:
-                return new InteracETransferForm(paymentAccount, interacETransferValidator, inputValidator, root, gridRow, formatter);
+                return new InteracETransferForm(paymentAccount, accountAgeWitnessService, interacETransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-                return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
+                return new USPostalMoneyOrderForm(paymentAccount, accountAgeWitnessService, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
-                return new CashDepositForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

@@ -24,6 +24,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,11 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayload {
-    private String postalAddress;
-    private String holderName;
+    private String postalAddress = "";
+    private String holderName = "";
 
-    public USPostalMoneyOrderAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public USPostalMoneyOrderAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -44,11 +51,12 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private USPostalMoneyOrderAccountPayload(String paymentMethod, String id,
-                                             long maxTradePeriod,
                                              String postalAddress,
-                                             String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                             String holderName,
+                                             @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+            id,
+            excludeFromJsonDataMap);
         this.postalAddress = postalAddress;
         this.holderName = holderName;
     }
@@ -56,18 +64,18 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setUSPostalMoneyOrderAccountPayload(PB.USPostalMoneyOrderAccountPayload.newBuilder()
-                        .setPostalAddress(postalAddress)
-                        .setHolderName(holderName))
-                .build();
+            .setUSPostalMoneyOrderAccountPayload(PB.USPostalMoneyOrderAccountPayload.newBuilder()
+                .setPostalAddress(postalAddress)
+                .setHolderName(holderName))
+            .build();
     }
 
     public static USPostalMoneyOrderAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new USPostalMoneyOrderAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getMaxTradePeriod(),
-                proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
-                proto.getUSPostalMoneyOrderAccountPayload().getHolderName());
+            proto.getId(),
+            proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
+            proto.getUSPostalMoneyOrderAccountPayload().getHolderName(),
+            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -84,6 +92,13 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Postal address: " + postalAddress;
+            "Postal address: " + postalAddress;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We use here the holderName because the address alone seems to be too weak
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(holderName.getBytes(Charset.forName("UTF-8")),
+            postalAddress.getBytes(Charset.forName("UTF-8"))));
     }
 }

@@ -24,11 +24,13 @@ import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
+import io.bisq.gui.util.validation.altcoins.XCNAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.WACoinsParams;
+import io.bisq.gui.util.validation.params.TerracoinParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
@@ -331,6 +333,27 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(true);
                     else
                         return regexTestFailed;
+		        case "ELLA":
+                    // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
+		        case "XCN": // https://bitcointalk.org/index.php?topic=1801595
+			        return XCNAddressValidator.ValidateAddress(input);
+                case "TRC":
+                    try {
+                        Address.fromBase58(TerracoinParams.get(), input);
+                    }
+                    catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                    return new ValidationResult(true);
+                case "INXT": 
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;

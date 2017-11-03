@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.SwishAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -53,9 +54,9 @@ public class SwishForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public SwishForm(PaymentAccount paymentAccount, SwishValidator swishValidator,
+    public SwishForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, SwishValidator swishValidator,
                      InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.swishAccount = (SwishAccount) paymentAccount;
         this.swishValidator = swishValidator;
     }
@@ -83,7 +84,7 @@ public class SwishForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -112,7 +113,7 @@ public class SwishForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

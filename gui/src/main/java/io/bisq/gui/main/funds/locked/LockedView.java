@@ -180,7 +180,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         } else if (openOfferManager.getOpenOfferById(offerId).isPresent()) {
             return Optional.of(openOfferManager.getOpenOfferById(offerId).get());
         } else {
-            return Optional.empty();
+            return Optional.<Tradable>empty();
         }
     }
 
