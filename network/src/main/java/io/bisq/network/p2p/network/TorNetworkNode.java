@@ -205,11 +205,13 @@ public class TorNetworkNode extends NetworkNode {
     private void createTorAndHiddenService(final File torDir, int localPort, int servicePort, List<String> bridgeLines) {
         Log.traceCall();
         log.debug("Using bridges: {}", bridgeLines.stream().collect(Collectors.joining(",")));
+        /*
         if(restartCounter == 0) {
             log.error("Doing fake restart to get to the bridges");
             restartTor("error message here...");
             return;
         }
+         */
         ListenableFuture<Object> future = (ListenableFuture<Object>) executorService.submit(() -> {
             try {
                 Tor.setDefault(new NativeTor(torDir, bridgeLines));
