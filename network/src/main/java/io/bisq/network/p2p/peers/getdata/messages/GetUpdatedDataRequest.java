@@ -9,8 +9,6 @@ import io.bisq.network.p2p.SendersNodeAddressMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import javax.annotation.Nullable;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,13 +21,11 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
 
     public GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                  int nonce,
-                                 Set<byte[]> excludedKeys,
-                                 @Nullable Set<byte[]> excludedPnpKeys) {
+                                 Set<byte[]> excludedKeys) {
         this(senderNodeAddress,
                 nonce,
                 excludedKeys,
-                Version.getP2PMessageVersion(),
-                excludedPnpKeys);
+                Version.getP2PMessageVersion());
     }
 
 
@@ -40,12 +36,10 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     private GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                   int nonce,
                                   Set<byte[]> excludedKeys,
-                                  int messageVersion,
-                                  @Nullable Set<byte[]> excludedPnpKeys) {
+                                  int messageVersion) {
         super(messageVersion,
                 nonce,
-                excludedKeys,
-                excludedPnpKeys);
+                excludedKeys);
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -58,10 +52,6 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
-        
-        Optional.ofNullable(excludedPnpKeys).ifPresent(excludedPnpKeys -> builder.addAllExcludedPnpKeys(excludedPnpKeys.stream()
-                .map(ByteString::copyFrom)
-                .collect(Collectors.toList())));
 
         return getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
@@ -72,9 +62,6 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                messageVersion,
-                proto.getExcludedPnpKeysList().isEmpty() ?
-                        null :
-                        ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedPnpKeysList()));
+                messageVersion);
     }
 }

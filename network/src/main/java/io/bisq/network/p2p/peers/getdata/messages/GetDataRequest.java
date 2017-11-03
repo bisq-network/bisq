@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import javax.annotation.Nullable;
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
@@ -16,18 +15,12 @@ public abstract class GetDataRequest extends NetworkEnvelope implements Extended
     protected final int nonce;
     // Keys for ProtectedStorageEntry items to be excluded from the request because the peer has them already
     protected final Set<byte[]> excludedKeys;
-    // Keys for PersistableNetworkPayload items to be excluded from the request because the peer has them already
-    // We added that in v 0.6 and we would get a null object from older peers, so keep it annotated with @Nullable
-    @Nullable
-    protected final Set<byte[]> excludedPnpKeys;
 
     public GetDataRequest(int messageVersion,
                           int nonce,
-                          Set<byte[]> excludedKeys,
-                          @Nullable Set<byte[]> excludedPnpKeys) {
+                          Set<byte[]> excludedKeys) {
         super(messageVersion);
         this.nonce = nonce;
         this.excludedKeys = excludedKeys;
-        this.excludedPnpKeys = excludedPnpKeys;
     }
 }

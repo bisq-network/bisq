@@ -71,7 +71,6 @@ message PreliminaryGetDataRequest {
     int32 nonce = 21;
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
-    repeated bytes excluded_pnp_keys = 4;
 }
 
 message GetDataResponse {
@@ -86,7 +85,6 @@ message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
-    repeated bytes excluded_pnp_keys = 4;
 }
 
 
