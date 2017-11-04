@@ -17,7 +17,7 @@
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--
+        <!-- TODO change back once JesusMcCloud has merged
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>

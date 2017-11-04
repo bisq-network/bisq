@@ -79,7 +79,6 @@ import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.gui.util.Transitions;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.BootstrapListener;

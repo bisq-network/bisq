@@ -137,6 +137,7 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
             "yzdvlv5daitafekn.onion"
         };
     }
+
     /**
      * returns .onion nodes available on testnet3
      */

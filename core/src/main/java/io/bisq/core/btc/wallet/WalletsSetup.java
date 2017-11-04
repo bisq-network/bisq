@@ -322,7 +322,7 @@ public class WalletsSetup {
         // be private by default when using proxy/tor.  However, the seedpeers
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
-        if (socks5Proxy != null && !usePeerNodes || regTestHost == RegTestHost.REG_TEST_SERVER) {
+        if (socks5Proxy != null && !usePeerNodes && regTestHost != RegTestHost.LOCALHOST) {
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
         }

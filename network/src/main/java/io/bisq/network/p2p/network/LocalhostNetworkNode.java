@@ -51,7 +51,7 @@ public class LocalhostNetworkNode extends NetworkNode {
             addSetupListener(setupListener);
 
         createExecutorService();
-        // userthread run after delay
+        // TODO use UserThread.runAfter() instead
         //Tor delay simulation
         createTorNode(torNode -> {
             Log.traceCall("torNode created");
