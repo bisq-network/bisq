@@ -31,9 +31,9 @@ public class BSFormatterTest {
         BSFormatter formatter = new BSFormatter();
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
-        assertEquals("0 days",formatter.formatAccountAge(TimeUnit.HOURS.toMillis(23)));
-        assertEquals("0 days",formatter.formatAccountAge(0));
-        assertEquals("0 days",formatter.formatAccountAge(-1));
+        assertEquals("0 days", formatter.formatAccountAge(TimeUnit.HOURS.toMillis(23)));
+        assertEquals("0 days", formatter.formatAccountAge(0));
+        assertEquals("0 days", formatter.formatAccountAge(-1));
         assertEquals("1 day", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(1)));
         assertEquals("2 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(2)));
         assertEquals("30 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(30)));

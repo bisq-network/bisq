@@ -36,56 +36,56 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Preferences implements PersistedDataHost {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
-        new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
-        new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
-        new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
-        new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
-        new BlockChainExplorer("Blockonomics", "https://www.blockonomics.co/api/tx?txid=", "https://www.blockonomics.co/#/search?q="),
-        new BlockChainExplorer("Chainflyer", "http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/"),
-        new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
-        new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
-        new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
-        new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
-        new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
+            new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
+            new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
+            new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
+            new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
+            new BlockChainExplorer("Blockonomics", "https://www.blockonomics.co/api/tx?txid=", "https://www.blockonomics.co/#/search?q="),
+            new BlockChainExplorer("Chainflyer", "http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/"),
+            new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
+            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
     ));
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
-        new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
-        new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
-        new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
-        new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
+            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
+            new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
+            new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
+            new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
+            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
-        "https://explorer.bisq.network/Address.html?addr=");
+            "https://explorer.bisq.network/Address.html?addr=");
     public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
-        "https://explorer.bisq.network/testnet/Address.html?addr=");
+            "https://explorer.bisq.network/testnet/Address.html?addr=");
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
-        new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
-        new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
-        new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
+            new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
+            new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
+            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
+            new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
     ));
 
     private static final ArrayList<BlockChainExplorer> LTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
     ));
 
     private static final ArrayList<BlockChainExplorer> DOGE_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/doge/", "https://chain.so/address/doge/")
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/doge/", "https://chain.so/address/doge/")
     ));
     private static final ArrayList<BlockChainExplorer> DOGE_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/DOGETEST/", "https://chain.so/address/DOGETEST/")
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/DOGETEST/", "https://chain.so/address/DOGETEST/")
     ));
 
     private static final ArrayList<BlockChainExplorer> DASH_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
     ));
     private static final ArrayList<BlockChainExplorer> DASH_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-        new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
     ));
 
 
@@ -184,7 +184,7 @@ public final class Preferences implements PersistedDataHost {
             prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
             GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
             preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
-                "preferredTradeCurrency must not be null");
+                    "preferredTradeCurrency must not be null");
             prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -283,7 +283,7 @@ public final class Preferences implements PersistedDataHost {
                 fiatCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
-                prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -301,7 +301,7 @@ public final class Preferences implements PersistedDataHost {
                 cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
-                prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -437,8 +437,8 @@ public final class Preferences implements PersistedDataHost {
 
     public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
         prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
-            Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
-                buyerSecurityDepositAsLong)));
+                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
+                        buyerSecurityDepositAsLong)));
         persist();
     }
 
@@ -554,8 +554,8 @@ public final class Preferences implements PersistedDataHost {
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
         if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty()
-            || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
-            || bisqEnvironment.isBitcoinLocalhostNodeRunning())
+                || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+                || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

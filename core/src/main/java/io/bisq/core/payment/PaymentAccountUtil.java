@@ -25,8 +25,8 @@ public class PaymentAccountUtil {
     public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer, Set<PaymentAccount> paymentAccounts) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
-            .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
-            .collect(Collectors.toList()));
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .collect(Collectors.toList()));
         return result;
     }
 
@@ -34,16 +34,16 @@ public class PaymentAccountUtil {
     public static String getInfoForMismatchingPaymentMethodLimits(Offer offer, PaymentAccount paymentAccount) {
         // dont translate atm as it is not used so far in the UI just for logs
         return "Payment methods have different trade limits or trade periods.\n" +
-            "Our local Payment method: " + paymentAccount.getPaymentMethod().toString() + "\n" +
-            "Payment method from offer: " + offer.getPaymentMethod().toString();
+                "Our local Payment method: " + paymentAccount.getPaymentMethod().toString() + "\n" +
+                "Payment method from offer: " + offer.getPaymentMethod().toString();
     }
 
     //TODO not tested with all combinations yet....
     public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
         // check if we have  a matching currency
         Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream()
-            .map(TradeCurrency::getCode)
-            .collect(Collectors.toSet());
+                .map(TradeCurrency::getCode)
+                .collect(Collectors.toSet());
         boolean matchesCurrencyCode = paymentAccountCurrencyCodes.contains(offer.getCurrencyCode());
         if (!matchesCurrencyCode)
             return false;
@@ -52,7 +52,7 @@ public class PaymentAccountUtil {
         final boolean arePaymentMethodsEqual = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
 
         if (!arePaymentMethodsEqual &&
-            paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId()))
+                paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId()))
             log.warn(getInfoForMismatchingPaymentMethodLimits(offer, paymentAccount));
 
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
@@ -60,14 +60,14 @@ public class PaymentAccountUtil {
 
             // check if we have a matching country
             boolean matchesCountryCodes = offer.getAcceptedCountryCodes() != null && countryBasedPaymentAccount.getCountry() != null &&
-                offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
+                    offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
             if (!matchesCountryCodes)
                 return false;
 
             if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
                 return arePaymentMethodsEqual;
             } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
-                offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+                    offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
 
                 final List<String> acceptedBankIds = offer.getAcceptedBankIds();
                 checkNotNull(acceptedBankIds, "offer.getAcceptedBankIds() must not be null");
@@ -105,11 +105,11 @@ public class PaymentAccountUtil {
                                                                                Set<PaymentAccount> paymentAccounts,
                                                                                AccountAgeWitnessService service) {
         List<PaymentAccount> list = paymentAccounts.stream()
-            .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
-            .sorted((o1, o2) -> {
-                return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload()), new Date()))
-                    .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload()), new Date()));
-            }).collect(Collectors.toList());
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .sorted((o1, o2) -> {
+                    return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload()), new Date()))
+                            .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload()), new Date()));
+                }).collect(Collectors.toList());
         list.stream().forEach(e -> log.info("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), service.getMyWitnessHashAsHex(e.getPaymentAccountPayload())));
         final Optional<PaymentAccount> first = list.stream().findFirst();
         if (first.isPresent())

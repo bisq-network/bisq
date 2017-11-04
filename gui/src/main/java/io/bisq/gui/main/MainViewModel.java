@@ -1017,8 +1017,8 @@ public class MainViewModel implements ViewModel {
             item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
 
             final String code = item.currencyCode;
-            if (selectedPriceFeedComboBoxItemProperty.get()!=null&&
-                selectedPriceFeedComboBoxItemProperty.get().currencyCode.equals(code)) {
+            if (selectedPriceFeedComboBoxItemProperty.get() != null &&
+                    selectedPriceFeedComboBoxItemProperty.get().currencyCode.equals(code)) {
                 isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
                 isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
                 isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());

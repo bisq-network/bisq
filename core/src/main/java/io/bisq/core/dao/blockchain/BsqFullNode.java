@@ -62,10 +62,10 @@ public class BsqFullNode extends BsqNode {
                        FeeService feeService,
                        SeedNodesRepository seedNodesRepository) {
         super(p2PService,
-            bsqParser,
-            bsqChainState,
-            feeService,
-            seedNodesRepository);
+                bsqParser,
+                bsqChainState,
+                feeService,
+                seedNodesRepository);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonChainStateExporter = jsonChainStateExporter;
     }
@@ -80,23 +80,23 @@ public class BsqFullNode extends BsqNode {
         // super.onAllServicesInitialized(errorMessageHandler) is called
         // bsqFullNodeExecutor.setup is and async call.
         bsqFullNodeExecutor.setup(() -> {
-                super.onAllServicesInitialized(errorMessageHandler);
-                startParseBlocks();
-            },
-            throwable -> {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
-            });
+                    super.onAllServicesInitialized(errorMessageHandler);
+                    startParseBlocks();
+                },
+                throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                });
     }
 
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
         bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight),
-            throwable -> {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
-            });
+                throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                });
     }
 
     @Override
@@ -105,27 +105,27 @@ public class BsqFullNode extends BsqNode {
         if (chainHeadHeight != startBlockHeight) {
             if (startBlockHeight <= chainHeadHeight) {
                 bsqFullNodeExecutor.parseBlocks(startBlockHeight,
-                    chainHeadHeight,
-                    genesisBlockHeight,
-                    genesisTxId,
-                    this::onNewBsqBlock,
-                    () -> {
-                        // we are done but it might be that new blocks have arrived in the meantime,
-                        // so we try again with startBlockHeight set to current chainHeadHeight
-                        // We also set up the listener in the else main branch where we check
-                        // if we at chainTip, so do nto include here another check as it would
-                        // not trigger the listener registration.
-                        parseBlocksWithChainHeadHeight(chainHeadHeight,
-                            genesisBlockHeight,
-                            genesisTxId);
-                    }, throwable -> {
-                        if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot();
-                        } else {
-                            log.error(throwable.toString());
-                            throwable.printStackTrace();
-                        }
-                    });
+                        chainHeadHeight,
+                        genesisBlockHeight,
+                        genesisTxId,
+                        this::onNewBsqBlock,
+                        () -> {
+                            // we are done but it might be that new blocks have arrived in the meantime,
+                            // so we try again with startBlockHeight set to current chainHeadHeight
+                            // We also set up the listener in the else main branch where we check
+                            // if we at chainTip, so do nto include here another check as it would
+                            // not trigger the listener registration.
+                            parseBlocksWithChainHeadHeight(chainHeadHeight,
+                                    genesisBlockHeight,
+                                    genesisTxId);
+                        }, throwable -> {
+                            if (throwable instanceof BlockNotConnectingException) {
+                                startReOrgFromLastSnapshot();
+                            } else {
+                                log.error(throwable.toString());
+                                throwable.printStackTrace();
+                            }
+                        });
             } else {
                 log.warn("We are trying to start with a block which is above the chain height of bitcoin core. We need probably wait longer until bitcoin core has fully synced. We try again after a delay of 1 min.");
                 UserThread.runAfter(() -> parseBlocksWithChainHeadHeight(startBlockHeight, genesisBlockHeight, genesisTxId), 60);
@@ -159,47 +159,47 @@ public class BsqFullNode extends BsqNode {
 
     private void createRequestBlocksManager() {
         requestManager = new RequestManager(p2PService.getNetworkNode(),
-            p2PService.getPeerManager(),
-            p2PService.getBroadcaster(),
-            seedNodesRepository.getSeedNodeAddresses(),
-            bsqChainState,
-            new RequestManager.Listener() {
-                @Override
-                public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
+                p2PService.getPeerManager(),
+                p2PService.getBroadcaster(),
+                seedNodesRepository.getSeedNodeAddresses(),
+                bsqChainState,
+                new RequestManager.Listener() {
+                    @Override
+                    public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
 
-                }
+                    }
 
-                @Override
-                public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
+                    @Override
+                    public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
 
-                }
+                    }
 
-                @Override
-                public void onNoSeedNodeAvailable() {
+                    @Override
+                    public void onNoSeedNodeAvailable() {
 
-                }
+                    }
 
-                @Override
-                public void onFault(String errorMessage, @Nullable Connection connection) {
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
 
-                }
-            });
+                    }
+                });
     }
 
     private void addBlockHandler() {
         // We register our handler for new blocks
         bsqFullNodeExecutor.addBlockHandler(btcdBlock -> bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
-            genesisBlockHeight,
-            genesisTxId,
-            this::onNewBsqBlock,
-            throwable -> {
-                if (throwable instanceof BlockNotConnectingException) {
-                    startReOrgFromLastSnapshot();
-                } else {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
-                }
-            }));
+                genesisBlockHeight,
+                genesisTxId,
+                this::onNewBsqBlock,
+                throwable -> {
+                    if (throwable instanceof BlockNotConnectingException) {
+                        startReOrgFromLastSnapshot();
+                    } else {
+                        log.error(throwable.toString());
+                        throwable.printStackTrace();
+                    }
+                }));
     }
 
     @Override

@@ -67,7 +67,7 @@ public class ArbitratorService {
     public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
         if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
-            !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
+                !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
             boolean result = p2PService.addData(arbitrator, true);
             if (result) {
                 log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
@@ -100,11 +100,11 @@ public class ArbitratorService {
         if (bannedArbitrators != null)
             log.warn("bannedArbitrators=" + bannedArbitrators);
         Set<Arbitrator> arbitratorSet = p2PService.getDataMap().values().stream()
-            .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
-            .map(data -> (Arbitrator) data.getProtectedStoragePayload())
-            .filter(a -> bannedArbitrators == null ||
-                !bannedArbitrators.contains(a.getNodeAddress().getHostName()))
-            .collect(Collectors.toSet());
+                .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
+                .map(data -> (Arbitrator) data.getProtectedStoragePayload())
+                .filter(a -> bannedArbitrators == null ||
+                        !bannedArbitrators.contains(a.getNodeAddress().getHostName()))
+                .collect(Collectors.toSet());
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();
         for (Arbitrator arbitrator : arbitratorSet) {

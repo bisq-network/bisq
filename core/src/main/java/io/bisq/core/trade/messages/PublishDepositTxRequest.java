@@ -73,19 +73,19 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                    @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
                                    long currentDate) {
         this(tradeId,
-            makerPaymentAccountPayload,
-            makerAccountId,
-            makerMultiSigPubKey,
-            makerContractAsJson,
-            makerContractSignature,
-            makerPayoutAddressString,
-            preparedDepositTx,
-            makerInputs,
-            senderNodeAddress,
-            uid,
-            Version.getP2PMessageVersion(),
-            accountAgeWitnessSignatureOfPreparedDepositTx,
-            currentDate);
+                makerPaymentAccountPayload,
+                makerAccountId,
+                makerMultiSigPubKey,
+                makerContractAsJson,
+                makerContractSignature,
+                makerPayoutAddressString,
+                preparedDepositTx,
+                makerInputs,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion(),
+                accountAgeWitnessSignatureOfPreparedDepositTx,
+                currentDate);
     }
 
 
@@ -125,63 +125,63 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         final PB.PublishDepositTxRequest.Builder builder = PB.PublishDepositTxRequest.newBuilder()
-            .setTradeId(tradeId)
-            .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-            .setMakerAccountId(makerAccountId)
-            .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
-            .setMakerContractAsJson(makerContractAsJson)
-            .setMakerContractSignature(makerContractSignature)
-            .setMakerPayoutAddressString(makerPayoutAddressString)
-            .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-            .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-            .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-            .setUid(uid);
+                .setTradeId(tradeId)
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setMakerAccountId(makerAccountId)
+                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+                .setMakerContractAsJson(makerContractAsJson)
+                .setMakerContractSignature(makerContractSignature)
+                .setMakerPayoutAddressString(makerPayoutAddressString)
+                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+                .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setUid(uid);
 
         Optional.ofNullable(accountAgeWitnessSignatureOfPreparedDepositTx).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder()
-            .setPublishDepositTxRequest(builder)
-            .build();
+                .setPublishDepositTxRequest(builder)
+                .build();
     }
 
     public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
-            .map(RawTransactionInput::fromProto)
-            .collect(Collectors.toList());
+                .map(RawTransactionInput::fromProto)
+                .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(proto.getTradeId(),
-            coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
-            proto.getMakerAccountId(),
-            proto.getMakerMultiSigPubKey().toByteArray(),
-            proto.getMakerContractAsJson(),
-            proto.getMakerContractSignature(),
-            proto.getMakerPayoutAddressString(),
-            proto.getPreparedDepositTx().toByteArray(),
-            makerInputs,
-            NodeAddress.fromProto(proto.getSenderNodeAddress()),
-            proto.getUid(),
-            messageVersion,
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfPreparedDepositTx()),
-            proto.getCurrentDate());
+                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
+                proto.getMakerAccountId(),
+                proto.getMakerMultiSigPubKey().toByteArray(),
+                proto.getMakerContractAsJson(),
+                proto.getMakerContractSignature(),
+                proto.getMakerPayoutAddressString(),
+                proto.getPreparedDepositTx().toByteArray(),
+                makerInputs,
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid(),
+                messageVersion,
+                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfPreparedDepositTx()),
+                proto.getCurrentDate());
     }
 
 
     @Override
     public String toString() {
         return "PublishDepositTxRequest{" +
-            "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
-            ",\n     makerAccountId='" + makerAccountId + '\'' +
-            ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
-            ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
-            ",\n     makerContractSignature='" + makerContractSignature + '\'' +
-            ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
-            ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
-            ",\n     makerInputs=" + makerInputs +
-            ",\n     senderNodeAddress=" + senderNodeAddress +
-            ",\n     uid='" + uid + '\'' +
-            ",\n     accountAgeWitnessSignatureOfPreparedDepositTx=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfPreparedDepositTx) +
-            ",\n     currentDate=" + new Date(currentDate) +
-            "\n} " + super.toString();
+                "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
+                ",\n     makerAccountId='" + makerAccountId + '\'' +
+                ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
+                ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
+                ",\n     makerContractSignature='" + makerContractSignature + '\'' +
+                ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
+                ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
+                ",\n     makerInputs=" + makerInputs +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                ",\n     accountAgeWitnessSignatureOfPreparedDepositTx=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfPreparedDepositTx) +
+                ",\n     currentDate=" + new Date(currentDate) +
+                "\n} " + super.toString();
     }
 }

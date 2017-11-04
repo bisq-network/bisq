@@ -74,7 +74,7 @@ public final class TradingPeer implements PersistablePayload {
     @Override
     public Message toProtoMessage() {
         final PB.TradingPeer.Builder builder = PB.TradingPeer.newBuilder()
-            .setChangeOutputValue(changeOutputValue);
+                .setChangeOutputValue(changeOutputValue);
         Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
         Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((PB.PaymentAccountPayload) e.toProtoMessage()));
         Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
@@ -106,10 +106,10 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setPubKeyRing(proto.hasPubKeyRing() ? PubKeyRing.fromProto(proto.getPubKeyRing()) : null);
             tradingPeer.setMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMultiSigPubKey()));
             List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
-                null :
-                proto.getRawTransactionInputsList().stream()
-                    .map(RawTransactionInput::fromProto)
-                    .collect(Collectors.toList());
+                    null :
+                    proto.getRawTransactionInputsList().stream()
+                            .map(RawTransactionInput::fromProto)
+                            .collect(Collectors.toList());
             tradingPeer.setRawTransactionInputs(rawTransactionInputs);
             tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));

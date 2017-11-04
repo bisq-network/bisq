@@ -81,13 +81,13 @@ public class TradeStatisticsManager implements PersistedDataHost {
     public void onAllServicesInitialized() {
         if (dumpStatistics) {
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                .collect(Collectors.toList()));
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                    .collect(Collectors.toList()));
             jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
 
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                .collect(Collectors.toList()));
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                    .collect(Collectors.toList()));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
             jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
@@ -159,12 +159,12 @@ public class TradeStatisticsManager implements PersistedDataHost {
         });
 
         mapByCurrencyCode.values().stream()
-            .filter(list -> !list.isEmpty())
-            .forEach(list -> {
-                list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
-                TradeStatistics tradeStatistics = list.get(list.size() - 1);
-                priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
-            });
+                .filter(list -> !list.isEmpty())
+                .forEach(list -> {
+                    list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+                    TradeStatistics tradeStatistics = list.get(list.size() - 1);
+                    priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
+                });
     }
 
     public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
@@ -222,8 +222,8 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
         map1.entrySet().stream()
-            .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-            .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+                .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
         log.error(sb1.toString());
 
         Map<String, Set<TradeStatistics>> map2 = new HashMap<>();
@@ -263,30 +263,30 @@ public class TradeStatisticsManager implements PersistedDataHost {
         newlyAdded.add("DEC");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-            .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
+                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
         StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
         StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
         map2.entrySet().stream()
-            .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-            .forEach(e -> {
-                final String key = e.getKey();
-                sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
-                // key is: USD Tether (USDT)
-                String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
-                if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                    allCryptoCurrencies.remove(key);
-            });
+                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+                .forEach(e -> {
+                    final String key = e.getKey();
+                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
+                    // key is: USD Tether (USDT)
+                    String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        allCryptoCurrencies.remove(key);
+                });
         log.error(sb2.toString());
 
         // Not considered age of newly added coins, so take care with removal if coin was added recently.
         allCryptoCurrencies.sort(String::compareTo);
         allCryptoCurrencies.stream()
-            .forEach(e -> {
-                // key is: USD Tether (USDT)
-                String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
-                if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                    sb3.append(e).append("\n");
-            });
+                .forEach(e -> {
+                    // key is: USD Tether (USDT)
+                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        sb3.append(e).append("\n");
+                });
         log.error(sb3.toString());
     }
 }

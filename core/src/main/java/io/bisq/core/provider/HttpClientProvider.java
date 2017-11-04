@@ -38,7 +38,7 @@ public abstract class HttpClientProvider {
     @Override
     public String toString() {
         return "HttpClientProvider{" +
-            "\n     httpClient=" + httpClient +
-            "\n}";
+                "\n     httpClient=" + httpClient +
+                "\n}";
     }
 }

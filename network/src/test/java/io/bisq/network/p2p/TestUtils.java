@@ -91,56 +91,56 @@ public class TestUtils {
         return seedNode;
     }
 
-  /*  public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
-                                                          boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
-            throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
-        if (seedNodes != null && !seedNodes.isEmpty()) {
-            if (useLocalhostForP2P)
-                seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
-            else
-                seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
-        }
+    /*  public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
+                                                            boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
+              throws InterruptedException {
+          CountDownLatch latch = new CountDownLatch(1);
+          SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+          if (seedNodes != null && !seedNodes.isEmpty()) {
+              if (useLocalhostForP2P)
+                  seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
+              else
+                  seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
+          }
 
-        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
-                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null,
-                new Clock(), null, encryptionService, keyRing, getNetworkProtoResolver(), getPersistenceProtoResolver());
-        p2PService.start(new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-            }
+          P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
+                  2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null,
+                  new Clock(), null, encryptionService, keyRing, getNetworkProtoResolver(), getPersistenceProtoResolver());
+          p2PService.start(new P2PServiceListener() {
+              @Override
+              public void onRequestingDataCompleted() {
+              }
 
-            @Override
-            public void onNoSeedNodeAvailable() {
-            }
+              @Override
+              public void onNoSeedNodeAvailable() {
+              }
 
-            @Override
-            public void onNoPeersAvailable() {
-            }
+              @Override
+              public void onNoPeersAvailable() {
+              }
 
-            @Override
-            public void onTorNodeReady() {
-            }
+              @Override
+              public void onTorNodeReady() {
+              }
 
-            @Override
-            public void onBootstrapComplete() {
-                latch.countDown();
-            }
+              @Override
+              public void onBootstrapComplete() {
+                  latch.countDown();
+              }
 
-            @Override
-            public void onHiddenServicePublished() {
-            }
+              @Override
+              public void onHiddenServicePublished() {
+              }
 
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-        });
-        latch.await();
-        Thread.sleep(2000);
-        return p2PService;
-    }
-*/
+              @Override
+              public void onSetupFailed(Throwable throwable) {
+              }
+          });
+          latch.await();
+          Thread.sleep(2000);
+          return p2PService;
+      }
+  */
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override

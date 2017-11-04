@@ -184,7 +184,7 @@ public class DummySeedNode {
         if (torDir.mkdirs())
             log.debug("Created torDir at " + torDir.getAbsolutePath());
 
-       // seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
+        // seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
       /*  seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.getPort(), maxConnections,
                 torDir, useLocalhostForP2P, networkId, storageDir, null, null, null, new Clock(), null, null,
                 null, TestUtils.getNetworkProtoResolver(), TestUtils.getPersistenceProtoResolver());

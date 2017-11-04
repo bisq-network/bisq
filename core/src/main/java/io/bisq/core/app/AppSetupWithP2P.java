@@ -55,8 +55,8 @@ public class AppSetupWithP2P extends AppSetup {
                            AccountAgeWitnessService accountAgeWitnessService,
                            FilterManager filterManager) {
         super(encryptionService,
-            keyRing,
-            tradeStatisticsManager);
+                keyRing,
+                tradeStatisticsManager);
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.filterManager = filterManager;
@@ -82,10 +82,10 @@ public class AppSetupWithP2P extends AppSetup {
     @Override
     protected void initBasicServices() {
         readMapsFromResourcesBinding = EasyBind.combine(SetupUtils.readPersistableNetworkPayloadMapFromResources(p2PService),
-            SetupUtils.readEntryMapFromResources(p2PService),
-            (result1, result2) -> {
-                return result1 && result2;
-            });
+                SetupUtils.readEntryMapFromResources(p2PService),
+                (result1, result2) -> {
+                    return result1 && result2;
+                });
         readMapsFromResourcesBindingSubscription = readMapsFromResourcesBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
                 startInitP2PNetwork();
@@ -118,7 +118,7 @@ public class AppSetupWithP2P extends AppSetup {
                 // We only check at seed nodes as they are running the latest version
                 // Other disconnects might be caused by peers running an older version
                 if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
-                    closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
+                        closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("RULE_VIOLATION onDisconnect connection=" + connection);
                 }

@@ -57,8 +57,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     @Override
     public PB.PersistableNetworkPayload toProtoMessage() {
         final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
-            .setHash(ByteString.copyFrom(hash))
-            .setDate(date);
+                .setHash(ByteString.copyFrom(hash))
+                .setDate(date);
         return PB.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
@@ -73,8 +73,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
             hash = new byte[0];
         }
         return new AccountAgeWitness(
-            hash,
-            proto.getDate());
+                hash,
+                proto.getDate());
     }
 
 
@@ -106,8 +106,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     @Override
     public String toString() {
         return "AccountAgeWitness{" +
-            "\n     hash=" + Utilities.bytesAsHexString(hash) +
-            ",\n     date=" + new Date(date) +
-            "\n}";
+                "\n     hash=" + Utilities.bytesAsHexString(hash) +
+                ",\n     date=" + new Date(date) +
+                "\n}";
     }
 }
