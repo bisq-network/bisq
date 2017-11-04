@@ -67,7 +67,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBtc = true;
     @Nullable
-    private List<String> bridgeAddresses = new ArrayList<>();
+    private List<String> bridgeAddresses;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,37 +85,36 @@ public final class PreferencesPayload implements PersistableEnvelope {
     @Override
     public Message toProtoMessage() {
         PB.PreferencesPayload.Builder builder = PB.PreferencesPayload.newBuilder()
-            .setUserLanguage(userLanguage)
-            .setUserCountry((PB.Country) userCountry.toProtoMessage())
-            .addAllFiatCurrencies(fiatCurrencies.stream()
-                .map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtoMessage()))
-                .collect(Collectors.toList()))
-            .addAllCryptoCurrencies(cryptoCurrencies.stream()
-                .map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtoMessage()))
-                .collect(Collectors.toList()))
-            .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
-            .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
-            .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
-            .setAutoSelectArbitrators(autoSelectArbitrators)
-            .putAllDontShowAgainMap(dontShowAgainMap)
-            .setTacAccepted(tacAccepted)
-            .setUseTorForBitcoinJ(useTorForBitcoinJ)
-            .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-            .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
-            .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
-            .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
-            .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
-            .setResyncSpvRequested(resyncSpvRequested)
-            .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
-            .setUsePercentageBasedPrice(usePercentageBasedPrice)
-            .putAllPeerTagMap(peerTagMap)
-            .setBitcoinNodes(bitcoinNodes)
-            .addAllIgnoreTradersList(ignoreTradersList)
-            .setDirectoryChooserPath(directoryChooserPath)
-            .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
-            .setUseAnimations(useAnimations)
-            .setPayFeeInBtc(payFeeInBtc);
-        Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
+                .setUserLanguage(userLanguage)
+                .setUserCountry((PB.Country) userCountry.toProtoMessage())
+                .addAllFiatCurrencies(fiatCurrencies.stream()
+                        .map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtoMessage()))
+                        .collect(Collectors.toList()))
+                .addAllCryptoCurrencies(cryptoCurrencies.stream()
+                        .map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtoMessage()))
+                        .collect(Collectors.toList()))
+                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
+                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
+                .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
+                .setAutoSelectArbitrators(autoSelectArbitrators)
+                .putAllDontShowAgainMap(dontShowAgainMap)
+                .setTacAccepted(tacAccepted)
+                .setUseTorForBitcoinJ(useTorForBitcoinJ)
+                .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
+                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
+                .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
+                .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
+                .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
+                .setResyncSpvRequested(resyncSpvRequested)
+                .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
+                .setUsePercentageBasedPrice(usePercentageBasedPrice)
+                .putAllPeerTagMap(peerTagMap)
+                .setBitcoinNodes(bitcoinNodes)
+                .addAllIgnoreTradersList(ignoreTradersList)
+                .setDirectoryChooserPath(directoryChooserPath)
+                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
+                .setUseAnimations(useAnimations)
+                .setPayFeeInBtc(payFeeInBtc);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -123,7 +122,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(buyScreenCurrencyCode).ifPresent(builder::setBuyScreenCurrencyCode);
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(builder::setSellScreenCurrencyCode);
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
-            account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
+                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
+        Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
@@ -173,6 +173,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseAnimations(),
                 paymentAccount,
                 proto.getPayFeeInBtc(),
-                proto.getBridgeAddressesList());
+                proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()));
     }
 }

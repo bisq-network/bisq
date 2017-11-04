@@ -176,7 +176,8 @@ public final class Preferences implements PersistedDataHost {
             setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
-            setBridgeAddresses(prefPayload.getBridgeAddresses());
+            if (prefPayload.getBridgeAddresses() != null)
+                setBridgeAddresses(prefPayload.getBridgeAddresses());
 
         } else {
             prefPayload = new PreferencesPayload();
