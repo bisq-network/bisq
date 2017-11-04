@@ -416,6 +416,11 @@ public class NetworkStressTest {
             localServicesFailed.set(true);
             localServicesLatch.countDown();
         }
+
+        @Override
+        public void onRequestCustomBridges(Runnable resultHandler) {
+
+        }
     }
 
     private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
@@ -801,6 +806,11 @@ public class NetworkStressTest {
 
         @Override
         public void onSetupFailed(Throwable throwable) {
+        }
+
+        @Override
+        public void onRequestCustomBridges(Runnable resultHandler) {
+
         }
     }
 }

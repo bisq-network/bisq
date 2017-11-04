@@ -112,6 +112,11 @@ public class TradeStatisticsMigrationTool {
                 @Override
                 public void onSetupFailed(Throwable throwable) {
                 }
+
+                @Override
+                public void onRequestCustomBridges(Runnable resultHandler) {
+
+                }
             });
         }
     }

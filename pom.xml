@@ -42,9 +42,6 @@
         <module>common</module>
         <module>network</module>
         <module>core</module>
-        <module>jsocks</module>
-        <module>jtorctl</module>
-        <module>jtorproxy</module>
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>

@@ -4,15 +4,12 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
-import io.nucleo.net.HiddenServiceDescriptor;
-import io.nucleo.net.TorNode;
+import org.berndpruenster.netlayer.tor.NativeTor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -54,14 +51,14 @@ public class LocalhostNetworkNode extends NetworkNode {
             addSetupListener(setupListener);
 
         createExecutorService();
-
+        // userthread run after delay
         //Tor delay simulation
         createTorNode(torNode -> {
             Log.traceCall("torNode created");
             setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
             // Create Hidden Service (takes about 40 sec.)
-            createHiddenService(hiddenServiceDescriptor -> {
+            createHiddenService((Void) -> {
                 Log.traceCall("hiddenService created");
                 try {
                     startServer(new ServerSocket(servicePort));
@@ -86,8 +83,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Tor delay simulation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorNode(final Consumer<TorNode> resultHandler) {
-        ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
+    private void createTorNode(final Consumer<NativeTor> resultHandler) {
+        ListenableFuture<NativeTor> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateTorNode");
             long ts = System.currentTimeMillis();
             if (simulateTorDelayTorNode > 0)
@@ -98,8 +95,8 @@ public class LocalhostNetworkNode extends NetworkNode {
                     + "\n############################################################\n");
             return null;
         });
-        Futures.addCallback(future, new FutureCallback<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>>() {
-            public void onSuccess(TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode) {
+        Futures.addCallback(future, new FutureCallback<NativeTor>() {
+            public void onSuccess(NativeTor nativeTor) {
                 UserThread.execute(() -> {
                     // as we are simulating we return null
                     resultHandler.accept(null);
@@ -115,8 +112,8 @@ public class LocalhostNetworkNode extends NetworkNode {
         });
     }
 
-    private void createHiddenService(final Consumer<HiddenServiceDescriptor> resultHandler) {
-        ListenableFuture<HiddenServiceDescriptor> future = executorService.submit(() -> {
+    private void createHiddenService(final Consumer<Void> resultHandler) {
+        ListenableFuture<Void> future = executorService.submit(() -> {
             Utilities.setThreadName("NetworkNode:CreateHiddenService");
             long ts = System.currentTimeMillis();
             if (simulateTorDelayHiddenService > 0)
@@ -127,10 +124,10 @@ public class LocalhostNetworkNode extends NetworkNode {
                     + "\n############################################################\n");
             return null;
         });
-        Futures.addCallback(future, new FutureCallback<HiddenServiceDescriptor>() {
-            public void onSuccess(HiddenServiceDescriptor hiddenServiceDescriptor) {
+        Futures.addCallback(future, new FutureCallback<Void>() {
+            public void onSuccess(Void v) {
                 UserThread.execute(() -> {
-                    // as we are simulating we return null
+                    // as we are simulating we do nothing
                     resultHandler.accept(null);
                 });
             }

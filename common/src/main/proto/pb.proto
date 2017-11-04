@@ -1255,6 +1255,7 @@ message PreferencesPayload {
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
+    repeated string bridge_addresses = 34;
 }
 
 

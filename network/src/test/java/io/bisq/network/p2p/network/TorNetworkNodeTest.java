@@ -53,6 +53,11 @@ public class TorNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
         });
         latch.await();
 
@@ -74,6 +79,11 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
             }
         });
         latch.await();
@@ -127,6 +137,11 @@ public class TorNetworkNodeTest {
             public void onSetupFailed(Throwable throwable) {
 
             }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
         });
 
         int port2 = 9002;
@@ -145,6 +160,11 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
             }
         });
 
