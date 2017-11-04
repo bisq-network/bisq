@@ -11,9 +11,12 @@ System requirements
 -------------
 
 The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u131 or better (as well as maven and git).
-In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
-    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+    $ sudo apt-get install openjdk-8-jdk maven git
+
+In Debian/Ubuntu with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
+
+    $ sudo apt-get install openjfx
 
 ### 1. Check the version of Java you currently have installed
 
