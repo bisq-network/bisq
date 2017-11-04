@@ -80,9 +80,9 @@ public abstract class BsqNode {
         genesisBlockHeight = bsqChainState.getGenesisBlockHeight();
 
         bsqChainState.setCreateCompensationRequestFee(feeService.getCreateCompensationRequestFee().value,
-            genesisBlockHeight);
+                genesisBlockHeight);
         bsqChainState.setVotingFee(feeService.getVotingTxFee().value,
-            genesisBlockHeight);
+                genesisBlockHeight);
     }
 
 
@@ -122,18 +122,18 @@ public abstract class BsqNode {
         log.info("startParseBlocks");
         int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
         log.info("Parse blocks:\n" +
-                "   Start block height={}\n" +
-                "   Genesis txId={}\n" +
-                "   Genesis block height={}\n" +
-                "   BsqChainState block height={}\n",
-            startBlockHeight,
-            genesisTxId,
-            genesisBlockHeight,
-            bsqChainState.getChainHeadHeight());
+                        "   Start block height={}\n" +
+                        "   Genesis txId={}\n" +
+                        "   Genesis block height={}\n" +
+                        "   BsqChainState block height={}\n",
+                startBlockHeight,
+                genesisTxId,
+                genesisBlockHeight,
+                bsqChainState.getChainHeadHeight());
 
         parseBlocksWithChainHeadHeight(startBlockHeight,
-            genesisBlockHeight,
-            genesisTxId);
+                genesisBlockHeight,
+                genesisTxId);
     }
 
     abstract protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId);

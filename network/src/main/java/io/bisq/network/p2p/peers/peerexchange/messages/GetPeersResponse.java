@@ -39,22 +39,22 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetPeersResponse(PB.GetPeersResponse.newBuilder()
-                        .setRequestNonce(requestNonce)
-                        .addAllReportedPeers(reportedPeers.stream()
-                                .map(Peer::toProtoMessage)
-                                .collect(Collectors.toList()))
-                        .addAllSupportedCapabilities(supportedCapabilities))
-                .build();
+            .setGetPeersResponse(PB.GetPeersResponse.newBuilder()
+                .setRequestNonce(requestNonce)
+                .addAllReportedPeers(reportedPeers.stream()
+                    .map(Peer::toProtoMessage)
+                    .collect(Collectors.toList()))
+                .addAllSupportedCapabilities(supportedCapabilities))
+            .build();
     }
 
     public static GetPeersResponse fromProto(PB.GetPeersResponse getPeersResponse, int messageVersion) {
         HashSet<Peer> reportedPeers = new HashSet<>(
-                getPeersResponse.getReportedPeersList()
-                        .stream()
-                        .map(peer -> new Peer(new NodeAddress(peer.getNodeAddress().getHostName(),
-                                peer.getNodeAddress().getPort())))
-                        .collect(Collectors.toList()));
+            getPeersResponse.getReportedPeersList()
+                .stream()
+                .map(peer -> new Peer(new NodeAddress(peer.getNodeAddress().getHostName(),
+                    peer.getNodeAddress().getPort())))
+                .collect(Collectors.toList()));
         return new GetPeersResponse(getPeersResponse.getRequestNonce(), reportedPeers, messageVersion);
     }
 }

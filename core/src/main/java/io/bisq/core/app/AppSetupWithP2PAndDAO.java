@@ -41,11 +41,11 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  FilterManager filterManager,
                                  BsqBlockchainManager bsqBlockchainManager) {
         super(encryptionService,
-            keyRing,
-            p2PService,
-            tradeStatisticsManager,
-            accountAgeWitnessService,
-            filterManager);
+                keyRing,
+                p2PService,
+                tradeStatisticsManager,
+                accountAgeWitnessService,
+                filterManager);
         this.bsqBlockchainManager = bsqBlockchainManager;
     }
 

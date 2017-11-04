@@ -76,9 +76,9 @@ public class ProvidersRepository {
         }
 
         providerList = Arrays.asList(StringUtils.deleteWhitespace(providerAsString).split(","))
-            .stream()
-            .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
+                .collect(Collectors.toList());
 
         if (!providerList.isEmpty())
             baseUrl = providerList.get(new Random().nextInt(providerList.size()));
@@ -87,7 +87,7 @@ public class ProvidersRepository {
             log.info("selected baseUrl={}, providerList={}", baseUrl, providerList);
         else
             log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
-                bannedNodes, baseUrl, providerList);
+                    bannedNodes, baseUrl, providerList);
 
     }
 

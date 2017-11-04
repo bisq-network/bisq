@@ -57,10 +57,10 @@ public class BsqLiteNode extends BsqNode {
                        FeeService feeService,
                        SeedNodesRepository seedNodesRepository) {
         super(p2PService,
-            bsqParser,
-            bsqChainState,
-            feeService,
-            seedNodesRepository);
+                bsqParser,
+                bsqChainState,
+                feeService,
+                seedNodesRepository);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 
@@ -79,64 +79,64 @@ public class BsqLiteNode extends BsqNode {
         super.onP2PNetworkReady();
 
         requestManager = new RequestManager(p2PService.getNetworkNode(),
-            p2PService.getPeerManager(),
-            p2PService.getBroadcaster(),
-            seedNodesRepository.getSeedNodeAddresses(),
-            bsqChainState,
-            new RequestManager.Listener() {
-                @Override
-                public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
-                    List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
-                    log.info("received msg with {} items", bsqBlockList.size());
-                    if (bsqBlockList.size() > 0)
-                        log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
-                    // Be safe and reset all mutable data in case the provider would not have done it
-                    bsqBlockList.stream().forEach(BsqBlock::reset);
-                    bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
-                        genesisBlockHeight,
-                        genesisTxId,
-                        BsqLiteNode.this::onNewBsqBlock,
-                        () -> onParseBlockchainComplete(genesisBlockHeight, genesisTxId), throwable -> {
-                            if (throwable instanceof BlockNotConnectingException) {
-                                startReOrgFromLastSnapshot();
-                            } else {
-                                log.error(throwable.toString());
-                                throwable.printStackTrace();
-                            }
-                        });
-                }
-
-                @Override
-                public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
-                    BsqBlock bsqBlock = newBsqBlockBroadcastMessage.getBsqBlock();
-                    // Be safe and reset all mutable data in case the provider would not have done it
-                    bsqBlock.reset();
-                    log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
-                    if (!bsqChainState.containsBlock(bsqBlock)) {
-                        bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
-                            genesisBlockHeight,
-                            genesisTxId,
-                            () -> onNewBsqBlock(bsqBlock), throwable -> {
-                                if (throwable instanceof BlockNotConnectingException) {
-                                    startReOrgFromLastSnapshot();
-                                } else {
-                                    log.error(throwable.toString());
-                                    throwable.printStackTrace();
-                                }
-                            });
+                p2PService.getPeerManager(),
+                p2PService.getBroadcaster(),
+                seedNodesRepository.getSeedNodeAddresses(),
+                bsqChainState,
+                new RequestManager.Listener() {
+                    @Override
+                    public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
+                        List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
+                        log.info("received msg with {} items", bsqBlockList.size());
+                        if (bsqBlockList.size() > 0)
+                            log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+                        // Be safe and reset all mutable data in case the provider would not have done it
+                        bsqBlockList.stream().forEach(BsqBlock::reset);
+                        bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
+                                genesisBlockHeight,
+                                genesisTxId,
+                                BsqLiteNode.this::onNewBsqBlock,
+                                () -> onParseBlockchainComplete(genesisBlockHeight, genesisTxId), throwable -> {
+                                    if (throwable instanceof BlockNotConnectingException) {
+                                        startReOrgFromLastSnapshot();
+                                    } else {
+                                        log.error(throwable.toString());
+                                        throwable.printStackTrace();
+                                    }
+                                });
                     }
-                }
 
-                @Override
-                public void onNoSeedNodeAvailable() {
+                    @Override
+                    public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
+                        BsqBlock bsqBlock = newBsqBlockBroadcastMessage.getBsqBlock();
+                        // Be safe and reset all mutable data in case the provider would not have done it
+                        bsqBlock.reset();
+                        log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
+                        if (!bsqChainState.containsBlock(bsqBlock)) {
+                            bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
+                                    genesisBlockHeight,
+                                    genesisTxId,
+                                    () -> onNewBsqBlock(bsqBlock), throwable -> {
+                                        if (throwable instanceof BlockNotConnectingException) {
+                                            startReOrgFromLastSnapshot();
+                                        } else {
+                                            log.error(throwable.toString());
+                                            throwable.printStackTrace();
+                                        }
+                                    });
+                        }
+                    }
 
-                }
+                    @Override
+                    public void onNoSeedNodeAvailable() {
 
-                @Override
-                public void onFault(String errorMessage, @Nullable Connection connection) {
+                    }
 
-                }
-            });
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+
+                    }
+                });
 
         // delay a bit to not stress too much at startup
         UserThread.runAfter(this::startParseBlocks, 2);

@@ -174,93 +174,93 @@ public class BisqEnvironment extends StandardEnvironment {
     private List<String> bannedSeedNodes;
 
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
-        rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
-        myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-        socks5ProxyHttpAddress;
+            rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
+            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
+            socks5ProxyHttpAddress;
 
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
-            options)));
+                options)));
     }
 
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //CommonOptionKeys
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
-            (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
-            LOG_LEVEL_DEFAULT;
+                (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
+                LOG_LEVEL_DEFAULT;
 
         //AppOptionKeys
         userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
-            DEFAULT_USER_DATA_DIR;
+                (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
+                DEFAULT_USER_DATA_DIR;
 
         appName = commandLineProperties.containsProperty(AppOptionKeys.APP_NAME_KEY) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.APP_NAME_KEY) :
-            DEFAULT_APP_NAME;
+                (String) commandLineProperties.getProperty(AppOptionKeys.APP_NAME_KEY) :
+                DEFAULT_APP_NAME;
 
         appDataDir = commandLineProperties.containsProperty(AppOptionKeys.APP_DATA_DIR_KEY) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.APP_DATA_DIR_KEY) :
-            appDataDir(userDataDir, appName);
+                (String) commandLineProperties.getProperty(AppOptionKeys.APP_DATA_DIR_KEY) :
+                appDataDir(userDataDir, appName);
         ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
-            "";
+                (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
+                "";
         dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
-            "";
+                (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
+                "";
         maxMemory = commandLineProperties.containsProperty(AppOptionKeys.MAX_MEMORY) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
-            "";
+                (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
+                "";
         providers = commandLineProperties.containsProperty(AppOptionKeys.PROVIDERS) ?
-            (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
-            "";
+                (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
+                "";
 
         //NetworkOptionKeys
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
-            (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
-            "";
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
+                "";
 
         myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
-            (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
-            "";
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
+                "";
         banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
-            (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
-            "";
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
+                "";
         socks5ProxyBtcAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) ?
-            (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
-            "";
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
+                "";
         socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
-            (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
-            "";
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
+                "";
 
         //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_USER) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_USER) :
+                "";
         rpcPassword = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PASSWORD) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PASSWORD) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PASSWORD) :
+                "";
         rpcPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PORT) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PORT) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PORT) :
+                "";
         rpcBlockNotificationPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
+                "";
         dumpBlockchainData = commandLineProperties.containsProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) :
+                "";
         fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
-            (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
-            "";
+                (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
+                "";
 
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
-            (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
-            "";
+                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
+                "";
 
         useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
-            (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
-            "";
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
+                "";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -274,7 +274,7 @@ public class BisqEnvironment extends StandardEnvironment {
             bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : null;
 
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                getDefaultBaseCurrencyNetwork().name()).toUpperCase());
+                    getDefaultBaseCurrencyNetwork().name()).toUpperCase());
 
             btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);

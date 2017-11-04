@@ -123,29 +123,29 @@ public final class PayDepositRequest extends TradeMessage {
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.PayDepositRequest.Builder builder = PB.PayDepositRequest.newBuilder()
-            .setTradeId(tradeId)
-            .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-            .setTradeAmount(tradeAmount)
-            .setTradePrice(tradePrice)
-            .setTxFee(txFee)
-            .setTakerFee(takerFee)
-            .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
-            .addAllRawTransactionInputs(rawTransactionInputs.stream()
-                .map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-            .setChangeOutputValue(changeOutputValue)
-            .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
-            .setTakerPayoutAddressString(takerPayoutAddressString)
-            .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
-            .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
-            .setTakerAccountId(takerAccountId)
-            .setTakerFeeTxId(takerFeeTxId)
-            .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
-                .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
-            .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
-                .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
-            .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
-            .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
-            .setUid(uid);
+                .setTradeId(tradeId)
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setTradeAmount(tradeAmount)
+                .setTradePrice(tradePrice)
+                .setTxFee(txFee)
+                .setTakerFee(takerFee)
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
+                .addAllRawTransactionInputs(rawTransactionInputs.stream()
+                        .map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
+                .setChangeOutputValue(changeOutputValue)
+                .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
+                .setTakerPayoutAddressString(takerPayoutAddressString)
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
+                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
+                .setTakerAccountId(takerAccountId)
+                .setTakerFeeTxId(takerFeeTxId)
+                .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
+                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
+                .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
+                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setUid(uid);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
@@ -156,65 +156,65 @@ public final class PayDepositRequest extends TradeMessage {
 
     public static PayDepositRequest fromProto(PB.PayDepositRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
-            .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
-                rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
-            .collect(Collectors.toList());
+                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
+                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
+                .collect(Collectors.toList());
         List<NodeAddress> acceptedArbitratorNodeAddresses = proto.getAcceptedArbitratorNodeAddressesList().stream()
-            .map(NodeAddress::fromProto).collect(Collectors.toList());
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> acceptedMediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
-            .map(NodeAddress::fromProto).collect(Collectors.toList());
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
 
         return new PayDepositRequest(proto.getTradeId(),
-            NodeAddress.fromProto(proto.getSenderNodeAddress()),
-            proto.getTradeAmount(),
-            proto.getTradePrice(),
-            proto.getTxFee(),
-            proto.getTakerFee(),
-            proto.getIsCurrencyForTakerFeeBtc(),
-            rawTransactionInputs,
-            proto.getChangeOutputValue(),
-            ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()),
-            proto.getTakerMultiSigPubKey().toByteArray(),
-            proto.getTakerPayoutAddressString(),
-            PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
-            coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
-            proto.getTakerAccountId(),
-            proto.getTakerFeeTxId(),
-            acceptedArbitratorNodeAddresses,
-            acceptedMediatorNodeAddresses,
-            NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
-            NodeAddress.fromProto(proto.getMediatorNodeAddress()),
-            proto.getUid(),
-            messageVersion,
-            ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
-            proto.getCurrentDate());
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getTradeAmount(),
+                proto.getTradePrice(),
+                proto.getTxFee(),
+                proto.getTakerFee(),
+                proto.getIsCurrencyForTakerFeeBtc(),
+                rawTransactionInputs,
+                proto.getChangeOutputValue(),
+                ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()),
+                proto.getTakerMultiSigPubKey().toByteArray(),
+                proto.getTakerPayoutAddressString(),
+                PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                proto.getTakerAccountId(),
+                proto.getTakerFeeTxId(),
+                acceptedArbitratorNodeAddresses,
+                acceptedMediatorNodeAddresses,
+                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(proto.getMediatorNodeAddress()),
+                proto.getUid(),
+                messageVersion,
+                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
+                proto.getCurrentDate());
     }
 
     @Override
     public String toString() {
         return "PayDepositRequest{" +
-            "\n     senderNodeAddress=" + senderNodeAddress +
-            ",\n     tradeAmount=" + tradeAmount +
-            ",\n     tradePrice=" + tradePrice +
-            ",\n     txFee=" + txFee +
-            ",\n     takerFee=" + takerFee +
-            ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
-            ",\n     rawTransactionInputs=" + rawTransactionInputs +
-            ",\n     changeOutputValue=" + changeOutputValue +
-            ",\n     changeOutputAddress='" + changeOutputAddress + '\'' +
-            ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
-            ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-            ",\n     takerPubKeyRing=" + takerPubKeyRing +
-            ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
-            ",\n     takerAccountId='" + takerAccountId + '\'' +
-            ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
-            ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
-            ",\n     acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
-            ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
-            ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-            ",\n     uid='" + uid + '\'' +
-            ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
-            ",\n     currentDate=" + new Date(currentDate) +
-            "\n} " + super.toString();
+                "\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     tradeAmount=" + tradeAmount +
+                ",\n     tradePrice=" + tradePrice +
+                ",\n     txFee=" + txFee +
+                ",\n     takerFee=" + takerFee +
+                ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
+                ",\n     rawTransactionInputs=" + rawTransactionInputs +
+                ",\n     changeOutputValue=" + changeOutputValue +
+                ",\n     changeOutputAddress='" + changeOutputAddress + '\'' +
+                ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
+                ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
+                ",\n     takerPubKeyRing=" + takerPubKeyRing +
+                ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
+                ",\n     takerAccountId='" + takerAccountId + '\'' +
+                ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
+                ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
+                ",\n     acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
+                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
+                ",\n     currentDate=" + new Date(currentDate) +
+                "\n} " + super.toString();
     }
 }
