@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
 
     // TODO update release date
-    private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.OCTOBER, 23);
+    private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 2);
     private static final Date FIRST_PHASE = Utilities.getUTCDate(2017, GregorianCalendar.DECEMBER, 15);
     private static final Date SECOND_PHASE = Utilities.getUTCDate(2018, GregorianCalendar.JANUARY, 15);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
@@ -138,16 +138,19 @@ public class AccountAgeWitnessService {
         return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
     }
 
-    public AccountAgeWitness getWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    public AccountAgeWitness getNewWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+            pubKeyRing.getSignaturePubKeyBytes()));
+        return new AccountAgeWitness(hash, new Date().getTime());
+    }
+
+    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
             pubKeyRing.getSignaturePubKeyBytes()));
 
-        Optional<AccountAgeWitness> accountAgeWitnessOptional = getWitnessByHash(hash);
-        if (accountAgeWitnessOptional.isPresent())
-            return accountAgeWitnessOptional.get();
-        else
-            return new AccountAgeWitness(hash, new Date().getTime());
+        return getWitnessByHash(hash);
     }
 
     public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
@@ -240,7 +243,11 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
-        return getWitness(paymentAccountPayload, keyRing.getPubKeyRing());
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(paymentAccountPayload, keyRing.getPubKeyRing());
+        if (accountAgeWitnessOptional.isPresent())
+            return accountAgeWitnessOptional.get();
+        else
+            return getNewWitness(paymentAccountPayload, keyRing.getPubKeyRing());
     }
 
     public byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
@@ -285,7 +292,19 @@ public class AccountAgeWitnessService {
                                            byte[] nonce,
                                            byte[] signature,
                                            ErrorMessageHandler errorMessageHandler) {
-        AccountAgeWitness peersWitness = getWitness(peersPaymentAccountPayload, peersPubKeyRing);
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(peersPaymentAccountPayload, peersPubKeyRing);
+        // If we don't find a stored witness data we create a new dummy object which makes is easier to reuse the
+        // below validation methods. This peersWitness object is not used beside for validation. Some of the
+        // validation calls are pointless in the case we create a new Witness ourselves but the verifyPeersTradeLimit
+        // need still be called, so we leave also the rest for sake of simplicity.
+        AccountAgeWitness peersWitness;
+        if (accountAgeWitnessOptional.isPresent()) {
+            peersWitness = accountAgeWitnessOptional.get();
+        } else {
+            peersWitness = getNewWitness(peersPaymentAccountPayload, peersPubKeyRing);
+            log.warn("We did not find the peers witness data. That is expected with peers using an older version.");
+        }
+
         // Check if date in witness is not older than the release date of that feature (was added in v0.6)
         // TODO set date before releasing
         if (!isDateAfterReleaseDate(peersWitness.getDate(), RELEASE, errorMessageHandler))

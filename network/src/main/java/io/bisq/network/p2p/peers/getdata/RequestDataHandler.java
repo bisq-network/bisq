@@ -105,14 +105,10 @@ class RequestDataHandler implements MessageListener {
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
-            Set<byte[]> excludedPnpKeys = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
-                    .map(e -> e.getKey().bytes)
-                    .collect(Collectors.toSet());
-
             if (isPreliminaryDataRequest)
-                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys, excludedPnpKeys);
+                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
             else
-                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys, excludedPnpKeys);
+                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

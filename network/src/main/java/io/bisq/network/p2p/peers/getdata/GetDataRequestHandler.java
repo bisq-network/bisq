@@ -83,7 +83,7 @@ public class GetDataRequestHandler {
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        
+
         for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
@@ -113,9 +113,9 @@ public class GetDataRequestHandler {
                 doAdd = true;
             }
             if (doAdd) {
-                // We have TradeStatistic data of both traders but we only send 1 item, 
-                // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores 
-                // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not, 
+                // We have TradeStatistic data of both traders but we only send 1 item,
+                // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores
+                // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not,
                 // as we ignore the pubKey and data there in the hashCode method.
                 boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
                 if (notContained)
@@ -123,14 +123,13 @@ public class GetDataRequestHandler {
             }
         }
 
-        Set<P2PDataStorage.ByteArray> excludedPnpKeysAsByteArray =  P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedPnpKeys());
-        Set<PersistableNetworkPayload> filteredPnpSet = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
-                .filter(e -> !excludedPnpKeysAsByteArray.contains(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
+
+        Set<PersistableNetworkPayload> pnpSet = dataStorage.getPersistableNetworkPayloadCollection().getMap().values()
+            .stream()
+            .collect(Collectors.toSet());
 
         GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet,
-                filteredPnpSet,
+                pnpSet,
                 getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
 
