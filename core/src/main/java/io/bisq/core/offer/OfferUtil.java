@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 /**
  * This class holds utility methods for the creation of an Offer.
  * Most of these are extracted here because they are used both in the GUI and in the API.
- *
+ * <p>
  * Long-term there could be a GUI-agnostic OfferService which provides these and other functionalities to both the
  * GUI and the API.
  */
@@ -45,7 +45,7 @@ public class OfferUtil {
     public static boolean isBuyOffer(OfferPayload.Direction direction) {
         return direction == OfferPayload.Direction.BUY;
     }
-    
+
     /**
      * Returns the makerFee as Coin, this can be priced in BTC or BSQ.
      *
@@ -108,7 +108,7 @@ public class OfferUtil {
      * @return
      */
     public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() || 
+        return preferences.getPayFeeInBtc() ||
                 !isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
     }
 

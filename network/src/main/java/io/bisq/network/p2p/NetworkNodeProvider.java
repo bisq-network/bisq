@@ -33,13 +33,13 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
     private final NetworkNode networkNode;
 
     @Inject
-    public NetworkNodeProvider( NetworkProtoResolver networkProtoResolver,
-                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
-                                @Named(NetworkOptionKeys.PORT_KEY) int port,
-                                @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
+    public NetworkNodeProvider(NetworkProtoResolver networkProtoResolver,
+                               @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
+                               @Named(NetworkOptionKeys.PORT_KEY) int port,
+                               @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
         networkNode = useLocalhostForP2P ?
-            new LocalhostNetworkNode(port, networkProtoResolver) :
-            new TorNetworkNode(port, torDir, networkProtoResolver);
+                new LocalhostNetworkNode(port, networkProtoResolver) :
+                new TorNetworkNode(port, torDir, networkProtoResolver);
     }
 
     @Override

@@ -107,13 +107,13 @@ public final class Filter implements ProtectedStoragePayload {
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
         this(bannedOfferIds,
-            bannedNodeAddress,
-            bannedPaymentAccounts,
-            bannedCurrencies,
-            bannedPaymentMethods,
-            arbitrators,
-            seedNodes,
-            priceRelayNodes);
+                bannedNodeAddress,
+                bannedPaymentAccounts,
+                bannedCurrencies,
+                bannedPaymentMethods,
+                arbitrators,
+                seedNodes,
+                priceRelayNodes);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -126,14 +126,14 @@ public final class Filter implements ProtectedStoragePayload {
         checkNotNull(signatureAsBase64, "signatureAsBase64 must nto be null");
         checkNotNull(ownerPubKeyBytes, "ownerPubKeyBytes must nto be null");
         List<PB.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
-            .map(PaymentAccountFilter::toProtoMessage)
-            .collect(Collectors.toList());
+                .map(PaymentAccountFilter::toProtoMessage)
+                .collect(Collectors.toList());
         final PB.Filter.Builder builder = PB.Filter.newBuilder()
-            .addAllBannedOfferIds(bannedOfferIds)
-            .addAllBannedNodeAddress(bannedNodeAddress)
-            .addAllBannedPaymentAccounts(paymentAccountFilterList)
-            .setSignatureAsBase64(signatureAsBase64)
-            .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
+                .addAllBannedOfferIds(bannedOfferIds)
+                .addAllBannedNodeAddress(bannedNodeAddress)
+                .addAllBannedPaymentAccounts(paymentAccountFilterList)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
 
         Optional.ofNullable(bannedCurrencies).ifPresent(builder::addAllBannedCurrencies);
         Optional.ofNullable(bannedPaymentMethods).ifPresent(builder::addAllBannedPaymentMethods);
@@ -147,18 +147,18 @@ public final class Filter implements ProtectedStoragePayload {
 
     public static Filter fromProto(PB.Filter proto) {
         return new Filter(proto.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-            proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
-            proto.getBannedPaymentAccountsList().stream()
-                .map(PaymentAccountFilter::fromProto)
-                .collect(Collectors.toList()),
-            CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : proto.getBannedCurrenciesList().stream().collect(Collectors.toList()),
-            CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : proto.getBannedPaymentMethodsList().stream().collect(Collectors.toList()),
-            CollectionUtils.isEmpty(proto.getArbitratorsList()) ? null : proto.getArbitratorsList().stream().collect(Collectors.toList()),
-            CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : proto.getSeedNodesList().stream().collect(Collectors.toList()),
-            CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : proto.getPriceRelayNodesList().stream().collect(Collectors.toList()),
-            proto.getSignatureAsBase64(),
-            proto.getOwnerPubKeyBytes().toByteArray(),
-            CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
+                proto.getBannedPaymentAccountsList().stream()
+                        .map(PaymentAccountFilter::fromProto)
+                        .collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : proto.getBannedCurrenciesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : proto.getBannedPaymentMethodsList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getArbitratorsList()) ? null : proto.getArbitratorsList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : proto.getSeedNodesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : proto.getPriceRelayNodesList().stream().collect(Collectors.toList()),
+                proto.getSignatureAsBase64(),
+                proto.getOwnerPubKeyBytes().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
 

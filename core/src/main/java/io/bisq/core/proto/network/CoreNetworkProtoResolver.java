@@ -117,7 +117,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetBsqBlocksResponse.fromProto(proto.getGetBsqBlocksResponse(), messageVersion);
                 case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
                     return NewBsqBlockBroadcastMessage.fromProto(proto.getNewBsqBlockBroadcastMessage(), messageVersion);
-               
+
                 case ADD_PERSISTABLE_NETWORK_PAYLOAD_MESSAGE:
                     return AddPersistableNetworkPayloadMessage.fromProto(proto.getAddPersistableNetworkPayloadMessage(), this, messageVersion);
                 default:

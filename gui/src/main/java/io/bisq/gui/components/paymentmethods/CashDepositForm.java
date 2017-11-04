@@ -210,8 +210,8 @@ public class CashDepositForm extends PaymentMethodForm {
     private boolean useHolderID;
     private ComboBox<TradeCurrency> currencyComboBox;
     private final EmailValidator emailValidator;
-    
-  
+
+
     public CashDepositForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
                            GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);

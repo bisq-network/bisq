@@ -55,7 +55,7 @@ public class StatisticsMain extends BisqExecutable {
 
         Utilities.removeCryptographyRestrictions();
     }
-    
+
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("Statistics")

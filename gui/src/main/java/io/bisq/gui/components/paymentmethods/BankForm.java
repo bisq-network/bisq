@@ -203,7 +203,7 @@ abstract class BankForm extends PaymentMethodForm {
     private final Runnable closeHandler;
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,InputValidator inputValidator,
+    BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
              GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.closeHandler = closeHandler;

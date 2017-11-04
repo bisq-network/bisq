@@ -30,7 +30,7 @@ public class CountryUtil {
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-            "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
+                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
 
@@ -59,7 +59,7 @@ public class CountryUtil {
     public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
-            "SE", "IS", "NO", "LI", "CH"};
+                "SE", "IS", "NO", "LI", "CH"};
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
         return list;
@@ -129,7 +129,7 @@ public class CountryUtil {
 
     public static List<Country> getAllCountriesForRegion(Region selectedRegion) {
         return Lists.newArrayList(Collections2.filter(getAllCountries(), country ->
-            selectedRegion != null && country != null && selectedRegion.equals(country.region)));
+                selectedRegion != null && country != null && selectedRegion.equals(country.region)));
     }
 
     public static List<Country> getAllCountries() {
@@ -157,7 +157,7 @@ public class CountryUtil {
 
         // Filter duplicate locale entries
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getCountry().isEmpty())
-            .collect(Collectors.toSet());
+                .collect(Collectors.toSet());
 
         List<Locale> allCountryLocales = new ArrayList<>();
         allCountryLocales.addAll(allLocalesAsSet);

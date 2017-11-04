@@ -81,18 +81,18 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     @Override
     public void takeAvailableOffer() {
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-            () -> handleTaskRunnerSuccess("takeAvailableOffer"),
-            this::handleTaskRunnerFault);
+                () -> handleTaskRunnerSuccess("takeAvailableOffer"),
+                this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-            TakerVerifyMakerAccount.class,
-            TakerVerifyMakerFeePayment.class,
-            TakerSelectArbitrator.class,
-            TakerSelectMediator.class,
-            CreateTakerFeeTx.class,
-            TakerPublishTakerFeeTx.class,
-            SellerAsTakerCreatesDepositTxInputs.class,
-            TakerSendPayDepositRequest.class
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                TakerSelectArbitrator.class,
+                TakerSelectMediator.class,
+                CreateTakerFeeTx.class,
+                TakerPublishTakerFeeTx.class,
+                SellerAsTakerCreatesDepositTxInputs.class,
+                TakerSendPayDepositRequest.class
         );
 
         //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
@@ -111,21 +111,21 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-            () -> {
-                stopTimeout();
-                handleTaskRunnerSuccess("PublishDepositTxRequest");
-            },
-            this::handleTaskRunnerFault);
+                () -> {
+                    stopTimeout();
+                    handleTaskRunnerSuccess("PublishDepositTxRequest");
+                },
+                this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-            TakerProcessPublishDepositTxRequest.class,
-            CheckIfPeerIsBanned.class,
-            TakerVerifyMakerAccount.class,
-            VerifyPeersAccountAgeWitness.class,
-            TakerVerifyMakerFeePayment.class,
-            TakerVerifyAndSignContract.class,
-            SellerAsTakerSignAndPublishDepositTx.class,
-            TakerSendDepositTxPublishedMessage.class
+                TakerProcessPublishDepositTxRequest.class,
+                CheckIfPeerIsBanned.class,
+                TakerVerifyMakerAccount.class,
+                VerifyPeersAccountAgeWitness.class,
+                TakerVerifyMakerFeePayment.class,
+                TakerVerifyAndSignContract.class,
+                SellerAsTakerSignAndPublishDepositTx.class,
+                TakerSendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
@@ -140,13 +140,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-            () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
-            this::handleTaskRunnerFault);
+                () -> handleTaskRunnerSuccess("CounterCurrencyTransferStartedMessage"),
+                this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-            SellerProcessCounterCurrencyTransferStartedMessage.class,
-            TakerVerifyMakerAccount.class,
-            TakerVerifyMakerFeePayment.class
+                SellerProcessCounterCurrencyTransferStartedMessage.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class
         );
         taskRunner.run();
     }

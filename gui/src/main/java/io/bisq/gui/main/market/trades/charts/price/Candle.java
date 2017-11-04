@@ -100,9 +100,9 @@ public class Candle extends Group {
             style = "empty";
 
         highLowLine.getStyleClass().setAll("candlestick-line", seriesStyleClass, dataStyleClass,
-                style);
+            style);
 
         bar.getStyleClass().setAll("candlestick-bar", seriesStyleClass, dataStyleClass,
-                style);
+            style);
     }
 }

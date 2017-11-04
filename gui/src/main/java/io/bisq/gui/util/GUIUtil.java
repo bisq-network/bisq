@@ -98,9 +98,9 @@ public class GUIUtil {
         //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
-                .onClose(runnable::run)
-                .useIUnderstandButton()
-                .show();
+                    .onClose(runnable::run)
+                    .useIUnderstandButton()
+                    .show();
             DontShowAgainLookup.dontShowAgain(key, true);
         } else {
             runnable.run();
@@ -168,15 +168,15 @@ public class GUIUtil {
         if (file != null) {
             try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
                 CSVWriter<T> headerWriter = new CSVWriterBuilder<T>(outputStreamWriter)
-                    .strategy(CSVStrategy.UK_DEFAULT)
-                    .entryConverter(headerConverter)
-                    .build();
+                        .strategy(CSVStrategy.UK_DEFAULT)
+                        .entryConverter(headerConverter)
+                        .build();
                 headerWriter.write(emptyItem);
 
                 CSVWriter<T> contentWriter = new CSVWriterBuilder<T>(outputStreamWriter)
-                    .strategy(CSVStrategy.UK_DEFAULT)
-                    .entryConverter(contentConverter)
-                    .build();
+                        .strategy(CSVStrategy.UK_DEFAULT)
+                        .entryConverter(contentConverter)
+                        .build();
                 contentWriter.writeAll(list);
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
@@ -260,13 +260,13 @@ public class GUIUtil {
         });
 
         List<CurrencyListItem> list = tradeCurrencySet.stream()
-            .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
-            .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-            .collect(Collectors.toList());
+                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
         List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
-            .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
-            .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-            .collect(Collectors.toList());
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
 
         if (preferences.isSortMarketCurrenciesNumerically()) {
             list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
@@ -314,14 +314,14 @@ public class GUIUtil {
         String key = "warnOpenURLWhenTorEnabled";
         if (DontShowAgainLookup.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
-                .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
-                .onAction(() -> {
-                    DontShowAgainLookup.dontShowAgain(key, true);
-                    doOpenWebPage(target);
-                })
-                .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
-                .onClose(() -> Utilities.copyToClipboard(target))
-                .show();
+                    .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
+                    .onAction(() -> {
+                        DontShowAgainLookup.dontShowAgain(key, true);
+                        doOpenWebPage(target);
+                    })
+                    .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
+                    .onClose(() -> Utilities.copyToClipboard(target))
+                    .show();
         } else {
             doOpenWebPage(target);
         }
@@ -349,7 +349,7 @@ public class GUIUtil {
 
     public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
         return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
-            " " + Res.get("guiUtil.ofTradeAmount") + ")";
+                " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
     @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
@@ -379,10 +379,10 @@ public class GUIUtil {
         String key = "confirmClearXchangeRequirements";
         final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
         new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
-            .width(900)
-            .closeButtonText(Res.get("shared.iConfirm"))
-            .dontShowAgainId(key)
-            .show();
+                .width(900)
+                .closeButtonText(Res.get("shared.iConfirm"))
+                .dontShowAgainId(key)
+                .show();
     }
 
     public static void fillAvailableHeight(Pane container, Region component, DoubleProperty initialOccupiedHeight) {
@@ -403,8 +403,8 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-            BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
-                address), amount, label, null) :
-            "";
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
+                        address), amount, label, null) :
+                "";
     }
 }
