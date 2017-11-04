@@ -17,6 +17,7 @@
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
@@ -28,8 +29,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        -->
 
-        <!--
         <dependency>
             <groupId>com.github.mrosseel</groupId>
             <artifactId>netlayer</artifactId>
@@ -42,7 +43,6 @@
             </exclusions>
 
         </dependency>
-        -->
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
