@@ -222,7 +222,7 @@ public class TorNetworkNode extends NetworkNode {
             }
             UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
 
-            hiddenServiceSocket = new HiddenServiceSocket(localPort, "hiddenservicedir_changeme", servicePort);
+            hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
             hiddenServiceSocket.addReadyListener(socket -> {
                 Socket con;
                 try {
