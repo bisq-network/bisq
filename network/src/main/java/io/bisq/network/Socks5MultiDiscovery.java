@@ -18,6 +18,7 @@
 package io.bisq.network;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  * This class implements various types of discovery over Socks5,
  * which can be enabled/disabled via constructor flag.
  */
+@Slf4j
 public class Socks5MultiDiscovery implements PeerDiscovery {
 
     public static final int SOCKS5_DISCOVER_ADDR = 0x0001;
@@ -82,5 +84,4 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
     public void shutdown() {
         //TODO should we add a DnsLookupTor.shutdown() ?
     }
-
 }

@@ -31,7 +31,7 @@ import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.WACoinsParams;
 import io.bisq.gui.util.validation.params.TerracoinParams;
-import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
+import io.bisq.gui.util.validation.params.btc.BtcMainNetParamsForValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Address;
@@ -94,7 +94,9 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
-                                Address.fromBase58(BtcMainNetParams.get(), input);
+                                // We cannot use MainNetParams because that would be one of the other base currencies,
+                                // so we cloned the MainNetParams to BtcMainNetParamsForValidation
+                                Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
                                 return new ValidationResult(true);
                         }
                         return new ValidationResult(true);
@@ -349,7 +351,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                     return new ValidationResult(true);
-                case "INXT": 
+                case "INXT":
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else

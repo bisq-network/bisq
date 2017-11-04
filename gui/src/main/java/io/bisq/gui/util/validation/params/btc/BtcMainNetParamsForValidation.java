@@ -28,6 +28,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Parameters for the main production network on which people trade goods and services.
+ *
+ * We cannot use MainNetParams because that would be one of the other base currencies,
+ * so we cloned the MainNetParams to BtcMainNetParamsForValidation
+ *
  */
 public class BtcMainNetParamsForValidation extends AbstractBitcoinNetParams {
     public static final int MAINNET_MAJORITY_WINDOW = 1000;
