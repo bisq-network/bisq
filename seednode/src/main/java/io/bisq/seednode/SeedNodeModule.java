@@ -40,6 +40,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import org.springframework.core.env.Environment;
 
@@ -66,6 +67,7 @@ class SeedNodeModule extends AppModule {
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
         bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 

@@ -487,8 +487,9 @@ public class FormBuilder {
     // RadioButton
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static RadioButton addRadioButton(GridPane gridPane, int rowIndex, String title) {
+    public static RadioButton addRadioButton(GridPane gridPane, int rowIndex, ToggleGroup toggleGroup, String title) {
         RadioButton radioButton = new RadioButton(title);
+        radioButton.setToggleGroup(toggleGroup);
         GridPane.setRowIndex(radioButton, rowIndex);
         GridPane.setColumnIndex(radioButton, 1);
         gridPane.getChildren().add(radioButton);

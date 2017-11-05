@@ -43,6 +43,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
@@ -71,6 +72,7 @@ class BisqAppModule extends AppModule {
         bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
         bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 

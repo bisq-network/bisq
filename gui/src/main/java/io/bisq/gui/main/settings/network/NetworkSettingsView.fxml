@@ -48,7 +48,7 @@
     <Label fx:id="reSyncSPVChainLabel" GridPane.rowIndex="3"/>
     <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="4" GridPane.rowSpan="3">
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="4" GridPane.rowSpan="4">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -114,6 +114,8 @@
     <Label fx:id="totalTrafficLabel" GridPane.rowIndex="6"/>
     <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
+
+    <Button fx:id="openTorSettingsButton" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>

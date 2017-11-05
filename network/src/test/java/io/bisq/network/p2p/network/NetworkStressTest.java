@@ -418,7 +418,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onRequestCustomBridges(Runnable resultHandler) {
+        public void onRequestCustomBridges() {
 
         }
     }
@@ -809,7 +809,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onRequestCustomBridges(Runnable resultHandler) {
+        public void onRequestCustomBridges() {
 
         }
     }

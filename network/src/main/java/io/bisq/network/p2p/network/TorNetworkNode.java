@@ -11,7 +11,6 @@ import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Utilities;
-import io.bisq.network.BridgeProvider;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;
 import javafx.beans.property.BooleanProperty;
@@ -28,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -41,10 +41,10 @@ public class TorNetworkNode extends NetworkNode {
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
-    private static final int WAIT_BEFORE_RESTART = 2000;
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
+    private final BridgeAddressProvider bridgeAddressProvider;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
@@ -55,9 +55,10 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver) {
+    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, BridgeAddressProvider bridgeAddressProvider) {
         super(servicePort, networkProtoResolver);
         this.torDir = torDir;
+        this.bridgeAddressProvider = bridgeAddressProvider;
     }
 
 
@@ -75,7 +76,7 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorAndHiddenService(torDir, Utils.findFreeSystemPort(), servicePort, BridgeProvider.getBridges());
+        createTorAndHiddenService(torDir, Utils.findFreeSystemPort(), servicePort, bridgeAddressProvider.getBridgeAddresses());
     }
 
     @Override
@@ -87,8 +88,10 @@ public class TorNetworkNode extends NetworkNode {
     // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
         try {
-            return Tor.getDefault() != null ? Tor.getDefault().getProxy() : null;
+            final Tor tor = Tor.getDefault();
+            return tor != null ? tor.getProxy() : null;
         } catch (TorCtlException e) {
+            log.error("Error at getSocksProxy: " + e.toString());
             e.printStackTrace();
         }
         return null;
@@ -130,8 +133,9 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown torNetworkNode");
                 try {
-                    if (Tor.getDefault() != null)
-                        Tor.getDefault().shutdown();
+                    final Tor tor = Tor.getDefault();
+                    if (tor != null)
+                        tor.shutdown();
                     log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
                 } catch (Throwable e) {
                     log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
@@ -168,24 +172,14 @@ public class TorNetworkNode extends NetworkNode {
 
     private void restartTor(String errorMessage) {
         Log.traceCall();
-        log.warn("Restarting Tor");
+        log.info("Restarting Tor");
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
-            // If we failed we try with custom bridges
-            if (restartCounter == 1) {
-                setupListeners.stream().forEach(e -> e.onRequestCustomBridges(() -> {
-                    log.warn("Tor restart after custom bridges.");
-                    start(null);
-                }));
-                log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
-                shutDown(null);
-            } else {
-                shutDown(() -> UserThread.runAfter(() -> {
-                    log.warn("We restart tor using custom bridges.");
-                    log.warn("Bridges: " + BridgeProvider.getBridges());
-                    start(null);
-                }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
-            }
+            UserThread.execute(() -> {
+                setupListeners.stream().forEach(SetupListener::onRequestCustomBridges);
+            });
+            log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
+            shutDown(null);
         } else {
             String msg = "We tried to restart Tor " + restartCounter +
                     " times, but it continued to fail with error message:\n" +
@@ -200,54 +194,55 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(final File torDir, int localPort, int servicePort, List<String> bridgeLines) {
+    private void createTorAndHiddenService(File torDir, int localPort, int servicePort, @Nullable List<String> bridgeEntries) {
         Log.traceCall();
-        log.debug("Using bridges: {}", bridgeLines.stream().collect(Collectors.joining(",")));
-        /*
-        if(restartCounter == 0) {
-            log.error("Doing fake restart to get to the bridges");
-            restartTor("error message here...");
-            return;
-        }
-         */
-        ListenableFuture<Object> future = (ListenableFuture<Object>) executorService.submit(() -> {
-            try {
-                Tor.setDefault(new NativeTor(torDir, bridgeLines));
-            } catch (TorCtlException e) {
-                log.error("Tor node creation failed", e);
-                restartTor(e.getMessage());
-                return;
-            }
-            UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
+        if (bridgeEntries != null)
+            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
-            hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
-            hiddenServiceSocket.addReadyListener(socket -> {
-                Socket con;
-                try {
-                    log.info("Hidden Service " + socket + " is ready");
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                Log.traceCall("hiddenService created");
-                                nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
-                                startServer(socket);
-                                UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onHiddenServicePublished));
-                            } catch (final Exception e1) {
-                                e1.printStackTrace();
+        ListenableFuture<Void> future = executorService.submit(() -> {
+            try {
+                long ts1 = new Date().getTime();
+                log.info("Starting tor");
+                Tor.setDefault(new NativeTor(torDir, bridgeEntries));
+                log.info("Tor started after {} ms. Start publishing hidden service.", (new Date().getTime() - ts1));
+
+                UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
+
+                long ts2 = new Date().getTime();
+                hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
+                hiddenServiceSocket.addReadyListener(socket -> {
+                    try {
+                        log.info("Tor hidden service published after {} ms. Socked={}", (new Date().getTime() - ts2), socket);
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Log.traceCall("hiddenService created");
+                                    nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
+                                    startServer(socket);
+                                    UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onHiddenServicePublished));
+                                } catch (final Exception e1) {
+                                    log.error(e1.toString());
+                                    e1.printStackTrace();
+                                }
                             }
-                        }
-                    }.start();
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
-            });
-            log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
+                        }.start();
+                    } catch (final Exception e) {
+                        log.error(e.toString());
+                        e.printStackTrace();
+                    }
+                    return null;
+                });
+                log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
+            } catch (TorCtlException e) {
+                log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
+                restartTor(e.getMessage());
+            }
+
+            return null;
         });
-        Futures.addCallback(future, new FutureCallback<Object>() {
-            public void onSuccess(Object hiddenServiceDescriptor) {
-                log.debug("HiddenServiceDescriptor created. Wait for publishing.");
+        Futures.addCallback(future, new FutureCallback<Void>() {
+            public void onSuccess(Void ignore) {
             }
 
             public void onFailure(@NotNull Throwable throwable) {

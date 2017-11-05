@@ -54,7 +54,7 @@ public class LocalhostNetworkNodeTest {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
             }
         });
 
@@ -81,7 +81,7 @@ public class LocalhostNetworkNodeTest {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
             }
         });
         startupLatch.await();

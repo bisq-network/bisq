@@ -29,6 +29,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Statistic;
@@ -75,7 +76,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     Label reSyncSPVChainLabel;
     @FXML
-    Button reSyncSPVChainButton;
+    Button reSyncSPVChainButton, openTorSettingsButton;
 
     private final Preferences preferences;
     private final Clock clock;
@@ -121,6 +122,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
         receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
         peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn"));
+        openTorSettingsButton.setText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
@@ -220,6 +222,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         };
         btcNodes.focusedProperty().addListener(btcNodesFocusListener);
+
+        openTorSettingsButton.setOnAction(e->new TorNetworkSettingsWindow(preferences).show());
     }
 
     @Override
@@ -240,6 +244,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
         btcNodes.focusedProperty().removeListener(btcNodesFocusListener);
+
+        openTorSettingsButton.setOnAction(null);
     }
 
     private void updateP2PTable() {

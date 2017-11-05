@@ -119,7 +119,7 @@ public class PeerManagerTest {
                     }
 
                     @Override
-                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    public void onRequestCustomBridges() {
 
                     }
                 });
@@ -175,7 +175,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
 
             }
         });
@@ -217,7 +217,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
 
             }
         });
@@ -239,7 +239,7 @@ public class PeerManagerTest {
         Thread.sleep(1000);
         DummySeedNode seedNode2 = getAndStartSeedNode(8002);
 
-        // authentication: 
+        // authentication:
         // node2 -> node1 RequestAuthenticationMessage
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
@@ -275,7 +275,7 @@ public class PeerManagerTest {
         // wait until Peers msg finished
         Thread.sleep(sleepTime);
 
-        // authentication: 
+        // authentication:
         // authentication from seedNode3 to seedNode1, then from seedNode1 to seedNode3
         // authentication from seedNode3 to seedNode2, then from seedNode2 to seedNode3
         SeedNode seedNode3 = getAndStartSeedNode(8003);
@@ -322,7 +322,7 @@ public class PeerManagerTest {
         SeedNode seedNode1 = getAndStartSeedNode(8001);
         SeedNode seedNode2 = getAndStartSeedNode(8002);
 
-        // authentication: 
+        // authentication:
         // node2 -> node1 RequestAuthenticationMessage
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
@@ -456,7 +456,7 @@ public class PeerManagerTest {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
 
             }
         });

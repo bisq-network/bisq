@@ -30,6 +30,6 @@ public abstract class BootstrapListener implements P2PServiceListener {
     abstract public void onBootstrapComplete();
 
     @Override
-    public void onRequestCustomBridges(Runnable resultHandler) {
+    public void onRequestCustomBridges() {
     }
 }

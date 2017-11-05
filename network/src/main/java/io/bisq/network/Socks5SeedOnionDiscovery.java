@@ -66,7 +66,7 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
      * returns .onion nodes available on mainnet
      */
     private String[] mainNetSeeds() {
-        // this list copied from bitcoin-core on 2017-11-03
+        // List copied from bitcoin-core on 2017-11-03
         // https://raw.githubusercontent.com/bitcoin/bitcoin/master/contrib/seeds/nodes_main.txt
 
         return new String[]{

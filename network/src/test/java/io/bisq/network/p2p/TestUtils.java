@@ -82,7 +82,7 @@ public class TestUtils {
                     }
 
                     @Override
-                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    public void onRequestCustomBridges() {
 
                     }
                 });

@@ -8,5 +8,5 @@ public interface SetupListener {
     @SuppressWarnings("unused")
     void onSetupFailed(Throwable throwable);
 
-    void onRequestCustomBridges(Runnable resultHandler);
+    void onRequestCustomBridges();
 }

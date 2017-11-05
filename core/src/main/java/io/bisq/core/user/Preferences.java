@@ -10,7 +10,7 @@ import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.network.BridgeProvider;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -33,7 +33,7 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public final class Preferences implements PersistedDataHost {
+public final class Preferences implements PersistedDataHost, BridgeAddressProvider {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
@@ -176,9 +176,6 @@ public final class Preferences implements PersistedDataHost {
             setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
-            if (prefPayload.getBridgeAddresses() != null)
-                setBridgeAddresses(prefPayload.getBridgeAddresses());
-
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
@@ -479,7 +476,6 @@ public final class Preferences implements PersistedDataHost {
 
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
-        BridgeProvider.setBridges(bridgeAddresses);
         // We call that before shutdown so we dont want a delay here
         storage.queueUpForSave(prefPayload, 1);
     }
@@ -579,6 +575,12 @@ public final class Preferences implements PersistedDataHost {
         return prefPayload.isPayFeeInBtc();
     }
 
+    @Override
+    @Nullable
+    public List<String> getBridgeAddresses() {
+        return prefPayload.getBridgeAddresses();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -662,5 +664,7 @@ public final class Preferences implements PersistedDataHost {
         void setPeerTagMap(Map<String, String> peerTagMap);
 
         void setBridgeAddresses(List<String> bridgeAddresses);
+
+        List<String> getBridgeAddresses();
     }
 }

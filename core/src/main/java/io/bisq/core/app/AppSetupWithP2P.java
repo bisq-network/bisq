@@ -169,7 +169,7 @@ public class AppSetupWithP2P extends AppSetup {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
+            public void onRequestCustomBridges() {
 
             }
         });

@@ -55,7 +55,6 @@ import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -72,10 +71,7 @@ import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.AddBridgeEntriesWindow;
-import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
-import io.bisq.gui.main.overlays.windows.TacWindow;
-import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
@@ -117,6 +113,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MainViewModel implements ViewModel {
+    private static final long STARTUP_TIMEOUT_MINUTES = 4;
+
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
@@ -143,7 +141,6 @@ public class MainViewModel implements ViewModel {
     private final FailedTradesManager failedTradesManager;
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final ProvidersRepository providersRepository;
     private final BSFormatter formatter;
 
     // BTC network
@@ -198,7 +195,7 @@ public class MainViewModel implements ViewModel {
     private MonadicBinding<String> marketPriceBinding;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
-    private Popup startupTimeoutPopup;
+    private TorNetworkSettingsWindow torNetworkSettingsWindow;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
@@ -221,7 +218,7 @@ public class MainViewModel implements ViewModel {
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         ProvidersRepository providersRepository, BSFormatter formatter) {
+                         BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -249,7 +246,6 @@ public class MainViewModel implements ViewModel {
         this.failedTradesManager = failedTradesManager;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.providersRepository = providersRepository;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
@@ -306,7 +302,7 @@ public class MainViewModel implements ViewModel {
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
-                showStartupTimeoutPopup();
+                showAddBridgeEntriesWindow();
         };
 
         Timer startupTimeout = UserThread.runAfter(() -> {
@@ -314,8 +310,8 @@ public class MainViewModel implements ViewModel {
             if (walletsManager.areWalletsEncrypted())
                 walletInitialized.addListener(walletInitializedListener);
             else
-                showStartupTimeoutPopup();
-        }, 4, TimeUnit.MINUTES);
+                showAddBridgeEntriesWindow();
+        }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
 
@@ -337,27 +333,16 @@ public class MainViewModel implements ViewModel {
                 startupTimeout.stop();
                 walletInitialized.removeListener(walletInitializedListener);
                 onBasicServicesInitialized();
-                if (startupTimeoutPopup != null)
-                    startupTimeoutPopup.hide();
+                if (torNetworkSettingsWindow != null)
+                    torNetworkSettingsWindow.hide();
             }
         });
     }
 
-    private void showStartupTimeoutPopup() {
+    private void showAddBridgeEntriesWindow() {
         MainView.blur();
-        String details;
-        if (!walletInitialized.get()) {
-            details = Res.get("popup.warning.cannotConnectAtStartup", Res.getBaseCurrencyName().toLowerCase());
-        } else if (!p2pNetWorkReady.get()) {
-            details = Res.get("popup.warning.cannotConnectAtStartup", Res.get("shared.P2P"));
-        } else {
-            log.error("Startup timeout with unknown problem.");
-            details = Res.get("popup.warning.unknownProblemAtStartup");
-        }
-        startupTimeoutPopup = new Popup<>();
-        startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
-                .useShutDownButton()
-                .show();
+        torNetworkSettingsWindow = new TorNetworkSettingsWindow(preferences).useShutDownButton();
+        torNetworkSettingsWindow.show();
     }
 
 
@@ -489,10 +474,8 @@ public class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-                AddBridgeEntriesWindow addBridgeEntriesWindow = new AddBridgeEntriesWindow(preferences)
-                        .onAction(resultHandler::run);
-                UserThread.execute(addBridgeEntriesWindow::show);
+            public void onRequestCustomBridges() {
+                showAddBridgeEntriesWindow();
             }
         });
 

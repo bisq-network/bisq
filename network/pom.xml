@@ -17,11 +17,10 @@
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- TODO change back once JesusMcCloud has merged
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
-            <version>491fb0b408</version>
+            <version>e7195748</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -29,21 +28,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        -->
-
-        <dependency>
-            <groupId>com.github.mrosseel</groupId>
-            <artifactId>netlayer</artifactId>
-            <version>-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-
-        </dependency>
-
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>

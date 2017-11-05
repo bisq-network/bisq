@@ -17,7 +17,6 @@
 
 package io.bisq.network;
 
-import com.google.common.collect.Iterables;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.util.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +28,8 @@ import org.bitcoinj.net.discovery.PeerDiscoveryException;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;
 import org.bitcoinj.utils.DaemonThreadFactory;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

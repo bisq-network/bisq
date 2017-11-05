@@ -21,6 +21,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.network.NetworkOptionKeys;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
 import io.bisq.network.p2p.network.LocalhostNetworkNode;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.network.TorNetworkNode;
@@ -34,12 +35,13 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
 
     @Inject
     public NetworkNodeProvider(NetworkProtoResolver networkProtoResolver,
+                               BridgeAddressProvider bridgeAddressProvider,
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                                @Named(NetworkOptionKeys.PORT_KEY) int port,
                                @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(port, networkProtoResolver) :
-                new TorNetworkNode(port, torDir, networkProtoResolver);
+                new TorNetworkNode(port, torDir, networkProtoResolver, bridgeAddressProvider);
     }
 
     @Override
