@@ -35,6 +35,8 @@ public class CoreProtoResolver implements ProtoResolver {
                                             "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload.BankAccountPayload). " +
                                             "messageCase=" + proto.getMessageCase());
                             }
+                        case WESTERN_UNION_ACCOUNT_PAYLOAD:
+                            return WesternUnionAccountPayload.fromProto(proto);
                         case CASH_DEPOSIT_ACCOUNT_PAYLOAD:
                             return CashDepositAccountPayload.fromProto(proto);
                         case SEPA_ACCOUNT_PAYLOAD:

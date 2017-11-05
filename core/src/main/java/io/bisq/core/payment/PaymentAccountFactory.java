@@ -52,6 +52,8 @@ public class PaymentAccountFactory {
                 return new CashDepositAccount();
             case PaymentMethod.BLOCK_CHAINS_ID:
                 return new CryptoCurrencyAccount();
+            case PaymentMethod.WESTERN_UNION_ID:
+                return new WesternUnionAccount();
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }
