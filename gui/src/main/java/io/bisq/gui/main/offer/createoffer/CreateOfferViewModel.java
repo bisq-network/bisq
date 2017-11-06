@@ -606,6 +606,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void onShowPayFundsScreen() {
+        dataModel.estimateTxSize();
         dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();

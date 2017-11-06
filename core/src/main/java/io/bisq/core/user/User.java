@@ -358,6 +358,7 @@ public final class User implements PersistedDataHost {
         return userPayload.getRegisteredMediator();
     }
 
+    @Nullable
     public List<Arbitrator> getAcceptedArbitrators() {
         return userPayload.getAcceptedArbitrators();
     }
@@ -367,6 +368,7 @@ public final class User implements PersistedDataHost {
         return userPayload.getAcceptedArbitrators() != null ? userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
+    @Nullable
     public List<Mediator> getAcceptedMediators() {
         return userPayload.getAcceptedMediators();
     }
