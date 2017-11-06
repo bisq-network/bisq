@@ -302,7 +302,7 @@ public class MainViewModel implements ViewModel {
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
-                showAddBridgeEntriesWindow();
+                showTorNetworkSettingsWindow();
         };
 
         Timer startupTimeout = UserThread.runAfter(() -> {
@@ -310,7 +310,7 @@ public class MainViewModel implements ViewModel {
             if (walletsManager.areWalletsEncrypted())
                 walletInitialized.addListener(walletInitializedListener);
             else
-                showAddBridgeEntriesWindow();
+                showTorNetworkSettingsWindow();
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
@@ -339,7 +339,7 @@ public class MainViewModel implements ViewModel {
         });
     }
 
-    private void showAddBridgeEntriesWindow() {
+    private void showTorNetworkSettingsWindow() {
         MainView.blur();
         torNetworkSettingsWindow = new TorNetworkSettingsWindow(preferences).useShutDownButton();
         torNetworkSettingsWindow.show();
@@ -475,7 +475,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onRequestCustomBridges() {
-                showAddBridgeEntriesWindow();
+                showTorNetworkSettingsWindow();
             }
         });
 
