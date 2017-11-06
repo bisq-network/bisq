@@ -69,7 +69,7 @@ public class Restrictions {
         if (MAX_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(10_000_000); // 500 EUR @ 5000 EUR/BTC
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(5_000_000); // 250 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_200_000_000); // 500 EUR @ 40 EUR/LTC
@@ -108,7 +108,7 @@ public class Restrictions {
         if (DEFAULT_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_500_000); // 75 EUR @ 5000 EUR/BTC
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 50 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(200_000_000); // 75 EUR @ 40 EUR/LTC
@@ -127,7 +127,7 @@ public class Restrictions {
         if (SELLER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(500_000); // 25 EUR @ 5000 EUR/BTC
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(300_000); // 15 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     SELLER_SECURITY_DEPOSIT = Coin.valueOf(60_000_000); // 25 EUR @ 40 EUR/LTC
