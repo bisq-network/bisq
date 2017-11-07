@@ -52,7 +52,7 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class BisqAppModule extends AppModule {
+public class BisqAppModule extends AppModule {
 
     private final Stage primaryStage;
 
