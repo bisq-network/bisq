@@ -139,7 +139,7 @@ public class WalletsSetup {
         backupWallets();
 
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
-        log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
+        log.info("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
         walletConfig = new WalletConfig(params, socks5Proxy, walletDir, bisqEnvironment, btcWalletFileName,
                 BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
@@ -259,40 +259,46 @@ public class WalletsSetup {
         if (!btcNodes.isEmpty()) {
             String[] nodes = StringUtils.deleteWhitespace(btcNodes).split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
+            log.info("We try to add custom btc nodes={}", nodes);
             for (String node : nodes) {
                 String[] parts = node.split(":");
-                if (parts.length == 1) {
-                    // port not specified.  Use default port for network.
-                    parts = new String[]{parts[0], Integer.toString(params.getPort())};
-                }
-                if (parts.length == 2) {
-                    // note: this will cause a DNS request if hostname used.
-                    // note: DNS requests are routed over socks5 proxy, if used.
-                    // note: .onion hostnames will be unresolved.
-                    InetSocketAddress addr;
-                    if (socks5Proxy != null) {
-                        try {
-                            // proxy remote DNS request happens here.  blocking.
-                            addr = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, parts[0]), Integer.parseInt(parts[1]));
-                        } catch (Exception e) {
-                            log.warn("Dns lookup failed for host: {}", parts[0]);
-                            addr = null;
-                        }
+                final String host = parts[0];
+                // port not specified use default port for network.
+                final int port = parts.length == 1 ? params.getPort() : Integer.parseInt(parts[1]);
+                if (socks5Proxy != null) {
+                    // We use Tor for BitcoinJ
+                    if (host.endsWith("onion")) {
+                        // no lookup for onion addresses
+                        log.info("We add a onion node with host={}, port={}", host, port);
+                        peerAddressList.add(new PeerAddress(host, port));
                     } else {
-                        // DNS request happens here. if it fails, addr.isUnresolved() == true.
-                        addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
+                        try {
+                            // We use DnsLookupTor to not leak with DNS lookup
+                            // Blocking call. takes about 600 ms ;-(
+                            InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, host), port);
+                            log.info("We add a clear net node (tor is used)  with address={}, port={}", address.getAddress(), port);
+                            peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
+                        } catch (Exception e) {
+                            log.warn("Dns lookup failed for host: {}", host);
+                        }
                     }
-                    if (addr != null && !addr.isUnresolved()) {
-                        peerAddressList.add(new PeerAddress(addr.getAddress(), addr.getPort()));
-                    }
+                } else {
+                    // We don't use Tor for BitcoinJ
+                    // onion addresses are not supported
+                    if (host.endsWith("onion"))
+                        log.warn("Onion addresses are only supported when using Tor with BitcoinJ");
+                    // DNS request happens here. if it fails, address.isUnresolved() == true.
+                    InetSocketAddress address = new InetSocketAddress(host, port);
+                    log.info("We add a clear net node (no tor is used) with host={}, port={}", host, port);
+                    peerAddressList.add(new PeerAddress(host, address.getPort()));
                 }
-                if (peerAddressList.size() > 0) {
-                    PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
-                    log.debug("btcNodes parsed: " + Arrays.toString(peerAddressListFixed));
-
-                    walletConfig.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
-                    usePeerNodes = true;
-                }
+            }
+            if (!peerAddressList.isEmpty()) {
+                PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
+                final PeerAddress[] peerAddresses = peerAddressList.toArray(peerAddressListFixed);
+                log.info("peerAddresses: " + peerAddressList.toString());
+                walletConfig.setPeerNodes(peerAddresses);
+                usePeerNodes = true;
             }
         }
 

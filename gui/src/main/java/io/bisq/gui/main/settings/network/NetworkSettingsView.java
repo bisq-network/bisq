@@ -223,7 +223,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         };
         btcNodes.focusedProperty().addListener(btcNodesFocusListener);
 
-        openTorSettingsButton.setOnAction(e->new TorNetworkSettingsWindow(preferences).show());
+        openTorSettingsButton.setOnAction(e -> new TorNetworkSettingsWindow(preferences).show());
     }
 
     @Override

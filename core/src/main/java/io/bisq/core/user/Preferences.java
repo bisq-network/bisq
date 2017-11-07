@@ -563,10 +563,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public boolean getUseTorForBitcoinJ() {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
-        // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty()
-                || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+        if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
