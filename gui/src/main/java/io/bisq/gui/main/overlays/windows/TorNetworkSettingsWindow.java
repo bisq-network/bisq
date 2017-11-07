@@ -119,7 +119,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         closeButton.setOnAction(event -> doClose());
 
         if (actionHandlerOptional.isPresent()) {
-            actionButton = new Button(Res.get("torNetworkSettingWindow.saveAndRestart"));
+            actionButton = new Button(Res.get("shared.shutDown"));
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();
@@ -137,7 +137,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             Pane spacer = new Pane();
             HBox hBox = new HBox();
             hBox.setSpacing(10);
-            hBox.getChildren().addAll(spacer, closeButton, urlButton, actionButton);
+            hBox.getChildren().addAll(spacer, urlButton, closeButton, actionButton);
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);

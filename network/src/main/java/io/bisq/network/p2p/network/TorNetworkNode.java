@@ -204,7 +204,7 @@ public class TorNetworkNode extends NetworkNode {
                 long ts1 = new Date().getTime();
                 log.info("Starting tor");
                 Tor.setDefault(new NativeTor(torDir, bridgeEntries));
-                log.info("Tor started after {} ms. Start publishing hidden service.", (new Date().getTime() - ts1));
+                log.info("Tor started after {} ms. Start publishing hidden service.", (new Date().getTime() - ts1)); // takes usually a few seconds
 
                 UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
 
@@ -212,7 +212,7 @@ public class TorNetworkNode extends NetworkNode {
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
-                        log.info("Tor hidden service published after {} ms. Socked={}", (new Date().getTime() - ts2), socket);
+                        log.info("Tor hidden service published after {} ms. Socked={}", (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
                         new Thread() {
                             @Override
                             public void run() {

@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main;
 
+import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
@@ -36,6 +37,7 @@ import io.bisq.gui.main.market.MarketView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.util.BSFormatter;
@@ -470,16 +472,32 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
 
+        Button showTorNetworkSettingsButton = new Button(Res.get("settings.net.openTorSettingsButton"));
+        showTorNetworkSettingsButton.setVisible(false);
+        showTorNetworkSettingsButton.setManaged(false);
+        showTorNetworkSettingsButton.setOnAction(e -> {
+            new TorNetworkSettingsWindow(model.preferences).show();
+        });
+
         ImageView splashP2PNetworkIcon = new ImageView();
         splashP2PNetworkIcon.setId("image-connection-tor");
         splashP2PNetworkIcon.setVisible(false);
         splashP2PNetworkIcon.setManaged(false);
         HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
 
+        // If after 10 sec we have not got connected we show "open network settings" button
+        Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
+            showTorNetworkSettingsButton.setVisible(true);
+            showTorNetworkSettingsButton.setManaged(true);
+        }, 10);
+
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkIcon.setId(newValue);
             splashP2PNetworkIcon.setVisible(true);
             splashP2PNetworkIcon.setManaged(true);
+
+            // if we can connect in 10 sec. we know that tor is working
+            showTorNetworkSettingsTimer.stop();
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
@@ -490,7 +508,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
         splashP2PNetworkBox.setPrefHeight(50);
-        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon);
+        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon, showTorNetworkSettingsButton);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
         return vBox;

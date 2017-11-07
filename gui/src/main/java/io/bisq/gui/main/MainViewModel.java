@@ -123,7 +123,7 @@ public class MainViewModel implements ViewModel {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final DisputeManager disputeManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final AlertManager alertManager;
     private final PrivateNotificationManager privateNotificationManager;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
