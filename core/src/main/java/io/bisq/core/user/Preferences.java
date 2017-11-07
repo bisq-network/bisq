@@ -486,6 +486,21 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setBridgeOptionOrdinal(int bridgeOptionOrdinal) {
+        prefPayload.setBridgeOptionOrdinal(bridgeOptionOrdinal);
+        persist();
+    }
+
+    public void setTorTransportOrdinal(int torTransportOrdinal) {
+        prefPayload.setTorTransportOrdinal(torTransportOrdinal);
+        persist();
+    }
+
+    public void setCustomBridges(String customBridges) {
+        prefPayload.setCustomBridges(customBridges);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -666,5 +681,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setBridgeAddresses(List<String> bridgeAddresses);
 
         List<String> getBridgeAddresses();
+
+        void setBridgeOptionOrdinal(int bridgeOptionOrdinal);
+
+        void setTorTransportOrdinal(int torTransportOrdinal);
+
+        void setCustomBridges(String customBridges);
     }
 }

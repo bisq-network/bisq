@@ -131,8 +131,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         bitcoinPeersTextArea.setPrefRowCount(6);
 
-        tableView.setMinHeight(230);
-        tableView.setPrefHeight(230);
+        tableView.setMinHeight(180);
+        tableView.setPrefHeight(180);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         tableView.getSortOrder().add(creationDateColumn);

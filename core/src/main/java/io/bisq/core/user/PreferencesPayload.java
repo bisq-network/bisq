@@ -68,6 +68,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean payFeeInBtc = true;
     @Nullable
     private List<String> bridgeAddresses;
+    int bridgeOptionOrdinal;
+    int torTransportOrdinal;
+    @Nullable
+    String customBridges;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +118,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setDirectoryChooserPath(directoryChooserPath)
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
                 .setUseAnimations(useAnimations)
-                .setPayFeeInBtc(payFeeInBtc);
+                .setPayFeeInBtc(payFeeInBtc)
+                .setBridgeOptionOrdinal(bridgeOptionOrdinal)
+                .setTorTransportOrdinal(torTransportOrdinal);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -124,6 +130,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
                 account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
         Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
+        Optional.ofNullable(customBridges).ifPresent(builder::setCustomBridges);
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
@@ -173,6 +180,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseAnimations(),
                 paymentAccount,
                 proto.getPayFeeInBtc(),
-                proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()));
+                proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),
+                proto.getBridgeOptionOrdinal(),
+                proto.getTorTransportOrdinal(),
+                ProtoUtil.stringOrNullFromProto(proto.getCustomBridges()));
     }
 }

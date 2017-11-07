@@ -1256,6 +1256,9 @@ message PreferencesPayload {
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
     repeated string bridge_addresses = 34;
+    int32 bridge_option_ordinal = 35;
+    int32 tor_transport_ordinal = 36;
+    string custom_bridges = 37;
 }
 
 

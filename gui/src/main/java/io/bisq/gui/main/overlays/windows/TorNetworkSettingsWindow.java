@@ -42,8 +42,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.network.p2p.network.DefaultPluggableTransports;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -55,6 +53,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -66,12 +65,29 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @Slf4j
 public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> {
+
+    public enum BridgeOption {
+        NONE,
+        PROVIDED,
+        CUSTOM
+    }
+
+    public enum Transport {
+        OBFS_4,
+        OBFS_3,
+        MEEK_AMAZON,
+        MEEK_AZURE
+    }
+
     private final Preferences preferences;
     private RadioButton noBridgesRadioButton, providedBridgesRadioButton, customBridgesRadioButton;
     private Label enterBridgeLabel;
-    private ComboBox<String> transportTypeComboBox;
+    private ComboBox<Transport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
     private Label transportTypeLabel;
+    private BridgeOption selectedBridgeOption = BridgeOption.NONE;
+    private Transport selectedTorTransportOrdinal = Transport.OBFS_4;
+    private String customBridges = "";
 
     public TorNetworkSettingsWindow(Preferences preferences) {
         this.preferences = preferences;
@@ -159,6 +175,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void addContent() {
+        gridPane.setStyle("-fx-background-color: #f8f8f8;");
+
         Label label = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.info"));
         label.setWrapText(true);
         GridPane.setColumnIndex(label, 0);
@@ -169,69 +187,47 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setMargin(label, new Insets(0, 0, 20, 0));
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        toggleGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-            @Override
-            public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
-                if (newValue == noBridgesRadioButton) {
-                    transportTypeLabel.setDisable(true);
-                    transportTypeComboBox.setDisable(true);
-                    enterBridgeLabel.setDisable(true);
-                    bridgeEntriesTextArea.setDisable(true);
 
-                    bridgeEntriesTextArea.setText("");
-                    preferences.setBridgeAddresses(null);
-                } else if (newValue == providedBridgesRadioButton) {
-                    transportTypeLabel.setDisable(false);
-                    transportTypeComboBox.setDisable(false);
-                    enterBridgeLabel.setDisable(true);
-                    bridgeEntriesTextArea.setDisable(true);
-
-                    transportTypeComboBox.getSelectionModel().select(0);
-                    preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_4);
-                } else if (newValue == customBridgesRadioButton) {
-                    enterBridgeLabel.setDisable(false);
-                    bridgeEntriesTextArea.setDisable(false);
-                    transportTypeLabel.setDisable(true);
-                    transportTypeComboBox.setDisable(true);
-
-                    bridgeEntriesTextArea.setText("");
-                    preferences.setBridgeAddresses(null);
-                }
-            }
-        });
         // noBridges
         noBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.noBridges"));
+        noBridgesRadioButton.setUserData(BridgeOption.NONE);
 
         // providedBridges
         providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
+        providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
         final Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeLabel = labelComboBoxTuple2.first;
         transportTypeComboBox = labelComboBoxTuple2.second;
-        transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(Res.get("torNetworkSettingWindow.obfs4"),
-                Res.get("torNetworkSettingWindow.obfs3"),
-                Res.get("torNetworkSettingWindow.meekAmazon"),
-                Res.get("torNetworkSettingWindow.meekAzure"))));
-        transportTypeComboBox.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
-            if (toggleGroup.getSelectedToggle() == providedBridgesRadioButton) {
-                switch ((int) newValue) {
-                    case 0:
-                        preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_4);
-                        break;
-                    case 1:
-                        preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_3);
-                        break;
-                    case 2:
-                        preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AMAZON);
-                        break;
-                    case 3:
-                        preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AZURE);
-                        break;
+        transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
+                Transport.OBFS_4,
+                Transport.OBFS_3,
+                Transport.MEEK_AMAZON,
+                Transport.MEEK_AZURE)));
+        transportTypeComboBox.setConverter(new StringConverter<Transport>() {
+            @Override
+            public String toString(Transport transport) {
+                switch (transport) {
+                    case OBFS_3:
+                        return Res.get("torNetworkSettingWindow.obfs3");
+                    case MEEK_AMAZON:
+                        return Res.get("torNetworkSettingWindow.meekAmazon");
+                    case MEEK_AZURE:
+                        return Res.get("torNetworkSettingWindow.meekAzure");
+                    default:
+                    case OBFS_4:
+                        return Res.get("torNetworkSettingWindow.obfs4");
                 }
+            }
+
+            @Override
+            public Transport fromString(String string) {
+                return null;
             }
         });
 
         // customBridges
         customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
+        customBridgesRadioButton.setUserData(BridgeOption.CUSTOM);
 
        /* enterBridgeLabel = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"));
         enterBridgeLabel.setWrapText(true);
@@ -241,26 +237,107 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         final Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
         enterBridgeLabel = labelTextAreaTuple2.first;
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
-        bridgeEntriesTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (toggleGroup.getSelectedToggle() == customBridgesRadioButton) {
-                if (newValue != null) {
-                    preferences.setBridgeAddresses(Arrays.asList(bridgeEntriesTextArea.getText().split("\\n")));
-                } else {
-                    preferences.setBridgeAddresses(null);
-                }
-            }
-        });
 
         Label label2 = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.restartInfo"));
         label2.setWrapText(true);
         GridPane.setColumnIndex(label2, 1);
         GridPane.setColumnSpan(label2, 2);
-        GridPane.setHalignment(label2, HPos.RIGHT);
+        GridPane.setHalignment(label2, HPos.LEFT);
         GridPane.setValignment(label, VPos.TOP);
-
         GridPane.setMargin(label, new Insets(10, 10, 20, 0));
 
-        toggleGroup.selectToggle(providedBridgesRadioButton);
+
+        // init persisted values
+        selectedBridgeOption = BridgeOption.values()[preferences.getBridgeOptionOrdinal()];
+        switch (selectedBridgeOption) {
+            case PROVIDED:
+                toggleGroup.selectToggle(providedBridgesRadioButton);
+                break;
+            case CUSTOM:
+                toggleGroup.selectToggle(customBridgesRadioButton);
+                break;
+            default:
+            case NONE:
+                toggleGroup.selectToggle(noBridgesRadioButton);
+                break;
+        }
+        applyToggleSelection();
+
+        selectedTorTransportOrdinal = Transport.values()[preferences.getTorTransportOrdinal()];
+        transportTypeComboBox.getSelectionModel().select(selectedTorTransportOrdinal);
+
+        customBridges = preferences.getCustomBridges();
+        bridgeEntriesTextArea.setText(customBridges);
+
+        // set listeners after initialisation\
+        toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            selectedBridgeOption = (BridgeOption) newValue.getUserData();
+            preferences.setBridgeOptionOrdinal(selectedBridgeOption.ordinal());
+            applyToggleSelection();
+        });
+        transportTypeComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            selectedTorTransportOrdinal = newValue;
+            preferences.setTorTransportOrdinal(selectedTorTransportOrdinal.ordinal());
+            setBridgeAddressesByTransport();
+        });
+        bridgeEntriesTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
+                    customBridges = newValue;
+                    preferences.setCustomBridges(customBridges);
+                    setBridgeAddressesByCustomBridges();
+                }
+        );
+    }
+
+    private void applyToggleSelection() {
+        switch (selectedBridgeOption) {
+            case PROVIDED:
+                transportTypeLabel.setDisable(false);
+                transportTypeComboBox.setDisable(false);
+                enterBridgeLabel.setDisable(true);
+                bridgeEntriesTextArea.setDisable(true);
+
+                setBridgeAddressesByTransport();
+                break;
+            case CUSTOM:
+                enterBridgeLabel.setDisable(false);
+                bridgeEntriesTextArea.setDisable(false);
+                transportTypeLabel.setDisable(true);
+                transportTypeComboBox.setDisable(true);
+
+                setBridgeAddressesByCustomBridges();
+                break;
+            case NONE:
+            default:
+                transportTypeLabel.setDisable(true);
+                transportTypeComboBox.setDisable(true);
+                enterBridgeLabel.setDisable(true);
+                bridgeEntriesTextArea.setDisable(true);
+
+                preferences.setBridgeAddresses(null);
+                break;
+        }
+    }
+
+    private void setBridgeAddressesByTransport() {
+        switch (selectedTorTransportOrdinal) {
+            case OBFS_3:
+                preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_3);
+                break;
+            case MEEK_AMAZON:
+                preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AMAZON);
+                break;
+            case MEEK_AZURE:
+                preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AZURE);
+                break;
+            default:
+            case OBFS_4:
+                preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_4);
+                break;
+        }
+    }
+
+    private void setBridgeAddressesByCustomBridges() {
+        preferences.setBridgeAddresses(customBridges != null ? Arrays.asList(customBridges.split("\\n")) : null);
     }
 
     private void saveAndShutDown() {
