@@ -215,6 +215,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public void onShowPayFundsScreen() {
+        dataModel.estimateTxSize();
         dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
