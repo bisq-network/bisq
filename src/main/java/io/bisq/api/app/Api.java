@@ -11,7 +11,10 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.*;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.AppSetup;
+import io.bisq.core.app.AppSetupWithP2P;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OfferBookService;
@@ -38,10 +41,6 @@ public class Api {
     private final ApiModule apiModule;
     private final AppSetup appSetup;
     private final User user;
-
-    public static void setEnvironment(Environment env) {
-        Api.env = env;
-    }
 
     public Api() {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
@@ -82,7 +81,6 @@ public class Api {
         offerBookService = injector.getInstance(OfferBookService.class);
         user = injector.getInstance(User.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
-
         appSetup = injector.getInstance(AppSetupWithP2P.class);
         appSetup.start();
 
@@ -92,6 +90,10 @@ public class Api {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void setEnvironment(Environment env) {
+        Api.env = env;
     }
 
     public void shutDown() {

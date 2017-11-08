@@ -1,4 +1,5 @@
 defaultName: Bisq-Api
+template: bla
 
 # the only required property is resourcePackage, for more config options see below
 swagger:

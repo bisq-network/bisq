@@ -18,25 +18,6 @@ package io.bisq.api.app;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bisq.common.UserThread;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.app.BisqExecutable;
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Scanner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
-import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bisq.common.UserThread;
 import io.bisq.common.util.Profiler;
 import io.bisq.common.util.RestartUtil;
 import io.bisq.core.app.AppOptionKeys;
@@ -45,10 +26,9 @@ import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -61,9 +41,9 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 public class ApiMain extends BisqExecutable {
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
+    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
     private Api api;
     private volatile boolean stopped;
-    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()

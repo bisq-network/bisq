@@ -32,6 +32,7 @@ import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
+import io.bisq.core.network.CoreSeedNodesRepository;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.network.CoreNetworkProtoResolver;
 import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -40,6 +41,8 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 
@@ -75,6 +78,9 @@ public class ApiModule extends AppModule {
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
         bind(BisqApiApplication.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
+        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
+
 
         // ordering is used for shut down sequence
         install(tradeModule());
@@ -84,7 +90,6 @@ public class ApiModule extends AppModule {
         install(torModule());
         install(bitcoinModule());
         install(daoModule());
-        //install(guiModule());
         install(alertModule());
         install(filterModule());
     }
