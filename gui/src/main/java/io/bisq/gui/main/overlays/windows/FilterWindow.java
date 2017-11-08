@@ -29,6 +29,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.bisq.gui.util.FormBuilder.addLabelCheckBox;
 import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
@@ -122,6 +124,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField arbitratorsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators")).second;
         InputTextField seedNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode")).second;
         InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
+        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
@@ -132,11 +135,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 filter.getBannedPaymentAccounts().stream().forEach(e -> {
                     if (e != null && e.getPaymentMethodId() != null) {
                         sb.append(e.getPaymentMethodId())
-                            .append("|")
-                            .append(e.getGetMethodName())
-                            .append("|")
-                            .append(e.getValue())
-                            .append(", ");
+                                .append("|")
+                                .append(e.getGetMethodName())
+                                .append("|")
+                                .append(e.getValue())
+                                .append(", ");
                     }
                 });
                 paymentAccountFilterInputTextField.setText(sb.toString());
@@ -157,6 +160,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (filter.getPriceRelayNodes() != null)
                 priceRelayNodesInputTextField.setText(filter.getPriceRelayNodes().stream().collect(Collectors.joining(", ")));
 
+            preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
+
         }
         Button sendButton = new Button(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
@@ -171,70 +176,71 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
             if (!offerIdsInputTextField.getText().isEmpty()) {
                 offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
-                    .split(",")));
+                        .split(",")));
             }
 
             if (!nodesInputTextField.getText().isEmpty()) {
                 nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText())
-                    .replace(":9999", "")
-                    .replace(".onion", "")
-                    .split(",")));
+                        .replace(":9999", "")
+                        .replace(".onion", "")
+                        .split(",")));
             }
 
             if (!paymentAccountFilterInputTextField.getText().isEmpty()) {
                 paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()
-                    .replace(", ", ",")
-                    .split(","))
-                    .stream().map(item -> {
-                        String[] list = item.split("\\|");
-                        if (list.length == 3)
-                            return new PaymentAccountFilter(list[0], list[1], list[2]);
-                        else
-                            return new PaymentAccountFilter("", "", "");
-                    })
-                    .collect(Collectors.toList()));
+                        .replace(", ", ",")
+                        .split(","))
+                        .stream().map(item -> {
+                            String[] list = item.split("\\|");
+                            if (list.length == 3)
+                                return new PaymentAccountFilter(list[0], list[1], list[2]);
+                            else
+                                return new PaymentAccountFilter("", "", "");
+                        })
+                        .collect(Collectors.toList()));
             }
 
             if (!bannedCurrenciesInputTextField.getText().isEmpty()) {
                 bannedCurrencies = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedCurrenciesInputTextField.getText())
-                    .split(",")));
+                        .split(",")));
             }
 
             if (!bannedPaymentMethodsInputTextField.getText().isEmpty()) {
                 bannedPaymentMethods = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedPaymentMethodsInputTextField.getText())
-                    .split(",")));
+                        .split(",")));
             }
 
             if (!arbitratorsInputTextField.getText().isEmpty()) {
                 arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText())
-                    .replace(":9999", "")
-                    .replace(".onion", "")
-                    .split(",")));
+                        .replace(":9999", "")
+                        .replace(".onion", "")
+                        .split(",")));
             }
 
             if (!seedNodesInputTextField.getText().isEmpty()) {
                 seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText())
-                    .replace(":9999", "")
-                    .replace(".onion", "")
-                    .split(",")));
+                        .replace(":9999", "")
+                        .replace(".onion", "")
+                        .split(",")));
             }
 
             if (!priceRelayNodesInputTextField.getText().isEmpty()) {
                 priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText())
-                    .replace(":9999", "")
-                    .replace(".onion", "")
-                    .split(",")));
+                        .replace(":9999", "")
+                        .replace(".onion", "")
+                        .split(",")));
             }
 
             if (sendFilterMessageHandler.handle(new Filter(offerIds,
-                    nodes,
-                    paymentAccountFilters,
-                    bannedCurrencies,
-                    bannedPaymentMethods,
-                    arbitrators,
-                    seedNodes,
-                    priceRelayNodes),
-                keyInputTextField.getText()))
+                            nodes,
+                            paymentAccountFilters,
+                            bannedCurrencies,
+                            bannedPaymentMethods,
+                            arbitrators,
+                            seedNodes,
+                            priceRelayNodes,
+                            preventPublicBtcNetworkCheckBox.isSelected()),
+                    keyInputTextField.getText()))
                 hide();
             else
                 new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();

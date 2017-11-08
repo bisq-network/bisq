@@ -501,6 +501,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setBitcoinNodesOptionOrdinal(int bitcoinNodesOptionOrdinal) {
+        prefPayload.setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -685,5 +690,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setTorTransportOrdinal(int torTransportOrdinal);
 
         void setCustomBridges(String customBridges);
+
+        void setBitcoinNodesOptionOrdinal(int bitcoinNodesOption);
     }
 }

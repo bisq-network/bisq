@@ -562,6 +562,7 @@ message Filter {
     repeated string arbitrators = 9;
     repeated string seed_nodes = 10;
     repeated string price_relay_nodes = 11;
+    bool prevent_public_btc_network = 12;
 }
 
 message TradeStatistics {
@@ -1259,6 +1260,7 @@ message PreferencesPayload {
     int32 bridge_option_ordinal = 35;
     int32 tor_transport_ordinal = 36;
     string custom_bridges = 37;
+    int32 bitcoin_nodes_option_ordinal = 38;
 }
 
 

@@ -485,11 +485,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkIcon.setManaged(false);
         HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
 
-        // If after 10 sec we have not got connected we show "open network settings" button
+        // If after 20 sec we have not got connected we show "open network settings" button
         Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
             showTorNetworkSettingsButton.setVisible(true);
             showTorNetworkSettingsButton.setManaged(true);
-        }, 10);
+        }, 20);
 
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkIcon.setId(newValue);
