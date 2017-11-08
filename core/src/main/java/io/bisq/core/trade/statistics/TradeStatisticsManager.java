@@ -255,12 +255,16 @@ public class TradeStatisticsManager implements PersistedDataHost {
         coinsWithValidator.add("WAC");
         coinsWithValidator.add("DEC");
 
-        // As of: 17.Sept 2017
+        // v0.6: DECENT, Pranacoin, WACoins, ZenCash, Ellaism, Cryptonite, Terracoin, Internext
         Set<String> newlyAdded = new HashSet<>();
+        newlyAdded.add("DCT");
         newlyAdded.add("PNC");
         newlyAdded.add("WAC");
         newlyAdded.add("ZEN");
-        newlyAdded.add("DEC");
+        newlyAdded.add("ELLA");
+        newlyAdded.add("XCN");
+        newlyAdded.add("TRC");
+        newlyAdded.add("INXT");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
