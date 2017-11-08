@@ -30,7 +30,7 @@ public class WalletTransaction {
         this.hash = transaction.getHashAsString();
         this.confidence = transaction.getConfidence().toString();
         this.params = transaction.getParams().getId();
-        this.fee = (transaction.getFee() == null)?-1:transaction.getFee().value;
+        this.fee = (transaction.getFee() == null) ? -1 : transaction.getFee().value;
         this.value = transaction.getValue(wallet).value;
         this.valueSentFromMe = transaction.getValueSentFromMe(wallet).value;
         this.valueSentToMe = transaction.getValueSentToMe(wallet).value;

@@ -33,9 +33,9 @@ import java.util.stream.Collectors;
         info = @Info(
                 description = "API for the Bisq exchange",
                 title = "The Bisq API",
-                contact = @Contact(name = "the Bisq open source project", email="Use the Bisq's project support channels"
+                contact = @Contact(name = "the Bisq open source project", email = "Use the Bisq's project support channels"
                 ),
-                license =  @License(
+                license = @License(
                         name = "GNU General Public License v3.0",
                         url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
                 ),
@@ -51,11 +51,11 @@ import java.util.stream.Collectors;
  * Bisq logic is kept to a minimum here, everything is passed to the BisqProxy.
  */
 public class ApiResourceV1 {
+    // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
+    private static final String STRING_END_INT_MAX_VALUE = "2147483647";
     private final String defaultName;
     private final AtomicLong counter;
     private final BisqProxy bisqProxy;
-    // Needs to be a hard-coded value, otherwise annotations complain. "0x7fffffff";
-    private static final String STRING_END_INT_MAX_VALUE = "2147483647";
 
     public ApiResourceV1(String defaultName, BisqProxy bisqProxy) {
         this.defaultName = defaultName;
@@ -217,10 +217,10 @@ public class ApiResourceV1 {
     @GET
     @Timed
     @Path("/trade_list")
-    public String tradeList(){
+    public String tradeList() {
         String result = "[]";
         TradeList tradeList = bisqProxy.getTradeList();
-        if(tradeList == null || tradeList.trades == null || tradeList.trades.size() == 0) {
+        if (tradeList == null || tradeList.trades == null || tradeList.trades.size() == 0) {
             // will use default result
         } else {
             try {
@@ -233,7 +233,7 @@ public class ApiResourceV1 {
                     return "error";
                 }).collect(Collectors.toList());
                 StringJoiner stringJoiner = new StringJoiner(",", "[", "]");
-                for(String string : stringList) {
+                for (String string : stringList) {
                     stringJoiner.add(string);
                 }
                 result = stringJoiner.toString();

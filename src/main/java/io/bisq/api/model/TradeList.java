@@ -19,7 +19,6 @@ package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.bisq.core.trade.Trade;
-import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;

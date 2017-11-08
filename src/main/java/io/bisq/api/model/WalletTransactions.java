@@ -6,19 +6,6 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by mike on 02/09/16.
- */
-public class WalletTransactions {
-    @Setter
-    List<WalletTransaction> transactions = new ArrayList<>();
-
-    @JsonValue
-    public List<WalletTransaction> getTransactions() {
-        return transactions;
-    }
-}
-
 // Copied from AddressEntry
 enum TransactionType {
     ARBITRATOR,
@@ -32,6 +19,19 @@ enum TransactionType {
 
     DAO_SHARE,
     DAO_DIVIDEND
+}
+
+/**
+ * Created by mike on 02/09/16.
+ */
+public class WalletTransactions {
+    @Setter
+    List<WalletTransaction> transactions = new ArrayList<>();
+
+    @JsonValue
+    public List<WalletTransaction> getTransactions() {
+        return transactions;
+    }
 }
 
 

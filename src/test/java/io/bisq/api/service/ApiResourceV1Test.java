@@ -2,8 +2,6 @@ package io.bisq.api.service;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by mike on 01/02/2017.
  */

@@ -2,7 +2,6 @@ package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.bisq.common.locale.Country;
 import io.bisq.core.payment.PaymentAccount;
 import lombok.Data;
 import org.springframework.util.CollectionUtils;

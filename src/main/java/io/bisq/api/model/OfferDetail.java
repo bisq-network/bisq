@@ -12,18 +12,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- "contractData": {
- "paymentMethodName": "SEPA",
- "id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
- "maxTradePeriod": 691200000,
- "countryCode": "BE",
- "holderName": "Mike Rosseel",
- "iban": "BE82063500018968",
- "bic": "GKCCBEBB",
- "acceptedCountryCodes": ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "IE", "IT", "LT", "LU", "LV", "MC", "MT", "NL", "PT", "SI", "SK"],
- "paymentDetails": "SEPA - Holder name: Mike Rosseel, IBAN: BE82063500018968, BIC: GKCCBEBB, country code: BE",
- "paymentDetailsForTradePopup": "Holder name: Mike Rosseel\nIBAN: BE82063500018968\nBIC: GKCCBEBB\nCountry of bank: Belgium (BE)"
- },
+ * "contractData": {
+ * "paymentMethodName": "SEPA",
+ * "id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
+ * "maxTradePeriod": 691200000,
+ * "countryCode": "BE",
+ * "holderName": "Mike Rosseel",
+ * "iban": "BE82063500018968",
+ * "bic": "GKCCBEBB",
+ * "acceptedCountryCodes": ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "IE", "IT", "LT", "LU", "LV", "MC", "MT", "NL", "PT", "SI", "SK"],
+ * "paymentDetails": "SEPA - Holder name: Mike Rosseel, IBAN: BE82063500018968, BIC: GKCCBEBB, country code: BE",
+ * "paymentDetailsForTradePopup": "Holder name: Mike Rosseel\nIBAN: BE82063500018968\nBIC: GKCCBEBB\nCountry of bank: Belgium (BE)"
+ * },
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class OfferDetail {
@@ -63,7 +63,7 @@ public class OfferDetail {
         this.offerer = offer.getMakerNodeAddress().toString();
         this.btc_amount = offer.getAmount().toPlainString();
         this.min_btc_amount = offer.getMinAmount().toPlainString();
-        if(offer.getPrice() != null) {
+        if (offer.getPrice() != null) {
             this.other_amount = offer.getPrice().toPlainString();
             this.other_currency = offer.getPrice().getCurrencyCode();
         }

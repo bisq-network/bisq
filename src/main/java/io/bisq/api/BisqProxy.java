@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.wallet.Wallet;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
@@ -59,7 +58,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  * => this should be the common gateway to bisq used by all outward-facing API classes.
- *
+ * <p>
  * If the bisq code is refactored correctly, this class could become very light.
  */
 @Slf4j
@@ -170,6 +169,7 @@ public class BisqProxy {
 
     /**
      * Return detail for a particular offerId.
+     *
      * @returns a tuple, with as first member an optional result, as second member an optional error.
      */
     public Tuple2<Optional<OfferDetail>, Optional<BisqProxyError>> getOfferDetail(String offerId) throws Exception {
@@ -648,7 +648,7 @@ public class BisqProxy {
             }
             TradeProtocol tradeProtocol = trade.getTradeProtocol();
 
-            if(!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
+            if (!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
                 return BisqProxyError.getOptional("Trade is not in the correct state to start payment received: " + tradeProtocol.getClass().getSimpleName());
             }
 

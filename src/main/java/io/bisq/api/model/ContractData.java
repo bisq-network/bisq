@@ -1,29 +1,23 @@
 package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.bisq.core.payment.BankAccount;
-import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.SepaAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- "contractData": {
- "paymentMethodName": "SEPA",
- "id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
- "maxTradePeriod": 691200000,
- "countryCode": "BE",
- "holderName": "Mike Rosseel",
- "iban": "BE82063500018968",
- "bic": "GKCCBEBB",
- "acceptedCountryCodes": ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "IE", "IT", "LT", "LU", "LV", "MC", "MT", "NL", "PT", "SI", "SK"],
- "paymentDetails": "SEPA - Holder name: Mike Rosseel, IBAN: BE82063500018968, BIC: GKCCBEBB, country code: BE",
- "paymentDetailsForTradePopup": "Holder name: Mike Rosseel\nIBAN: BE82063500018968\nBIC: GKCCBEBB\nCountry of bank: Belgium (BE)"
- },
+ * "contractData": {
+ * "paymentMethodName": "SEPA",
+ * "id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
+ * "maxTradePeriod": 691200000,
+ * "countryCode": "BE",
+ * "holderName": "Mike Rosseel",
+ * "iban": "BE82063500018968",
+ * "bic": "GKCCBEBB",
+ * "acceptedCountryCodes": ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "IE", "IT", "LT", "LU", "LV", "MC", "MT", "NL", "PT", "SI", "SK"],
+ * "paymentDetails": "SEPA - Holder name: Mike Rosseel, IBAN: BE82063500018968, BIC: GKCCBEBB, country code: BE",
+ * "paymentDetailsForTradePopup": "Holder name: Mike Rosseel\nIBAN: BE82063500018968\nBIC: GKCCBEBB\nCountry of bank: Belgium (BE)"
+ * },
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data

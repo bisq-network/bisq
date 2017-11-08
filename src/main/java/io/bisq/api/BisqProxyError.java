@@ -17,7 +17,6 @@
 
 package io.bisq.api;
 
-import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import java.util.Optional;

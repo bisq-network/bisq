@@ -2,7 +2,7 @@ package io.bisq.api.model;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /*
  * This file is part of bisq.
