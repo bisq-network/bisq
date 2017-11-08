@@ -39,11 +39,14 @@ public class BitcoinNodes {
 
     @Getter
     private final List<BtcNode> btcNodeList = Arrays.asList(
-            BtcNode.fromAddress(/*"bitcoin.christophatteneder.com", */"174.138.35.229"),
-            BtcNode.fromHostName("btc.beams.io"/*, "62.178.187.80"*/),
-            BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83"),
-            BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion"),
-            BtcNode.fromHostName("vlf5i3grro3wux24.onion")
+            BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
+            BtcNode.fromHostName("btc.beams.io", "https://github.com/cbeams"),
+            BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
+            BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
+            BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
+            BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
+            BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
+            BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
     );
 
     @Getter
@@ -52,44 +55,47 @@ public class BitcoinNodes {
         @Nullable
         private final String hostName;
         @Nullable
+        private final String operator; // null in case the user provides a list of custom btc nodes
+        @Nullable
         private final String address; // IPv4 address
         private int port = BisqEnvironment.getParameters().getPort();
 
         /**
          * @param fullAddress [hostName:port | IPv4 address:port]
-         * @return
+         * @return BtcNode instance
          */
         public static BtcNode fromFullAddress(String fullAddress) {
             String[] parts = fullAddress.split(":");
             checkArgument(parts.length > 0);
             if (parts.length == 1) {
-                return BtcNode.fromHostName(parts[0]);
+                return BtcNode.fromHostName(parts[0], null);
             } else {
                 checkArgument(parts.length == 2);
-                return BtcNode.fromHostNameAndPort(parts[0], Integer.valueOf(parts[1]));
+                return BtcNode.fromHostNameAndPort(parts[0], Integer.valueOf(parts[1]), null);
             }
         }
 
-        public static BtcNode fromHostName(String hostName) {
-            return new BtcNode(hostName, null);
+        public static BtcNode fromHostName(String hostName, @Nullable String operator) {
+            return new BtcNode(hostName, null, operator);
         }
 
-        public static BtcNode fromAddress(String address) {
-            return new BtcNode(null, address);
+        public static BtcNode fromAddress(String address, @Nullable String operator) {
+            return new BtcNode(null, address, operator);
         }
 
-        public static BtcNode fromHostNameAndPort(String hostName, int port) {
-            return new BtcNode(hostName, null, port);
+        public static BtcNode fromHostNameAndPort(String hostName, int port, @Nullable String operator) {
+            return new BtcNode(hostName, null, port, operator);
         }
 
-        public static BtcNode fromHostNameAndAddress(String hostName, String address) {
-            return new BtcNode(hostName, address);
+        public static BtcNode fromHostNameAndAddress(String hostName, String address, @Nullable String operator) {
+            return new BtcNode(hostName, address, operator);
         }
 
-        private BtcNode(@Nullable String hostName, @Nullable String address, int port) {
+        private BtcNode(@Nullable String hostName, @Nullable String address, int port, @Nullable String operator) {
             this.hostName = hostName;
             this.address = address;
             this.port = port;
+            this.operator = operator;
 
             if (address == null)
                 checkNotNull(hostName, "hostName must not be null if address is null");
@@ -97,9 +103,10 @@ public class BitcoinNodes {
                 checkNotNull(address, "address must not be null if hostName is null");
         }
 
-        private BtcNode(@Nullable String hostName, @Nullable String address) {
+        private BtcNode(@Nullable String hostName, @Nullable String address, @Nullable String operator) {
             this.hostName = hostName;
             this.address = address;
+            this.operator = operator;
 
             if (address == null)
                 checkNotNull(hostName, "hostName must not be null if address is null");
