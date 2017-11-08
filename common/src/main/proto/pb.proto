@@ -935,7 +935,6 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        // TODO not fully implemented yet
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
