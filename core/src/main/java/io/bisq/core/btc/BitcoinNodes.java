@@ -47,6 +47,7 @@ public class BitcoinNodes {
             BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
             BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
             BtcNode.fromHostNameAndAddress("bcwat.ch", "5.189.166.193", "https://github.com/sgeisler"),
+            BtcNode.fromHostNameAndAddress("btc.jochen-hoenicke.de", "37.221.198.57", "https://github.com/jhoenicke"),
             BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
     );
 
