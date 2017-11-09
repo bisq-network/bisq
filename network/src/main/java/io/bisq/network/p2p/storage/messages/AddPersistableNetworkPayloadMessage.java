@@ -3,13 +3,16 @@ package io.bisq.network.p2p.storage.messages;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class AddPersistableNetworkPayloadMessage extends BroadcastMessage {
+public final class AddPersistableNetworkPayloadMessage extends BroadcastMessage implements CapabilityRequiringPayload {
     private final PersistableNetworkPayload persistableNetworkPayload;
 
     public AddPersistableNetworkPayloadMessage(PersistableNetworkPayload persistableNetworkPayload) {
@@ -35,9 +38,14 @@ public final class AddPersistableNetworkPayloadMessage extends BroadcastMessage 
     }
 
     public static AddPersistableNetworkPayloadMessage fromProto(PB.AddPersistableNetworkPayloadMessage proto,
-                                                                NetworkProtoResolver resolver, 
+                                                                NetworkProtoResolver resolver,
                                                                 int messageVersion) {
         return new AddPersistableNetworkPayloadMessage((PersistableNetworkPayload) resolver.fromProto(proto.getPayload()),
                 messageVersion);
+    }
+
+    @Override
+    public List<Integer> getRequiredCapabilities() {
+        return null;
     }
 }
