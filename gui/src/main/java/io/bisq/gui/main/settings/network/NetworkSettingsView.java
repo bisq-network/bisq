@@ -373,10 +373,17 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 break;
             default:
             case PROVIDED:
-                btcNodesInputTextField.setDisable(true);
-                btcNodesLabel.setDisable(true);
-                if (calledFromUser)
-                    showShutDownPopup();
+                if (bitcoinNodes.useProvidedBtcNodes()) {
+                    btcNodesInputTextField.setDisable(true);
+                    btcNodesLabel.setDisable(true);
+                    if (calledFromUser)
+                        showShutDownPopup();
+                }else{
+                    selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    selectBitcoinPeersToggle();
+                    onBitcoinPeersToggleSelected(false);
+                }
                 break;
         }
     }
