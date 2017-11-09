@@ -86,6 +86,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     Button reSyncSPVChainButton, openTorSettingsButton;
 
     private final Preferences preferences;
+    private final BitcoinNodes bitcoinNodes;
     private final FilterManager filterManager;
     private final BisqEnvironment bisqEnvironment;
     private final Clock clock;
@@ -100,7 +101,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
     private ChangeListener<Boolean> btcNodesFocusListener;
-    private String btcNodesPreFocusText;
     private ToggleGroup bitcoinPeersToggleGroup;
     private BitcoinNodes.BitcoinNodesOption selectedBitcoinNodesOption;
     private ChangeListener<Toggle> bitcoinPeersToggleGroupListener;
@@ -108,12 +108,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private ChangeListener<Filter> filterPropertyListener;
 
     @Inject
-    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences,
+    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences, BitcoinNodes bitcoinNodes,
                                FilterManager filterManager, BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
+        this.bitcoinNodes = bitcoinNodes;
         this.filterManager = filterManager;
         this.bisqEnvironment = bisqEnvironment;
         this.clock = clock;
@@ -330,7 +331,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
-        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
+        useProvidedNodesRadio.setDisable(!bitcoinNodes.useProvidedBtcNodes() || bitcoinLocalhostNodeRunning);
         useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
         usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
 

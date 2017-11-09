@@ -286,7 +286,7 @@ public class WalletsSetup {
                     break;
                 default:
                 case PROVIDED:
-                    btcNodeList = bitcoinNodes.getBtcNodeList();
+                    btcNodeList = bitcoinNodes.getProvidedBtcNodes();
                     break;
             }
 

@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,19 +38,27 @@ public class BitcoinNodes {
         PUBLIC
     }
 
-    @Getter
-    private final List<BtcNode> btcNodeList = Arrays.asList(
-            BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
-            BtcNode.fromHostName("btc.beams.io", "https://github.com/cbeams"),
-            BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
-            BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
-            BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
-            BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
-            BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
-            BtcNode.fromHostNameAndAddress("bcwat.ch", "5.189.166.193", "https://github.com/sgeisler"),
-            BtcNode.fromHostNameAndAddress("btc.jochen-hoenicke.de", "37.221.198.57", "https://github.com/jhoenicke"),
-            BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
-    );
+    // For other base currencies or testnet we ignore provided nodes
+    public List<BtcNode> getProvidedBtcNodes() {
+        return useProvidedBtcNodes() ?
+                Arrays.asList(
+                        BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
+                        BtcNode.fromHostName("btc.beams.io", "https://github.com/cbeams"),
+                        BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
+                        BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
+                        BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
+                        BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
+                        BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
+                        BtcNode.fromHostNameAndAddress("bcwat.ch", "5.189.166.193", "https://github.com/sgeisler"),
+                        BtcNode.fromHostNameAndAddress("btc.jochen-hoenicke.de", "37.221.198.57", "https://github.com/jhoenicke"),
+                        BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
+                ) :
+                new ArrayList<>();
+    }
+
+    public boolean useProvidedBtcNodes() {
+        return BisqEnvironment.getBaseCurrencyNetwork().isBitcoin() && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin();
+    }
 
     @Getter
     @ToString
