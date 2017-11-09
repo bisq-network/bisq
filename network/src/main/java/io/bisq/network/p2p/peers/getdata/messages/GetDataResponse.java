@@ -1,6 +1,5 @@
 package io.bisq.network.p2p.peers.getdata.messages;
 
-import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkProtoResolver;
@@ -15,8 +14,8 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,10 +31,11 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     // We added that in v 0.6 and we would get a null object from older peers, so keep it annotated with @Nullable
     @Nullable
     private final Set<PersistableNetworkPayload> persistableNetworkPayloadSet;
-    
+
     private final int requestNonce;
     private final boolean isGetUpdatedDataResponse;
-    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    @Nullable
+    private final List<Integer> supportedCapabilities;
 
     public GetDataResponse(Set<ProtectedStorageEntry> dataSet,
                            @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
@@ -45,6 +45,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 persistableNetworkPayloadSet,
                 requestNonce,
                 isGetUpdatedDataResponse,
+                null,
                 Version.getP2PMessageVersion());
     }
 
@@ -56,6 +57,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                             @Nullable Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                             int requestNonce,
                             boolean isGetUpdatedDataResponse,
+                            @Nullable List<Integer> supportedCapabilities,
                             int messageVersion) {
         super(messageVersion);
 
@@ -63,6 +65,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         this.persistableNetworkPayloadSet = persistableNetworkPayloadSet;
         this.requestNonce = requestNonce;
         this.isGetUpdatedDataResponse = isGetUpdatedDataResponse;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
@@ -79,9 +82,9 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                                         .build())
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
-                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
-                .addAllSupportedCapabilities(supportedCapabilities);
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
 
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
         Optional.ofNullable(persistableNetworkPayloadSet).ifPresent(set -> builder.addAllPersistableNetworkPayloadItems(set.stream()
                 .map(PersistableNetworkPayload::toProtoMessage)
                 .collect(Collectors.toList())));
@@ -109,6 +112,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),
                 proto.getIsGetUpdatedDataResponse(),
+                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion);
     }
 }

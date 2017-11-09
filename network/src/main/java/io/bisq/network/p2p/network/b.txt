@@ -1,0 +1,84 @@
+{
+  "offerPayload": {
+    "id": "bynzq-3dbea64f-8028-4235-bfc7-7b7329bff180-053",
+    "date": 1510249787501,
+    "ownerNodeAddress": {
+      "hostName": "localhost",
+      "port": 3682
+    },
+    "direction": "BUY",
+    "price": 0,
+    "marketPriceMargin": 0.01,
+    "useMarketBasedPrice": true,
+    "amount": 1000000,
+    "minAmount": 1000000,
+    "baseCurrencyCode": "BTC",
+    "counterCurrencyCode": "USD",
+    "arbitratorNodeAddresses": [
+      {
+        "hostName": "localhost",
+        "port": 9222
+      }
+    ],
+    "mediatorNodeAddresses": [
+      {
+        "hostName": "localhost",
+        "port": 9222
+      }
+    ],
+    "paymentMethodId": "PERFECT_MONEY",
+    "makerPaymentAccountId": "619c802d-48ff-40a1-944e-77d5df5623eb",
+    "offerFeePaymentTxId": "1e5f0c750a8bc91c92cdd2132c916089bafd649b1d288980a65ce8dfdfc9a2ca",
+    "versionNr": "0.5.3",
+    "blockHeightAtOfferCreation": 166,
+    "txFee": 168000,
+    "makerFee": 20000,
+    "isCurrencyForMakerFeeBtc": true,
+    "buyerSecurityDeposit": 3000000,
+    "sellerSecurityDeposit": 1000000,
+    "maxTradeLimit": 100000000,
+    "maxTradePeriod": 86400000,
+    "useAutoClose": false,
+    "useReOpenAfterAutoClose": false,
+    "lowerClosePrice": 0,
+    "upperClosePrice": 0,
+    "isPrivateOffer": false,
+    "protocolVersion": 1
+  },
+  "tradeAmount": 1000000,
+  "tradePrice": 71132787,
+  "takerFeeTxID": "7361ac51789257022dc07189d56a42ad918922fad81d3d074ebf85ebbfdcb3c9",
+  "buyerNodeAddress": {
+    "hostName": "localhost",
+    "port": 3682
+  },
+  "sellerNodeAddress": {
+    "hostName": "localhost",
+    "port": 3632
+  },
+  "arbitratorNodeAddress": {
+    "hostName": "localhost",
+    "port": 9222
+  },
+  "mediatorNodeAddress": {
+    "hostName": "localhost",
+    "port": 9222
+  },
+  "isBuyerMakerAndSellerTaker": true,
+  "makerAccountId": "919666446",
+  "takerAccountId": "1680033503",
+  "makerPaymentAccountPayload": {
+    "accountNr": "adsf",
+    "paymentMethodId": "PERFECT_MONEY",
+    "id": "619c802d-48ff-40a1-944e-77d5df5623eb",
+    "maxTradePeriod": 86400000
+  },
+  "takerPaymentAccountPayload": {
+    "accountNr": "dummy_31",
+    "paymentMethodId": "PERFECT_MONEY",
+    "id": "1f78ffab-082d-4646-aa3a-2089698748d0",
+    "maxTradePeriod": 0
+  },
+  "makerPayoutAddressString": "mtEiwZUKnyEGunzTbpqNFwrNv4wEAbVoHK",
+  "takerPayoutAddressString": "mk8gDkjz4gKA3qWvRbbcc82VhEBx1c43P3"
+}
