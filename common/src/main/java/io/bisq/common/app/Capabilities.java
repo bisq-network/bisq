@@ -2,6 +2,8 @@ package io.bisq.common.app;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Capabilities {
     // We can define here special features the client is supporting.
@@ -29,5 +31,23 @@ public class Capabilities {
      */
     public static ArrayList<Integer> getCapabilities() {
         return capabilities;
+    }
+
+    public static boolean isCapabilitySupported(final List<Integer> requiredItems, final List<Integer> supportedItems) {
+        if (requiredItems != null && !requiredItems.isEmpty()) {
+            if (supportedItems != null && !supportedItems.isEmpty()) {
+                List<Integer> matches = new ArrayList<>();
+                for (int requiredItem : requiredItems) {
+                    matches.addAll(supportedItems.stream()
+                            .filter(supportedItem -> requiredItem == supportedItem)
+                            .collect(Collectors.toList()));
+                }
+                return matches.size() == requiredItems.size();
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 }

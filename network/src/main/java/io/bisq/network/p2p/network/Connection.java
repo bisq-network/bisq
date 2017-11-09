@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
@@ -243,6 +244,8 @@ public class Connection implements MessageListener {
                     if (protoOutputStreamLock.isLocked())
                         protoOutputStreamLock.unlock();
                 }
+            } else {
+                log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -250,66 +253,21 @@ public class Connection implements MessageListener {
     }
 
     public boolean isCapabilitySupported(NetworkEnvelope networkEnvelop) {
-        //TODO refactor, does not cover multiple items, add tests
         if (networkEnvelop instanceof AddDataMessage) {
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload();
-            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
-                if (supportedCapabilities != null) {
-                    for (int messageCapability : requiredCapabilities) {
-                        for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability)
-                                return true;
-                        }
-                    }
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                    return false;
-                } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                    return false;
-                }
-            } else {
-                return true;
-            }
+            return !(protectedStoragePayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) protectedStoragePayload);
         } else if (networkEnvelop instanceof AddPersistableNetworkPayloadMessage) {
             final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload();
-            if (persistableNetworkPayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
-                if (supportedCapabilities != null) {
-                    for (int messageCapability : requiredCapabilities) {
-                        for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability)
-                                return true;
-                        }
-                    }
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(persistableNetworkPayload));
-                    return false;
-                } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(persistableNetworkPayload));
-                    return false;
-                }
-            } else {
-                return true;
-            }
+            return !(persistableNetworkPayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) persistableNetworkPayload);
         } else {
             return true;
         }
+    }
+
+    private boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
+        final List<Integer> requiredCapabilities = payload.getRequiredCapabilities();
+        final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
+        return Capabilities.isCapabilitySupported(requiredCapabilities, supportedCapabilities);
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

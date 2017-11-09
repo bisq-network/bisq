@@ -339,10 +339,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         persistableNetworkPayloadMapStorage.queueUpForSave(persistableNetworkPayloadCollection, 2000);
                         persistableNetworkPayloadMapListeners.stream().forEach(e -> e.onAdded(payload));
                     }
-                    if (allowBroadcast) {
-                        log.error("broadcast AddPersistableNetworkPayloadMessage");
+                    if (allowBroadcast)
                         broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
-                    }
+
                     return true;
                 } else {
                     log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
