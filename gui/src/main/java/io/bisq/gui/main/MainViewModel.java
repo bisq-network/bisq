@@ -50,7 +50,10 @@ import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.*;
+import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.CryptoCurrencyAccount;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
@@ -68,7 +71,10 @@ import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.*;
+import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
+import io.bisq.gui.main.overlays.windows.TacWindow;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
+import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
@@ -409,6 +415,19 @@ public class MainViewModel implements ViewModel {
 
                 if (preferences.getUseTorForBitcoinJ())
                     initWalletService();
+
+                // We want to get early connected to the price relay so we call it already now
+                long ts = new Date().getTime();
+                final boolean[] logged = {false};
+                priceFeedService.setCurrencyCodeOnInit();
+                priceFeedService.requestPriceFeed(price -> {
+                            if (!logged[0]) {
+                                log.info("We received data from the price relay after {} ms.",
+                                        (new Date().getTime() - ts));
+                                logged[0] = true;
+                            }
+                        },
+                        (errorMessage, throwable) -> log.error("requestPriceFeed failed:" + errorMessage));
             }
 
             @Override
@@ -638,7 +657,7 @@ public class MainViewModel implements ViewModel {
 
         accountAgeWitnessService.onAllServicesInitialized();
 
-        priceFeedService.onAllServicesInitialized();
+        priceFeedService.setCurrencyCodeOnInit();
 
         filterManager.onAllServicesInitialized();
         filterManager.addListener(filter -> {
