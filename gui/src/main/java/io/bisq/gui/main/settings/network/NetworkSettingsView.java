@@ -177,6 +177,10 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
         }
+        if (!bitcoinNodes.useProvidedBtcNodes()) {
+            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+        }
 
         selectBitcoinPeersToggle();
         onBitcoinPeersToggleSelected(false);
@@ -378,7 +382,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                     btcNodesLabel.setDisable(true);
                     if (calledFromUser)
                         showShutDownPopup();
-                }else{
+                } else {
                     selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
                     selectBitcoinPeersToggle();
