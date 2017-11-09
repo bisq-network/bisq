@@ -61,19 +61,21 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String bankId,
                                         String email,
                                         ArrayList<String> acceptedBanks,
+                                        long maxTradePeriod,
                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
-            id,
-            countryCode,
-            holderName,
-            bankName,
-            branchId,
-            accountNr,
-            accountType,
-            holderTaxId,
-            bankId,
-            email,
-            excludeFromJsonDataMap);
+                id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                email,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.acceptedBanks = acceptedBanks;
     }
@@ -81,20 +83,20 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     @Override
     public Message toProtoMessage() {
         final PB.SpecificBanksAccountPayload.Builder builder = PB.SpecificBanksAccountPayload.newBuilder()
-            .addAllAcceptedBanks(acceptedBanks);
+                .addAllAcceptedBanks(acceptedBanks);
 
         PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
-            .getCountryBasedPaymentAccountPayloadBuilder()
-            .getBankAccountPayloadBuilder()
-            .setSpecificBanksAccountPayload(builder);
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .getBankAccountPayloadBuilder()
+                .setSpecificBanksAccountPayload(builder);
 
         PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
-            .getCountryBasedPaymentAccountPayloadBuilder()
-            .setBankAccountPayload(bankAccountPayloadBuilder);
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setBankAccountPayload(bankAccountPayloadBuilder);
 
         return getPaymentAccountPayloadBuilder()
-            .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
-            .build();
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
+                .build();
     }
 
     public static SpecificBanksAccountPayload fromProto(PB.PaymentAccountPayload proto) {
@@ -102,18 +104,19 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
         PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         PB.SpecificBanksAccountPayload specificBanksAccountPayload = bankAccountPayload.getSpecificBanksAccountPayload();
         return new SpecificBanksAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            countryBasedPaymentAccountPayload.getCountryCode(),
-            bankAccountPayload.getHolderName(),
-            bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
-            bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
-            bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
-            bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
-            bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-            bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-            bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
-            new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                bankAccountPayload.getHolderName(),
+                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
+                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
+                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
+                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -138,6 +141,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return super.getPaymentDetailsForTradePopup() + "\n" +
-            "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
+                "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
     }
 }

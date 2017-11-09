@@ -52,10 +52,12 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     private SwishAccountPayload(String paymentMethod, String id,
                                 String mobileNr,
                                 String holderName,
+                                long maxTradePeriod,
                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.mobileNr = mobileNr;
         this.holderName = holderName;
     }
@@ -63,18 +65,19 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
-                .setMobileNr(mobileNr)
-                .setHolderName(holderName))
-            .build();
+                .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
+                        .setMobileNr(mobileNr)
+                        .setHolderName(holderName))
+                .build();
     }
 
     public static SwishAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new SwishAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getSwishAccountPayload().getMobileNr(),
-            proto.getSwishAccountPayload().getHolderName(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getSwishAccountPayload().getMobileNr(),
+                proto.getSwishAccountPayload().getHolderName(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -90,7 +93,7 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-            "Mobile no.: " + mobileNr;
+                "Mobile no.: " + mobileNr;
     }
 
     @Override
