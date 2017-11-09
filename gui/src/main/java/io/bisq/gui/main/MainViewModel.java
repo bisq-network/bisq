@@ -50,10 +50,7 @@ import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.OKPayAccount;
-import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
@@ -1218,20 +1215,20 @@ public class MainViewModel implements ViewModel {
 
     private void setupDevDummyPaymentAccounts() {
         if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
-            OKPayAccount okPayAccount = new OKPayAccount();
-            okPayAccount.init();
-            okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-            okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-            okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
-            user.addPaymentAccount(okPayAccount);
+            PerfectMoneyAccount perfectMoneyAccount = new PerfectMoneyAccount();
+            perfectMoneyAccount.init();
+            perfectMoneyAccount.setAccountNr("dummy_" + new Random().nextInt(100));
+            perfectMoneyAccount.setAccountName("PerfectMoney dummy");// Don't translate only for dev
+            perfectMoneyAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
+            user.addPaymentAccount(perfectMoneyAccount);
 
             if (p2PService.isBootstrapped()) {
-                accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onBootstrapComplete() {
-                        accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                        accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
                     }
                 });
             }
