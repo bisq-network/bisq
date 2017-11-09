@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ProvidersRepository {
-    private static final String NODES = "http://xc3nh4juf2hshy7e.onion/";
+    private static final String NODES = "http://xc3nh4juf2hshy7e.onion/, http://ceaanhbvluug4we6.onion/";
     // old nodes
     // private static final String NODES = "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/";
     private final String providersFromProgramArgs;
