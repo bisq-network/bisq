@@ -11,9 +11,12 @@ System requirements
 -------------
 
 The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u131 or better (as well as maven and git).
-In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
-    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+    $ sudo apt-get install openjdk-8-jdk maven git
+
+In Debian/Ubuntu with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
+
+    $ sudo apt-get install openjfx
 
 ### 1. Check the version of Java you currently have installed
 
@@ -55,8 +58,11 @@ If `$JAVA_HOME` is not present, open your `.bashrc` file:
     $ touch ~/.bashrc
     $ gedit ~/.bashrc
 
-For OpenJDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
-For Oracle JDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-oracle`
+* For OpenJDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
+* For Oracle JDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-oracle`
+* For your current *alternative* JDK add: `export JAVA_HOME=/usr/lib/jvm/default-java`  
+  (or `/usr/lib/jvm/default` for Arch or `/usr/lib/jvm/java` for Fedora)
+
 Save and close the file.
 
 Reload the file in your shell:
