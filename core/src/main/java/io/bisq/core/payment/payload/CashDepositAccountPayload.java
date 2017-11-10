@@ -80,9 +80,12 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       @Nullable String requirements,
                                       @Nullable String holderTaxId,
                                       @Nullable String bankId,
+                                      long maxTradePeriod,
                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
-        super(paymentMethodName, id,
+        super(paymentMethodName,
+                id,
                 countryCode,
+                maxTradePeriod,
                 excludeFromJsonDataMap);
         this.holderName = holderName;
         this.holderEmail = holderEmail;
@@ -132,6 +135,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 cashDepositAccountPayload.getRequirements().isEmpty() ? null : cashDepositAccountPayload.getRequirements(),
                 cashDepositAccountPayload.getHolderTaxId().isEmpty() ? null : cashDepositAccountPayload.getHolderTaxId(),
                 cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId(),
+                proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 

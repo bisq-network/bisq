@@ -91,7 +91,7 @@ public class PriceFeedService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
+    public void setCurrencyCodeOnInit() {
         if (getCurrencyCode() == null) {
             final TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
             final String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";

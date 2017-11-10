@@ -54,6 +54,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
     protected final String paymentMethodId;
     protected final String id;
 
+    // Is just kept for not breaking backward compatibility. Set to -1 to indicate it is no used anymore.
+    protected final long maxTradePeriod;
+
     // In v0.6 we removed maxTradePeriod but we need to keep it in the PB file for backward compatibility
     // protected final long maxTradePeriod;
 
@@ -71,8 +74,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     PaymentAccountPayload(String paymentMethodId, String id) {
         this(paymentMethodId,
-            id,
-            null);
+                id,
+                -1,
+                null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,9 +85,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     protected PaymentAccountPayload(String paymentMethodId,
                                     String id,
+                                    long maxTradePeriod,
                                     @Nullable Map<String, String> excludeFromJsonDataMapParam) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
+        this.maxTradePeriod = maxTradePeriod;
         this.excludeFromJsonDataMap = excludeFromJsonDataMapParam == null ? new HashMap<>() : excludeFromJsonDataMapParam;
 
         // If not set (old versions) we set by default a random 256 bit salt.
@@ -95,8 +101,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, Restricte
 
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         final PB.PaymentAccountPayload.Builder builder = PB.PaymentAccountPayload.newBuilder()
-            .setPaymentMethodId(paymentMethodId)
-            .setId(id);
+                .setPaymentMethodId(paymentMethodId)
+                .setMaxTradePeriod(maxTradePeriod)
+                .setId(id);
 
         Optional.ofNullable(excludeFromJsonDataMap).ifPresent(builder::putAllExcludeFromJsonData);
 

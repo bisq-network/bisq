@@ -18,17 +18,19 @@
 package io.bisq.core.payment;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.P2PDataStorage;
+import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.DateTolerantPayload;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 // Object has 28 raw bytes (33 bytes is size of ProtoBuffer object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
@@ -36,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload, CapabilityRequiringPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
@@ -92,6 +94,14 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     @Override
     public boolean verifyHashSize() {
         return hash.length == 20;
+    }
+
+    // Pre 0.6 version don't know the new message type and throw an error which leads to disconnecting the peer.
+    @Override
+    public List<Integer> getRequiredCapabilities() {
+        return new ArrayList<>(Collections.singletonList(
+                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
+        ));
     }
 
 

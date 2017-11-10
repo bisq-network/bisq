@@ -50,10 +50,12 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     private OKPayAccountPayload(String paymentMethod,
                                 String id,
                                 String accountNr,
+                                long maxTradePeriod,
                                 Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -61,16 +63,17 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
-                .setAccountNr(accountNr))
-            .build();
+                .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
+                .build();
     }
 
     public static OKPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new OKPayAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getOKPayAccountPayload().getAccountNr(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getOKPayAccountPayload().getAccountNr(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

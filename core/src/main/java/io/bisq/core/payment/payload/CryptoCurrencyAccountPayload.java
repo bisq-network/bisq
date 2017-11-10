@@ -51,26 +51,29 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     private CryptoCurrencyAccountPayload(String paymentMethod,
                                          String id,
                                          String address,
+                                         long maxTradePeriod,
                                          @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.address = address;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
-                .setAddress(address))
-            .build();
+                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                        .setAddress(address))
+                .build();
     }
 
     public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getCryptoCurrencyAccountPayload().getAddress(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getCryptoCurrencyAccountPayload().getAddress(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

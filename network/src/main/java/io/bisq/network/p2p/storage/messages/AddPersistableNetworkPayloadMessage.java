@@ -35,7 +35,7 @@ public final class AddPersistableNetworkPayloadMessage extends BroadcastMessage 
     }
 
     public static AddPersistableNetworkPayloadMessage fromProto(PB.AddPersistableNetworkPayloadMessage proto,
-                                                                NetworkProtoResolver resolver, 
+                                                                NetworkProtoResolver resolver,
                                                                 int messageVersion) {
         return new AddPersistableNetworkPayloadMessage((PersistableNetworkPayload) resolver.fromProto(proto.getPayload()),
                 messageVersion);

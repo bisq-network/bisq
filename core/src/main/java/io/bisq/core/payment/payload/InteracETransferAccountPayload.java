@@ -58,10 +58,12 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                                            String holderName,
                                            String question,
                                            String answer,
+                                           long maxTradePeriod,
                                            @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.email = email;
         this.holderName = holderName;
         this.question = question;
@@ -71,22 +73,23 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
-                .setEmail(email)
-                .setHolderName(holderName)
-                .setQuestion(question)
-                .setAnswer(answer))
-            .build();
+                .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
+                        .setEmail(email)
+                        .setHolderName(holderName)
+                        .setQuestion(question)
+                        .setAnswer(answer))
+                .build();
     }
 
     public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getInteracETransferAccountPayload().getEmail(),
-            proto.getInteracETransferAccountPayload().getHolderName(),
-            proto.getInteracETransferAccountPayload().getQuestion(),
-            proto.getInteracETransferAccountPayload().getAnswer(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getInteracETransferAccountPayload().getEmail(),
+                proto.getInteracETransferAccountPayload().getHolderName(),
+                proto.getInteracETransferAccountPayload().getQuestion(),
+                proto.getInteracETransferAccountPayload().getAnswer(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -102,15 +105,15 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-            "Email: " + email + "\n" +
-            "Secret question: " + question + "\n" +
-            "Answer: " + answer;
+                "Email: " + email + "\n" +
+                "Secret question: " + question + "\n" +
+                "Answer: " + answer;
     }
 
     @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(Charset.forName("UTF-8")),
-            ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
-                answer.getBytes(Charset.forName("UTF-8")))));
+                ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
+                        answer.getBytes(Charset.forName("UTF-8")))));
     }
 }

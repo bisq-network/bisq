@@ -58,6 +58,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean sortMarketCurrenciesNumerically = true;
     private boolean usePercentageBasedPrice = true;
     private Map<String, String> peerTagMap = new HashMap<>();
+    // custom btc nodes
     private String bitcoinNodes = "";
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
@@ -72,7 +73,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     int torTransportOrdinal;
     @Nullable
     String customBridges;
-
+    int bitcoinNodesOptionOrdinal;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -120,7 +121,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseAnimations(useAnimations)
                 .setPayFeeInBtc(payFeeInBtc)
                 .setBridgeOptionOrdinal(bridgeOptionOrdinal)
-                .setTorTransportOrdinal(torTransportOrdinal);
+                .setTorTransportOrdinal(torTransportOrdinal)
+                .setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -183,6 +185,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),
                 proto.getBridgeOptionOrdinal(),
                 proto.getTorTransportOrdinal(),
-                ProtoUtil.stringOrNullFromProto(proto.getCustomBridges()));
+                ProtoUtil.stringOrNullFromProto(proto.getCustomBridges()),
+                proto.getBitcoinNodesOptionOrdinal());
     }
 }

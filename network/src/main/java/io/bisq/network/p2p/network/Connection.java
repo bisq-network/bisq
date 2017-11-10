@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
@@ -22,6 +23,7 @@ import io.bisq.network.p2p.storage.messages.AddDataMessage;
 import io.bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -189,8 +191,8 @@ public class Connection implements MessageListener {
                     long elapsed = now - lastSendTimeStamp;
                     if (elapsed < 20) {
                         log.debug("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
-                                "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
-                            lastSendTimeStamp, now, elapsed);
+                                        "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
+                                lastSendTimeStamp, now, elapsed);
                         Thread.sleep(50);
                     }
 
@@ -203,25 +205,25 @@ public class Connection implements MessageListener {
                     if (networkEnvelope instanceof Ping | networkEnvelope instanceof RefreshOfferMessage) {
                         // pings and offer refresh msg we dont want to log in production
                         log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                "Sending direct message to peer" +
-                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, proto.toString(), proto.getSerializedSize());
+                                        "Sending direct message to peer" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, proto.toString(), proto.getSerializedSize());
                     } else if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                "Sending direct message to peer" +
-                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
+                                        "Sending direct message to peer" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
                     } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
                         setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
                     }
 
                     if (!stopped) {
@@ -242,6 +244,8 @@ public class Connection implements MessageListener {
                     if (protoOutputStreamLock.isLocked())
                         protoOutputStreamLock.unlock();
                 }
+            } else {
+                log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -251,40 +255,27 @@ public class Connection implements MessageListener {
     public boolean isCapabilitySupported(NetworkEnvelope networkEnvelop) {
         if (networkEnvelop instanceof AddDataMessage) {
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload();
-            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
-                if (supportedCapabilities != null) {
-                    for (int messageCapability : requiredCapabilities) {
-                        for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability)
-                                return true;
-                        }
-                    }
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                        "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                        "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                        "connection: " + this.toString() + "\n" +
-                        "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                    return false;
-                } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
-                        "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                        "connection: " + this.toString() + "\n" +
-                        "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                    return false;
-                }
-            } else {
-                return true;
-            }
+            return !(protectedStoragePayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) protectedStoragePayload);
+        } else if (networkEnvelop instanceof AddPersistableNetworkPayloadMessage) {
+            final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload();
+            return !(persistableNetworkPayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) persistableNetworkPayload);
         } else {
             return true;
         }
     }
 
+    private boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
+        final List<Integer> requiredCapabilities = payload.getRequiredCapabilities();
+        final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
+        return Capabilities.isCapabilitySupported(requiredCapabilities, supportedCapabilities);
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isCapabilityRequired(NetworkEnvelope networkEnvelop) {
-        return networkEnvelop instanceof AddDataMessage && (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload() instanceof CapabilityRequiringPayload;
+        return (networkEnvelop instanceof AddDataMessage &&
+                (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload() instanceof CapabilityRequiringPayload) ||
+                (networkEnvelop instanceof AddPersistableNetworkPayloadMessage &&
+                        (((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload() instanceof CapabilityRequiringPayload));
     }
 
     public List<Integer> getSupportedCapabilities() {
@@ -301,7 +292,7 @@ public class Connection implements MessageListener {
         boolean contained = messageListeners.remove(messageListener);
         if (!contained)
             log.debug("Try to remove a messageListener which was never added.\n\t" +
-                "That might happen because of async behaviour of CopyOnWriteArraySet");
+                    "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
     @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -323,8 +314,8 @@ public class Connection implements MessageListener {
                 log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
                 log.error("elapsed " + (now - compareValue));
                 log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                    .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
-                    .collect(Collectors.toList()).toString());
+                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                        .collect(Collectors.toList()).toString());
             }
         }
 
@@ -339,8 +330,8 @@ public class Connection implements MessageListener {
                     log.error("violatesThrottleLimit MSG_THROTTLE_PER_10_SEC ");
                     log.error("elapsed " + (now - compareValue));
                     log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
-                        .collect(Collectors.toList()).toString());
+                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                            .collect(Collectors.toList()).toString());
                 }
             }
             // we limit to max 50 (MSG_THROTTLE_PER_10SEC) entries
@@ -379,10 +370,10 @@ public class Connection implements MessageListener {
         String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
         if (this instanceof InboundConnection) {
             log.debug("\n\n############################################################\n" +
-                "We got the peers node address set.\n" +
-                "peersNodeAddress= " + peersNodeAddress +
-                "\nconnection.uid=" + getUid() +
-                "\n############################################################\n");
+                    "We got the peers node address set.\n" +
+                    "peersNodeAddress= " + peersNodeAddress +
+                    "\nconnection.uid=" + getUid() +
+                    "\n############################################################\n");
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
@@ -444,11 +435,11 @@ public class Connection implements MessageListener {
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                "ShutDown connection:"
-                + "\npeersNodeAddress=" + peersNodeAddress
-                + "\ncloseConnectionReason=" + closeConnectionReason
-                + "\nuid=" + uid
-                + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+                    "ShutDown connection:"
+                    + "\npeersNodeAddress=" + peersNodeAddress
+                    + "\ncloseConnectionReason=" + closeConnectionReason
+                    + "\nuid=" + uid
+                    + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
@@ -456,7 +447,7 @@ public class Connection implements MessageListener {
                     Log.traceCall("sendCloseConnectionMessage");
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
-                            sharedModel.getRuleViolation().name() : closeConnectionReason.name();
+                                sharedModel.getRuleViolation().name() : closeConnectionReason.name();
                         sendMessage(new CloseConnectionMessage(reason));
 
                         setStopFlags();
@@ -545,22 +536,22 @@ public class Connection implements MessageListener {
     @Override
     public String toString() {
         return "Connection{" +
-            "peerAddress=" + peersNodeAddressOptional +
-            ", peerType=" + peerType +
-            ", uid='" + uid + '\'' +
-            '}';
+                "peerAddress=" + peersNodeAddressOptional +
+                ", peerType=" + peerType +
+                ", uid='" + uid + '\'' +
+                '}';
     }
 
     @SuppressWarnings("unused")
     public String printDetails() {
         return "Connection{" +
-            "peerAddress=" + peersNodeAddressOptional +
-            ", peerType=" + peerType +
-            ", portInfo=" + portInfo +
-            ", uid='" + uid + '\'' +
-            ", sharedSpace=" + sharedModel.toString() +
-            ", stopped=" + stopped +
-            '}';
+                "peerAddress=" + peersNodeAddressOptional +
+                ", peerType=" + peerType +
+                ", portInfo=" + portInfo +
+                ", uid='" + uid + '\'' +
+                ", sharedSpace=" + sharedModel.toString() +
+                ", stopped=" + stopped +
+                '}';
     }
 
 
@@ -605,10 +596,10 @@ public class Connection implements MessageListener {
 
             if (numRuleViolations >= ruleViolation.maxTolerance) {
                 log.warn("We close connection as we received too many corrupt requests.\n" +
-                    "numRuleViolations={}\n\t" +
-                    "corruptRequest={}\n\t" +
-                    "corruptRequests={}\n\t" +
-                    "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
+                        "numRuleViolations={}\n\t" +
+                        "corruptRequest={}\n\t" +
+                        "corruptRequests={}\n\t" +
+                        "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
                 this.ruleViolation = ruleViolation;
                 if (ruleViolation == RuleViolation.PEER_BANNED) {
                     log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
@@ -653,11 +644,11 @@ public class Connection implements MessageListener {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
                 log.warn("Unknown reason for exception at socket {}\n\t" +
-                        "connection={}\n\t" +
-                        "Exception=",
-                    socket.toString(),
-                    this,
-                    e.toString());
+                                "connection={}\n\t" +
+                                "Exception=",
+                        socket.toString(),
+                        this,
+                        e.toString());
                 e.printStackTrace();
             }
 
@@ -686,9 +677,9 @@ public class Connection implements MessageListener {
         @Override
         public String toString() {
             return "SharedSpace{" +
-                "socket=" + socket +
-                ", ruleViolations=" + ruleViolations +
-                '}';
+                    "socket=" + socket +
+                    ", ruleViolations=" + ruleViolations +
+                    '}';
         }
     }
 
@@ -744,13 +735,13 @@ public class Connection implements MessageListener {
                 Thread.currentThread().setName("InputHandler");
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
                     if (!threadNameSet && sharedModel.connection != null &&
-                        sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
+                            sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
                         Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
                     try {
                         if (sharedModel.getSocket() != null &&
-                            sharedModel.getSocket().isClosed()) {
+                                sharedModel.getSocket().isClosed()) {
                             stopAndShutDown(CloseConnectionReason.SOCKET_CLOSED);
                             return;
                         }
@@ -763,8 +754,8 @@ public class Connection implements MessageListener {
                         long elapsed = now - lastReadTimeStamp;
                         if (elapsed < 10) {
                             log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
-                                    "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
-                                lastReadTimeStamp, now, elapsed);
+                                            "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
+                                    lastReadTimeStamp, now, elapsed);
                             Thread.sleep(20);
                         }
 
@@ -786,23 +777,23 @@ public class Connection implements MessageListener {
                         if (networkEnvelope instanceof Pong || networkEnvelope instanceof RefreshOfferMessage) {
                             // We only log Pong and RefreshOfferMsg when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                    "New data arrived at inputHandler of connection {}.\n" +
-                                    "Received object (truncated)={} / size={}"
-                                    + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                connection,
-                                Utilities.toTruncatedString(proto.toString()),
-                                size);
+                                            "New data arrived at inputHandler of connection {}.\n" +
+                                            "Received object (truncated)={} / size={}"
+                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
+                                    connection,
+                                    Utilities.toTruncatedString(proto.toString()),
+                                    size);
                         } else {
                             // We want to log all incoming network_messages (except Pong and RefreshOfferMsg)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                             log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                    "New data arrived at inputHandler of connection {}.\n" +
-                                    "Received object (truncated)={} / size={}"
-                                    + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                connection,
-                                Utilities.toTruncatedString(proto.toString()),
-                                size);
+                                            "New data arrived at inputHandler of connection {}.\n" +
+                                            "Received object (truncated)={} / size={}"
+                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
+                                    connection,
+                                    Utilities.toTruncatedString(proto.toString()),
+                                    size);
                         }
 
                         // We want to track the size of each object even if it is invalid data
@@ -821,10 +812,10 @@ public class Connection implements MessageListener {
                         }
 
                         if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage &&
-                            !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
+                                !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
                             log.warn("PersistableNetworkPayload.verifyHashSize failed. hashSize={}; object={}",
-                                ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().getHash().length,
-                                Utilities.toTruncatedString(proto));
+                                    ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().getHash().length,
+                                    Utilities.toTruncatedString(proto));
                             if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                                 return;
                         }
@@ -837,16 +828,16 @@ public class Connection implements MessageListener {
                         }
 
                         if (connection.violatesThrottleLimit(networkEnvelope)
-                            && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
+                                && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;
 
                         // Check P2P network ID
                         if (proto.getMessageVersion() != Version.getP2PMessageVersion()
-                            && reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID)) {
+                                && reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID)) {
                             log.warn("RuleViolation.WRONG_NETWORK_ID. version of message={}, app version={}, " +
-                                    "proto.toTruncatedString={}", proto.getMessageVersion(),
-                                Version.getP2PMessageVersion(),
-                                Utilities.toTruncatedString(proto.toString()));
+                                            "proto.toTruncatedString={}", proto.getMessageVersion(),
+                                    Version.getP2PMessageVersion(),
+                                    Utilities.toTruncatedString(proto.toString()));
                             return;
                         }
 
@@ -856,7 +847,7 @@ public class Connection implements MessageListener {
                         if (networkEnvelope instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
                             log.debug("CloseConnectionMessage received. Reason={}\n\t" +
-                                "connection={}", proto.getCloseConnectionMessage().getReason(), connection);
+                                    "connection={}", proto.getCloseConnectionMessage().getReason(), connection);
                             if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                                 log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
                                 stopAndShutDown(CloseConnectionReason.PEER_BANNED);
@@ -895,8 +886,8 @@ public class Connection implements MessageListener {
                                 if (peersNodeAddressOptional.isPresent()) {
                                     // If we have already the peers address we check again if it matches our stored one
                                     checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                        "senderNodeAddress not matching connections peer address.\n\t" +
-                                            "message=" + networkEnvelope);
+                                            "senderNodeAddress not matching connections peer address.\n\t" +
+                                                    "message=" + networkEnvelope);
                                 } else {
                                     connection.setPeersNodeAddress(senderNodeAddress);
                                 }
@@ -946,10 +937,10 @@ public class Connection implements MessageListener {
         @Override
         public String toString() {
             return "InputHandler{" +
-                "sharedSpace=" + sharedModel +
-                ", port=" + portInfo +
-                ", stopped=" + stopped +
-                '}';
+                    "sharedSpace=" + sharedModel +
+                    ", port=" + portInfo +
+                    ", stopped=" + stopped +
+                    '}';
         }
     }
 }

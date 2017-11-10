@@ -54,53 +54,56 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                    String holderTaxId,
                                    String bankId,
                                    String email,
+                                   long maxTradePeriod,
                                    @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
-            id,
-            countryCode,
-            holderName,
-            bankName,
-            branchId,
-            accountNr,
-            accountType,
-            holderTaxId,
-            bankId,
-            email,
-            excludeFromJsonDataMap);
+                id,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                email,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
     }
 
     @Override
     public Message toProtoMessage() {
         PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
-            .getCountryBasedPaymentAccountPayloadBuilder()
-            .getBankAccountPayloadBuilder()
-            .setSameBankAccontPayload(PB.SameBankAccountPayload.newBuilder());
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .getBankAccountPayloadBuilder()
+                .setSameBankAccontPayload(PB.SameBankAccountPayload.newBuilder());
 
         PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
-            .getCountryBasedPaymentAccountPayloadBuilder()
-            .setBankAccountPayload(bankAccountPayloadBuilder);
+                .getCountryBasedPaymentAccountPayloadBuilder()
+                .setBankAccountPayload(bankAccountPayloadBuilder);
 
         return getPaymentAccountPayloadBuilder()
-            .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
-            .build();
+                .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayloadBuilder)
+                .build();
     }
 
     public static SameBankAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            countryBasedPaymentAccountPayload.getCountryCode(),
-            bankAccountPayload.getHolderName(),
-            bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
-            bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
-            bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
-            bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
-            bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-            bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-            bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                bankAccountPayload.getHolderName(),
+                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
+                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
+                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

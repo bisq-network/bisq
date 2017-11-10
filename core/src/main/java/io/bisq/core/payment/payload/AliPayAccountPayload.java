@@ -49,26 +49,29 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     private AliPayAccountPayload(String paymentMethod,
                                  String id,
                                  String accountNr,
+                                 long maxTradePeriod,
                                  @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.accountNr = accountNr;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
-                .setAccountNr(accountNr))
-            .build();
+                .setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
+                .build();
     }
 
     public static AliPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new AliPayAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getAliPayAccountPayload().getAccountNr(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getAliPayAccountPayload().getAccountNr(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

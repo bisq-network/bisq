@@ -23,14 +23,17 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.ECKey;
@@ -67,6 +70,7 @@ public class FilterManager {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
+    private final Preferences preferences;
     private final BisqEnvironment bisqEnvironment;
     private final ProvidersRepository providersRepository;
     private boolean ignoreDevMsg;
@@ -88,12 +92,14 @@ public class FilterManager {
     public FilterManager(P2PService p2PService,
                          KeyRing keyRing,
                          User user,
+                         Preferences preferences,
                          BisqEnvironment bisqEnvironment,
                          ProvidersRepository providersRepository,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
+        this.preferences = preferences;
         this.bisqEnvironment = bisqEnvironment;
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
@@ -101,27 +107,20 @@ public class FilterManager {
 
     public void onAllServicesInitialized() {
         if (!ignoreDevMsg) {
+
+            final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
+            list.forEach(e -> {
+                final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof Filter)
+                    addFilter((Filter) protectedStoragePayload);
+            });
+
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter)) {
-                            // Seed nodes are requested at startup before we get the filter so we only apply the banned
-                            // nodes at the next startup and don't update the list in the P2P network domain.
-                            // We persist it to the property file which is read before any other initialisation.
-                            bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
-
-                            // Banned price relay nodes we can apply at runtime
-                            final List<String> priceRelayNodes = filter.getPriceRelayNodes();
-                            bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
-                            providersRepository.applyBannedNodes(priceRelayNodes);
-                            providersRepository.selectNewRandomBaseUrl();
-
-                            filterProperty.set(filter);
-
-                            listeners.stream().forEach(e -> e.onFilterAdded(filter));
-                        }
+                        addFilter(filter);
                     }
                 }
 
@@ -141,6 +140,28 @@ public class FilterManager {
                     }
                 }
             });
+        }
+    }
+
+    private void addFilter(Filter filter) {
+        if (verifySignature(filter)) {
+            // Seed nodes are requested at startup before we get the filter so we only apply the banned
+            // nodes at the next startup and don't update the list in the P2P network domain.
+            // We persist it to the property file which is read before any other initialisation.
+            bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
+
+            // Banned price relay nodes we can apply at runtime
+            final List<String> priceRelayNodes = filter.getPriceRelayNodes();
+            bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+            providersRepository.applyBannedNodes(priceRelayNodes);
+            providersRepository.selectNewRandomBaseUrl();
+
+            filterProperty.set(filter);
+            listeners.stream().forEach(e -> e.onFilterAdded(filter));
+
+            if (filter.isPreventPublicBtcNetwork() &&
+                    preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.PUBLIC.ordinal())
+                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
         }
     }
 

@@ -48,12 +48,15 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PerfectMoneyAccountPayload(String paymentMethod, String id,
+    private PerfectMoneyAccountPayload(String paymentMethod,
+                                       String id,
                                        String accountNr,
+                                       long maxTradePeriod,
                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -61,16 +64,17 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
-                .setAccountNr(accountNr))
-            .build();
+                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
+                .build();
     }
 
     public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getPerfectMoneyAccountPayload().getAccountNr(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getPerfectMoneyAccountPayload().getAccountNr(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

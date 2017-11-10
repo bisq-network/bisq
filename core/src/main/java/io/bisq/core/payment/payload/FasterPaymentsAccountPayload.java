@@ -57,10 +57,12 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          String sortCode,
                                          String accountNr,
                                          String email,
+                                         long maxTradePeriod,
                                          @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.sortCode = sortCode;
         this.accountNr = accountNr;
         this.email = email;
@@ -69,20 +71,21 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-            .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
-                .setSortCode(sortCode)
-                .setAccountNr(accountNr)
-                .setEmail(email))
-            .build();
+                .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
+                        .setSortCode(sortCode)
+                        .setAccountNr(accountNr)
+                        .setEmail(email))
+                .build();
     }
 
     public static FasterPaymentsAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new FasterPaymentsAccountPayload(proto.getPaymentMethodId(),
-            proto.getId(),
-            proto.getFasterPaymentsAccountPayload().getSortCode(),
-            proto.getFasterPaymentsAccountPayload().getAccountNr(),
-            proto.getFasterPaymentsAccountPayload().getEmail(),
-            CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                proto.getId(),
+                proto.getFasterPaymentsAccountPayload().getSortCode(),
+                proto.getFasterPaymentsAccountPayload().getAccountNr(),
+                proto.getFasterPaymentsAccountPayload().getEmail(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -98,12 +101,12 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
-            "Account number: " + accountNr;
+                "Account number: " + accountNr;
     }
 
     @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(ArrayUtils.addAll(sortCode.getBytes(Charset.forName("UTF-8")),
-            accountNr.getBytes(Charset.forName("UTF-8"))));
+                accountNr.getBytes(Charset.forName("UTF-8"))));
     }
 }

@@ -52,8 +52,8 @@ import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
@@ -71,7 +71,10 @@ import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.*;
+import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
+import io.bisq.gui.main.overlays.windows.TacWindow;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
+import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
@@ -412,6 +415,19 @@ public class MainViewModel implements ViewModel {
 
                 if (preferences.getUseTorForBitcoinJ())
                     initWalletService();
+
+                // We want to get early connected to the price relay so we call it already now
+                long ts = new Date().getTime();
+                final boolean[] logged = {false};
+                priceFeedService.setCurrencyCodeOnInit();
+                priceFeedService.requestPriceFeed(price -> {
+                            if (!logged[0]) {
+                                log.info("We received data from the price relay after {} ms.",
+                                        (new Date().getTime() - ts));
+                                logged[0] = true;
+                            }
+                        },
+                        (errorMessage, throwable) -> log.error("requestPriceFeed failed:" + errorMessage));
             }
 
             @Override
@@ -641,7 +657,7 @@ public class MainViewModel implements ViewModel {
 
         accountAgeWitnessService.onAllServicesInitialized();
 
-        priceFeedService.onAllServicesInitialized();
+        priceFeedService.setCurrencyCodeOnInit();
 
         filterManager.onAllServicesInitialized();
         filterManager.addListener(filter -> {
@@ -1218,20 +1234,20 @@ public class MainViewModel implements ViewModel {
 
     private void setupDevDummyPaymentAccounts() {
         if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
-            OKPayAccount okPayAccount = new OKPayAccount();
-            okPayAccount.init();
-            okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-            okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-            okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
-            user.addPaymentAccount(okPayAccount);
+            PerfectMoneyAccount perfectMoneyAccount = new PerfectMoneyAccount();
+            perfectMoneyAccount.init();
+            perfectMoneyAccount.setAccountNr("dummy_" + new Random().nextInt(100));
+            perfectMoneyAccount.setAccountName("PerfectMoney dummy");// Don't translate only for dev
+            perfectMoneyAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
+            user.addPaymentAccount(perfectMoneyAccount);
 
             if (p2PService.isBootstrapped()) {
-                accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onBootstrapComplete() {
-                        accountAgeWitnessService.publishMyAccountAgeWitness(okPayAccount.getPaymentAccountPayload());
+                        accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
                     }
                 });
             }

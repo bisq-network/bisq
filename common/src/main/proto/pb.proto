@@ -562,6 +562,7 @@ message Filter {
     repeated string arbitrators = 9;
     repeated string seed_nodes = 10;
     repeated string price_relay_nodes = 11;
+    bool prevent_public_btc_network = 12;
 }
 
 message TradeStatistics {
@@ -934,7 +935,6 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        // TODO not fully implemented yet
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
@@ -1259,6 +1259,7 @@ message PreferencesPayload {
     int32 bridge_option_ordinal = 35;
     int32 tor_transport_ordinal = 36;
     string custom_bridges = 37;
+    int32 bitcoin_nodes_option_ordinal = 38;
 }
 
 

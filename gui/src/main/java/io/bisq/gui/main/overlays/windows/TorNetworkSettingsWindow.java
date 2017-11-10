@@ -269,7 +269,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         customBridges = preferences.getCustomBridges();
         bridgeEntriesTextArea.setText(customBridges);
 
-        // set listeners after initialisation\
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             selectedBridgeOption = (BridgeOption) newValue.getUserData();
             preferences.setBridgeOptionOrdinal(selectedBridgeOption.ordinal());
@@ -306,8 +305,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
                 setBridgeAddressesByCustomBridges();
                 break;
-            case NONE:
             default:
+            case NONE:
                 transportTypeLabel.setDisable(true);
                 transportTypeComboBox.setDisable(true);
                 enterBridgeLabel.setDisable(true);

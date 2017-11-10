@@ -44,10 +44,12 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     protected CountryBasedPaymentAccountPayload(String paymentMethodName,
                                                 String id,
                                                 String countryCode,
+                                                long maxTradePeriod,
                                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
-            id,
-            excludeFromJsonDataMap);
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.countryCode = countryCode;
     }
@@ -55,9 +57,9 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     @Override
     protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
         PB.CountryBasedPaymentAccountPayload.Builder builder = PB.CountryBasedPaymentAccountPayload.newBuilder()
-            .setCountryCode(countryCode);
+                .setCountryCode(countryCode);
         return super.getPaymentAccountPayloadBuilder()
-            .setCountryBasedPaymentAccountPayload(builder);
+                .setCountryBasedPaymentAccountPayload(builder);
     }
 
     abstract public String getPaymentDetails();
