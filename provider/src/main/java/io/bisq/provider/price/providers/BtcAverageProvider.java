@@ -69,7 +69,7 @@ public class BtcAverageProvider {
         long ts = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
-            // We need to check the type as we get an unexpected "timestamp" object at the end: 
+            // We need to check the type as we get an unexpected "timestamp" object at the end:
             if (value instanceof LinkedTreeMap) {
                 //noinspection unchecked
                 LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
@@ -78,9 +78,9 @@ public class BtcAverageProvider {
                 // We should use that api with a custom provider: http://api.bitcoinvenezuela.com/1
                 if (!("VEF".equals(currencyCode))) {
                     marketPriceMap.put(currencyCode,
-                            new PriceData(currencyCode,
-                                    (double) data.get("last"),
-                                    ts));
+                        new PriceData(currencyCode,
+                            Double.valueOf((String) data.get("last")),
+                            ts));
                 }
             }
         });
