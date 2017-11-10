@@ -67,7 +67,7 @@ public class ProvidersRepository {
                 // Use localhost for using a locally running provider
                 // providerAsString = "http://localhost:8080/";
                 //  providerAsString = "http://localhost:8080/, http://37.139.14.34:8080/";
-                providerAsString = "http://37.139.14.34:8080/";
+                providerAsString = "http://174.138.104.137:8080/";
             } else {
                 providerAsString = NODES;
             }
