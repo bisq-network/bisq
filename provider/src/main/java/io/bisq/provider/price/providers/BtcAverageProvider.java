@@ -80,7 +80,7 @@ public class BtcAverageProvider {
                     try {
                         marketPriceMap.put(currencyCode,
                                 new PriceData(currencyCode,
-                                        (double) data.get("last"),
+                                        Double.valueOf((String) data.get("last")),
                                         ts));
                     } catch (Throwable exception) {
                         log.error("Error converting btcaverage data: " + currencyCode, exception);
