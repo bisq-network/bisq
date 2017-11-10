@@ -200,7 +200,7 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFix, Preferences preferences) {
+    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFixSingle, String postFixMulti, Preferences preferences) {
         return new StringConverter<CurrencyListItem>() {
             @Override
             public String toString(CurrencyListItem item) {
@@ -213,8 +213,10 @@ public class GUIUtil {
                         return "▼ " + Res.get("list.currency.editList");
                     default:
                         String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.isSortMarketCurrenciesNumerically())
-                            displayString += " - " + item.numTrades + " " + postFix;
+                        if (preferences.isSortMarketCurrenciesNumerically()) {
+                            final int numTrades = item.numTrades;
+                            displayString += " - " + numTrades + " " + (numTrades == 1 ? postFixSingle : postFixMulti);
+                        }
                         return tradeCurrency.getDisplayPrefix() + displayString;
                 }
             }
@@ -247,9 +249,15 @@ public class GUIUtil {
         };
     }
 
-    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, @Nullable CurrencyListItem showAllCurrencyListItem, Preferences preferences) {
-        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+    // TODO could be done more elegantly...
+    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList,
+                                             ObservableList<CurrencyListItem> currencyListItems,
+                                             @Nullable CurrencyListItem showAllCurrencyListItem,
+                                             Preferences preferences) {
         Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
+        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+
+        // We get the list of all offers or trades. We want to find out how many items at each currency we have.
         tradeCurrencyList.stream().forEach(tradeCurrency -> {
             tradeCurrencySet.add(tradeCurrency);
             String code = tradeCurrency.getCode();
@@ -257,6 +265,17 @@ public class GUIUtil {
                 tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
             else
                 tradesPerCurrencyMap.put(code, 1);
+        });
+
+        Set<TradeCurrency> userSet = new HashSet<>(preferences.getFiatCurrencies());
+        userSet.addAll(preferences.getCryptoCurrencies());
+        // Now all those items which are not in the offers or trades list but comes from the user preferred currency list
+        // will get set to 0
+        userSet.stream().forEach(tradeCurrency -> {
+            tradeCurrencySet.add(tradeCurrency);
+            String code = tradeCurrency.getCode();
+            if (!tradesPerCurrencyMap.containsKey(code))
+                tradesPerCurrencyMap.put(code, 0);
         });
 
         List<CurrencyListItem> list = tradeCurrencySet.stream()
