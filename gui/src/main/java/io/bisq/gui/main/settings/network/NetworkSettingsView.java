@@ -100,7 +100,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
-    private ChangeListener<Boolean> btcNodesFocusListener;
+    private ChangeListener<Boolean> btcNodesInputTextFieldFocusListener;
     private ToggleGroup bitcoinPeersToggleGroup;
     private BitcoinNodes.BitcoinNodesOption selectedBitcoinNodesOption;
     private ChangeListener<Toggle> bitcoinPeersToggleGroupListener;
@@ -192,8 +192,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         };
 
         btcNodesInputTextFieldListener = (observable, oldValue, newValue) -> preferences.setBitcoinNodes(newValue);
-        btcNodesFocusListener = (observable, oldValue, newValue) -> {
-            if (oldValue && !newValue && !btcNodesInputTextField.getText().isEmpty())
+        btcNodesInputTextFieldFocusListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue)
                 showShutDownPopup();
         };
         filterPropertyListener = (observable, oldValue, newValue) -> {
@@ -271,7 +271,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
 
         btcNodesInputTextField.textProperty().addListener(btcNodesInputTextFieldListener);
-        btcNodesInputTextField.focusedProperty().addListener(btcNodesFocusListener);
+        btcNodesInputTextField.focusedProperty().addListener(btcNodesInputTextFieldFocusListener);
 
         openTorSettingsButton.setOnAction(e -> new TorNetworkSettingsWindow(preferences).show());
     }
@@ -296,7 +296,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
-        btcNodesInputTextField.focusedProperty().removeListener(btcNodesFocusListener);
+        btcNodesInputTextField.focusedProperty().removeListener(btcNodesInputTextFieldFocusListener);
         btcNodesInputTextField.textProperty().removeListener(btcNodesInputTextFieldListener);
 
         openTorSettingsButton.setOnAction(null);
