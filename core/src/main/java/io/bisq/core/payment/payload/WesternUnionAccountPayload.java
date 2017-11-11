@@ -20,7 +20,6 @@ package io.bisq.core.payment.payload;
 import com.google.protobuf.Message;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
-import io.bisq.common.locale.Res;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +32,6 @@ import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -41,9 +39,10 @@ import java.util.Optional;
 @Getter
 @Slf4j
 public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload {
-    private String holderName="";
-    @Nullable
-    private String requirements;
+    private String holderName;
+    private String city;
+    private String state = ""; // is optional. we don't use @Nullable because it would makes UI code more complex.
+    private String email;
 
     public WesternUnionAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -55,27 +54,33 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private WesternUnionAccountPayload(String paymentMethodName,
-                                      String id,
-                                      String countryCode,
-                                      String holderName,
-                                      @Nullable String requirements,
-                                      long maxTradePeriod,
-                                      @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                       String id,
+                                       String countryCode,
+                                       String holderName,
+                                       String city,
+                                       String state,
+                                       String email,
+                                       long maxTradePeriod,
+                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
         this.holderName = holderName;
-        this.requirements = requirements;
+        this.city = city;
+        this.state = state;
+        this.email = email;
     }
 
     @Override
     public Message toProtoMessage() {
         PB.WesternUnionAccountPayload.Builder builder =
                 PB.WesternUnionAccountPayload.newBuilder()
-                        .setHolderName(holderName);
-        Optional.ofNullable(requirements).ifPresent(builder::setRequirements);
+                        .setHolderName(holderName)
+                        .setCity(city)
+                        .setState(state)
+                        .setEmail(email);
 
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -92,7 +97,9 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 westernUnionAccountPayload.getHolderName(),
-                westernUnionAccountPayload.getRequirements().isEmpty() ? null : westernUnionAccountPayload.getRequirements(),
+                westernUnionAccountPayload.getCity(),
+                westernUnionAccountPayload.getState(),
+                westernUnionAccountPayload.getEmail(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -104,30 +111,24 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
 
     @Override
     public String getPaymentDetails() {
-        return "WU deposit - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return "Western Union - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String requirementsString = requirements != null && !requirements.isEmpty() ?
-                ("Extra requirements: " + requirements + "\n") : "";
-
-        return "Holder name: " + holderName + "\n" +
-                requirementsString +
-                CountryUtil.getNameByCode(countryCode);
+        String cityState = BankUtil.isStateRequired(countryCode) ? ("City / State: " + city + " / " + state + "\n")
+                : ("City: " + city + "\n");
+        return "Full name: " + holderName + "\n" +
+                cityState +
+                "County: " + CountryUtil.getNameByCode(countryCode) + "\n" +
+                "Email: " + email;
     }
-
 
     @Override
     public byte[] getAgeWitnessInputData() {
-
-        // We don't add holderName and holderEmail because we don't want to break age validation if the user recreates an account with
-        // slight changes in holder name (e.g. add or remove middle name)
-
         String all = this.countryCode +
                 this.holderName +
-                this.requirements;
-
+                this.email;
         return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
     }
 }

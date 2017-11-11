@@ -226,15 +226,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             final String method = Res.get(paymentMethod.getId());
             String paymentMethodLabel = Res.getWithCol("shared.paymentMethod");
             if (isNationalBanks || isSpecificBanks || isSepa) {
-                String mathodWithBankId = method + bankId;
+                String methodWithBankId = method + bankId;
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
-                            mathodWithBankId);
+                            methodWithBankId);
                 else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offerersBankName"),
-                            mathodWithBankId);
+                            methodWithBankId);
             } else {
                 addLabelTextField(gridPane, ++rowIndex, paymentMethodLabel, method);
             }

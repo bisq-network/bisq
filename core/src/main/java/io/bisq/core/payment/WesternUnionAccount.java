@@ -17,13 +17,11 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.core.payment.payload.WesternUnionAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.payment.payload.WesternUnionAccountPayload;
 
-import javax.annotation.Nullable;
-
-public final class WesternUnionAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
+public final class WesternUnionAccount extends CountryBasedPaymentAccount {
     public WesternUnionAccount() {
         super(PaymentMethod.WESTERN_UNION);
     }
@@ -33,22 +31,35 @@ public final class WesternUnionAccount extends CountryBasedPaymentAccount implem
         return new WesternUnionAccountPayload(paymentMethod.getId(), id);
     }
 
-    @Override
-    public String getBankId() {
-        return "";
+    public String getEmail() {
+        return ((WesternUnionAccountPayload) paymentAccountPayload).getEmail();
     }
 
-    @Override
-    public String getCountryCode() {
-        return getCountry() != null ? getCountry().code : "";
+    public void setEmail(String email) {
+        ((WesternUnionAccountPayload) paymentAccountPayload).setEmail(email);
     }
 
-    @Nullable
-    public String getRequirements() {
-        return ((WesternUnionAccountPayload) paymentAccountPayload).getRequirements();
+    public String getFullName() {
+        return ((WesternUnionAccountPayload) paymentAccountPayload).getHolderName();
     }
 
-    public void setRequirements(String requirements) {
-        ((WesternUnionAccountPayload) paymentAccountPayload).setRequirements(requirements);
+    public void setFullName(String email) {
+        ((WesternUnionAccountPayload) paymentAccountPayload).setHolderName(email);
+    }
+
+    public String getCity() {
+        return ((WesternUnionAccountPayload) paymentAccountPayload).getCity();
+    }
+
+    public void setCity(String email) {
+        ((WesternUnionAccountPayload) paymentAccountPayload).setCity(email);
+    }
+
+    public String getState() {
+        return ((WesternUnionAccountPayload) paymentAccountPayload).getState();
+    }
+
+    public void setState(String email) {
+        ((WesternUnionAccountPayload) paymentAccountPayload).setState(email);
     }
 }
