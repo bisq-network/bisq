@@ -26,6 +26,9 @@ If `java` is not found, or your version is anything less than `1.8.0_121`, then 
 
 #### 1.1 Debian based systems (Ubuntu)
 
+# install 7Zip
+sudo apt-get install -y p7zip-full
+
 You can use either OpenJDK or Oracle JDK.
 
 **To install OpenJDK use:**

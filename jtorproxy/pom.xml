@@ -11,6 +11,10 @@
 
     <artifactId>jtorproxy</artifactId>
 
+    <properties>
+        <tor-binary.version>7.0.6</tor-binary.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.bisq</groupId>
@@ -22,6 +26,104 @@
             <artifactId>jtorctl</artifactId>
             <version>${project.version}</version>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-linux32</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/linux/x86
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-linux64</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/linux/x64
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-macos</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/osx/x64</outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-windows</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/native/windows/x86
+                                    </outputDirectory>
+                                    <destFileName>tor.zip</destFileName>
+                                </artifactItem>
+
+                            </artifactItems>
+
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.cedricwalter</groupId>
+                                    <artifactId>tor-binary-geoip</artifactId>
+                                    <version>${tor-binary.version}</version>
+                                    <type>zip</type>
+                                    <classifier>bin</classifier>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+    </build>
 </project>
