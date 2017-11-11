@@ -59,9 +59,12 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                                       String countryCode,
                                       String holderName,
                                       @Nullable String requirements,
+                                      long maxTradePeriod,
                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
-        super(paymentMethodName, id,
+        super(paymentMethodName,
+                id,
                 countryCode,
+                maxTradePeriod,
                 excludeFromJsonDataMap);
         this.holderName = holderName;
         this.requirements = requirements;
@@ -90,6 +93,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 westernUnionAccountPayload.getHolderName(),
                 westernUnionAccountPayload.getRequirements().isEmpty() ? null : westernUnionAccountPayload.getRequirements(),
+                proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
