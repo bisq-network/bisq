@@ -60,6 +60,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String INTERAC_E_TRANSFER_ID = "INTERAC_E_TRANSFER";
     public static final String US_POSTAL_MONEY_ORDER_ID = "US_POSTAL_MONEY_ORDER";
     public static final String CASH_DEPOSIT_ID = "CASH_DEPOSIT";
+    public static final String WESTERN_UNION_ID = "WESTERN_UNION";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
@@ -76,6 +77,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod INTERAC_E_TRANSFER;
     public static PaymentMethod US_POSTAL_MONEY_ORDER;
     public static PaymentMethod CASH_DEPOSIT;
+    public static PaymentMethod WESTERN_UNION;
     public static PaymentMethod BLOCK_CHAINS;
 
     private static List<PaymentMethod> ALL_VALUES;
@@ -171,6 +173,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // Global
                     CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, maxTradeLimitMidRisk),
                     NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
                     SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
                     SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),

@@ -146,11 +146,11 @@ public class BuyerStep2View extends TradeStepView {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-            Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
-            Layout.GROUP_DISTANCE);
+                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
+                Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
-            model.getFiatVolume(),
-            Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                model.getFiatVolume(),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         switch (paymentMethodId) {
@@ -196,9 +196,12 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CASH_DEPOSIT_ID:
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.WESTERN_UNION_ID:
+                gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
-                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             default:
@@ -207,12 +210,12 @@ public class BuyerStep2View extends TradeStepView {
 
         if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
+                    Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
         Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
-            Res.get("portfolio.pending.step2_buyer.paymentStarted"));
+                Res.get("portfolio.pending.step2_buyer.paymentStarted"));
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
@@ -228,8 +231,8 @@ public class BuyerStep2View extends TradeStepView {
     protected String getWarningText() {
         setWarningHeadline();
         return Res.get("portfolio.pending.step2_buyer.warn",
-            model.dataModel.getCurrencyCode(),
-            model.getDateForOpenDispute());
+                model.dataModel.getCurrencyCode(),
+                model.getDateForOpenDispute());
     }
 
 
@@ -262,12 +265,30 @@ public class BuyerStep2View extends TradeStepView {
                 if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
-                        .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
-                        .onAction(this::showConfirmPaymentStartedPopup)
-                        .closeButtonText(Res.get("shared.no"))
-                        .onClose(popup::hide)
-                        .dontShowAgainId(key)
-                        .show();
+                            .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .closeButtonText(Res.get("shared.no"))
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key)
+                            .show();
+                } else {
+                    showConfirmPaymentStartedPopup();
+                }
+            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof WesternUnionAccountPayload) {
+                //noinspection UnusedAssignment
+                //noinspection ConstantConditions
+                String key = "westernUnionMTCNSent";
+                if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                    Popup popup = new Popup<>();
+                    popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg",
+                                    ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail()))
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .actionButtonText(Res.get("shared.yes"))
+                            .closeButtonText(Res.get("shared.no"))
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key)
+                            .show();
                 } else {
                     showConfirmPaymentStartedPopup();
                 }
@@ -287,15 +308,15 @@ public class BuyerStep2View extends TradeStepView {
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup<>();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
-                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
-                .width(700)
-                .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
-                .onAction(this::confirmPaymentStarted)
-                .closeButtonText(Res.get("shared.no"))
-                .onClose(popup::hide)
-                .dontShowAgainId(key)
-                .show();
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
+                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
+                    .width(700)
+                    .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
+                    .onAction(this::confirmPaymentStarted)
+                    .closeButtonText(Res.get("shared.no"))
+                    .onClose(popup::hide)
+                    .dontShowAgainId(key)
+                    .show();
         } else {
             confirmPaymentStarted();
         }
@@ -339,42 +360,51 @@ public class BuyerStep2View extends TradeStepView {
             if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
-                    amount) +
-                    accountDetails +
-                    paymentDetailsForTradePopup + ".\n\n" +
-                    copyPaste;
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n\n" +
+                        copyPaste;
             else if (paymentAccountPayload instanceof CashDepositAccountPayload)
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.cash",
-                    amount) +
-                    accountDetails +
-                    paymentDetailsForTradePopup + ".\n" +
-                    copyPaste + "\n\n" +
-                    tradeId + paddedId +
-                    assign +
-                    refTextWarn + "\n\n" +
-                    fees + "\n\n" +
-                    Res.get("portfolio.pending.step2_buyer.cash.extra");
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + paddedId +
+                        assign +
+                        refTextWarn + "\n\n" +
+                        fees + "\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.cash.extra");
+            else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
+                //noinspection UnusedAssignment
+                message += Res.get("portfolio.pending.step2_buyer.westernUnion",
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.westernUnion.extra",
+                                ((WesternUnionAccountPayload) paymentAccountPayload).getEmail());
             else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
-                    accountDetails +
-                    paymentDetailsForTradePopup + ".\n" +
-                    copyPaste + "\n\n" +
-                    tradeId + paddedId +
-                    assign +
-                    refTextWarn;
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + paddedId +
+                        assign +
+                        refTextWarn;
             else
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                    accountDetails +
-                    paymentDetailsForTradePopup + ".\n" +
-                    copyPaste + "\n\n" +
-                    tradeId + paddedId +
-                    assign +
-                    refTextWarn + "\n\n" +
-                    fees;
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + paddedId +
+                        assign +
+                        refTextWarn + "\n\n" +
+                        fees;
 
             //noinspection ConstantConditions,UnusedAssignment
             String key = "startPayment" + trade.getId();
@@ -382,8 +412,8 @@ public class BuyerStep2View extends TradeStepView {
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
                 new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
-                    .attention(message)
-                    .show();
+                        .attention(message)
+                        .show();
             }
         }
     }

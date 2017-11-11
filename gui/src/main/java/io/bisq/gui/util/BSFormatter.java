@@ -298,7 +298,7 @@ public class BSFormatter {
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
-                CurrencyUtil.getNameByCode(currencyCode), postFix);
+                currencyCode, postFix);
     }
 
     public String formatMinVolumeAndVolume(Offer offer) {

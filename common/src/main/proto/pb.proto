@@ -829,6 +829,7 @@ message CountryBasedPaymentAccountPayload {
         BankAccountPayload bank_account_payload = 2;
         CashDepositAccountPayload cash_deposit_account_payload = 3;
         SepaAccountPayload sepa_account_payload = 4;
+        WesternUnionAccountPayload western_union_account_payload = 5;
     }
 }
 
@@ -868,6 +869,13 @@ message CashDepositAccountPayload {
     string account_type = 7;
     string requirements = 8;
     string holder_tax_id = 9;
+}
+
+message WesternUnionAccountPayload {
+    string holder_name = 1;
+    string city = 2;
+    string state = 3;
+    string email = 4;
 }
 
 message SepaAccountPayload {
