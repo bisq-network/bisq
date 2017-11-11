@@ -136,7 +136,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList");
+        PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
         if (persistedPeerList != null)
             this.persistedPeers.addAll(persistedPeerList.getList());
     }

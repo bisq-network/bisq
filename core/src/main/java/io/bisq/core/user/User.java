@@ -74,7 +74,7 @@ public final class User implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserPayload");
+        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserPayload", 100);
         userPayload = persisted != null ? persisted : new UserPayload();
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");

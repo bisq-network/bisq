@@ -113,7 +113,7 @@ public class GUIUtil {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (directory != null && !directory.isEmpty()) {
                 Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName);
+                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 50);
                 paymentAccountsStorage.queueUpForSave();
                 new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
@@ -134,7 +134,7 @@ public class GUIUtil {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
                 Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 50);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     persisted.getList().stream().forEach(paymentAccount -> {
