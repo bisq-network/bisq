@@ -196,6 +196,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CASH_DEPOSIT_ID:
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.WESTERN_UNION_ID:
+                gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                     CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));

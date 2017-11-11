@@ -48,137 +48,84 @@ public class WesternUnionForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         WesternUnionAccountPayload data = (WesternUnionAccountPayload) paymentAccountPayload;
+        String holderName = data.getHolderName();
         String countryCode = data.getCountryCode();
         String requirements = data.getRequirements();
         boolean showRequirements = requirements != null && !requirements.isEmpty();
 
-        if (data.getHolderTaxId() != null)
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    Res.get("payment.account.name.emailAndHolderId", BankUtil.getHolderIdLabel(countryCode)),
-                    data.getHolderName() + " / " + data.getHolderEmail() + " / " + data.getHolderTaxId());
-        else
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.name.email"),
-                    data.getHolderName() + " / " + data.getHolderEmail());
+        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                    data.getHolderName());
 
         if (!showRequirements)
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
+            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.country"),
                     CountryUtil.getNameAndCode(countryCode));
         else
-            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
+            requirements += "\n" + Res.get("payment.country") + " " + CountryUtil.getNameAndCode(countryCode);
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
         int nrRows = 0;
-        if (BankUtil.isBankNameRequired(countryCode))
-            nrRows++;
-        if (BankUtil.isBankIdRequired(countryCode))
-            nrRows++;
-        if (BankUtil.isBranchIdRequired(countryCode))
-            nrRows++;
-        if (BankUtil.isAccountNrRequired(countryCode))
-            nrRows++;
-        if (BankUtil.isAccountTypeRequired(countryCode))
-            nrRows++;
+        /* if (BankUtil.isBankNameRequired(countryCode)) */
+        /*     nrRows++; */
+        /* if (BankUtil.isBankIdRequired(countryCode)) */
+        /*     nrRows++; */
+        /* if (BankUtil.isBranchIdRequired(countryCode)) */
+        /*     nrRows++; */
+        /* if (BankUtil.isAccountNrRequired(countryCode)) */
+        /*     nrRows++; */
+        /* if (BankUtil.isAccountTypeRequired(countryCode)) */
+        /*     nrRows++; */
 
-        String bankNameLabel = BankUtil.getBankNameLabel(countryCode);
-        String bankIdLabel = BankUtil.getBankIdLabel(countryCode);
-        String branchIdLabel = BankUtil.getBranchIdLabel(countryCode);
-        String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
-        String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode);
+        /* String bankNameLabel = BankUtil.getBankNameLabel(countryCode); */
+        /* String bankIdLabel = BankUtil.getBankIdLabel(countryCode); */
+        /* String branchIdLabel = BankUtil.getBranchIdLabel(countryCode); */
+        /* String accountNrLabel = BankUtil.getAccountNrLabel(countryCode); */
+        /* String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode); */
 
-        boolean accountNrAccountTypeCombined = false;
-        boolean bankNameBankIdCombined = false;
-        boolean bankIdBranchIdCombined = false;
-        boolean bankNameBranchIdCombined = false;
-        boolean branchIdAccountNrCombined = false;
-        if (nrRows > 2) {
-            // Try combine AccountNr + AccountType
-            accountNrAccountTypeCombined = BankUtil.isAccountNrRequired(countryCode) && BankUtil.isAccountTypeRequired(countryCode);
-            if (accountNrAccountTypeCombined)
-                nrRows--;
+        /* boolean accountNrAccountTypeCombined = false; */
+        /* boolean bankNameBankIdCombined = false; */
+        /* boolean bankIdBranchIdCombined = false; */
+        /* boolean bankNameBranchIdCombined = false; */
+        /* boolean branchIdAccountNrCombined = false; */
+        /* if (nrRows > 2) { */
+        /*     // Try combine AccountNr + AccountType */
+        /*     accountNrAccountTypeCombined = BankUtil.isAccountNrRequired(countryCode) && BankUtil.isAccountTypeRequired(countryCode); */
+        /*     if (accountNrAccountTypeCombined) */
+        /*         nrRows--; */
 
-            if (nrRows > 2) {
-                // Next we try BankName + BankId
-                bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
-                if (bankNameBankIdCombined)
-                    nrRows--;
+        /*     if (nrRows > 2) { */
+        /*         // Next we try BankName + BankId */
+        /*         bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode); */
+        /*         if (bankNameBankIdCombined) */
+        /*             nrRows--; */
 
-                if (nrRows > 2) {
-                    // Next we try BankId + BranchId
-                    bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) &&
-                            BankUtil.isBranchIdRequired(countryCode);
-                    if (bankIdBranchIdCombined)
-                        nrRows--;
+        /*         if (nrRows > 2) { */
+        /*             // Next we try BankId + BranchId */
+        /*             bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) && */
+        /*                     BankUtil.isBranchIdRequired(countryCode); */
+        /*             if (bankIdBranchIdCombined) */
+        /*                 nrRows--; */
 
-                    if (nrRows > 2) {
-                        // Next we try BankId + BranchId
-                        bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
-                                BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
-                        if (bankNameBranchIdCombined)
-                            nrRows--;
+        /*             if (nrRows > 2) { */
+        /*                 // Next we try BankId + BranchId */
+        /*                 bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined && */
+        /*                         BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode); */
+        /*                 if (bankNameBranchIdCombined) */
+        /*                     nrRows--; */
 
-                        if (nrRows > 2) {
-                            branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined &&
-                                    !accountNrAccountTypeCombined &&
-                                    BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
-                            if (branchIdAccountNrCombined)
-                                nrRows--;
+        /*                 if (nrRows > 2) { */
+        /*                     branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined && */
+        /*                             !accountNrAccountTypeCombined && */
+        /*                             BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode); */
+        /*                     if (branchIdAccountNrCombined) */
+        /*                         nrRows--; */
 
-                            if (nrRows > 2)
-                                log.warn("We still have too many rows....");
-                        }
-                    }
-                }
-            }
-        }
-
-        if (bankNameBankIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
-                            bankIdLabel.substring(0, bankIdLabel.length() - 1) + ":",
-                    data.getBankName() + " / " + data.getBankId());
-        }
-        if (bankNameBranchIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
-                            branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
-                    data.getBankName() + " / " + data.getBranchId());
-        }
-
-        if (!bankNameBankIdCombined && !bankNameBranchIdCombined && BankUtil.isBankNameRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankNameLabel, data.getBankName());
-
-        if (!bankNameBankIdCombined && !bankNameBranchIdCombined && !branchIdAccountNrCombined && bankIdBranchIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    bankIdLabel.substring(0, bankIdLabel.length() - 1) + " / " +
-                            branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
-                    data.getBankId() + " / " + data.getBranchId());
-        }
-
-        if (!bankNameBankIdCombined && !bankIdBranchIdCombined && BankUtil.isBankIdRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankIdLabel, data.getBankId());
-
-        if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    branchIdLabel.substring(0, branchIdLabel.length() - 1) + " / " +
-                            accountNrLabel.substring(0, accountNrLabel.length() - 1) + ":",
-                    data.getBranchId() + " / " + data.getAccountNr());
-        }
-
-        if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && !branchIdAccountNrCombined &&
-                BankUtil.isBranchIdRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchIdLabel, data.getBranchId());
-
-        if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    accountNrLabel.substring(0, accountNrLabel.length() - 1) + " / " + accountTypeLabel,
-                    data.getAccountNr() + " / " + data.getAccountType());
-        }
-
-        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && BankUtil.isAccountNrRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
-
-        if (!accountNrAccountTypeCombined && BankUtil.isAccountTypeRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
+        /*                     if (nrRows > 2) */
+        /*                         log.warn("We still have too many rows...."); */
+        /*                 } */
+        /*             } */
+        /*         } */
+        /*     } */
+        /* } */
 
         if (showRequirements) {
             TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
@@ -193,23 +140,14 @@ public class WesternUnionForm extends PaymentMethodForm {
     }
 
     protected final WesternUnionAccountPayload westernUnionAccountPayload;
-    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private Label holderIdLabel;
-    protected InputTextField holderNameInputTextField, emailInputTextField;
-    private Label bankIdLabel;
-    private Label branchIdLabel;
-    private Label accountNrLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple;
+    protected InputTextField holderNameInputTextField;
     private Tuple2<Label, InputTextField> accountNrTuple;
-    private Tuple2<Label, InputTextField> branchIdTuple;
-    private Tuple2<Label, InputTextField> bankNameTuple;
     private Tuple2<Label, ComboBox> accountTypeTuple;
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
-    private boolean useHolderID;
     private ComboBox<TradeCurrency> currencyComboBox;
-    private final EmailValidator emailValidator;
 
 
     public WesternUnionForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
@@ -217,7 +155,6 @@ public class WesternUnionForm extends PaymentMethodForm {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.westernUnionAccountPayload = (WesternUnionAccountPayload) paymentAccount.paymentAccountPayload;
 
-        emailValidator = new EmailValidator();
     }
 
     @Override
@@ -234,30 +171,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
-        addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
-                westernUnionAccountPayload.getHolderEmail());
-
-        if (BankUtil.isBankNameRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
-                    westernUnionAccountPayload.getBankName()).second.setMouseTransparent(false);
-
-        if (BankUtil.isBankIdRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
-                    westernUnionAccountPayload.getBankId()).second.setMouseTransparent(false);
-
-        if (BankUtil.isBranchIdRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
-                    westernUnionAccountPayload.getBranchId()).second.setMouseTransparent(false);
-
-        if (BankUtil.isAccountNrRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
-                    westernUnionAccountPayload.getAccountNr()).second.setMouseTransparent(false);
-
-        if (BankUtil.isAccountTypeRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
-                    westernUnionAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
         String requirements = westernUnionAccountPayload.getRequirements();
         boolean showRequirements = requirements != null && !requirements.isEmpty();
@@ -321,92 +235,7 @@ public class WesternUnionForm extends PaymentMethodForm {
                 currencyComboBox.setDisable(false);
                 currencyComboBox.getSelectionModel().select(currency);
 
-                bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
-                branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
-                accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
-                accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
-
-                bankNameInputTextField.setText("");
-                bankIdInputTextField.setText("");
-                branchIdInputTextField.setText("");
-                accountNrInputTextField.setText("");
-                accountTypeComboBox.getSelectionModel().clearSelection();
-                accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
-
-                if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
-                    validatorsApplied = true;
-                    if (useHolderID)
-                        holderIdInputTextField.setValidator(inputValidator);
-                    bankNameInputTextField.setValidator(inputValidator);
-                    bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
-                    branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
-                    accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
-                } else {
-                    validatorsApplied = false;
-                    if (useHolderID)
-                        holderIdInputTextField.setValidator(null);
-                    bankNameInputTextField.setValidator(null);
-                    bankIdInputTextField.setValidator(null);
-                    branchIdInputTextField.setValidator(null);
-                    accountNrInputTextField.setValidator(null);
-                }
                 holderNameInputTextField.resetValidation();
-                /* emailInputTextField.resetValidation(); */
-                bankNameInputTextField.resetValidation();
-                bankIdInputTextField.resetValidation();
-                branchIdInputTextField.resetValidation();
-                accountNrInputTextField.resetValidation();
-
-                boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
-                if (requiresHolderId) {
-                    holderNameInputTextField.minWidthProperty().unbind();
-                    holderNameInputTextField.setMinWidth(300);
-                } else {
-                    holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
-                }
-
-                if (useHolderID) {
-                    if (!requiresHolderId)
-                        holderIdInputTextField.setText("");
-
-                    holderIdInputTextField.resetValidation();
-                    holderIdInputTextField.setVisible(requiresHolderId);
-                    holderIdInputTextField.setManaged(requiresHolderId);
-
-                    holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
-                    holderIdLabel.setVisible(requiresHolderId);
-                    holderIdLabel.setManaged(requiresHolderId);
-                }
-
-                boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
-                bankNameTuple.first.setVisible(bankNameRequired);
-                bankNameTuple.first.setManaged(bankNameRequired);
-                bankNameInputTextField.setVisible(bankNameRequired);
-                bankNameInputTextField.setManaged(bankNameRequired);
-
-                boolean bankIdRequired = BankUtil.isBankIdRequired(countryCode);
-                bankIdTuple.first.setVisible(bankIdRequired);
-                bankIdTuple.first.setManaged(bankIdRequired);
-                bankIdInputTextField.setVisible(bankIdRequired);
-                bankIdInputTextField.setManaged(bankIdRequired);
-
-                boolean branchIdRequired = BankUtil.isBranchIdRequired(countryCode);
-                branchIdTuple.first.setVisible(branchIdRequired);
-                branchIdTuple.first.setManaged(branchIdRequired);
-                branchIdInputTextField.setVisible(branchIdRequired);
-                branchIdInputTextField.setManaged(branchIdRequired);
-
-                boolean accountNrRequired = BankUtil.isAccountNrRequired(countryCode);
-                accountNrTuple.first.setVisible(accountNrRequired);
-                accountNrTuple.first.setManaged(accountNrRequired);
-                accountNrInputTextField.setVisible(accountNrRequired);
-                accountNrInputTextField.setManaged(accountNrRequired);
-
-                boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
-                accountTypeTuple.first.setVisible(accountTypeRequired);
-                accountTypeTuple.first.setManaged(accountTypeRequired);
-                accountTypeTuple.second.setVisible(accountTypeRequired);
-                accountTypeTuple.second.setManaged(accountTypeRequired);
 
                 updateFromInputs();
 
@@ -457,69 +286,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         });
         currencyComboBox.setDisable(true);
 
-        /* addAcceptedBanksForAddAccount(); */
-
         addHolderNameAndId();
-
-        bankNameInputTextField.setVisible(false);
-        bankIdInputTextField.setVisible(false);
-        branchIdInputTextField.setVisible(false);
-        accountNrInputTextField.setVisible(false);
-        holderIdInputTextField.setVisible(false);
-        holderIdLabel.setVisible(false);
-        /* emailInputTextField.setVisible(false); */
-        bankIdLabel.setVisible(false);
-        branchIdLabel.setVisible(false);
-        accountNrLabel.setVisible(false);
-        accountTypeLabel.setVisible(false);
-
-        bankNameTuple = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
-        bankNameInputTextField = bankNameTuple.second;
-
-        bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            westernUnionAccountPayload.setBankName(newValue);
-            updateFromInputs();
-
-        });
-
-        bankIdTuple = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
-        bankIdLabel = bankIdTuple.first;
-        bankIdInputTextField = bankIdTuple.second;
-        bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            westernUnionAccountPayload.setBankId(newValue);
-            updateFromInputs();
-
-        });
-
-        branchIdTuple = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
-        branchIdLabel = branchIdTuple.first;
-        branchIdInputTextField = branchIdTuple.second;
-        branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            westernUnionAccountPayload.setBranchId(newValue);
-            updateFromInputs();
-
-        });
-
-        accountNrTuple = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
-        accountNrLabel = accountNrTuple.first;
-        accountNrInputTextField = accountNrTuple.second;
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            westernUnionAccountPayload.setAccountNr(newValue);
-            updateFromInputs();
-
-        });
-
-        accountTypeTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, "");
-        accountTypeLabel = accountTypeTuple.first;
-        //noinspection unchecked
-        accountTypeComboBox = accountTypeTuple.second;
-        accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
-        accountTypeComboBox.setOnAction(e -> {
-            if (BankUtil.isAccountTypeRequired(westernUnionAccountPayload.getCountryCode())) {
-                westernUnionAccountPayload.setAccountType(accountTypeComboBox.getSelectionModel().getSelectedItem());
-                updateFromInputs();
-            }
-        });
 
         TextArea requirementsTextArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
         requirementsTextArea.setMinHeight(30);
@@ -543,8 +310,8 @@ public class WesternUnionForm extends PaymentMethodForm {
     }
 
     protected void addHolderNameAndId() {
-        Tuple4<Label, InputTextField, Label, InputTextField> tuple = FormBuilder.addLabelInputTextFieldLabelInputTextField(gridPane,
-                ++gridRow, Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(""));
+        Tuple2<Label, InputTextField> tuple = FormBuilder.addLabelInputTextField(gridPane,
+                ++gridRow, Res.getWithCol("payment.account.owner"));
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setMinWidth(300);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -562,18 +329,6 @@ public class WesternUnionForm extends PaymentMethodForm {
         /* emailInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty()); */
         /* emailInputTextField.setValidator(emailValidator); */
 
-        useHolderID = true;
-        holderIdLabel = tuple.third;
-        holderIdLabel.setVisible(false);
-        holderIdLabel.setManaged(false);
-
-        holderIdInputTextField = tuple.forth;
-        holderIdInputTextField.setVisible(false);
-        holderIdInputTextField.setManaged(false);
-        holderIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            westernUnionAccountPayload.setHolderTaxId(newValue);
-            updateFromInputs();
-        });
     }
 
     @Override
@@ -583,29 +338,8 @@ public class WesternUnionForm extends PaymentMethodForm {
             String countryCode = westernUnionAccountPayload.getCountryCode();
             if (countryCode == null)
                 countryCode = "";
-            if (BankUtil.isBankIdRequired(countryCode)) {
-                bankId = bankIdInputTextField.getText();
-                if (bankId.length() > 9)
-                    bankId = StringUtils.abbreviate(bankId, 9);
-            } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                bankId = branchIdInputTextField.getText();
-                if (bankId.length() > 9)
-                    bankId = StringUtils.abbreviate(bankId, 9);
-            } else if (BankUtil.isBankNameRequired(countryCode)) {
-                bankId = bankNameInputTextField.getText();
-                if (bankId.length() > 9)
-                    bankId = StringUtils.abbreviate(bankId, 9);
-            }
-
-            String accountNr = accountNrInputTextField.getText();
-            if (accountNr.length() > 9)
-                accountNr = StringUtils.abbreviate(accountNr, 9);
 
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            if (bankId != null && !bankId.isEmpty())
-                accountNameTextField.setText(method.concat(": ").concat(bankId).concat(", ").concat(accountNr));
-            else
-                accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
 
@@ -614,45 +348,17 @@ public class WesternUnionForm extends PaymentMethodForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(westernUnionAccountPayload.getHolderName()).isValid
-                && emailInputTextField.getValidator().validate(westernUnionAccountPayload.getHolderEmail()).isValid;
+                && holderNameInputTextField.getValidator().validate(westernUnionAccountPayload.getHolderName()).isValid;
 
         String countryCode = westernUnionAccountPayload.getCountryCode();
-        if (validatorsApplied && BankUtil.useValidation(countryCode)) {
-            if (BankUtil.isBankNameRequired(countryCode))
-                result = result && bankNameInputTextField.getValidator().validate(westernUnionAccountPayload.getBankName()).isValid;
-
-            if (BankUtil.isBankIdRequired(countryCode))
-                result = result && bankIdInputTextField.getValidator().validate(westernUnionAccountPayload.getBankId()).isValid;
-
-            if (BankUtil.isBranchIdRequired(countryCode))
-                result = result && branchIdInputTextField.getValidator().validate(westernUnionAccountPayload.getBranchId()).isValid;
-
-            if (BankUtil.isAccountNrRequired(countryCode))
-                result = result && accountNrInputTextField.getValidator().validate(westernUnionAccountPayload.getAccountNr()).isValid;
-
-            if (BankUtil.isAccountTypeRequired(countryCode))
-                result = result && westernUnionAccountPayload.getAccountType() != null;
-
-            if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
-                result = result && holderIdInputTextField.getValidator().validate(westernUnionAccountPayload.getHolderTaxId()).isValid;
-        }
         allInputsValid.set(result);
     }
 
     protected void addHolderNameAndIdForDisplayAccount() {
         String countryCode = westernUnionAccountPayload.getCountryCode();
-        if (BankUtil.isHolderIdRequired(countryCode)) {
-            Tuple4<Label, TextField, Label, TextField> tuple = FormBuilder.addLabelTextFieldLabelTextField(gridPane, ++gridRow,
-                    Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
-            TextField holderNameTextField = tuple.second;
-            holderNameTextField.setText(westernUnionAccountPayload.getHolderName());
-            holderNameTextField.setMinWidth(300);
-            tuple.forth.setText(westernUnionAccountPayload.getHolderTaxId());
-        } else {
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                    westernUnionAccountPayload.getHolderName());
-        }
+
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+            westernUnionAccountPayload.getHolderName());
     }
 
     protected void addAcceptedBanksForAddAccount() {

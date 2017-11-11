@@ -43,21 +43,7 @@ import java.util.Optional;
 public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload {
     private String holderName="";
     @Nullable
-    private String holderEmail;
-    @Nullable
-    private String bankName;
-    @Nullable
-    private String branchId;
-    @Nullable
-    private String accountNr;
-    @Nullable
-    private String accountType;
-    @Nullable
     private String requirements;
-    @Nullable
-    private String holderTaxId;
-    @Nullable
-    private String bankId;
 
     public WesternUnionAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -72,27 +58,13 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                                       String id,
                                       String countryCode,
                                       String holderName,
-                                      @Nullable String holderEmail,
-                                      @Nullable String bankName,
-                                      @Nullable String branchId,
-                                      @Nullable String accountNr,
-                                      @Nullable String accountType,
                                       @Nullable String requirements,
-                                      @Nullable String holderTaxId,
-                                      @Nullable String bankId,
                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName, id,
                 countryCode,
                 excludeFromJsonDataMap);
         this.holderName = holderName;
-        this.holderEmail = holderEmail;
-        this.bankName = bankName;
-        this.branchId = branchId;
-        this.accountNr = accountNr;
-        this.accountType = accountType;
         this.requirements = requirements;
-        this.holderTaxId = holderTaxId;
-        this.bankId = bankId;
     }
 
     @Override
@@ -100,14 +72,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
         PB.WesternUnionAccountPayload.Builder builder =
                 PB.WesternUnionAccountPayload.newBuilder()
                         .setHolderName(holderName);
-        Optional.ofNullable(holderEmail).ifPresent(builder::setHolderEmail);
-        Optional.ofNullable(bankName).ifPresent(builder::setBankName);
-        Optional.ofNullable(branchId).ifPresent(builder::setBranchId);
-        Optional.ofNullable(accountNr).ifPresent(builder::setAccountNr);
-        Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
         Optional.ofNullable(requirements).ifPresent(builder::setRequirements);
-        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
-        Optional.ofNullable(bankId).ifPresent(builder::setBankId);
 
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -124,14 +89,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 westernUnionAccountPayload.getHolderName(),
-                westernUnionAccountPayload.getHolderEmail().isEmpty() ? null : westernUnionAccountPayload.getHolderEmail(),
-                westernUnionAccountPayload.getBankName().isEmpty() ? null : westernUnionAccountPayload.getBankName(),
-                westernUnionAccountPayload.getBranchId().isEmpty() ? null : westernUnionAccountPayload.getBranchId(),
-                westernUnionAccountPayload.getAccountNr().isEmpty() ? null : westernUnionAccountPayload.getAccountNr(),
-                westernUnionAccountPayload.getAccountType().isEmpty() ? null : westernUnionAccountPayload.getAccountType(),
                 westernUnionAccountPayload.getRequirements().isEmpty() ? null : westernUnionAccountPayload.getRequirements(),
-                westernUnionAccountPayload.getHolderTaxId().isEmpty() ? null : westernUnionAccountPayload.getHolderTaxId(),
-                westernUnionAccountPayload.getBankId().isEmpty() ? null : westernUnionAccountPayload.getBankId(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
@@ -147,63 +105,24 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String bankName = BankUtil.isBankNameRequired(countryCode) ?
-                BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
-        String bankId = BankUtil.isBankIdRequired(countryCode) ?
-                BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
-        String branchId = BankUtil.isBranchIdRequired(countryCode) ?
-                BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
-        String accountNr = BankUtil.isAccountNrRequired(countryCode) ?
-                BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
-        String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
-                BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
-        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
-                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
         String requirementsString = requirements != null && !requirements.isEmpty() ?
                 ("Extra requirements: " + requirements + "\n") : "";
-        String emailString = holderEmail != null ?
-                (Res.get("payment.email") + " " + holderEmail + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
-                emailString +
-                bankName +
-                bankId +
-                branchId +
-                accountNr +
-                accountType +
-                holderTaxIdString +
                 requirementsString +
-                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
+                CountryUtil.getNameByCode(countryCode);
     }
 
-    public String getHolderIdLabel() {
-        return BankUtil.getHolderIdLabel(countryCode);
-    }
-
-    @Nullable
-    public String getBankId() {
-        return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
-    }
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        String bankName = BankUtil.isBankNameRequired(countryCode) ? this.bankName : "";
-        String bankId = BankUtil.isBankIdRequired(countryCode) ? this.bankId : "";
-        String branchId = BankUtil.isBranchIdRequired(countryCode) ? this.branchId : "";
-        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? this.accountNr : "";
-        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? this.accountType : "";
-        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
-                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
 
         // We don't add holderName and holderEmail because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
 
-        String all = bankName +
-                bankId +
-                branchId +
-                accountNr +
-                accountType +
-                holderTaxIdString;
+        String all = this.countryCode +
+                this.holderName +
+                this.requirements;
 
         return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
     }

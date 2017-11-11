@@ -35,7 +35,7 @@ public final class WesternUnionAccount extends CountryBasedPaymentAccount implem
 
     @Override
     public String getBankId() {
-        return ((WesternUnionAccountPayload) paymentAccountPayload).getBankId();
+        return "";
     }
 
     @Override
