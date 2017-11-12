@@ -27,6 +27,7 @@ import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
 import io.bisq.gui.util.validation.altcoins.XCNAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
+import io.bisq.gui.util.validation.params.PARTParams;
 import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.WACoinsParams;
@@ -210,6 +211,22 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                     // Example for BTC, though for BTC we use the BitcoinJ library address check
+                case "PART":
+                    if (input.matches("^[RP][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
+                        if (verifyChecksum(input)) {
+                            try {
+                                Address.fromBase58(PARTParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
