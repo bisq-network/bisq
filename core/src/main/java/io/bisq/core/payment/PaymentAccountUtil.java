@@ -66,8 +66,8 @@ public class PaymentAccountUtil {
 
             if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
                 return arePaymentMethodsEqual;
-            } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
-                    offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+            } else if (paymentAccount instanceof BankAccount && (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
+                    offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))) {
 
                 final List<String> acceptedBankIds = offer.getAcceptedBankIds();
                 checkNotNull(acceptedBankIds, "offer.getAcceptedBankIds() must not be null");
@@ -82,6 +82,7 @@ public class PaymentAccountUtil {
                     return bankId != null && acceptedBankIds.contains(bankId);
                 }
             } else {
+                //TODO check if that case can be reached
                 if (paymentAccount instanceof SpecificBanksAccount) {
                     // check if we have a matching bank
                     final ArrayList<String> acceptedBanks = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
@@ -95,7 +96,6 @@ public class PaymentAccountUtil {
                     return true;
                 }
             }
-
         } else {
             return arePaymentMethodsEqual;
         }
