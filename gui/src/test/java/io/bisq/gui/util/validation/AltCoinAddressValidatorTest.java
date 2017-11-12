@@ -53,6 +53,20 @@ public class AltCoinAddressValidatorTest {
     }
 
     @Test
+    public void testPART() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("PART");
+        assertTrue(validator.validate("PZdYWHgyhuG7NHVCzEkkx3dcLKurTpvmo6").isValid);
+        assertTrue(validator.validate("RJAPhgckEgRGVPZa9WoGSWW24spskSfLTQ").isValid);
+        assertTrue(validator.validate("PaqMewoBY4vufTkKeSy91su3CNwviGg4EK").isValid);
+        assertTrue(validator.validate("PpWHwrkUKRYvbZbTic57YZ1zjmsV9X9Wu7").isValid);
+
+        assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq").isValid);
+        assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYheO").isValid);
+        assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#").isValid);
+    }
+
+    @Test
     public void testPIVX() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
         validator.setCurrencyCode("PIVX");
