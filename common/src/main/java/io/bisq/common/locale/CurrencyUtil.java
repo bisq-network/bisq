@@ -107,9 +107,11 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
+        result.add(new CryptoCurrency("MDC", "Madcoin"));
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
+        result.add(new CryptoCurrency("MDC", "Madcoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NAV", "Nav Coin"));
@@ -133,7 +135,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
@@ -167,6 +168,7 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
+        result.add(new CryptoCurrency("MDC", "Madcoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
