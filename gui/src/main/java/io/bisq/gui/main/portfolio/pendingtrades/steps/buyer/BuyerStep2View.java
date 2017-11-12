@@ -196,6 +196,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CASH_DEPOSIT_ID:
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.WESTERN_UNION_ID:
+                gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
@@ -271,6 +274,24 @@ public class BuyerStep2View extends TradeStepView {
                 } else {
                     showConfirmPaymentStartedPopup();
                 }
+            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof WesternUnionAccountPayload) {
+                //noinspection UnusedAssignment
+                //noinspection ConstantConditions
+                String key = "westernUnionMTCNSent";
+                if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                    Popup popup = new Popup<>();
+                    popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg",
+                                    ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail()))
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .actionButtonText(Res.get("shared.yes"))
+                            .closeButtonText(Res.get("shared.no"))
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key)
+                            .show();
+                } else {
+                    showConfirmPaymentStartedPopup();
+                }
             } else {
                 showConfirmPaymentStartedPopup();
             }
@@ -334,6 +355,7 @@ public class BuyerStep2View extends TradeStepView {
             String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
+            String paddedId = " " + id + " ";
             String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                 //noinspection UnusedAssignment
@@ -350,18 +372,27 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.cash.extra");
+            else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
+                //noinspection UnusedAssignment
+                message += Res.get("portfolio.pending.step2_buyer.westernUnion",
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.westernUnion.extra",
+                                ((WesternUnionAccountPayload) paymentAccountPayload).getEmail());
             else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn;
             else
@@ -370,7 +401,7 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        tradeId + id +
+                        tradeId + paddedId +
                         assign +
                         refTextWarn + "\n\n" +
                         fees;

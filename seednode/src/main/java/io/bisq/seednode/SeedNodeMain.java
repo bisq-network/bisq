@@ -21,24 +21,28 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Profiler;
 import io.bisq.common.util.RestartUtil;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
+@Slf4j
 public class SeedNodeMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
@@ -46,6 +50,13 @@ public class SeedNodeMain extends BisqExecutable {
     private SeedNode seedNode;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
+
+    static {
+        // Need to set default locale initially otherwise we get problems at non-english OS
+        Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
+
+        Utilities.removeCryptographyRestrictions();
+    }
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()

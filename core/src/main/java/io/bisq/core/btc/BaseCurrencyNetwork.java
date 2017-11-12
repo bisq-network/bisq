@@ -17,7 +17,10 @@
 
 package io.bisq.core.btc;
 
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.provider.fee.FeeService;
 import lombok.Getter;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -35,7 +38,11 @@ public enum BaseCurrencyNetwork {
 
     DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
     DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
-    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin");
+    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin"),
+
+    DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
+    DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
+    DASH_REGTEST(DashRegTestParams.get(), "DASH", "REGTEST", "Dash");
 
     @Getter
     private final NetworkParameters parameters;
@@ -67,5 +74,29 @@ public enum BaseCurrencyNetwork {
 
     public boolean isLitecoin() {
         return "LTC".equals(currencyCode);
+    }
+
+    public boolean isDash() {
+        return "DASH".equals(currencyCode);
+    }
+
+    public boolean isDoge() {
+        return "DOGE".equals(currencyCode);
+    }
+
+
+    public Coin getDefaultMinFee() {
+        switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
+            case "BTC":
+                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE;
+            case "LTC":
+                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE;
+            case "DOGE":
+                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE;
+            case "DASH":
+                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE;
+            default:
+                throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
+        }
     }
 }

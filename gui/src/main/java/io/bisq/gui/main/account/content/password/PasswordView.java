@@ -22,11 +22,16 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
+import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.main.MainView;
+import io.bisq.gui.main.account.AccountView;
+import io.bisq.gui.main.account.content.seedwords.SeedWordsView;
+import io.bisq.gui.main.account.settings.AccountSettingsView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
@@ -47,6 +52,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private final WalletsManager walletsManager;
     private final PasswordValidator passwordValidator;
+    private final Navigation navigation;
 
     private PasswordTextField passwordField;
     private PasswordTextField repeatedPasswordField;
@@ -63,9 +69,10 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(WalletsManager walletsManager, PasswordValidator passwordValidator) {
+    private PasswordView(WalletsManager walletsManager, PasswordValidator passwordValidator, Navigation navigation) {
         this.walletsManager = walletsManager;
         this.passwordValidator = passwordValidator;
+        this.navigation = navigation;
     }
 
     @Override
@@ -90,50 +97,66 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         setText();
 
         pwButton.setOnAction(e -> {
-            String password = passwordField.getText();
-            checkArgument(password.length() < 50, Res.get("password.tooLong"));
-
-            pwButton.setDisable(true);
-            deriveStatusLabel.setText(Res.get("password.deriveKey"));
-            busyAnimation.play();
-
-            KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-            ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
-                deriveStatusLabel.setText("");
-                busyAnimation.stop();
-
-                if (walletsManager.areWalletsEncrypted()) {
-                    if (walletsManager.checkAESKey(aesKey)) {
-                        walletsManager.decryptWallets(aesKey);
-                        new Popup<>()
-                                .feedback(Res.get("password.walletDecrypted"))
-                                .show();
-                        passwordField.setText("");
-                        repeatedPasswordField.setText("");
-                        walletsManager.backupWallets();
-                    } else {
-                        pwButton.setDisable(false);
-                        new Popup<>()
-                                .warning(Res.get("password.wrongPw"))
-                                .show();
-                    }
-                } else {
-                    walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                    new Popup<>()
-                            .feedback(Res.get("password.walletEncrypted"))
-                            .show();
-                    passwordField.setText("");
-                    repeatedPasswordField.setText("");
-                    walletsManager.clearBackup();
-                    walletsManager.backupWallets();
-                }
-                setText();
-            });
+            if (!walletsManager.areWalletsEncrypted()) {
+                new Popup<>().backgroundInfo(Res.get("password.backupReminder"))
+                        .closeButtonText(Res.get("password.backupWasDone"))
+                        .onClose(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
+                        .actionButtonTextWithGoTo("navigation.account.walletSeed")
+                        .onAction(() -> {
+                            navigation.setReturnPath(navigation.getCurrentPath());
+                            //noinspection unchecked
+                            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, SeedWordsView.class);
+                        })
+                        .show();
+            } else {
+                onApplyPassword(busyAnimation, deriveStatusLabel);
+            }
         });
 
         FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
         FormBuilder.addMultilineLabel(root, gridRow, Res.get("account.password.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+    }
 
+    private void onApplyPassword(BusyAnimation busyAnimation, Label deriveStatusLabel) {
+        String password = passwordField.getText();
+        checkArgument(password.length() < 500, Res.get("password.tooLong"));
+
+        pwButton.setDisable(true);
+        deriveStatusLabel.setText(Res.get("password.deriveKey"));
+        busyAnimation.play();
+
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
+            deriveStatusLabel.setText("");
+            busyAnimation.stop();
+
+            if (walletsManager.areWalletsEncrypted()) {
+                if (walletsManager.checkAESKey(aesKey)) {
+                    walletsManager.decryptWallets(aesKey);
+                    new Popup<>()
+                            .feedback(Res.get("password.walletDecrypted"))
+                            .show();
+                    passwordField.setText("");
+                    repeatedPasswordField.setText("");
+                    walletsManager.backupWallets();
+                } else {
+                    pwButton.setDisable(false);
+                    new Popup<>()
+                            .warning(Res.get("password.wrongPw"))
+                            .show();
+                }
+            } else {
+                walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+                new Popup<>()
+                        .feedback(Res.get("password.walletEncrypted"))
+                        .show();
+                passwordField.setText("");
+                repeatedPasswordField.setText("");
+                walletsManager.clearBackup();
+                walletsManager.backupWallets();
+            }
+            setText();
+        });
     }
 
     private void setText() {

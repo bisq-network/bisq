@@ -17,20 +17,27 @@
 
 package io.bisq.gui.app;
 
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Locale;
 
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BisqAppMain extends BisqExecutable {
-    private static final Logger log = LoggerFactory.getLogger(BisqAppMain.class);
+
+    static {
+        // Need to set default locale initially otherwise we get problems at non-english OS
+        Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
+
+        Utilities.removeCryptographyRestrictions();
+    }
 
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions

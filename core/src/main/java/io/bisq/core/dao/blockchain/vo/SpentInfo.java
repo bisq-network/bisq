@@ -17,24 +17,33 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
-
 @Value
-@Immutable
-public class SpentInfo implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
+public class SpentInfo implements PersistablePayload {
     private final long blockHeight;
     private final String txId;
-    private final int inputIndex; // TODO not impl yet
+    private final int inputIndex;
 
-    @Override
-    public Message toProtoMessage() {
-        return null;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static SpentInfo fromProto(PB.SpentInfo proto) {
+        return new SpentInfo(proto.getBlockHeight(),
+                proto.getTxId(),
+                proto.getInputIndex());
     }
+
+    public PB.SpentInfo toProtoMessage() {
+        return PB.SpentInfo.newBuilder()
+                .setBlockHeight(blockHeight)
+                .setTxId(txId)
+                .setInputIndex(inputIndex)
+                .build();
+    }
+
 }

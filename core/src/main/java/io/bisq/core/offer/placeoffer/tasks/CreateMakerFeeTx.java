@@ -18,6 +18,7 @@
 package io.bisq.core.offer.placeoffer.tasks;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.UserThread;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.arbitration.Arbitrator;
@@ -43,6 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
+    private Transaction tradeFeeTx = null;
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public CreateMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
@@ -70,8 +72,11 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
             final TradeWalletService tradeWalletService = model.getTradeWalletService();
+
+            // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
+
             if (offer.isCurrencyForMakerFeeBtc()) {
-                Transaction btcTransaction = tradeWalletService.createBtcTradingFeeTx(
+                tradeFeeTx = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
@@ -79,16 +84,36 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         model.isUseSavingsWallet(),
                         offer.getMakerFee(),
                         offer.getTxFee(),
-                        selectedArbitrator.getBtcAddress());
+                        selectedArbitrator.getBtcAddress(),
+                        new FutureCallback<Transaction>() {
+                            @Override
+                            public void onSuccess(Transaction transaction) {
+                                // we delay one render frame to be sure we don't get called before the method call has 
+                                // returned (tradeFeeTx would be null in that case)
+                                UserThread.execute(() -> {
+                                    if (!completed) {
+                                        if (tradeFeeTx != null && !tradeFeeTx.getHashAsString().equals(transaction.getHashAsString()))
+                                            log.warn("The trade fee tx received from the network had another tx ID than the one we publish");
 
-                // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.
-                // As the txId is part of the offer and therefore change the hash data we need to be sure to have no
-                // tx malleability
-                offer.setOfferFeePaymentTxId(btcTransaction.getHashAsString());
-                model.setTransaction(btcTransaction);
-                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                        offer.setOfferFeePaymentTxId(transaction.getHashAsString());
+                                        model.setTransaction(transaction);
+                                        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                        complete();
+                                    } else {
+                                        log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    }
+                                });
+                            }
 
-                complete();
+                            @Override
+                            public void onFailure(@NotNull Throwable t) {
+                                if (!completed) {
+                                    failed(t);
+                                } else {
+                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                }
+                            }
+                        });
             } else {
                 final BsqWalletService bsqWalletService = model.getBsqWalletService();
                 Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedBurnFeeTx(offer.getMakerFee());
@@ -106,6 +131,9 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception 
                 // if it gets committed 2 times 
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
+
+                // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
+
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
@@ -113,6 +141,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
+                            log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                             complete();

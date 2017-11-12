@@ -119,8 +119,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Pane owner;
     protected GridPane gridPane;
     protected Button closeButton;
-    protected Optional<Runnable> closeHandlerOptional = Optional.empty();
-    protected Optional<Runnable> actionHandlerOptional = Optional.empty();
+    protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
     protected Stage stage;
     protected boolean showReportErrorButtons;
     protected Label messageLabel;
@@ -335,7 +335,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues"));
         //noinspection unchecked
         return (T) this;
     }
@@ -734,7 +734,7 @@ public abstract class Overlay<T extends Overlay> {
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
+            GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues");
         });
 
         Button forumButton = new Button(Res.get("popup.reportError.forum"));
@@ -746,7 +746,7 @@ public abstract class Overlay<T extends Overlay> {
         forumButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bisq.io");
+            GUIUtil.openWebPage("http://forum.bisq.network");
         });
     }
 

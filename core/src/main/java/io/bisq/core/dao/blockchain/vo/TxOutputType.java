@@ -17,6 +17,9 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.proto.ProtoUtil;
+import io.bisq.generated.protobuffer.PB;
+
 public enum TxOutputType {
     UNDEFINED,
     BSQ_OUTPUT,
@@ -25,5 +28,18 @@ public enum TxOutputType {
     COMPENSATION_REQUEST_OP_RETURN_OUTPUT,
     COMPENSATION_REQUEST_BTC_OUTPUT,
     SPONSORING_BTC_OUTPUT,
-    VOTING_OP_RETURN_OUTPUT
+    VOTING_OP_RETURN_OUTPUT;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TxOutputType fromProto(PB.TxOutputType txOutputType) {
+        return ProtoUtil.enumFromProto(TxOutputType.class, txOutputType.name());
+    }
+
+    public PB.TxOutputType toProtoMessage() {
+        return PB.TxOutputType.valueOf(name());
+    }
 }

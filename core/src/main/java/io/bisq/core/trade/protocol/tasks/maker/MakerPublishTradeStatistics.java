@@ -22,6 +22,8 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.trade.statistics.TradeStatistics;
 
+// TODO add TakerPublishTradeStatistics to trade processes
+
 public class MakerPublishTradeStatistics extends TradeTask {
     public MakerPublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

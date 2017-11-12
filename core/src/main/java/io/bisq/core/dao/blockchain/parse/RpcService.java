@@ -25,6 +25,7 @@ import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import com.neemre.btcdcli4j.core.domain.Transaction;
 import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
 import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
@@ -32,16 +33,22 @@ import com.neemre.btcdcli4j.daemon.event.BlockListener;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
-import io.bisq.core.dao.blockchain.vo.*;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxInput;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.TxVo;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -92,6 +99,9 @@ public class RpcService {
             nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
             nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
             nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+            nodeConfig.setProperty("node.bitcoind.notification.alert.port", "64647");
+            nodeConfig.setProperty("node.bitcoind.notification.wallet.port", "64648");
+            nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
             BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
             daemon = new BtcdDaemonImpl(client);
             log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
@@ -116,9 +126,13 @@ public class RpcService {
             public void blockDetected(Block block) {
                 if (block != null) {
                     log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
-                    blockHandler.accept(block);
+                    if (block.getHeight() != null && block.getHash() != null) {
+                        blockHandler.accept(block);
+                    } else {
+                        log.warn("We received a block with block.getHeight()=null or block.getHash()=null. That should not happen.");
+                    }
                 } else {
-                    log.error("We received a block with value null. That should not happen.");
+                    log.warn("We received a block with value null. That should not happen.");
                 }
             }
         });
@@ -133,7 +147,19 @@ public class RpcService {
         return client.getBlock(blockHash);
     }
 
-    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
+    void requestFees(String txId, int blockHeight, Map<Integer, Long> feesByBlock) throws BsqBlockchainException {
+        try {
+            Transaction transaction = requestTx(txId);
+            final BigDecimal fee = transaction.getFee();
+            if (fee != null)
+                feesByBlock.put(blockHeight, Math.abs(fee.multiply(BigDecimal.valueOf(Coin.COIN.value)).longValue()));
+        } catch (BitcoindException | CommunicationException e) {
+            log.error("error at requestFees with txId={}, blockHeight={}", txId, blockHeight);
+            throw new BsqBlockchainException(e.getMessage(), e);
+        }
+    }
+
+    Tx requestTx(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = requestRawTransaction(txId);
             // rawTransaction.getTime() is in seconds but we keep it in ms internally
@@ -141,7 +167,7 @@ public class RpcService {
             final List<TxInput> txInputs = rawTransaction.getVIn()
                     .stream()
                     .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                    .map(rawInput -> new TxInput(new TxInputVo(rawInput.getTxId(), rawInput.getVOut())))
+                    .map(rawInput -> new TxInput(rawInput.getTxId(), rawInput.getVOut()))
                     .collect(Collectors.toList());
 
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
@@ -153,14 +179,16 @@ public class RpcService {
                                 if (scriptPubKey.getType().equals(ScriptTypes.NULL_DATA)) {
                                     String[] chunks = scriptPubKey.getAsm().split(" ");
                                     // TODO only store BSQ OP_RETURN date filtered by type byte
-                                    if (chunks.length == 2 && chunks[0].equals("OP_RETURN")) {
+
+                                    // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
+                                    if (chunks.length == 2 && chunks[0].equals("OP_RETURN") && !"0".equals(chunks[1])) {
                                         try {
                                             opReturnData = Utils.HEX.decode(chunks[1]);
                                         } catch (Throwable t) {
                                             // We get sometimes exceptions, seems BitcoinJ 
                                             // cannot handle all existing OP_RETURN data, but we ignore them
                                             // anyway as our OP_RETURN data is valid in BitcoinJ
-                                            log.warn(t.toString());
+                                            log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
                                         }
                                     }
                                 }
@@ -168,14 +196,13 @@ public class RpcService {
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                                 final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
-                                final TxOutputVo txOutputVo = new TxOutputVo(rawOutput.getN(),
+                                return new TxOutput(rawOutput.getN(),
                                         rawOutput.getValue().movePointRight(8).longValue(),
                                         rawTransaction.getTxId(),
                                         pubKeyScript,
                                         address,
                                         opReturnData,
                                         blockHeight);
-                                return new TxOutput(txOutputVo);
                             }
                     )
                     .collect(Collectors.toList());
@@ -188,11 +215,16 @@ public class RpcService {
                     ImmutableList.copyOf(txInputs),
                     ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {
+            log.error("error at requestTx with txId={}, blockHeight={}", txId, blockHeight);
             throw new BsqBlockchainException(e.getMessage(), e);
         }
     }
 
     RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
+    }
+
+    Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
+        return client.getTransaction(txId);
     }
 }

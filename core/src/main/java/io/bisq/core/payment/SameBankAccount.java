@@ -30,8 +30,8 @@ public final class SameBankAccount extends CountryBasedPaymentAccount implements
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new SameBankAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload createPayload() {
+        return new SameBankAccountPayload(paymentMethod.getId(), id);
     }
 
     @Override
@@ -42,13 +42,5 @@ public final class SameBankAccount extends CountryBasedPaymentAccount implements
     @Override
     public String getCountryCode() {
         return getCountry() != null ? getCountry().code : "";
-    }
-
-    public void setEmail(String value) {
-        ((BankAccountPayload) paymentAccountPayload).setEmail(value);
-    }
-
-    public String getEmail() {
-        return ((BankAccountPayload) paymentAccountPayload).getEmail();
     }
 }

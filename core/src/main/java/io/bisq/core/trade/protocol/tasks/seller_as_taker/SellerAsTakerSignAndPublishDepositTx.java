@@ -25,6 +25,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
@@ -56,7 +57,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
 
             List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");
@@ -81,6 +82,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
             Timer timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                log.debug("timeoutTimer, offerId={}, RESERVED_FOR_TRADE", trade.getId());
                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
                 complete();
@@ -123,6 +125,9 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     });
             trade.setDepositTx(depositTx);
         } catch (Throwable t) {
+            final Contract contract = trade.getContract();
+            if (contract != null)
+                contract.printDiff(processModel.getTradingPeer().getContractAsJson());
             failed(t);
         }
     }

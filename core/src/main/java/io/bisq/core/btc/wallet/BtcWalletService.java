@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -388,7 +389,7 @@ public class BtcWalletService extends WalletService {
 
     public void resetAddressEntriesForPendingTrade(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
-        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.TRADE_PAYOUT);
+        // Don't swap TRADE_PAYOUT as it might be still open in the last trade step to be used for external transfer
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
@@ -409,12 +410,12 @@ public class BtcWalletService extends WalletService {
             if (!Arrays.equals(pubKey, multiSigAddressEntry.getPubKey())) {
                 log.error("Pub Key from AddressEntry does not match key pair from trade data. Trade ID={}\n" +
                         "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
-                multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+                multiSigKeyPair = findKeyFromPubKey(pubKey);
             }
         } else {
             log.error("multiSigAddressEntry not found for trade ID={}.\n" +
                     "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
-            multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+            multiSigKeyPair = findKeyFromPubKey(pubKey);
         }
 
         return multiSigKeyPair;
@@ -492,8 +493,9 @@ public class BtcWalletService extends WalletService {
                         do {
                             counter++;
                             fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                            if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                                fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                            final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                            if (fee.compareTo(defaultMinFee) < 0)
+                                fee = defaultMinFee;
 
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount.subtract(fee), toAddress);
@@ -610,8 +612,9 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                    fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                if (fee.compareTo(defaultMinFee) < 0)
+                    fee = defaultMinFee;
 
                 SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
@@ -661,8 +664,9 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-                    fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
+                if (fee.compareTo(defaultMinFee) < 0)
+                    fee = defaultMinFee;
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
@@ -783,7 +787,7 @@ public class BtcWalletService extends WalletService {
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
         sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
-        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+        Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
             addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);

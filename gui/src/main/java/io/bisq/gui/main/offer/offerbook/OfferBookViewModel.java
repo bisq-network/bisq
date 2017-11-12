@@ -30,6 +30,8 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -53,27 +55,24 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableColumn;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 class OfferBookViewModel extends ActivatableViewModel {
-    protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
-
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
     final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
-    private Set<String> tradeCurrencyCodes = new HashSet<>();
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
+    final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
@@ -102,11 +101,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager, FilterManager filterManager,
-                              Navigation navigation, BSFormatter formatter) {
+                              AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -117,6 +117,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -126,17 +127,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> {
-            tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                    .map(TradeCurrency::getCode).collect(Collectors.toSet());
             fillAllTradeCurrencies();
         };
     }
 
     @Override
     protected void activate() {
-        tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                .map(TradeCurrency::getCode).collect(Collectors.toSet());
-
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
@@ -346,9 +342,9 @@ class OfferBookViewModel extends ActivatableViewModel {
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += Res.get("offerbook.offerersAcceptedBankSeatsEuro");
+                    result += "\n" +Res.get("offerbook.offerersAcceptedBankSeatsEuro");
                 else
-                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                    result += "\n" +Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
                     result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
@@ -367,6 +363,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
+    Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
+        return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -448,19 +447,32 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isOfferBanned(Offer offer) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedOfferIds().stream()
-                        .filter(e -> e.equals(offer.getId()))
-                        .findAny()
-                        .isPresent();
+        return filterManager.isOfferIdBanned(offer.getId());
     }
 
-    boolean isNodeBanned(Offer offer) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()))
-                        .findAny()
-                        .isPresent();
+    boolean isCurrencyBanned(Offer offer) {
+        return filterManager.isCurrencyBanned(offer.getCurrencyCode());
+    }
+
+    boolean isPaymentMethodBanned(Offer offer) {
+        return filterManager.isPaymentMethodBanned(offer.getPaymentMethod());
+    }
+
+    boolean isNodeAddressBanned(Offer offer) {
+        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix());
+    }
+
+    boolean isInsufficientTradeLimit(Offer offer) {
+        Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
+        final long myTradeLimit = accountOptional.isPresent() ? accountAgeWitnessService.getMyTradeLimit(accountOptional.get(), offer.getCurrencyCode()) : 0L;
+        final long offerMinAmount = offer.getMinAmount().value;
+        log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
+                accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
+                Coin.valueOf(myTradeLimit).toFriendlyString(),
+                Coin.valueOf(offerMinAmount).toFriendlyString());
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                accountOptional.isPresent() &&
+                myTradeLimit < offerMinAmount;
     }
 
     boolean hasSameProtocolVersion(Offer offer) {
@@ -475,12 +487,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(GUIUtil.EDIT_FLAG);
     }
 
-    int getNumPastTrades(Offer offer) {
+    int getNumTrades(Offer offer) {
         return closedTradableManager.getClosedTradables().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&
-                            tradingPeerNodeAddress.getHostName().equals(offer.getMakerNodeAddress().getHostName());
+                            tradingPeerNodeAddress.getFullAddress().equals(offer.getMakerNodeAddress().getFullAddress());
                 })
                 .collect(Collectors.toSet())
                 .size();

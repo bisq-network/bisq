@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SpecificBanksAccountPayload;
@@ -32,8 +31,8 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new SpecificBanksAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload createPayload() {
+        return new SpecificBanksAccountPayload(paymentMethod.getId(), id);
     }
 
     public ArrayList<String> getAcceptedBanks() {
@@ -48,13 +47,5 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
     @Override
     public String getCountryCode() {
         return getCountry() != null ? getCountry().code : "";
-    }
-
-    public void setEmail(String value) {
-        ((BankAccountPayload) paymentAccountPayload).setEmail(value);
-    }
-
-    public String getEmail() {
-        return ((BankAccountPayload) paymentAccountPayload).getEmail();
     }
 }

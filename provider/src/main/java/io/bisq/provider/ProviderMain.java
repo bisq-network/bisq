@@ -19,6 +19,7 @@ package io.bisq.provider;
 
 import ch.qos.logback.classic.Level;
 import io.bisq.common.app.Log;
+import io.bisq.common.util.Utilities;
 import io.bisq.network.http.HttpException;
 import io.bisq.provider.fee.FeeRequestService;
 import io.bisq.provider.price.PriceRequestService;
@@ -31,6 +32,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Locale;
 
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -38,7 +40,11 @@ import static spark.Spark.port;
 public class ProviderMain {
     private static final Logger log = LoggerFactory.getLogger(ProviderMain.class);
 
-    public ProviderMain() {
+    static {
+        // Need to set default locale initially otherwise we get problems at non-english OS
+        Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
+
+        Utilities.removeCryptographyRestrictions();
     }
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, HttpException {

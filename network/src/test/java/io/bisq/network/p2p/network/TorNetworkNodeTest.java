@@ -37,7 +37,7 @@ public class TorNetworkNodeTest {
     public void testTorNodeBeforeSecondReady() throws InterruptedException, IOException {
         latch = new CountDownLatch(1);
         int port = 9001;
-        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getNetworkProtoResolver());
+        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getNetworkProtoResolver(), null);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -53,12 +53,17 @@ public class TorNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
+
+            @Override
+            public void onRequestCustomBridges() {
+
+            }
         });
         latch.await();
 
         latch = new CountDownLatch(1);
         int port2 = 9002;
-        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2), TestUtils.getNetworkProtoResolver());
+        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2), TestUtils.getNetworkProtoResolver(), null);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -74,6 +79,11 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+
             }
         });
         latch.await();
@@ -110,7 +120,7 @@ public class TorNetworkNodeTest {
     public void testTorNodeAfterBothReady() throws InterruptedException, IOException {
         latch = new CountDownLatch(2);
         int port = 9001;
-        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getNetworkProtoResolver());
+        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getNetworkProtoResolver(), null);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -127,10 +137,15 @@ public class TorNetworkNodeTest {
             public void onSetupFailed(Throwable throwable) {
 
             }
+
+            @Override
+            public void onRequestCustomBridges() {
+
+            }
         });
 
         int port2 = 9002;
-        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port), TestUtils.getNetworkProtoResolver());
+        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port), TestUtils.getNetworkProtoResolver(), null);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -145,6 +160,11 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+
             }
         });
 

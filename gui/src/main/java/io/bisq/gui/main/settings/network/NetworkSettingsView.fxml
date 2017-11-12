@@ -35,23 +35,27 @@
 
     <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
 
-    <Label fx:id="selectCurrencyNetworkLabel" GridPane.rowIndex="0"/>
-    <ComboBox fx:id="selectCurrencyNetworkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-    <Label fx:id="bitcoinPeersLabel" GridPane.rowIndex="1"/>
-    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="bitcoinPeersLabel" GridPane.rowIndex="0"/>
+    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
               GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
 
-    <Label fx:id="useTorForBtcJLabel" GridPane.rowIndex="2"/>
-    <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <Label fx:id="useTorForBtcJLabel" GridPane.rowIndex="1"/>
+    <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <Label fx:id="bitcoinNodesLabel" GridPane.rowIndex="2"/>
+    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" spacing="10">
+        <RadioButton fx:id="useProvidedNodesRadio"/>
+        <RadioButton fx:id="useCustomNodesRadio"/>
+        <RadioButton fx:id="usePublicNodesRadio"/>
+    </HBox>
 
     <Label fx:id="btcNodesLabel" GridPane.rowIndex="3"/>
-    <InputTextField fx:id="btcNodes" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    <InputTextField fx:id="btcNodesInputTextField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
     <Label fx:id="reSyncSPVChainLabel" GridPane.rowIndex="4"/>
     <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="3">
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="4">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -117,6 +121,8 @@
     <Label fx:id="totalTrafficLabel" GridPane.rowIndex="7"/>
     <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
+
+    <Button fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>

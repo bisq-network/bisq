@@ -5,6 +5,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.common.util.MathUtils;
 import io.bisq.core.payment.payload.PaymentMethod;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -101,7 +102,6 @@ public class OfferForJson {
                 primaryMarketAmount = getVolume().getValue();
                 primaryMarketMinVolume = getMinAmountAsCoin().getValue();
                 primaryMarketVolume = getAmountAsCoin().getValue();
-
             } else {
                 primaryMarketDirection = direction;
                 currencyPair = Res.getBaseCurrencyCode() + "/" + currencyCode;
@@ -112,11 +112,13 @@ public class OfferForJson {
                 primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolume().getMonetary()).toString();
                 primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolume().getMonetary()).toString();
 
-                primaryMarketPrice = price.getValue();
+                // we use precision 4 for fiat based price but on the markets api we use precision 8 so we scale up by 10000
+                primaryMarketPrice = (long) MathUtils.scaleUpByPowerOf10(price.getValue(), 4);
+                primaryMarketMinVolume = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().getValue(), 4);
+                primaryMarketVolume = (long) MathUtils.scaleUpByPowerOf10(getVolume().getValue(), 4);
+
                 primaryMarketMinAmount = getMinAmountAsCoin().getValue();
                 primaryMarketAmount = getAmountAsCoin().getValue();
-                primaryMarketMinVolume = getMinVolume().getValue();
-                primaryMarketVolume = getVolume().getValue();
             }
 
         } catch (Throwable t) {

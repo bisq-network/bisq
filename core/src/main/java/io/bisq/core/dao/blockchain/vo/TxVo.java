@@ -17,28 +17,51 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
-
 @Value
-@Immutable
-public class TxVo implements PersistablePayload, Serializable {
-    private static final long serialVersionUID = 1;
-
-    private final String txVersion = Version.BSQ_TX_VERSION;
+public class TxVo implements PersistablePayload {
+    private final String txVersion;
     private final String id;
     private final int blockHeight;
     private final String blockHash;
     private final long time;
 
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
+    public TxVo(String id, int blockHeight, String blockHash, long time) {
+        this(Version.BSQ_TX_VERSION, id, blockHeight, blockHash, time);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private TxVo(String txVersion, String id, int blockHeight, String blockHash, long time) {
+        this.txVersion = txVersion;
+        this.id = id;
+        this.blockHeight = blockHeight;
+        this.blockHash = blockHash;
+        this.time = time;
+    }
+
+    public static TxVo fromProto(PB.TxVo proto) {
+        return new TxVo(proto.getTxVersion(),
+                proto.getId(),
+                proto.getBlockHeight(),
+                proto.getBlockHash(),
+                proto.getTime());
+    }
+
+    public PB.TxVo toProtoMessage() {
+        return PB.TxVo.newBuilder()
+                .setTxVersion(txVersion)
+                .setId(id)
+                .setBlockHeight(blockHeight)
+                .setBlockHash(blockHash)
+                .setTime(time)
+                .build();
     }
 }

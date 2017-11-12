@@ -22,9 +22,13 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.Security;
@@ -39,7 +43,7 @@ public class SetupUtils {
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
-        // See: https://github.com/bitsquare/bitsquare/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
+        // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
         Thread checkCryptoThread = new Thread() {
             @Override
             public void run() {
@@ -73,5 +77,43 @@ public class SetupUtils {
             }
         };
         checkCryptoThread.start();
+    }
+
+    public static BooleanProperty readEntryMapFromResources(P2PService p2PService) {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("readEntryMapFromResources");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
+                final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+                final String storageFileName = "EntryMap_"
+                        + baseCurrencyNetwork.getCurrencyCode() + "_"
+                        + baseCurrencyNetwork.getNetwork();
+                p2PService.readEntryMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        thread.start();
+        return result;
+    }
+
+    public static BooleanProperty readPersistableNetworkPayloadMapFromResources(P2PService p2PService) {
+        BooleanProperty result = new SimpleBooleanProperty();
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("readPersistableNetworkPayloadMapFromResources thread");
+                // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
+                final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+                final String storageFileName = "PersistableNetworkPayloadMap_"
+                        + baseCurrencyNetwork.getCurrencyCode() + "_"
+                        + baseCurrencyNetwork.getNetwork();
+                p2PService.readPersistableNetworkPayloadMapFromResources(storageFileName);
+                UserThread.execute(() -> result.set(true));
+            }
+        };
+        thread.start();
+        return result;
     }
 }

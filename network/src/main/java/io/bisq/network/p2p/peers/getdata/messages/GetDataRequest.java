@@ -13,9 +13,12 @@ import java.util.Set;
 @ToString
 public abstract class GetDataRequest extends NetworkEnvelope implements ExtendedDataSizePermission {
     protected final int nonce;
+    // Keys for ProtectedStorageEntry items to be excluded from the request because the peer has them already
     protected final Set<byte[]> excludedKeys;
 
-    public GetDataRequest(int messageVersion, int nonce, Set<byte[]> excludedKeys) {
+    public GetDataRequest(int messageVersion,
+                          int nonce,
+                          Set<byte[]> excludedKeys) {
         super(messageVersion);
         this.nonce = nonce;
         this.excludedKeys = excludedKeys;

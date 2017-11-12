@@ -30,15 +30,16 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 //TODO use protobuffer instead of json
 public class FeeRequestService {
     private static final Logger log = LoggerFactory.getLogger(FeeRequestService.class);
 
-    private static final long INTERVAL_BTC_FEES_MS = 600_000;      // 10 min  
+    private static final long INTERVAL_BTC_FEES_MS = TimeUnit.MINUTES.toMillis(5);
 
-    public static final long BTC_MIN_TX_FEE = 40; // satoshi/byte
-    public static final long BTC_MAX_TX_FEE = 2000;
+    public static final long BTC_MIN_TX_FEE = 10; // satoshi/byte
+    public static final long BTC_MAX_TX_FEE = 1000;
 
     private final Timer timerBitcoinFeesLocal = new Timer();
 
@@ -50,10 +51,11 @@ public class FeeRequestService {
     public FeeRequestService() throws IOException {
         btcFeesProvider = new BtcFeesProvider();
 
-        // For now we don't need a fee estimation for LTC so we set it fixed, but we keep it in the provider to 
+        // For now we don't need a fee estimation for LTC so we set it fixed, but we keep it in the provider to
         // be flexible if fee pressure grows on LTC
         dataMap.put("ltcTxFee", FeeService.LTC_DEFAULT_TX_FEE);
         dataMap.put("dogeTxFee", FeeService.DOGE_DEFAULT_TX_FEE);
+        dataMap.put("dashTxFee", FeeService.DASH_DEFAULT_TX_FEE);
 
         writeToJson();
         startRequests();

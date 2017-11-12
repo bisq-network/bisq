@@ -59,7 +59,7 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             // params
             final boolean makerIsBuyer = false;
 
-            final byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            final byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
@@ -67,8 +67,7 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     + "\n------------------------------------------------------------\n");
 
             final Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getTradeAmount());
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id,
-                    AddressEntry.Context.MULTI_SIG);
+            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry makerMultiSigAddressEntry = addressEntryOptional.get();
             makerMultiSigAddressEntry.setCoinLockedInMultiSig(makerInputAmount);

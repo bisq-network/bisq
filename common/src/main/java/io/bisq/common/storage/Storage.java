@@ -77,26 +77,24 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     @Nullable
-    public T initAndGetPersistedWithFileName(String fileName) {
+    public T initAndGetPersistedWithFileName(String fileName, long delay) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300, persistenceProtoResolver);
-
+        fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
         return getPersisted();
     }
 
     @Nullable
-    public T initAndGetPersisted(T persistable) {
-        return initAndGetPersisted(persistable, persistable.getClass().getSimpleName());
+    public T initAndGetPersisted(T persistable, long delay) {
+        return initAndGetPersisted(persistable, persistable.getClass().getSimpleName(), delay);
     }
 
     @Nullable
-    public T initAndGetPersisted(T persistable, String fileName) {
+    public T initAndGetPersisted(T persistable, String fileName, long delay) {
         this.persistable = persistable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600, persistenceProtoResolver);
-
+        fileManager = new FileManager<>(dir, storageFile, delay, persistenceProtoResolver);
         return getPersisted();
     }
 

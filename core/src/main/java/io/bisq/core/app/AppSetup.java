@@ -53,8 +53,6 @@ public abstract class AppSetup {
             throwable.printStackTrace();
             System.exit(1);
         });
-
-        initPersistedDataHosts();
     }
 
     abstract void initPersistedDataHosts();

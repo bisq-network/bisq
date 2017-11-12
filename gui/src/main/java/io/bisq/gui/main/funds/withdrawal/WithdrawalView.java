@@ -105,11 +105,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalView(BtcWalletService walletService, TradeManager tradeManager,
+    private WithdrawalView(BtcWalletService walletService,
+                           TradeManager tradeManager,
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,
-                           BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow) {
+                           BtcAddressValidator btcAddressValidator,
+                           WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
@@ -399,7 +401,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } else if (failedTradesManager.getTradeById(offerId).isPresent()) {
             return Optional.of(failedTradesManager.getTradeById(offerId).get());
         } else {
-            return Optional.empty();
+            return Optional.<Tradable>empty();
         }
     }
 

@@ -17,30 +17,25 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.proto.network.NetworkEnvelope;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
-import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
-import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMessage;
+import io.bisq.core.dao.blockchain.p2p.RequestManager;
+import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
+import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
@@ -48,6 +43,7 @@ public class BsqFullNode extends BsqNode {
 
     private final BsqFullNodeExecutor bsqFullNodeExecutor;
     private final JsonChainStateExporter jsonChainStateExporter;
+
     @Getter
     private boolean parseBlockchainComplete;
 
@@ -63,11 +59,13 @@ public class BsqFullNode extends BsqNode {
                        BsqFullNodeExecutor bsqFullNodeExecutor,
                        BsqChainState bsqChainState,
                        JsonChainStateExporter jsonChainStateExporter,
-                       FeeService feeService) {
+                       FeeService feeService,
+                       SeedNodesRepository seedNodesRepository) {
         super(p2PService,
                 bsqParser,
                 bsqChainState,
-                feeService);
+                feeService,
+                seedNodesRepository);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonChainStateExporter = jsonChainStateExporter;
     }
@@ -78,9 +76,13 @@ public class BsqFullNode extends BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        super.onAllServicesInitialized(errorMessageHandler);
-
-        bsqFullNodeExecutor.setup(this::startParseBlocks,
+        // bsqFullNodeExecutor.setup need to return with result handler before
+        // super.onAllServicesInitialized(errorMessageHandler) is called
+        // bsqFullNodeExecutor.setup is and async call.
+        bsqFullNodeExecutor.setup(() -> {
+                    super.onAllServicesInitialized(errorMessageHandler);
+                    startParseBlocks();
+                },
                 throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
@@ -90,10 +92,11 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
-        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight), throwable -> {
-            log.error(throwable.toString());
-            throwable.printStackTrace();
-        });
+        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight),
+                throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                });
     }
 
     @Override
@@ -109,7 +112,7 @@ public class BsqFullNode extends BsqNode {
                         () -> {
                             // we are done but it might be that new blocks have arrived in the meantime,
                             // so we try again with startBlockHeight set to current chainHeadHeight
-                            // We also set up the listener in the else main branch where we check  
+                            // We also set up the listener in the else main branch where we check
                             // if we at chainTip, so do nto include here another check as it would
                             // not trigger the listener registration.
                             parseBlocksWithChainHeadHeight(chainHeadHeight,
@@ -134,9 +137,56 @@ public class BsqFullNode extends BsqNode {
     }
 
     @Override
+    protected void onP2PNetworkReady() {
+        super.onP2PNetworkReady();
+
+        if (requestManager == null && p2pNetworkReady) {
+            createRequestBlocksManager();
+            addBlockHandler();
+        }
+    }
+
+    @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         log.info("onParseBlockchainComplete");
         parseBlockchainComplete = true;
+
+        if (requestManager == null && p2pNetworkReady) {
+            createRequestBlocksManager();
+            addBlockHandler();
+        }
+    }
+
+    private void createRequestBlocksManager() {
+        requestManager = new RequestManager(p2PService.getNetworkNode(),
+                p2PService.getPeerManager(),
+                p2PService.getBroadcaster(),
+                seedNodesRepository.getSeedNodeAddresses(),
+                bsqChainState,
+                new RequestManager.Listener() {
+                    @Override
+                    public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
+
+                    }
+
+                    @Override
+                    public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
+
+                    }
+
+                    @Override
+                    public void onNoSeedNodeAvailable() {
+
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+
+                    }
+                });
+    }
+
+    private void addBlockHandler() {
         // We register our handler for new blocks
         bsqFullNodeExecutor.addBlockHandler(btcdBlock -> bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
                 genesisBlockHeight,
@@ -150,49 +200,13 @@ public class BsqFullNode extends BsqNode {
                         throwable.printStackTrace();
                     }
                 }));
-
-        log.info("Register MessageListener");
-        p2PService.getNetworkNode().addMessageListener(this::onMessage);
-    }
-
-    // TODO use handler class
-    private void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
-        if (networkEnvelop instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
-            GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) networkEnvelop;
-            final NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
-            log.info("Received getBsqBlocksRequest with data: {} from {}",
-                    getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
-
-            // reset it done in getSerializedResettedBlocksFrom
-            byte[] bsqBlockListBytes = bsqChainState.getSerializedResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
-            final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes);
-            SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress,
-                    bsqBlocksResponse);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(Connection connection) {
-                    log.info("onSuccess Send " + bsqBlocksResponse + " to " + peersNodeAddress + " succeeded.");
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.error(throwable.toString());
-                }
-            });
-        }
     }
 
     @Override
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
         super.onNewBsqBlock(bsqBlock);
         jsonChainStateExporter.maybeExport();
-        if (parseBlockchainComplete && p2pNetworkReady)
-            publishNewBlock(bsqBlock);
-    }
-
-    private void publishNewBlock(BsqBlock bsqBlock) {
-        byte[] bsqBlockBytes = Utilities.<BsqBlock>serialize(bsqBlock);
-        final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlockBytes);
-        p2PService.getBroadcaster().broadcast(newBsqBlockBroadcastMessage, p2PService.getNetworkNode().getNodeAddress(), null, true);
+        if (parseBlockchainComplete && p2pNetworkReady && requestManager != null)
+            requestManager.publishNewBlock(bsqBlock);
     }
 }

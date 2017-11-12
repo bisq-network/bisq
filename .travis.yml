@@ -1,0 +1,11 @@
+language: java
+jdk: oraclejdk8
+
+script: mvn clean install -DskipTests
+
+notifications:
+  slack:
+    rooms:
+      - secure: H82Q57T5nRNDfVnxzlWZ2WoeGt71oq2eJGHbqJ4wP2tIc8b02UO9bztPKFxbm9slMu0JjxZdJfnHSgNZKfPVXrTqwPYRVjKqm7m9TynIlkQabV+yCI/oRvy4Xi/Xj7/aPvZat4s/bxjrtw9KwVdpmqWvRNNSgiTqQ4teBJ1uQGs=
+    on_success: change
+    on_failure: always

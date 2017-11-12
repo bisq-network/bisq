@@ -100,22 +100,20 @@ public class BisqApp extends Application {
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
     private static BisqEnvironment bisqEnvironment;
-
-    private BisqAppModule bisqAppModule;
-    private Injector injector;
-    private boolean popupOpened;
-
-    private static Stage primaryStage;
-    private Scene scene;
-    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
-    private MainView mainView;
-
     public static Runnable shutDownHandler;
-    private boolean shutDownRequested;
+    private static Stage primaryStage;
 
     public static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
+
+    private BisqAppModule bisqAppModule;
+    private Injector injector;
+    private boolean popupOpened;
+    private Scene scene;
+    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
+    private MainView mainView;
+    private boolean shutDownRequested;
 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
@@ -174,19 +172,12 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-/*
-            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
-            Injector injector = Guice.createInjector(new GraphvizModule());
-            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
-            grapher.setOut(out);
-            grapher.setRankdir("TB");
-            grapher.graph(injector);
-*/
 
             // All classes which are persisting objects need to be added here
             // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
-            persistedDataHosts.add(injector.getInstance(Preferences.class));
+            final Preferences preferences = injector.getInstance(Preferences.class);
+            persistedDataHosts.add(preferences);
             persistedDataHosts.add(injector.getInstance(User.class));
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
@@ -273,7 +264,7 @@ public class BisqApp extends Application {
                         TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                         BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                         if (walletService.isWalletReady())
-                            new SpendFromDepositTxWindow(tradeWalletService).show();
+                            new ManualPayoutTxWindow(tradeWalletService).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (DevEnv.DEV_MODE) {

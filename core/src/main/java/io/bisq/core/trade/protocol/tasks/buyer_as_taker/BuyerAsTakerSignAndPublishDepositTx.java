@@ -59,7 +59,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
                     + "\n------------------------------------------------------------\n");
 
 
-            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             List<RawTransactionInput> buyerInputs = checkNotNull(processModel.getRawTransactionInputs(), "buyerInputs must not be null");
             BtcWalletService walletService = processModel.getBtcWalletService();
@@ -82,6 +82,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             Timer timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                log.error("timeoutTimer, offerId={}, RESERVED_FOR_TRADE", id);
                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
                 complete();

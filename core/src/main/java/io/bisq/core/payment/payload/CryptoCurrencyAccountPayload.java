@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,10 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
-    private String address;
+    private String address = "";
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -44,11 +50,13 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
 
     private CryptoCurrencyAccountPayload(String paymentMethod,
                                          String id,
+                                         String address,
                                          long maxTradePeriod,
-                                         String address) {
-        this(paymentMethod,
+                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
                 id,
-                maxTradePeriod);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.address = address;
     }
 
@@ -63,8 +71,9 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
+                proto.getCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
-                proto.getCryptoCurrencyAccountPayload().getAddress());
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -80,5 +89,10 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(address.getBytes(Charset.forName("UTF-8")));
     }
 }

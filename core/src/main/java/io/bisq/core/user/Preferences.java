@@ -10,6 +10,7 @@ import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,11 +33,11 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public final class Preferences implements PersistedDataHost {
+public final class Preferences implements PersistedDataHost, BridgeAddressProvider {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
-            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
+            new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
@@ -45,16 +46,21 @@ public final class Preferences implements PersistedDataHost {
             new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
             new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
-            new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/")
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
     ));
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
             new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
-            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/"),
-            new BlockChainExplorer("Blockr.io", "https://tbtc.blockr.io/tx/info/", "https://tbtc.blockr.io/address/info/")
+            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
+
+    public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
+            "https://explorer.bisq.network/Address.html?addr=");
+    public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
+            "https://explorer.bisq.network/testnet/Address.html?addr=");
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
@@ -73,6 +79,13 @@ public final class Preferences implements PersistedDataHost {
     ));
     private static final ArrayList<BlockChainExplorer> DOGE_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("SoChain", "https://chain.so/tx/DOGETEST/", "https://chain.so/address/DOGETEST/")
+    ));
+
+    private static final ArrayList<BlockChainExplorer> DASH_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
+    ));
+    private static final ArrayList<BlockChainExplorer> DASH_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
     ));
 
 
@@ -152,7 +165,8 @@ public final class Preferences implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload");
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -162,7 +176,6 @@ public final class Preferences implements PersistedDataHost {
             setPreferredTradeCurrency(preferredTradeCurrency);
             setFiatCurrencies(prefPayload.getFiatCurrencies());
             setCryptoCurrencies(prefPayload.getCryptoCurrencies());
-
         } else {
             prefPayload = new PreferencesPayload();
             prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
@@ -174,7 +187,6 @@ public final class Preferences implements PersistedDataHost {
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
-            final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             switch (baseCurrencyNetwork.getCurrencyCode()) {
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
@@ -188,6 +200,10 @@ public final class Preferences implements PersistedDataHost {
                     setBlockChainExplorerMainNet(DOGE_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(DOGE_TEST_NET_EXPLORERS.get(0));
                     break;
+                case "DASH":
+                    setBlockChainExplorerMainNet(DASH_MAIN_NET_EXPLORERS.get(0));
+                    setBlockChainExplorerTestNet(DASH_TEST_NET_EXPLORERS.get(0));
+                    break;
                 default:
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
@@ -200,6 +216,7 @@ public final class Preferences implements PersistedDataHost {
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
+        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER : BSQ_TEST_NET_EXPLORER);
 
         // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
@@ -428,11 +445,6 @@ public final class Preferences implements PersistedDataHost {
         persist();
     }
 
-    public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
-        prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
-        persist();
-    }
-
     public void setPayFeeInBtc(boolean payFeeInBtc) {
         prefPayload.setPayFeeInBtc(payFeeInBtc);
         persist();
@@ -462,11 +474,38 @@ public final class Preferences implements PersistedDataHost {
         storage.queueUpForSave(prefPayload, 1);
     }
 
+    public void setBridgeAddresses(List<String> bridgeAddresses) {
+        prefPayload.setBridgeAddresses(bridgeAddresses);
+        // We call that before shutdown so we dont want a delay here
+        storage.queueUpForSave(prefPayload, 1);
+    }
+
     // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
         prefPayload.setPeerTagMap(peerTagMap);
         persist();
     }
+
+    public void setBridgeOptionOrdinal(int bridgeOptionOrdinal) {
+        prefPayload.setBridgeOptionOrdinal(bridgeOptionOrdinal);
+        persist();
+    }
+
+    public void setTorTransportOrdinal(int torTransportOrdinal) {
+        prefPayload.setTorTransportOrdinal(torTransportOrdinal);
+        persist();
+    }
+
+    public void setCustomBridges(String customBridges) {
+        prefPayload.setCustomBridges(customBridges);
+        persist();
+    }
+
+    public void setBitcoinNodesOptionOrdinal(int bitcoinNodesOptionOrdinal) {
+        prefPayload.setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -513,6 +552,11 @@ public final class Preferences implements PersistedDataHost {
             case DOGE_TESTNET:
             case DOGE_REGTEST:
                 return DOGE_TEST_NET_EXPLORERS;
+            case DASH_MAINNET:
+                return DASH_MAIN_NET_EXPLORERS;
+            case DASH_REGTEST:
+            case DASH_TESTNET:
+                return DASH_TEST_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -524,10 +568,8 @@ public final class Preferences implements PersistedDataHost {
 
     public boolean getUseTorForBitcoinJ() {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
-        // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty()
-                || BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+        if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
@@ -549,6 +591,12 @@ public final class Preferences implements PersistedDataHost {
 
     public boolean getPayFeeInBtc() {
         return prefPayload.isPayFeeInBtc();
+    }
+
+    @Override
+    @Nullable
+    public List<String> getBridgeAddresses() {
+        return prefPayload.getBridgeAddresses();
     }
 
 
@@ -632,5 +680,17 @@ public final class Preferences implements PersistedDataHost {
         void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
 
         void setPeerTagMap(Map<String, String> peerTagMap);
+
+        void setBridgeAddresses(List<String> bridgeAddresses);
+
+        List<String> getBridgeAddresses();
+
+        void setBridgeOptionOrdinal(int bridgeOptionOrdinal);
+
+        void setTorTransportOrdinal(int torTransportOrdinal);
+
+        void setCustomBridges(String customBridges);
+
+        void setBitcoinNodesOptionOrdinal(int bitcoinNodesOption);
     }
 }

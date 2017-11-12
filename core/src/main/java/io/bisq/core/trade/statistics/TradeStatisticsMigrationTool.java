@@ -73,7 +73,7 @@ public class TradeStatisticsMigrationTool {
                         null);
                 persistedTradeStatisticsList.add(tradeStatistics);
             }
-            statisticsStorage.initAndGetPersistedWithFileName("TradeStatisticsList");
+            statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics", 500);
             statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(persistedTradeStatisticsList)), 200);
         } else {
             log.warn("Unknown JOSN object " + fromDisc);
@@ -111,6 +111,11 @@ public class TradeStatisticsMigrationTool {
 
                 @Override
                 public void onSetupFailed(Throwable throwable) {
+                }
+
+                @Override
+                public void onRequestCustomBridges() {
+
                 }
             });
         }

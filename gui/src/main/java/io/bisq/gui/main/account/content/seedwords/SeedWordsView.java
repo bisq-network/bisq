@@ -143,7 +143,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
                 seedWordsValid, dateValid, seedWordsEdited));
 
-        restoreButton.setOnAction(e -> onRestore());
+        restoreButton.setOnAction(e -> {
+            new Popup<>().information(Res.get("account.seed.restore.info"))
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("account.seed.restore.ok"))
+                    .onAction(this::onRestore)
+                    .show();
+        });
 
         seedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");

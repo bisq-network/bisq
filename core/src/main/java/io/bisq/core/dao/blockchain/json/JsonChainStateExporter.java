@@ -30,6 +30,7 @@ import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.TxType;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +107,7 @@ public class JsonChainStateExporter {
                 final BsqChainState bsqChainStateClone = bsqChainState.getClone();
                 for (Tx tx : bsqChainStateClone.getTxMap().values()) {
                     String txId = tx.getId();
-                    JsonTxType txType = tx.getTxType() != null ? JsonTxType.valueOf(tx.getTxType().name()) : null;
+                    JsonTxType txType = tx.getTxType() != TxType.UNDEFINED_TX_TYPE ? JsonTxType.valueOf(tx.getTxType().name()) : null;
                     List<JsonTxOutput> outputs = new ArrayList<>();
                     tx.getOutputs().stream().forEach(txOutput -> {
                         final JsonTxOutput outputForJson = new JsonTxOutput(txId,

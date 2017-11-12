@@ -20,8 +20,8 @@ package io.bisq.gui.util.validation;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.gui.util.BSFormatter;
+import lombok.Setter;
 import org.bitcoinj.core.Coin;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -32,23 +32,22 @@ public class BtcValidator extends NumberValidator {
     protected final BSFormatter formatter;
 
     @Nullable
+    @Setter
     protected Coin minValue;
 
     @Nullable
+    @Setter
     protected Coin maxValue;
+
+    @Nullable
+    @Setter
+    protected Coin maxTradeLimit;
 
     @Inject
     public BtcValidator(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
-    public void setMinValue(@NotNull Coin minValue) {
-        this.minValue = minValue;
-    }
-
-    public void setMaxValue(@NotNull Coin maxValue) {
-        this.maxValue = maxValue;
-    }
 
     @Override
     public ValidationResult validate(String input) {
@@ -63,6 +62,7 @@ public class BtcValidator extends NumberValidator {
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input))
+                    .and(validateIfNotExceedsMaxTradeLimit(input))
                     .and(validateIfNotUnderMinValue(input))
                     .and(validateIfAboveDust(input));
         }
@@ -71,20 +71,28 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfAboveDust(String input) {
-        final Coin coin = Coin.parseCoin(input);
-        if (Restrictions.isAboveDust(coin))
-            return new ValidationResult(true);
-        else
-            return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (Restrictions.isAboveDust(coin))
+                return new ValidationResult(true);
+            else
+                return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
     }
 
     protected ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
-            return new ValidationResult(false, Res.get("validation.btc.fraction"));
-        else
-            return new ValidationResult(true);
+        try {
+            BigDecimal bd = new BigDecimal(input);
+            final BigDecimal satoshis = bd.movePointRight(8);
+            if (satoshis.scale() > 0)
+                return new ValidationResult(false, Res.get("validation.btc.fraction"));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
     }
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
@@ -92,6 +100,18 @@ public class BtcValidator extends NumberValidator {
             final Coin coin = Coin.parseCoin(input);
             if (maxValue != null && coin.compareTo(maxValue) > 0)
                 return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValue)));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    protected ValidationResult validateIfNotExceedsMaxTradeLimit(String input) {
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (maxTradeLimit != null && coin.compareTo(maxTradeLimit) > 0)
+                return new ValidationResult(false, Res.get("validation.btc.exceedsMaxTradeLimit", formatter.formatCoinWithCode(maxTradeLimit)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

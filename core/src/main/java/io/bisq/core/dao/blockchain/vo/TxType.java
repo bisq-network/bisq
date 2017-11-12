@@ -17,7 +17,11 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.proto.ProtoUtil;
+import io.bisq.generated.protobuffer.PB;
+
 public enum TxType {
+    UNDEFINED_TX_TYPE,
     UNVERIFIED,
     INVALID,
     GENESIS,
@@ -27,5 +31,18 @@ public enum TxType {
     VOTE,
     ISSUANCE,
     LOCK_UP,
-    UN_LOCK
+    UN_LOCK;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TxType fromProto(PB.TxType txType) {
+        return ProtoUtil.enumFromProto(TxType.class, txType.name());
+    }
+
+    public PB.TxType toProtoMessage() {
+        return PB.TxType.valueOf(name());
+    }
 }

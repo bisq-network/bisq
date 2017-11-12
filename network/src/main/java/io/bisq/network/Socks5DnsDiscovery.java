@@ -19,6 +19,7 @@ package io.bisq.network;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.util.Utilities;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.net.discovery.MultiplexingDiscovery;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  * will return up to 30 random peers from the set of those returned within the timeout period. If you want more peers
  * to connect to, you need to discover them via other means (like addr broadcasts).</p>
  */
+@Slf4j
 public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
     /**
@@ -71,14 +73,9 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
     private static List<PeerDiscovery> buildDiscoveries(Socks5Proxy proxy, NetworkParameters params, String[] seeds) {
         List<PeerDiscovery> discoveries = new ArrayList<>(seeds.length);
-        for (String seed : seeds) {
-            if ("dnsseed.bluematt.me".equals(seed)) {
-                // this dns is known to fail with tor-resolve because it returns too many addrs.
-                // we avoid adding it in order to prevent ugly log network_messages.
-                continue;
-            }
+        for (String seed : seeds)
             discoveries.add(new Socks5DnsSeedDiscovery(proxy, params, seed));
-        }
+
         return discoveries;
     }
 
@@ -94,6 +91,8 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
     /**
      * Implements discovery from a single DNS host over Socks5 proxy with RESOLVE DNS extension.
+     * With our DnsLookupTor (used to not leak at DNS lookup) version we only get one address instead a list of addresses like in DnsDiscovery.
+     * We get repeated the call until we have received enough addresses.
      */
     public static class Socks5DnsSeedDiscovery implements PeerDiscovery {
         private final String hostname;
@@ -123,7 +122,6 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
         @Override
         public void shutdown() {
-            //TODO should we add a DnsLookupTor.shutdown() ?
         }
 
         @Override

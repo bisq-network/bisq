@@ -40,39 +40,40 @@ public class SellerSendPayoutTxPublishedMessage extends TradeTask {
             if (trade.getPayoutTx() != null) {
                 final String id = processModel.getOfferId();
                 final PayoutTxPublishedMessage message = new PayoutTxPublishedMessage(
-                        id,
-                        trade.getPayoutTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress(),
-                        UUID.randomUUID().toString()
+                    id,
+                    trade.getPayoutTx().bitcoinSerialize(),
+                    processModel.getMyNodeAddress(),
+                    UUID.randomUUID().toString()
                 );
                 trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
+
                 processModel.getP2PService().sendEncryptedMailboxMessage(
-                        trade.getTradingPeerNodeAddress(),
-                        processModel.getTradingPeer().getPubKeyRing(),
-                        message,
-                        new SendMailboxMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.info("Message arrived at peer. tradeId={}", id);
-                                trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
-                                complete();
-                            }
-
-                            @Override
-                            public void onStoredInMailbox() {
-                                log.info("Message stored in mailbox. tradeId={}", id);
-                                trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
-                                complete();
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage) {
-                                log.error("sendEncryptedMailboxMessage failed. message=" + message);
-                                trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
-                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                                failed(errorMessage);
-                            }
+                    trade.getTradingPeerNodeAddress(),
+                    processModel.getTradingPeer().getPubKeyRing(),
+                    message,
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            log.info("Message arrived at peer. tradeId={}", id);
+                            trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
+                            complete();
                         }
+
+                        @Override
+                        public void onStoredInMailbox() {
+                            log.info("Message stored in mailbox. tradeId={}", id);
+                            trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
+                            complete();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            log.error("sendEncryptedMailboxMessage failed. message=" + message);
+                            trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
+                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            failed(errorMessage);
+                        }
+                    }
                 );
             } else {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());

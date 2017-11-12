@@ -1,6 +1,5 @@
 package io.bisq.network.p2p.network;
 
-import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
@@ -146,7 +145,7 @@ public class NetworkStressTest {
     /**
      * The repository of seed nodes used in the test.
      */
-    private final SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+    private final SeedNodesRepository seedNodesRepository = null;
     /**
      * A list of peer nodes represented as P2P services.
      */
@@ -382,10 +381,11 @@ public class NetworkStressTest {
         final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
         final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing, TestUtils.getNetworkProtoResolver());
 
-        return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
-                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null,
+        return null;
+        /*new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir,0,null,false, 0, null, null, null,
                 new Clock(), null, peerEncryptionService, peerKeyRing,
-                TestUtils.getNetworkProtoResolver(), TestUtils.getPersistenceProtoResolver());
+                TestUtils.getNetworkProtoResolver());*/
     }
 
     // ## TEST SETUP: P2P service listener classes
@@ -415,6 +415,11 @@ public class NetworkStressTest {
             // failed result
             localServicesFailed.set(true);
             localServicesLatch.countDown();
+        }
+
+        @Override
+        public void onRequestCustomBridges() {
+
         }
     }
 
@@ -801,6 +806,11 @@ public class NetworkStressTest {
 
         @Override
         public void onSetupFailed(Throwable throwable) {
+        }
+
+        @Override
+        public void onRequestCustomBridges() {
+
         }
     }
 }

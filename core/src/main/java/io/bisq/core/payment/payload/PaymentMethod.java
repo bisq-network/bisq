@@ -33,8 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-// Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
-
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
 @Slf4j
@@ -62,6 +60,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String INTERAC_E_TRANSFER_ID = "INTERAC_E_TRANSFER";
     public static final String US_POSTAL_MONEY_ORDER_ID = "US_POSTAL_MONEY_ORDER";
     public static final String CASH_DEPOSIT_ID = "CASH_DEPOSIT";
+    public static final String WESTERN_UNION_ID = "WESTERN_UNION";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
@@ -78,6 +77,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod INTERAC_E_TRANSFER;
     public static PaymentMethod US_POSTAL_MONEY_ORDER;
     public static PaymentMethod CASH_DEPOSIT;
+    public static PaymentMethod WESTERN_UNION;
     public static PaymentMethod BLOCK_CHAINS;
 
     private static List<PaymentMethod> ALL_VALUES;
@@ -120,22 +120,32 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         if (ALL_VALUES == null) {
             Coin maxTradeLimitMidRisk;
             Coin maxTradeLimitLowRisk;
+            Coin maxTradeLimitVeryLowRisk;
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
                     // av. price June 2017: 2500 EUR/BTC
-                    maxTradeLimitMidRisk = Coin.parseCoin("0.5");
-                    maxTradeLimitLowRisk = Coin.parseCoin("1");
+                    // av. price Oct 2017: 4700 EUR/BTC
+                    maxTradeLimitMidRisk = Coin.parseCoin("0.25");
+                    maxTradeLimitLowRisk = Coin.parseCoin("0.5");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
                     break;
                 case "LTC":
                     // av. price June 2017: 40 EUR/LTC
                     maxTradeLimitMidRisk = Coin.parseCoin("25");
                     maxTradeLimitLowRisk = Coin.parseCoin("50");
-
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("100");
                     break;
                 case "DOGE":
                     // av. price June 2017: 0.002850 EUR/DOGE
                     maxTradeLimitMidRisk = Coin.parseCoin("250000");
                     maxTradeLimitLowRisk = Coin.parseCoin("500000");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1000000");
+                    break;
+                case "DASH":
+                    // av. price June 2017: 150 EUR/DASH
+                    maxTradeLimitMidRisk = Coin.parseCoin("10");
+                    maxTradeLimitLowRisk = Coin.parseCoin("20");
+                    maxTradeLimitVeryLowRisk = Coin.parseCoin("40");
                     break;
 
                 default:
@@ -163,19 +173,20 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // Global
                     CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, maxTradeLimitMidRisk),
                     NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
                     SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
                     SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
 
                     // Trans national
-                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitLowRisk),
+                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
                     PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China
                     ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
 
                     // Altcoins
-                    BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitLowRisk)
+                    BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
             ));
         }
         return ALL_VALUES;
@@ -221,8 +232,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
-        if (currencyCode.equals("SF"))
-            return Coin.valueOf(maxTradeLimit).multiply(5);
+        if (currencyCode.equals("SF") || currencyCode.equals("BSQ"))
+            return Coin.parseCoin("4");
         else
             return Coin.valueOf(maxTradeLimit);
     }

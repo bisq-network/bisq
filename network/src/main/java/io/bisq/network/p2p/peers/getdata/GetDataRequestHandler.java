@@ -15,14 +15,16 @@ import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -30,7 +32,7 @@ import java.util.stream.Collectors;
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
 
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIME_OUT_SEC = 60;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,20 +75,20 @@ public class GetDataRequestHandler {
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
 
-        final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         final Set<Integer> lookupSet = new HashSet<>();
 
-        Set<P2PDataStorage.ByteArray> excludedItems = getDataRequest.getExcludedKeys() != null ?
-                getDataRequest.getExcludedKeys().stream()
-                        .map(P2PDataStorage.ByteArray::new)
-                        .collect(Collectors.toSet())
-                : new HashSet<>();
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =  P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        Set<ProtectedStorageEntry> filteredSet = dataStorage.getMap().entrySet().stream()
+                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
 
-        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getFilteredValues(excludedItems)) {
-            final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
+        for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
+            final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
-            if (storagePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
                 if (supportedCapabilities != null) {
                     for (int messageCapability : requiredCapabilities) {
@@ -101,26 +103,34 @@ public class GetDataRequestHandler {
                         log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
                                 "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                                 "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                                "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                                "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 } else {
                     log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 }
             } else {
                 doAdd = true;
             }
             if (doAdd) {
-                // We have TradeStatistic data of both traders but we only send 1 item, 
-                // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores 
-                // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not, 
+                // We have TradeStatistic data of both traders but we only send 1 item,
+                // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores
+                // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not,
                 // as we ignore the pubKey and data there in the hashCode method.
-                boolean notContained = lookupSet.add(storagePayload.hashCode());
+                boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
                 if (notContained)
                     filteredDataSet.add(protectedStorageEntry);
             }
         }
-        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(),
+
+
+        Set<PersistableNetworkPayload> pnpSet = dataStorage.getPersistableNetworkPayloadCollection().getMap().values()
+            .stream()
+            .collect(Collectors.toSet());
+
+        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet,
+                pnpSet,
+                getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
 
         if (timeoutTimer == null) {

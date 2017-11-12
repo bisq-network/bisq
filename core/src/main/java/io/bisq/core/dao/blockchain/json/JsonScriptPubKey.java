@@ -37,6 +37,6 @@ public class JsonScriptPubKey {
         asm = pubKeyScript.getAsm();
         hex = pubKeyScript.getHex();
         reqSigs = pubKeyScript.getReqSigs();
-        type = pubKeyScript.getType().toString();
+        type = pubKeyScript.getScriptType().toString();
     }
 }

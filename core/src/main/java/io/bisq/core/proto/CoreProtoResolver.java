@@ -2,6 +2,8 @@ package io.bisq.core.proto;
 
 import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.ProtobufferException;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.core.payment.AccountAgeWitness;
 import io.bisq.core.payment.payload.*;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,8 @@ public class CoreProtoResolver implements ProtoResolver {
                                             "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload.BankAccountPayload). " +
                                             "messageCase=" + proto.getMessageCase());
                             }
+                        case WESTERN_UNION_ACCOUNT_PAYLOAD:
+                            return WesternUnionAccountPayload.fromProto(proto);
                         case CASH_DEPOSIT_ACCOUNT_PAYLOAD:
                             return CashDepositAccountPayload.fromProto(proto);
                         case SEPA_ACCOUNT_PAYLOAD:
@@ -62,6 +66,21 @@ public class CoreProtoResolver implements ProtoResolver {
         } else {
             log.error("PersistableEnvelope.fromProto: PB.PaymentAccountPayload is null");
             throw new ProtobufferException("PB.PaymentAccountPayload is null");
+        }
+    }
+
+    @Override
+    public PersistableEnvelope fromProto(PB.PersistableNetworkPayload proto) {
+        if (proto != null) {
+            switch (proto.getMessageCase()) {
+                case ACCOUNT_AGE_WITNESS:
+                    return AccountAgeWitness.fromProto(proto.getAccountAgeWitness());
+                default:
+                    throw new ProtobufferException("Unknown proto message case (PB.PersistableNetworkPayload). messageCase=" + proto.getMessageCase());
+            }
+        } else {
+            log.error("PB.PersistableNetworkPayload is null");
+            throw new ProtobufferException("PB.PersistableNetworkPayload is null");
         }
     }
 }

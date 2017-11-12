@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.USPostalMoneyOrderAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -56,9 +57,9 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     }
 
     public USPostalMoneyOrderForm(PaymentAccount paymentAccount,
-                                  USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
+                                  AccountAgeWitnessService accountAgeWitnessService, USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                                   InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.usPostalMoneyOrderAccount = (USPostalMoneyOrderAccount) paymentAccount;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
     }
@@ -89,7 +90,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -119,7 +120,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

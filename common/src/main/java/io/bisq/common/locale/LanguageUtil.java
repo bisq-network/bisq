@@ -28,20 +28,23 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
+            "el", // Greek
             "es", // Spanish
-            "sr"  // Serbian
+            "pt", // Portuguese / Brazil
+            "sr",  // Serbian
+            "zh",  // Chinese
+            "hu", // Hungarian
+            "ro", // Romanian
+            "ru", // Russian
+            "fr", // French
+            "tr" // Turkish
             
             /*
             // not translated yet
-            "zh", // Chinese
-            "pt", // Portuguese
             "it", // Italian
-            "el", // Greek
-            "fr", // French
             "ja", // Japanese
             "iw", // Hebrew
             "hi", // Hindi
-            "ru", // Russian
             "ko", // Korean
             "pl", // Polish
             "sv", // Swedish
@@ -53,7 +56,6 @@ public class LanguageUtil {
             "lt", // Lithuanian
             "lv", // Latvian
             "hr", // Croatian
-            "hu", // Hungarian
             "uk", // Ukrainian
             "sk", // Slovak
             "sl", // Slovenian
@@ -73,8 +75,6 @@ public class LanguageUtil {
             "vi", // Vietnamese
             "th", // Thai
             "da", // Danish
-            "ro", // Romanian
-            "tr", // Turkish
             "mt"  // Maltese
             */
     );

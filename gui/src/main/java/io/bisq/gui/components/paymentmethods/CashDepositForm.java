@@ -21,6 +21,7 @@ import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Tuple4;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
@@ -209,11 +210,11 @@ public class CashDepositForm extends PaymentMethodForm {
     private boolean useHolderID;
     private ComboBox<TradeCurrency> currencyComboBox;
     private final EmailValidator emailValidator;
-    
-  
-    public CashDepositForm(PaymentAccount paymentAccount, InputValidator inputValidator,
+
+
+    public CashDepositForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
                            GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccount.paymentAccountPayload;
 
         emailValidator = new EmailValidator();
@@ -269,7 +270,7 @@ public class CashDepositForm extends PaymentMethodForm {
             textArea.setText(requirements);
         }
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override
@@ -516,7 +517,7 @@ public class CashDepositForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         updateFromInputs();

@@ -11,13 +11,14 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.Broadcaster;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.io.File;
@@ -31,13 +32,14 @@ import java.util.Set;
 
 @Slf4j
 @RunWith(JMockit.class)
+@Ignore("Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.")
 public class P2PDataStorageTest {
     private final Set<NodeAddress> seedNodes = new HashSet<>();
     private EncryptionService encryptionService1, encryptionService2;
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
     private KeyRing keyRing1, keyRing2;
-    private StoragePayload storagePayload;
+    private ProtectedStoragePayload protectedStoragePayload;
     private File dir1;
     private File dir2;
 
@@ -72,7 +74,7 @@ public class P2PDataStorageTest {
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2, TestUtils.getNetworkProtoResolver());
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, persistenceProtoResolver);
+        //dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, persistenceProtoResolver);
     }
 
     @After
@@ -83,10 +85,6 @@ public class P2PDataStorageTest {
         FileUtil.deleteDirectory(dir1);
         FileUtil.deleteDirectory(dir2);
     }
-
-    //TODO CoreProtobufferResolver is not accessible here
-// We should refactor it so that the classes themselves know how to deserialize
-// so we don't get dependencies from core objects here
 
    /* @Test
     public void testProtectedStorageEntryAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
@@ -121,10 +119,7 @@ public class P2PDataStorageTest {
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
         data.toEnvelopeProto().writeTo(byteOutputStream);
 
-        //TODO CoreProtobufferResolver is not accessible here
-        // We should refactor it so that the classes themselves know how to deserialize
-        // so we don't get dependencies from core objects here
-         // -> use the base classes or interfaces instead (ProtoResolver, CoreProtoResolver)
+        //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.
        ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
         assertTrue(Arrays.equals(Hash.getHash(data.getStoragePayload()), Hash.getHash(protectedStorageEntry.getStoragePayload())));
@@ -132,10 +127,7 @@ public class P2PDataStorageTest {
         assertTrue(checkSignature(protectedStorageEntry));
     }*/
 
-    //TODO CoreProtobufferResolver is not accessible here
-    // We should refactor it so that the classes themselves know how to deserialize
-    // so we don't get dependencies from core objects here
-    // -> use the base classes or interfaces instead (ProtoResolver, CoreProtoResolver)
+    //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.
    /* @Test
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
         OfferPayload offer = getDummyOffer();

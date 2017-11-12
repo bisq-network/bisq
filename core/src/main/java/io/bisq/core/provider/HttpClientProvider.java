@@ -29,9 +29,16 @@ public abstract class HttpClientProvider {
 
     public HttpClientProvider(HttpClient httpClient, String baseUrl, @SuppressWarnings("SameParameterValue") boolean ignoreSocks5Proxy) {
         this.httpClient = httpClient;
-        log.info("{} with baseUrl {}", this.getClass().getSimpleName(), baseUrl);
+        log.debug("{} with baseUrl {}", this.getClass().getSimpleName(), baseUrl);
         httpClient.setBaseUrl(baseUrl);
 
         httpClient.setIgnoreSocks5Proxy(ignoreSocks5Proxy);
+    }
+
+    @Override
+    public String toString() {
+        return "HttpClientProvider{" +
+                "\n     httpClient=" + httpClient +
+                "\n}";
     }
 }

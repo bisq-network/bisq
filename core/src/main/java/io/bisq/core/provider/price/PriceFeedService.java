@@ -25,15 +25,14 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,7 +61,7 @@ public class PriceFeedService {
     private FaultHandler faultHandler;
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
-    private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
+    private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
     private int retryCounter = 0;
@@ -92,7 +91,7 @@ public class PriceFeedService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
+    public void setCurrencyCodeOnInit() {
         if (getCurrencyCode() == null) {
             final TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
             final String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";
@@ -121,7 +120,7 @@ public class PriceFeedService {
         }, (errorMessage, throwable) -> {
             // Try other provider if more then 1 is available
             if (providersRepository.hasMoreProviders()) {
-                providersRepository.setNewRandomBaseUrl();
+                providersRepository.selectNewRandomBaseUrl();
                 priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
             }
             UserThread.runAfter(() -> {
@@ -140,6 +139,16 @@ public class PriceFeedService {
             return cache.get(currencyCode);
         else
             return null;
+    }
+
+    public void setBisqMarketPrice(String currencyCode, Price price) {
+        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
+            cache.put(currencyCode, new MarketPrice(currencyCode,
+                MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                0,
+                false));
+            updateCounter.set(updateCounter.get() + 1);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +176,8 @@ public class PriceFeedService {
         return currencyCodeProperty;
     }
 
-    public IntegerProperty currenciesUpdateFlagProperty() {
-        return currenciesUpdateFlag;
+    public ReadOnlyIntegerProperty updateCounterProperty() {
+        return updateCounter;
     }
 
     public Date getLastRequestTimeStampBtcAverage() {
@@ -201,7 +210,7 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    if (marketPrice.isValid())
+                    if (marketPrice.isRecentExternalPriceAvailable())
                         priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
                     log.warn("Error at applyPriceToConsumer " + t.getMessage());
@@ -213,7 +222,7 @@ public class PriceFeedService {
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
         }
-        currenciesUpdateFlag.setValue(currenciesUpdateFlag.get() + 1);
+        updateCounter.set(updateCounter.get() + 1);
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
@@ -235,22 +244,39 @@ public class PriceFeedService {
                             break;
                         case "LTC":
                         case "DOGE":
+                        case "DASH":
                             // apply conversion of btc based price to baseCurrencyCode based with btc/baseCurrencyCode price
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
-                            Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
-                            priceMap.entrySet().stream().forEach(e -> {
-                                final MarketPrice value = e.getValue();
-                                double convertedPrice;
-                                if (CurrencyUtil.isCryptoCurrency(e.getKey()))
-                                    convertedPrice = value.getPrice() / baseCurrencyPrice.getPrice();
-                                else
-                                    convertedPrice = value.getPrice() * baseCurrencyPrice.getPrice();
-                                convertedPriceMap.put(e.getKey(), new MarketPrice(value.getCurrencyCode(), convertedPrice, value.getTimestampSec()));
-                            });
-                            cache.putAll(convertedPriceMap);
+                            if (baseCurrencyPrice != null) {
+                                Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
+                                priceMap.entrySet().stream().forEach(e -> {
+                                    final MarketPrice marketPrice = e.getValue();
+                                    if (marketPrice != null) {
+                                        double convertedPrice;
+                                        final double marketPriceAsDouble = marketPrice.getPrice();
+                                        final double baseCurrencyPriceAsDouble = baseCurrencyPrice.getPrice();
+                                        if (marketPriceAsDouble > 0 && baseCurrencyPriceAsDouble > 0) {
+                                            if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                                convertedPrice = marketPriceAsDouble / baseCurrencyPriceAsDouble;
+                                            else
+                                                convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
+                                            convertedPriceMap.put(e.getKey(),
+                                                new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
+                                        } else {
+                                            log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +
+                                                "baseCurrencyPriceAsDouble={}", marketPriceAsDouble, baseCurrencyPriceAsDouble);
+                                        }
+                                    } else {
+                                        log.warn("marketPrice is null");
+                                    }
+                                });
+                                cache.putAll(convertedPriceMap);
+                            } else {
+                                log.warn("baseCurrencyPrice is null");
+                            }
                             break;
                         default:
-                            throw new RuntimeException("baseCurrencyCode not dfined. baseCurrencyCode=" + baseCurrencyCode);
+                            throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
                     }
 
                     resultHandler.run();

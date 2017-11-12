@@ -30,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -60,6 +61,11 @@ public final class PayDepositRequest extends TradeMessage {
     private final NodeAddress mediatorNodeAddress;
     private final String uid;
 
+    // added in v 0.6. can be null if we trade with an older peer
+    @Nullable
+    private final byte[] accountAgeWitnessSignatureOfOfferId;
+    private final long currentDate;
+
     public PayDepositRequest(String tradeId,
                              NodeAddress senderNodeAddress,
                              long tradeAmount,
@@ -81,7 +87,9 @@ public final class PayDepositRequest extends TradeMessage {
                              NodeAddress arbitratorNodeAddress,
                              NodeAddress mediatorNodeAddress,
                              String uid,
-                             int messageVersion) {
+                             int messageVersion,
+                             @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
+                             long currentDate) {
         super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -103,6 +111,8 @@ public final class PayDepositRequest extends TradeMessage {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.uid = uid;
+        this.accountAgeWitnessSignatureOfOfferId = accountAgeWitnessSignatureOfOfferId;
+        this.currentDate = currentDate;
     }
 
 
@@ -136,7 +146,11 @@ public final class PayDepositRequest extends TradeMessage {
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setUid(uid);
+
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
+        builder.setCurrentDate(currentDate);
+
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
 
@@ -171,9 +185,10 @@ public final class PayDepositRequest extends TradeMessage {
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
+                proto.getCurrentDate());
     }
-
 
     @Override
     public String toString() {
@@ -198,6 +213,8 @@ public final class PayDepositRequest extends TradeMessage {
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     uid='" + uid + '\'' +
+                ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
+                ",\n     currentDate=" + new Date(currentDate) +
                 "\n} " + super.toString();
     }
 }

@@ -19,11 +19,12 @@ package io.bisq.gui.main.settings.network;
 
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.core.filter.Filter;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
@@ -32,6 +33,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Statistic;
@@ -44,13 +46,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,22 +58,23 @@ import java.util.stream.Collectors;
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
+
     @FXML
     TitledGroupBg p2pHeader, btcHeader;
     @FXML
-    Label onionAddressLabel, btcNodesLabel, useTorForBtcJLabel, totalTrafficLabel;
+    Label onionAddressLabel, btcNodesLabel, useTorForBtcJLabel, totalTrafficLabel, bitcoinNodesLabel;
     @FXML
-    InputTextField btcNodes;
+    InputTextField btcNodesInputTextField;
     @FXML
     TextField onionAddress, totalTrafficTextField;
     @FXML
-    ComboBox<BaseCurrencyNetwork> selectCurrencyNetworkComboBox;
-    @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
-    Label bitcoinPeersLabel, p2PPeersLabel, selectCurrencyNetworkLabel;
+    Label bitcoinPeersLabel, p2PPeersLabel;
     @FXML
     CheckBox useTorForBtcJCheckBox;
+    @FXML
+    RadioButton useProvidedNodesRadio, useCustomNodesRadio, usePublicNodesRadio;
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -82,14 +83,16 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     Label reSyncSPVChainLabel;
     @FXML
-    Button reSyncSPVChainButton;
+    Button reSyncSPVChainButton, openTorSettingsButton;
 
     private final Preferences preferences;
+    private final BitcoinNodes bitcoinNodes;
+    private final FilterManager filterManager;
+    private final BisqEnvironment bisqEnvironment;
     private final Clock clock;
     private final BSFormatter formatter;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
-    private final BisqEnvironment bisqEnvironment;
 
     private final ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
@@ -97,16 +100,22 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
-    private ChangeListener<Boolean> btcNodesFocusListener;
-    private String btcNodesPreFocusText;
+    private ChangeListener<Boolean> btcNodesInputTextFieldFocusListener;
+    private ToggleGroup bitcoinPeersToggleGroup;
+    private BitcoinNodes.BitcoinNodesOption selectedBitcoinNodesOption;
+    private ChangeListener<Toggle> bitcoinPeersToggleGroupListener;
+    private ChangeListener<String> btcNodesInputTextFieldListener;
+    private ChangeListener<Filter> filterPropertyListener;
 
     @Inject
-    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences,
-                               BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
+    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences, BitcoinNodes bitcoinNodes,
+                               FilterManager filterManager, BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
+        this.bitcoinNodes = bitcoinNodes;
+        this.filterManager = filterManager;
         this.bisqEnvironment = bisqEnvironment;
         this.clock = clock;
         this.formatter = formatter;
@@ -116,10 +125,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         btcHeader.setText(Res.get("settings.net.btcHeader"));
         p2pHeader.setText(Res.get("settings.net.p2pHeader"));
         onionAddressLabel.setText(Res.get("settings.net.onionAddressLabel"));
-        selectCurrencyNetworkLabel.setText(Res.getWithCol("settings.net.selectCurrencyNetwork"));
         btcNodesLabel.setText(Res.get("settings.net.btcNodesLabel"));
         bitcoinPeersLabel.setText(Res.get("settings.net.bitcoinPeersLabel"));
         useTorForBtcJLabel.setText(Res.get("settings.net.useTorForBtcJLabel"));
+        bitcoinNodesLabel.setText(Res.get("settings.net.bitcoinNodesLabel"));
+        useProvidedNodesRadio.setText(Res.get("settings.net.useProvidedNodesRadio"));
+        useCustomNodesRadio.setText(Res.get("settings.net.useCustomNodesRadio"));
+        usePublicNodesRadio.setText(Res.get("settings.net.usePublicNodesRadio"));
         reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.setText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
@@ -131,44 +143,62 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
         receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
         peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn"));
+        openTorSettingsButton.setText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
-        bitcoinPeersTextArea.setPrefRowCount(6);
+        bitcoinPeersTextArea.setPrefRowCount(4);
 
-        List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
-        // show ony mainnet in production version
-        if (!DevEnv.DEV_MODE)
-            baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.isMainnet())
-                    .collect(Collectors.toList());
-        selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
-
-        selectCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
-        selectCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
-            @Override
-            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
-                        baseCurrencyNetwork.getCurrencyName();
-            }
-
-            @Override
-            public BaseCurrencyNetwork fromString(String string) {
-                return null;
-            }
-        });
-
-        tableView.setMinHeight(230);
-        tableView.setPrefHeight(230);
+        tableView.setMinHeight(180);
+        tableView.setPrefHeight(180);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         tableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
 
+        bitcoinPeersToggleGroup = new ToggleGroup();
+        useProvidedNodesRadio.setToggleGroup(bitcoinPeersToggleGroup);
+        useCustomNodesRadio.setToggleGroup(bitcoinPeersToggleGroup);
+        usePublicNodesRadio.setToggleGroup(bitcoinPeersToggleGroup);
+
+        useProvidedNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.PROVIDED);
+        useCustomNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.CUSTOM);
+        usePublicNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.PUBLIC);
+
+        selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        // In case CUSTOM is selected but no custom nodes are set or
+        // in case PUBLIC is selected but we blocked it (B2X risk) we revert to provided nodes
+        if ((selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.CUSTOM &&
+                (preferences.getBitcoinNodes() == null || preferences.getBitcoinNodes().isEmpty())) ||
+                (selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.PUBLIC && isPreventPublicBtcNetwork())) {
+            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+        }
+        if (!bitcoinNodes.useProvidedBtcNodes()) {
+            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+        }
+
+        selectBitcoinPeersToggle();
+        onBitcoinPeersToggleSelected(false);
+
+        bitcoinPeersToggleGroupListener = (observable, oldValue, newValue) -> {
+            selectedBitcoinNodesOption = (BitcoinNodes.BitcoinNodesOption) newValue.getUserData();
+            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+            onBitcoinPeersToggleSelected(true);
+        };
+
+        btcNodesInputTextFieldListener = (observable, oldValue, newValue) -> preferences.setBitcoinNodes(newValue);
+        btcNodesInputTextFieldFocusListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                showShutDownPopup();
+        };
+        filterPropertyListener = (observable, oldValue, newValue) -> {
+            applyPreventPublicBtcNetwork();
+        };
 
         //TODO sorting needs other NetworkStatisticListItem as columns type
        /* creationDateColumn.setComparator((o1, o2) ->
@@ -181,6 +211,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
+        bitcoinPeersToggleGroup.selectedToggleProperty().addListener(bitcoinPeersToggleGroupListener);
+
+        if (filterManager.getFilter() != null)
+            applyPreventPublicBtcNetwork();
+
+        filterManager.filterProperty().addListener(filterPropertyListener);
+
         useTorForBtcJCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
@@ -230,33 +267,20 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        btcNodes.setText(preferences.getBitcoinNodes());
-        btcNodes.setPromptText(Res.get("settings.net.ips"));
-        btcNodesFocusListener = (observable, oldValue, newValue) -> {
-            if (newValue) {
-                btcNodesPreFocusText = btcNodes.getText();
-            }
-            if (oldValue && !newValue && !btcNodesPreFocusText.equals(btcNodes.getText())) {
-                new Popup<>().information(Res.get("settings.net.needRestart"))
-                        .actionButtonText(Res.get("shared.applyAndShutDown"))
-                        .onAction(() -> {
-                            if (btcNodes.getText().isEmpty()) {
-                                preferences.setBitcoinNodes("");
-                            } else {
-                                preferences.setBitcoinNodes(btcNodes.getText());
-                            }
-                            UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .onClose(() -> btcNodes.setText(btcNodesPreFocusText))
-                        .show();
-            }
-        };
-        btcNodes.focusedProperty().addListener(btcNodesFocusListener);
+        btcNodesInputTextField.setText(preferences.getBitcoinNodes());
+        btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
+
+        btcNodesInputTextField.textProperty().addListener(btcNodesInputTextFieldListener);
+        btcNodesInputTextField.focusedProperty().addListener(btcNodesInputTextFieldFocusListener);
+
+        openTorSettingsButton.setOnAction(e -> new TorNetworkSettingsWindow(preferences).show());
     }
 
     @Override
     public void deactivate() {
+        bitcoinPeersToggleGroup.selectedToggleProperty().removeListener(bitcoinPeersToggleGroupListener);
+        filterManager.filterProperty().removeListener(filterPropertyListener);
+
         useTorForBtcJCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
@@ -272,24 +296,112 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
-        btcNodes.focusedProperty().removeListener(btcNodesFocusListener);
+        btcNodesInputTextField.focusedProperty().removeListener(btcNodesInputTextFieldFocusListener);
+        btcNodesInputTextField.textProperty().removeListener(btcNodesInputTextFieldListener);
+
+        openTorSettingsButton.setOnAction(null);
     }
 
-    private void onSelectNetwork() {
-        if (selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
-            selectNetwork();
+    private boolean isPreventPublicBtcNetwork() {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().isPreventPublicBtcNetwork();
     }
 
-    private void selectNetwork() {
-        new Popup().warning(Res.get("settings.net.needRestart"))
-                .onAction(() -> {
-                    bisqEnvironment.saveBaseCryptoNetwork(selectCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                })
-                .actionButtonText(Res.get("shared.shutDown"))
+    private void selectBitcoinPeersToggle() {
+        switch (selectedBitcoinNodesOption) {
+            case CUSTOM:
+                bitcoinPeersToggleGroup.selectToggle(useCustomNodesRadio);
+                break;
+            case PUBLIC:
+                bitcoinPeersToggleGroup.selectToggle(usePublicNodesRadio);
+                break;
+            default:
+            case PROVIDED:
+                bitcoinPeersToggleGroup.selectToggle(useProvidedNodesRadio);
+                break;
+        }
+    }
+
+    private void showShutDownPopup() {
+        new Popup<>()
+                .information(Res.get("settings.net.needRestart"))
                 .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> selectCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
+                .useShutDownButton()
                 .show();
+    }
+
+    private void onBitcoinPeersToggleSelected(boolean calledFromUser) {
+        boolean bitcoinLocalhostNodeRunning = bisqEnvironment.isBitcoinLocalhostNodeRunning();
+        bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
+        btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
+        btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
+        useProvidedNodesRadio.setDisable(!bitcoinNodes.useProvidedBtcNodes() || bitcoinLocalhostNodeRunning);
+        useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
+        usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
+
+        switch (selectedBitcoinNodesOption) {
+            case CUSTOM:
+                btcNodesInputTextField.setDisable(false);
+                btcNodesLabel.setDisable(false);
+                if (calledFromUser && !btcNodesInputTextField.getText().isEmpty()) {
+                    if (isPreventPublicBtcNetwork()) {
+                        new Popup<>().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
+                                .onAction(() -> {
+                                    UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
+                                }).show();
+                    } else {
+                        showShutDownPopup();
+                    }
+                }
+                break;
+            case PUBLIC:
+                btcNodesInputTextField.setDisable(true);
+                btcNodesLabel.setDisable(true);
+                if (calledFromUser)
+                    new Popup<>()
+                            .warning(Res.get("settings.net.warn.usePublicNodes"))
+                            .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
+                            .onAction(() -> {
+                                UserThread.runAfter(() -> {
+                                    selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+                                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                                    selectBitcoinPeersToggle();
+                                    onBitcoinPeersToggleSelected(false);
+                                }, 300, TimeUnit.MILLISECONDS);
+                            })
+                            .closeButtonText(Res.get("settings.net.warn.usePublicNodes.usePublic"))
+                            .onClose(() -> {
+                                UserThread.runAfter(this::showShutDownPopup, 300, TimeUnit.MILLISECONDS);
+                            })
+                            .show();
+                break;
+            default:
+            case PROVIDED:
+                if (bitcoinNodes.useProvidedBtcNodes()) {
+                    btcNodesInputTextField.setDisable(true);
+                    btcNodesLabel.setDisable(true);
+                    if (calledFromUser)
+                        showShutDownPopup();
+                } else {
+                    selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+                    preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    selectBitcoinPeersToggle();
+                    onBitcoinPeersToggleSelected(false);
+                }
+                break;
+        }
+    }
+
+
+    private void applyPreventPublicBtcNetwork() {
+        final boolean preventPublicBtcNetwork = isPreventPublicBtcNetwork();
+        usePublicNodesRadio.setDisable(preventPublicBtcNetwork);
+        if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.PUBLIC) {
+            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+            preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+            selectBitcoinPeersToggle();
+            onBitcoinPeersToggleSelected(false);
+        }
     }
 
     private void updateP2PTable() {

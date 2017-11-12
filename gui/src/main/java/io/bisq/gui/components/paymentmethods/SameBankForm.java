@@ -20,6 +20,7 @@ package io.bisq.gui.components.paymentmethods;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -42,9 +43,9 @@ public class SameBankForm extends BankForm {
         return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
-    public SameBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
+    public SameBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
                         GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter, closeHandler);
     }
 
     @Override
@@ -56,21 +57,12 @@ public class SameBankForm extends BankForm {
             bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
-
-        InputTextField emailTextField = addLabelInputTextField(gridPane,
-                ++gridRow, Res.get("payment.email")).second;
-        emailTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setEmail(newValue);
-            updateFromInputs();
-        });
-        emailTextField.setValidator(emailValidator);
     }
 
     @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && inputValidator.validate(bankAccountPayload.getHolderName()).isValid
-                && emailValidator.validate(bankAccountPayload.getEmail()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
                 && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
 
@@ -97,8 +89,6 @@ public class SameBankForm extends BankForm {
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
         holderNameTextField.setText(bankAccountPayload.getHolderName());
-
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), bankAccountPayload.getEmail());
     }
 
 }

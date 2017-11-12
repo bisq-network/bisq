@@ -413,7 +413,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.trades"), model.preferences));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.trade"),
+                Res.get("shared.trades"),
+                model.preferences));
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);

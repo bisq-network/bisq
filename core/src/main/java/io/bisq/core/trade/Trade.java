@@ -40,6 +40,7 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
@@ -139,7 +140,6 @@ public abstract class Trade implements Tradable, Model {
         SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
         SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
         SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
-
 
         BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
         // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
@@ -332,6 +332,7 @@ public abstract class Trade implements Tradable, Model {
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty(errorMessage);
 
     //  Mutable
+    @Getter
     transient protected TradeProtocol tradeProtocol;
     @Nullable
     @Setter
@@ -476,6 +477,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      FilterManager filterManager,
+                     AccountAgeWitnessService accountAgeWitnessService,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
@@ -489,14 +491,15 @@ public abstract class Trade implements Tradable, Model {
                 tradeWalletService,
                 user,
                 filterManager,
+                accountAgeWitnessService,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
         createTradeProtocol();
 
-        // if we have already received a msg we apply it. 
-        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
+        // If we have already received a msg we apply it.
+        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
         // or async calls there.
         // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
         HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
@@ -530,15 +533,15 @@ public abstract class Trade implements Tradable, Model {
         return depositTx;
     }
 
-    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we 
-    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
+    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
+    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
     // received the msb but before the init is called.
     public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
-            // If we have already initialized we apply. 
-            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
+            // If we have already initialized we apply.
+            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context
             // or async calls there.
             if (tradeProtocol != null)
                 tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
@@ -569,7 +572,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Abstract 
+    // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     abstract protected void createTradeProtocol();
@@ -578,7 +581,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters 
+    // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {

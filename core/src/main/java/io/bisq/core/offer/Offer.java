@@ -33,6 +33,7 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -128,7 +129,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         if (offerPayload.isUseMarketBasedPrice()) {
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-            if (marketPrice != null && marketPrice.isValid()) {
+            if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
@@ -300,6 +301,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
+
+    public Optional<String> getAccountAgeWitnessHashAsHex() {
+        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
+            return Optional.of(getExtraDataMap().get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
+        else
+            return Optional.<String>empty();
+    }
 
     // domain properties
     public Offer.State getState() {
