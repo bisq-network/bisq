@@ -265,6 +265,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         newlyAdded.add("XCN");
         newlyAdded.add("TRC");
         newlyAdded.add("INXT");
+        newlyAdded.add("PART");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
