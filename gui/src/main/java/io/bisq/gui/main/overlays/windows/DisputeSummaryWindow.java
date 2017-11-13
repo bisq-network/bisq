@@ -185,7 +185,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
             disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
             disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setLoserIsPublisher(peersDisputeResult.isLoserPublisher());
+            disputeResult.setLoserPublisher(peersDisputeResult.isLoserPublisher());
             disputeResult.setReason(peersDisputeResult.getReason());
             disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
@@ -534,7 +534,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     closeTicketButton.disableProperty().unbind();
                     dispute.setDisputeResult(disputeResult);
 
-                    disputeResult.setLoserIsPublisher(isLoserPublisherCheckBox.isSelected());
+                    disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
                     String text = Res.get("disputeSummaryWindow.close.msg",
                             formatter.formatDateTime(disputeResult.getCloseDate()),
