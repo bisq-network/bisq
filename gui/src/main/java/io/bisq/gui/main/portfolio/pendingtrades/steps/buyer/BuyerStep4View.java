@@ -144,18 +144,14 @@ public class BuyerStep4View extends TradeStepView {
         });
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
-        if (DevEnv.DEV_MODE) {
-            withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
-        } else {
-            String key = "tradeCompleted" + trade.getId();
-            //noinspection ConstantConditions
-            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-                DontShowAgainLookup.dontShowAgain(key, true);
-                new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
+        String key = "tradeCompleted" + trade.getId();
+        //noinspection ConstantConditions
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+            DontShowAgainLookup.dontShowAgain(key, true);
+            new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                     .notification(Res.get("notification.tradeCompleted.msg"))
                     .autoClose()
                     .show();
-            }
         }
     }
 
@@ -192,22 +188,22 @@ public class BuyerStep4View extends TradeStepView {
                                 double kb = txSize / 1000d;
                                 String recAmount = formatter.formatCoinWithCode(receiverAmount);
                                 new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
-                                    .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                        formatter.formatCoinWithCode(amount),
-                                        fromAddresses,
-                                        toAddresses,
-                                        formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
-                                        recAmount))
-                                    .actionButtonText(Res.get("shared.yes"))
-                                    .onAction(() -> doWithdrawal(amount, fee))
-                                    .closeButtonText(Res.get("shared.cancel"))
-                                    .onClose(() -> {
-                                        useSavingsWalletButton.setDisable(false);
-                                        withdrawToExternalWalletButton.setDisable(false);
-                                    })
-                                    .show();
+                                        .confirmation(Res.get("shared.sendFundsDetailsWithFee",
+                                                formatter.formatCoinWithCode(amount),
+                                                fromAddresses,
+                                                toAddresses,
+                                                formatter.formatCoinWithCode(fee),
+                                                feePerByte,
+                                                kb,
+                                                recAmount))
+                                        .actionButtonText(Res.get("shared.yes"))
+                                        .onAction(() -> doWithdrawal(amount, fee))
+                                        .closeButtonText(Res.get("shared.cancel"))
+                                        .onClose(() -> {
+                                            useSavingsWalletButton.setDisable(false);
+                                            withdrawToExternalWalletButton.setDisable(false);
+                                        })
+                                        .show();
                             } else {
                                 doWithdrawal(amount, fee);
                             }
@@ -243,8 +239,8 @@ public class BuyerStep4View extends TradeStepView {
         };
         if (model.dataModel.btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> model.dataModel.walletPasswordWindow.onAesKey(aesKey ->
-                doWithdrawRequest(toAddress, amount, fee, aesKey, resultHandler, faultHandler))
-                .show(), 300, TimeUnit.MILLISECONDS);
+                    doWithdrawRequest(toAddress, amount, fee, aesKey, resultHandler, faultHandler))
+                    .show(), 300, TimeUnit.MILLISECONDS);
         } else
             doWithdrawRequest(toAddress, amount, fee, null, resultHandler, faultHandler);
     }
@@ -253,11 +249,11 @@ public class BuyerStep4View extends TradeStepView {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
         model.dataModel.onWithdrawRequest(toAddress,
-            amount,
-            fee,
-            aesKey,
-            resultHandler,
-            faultHandler);
+                amount,
+                fee,
+                aesKey,
+                resultHandler,
+                faultHandler);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -266,11 +262,11 @@ public class BuyerStep4View extends TradeStepView {
             String key = "tradeCompleteWithdrawCompletedInfo";
             //noinspection unchecked
             new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
-                .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
-                .actionButtonTextWithGoTo("navigation.funds.transactions")
-                .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
-                .dontShowAgainId(key)
-                .show();
+                    .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
+                    .actionButtonTextWithGoTo("navigation.funds.transactions")
+                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                    .dontShowAgainId(key)
+                    .show();
         }
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);

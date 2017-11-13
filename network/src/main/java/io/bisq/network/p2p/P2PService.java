@@ -666,11 +666,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     }
 
                     mailboxMap.remove(uid);
-                    log.trace("Removed successfully decryptedMsgWithPubKey.");
+                    log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
                 }
             } else {
-                log.warn("uid for mailbox entry not found in mailboxMap. That should never happen." +
-                        "\n\tuid={}\n\tmailboxMap={}\n\tmailboxMessage={}", uid, mailboxMap, mailboxMessage);
+                log.warn("uid for mailbox entry not found in mailboxMap." + "uid={}", uid);
             }
         } else {
             throw new NetworkNotReadyException();

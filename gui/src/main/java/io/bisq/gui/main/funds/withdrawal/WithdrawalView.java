@@ -388,9 +388,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
-
-        if (DevEnv.DEV_MODE)
-            withdrawToTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
