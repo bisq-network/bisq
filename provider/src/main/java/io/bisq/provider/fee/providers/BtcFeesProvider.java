@@ -22,14 +22,14 @@ public class BtcFeesProvider {
 
     // other: https://estimatefee.com/n/2
     public BtcFeesProvider() {
-        this.httpClient = new HttpClient("https://bitcoinfees.21.co/api/v1/fees/");
+        this.httpClient = new HttpClient("https://bitcoinfees.earn.com/api/v1/fees/");
     }
 
     public Long getFee() throws IOException {
-        // prev. used:  https://bitcoinfees.21.co/api/v1/fees/recommended
+        // prev. used:  https://bitcoinfees.earn.com/api/v1/fees/recommended
         // but was way too high
 
-        // https://bitcoinfees.21.co/api/v1/fees/list
+        // https://bitcoinfees.earn.com/api/v1/fees/list
         String response = httpClient.requestWithGET("list", "User-Agent", "");
         log.info("Get recommended fee response:  " + response);
 
