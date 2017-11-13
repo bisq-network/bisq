@@ -18,6 +18,7 @@
 package io.bisq.core.offer.messages;
 
 
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.core.offer.AvailabilityResult;
@@ -40,7 +41,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     private final List<Integer> supportedCapabilities;
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
-        this(offerId, availabilityResult, null, Version.getP2PMessageVersion());
+        this(offerId, availabilityResult, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
     }
 
 

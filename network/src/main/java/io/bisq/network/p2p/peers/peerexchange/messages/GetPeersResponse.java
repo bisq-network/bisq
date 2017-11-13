@@ -1,5 +1,6 @@
 package io.bisq.network.p2p.peers.peerexchange.messages;
 
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
@@ -24,7 +25,7 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     private final List<Integer> supportedCapabilities;
 
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
-        this(requestNonce, reportedPeers, null, Version.getP2PMessageVersion());
+        this(requestNonce, reportedPeers, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
     }
 
 

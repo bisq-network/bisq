@@ -143,7 +143,7 @@ public class WalletsSetup {
         backupWallets();
 
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
-        log.info("Use socks5Proxy for bitcoinj: " + socks5Proxy);
+        log.info("Socks5Proxy for bitcoinj: socks5Proxy=" + socks5Proxy);
 
         walletConfig = new WalletConfig(params, socks5Proxy, walletDir, bisqEnvironment, btcWalletFileName,
                 BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {

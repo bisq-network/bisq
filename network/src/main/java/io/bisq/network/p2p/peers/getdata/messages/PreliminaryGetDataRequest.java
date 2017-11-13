@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.peers.getdata.messages;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
@@ -26,7 +27,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
 
     public PreliminaryGetDataRequest(int nonce,
                                      Set<byte[]> excludedKeys) {
-        this(nonce, excludedKeys, null, Version.getP2PMessageVersion());
+        this(nonce, excludedKeys, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
     }
 
 

@@ -17,6 +17,7 @@
 
 package io.bisq.core.offer.messages;
 
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.generated.protobuffer.PB;
@@ -41,7 +42,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice) {
-        this(offerId, pubKeyRing, takersTradePrice, null, Version.getP2PMessageVersion());
+        this(offerId, pubKeyRing, takersTradePrice, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
     }
 
 

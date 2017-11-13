@@ -1,5 +1,6 @@
 package io.bisq.network.p2p.peers.getdata.messages;
 
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkProtoResolver;
@@ -45,7 +46,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 persistableNetworkPayloadSet,
                 requestNonce,
                 isGetUpdatedDataResponse,
-                null,
+                Capabilities.getCapabilities(),
                 Version.getP2PMessageVersion());
     }
 
