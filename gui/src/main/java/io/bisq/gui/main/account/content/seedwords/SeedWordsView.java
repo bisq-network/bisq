@@ -64,10 +64,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private int gridRow = 0;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
     private final SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
-    private final SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
     private ChangeListener<String> seedWordsTextAreaChangeListener;
-    private ChangeListener<Boolean> datePickerChangeListener;
-    private ChangeListener<LocalDate> dateChangeListener;
     private final BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
     private String seedWordText;
     private LocalDate walletCreationDate;
@@ -123,25 +120,14 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seedWordsValid.set(false);
             }
         };
-
-        datePickerChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue)
-                restoreDatePicker.getStyleClass().remove("validation_error");
-            else
-                restoreDatePicker.getStyleClass().add("validation_error");
-        };
-
-        dateChangeListener = (observable, oldValue, newValue) -> dateValid.set(true);
     }
 
     @Override
     public void activate() {
         seedWordsValid.addListener(seedWordsValidChangeListener);
-        dateValid.addListener(datePickerChangeListener);
         seedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
-        restoreDatePicker.valueProperty().addListener(dateChangeListener);
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !seedWordsEdited.get(),
+                seedWordsValid, seedWordsEdited));
 
         restoreButton.setOnAction(e -> {
             new Popup<>().information(Res.get("account.seed.restore.info"))
@@ -182,9 +168,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     @Override
     protected void deactivate() {
         seedWordsValid.removeListener(seedWordsValidChangeListener);
-        dateValid.removeListener(datePickerChangeListener);
         seedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
-        restoreDatePicker.valueProperty().removeListener(dateChangeListener);
         restoreButton.disableProperty().unbind();
         restoreButton.setOnAction(null);
 
