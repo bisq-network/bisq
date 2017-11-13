@@ -200,4 +200,18 @@ public class AltCoinAddressValidatorTest {
 	    assertFalse(validator.validate("decent-").isValid);
         assertFalse(validator.validate("").isValid);
     }
+    +    +     @Test
+++    public void testMDC() {
+++        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+++        validator.setCurrencyCode("MDC");
+++
+++        assertTrue(validator.validate("LPEodc9BeJV7RGdndwPfnbRVxrDfcvcwT6").isValid);
+++        assertTrue(validator.validate("LPkqBbp9GdHFGD9vbhzJ3pvgdVYFhVUhdG").isValid);
+++        assertTrue(validator.validate("LSRhut1MDfmZN5X9azskDb39CBDwCKPnM3").isValid);
+++        assertTrue(validator.validate("LaaAsZWk2U7pzMY4oz22KDR6V8UaDhby68").isValid);
+++
+++        assertFalse(validator.validate("15XfynN3JRhENC6MWjcxBrAQkEXttoeV8").isValid);
+++        assertFalse(validator.validate("Lh3jDMBRLbBjwRsnDr").isValid);
+++        assertFalse(validator.validate("LXjom839gHBwWzFWvmWRy5TRKX3Ux1goio#").isValid);
+++    }
 }
