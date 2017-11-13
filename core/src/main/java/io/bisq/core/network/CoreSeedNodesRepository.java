@@ -64,10 +64,15 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             // BTC mainnet
 
             //TODO dev dont use live nodes atm!
-            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
+           /* new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
             new NodeAddress("723ljisnynbtdohi.onion:8000"),
             new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
-            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),*/
+
+            new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @mrosseel
+            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @alexej996
+            new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy
+
 
             //TODO dev
             // local dev

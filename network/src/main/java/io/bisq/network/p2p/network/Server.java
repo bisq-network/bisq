@@ -85,7 +85,8 @@ class Server implements Runnable {
             connections.stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
-                serverSocket.close();
+                if (!serverSocket.isClosed())
+                    serverSocket.close();
             } catch (SocketException e) {
                 log.debug("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
