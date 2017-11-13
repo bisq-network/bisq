@@ -79,6 +79,11 @@ public class BisqEnvironment extends StandardEnvironment {
     private static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
     private static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
 
+    private static String staticAppDataDir;
+    public static String getStaticAppDataDir() {
+        return staticAppDataDir;
+    }
+
     @SuppressWarnings("SameReturnValue")
     public static BaseCurrencyNetwork getDefaultBaseCurrencyNetwork() {
         return BaseCurrencyNetwork.BTC_MAINNET;
@@ -203,6 +208,8 @@ public class BisqEnvironment extends StandardEnvironment {
         appDataDir = commandLineProperties.containsProperty(AppOptionKeys.APP_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
+        staticAppDataDir = appDataDir;
+
         ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
                 "";

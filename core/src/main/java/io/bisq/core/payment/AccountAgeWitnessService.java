@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
 
     // TODO update release date
-    private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 8);
+    private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     private static final Date FIRST_PHASE = Utilities.getUTCDate(2017, GregorianCalendar.DECEMBER, 15);
     private static final Date SECOND_PHASE = Utilities.getUTCDate(2018, GregorianCalendar.JANUARY, 15);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
