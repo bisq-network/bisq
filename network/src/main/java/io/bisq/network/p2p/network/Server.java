@@ -90,8 +90,7 @@ class Server implements Runnable {
             } catch (SocketException e) {
                 log.debug("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
-                log.error("Exception at shutdown. " + e.getMessage());
-                e.printStackTrace();
+                log.debug("Exception at shutdown. " + e.getMessage());
             } finally {
                 log.debug("Server shutdown complete");
             }
