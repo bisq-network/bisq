@@ -165,7 +165,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     @Override
     public void readPersisted() {
-        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 300);
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {

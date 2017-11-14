@@ -224,7 +224,7 @@ public class BsqChainState implements PersistableEnvelope {
     public void applySnapshot() {
         lock.write(() -> {
             checkNotNull(storage, "storage must not be null");
-            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState", 300);
+            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState", 100);
             bsqBlocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
