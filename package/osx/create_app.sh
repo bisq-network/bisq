@@ -48,4 +48,6 @@ rm "gui/deploy/Bisq.jnlp"
 mv "gui/deploy/bundles/Bisq-$version.dmg" "gui/deploy/Bisq-$version.dmg"
 rm -r "gui/deploy/bundles"
 
+open gui/deploy
+
 cd package/osx
