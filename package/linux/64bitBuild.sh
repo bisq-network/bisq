@@ -16,6 +16,7 @@ $JAVA_HOME/bin/javapackager \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
     -Bcategory=Network \
+    -Bemail=contact@bisq.network \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
     -Bicon=package/linux/icon.png \
