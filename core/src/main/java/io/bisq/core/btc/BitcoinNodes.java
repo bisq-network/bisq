@@ -47,6 +47,7 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
                         BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
                         BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
+                        BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", "https://github.com/sqrrm"),
                         BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
                         BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
                         BtcNode.fromHostNameAndAddress("bcwat.ch", "5.189.166.193", "https://github.com/sgeisler"),
