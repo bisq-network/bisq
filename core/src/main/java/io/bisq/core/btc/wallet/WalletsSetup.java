@@ -39,6 +39,7 @@ import javafx.beans.property.*;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.net.OnionCat;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -297,7 +298,22 @@ public class WalletsSetup {
                             if (btcNode.isHiddenService()) {
                                 // no DNS lookup for onion addresses
                                 log.info("We add a onion node with btcNode={}", btcNode);
-                                peerAddressList.add(new PeerAddress(btcNode.getHostName(), btcNode.getPort()));
+                                final String hostName = btcNode.getHostName();
+                                if (hostName != null) {
+                                    try {
+                                        // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
+                                        final InetAddress inetAddress = OnionCat.onionHostToInetAddress(hostName);
+                                        final PeerAddress peerAddress = new PeerAddress(hostName, btcNode.getPort());
+                                        // inetAddress is not used but required for wallet persistence. Throws nullpointer if not set.
+                                        peerAddress.setAddr(inetAddress);
+                                        peerAddressList.add(peerAddress);
+                                    } catch (UnknownHostException e) {
+                                        log.error("OnionCat.onionHostToInetAddress() failed with btcNode={}, error={}", btcNode.toString(), e.toString());
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    log.error("hostName is null for btcNode={}", btcNode.toString());
+                                }
                             } else {
                                 try {
                                     // We use DnsLookupTor to not leak with DNS lookup
