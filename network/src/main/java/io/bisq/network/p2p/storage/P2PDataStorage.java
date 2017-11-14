@@ -136,7 +136,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             log.debug(storageFileName + " file exists already.");
         }
         // takes about 4 seconds with PB! :-(
-        persistableEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName, 100);
+        persistableEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName, 300);
 
         if (persistableEntryMap != null) {
             map.putAll(persistableEntryMap.getMap());
@@ -174,7 +174,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             log.debug(storageFileName + " file exists already.");
         }
-        persistableNetworkPayloadCollection = persistableNetworkPayloadMapStorage.initAndGetPersistedWithFileName(storageFileName, 100);
+        persistableNetworkPayloadCollection = persistableNetworkPayloadMapStorage.initAndGetPersistedWithFileName(storageFileName, 300);
 
         if (persistableNetworkPayloadCollection != null) {
             log.info("persistableNetworkPayloadMap size=" + persistableNetworkPayloadCollection.getMap().size());

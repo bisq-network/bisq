@@ -109,7 +109,7 @@ public class CompensationRequestManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests", 50);
+            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests", 300);
             if (persisted != null)
                 model.setPersistedCompensationRequest(persisted.getList());
         }

@@ -52,7 +52,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = storage.initAndGetPersisted(this, 10);
+        AddressEntryList persisted = storage.initAndGetPersisted(this, 300);
         if (persisted != null)
             list = new ArrayList<>(persisted.getList());
     }

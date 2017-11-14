@@ -52,7 +52,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
 
-        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName, 50);
+        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName, 300);
         if (persisted != null)
             list.addAll(persisted.getList());
     }
