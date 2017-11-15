@@ -43,7 +43,6 @@ public class BitcoinNodes {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
                         BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
-                        BtcNode.fromHostName("btc.beams.io", "https://github.com/cbeams"), // 62.178.187.80
                         BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
                         BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
                         BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
