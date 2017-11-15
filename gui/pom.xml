@@ -55,34 +55,32 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.0.1</version>
-                <!-- TODO with current build scripts bouncy castle jar is still needed in jdk dir -->
-                <!--
-         <executions>
-             <execution>
-                 <id>copy-bouncycastle</id>
-                 <phase>package</phase>
-                 <goals>
-                     <goal>copy</goal>
-                 </goals>
-                <configuration>
-                     <stripVersion>true</stripVersion>
-                     <artifactItems>
-                         <artifactItem>
-                             <groupId>org.bouncycastle</groupId>
-                             <artifactId>bcprov-jdk15on</artifactId>
-                             <overWrite>true</overWrite>
-                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                         </artifactItem>
-                         <artifactItem>
-                             <groupId>org.bouncycastle</groupId>
-                             <artifactId>bcpg-jdk15on</artifactId>
-                             <overWrite>true</overWrite>
-                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                          </artifactItem>
-                     </artifactItems>
-                 </configuration>
-             </execution>
-         </executions>-->
+                <executions>
+                    <execution>
+                        <id>copy-bouncycastle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcprov-jdk15on</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.bouncycastle</groupId>
+                                    <artifactId>bcpg-jdk15on</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                 </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -90,31 +88,22 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <!-- TODO with current build scripts bouncy castle jar is still needed in jdk dir -->
-                    <!--
                     <artifactSet>
                         <excludes>
                             <exclude>org.bouncycastle:*:*:*</exclude>
                         </excludes>
-                    </artifactSet>-->
+                    </artifactSet>
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bisq.gui.app.BisqAppMain</mainClass>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>io.bisq.gui.app.BisqAppMain</Main-Class>
+                                <!-- the specified bouncy castle jar classes  -->
+                                <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
+                            </manifestEntries>
                         </transformer>
                     </transformers>
-                    <!-- TODO with current build scripts bouncy castle jar is still needed in jdk dir -->
-                    <!--  <transformers>
-                          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                              <manifestEntries>
-                                  <Main-Class>io.bisq.gui.app.BisqAppMain</Main-Class>
-                                  &lt;!&ndash; the specified bouncy castle jar classes  &ndash;&gt;
-                                  <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
-                              </manifestEntries>
-                          </transformer>
-                      </transformers>-->
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <filters>
                         <filter>
