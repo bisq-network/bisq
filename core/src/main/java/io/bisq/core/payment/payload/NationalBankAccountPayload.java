@@ -35,7 +35,6 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
 
     public NationalBankAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
-        email = "";  //email must not be null but empty string, otherwise hash check fails for contract
     }
 
 
@@ -53,7 +52,6 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                                        String accountType,
                                        String holderTaxId,
                                        String bankId,
-                                       String email,
                                        long maxTradePeriod,
                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
@@ -66,7 +64,6 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                 accountType,
                 holderTaxId,
                 bankId,
-                email,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
     }
@@ -100,7 +97,6 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                 bankAccountPayloadPB.getAccountType().isEmpty() ? null : bankAccountPayloadPB.getAccountType(),
                 bankAccountPayloadPB.getHolderTaxId().isEmpty() ? null : bankAccountPayloadPB.getHolderTaxId(),
                 bankAccountPayloadPB.getBankId().isEmpty() ? null : bankAccountPayloadPB.getBankId(),
-                bankAccountPayloadPB.getEmail().isEmpty() ? "" : bankAccountPayloadPB.getEmail(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
