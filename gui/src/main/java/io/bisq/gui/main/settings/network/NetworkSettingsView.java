@@ -332,10 +332,12 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void onBitcoinPeersToggleSelected(boolean calledFromUser) {
         boolean bitcoinLocalhostNodeRunning = bisqEnvironment.isBitcoinLocalhostNodeRunning();
+        useTorForBtcJLabel.setDisable(bitcoinLocalhostNodeRunning);
+        useTorForBtcJCheckBox.setDisable(bitcoinLocalhostNodeRunning);
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
-        useProvidedNodesRadio.setDisable(!bitcoinNodes.useProvidedBtcNodes() || bitcoinLocalhostNodeRunning);
+        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning ||  !bitcoinNodes.useProvidedBtcNodes());
         useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
         usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
 
@@ -395,7 +397,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void applyPreventPublicBtcNetwork() {
         final boolean preventPublicBtcNetwork = isPreventPublicBtcNetwork();
-        usePublicNodesRadio.setDisable(preventPublicBtcNetwork);
+        usePublicNodesRadio.setDisable(bisqEnvironment.isBitcoinLocalhostNodeRunning() || preventPublicBtcNetwork);
         if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.PUBLIC) {
             selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
@@ -422,6 +424,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 bitcoinPeersTextArea.appendText(e.toString());
             });
         }
+
+        if (bisqEnvironment.isBitcoinLocalhostNodeRunning())
+            bitcoinPeersTextArea.appendText("\n\n" + Res.get("settings.net.localhostBtcNodeInfo"));
     }
 }
 

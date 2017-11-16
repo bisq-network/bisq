@@ -279,10 +279,10 @@ public class BuyerStep2View extends TradeStepView {
                 //noinspection ConstantConditions
                 String key = "westernUnionMTCNSent";
                 if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                    String email = ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
-                            .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg",
-                                    ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail()))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg", email))
                             .onAction(this::showConfirmPaymentStartedPopup)
                             .actionButtonText(Res.get("shared.yes"))
                             .closeButtonText(Res.get("shared.no"))
@@ -357,7 +357,7 @@ public class BuyerStep2View extends TradeStepView {
             String id = trade.getShortId();
             String paddedId = " " + id + " ";
             String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
-            if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
+            if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
@@ -365,7 +365,7 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste;
-            else if (paymentAccountPayload instanceof CashDepositAccountPayload)
+            } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
@@ -377,16 +377,16 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.cash.extra");
-            else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
-                //noinspection UnusedAssignment
+            } else if (paymentAccountPayload instanceof WesternUnionAccountPayload) {
+                final String email = ((WesternUnionAccountPayload) paymentAccountPayload).getEmail();
+                final String extra = Res.get("portfolio.pending.step2_buyer.westernUnion.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.westernUnion",
                         amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
                         copyPaste + "\n\n" +
-                        Res.get("portfolio.pending.step2_buyer.westernUnion.extra",
-                                ((WesternUnionAccountPayload) paymentAccountPayload).getEmail());
-            else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
+                        extra;
+            } else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
                         accountDetails +
@@ -395,7 +395,7 @@ public class BuyerStep2View extends TradeStepView {
                         tradeId + paddedId +
                         assign +
                         refTextWarn;
-            else
+            } else {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
@@ -405,7 +405,7 @@ public class BuyerStep2View extends TradeStepView {
                         assign +
                         refTextWarn + "\n\n" +
                         fees;
-
+            }
             //noinspection ConstantConditions,UnusedAssignment
             String key = "startPayment" + trade.getId();
             //noinspection ConstantConditions,ConstantConditions
