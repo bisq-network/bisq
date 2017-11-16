@@ -68,7 +68,7 @@ public class ArbitratorService {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
         if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
                 !Utilities.encodeToHex(arbitrator.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
-            boolean result = p2PService.addData(arbitrator, true);
+            boolean result = p2PService.addProtectedStorageEntry(arbitrator, true);
             if (result) {
                 log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
                 resultHandler.handleResult();

@@ -26,7 +26,7 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.trade.statistics.TradeStatistics;
+import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
@@ -48,16 +48,15 @@ import javafx.collections.SetChangeListener;
 import javafx.scene.chart.XYChart;
 import javafx.util.Pair;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 class TradesChartsViewModel extends ActivatableViewModel {
-    private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModel.class);
     private static final int TAB_INDEX = 2;
 
 
@@ -80,15 +79,15 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private Navigation navigation;
     private BSFormatter formatter;
 
-    private final SetChangeListener<TradeStatistics> setChangeListener;
+    private final SetChangeListener<TradeStatistics2> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
-    final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
+    final ObservableList<TradeStatistics2> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
-    private Map<Long, Pair<Date, Set<TradeStatistics>>> itemsPerInterval;
+    private Map<Long, Pair<Date, Set<TradeStatistics2>>> itemsPerInterval;
 
     TickUnit tickUnit = TickUnit.DAY;
     final int maxTicks = 30;
@@ -240,8 +239,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         itemsPerInterval = new HashMap<>();
         Date time = new Date();
         for (long i = maxTicks + 1; i >= 0; --i) {
-            Set<TradeStatistics> set = new HashSet<>();
-            Pair<Date, Set<TradeStatistics>> pair = new Pair<>((Date) time.clone(), set);
+            Set<TradeStatistics2> set = new HashSet<>();
+            Pair<Date, Set<TradeStatistics2>> pair = new Pair<>((Date) time.clone(), set);
             itemsPerInterval.put(i, pair);
             time.setTime(time.getTime() - 1);
             time = roundToTick(time,  tickUnit);
@@ -250,7 +249,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         // Get all entries for the defined time interval
         tradeStatisticsByCurrency.stream().forEach(e -> {
             for (long i = maxTicks; i > 0; --i) {
-                Pair<Date, Set<TradeStatistics>> p = itemsPerInterval.get(i);
+                Pair<Date, Set<TradeStatistics2>> p = itemsPerInterval.get(i);
                 if (e.getTradeDate().after(p.getKey())) {
                     p.getValue().add(e);
                     break;
@@ -277,7 +276,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     @VisibleForTesting
-    CandleData getCandleData(long tick, Set<TradeStatistics> set) {
+    CandleData getCandleData(long tick, Set<TradeStatistics2> set) {
         long open = 0;
         long close = 0;
         long high = 0;
@@ -286,7 +285,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedAmount = 0;
         long numTrades = set.size();
 
-        for (TradeStatistics item : set) {
+        for (TradeStatistics2 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
             if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                 low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
@@ -300,7 +299,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedAmount += item.getTradeAmount().getValue();
         }
 
-        List<TradeStatistics> list = new ArrayList<>(set);
+        List<TradeStatistics2> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.getTradeDate().getTime() < o2.getTradeDate().getTime() ? -1 : (o1.getTradeDate().getTime() == o2.getTradeDate().getTime() ? 0 : 1)));
         if (list.size() > 0) {
             open = list.get(0).getTradePrice().getValue();

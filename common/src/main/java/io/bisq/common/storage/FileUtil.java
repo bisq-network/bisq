@@ -74,10 +74,10 @@ public class FileUtil {
                 for (File c : files)
                     deleteDirectory(c);
         }
-        deleteFile(file);
+        deleteFileIfExists(file);
     }
 
-    public static void deleteFile(File file) throws IOException {
+    public static void deleteFileIfExists(File file) throws IOException {
         if (file.exists() && !file.delete())
             throw new FileNotFoundException("Failed to delete file: " + file);
     }

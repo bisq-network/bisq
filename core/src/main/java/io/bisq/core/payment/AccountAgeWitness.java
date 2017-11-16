@@ -24,13 +24,16 @@ import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bisq.network.p2p.storage.payload.DateTolerantPayload;
 import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import io.bisq.network.p2p.storage.payload.DateTolerantPayload;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 // Object has 28 raw bytes (33 bytes is size of ProtoBuffer object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
@@ -102,6 +105,11 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
         return new ArrayList<>(Collections.singletonList(
                 Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
         ));
+    }
+
+    @Override
+    public byte[] getHash() {
+        return hash;
     }
 
 

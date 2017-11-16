@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.net.OnionCat;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -348,7 +349,8 @@ public class WalletsSetup {
                 log.info("You connect with peerAddresses: " + peerAddressList.toString());
                 walletConfig.setPeerNodes(peerAddresses);
             } else if (useTorForBitcoinJ) {
-                log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
+                if (params == MainNetParams.get())
+                    log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
                         "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
                 // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
                 walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));

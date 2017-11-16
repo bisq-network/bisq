@@ -46,7 +46,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 persistableNetworkPayloadSet,
                 requestNonce,
                 isGetUpdatedDataResponse,
-                Capabilities.getCapabilities(),
+                Capabilities.getSupportedCapabilities(),
                 Version.getP2PMessageVersion());
     }
 

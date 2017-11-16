@@ -6,7 +6,7 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.trade.statistics.TradeStatistics;
+import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
@@ -31,62 +31,72 @@ import java.security.Security;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JMockit.class)
 public class TradesChartsViewModelTest {
-    @Tested TradesChartsViewModel model;
-    @Injectable Preferences preferences;
-    @Injectable PriceFeedService priceFeedService;
-    @Injectable Navigation navigation;
-    @Injectable BSFormatter formatter;
-    @Injectable TradeStatisticsManager tsm;
+    @Tested
+    TradesChartsViewModel model;
+    @Injectable
+    Preferences preferences;
+    @Injectable
+    PriceFeedService priceFeedService;
+    @Injectable
+    Navigation navigation;
+    @Injectable
+    BSFormatter formatter;
+    @Injectable
+    TradeStatisticsManager tsm;
 
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private KeyRing keyRing;
     private File dir;
     OfferPayload offer = new OfferPayload(null,
-        0,
-        null,
-        null,
-        null,
-        0,
-        0,
-        false,
-        0,
-        0,
-        "BTC",
-        "EUR",
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        0,
-        0,
-        0,
-        false,
-        0,
-        0,
-        0,
-        0,
-        false,
-        false,
-        0,
-        0,
-        false,
-        null,
-        null,
-        1
+            0,
+            null,
+            null,
+            null,
+            0,
+            0,
+            false,
+            0,
+            0,
+            "BTC",
+            "EUR",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            0,
+            0,
+            false,
+            0,
+            0,
+            0,
+            0,
+            false,
+            false,
+            0,
+            0,
+            false,
+            null,
+            null,
+            1
     );
+
     @Before
     public void setup() throws IOException {
         Security.addProvider(new BouncyCastleProvider());
@@ -112,13 +122,13 @@ public class TradesChartsViewModelTest {
         long volume = Fiat.parseFiat("EUR", "2200").value;
         boolean isBullish = true;
 
-        Set<TradeStatistics> set = new HashSet<>();
+        Set<TradeStatistics2> set = new HashSet<>();
         final Date now = new Date();
 
-        set.add(new TradeStatistics(offer, Price.parse("EUR","520"), Coin.parseCoin("1"), new Date(now.getTime()), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-        set.add(new TradeStatistics(offer, Price.parse("EUR","500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-        set.add(new TradeStatistics(offer, Price.parse("EUR","600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-        set.add(new TradeStatistics(offer, Price.parse("EUR","580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
+        set.add(new TradeStatistics2(offer, Price.parse("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null));
+        set.add(new TradeStatistics2(offer, Price.parse("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null));
+        set.add(new TradeStatistics2(offer, Price.parse("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null));
+        set.add(new TradeStatistics2(offer, Price.parse("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null));
 
         CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set);
         assertEquals(open, candleData.open);
@@ -135,7 +145,7 @@ public class TradesChartsViewModelTest {
     public void testItemLists() throws ParseException {
         // Helper class to add historic trades
         class Trade {
-            Trade (String date, String size, String price, String cc) {
+            Trade(String date, String size, String price, String cc) {
                 try {
                     this.date = dateFormat.parse(date);
                 } catch (ParseException p) {
@@ -145,11 +155,13 @@ public class TradesChartsViewModelTest {
                 this.price = price;
                 this.cc = cc;
             }
+
             Date date;
             String size;
             String price;
             String cc;
-        };
+        }
+        ;
 
         // Trade EUR
         model.selectedTradeCurrencyProperty.setValue(new FiatCurrency("EUR"));
@@ -159,19 +171,22 @@ public class TradesChartsViewModelTest {
         // Set predetermined time to use as "now" during test
         Date test_time = dateFormat.parse("2018-01-01T00:00:05");  // Monday
         new MockUp<System>() {
-            @Mock long currentTimeMillis() { return test_time.getTime(); }
+            @Mock
+            long currentTimeMillis() {
+                return test_time.getTime();
+            }
         };
 
         // Two trades 10 seconds apart, different YEAR, MONTH, WEEK, DAY, HOUR, MINUTE_10
         trades.add(new Trade("2017-12-31T23:59:52", "1", "100", "EUR"));
         trades.add(new Trade("2018-01-01T00:00:02", "1", "110", "EUR"));
-        Set<TradeStatistics> set = new HashSet<>();
-        trades.forEach (t ->
-            {
-                set.add(new TradeStatistics(offer, Price.parse(t.cc, t.price), Coin.parseCoin(t.size), t.date, null, keyRing.getPubKeyRing().getSignaturePubKeyBytes()));
-            }
+        Set<TradeStatistics2> set = new HashSet<>();
+        trades.forEach(t ->
+                {
+                    set.add(new TradeStatistics2(offer, Price.parse(t.cc, t.price), Coin.parseCoin(t.size), t.date, null));
+                }
         );
-        ObservableSet<TradeStatistics> tradeStats = FXCollections.observableSet(set);
+        ObservableSet<TradeStatistics2> tradeStats = FXCollections.observableSet(set);
 
         // Run test for each tick type
         for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {

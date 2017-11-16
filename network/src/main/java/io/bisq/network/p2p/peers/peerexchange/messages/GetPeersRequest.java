@@ -29,7 +29,7 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
     private final List<Integer> supportedCapabilities;
 
     public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
-        this(senderNodeAddress, nonce, reportedPeers, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
+        this(senderNodeAddress, nonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 

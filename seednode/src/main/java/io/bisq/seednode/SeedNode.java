@@ -7,6 +7,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
@@ -30,6 +31,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Slf4j
 public class SeedNode {
@@ -52,7 +55,7 @@ public class SeedNode {
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread 
+            // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());
@@ -86,6 +89,21 @@ public class SeedNode {
 
         Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
         appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
+        if (fullDaoNode)
+            Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
+                    Capabilities.Capability.TRADE_STATISTICS.ordinal(),
+                    Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
+                    Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
+                    Capabilities.Capability.SEED_NODE.ordinal(),
+                    Capabilities.Capability.DAO_FULL_NODE.ordinal()
+            )));
+        else
+            Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
+                    Capabilities.Capability.TRADE_STATISTICS.ordinal(),
+                    Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
+                    Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
+                    Capabilities.Capability.SEED_NODE.ordinal()
+            )));
         appSetup.start();
     }
 

@@ -110,7 +110,7 @@ public class PaymentAccountUtil {
                     return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload()), new Date()))
                             .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload()), new Date()));
                 }).collect(Collectors.toList());
-        list.stream().forEach(e -> log.info("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), service.getMyWitnessHashAsHex(e.getPaymentAccountPayload())));
+        list.stream().forEach(e -> log.debug("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), service.getMyWitnessHashAsHex(e.getPaymentAccountPayload())));
         final Optional<PaymentAccount> first = list.stream().findFirst();
         if (first.isPresent())
             log.debug("first={}", first.get().getAccountName());

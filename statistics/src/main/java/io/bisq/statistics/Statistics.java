@@ -3,23 +3,24 @@ package io.bisq.statistics;
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.*;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.AppSetup;
+import io.bisq.core.app.AppSetupWithP2P;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -34,6 +35,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Slf4j
 public class Statistics {
@@ -111,8 +114,12 @@ public class Statistics {
             }
         });
 
-        Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
-        appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
+        appSetup = injector.getInstance(AppSetupWithP2P.class);
+        Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
+                Capabilities.Capability.TRADE_STATISTICS.ordinal(),
+                Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
+                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
+        )));
         appSetup.start();
     }
 

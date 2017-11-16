@@ -8,7 +8,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
-import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -100,8 +99,7 @@ class RequestDataHandler implements MessageListener {
             // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
             // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
             // miss that event if we do not load the full set or use some delta handling.
-            Set<byte[]> excludedKeys = dataStorage.getMap().entrySet().stream()
-                    .filter(e -> e.getValue().getProtectedStoragePayload() instanceof PersistablePayload)
+            Set<byte[]> excludedKeys = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
@@ -229,7 +227,7 @@ class RequestDataHandler implements MessageListener {
                                 processDelayedItems.add(e);
                             } else {
                                 // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
-                                dataStorage.add(e, sender, null, false, false);
+                                dataStorage.addProtectedStorageEntry(e, sender, null, false, false);
                             }
                         });
 
@@ -267,7 +265,7 @@ class RequestDataHandler implements MessageListener {
                             List<NetworkPayload> subList = processDelayedItems.subList(startIndex, endIndex);
                             UserThread.runAfter(() -> subList.stream().forEach(item -> {
                                 if (item instanceof ProtectedStorageEntry)
-                                    dataStorage.add((ProtectedStorageEntry) item, sender, null, false, false);
+                                    dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null, false, false);
                                 else if (item instanceof PersistableNetworkPayload)
                                     dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false, false, false);
                             }), delay, TimeUnit.MILLISECONDS);

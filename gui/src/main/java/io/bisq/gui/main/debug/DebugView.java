@@ -25,6 +25,7 @@ import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
@@ -98,7 +99,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerProcessDepositTxPublishedMessage.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
-                        MakerPublishTradeStatistics.class,
+                        PublishTradeStatistics.class,
 
                         CheckIfPeerIsBanned.class,
                         MakerVerifyTakerAccount.class,
@@ -177,7 +178,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerSendPublishDepositTxRequest.class,
 
                         MakerProcessDepositTxPublishedMessage.class,
-                        MakerPublishTradeStatistics.class,
+                        PublishTradeStatistics.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
 

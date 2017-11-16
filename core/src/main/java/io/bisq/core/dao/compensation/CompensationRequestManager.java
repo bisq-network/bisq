@@ -122,7 +122,7 @@ public class CompensationRequestManager implements PersistedDataHost {
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
-        p2PService.addData(compensationRequestPayload, true);
+        p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
     }
 
     public void addToList(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {

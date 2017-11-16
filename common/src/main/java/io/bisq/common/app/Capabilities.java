@@ -1,7 +1,9 @@
 package io.bisq.common.app;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,25 +15,16 @@ public class Capabilities {
     // Sequence in the enum must not be changed (append only).
     public enum Capability {
         TRADE_STATISTICS,
-        ACCOUNT_AGE_WITNESS
+        TRADE_STATISTICS_2,
+        ACCOUNT_AGE_WITNESS,
+        SEED_NODE,
+        DAO_FULL_NODE,
     }
 
-    public static void setCapabilities(ArrayList<Integer> capabilities) {
-        Capabilities.capabilities = capabilities;
-    }
-
-    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    private static ArrayList<Integer> capabilities = new ArrayList<>(Arrays.asList(
-            Capability.TRADE_STATISTICS.ordinal(),
-            Capability.ACCOUNT_AGE_WITNESS.ordinal()
-    ));
-
-    /**
-     * @return The Capabilities as ordinal integer the client supports.
-     */
-    public static ArrayList<Integer> getCapabilities() {
-        return capabilities;
-    }
+    // Application need to set supported capabilities at startup
+    @Getter
+    @Setter
+    private static ArrayList<Integer> supportedCapabilities = new ArrayList<>();
 
     public static boolean isCapabilitySupported(final List<Integer> requiredItems, final List<Integer> supportedItems) {
         if (requiredItems != null && !requiredItems.isEmpty()) {

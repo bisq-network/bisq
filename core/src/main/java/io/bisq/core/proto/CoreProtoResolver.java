@@ -5,6 +5,7 @@ import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.payment.AccountAgeWitness;
 import io.bisq.core.payment.payload.*;
+import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,6 +79,8 @@ public class CoreProtoResolver implements ProtoResolver {
             switch (proto.getMessageCase()) {
                 case ACCOUNT_AGE_WITNESS:
                     return AccountAgeWitness.fromProto(proto.getAccountAgeWitness());
+                case TRADE_STATISTICS2:
+                    return TradeStatistics2.fromProto(proto.getTradeStatistics2());
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.PersistableNetworkPayload). messageCase=" + proto.getMessageCase());
             }

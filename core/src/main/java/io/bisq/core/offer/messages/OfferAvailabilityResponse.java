@@ -41,7 +41,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     private final List<Integer> supportedCapabilities;
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
-        this(offerId, availabilityResult, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
+        this(offerId, availabilityResult, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 

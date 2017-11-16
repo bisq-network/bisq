@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+// Only used for converting old TradeStatistic data to new TradeStatistic2 at the moment. But might be used for
+// CompensationRequests and voteItems in future
 @Slf4j
 public class PersistableEntryMap implements PersistableEnvelope {
     @Getter
