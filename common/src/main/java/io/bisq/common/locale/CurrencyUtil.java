@@ -143,16 +143,15 @@ public class CurrencyUtil {
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
-        /*
-        StringBuilder sb = new StringBuilder();
-        result.stream().forEach(e -> sb.append("<li>\"")
+
+       /* StringBuilder sb = new StringBuilder();
+        result.stream().forEach(e -> sb.append("<li>&#8220;")
                 .append(e.getCode())
-                .append("\", \"")
+                .append("&#8221;, &#8220;")
                 .append(e.getName())
-                .append("\"</li>")
+                .append("&#8221;</li>")
                 .append("\n"));
-        log.info(sb.toString());
-        */
+        log.info(sb.toString());*/
         return result;
     }
 
