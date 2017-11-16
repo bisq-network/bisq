@@ -67,7 +67,7 @@ public class SellerBroadcastPayoutTx extends TradeTask {
                                     trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
                                     complete();
                                 } else {
-                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                                 }
                             }
 
@@ -78,7 +78,7 @@ public class SellerBroadcastPayoutTx extends TradeTask {
                                     log.error("BroadcastTx failed. Error:" + t.getMessage());
                                     failed(t);
                                 } else {
-                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                                 }
                             }
                         });

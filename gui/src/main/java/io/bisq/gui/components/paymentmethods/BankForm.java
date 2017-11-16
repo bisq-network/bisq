@@ -21,6 +21,7 @@ import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Tuple4;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.BankAccountPayload;
@@ -202,9 +203,9 @@ abstract class BankForm extends PaymentMethodForm {
     private final Runnable closeHandler;
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    BankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
+    BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
              GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.closeHandler = closeHandler;
         this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
     }
@@ -246,7 +247,7 @@ abstract class BankForm extends PaymentMethodForm {
             addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
                     bankAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override
@@ -492,7 +493,7 @@ abstract class BankForm extends PaymentMethodForm {
             }
         });
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         updateFromInputs();

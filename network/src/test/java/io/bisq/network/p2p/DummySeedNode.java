@@ -2,7 +2,6 @@ package io.bisq.network.p2p;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
-import io.bisq.common.Clock;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -10,7 +9,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.peers.BanList;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,13 +168,13 @@ public class DummySeedNode {
         Utilities.printSysInfo();
         Log.setLevel(logLevel);
 
-        SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+       /* SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
             if (useLocalhostForP2P)
                 seedNodesRepository.setLocalhostSeedNodeAddresses(progArgSeedNodes);
             else
                 seedNodesRepository.setTorSeedNodeAddresses(progArgSeedNodes);
-        }
+        }*/
 
         File storageDir = Paths.get(appPath.toString(), "db").toFile();
         if (storageDir.mkdirs())
@@ -186,11 +184,11 @@ public class DummySeedNode {
         if (torDir.mkdirs())
             log.debug("Created torDir at " + torDir.getAbsolutePath());
 
-        seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
-        seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.getPort(), maxConnections,
+        // seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
+      /*  seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.getPort(), maxConnections,
                 torDir, useLocalhostForP2P, networkId, storageDir, null, null, null, new Clock(), null, null,
                 null, TestUtils.getNetworkProtoResolver(), TestUtils.getPersistenceProtoResolver());
-        seedNodeP2PService.start(listener);
+        seedNodeP2PService.start(listener);*/
     }
 
     @VisibleForTesting

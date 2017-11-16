@@ -17,7 +17,6 @@
 
 package io.bisq.core.offer.placeoffer.tasks;
 
-import com.google.common.base.Preconditions;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.Restrictions;
@@ -54,38 +53,36 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkCoinNotNullOrZero(offer.getMakerFee(), "MakerFee");
 
             checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()).value,
-                    "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
-                            "MakerFee=" + offer.getMakerFee().toFriendlyString());
+                "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
+                    "MakerFee=" + offer.getMakerFee().toFriendlyString());
 
             checkCoinNotNullOrZero(offer.getBuyerSecurityDeposit(), "buyerSecurityDeposit");
             checkCoinNotNullOrZero(offer.getSellerSecurityDeposit(), "sellerSecurityDeposit");
             checkArgument(offer.getBuyerSecurityDeposit().value >= Restrictions.getMinBuyerSecurityDeposit().value,
-                    "buyerSecurityDeposit must not be less than Restrictions.MIN_BUYER_SECURITY_DEPOSIT. " +
-                            "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
+                "buyerSecurityDeposit must not be less than Restrictions.MIN_BUYER_SECURITY_DEPOSIT. " +
+                    "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
             checkArgument(offer.getBuyerSecurityDeposit().value <= Restrictions.getMaxBuyerSecurityDeposit().value,
-                    "buyerSecurityDeposit must not be larger than Restrictions.MAX_BUYER_SECURITY_DEPOSIT. " +
-                            "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
+                "buyerSecurityDeposit must not be larger than Restrictions.MAX_BUYER_SECURITY_DEPOSIT. " +
+                    "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
 
             checkArgument(offer.getSellerSecurityDeposit().value == Restrictions.getSellerSecurityDeposit().value,
-                    "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
-                            "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());
+                "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
+                    "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());
             checkCoinNotNullOrZero(offer.getTxFee(), "txFee");
             checkCoinNotNullOrZero(offer.getMaxTradeLimit(), "MaxTradeLimit");
 
             checkArgument(offer.getMinAmount().compareTo(Restrictions.getMinTradeAmount()) >= 0,
-                    "MinAmount is less then "
-                            + Restrictions.getMinTradeAmount().toFriendlyString());
-            Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode())) <= 0,
-                    "Amount is larger then "
-                            + offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()).toFriendlyString());
+                "MinAmount is less then " + Restrictions.getMinTradeAmount().toFriendlyString());
+            checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode())) <= 0,
+                "Amount is larger then " + offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()).toFriendlyString());
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
 
             checkNotNull(offer.getPrice(), "Price is null");
             checkArgument(offer.getPrice().isPositive(),
-                    "Price must be positive. price=" + offer.getPrice().toFriendlyString());
+                "Price must be positive. price=" + offer.getPrice().toFriendlyString());
 
             checkArgument(offer.getDate().getTime() > 0,
-                    "Date must not be 0. date=" + offer.getDate().toString());
+                "Date must not be 0. date=" + offer.getDate().toString());
 
             checkNotNull(offer.getArbitratorNodeAddresses(), "Arbitrator is null");
             checkNotNull(offer.getMediatorNodeAddresses(), "Mediator is null");
@@ -99,15 +96,15 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getMakerFee(), "MakerFee is null");
             checkNotNull(offer.getVersionNr(), "VersionNr is null");
             checkArgument(offer.getMaxTradePeriod() > 0,
-                    "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());
+                "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());
             // TODO check upper and lower bounds for fiat
             // TODO check rest of new parameters
 
             complete();
         } catch (Exception e) {
             offer.setErrorMessage("An error occurred.\n" +
-                    "Error message:\n"
-                    + e.getMessage());
+                "Error message:\n"
+                + e.getMessage());
             failed(e);
         }
     }
@@ -115,7 +112,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     public static void checkCoinNotNullOrZero(Coin value, String name) {
         checkNotNull(value, name + " is null");
         checkArgument(value.isPositive(),
-                name + " must be positive. " + name + "=" + value.toFriendlyString());
+            name + " must be positive. " + name + "=" + value.toFriendlyString());
     }
 
     public static String nonEmptyStringOf(String value) {

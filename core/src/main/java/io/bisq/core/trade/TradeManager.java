@@ -39,13 +39,13 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.handlers.TradeResultHandler;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMessage;
-import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.User;
 import io.bisq.core.util.Validator;
@@ -54,6 +54,7 @@ import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import lombok.Setter;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -63,10 +64,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,12 +93,15 @@ public class TradeManager implements PersistedDataHost {
     private final PriceFeedService priceFeedService;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private boolean stopped;
     private List<Trade> tradesForStatistics;
+    @Setter
+    @Nullable
+    private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +122,7 @@ public class TradeManager implements PersistedDataHost {
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         PersistenceProtoResolver persistenceProtoResolver,
+                        AccountAgeWitnessService accountAgeWitnessService,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -127,6 +136,7 @@ public class TradeManager implements PersistedDataHost {
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -192,7 +202,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void shutDown() {
-        stopped = true;
     }
 
     private void initPendingTrades() {
@@ -222,9 +231,10 @@ public class TradeManager implements PersistedDataHost {
 
         cleanUpAddressEntries();
 
+        // TODO remove once we support Taker side publishing at take offer process
         // We start later to have better connectivity to the network
-        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
-                90, TimeUnit.SECONDS);
+        UserThread.runAfter(() -> tradeStatisticsManager.publishTradeStatistics(tradesForStatistics),
+                30, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);
     }
@@ -248,33 +258,6 @@ public class TradeManager implements PersistedDataHost {
                     log.warn("We found an outdated addressEntry for trade {}", e.getOfferId());
                     btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
                 });
-    }
-
-    private void publishTradeStatistics(List<Trade> trades) {
-        for (int i = 0; i < trades.size(); i++) {
-            Trade trade = trades.get(i);
-            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer().getOfferPayload(),
-                    trade.getTradePrice(),
-                    trade.getTradeAmount(),
-                    trade.getDate(),
-                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    keyRing.getPubKeyRing().getSignaturePubKeyBytes());
-            tradeStatisticsManager.add(tradeStatistics, true);
-
-            // We only republish trades from last 10 days
-            // TODO check if needed at all. Don't want to remove it atm to not risk anything.
-            // But we could check which tradeStatistics we received from the seed nodes and
-            // only re-publish in case tradeStatistics are missing.
-            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
-                long delay = 5000;
-                final long minDelay = (i + 1) * delay;
-                final long maxDelay = (i + 2) * delay;
-                UserThread.runAfterRandomDelay(() -> {
-                    if (!stopped)
-                        p2PService.addData(tradeStatistics, true);
-                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
-        }
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
@@ -311,7 +294,10 @@ public class TradeManager implements PersistedDataHost {
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             tradableList.add(trade);
-            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
+            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress, errorMessage -> {
+                if (takeOfferRequestErrorMessageHandler != null)
+                    takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+            });
         } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
@@ -329,6 +315,7 @@ public class TradeManager implements PersistedDataHost {
                 openOfferManager,
                 user,
                 filterManager,
+                accountAgeWitnessService,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
@@ -514,6 +501,7 @@ public class TradeManager implements PersistedDataHost {
             Trade trade = tradeOptional.get();
             trade.setDisputeState(Trade.DisputeState.DISPUTE_CLOSED);
             addTradeToClosedTrades(trade);
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }
     }
 

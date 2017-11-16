@@ -39,5 +39,4 @@ public final class NewBsqBlockBroadcastMessage extends BroadcastMessage {
         return new NewBsqBlockBroadcastMessage(BsqBlock.fromProto(proto.getBsqBlock()),
                 messageVersion);
     }
-
 }

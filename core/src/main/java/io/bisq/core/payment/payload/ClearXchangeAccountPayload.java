@@ -24,6 +24,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
-    private String emailOrMobileNr;
-    private String holderName;
+    private String emailOrMobileNr = "";
+    private String holderName = "";
 
-    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public ClearXchangeAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -45,10 +51,14 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
 
     private ClearXchangeAccountPayload(String paymentMethod,
                                        String id,
-                                       long maxTradePeriod,
                                        String emailOrMobileNr,
-                                       String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
+                                       String holderName,
+                                       long maxTradePeriod,
+                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;
@@ -66,9 +76,10 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     public static ClearXchangeAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new ClearXchangeAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 proto.getClearXchangeAccountPayload().getEmailOrMobileNr(),
-                proto.getClearXchangeAccountPayload().getHolderName());
+                proto.getClearXchangeAccountPayload().getHolderName(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -85,5 +96,12 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email or mobile no.: " + emailOrMobileNr;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        return super.getAgeWitnessInputData(emailOrMobileNr.getBytes(Charset.forName("UTF-8")));
     }
 }

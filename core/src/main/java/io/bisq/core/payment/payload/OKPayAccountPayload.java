@@ -24,6 +24,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class OKPayAccountPayload extends PaymentAccountPayload {
-    private String accountNr;
+    private String accountNr = "";
 
-    public OKPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public OKPayAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -42,10 +47,15 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OKPayAccountPayload(String paymentMethod, String id,
+    private OKPayAccountPayload(String paymentMethod,
+                                String id,
+                                String accountNr,
                                 long maxTradePeriod,
-                                String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
+                                Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.accountNr = accountNr;
     }
@@ -61,8 +71,9 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     public static OKPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new OKPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
+                proto.getOKPayAccountPayload().getAccountNr(),
                 proto.getMaxTradePeriod(),
-                proto.getOKPayAccountPayload().getAccountNr());
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -78,5 +89,10 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
     }
 }

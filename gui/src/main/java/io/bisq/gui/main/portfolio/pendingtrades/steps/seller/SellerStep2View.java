@@ -55,8 +55,8 @@ public class SellerStep2View extends TradeStepView {
     protected String getWarningText() {
         setInformationHeadline();
         return Res.get("portfolio.pending.step2_seller.warn",
-                model.dataModel.getCurrencyCode(),
-                model.getDateForOpenDispute());
+            model.dataModel.getCurrencyCode(),
+            model.getDateForOpenDispute());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

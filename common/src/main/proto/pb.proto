@@ -55,6 +55,8 @@ message NetworkEnvelope {
         GetBsqBlocksRequest get_bsq_blocks_request = 28;
         GetBsqBlocksResponse get_bsq_blocks_response = 29;
         NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 30;
+
+        AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
     }
 }
 
@@ -76,6 +78,7 @@ message GetDataResponse {
     bool is_get_updated_data_response = 2;
     repeated StorageEntryWrapper data_set = 3;
     repeated int32 supported_capabilities = 4;
+    repeated PersistableNetworkPayload persistable_network_payload_items = 5;
 }
 
 message GetUpdatedDataRequest {
@@ -126,10 +129,10 @@ message OfferAvailabilityResponse {
 }
 
 message RefreshOfferMessage {
-    bytes hash_of_data_and_seq_nr = 1; 
-    bytes signature = 2; 
-    bytes hash_of_payload = 3; 
-    int32 sequence_number = 4; 
+    bytes hash_of_data_and_seq_nr = 1;
+    bytes signature = 2;
+    bytes hash_of_payload = 3;
+    int32 sequence_number = 4;
 }
 
 
@@ -145,6 +148,10 @@ message RemoveDataMessage {
 
 message RemoveMailboxDataMessage {
     ProtectedMailboxStorageEntry protected_storage_entry = 1;
+}
+
+message AddPersistableNetworkPayloadMessage {
+    PersistableNetworkPayload payload = 1;
 }
 
 
@@ -186,6 +193,8 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 19;
     NodeAddress mediator_node_address = 20;
     string uid = 21;
+    bytes account_age_witness_signature_of_offer_id = 22;
+    int64 current_date = 23;
 }
 
 message PublishDepositTxRequest {
@@ -200,6 +209,8 @@ message PublishDepositTxRequest {
     bytes maker_multi_sig_pub_key = 9;
     NodeAddress sender_node_address = 10;
     string uid = 11;
+    bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
+    int64 current_date = 13;
 }
 
 message DepositTxPublishedMessage {
@@ -337,10 +348,21 @@ message StoragePayload {
         Arbitrator arbitrator = 2;
         Mediator mediator = 3;
         Filter filter = 4;
+
+        // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
+        // versions and convert it to TradeStatistics2 objects.
         TradeStatistics trade_statistics = 5;
+
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
         CompensationRequestPayload compensation_request_payload = 8;
+    }
+}
+
+message PersistableNetworkPayload {
+    oneof message {
+        AccountAgeWitness account_age_witness = 1;
+        TradeStatistics2 trade_statistics2 = 2;
     }
 }
 
@@ -478,7 +500,7 @@ message Tx {
     int64 burnt_fee = 4;
     TxType tx_type = 5;
 }
-    
+
 message BsqBlock {
     int32 height = 1;
     string hash = 2;
@@ -540,9 +562,15 @@ message Filter {
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
-    repeated string banned_payment_methods = 8;    
+    repeated string banned_payment_methods = 8;
+    repeated string arbitrators = 9;
+    repeated string seed_nodes = 10;
+    repeated string price_relay_nodes = 11;
+    bool prevent_public_btc_network = 12;
 }
 
+// not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
+// versions and convert it to TradeStatistics2 objects.
 message TradeStatistics {
     string base_currency = 1;
     string counter_currency = 2;
@@ -562,6 +590,24 @@ message TradeStatistics {
     map<string, string> extra_data = 16;
 }
 
+message TradeStatistics2 {
+    string base_currency = 1;
+    string counter_currency = 2;
+    OfferPayload.Direction direction = 3;
+    int64 trade_price = 4;
+    int64 trade_amount = 5;
+    int64 trade_date = 6;
+    string payment_method_id = 7;
+    int64 offer_date = 8;
+    bool offer_use_market_based_price = 9;
+    double offer_market_price_margin = 10;
+    int64 offer_amount = 11;
+    int64 offer_min_amount = 12;
+    string offer_id = 13;
+    string deposit_tx_id = 14;
+    bytes hash = 15;
+    map<string, string> extra_data = 16;
+}
 
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
@@ -586,7 +632,7 @@ message OfferPayload {
     double market_price_margin = 7;
     bool use_market_based_price = 8;
     int64 amount = 9;
-    int64 min_amount = 10;   
+    int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
     repeated NodeAddress arbitrator_node_addresses = 13;
@@ -637,6 +683,11 @@ message CompensationRequestPayload {
     string signature = 16;
     string fee_tx_id = 17;
     map<string, string> extra_data = 18;
+}
+
+message AccountAgeWitness {
+    bytes hash = 1;
+    int64 date = 2;
 }
 
 
@@ -765,7 +816,7 @@ enum AvailabilityResult {
 message PaymentAccountPayload {
     string id = 1;
     string payment_method_id = 2;
-    int64 max_trade_period = 3;
+    int64 max_trade_period = 3; // not used anymore but we need to keep it in PB for backward compatibility
     oneof message {
         AliPayAccountPayload ali_pay_account_payload = 4;
         ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
@@ -779,6 +830,7 @@ message PaymentAccountPayload {
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
     }
+    map<string, string> exclude_from_json_data = 15;
 }
 
 message AliPayAccountPayload {
@@ -801,6 +853,7 @@ message CountryBasedPaymentAccountPayload {
         BankAccountPayload bank_account_payload = 2;
         CashDepositAccountPayload cash_deposit_account_payload = 3;
         SepaAccountPayload sepa_account_payload = 4;
+        WesternUnionAccountPayload western_union_account_payload = 5;
     }
 }
 
@@ -840,6 +893,13 @@ message CashDepositAccountPayload {
     string account_type = 7;
     string requirements = 8;
     string holder_tax_id = 9;
+}
+
+message WesternUnionAccountPayload {
+    string holder_name = 1;
+    string city = 2;
+    string state = 3;
+    string email = 4;
 }
 
 message SepaAccountPayload {
@@ -898,19 +958,20 @@ message PersistableEnvelope {
         PeerList peer_list = 3;
         AddressEntryList address_entry_list = 4;
         NavigationPath navigation_path = 5;
-        
+
         TradableList tradable_list = 6;
-        TradeStatisticsList trade_statistics_list = 7;
+        TradeStatisticsList trade_statistics_list = 7; // deprecated  Was used in pre v0.6.0 version. Not used anymore.
         DisputeList dispute_list = 8;
-        
+
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
-        
-        // TODO not fully implemented yet
+
         CompensationRequestPayload compensation_request_payload = 12;
         VoteItemsList vote_items_list = 13;
         BsqChainState bsq_chain_state = 14;
+
+        PersistableNetworkPayloadList persistable_network_payload_list = 15;
     }
 }
 
@@ -939,6 +1000,10 @@ message MapValue {
 
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
+}
+
+message PersistableNetworkPayloadList {
+    repeated PersistableNetworkPayload items = 1;
 }
 
 message PeerList {
@@ -984,6 +1049,7 @@ message TradableList {
     repeated Tradable tradable = 1;
 }
 
+// deprecated  Was used in pre v0.6.0 version. Not used anymore but leave it as it is used in PersistableEnvelope
 message TradeStatisticsList {
     repeated TradeStatistics trade_statistics = 1;
 }
@@ -1164,7 +1230,15 @@ message TradingPeer {
     repeated RawTransactionInput raw_transaction_inputs = 9;
     int64 change_output_value = 10;
     string change_output_address = 11;
+    bytes account_age_witness_nonce = 12;
+    bytes account_age_witness_signature = 13;
+    int64 current_date = 14;
 }
+
+message AccountAgeWitnessMap {
+   map<string, AccountAgeWitness> account_age_witness_map = 1;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1214,6 +1288,11 @@ message PreferencesPayload {
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
+    repeated string bridge_addresses = 34;
+    int32 bridge_option_ordinal = 35;
+    int32 tor_transport_ordinal = 36;
+    string custom_bridges = 37;
+    int32 bitcoin_nodes_option_ordinal = 38;
 }
 
 

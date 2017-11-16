@@ -22,7 +22,14 @@ import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5ProxyProvider;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.network.NetworkNode;
+import io.bisq.network.p2p.peers.BanList;
+import io.bisq.network.p2p.peers.Broadcaster;
+import io.bisq.network.p2p.peers.PeerManager;
+import io.bisq.network.p2p.peers.getdata.RequestDataManager;
+import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
+import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
@@ -38,8 +45,16 @@ public class P2PModule extends AppModule {
 
     @Override
     protected void configure() {
-        bind(SeedNodesRepository.class).in(Singleton.class);
         bind(P2PService.class).in(Singleton.class);
+        bind(PeerManager.class).in(Singleton.class);
+        bind(P2PDataStorage.class).in(Singleton.class);
+        bind(RequestDataManager.class).in(Singleton.class);
+        bind(PeerExchangeManager.class).in(Singleton.class);
+        bind(KeepAliveManager.class).in(Singleton.class);
+        bind(Broadcaster.class).in(Singleton.class);
+        bind(BanList.class).in(Singleton.class);
+        bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
+
         bind(Socks5ProxyProvider.class).in(Singleton.class);
 
         Boolean useLocalhostForP2P = environment.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);

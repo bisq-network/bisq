@@ -18,8 +18,11 @@
 package io.bisq.common.proto;
 
 import io.bisq.common.Payload;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 public interface ProtoResolver {
     Payload fromProto(PB.PaymentAccountPayload proto);
+
+    PersistableEnvelope fromProto(PB.PersistableNetworkPayload proto);
 }

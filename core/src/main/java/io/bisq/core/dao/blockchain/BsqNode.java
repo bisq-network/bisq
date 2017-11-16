@@ -19,12 +19,14 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,16 +47,17 @@ public abstract class BsqNode {
     protected final BsqParser bsqParser;
     @SuppressWarnings("WeakerAccess")
     protected final BsqChainState bsqChainState;
+    protected final SeedNodesRepository seedNodesRepository;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqChainStateListener> bsqChainStateListeners = new ArrayList<>();
     protected final String genesisTxId;
     protected final int genesisBlockHeight;
+    protected RequestManager requestManager;
 
     @Getter
     protected boolean parseBlockchainComplete;
     @SuppressWarnings("WeakerAccess")
     protected boolean p2pNetworkReady;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -65,11 +68,13 @@ public abstract class BsqNode {
     public BsqNode(P2PService p2PService,
                    BsqParser bsqParser,
                    BsqChainState bsqChainState,
-                   FeeService feeService) {
+                   FeeService feeService,
+                   SeedNodesRepository seedNodesRepository) {
 
         this.p2PService = p2PService;
         this.bsqParser = bsqParser;
         this.bsqChainState = bsqChainState;
+        this.seedNodesRepository = seedNodesRepository;
 
         genesisTxId = bsqChainState.getGenesisTxId();
         genesisBlockHeight = bsqChainState.getGenesisBlockHeight();
@@ -114,9 +119,8 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void startParseBlocks() {
-        log.info("startParseBlocks");
         int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
-        log.info("Parse blocks:\n" +
+        log.info("Start parse blocks:\n" +
                         "   Start block height={}\n" +
                         "   Genesis txId={}\n" +
                         "   Genesis block height={}\n" +

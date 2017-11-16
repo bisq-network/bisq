@@ -20,6 +20,7 @@ package io.bisq.gui.main.portfolio.closedtrades;
 import com.google.inject.Inject;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
@@ -31,12 +32,14 @@ import java.util.stream.Collectors;
 
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final BSFormatter formatter;
-
+    final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
-    public ClosedTradesViewModel(ClosedTradesDataModel dataModel, BSFormatter formatter) {
+    public ClosedTradesViewModel(ClosedTradesDataModel dataModel, 
+                                 AccountAgeWitnessService accountAgeWitnessService, 
+                                 BSFormatter formatter) {
         super(dataModel);
-
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 
@@ -133,7 +136,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         ((Trade) tradable).getTradingPeerNodeAddress() != null &&
                         ((Trade) e).getTradingPeerNodeAddress() != null &&
                         ((Trade) tradable).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().getHostName().equals(((Trade) tradable).getTradingPeerNodeAddress().getHostName()))
+                        ((Trade) e).getTradingPeerNodeAddress().getFullAddress().equals(((Trade) tradable).getTradingPeerNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet())
                 .size();
     }

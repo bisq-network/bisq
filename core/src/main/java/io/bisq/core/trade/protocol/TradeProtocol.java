@@ -142,10 +142,15 @@ public abstract class TradeProtocol {
             // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);
         } else if (!trade.isFundsLockedIn()) {
-            if (trade.isTakerFeePublished())
-                tradeManager.addTradeToFailedTrades(trade);
-            else
-                tradeManager.addTradeToClosedTrades(trade);
+            if (processModel.getPreparedDepositTx() == null) {
+                if (trade.isTakerFeePublished())
+                    tradeManager.addTradeToFailedTrades(trade);
+                else
+                    tradeManager.addTradeToClosedTrades(trade);
+            } else {
+                log.error("We have already sent the prepared deposit tx to the peer but we did not received the reply " +
+                        "about the deposit tx nor saw it in the network. tradeId={}, tradeState={}", trade.getId(), trade.getState());
+            }
         }
     }
 }

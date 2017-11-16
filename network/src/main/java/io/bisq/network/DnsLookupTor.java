@@ -105,11 +105,11 @@ public class DnsLookupTor {
                 if (!torStatusErrors.containsKey(buf[1])) {
                     throw new DnsLookupException("Invalid Tor Proxy Response");
                 }
-                throw new DnsLookupException(torStatusErrors.get(buf[1]));
+                throw new DnsLookupException(torStatusErrors.get(buf[1]) + "(host=" + host + ")");
             }
 
             if (buf[3] != b('\u0001'))
-                throw new DnsLookupException(torStatusErrors.get(b('\u0001')));
+                throw new DnsLookupException(torStatusErrors.get(b('\u0001')) + "(host=" + host + ")");
 
             buf = new byte[4];
             bytesRead = proxySocket.getInputStream().read(buf);

@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.5.3
+version=0.6.0
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bisq-$version.jar"
 
@@ -16,6 +16,7 @@ $JAVA_HOME/bin/javapackager \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
     -Bcategory=Network \
+    -Bemail=contact@bisq.network \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
     -Bicon=package/linux/icon.png \
@@ -29,8 +30,8 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
     -outfile Bisq
-     
-# when we have support for security manager we use that     
+
+# when we have support for security manager we use that
 #     \
 #    -BjvmOptions=-Djava.security.manager \
 #    -BjvmOptions=-Djava.security.debug=failure \
@@ -41,7 +42,7 @@ $JAVA_HOME/bin/javapackager \
 
 # sudo alien -r -c -k gui/deploy/bundles/bisq-$version.deb
 
-cp "gui/deploy/bundles/bisq-$version.deb" "/home/bisq-network/Desktop/Bisq-32bit-$version.deb"
+cp "gui/deploy/bundles/bisq-$version.deb" "/home/bitsquare/Desktop/Bisq-32bit-$version.deb"
 mv "gui/deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu14_32bit/Bisq-32bit-$version.deb"
 
 # mv "bisq-$version-1.i386.rpm" "/media/sf_vm_shared_ubuntu14_32bit/Bisq-32bit-$version.rpm"

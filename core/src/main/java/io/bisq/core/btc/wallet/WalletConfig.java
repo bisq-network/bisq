@@ -306,8 +306,6 @@ public class WalletConfig extends AbstractIdleService {
      * or block chain download is started. You can tweak the objects configuration here.
      */
     void onSetupCompleted() {
-       /* if (!params.equals(RegTestParams.get()))
-            peerGroup().setMaxConnections(11);*/
     }
 
     /**
@@ -417,7 +415,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                vPeerGroup.setMaxConnections(peerAddresses.length);
+                vPeerGroup.setMaxConnections(Math.min(PeerGroup.DEFAULT_CONNECTIONS, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));

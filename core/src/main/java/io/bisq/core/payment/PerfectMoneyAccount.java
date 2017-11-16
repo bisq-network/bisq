@@ -31,8 +31,8 @@ public final class PerfectMoneyAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new PerfectMoneyAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload createPayload() {
+        return new PerfectMoneyAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setAccountNr(String accountNr) {

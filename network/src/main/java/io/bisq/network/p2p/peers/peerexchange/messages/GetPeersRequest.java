@@ -11,8 +11,10 @@ import io.bisq.network.p2p.peers.peerexchange.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -23,10 +25,11 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
     private final NodeAddress senderNodeAddress;
     private final int nonce;
     private final HashSet<Peer> reportedPeers;
-    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    @Nullable
+    private final List<Integer> supportedCapabilities;
 
     public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
-        this(senderNodeAddress, nonce, reportedPeers, Version.getP2PMessageVersion());
+        this(senderNodeAddress, nonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 
@@ -34,24 +37,32 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers, int messageVersion) {
+    private GetPeersRequest(NodeAddress senderNodeAddress,
+                            int nonce,
+                            HashSet<Peer> reportedPeers,
+                            @Nullable List<Integer> supportedCapabilities,
+                            int messageVersion) {
         super(messageVersion);
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetPeersRequest");
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;
         this.reportedPeers = reportedPeers;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.GetPeersRequest.Builder builder = PB.GetPeersRequest.newBuilder()
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setNonce(nonce)
+                .addAllReportedPeers(reportedPeers.stream()
+                        .map(Peer::toProtoMessage)
+                        .collect(Collectors.toList()));
+
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+
         return getNetworkEnvelopeBuilder()
-                .setGetPeersRequest(PB.GetPeersRequest.newBuilder()
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setNonce(nonce)
-                        .addAllReportedPeers(reportedPeers.stream()
-                                .map(Peer::toProtoMessage)
-                                .collect(Collectors.toList()))
-                        .addAllSupportedCapabilities(supportedCapabilities))
+                .setGetPeersRequest(builder)
                 .build();
     }
 
@@ -61,6 +72,7 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
                 new HashSet<>(proto.getReportedPeersList().stream()
                         .map(Peer::fromProto)
                         .collect(Collectors.toSet())),
+                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion);
     }
 }

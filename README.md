@@ -1,4 +1,4 @@
-<img src="https://bisq.network/images/logo_white_bg.png"/>
+<img src="https://bisq.network/images/logo_white_bg.png" width="410" />
 
 
 What is Bisq?
@@ -36,7 +36,7 @@ Contact the team and keep up to date using any of the following:
  - The [Bisq Website](https://bisq.network)
  - GitHub [Issues](https://github.com/bisq-network/exchange/issues)
  - The [Bisq Forum]( https://forum.bisq.network)
- - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
+ - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare))
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@Bitsquare_](https://twitter.com/bitsquare_) on Twitter
 

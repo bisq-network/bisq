@@ -21,9 +21,13 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple3;
+import io.bisq.common.util.Utilities;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.beans.property.BooleanProperty;
@@ -34,13 +38,15 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-
-import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
+@Slf4j
 public abstract class PaymentMethodForm {
     protected final PaymentAccount paymentAccount;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;
     protected int gridRow;
@@ -52,8 +58,9 @@ public abstract class PaymentMethodForm {
     protected CheckBox useCustomAccountNameCheckBox;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
-    public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.inputValidator = inputValidator;
         this.gridPane = gridPane;
         this.gridRow = gridRow;
@@ -104,14 +111,13 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    public static void addAllowedPeriod(GridPane gridPane, int gridRow,
-                                        @Nullable PaymentAccountPayload paymentAccountPayload,
-                                        String dateFromBlocks) {
-        if (paymentAccountPayload != null) {
-            long hours = paymentAccountPayload.getMaxTradePeriod() / 3600_000;
-            addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                    getTimeText(hours) + " / " + dateFromBlocks);
-        }
+    public static void addOpenTradeDuration(GridPane gridPane,
+                                            int gridRow,
+                                            Offer offer,
+                                            String dateFromBlocks) {
+        long hours = offer.getMaxTradePeriod() / 3600_000;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
+                getTimeText(hours) + " / " + dateFromBlocks);
     }
 
     protected static String getTimeText(long hours) {
@@ -126,7 +132,7 @@ public abstract class PaymentMethodForm {
         return time;
     }
 
-    protected void addAllowedPeriod() {
+    protected void addLimitations() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
@@ -137,12 +143,39 @@ public abstract class PaymentMethodForm {
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
-            tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+            tradeCurrency = paymentAccount instanceof CryptoCurrencyAccount ?
+                    CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
+                    CurrencyUtil.getDefaultTradeCurrency();
 
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"),
-                Res.get("payment.maxPeriodAndLimit",
-                        getTimeText(hours),
-                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(tradeCurrency.getCode()))));
+        final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
+        final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
+                getTimeText(hours),
+                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+                formatter.formatAccountAge(accountAge)));
+
+        if (isAddAccountScreen) {
+            InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
+            inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+            inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.isEmpty()) {
+                    try {
+                        // test if input is hex
+                        Utilities.decodeFromHex(newValue);
+
+                        paymentAccount.setSaltAsHex(newValue);
+                    } catch (Throwable t) {
+                        new Popup().warning(Res.get("payment.error.noHexSalt")).show();
+                        inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+                        log.warn(t.toString());
+                    }
+                }
+            });
+        } else {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
+                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+        }
     }
 
     abstract protected void autoFillNameTextField();

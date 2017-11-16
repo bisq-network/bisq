@@ -10,8 +10,10 @@ import io.bisq.network.p2p.peers.peerexchange.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
@@ -19,10 +21,11 @@ import java.util.stream.Collectors;
 public final class GetPeersResponse extends NetworkEnvelope implements PeerExchangeMessage, SupportedCapabilitiesMessage {
     private final int requestNonce;
     private final HashSet<Peer> reportedPeers;
-    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    @Nullable
+    private final List<Integer> supportedCapabilities;
 
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
-        this(requestNonce, reportedPeers, Version.getP2PMessageVersion());
+        this(requestNonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 
@@ -30,31 +33,41 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers, int messageVersion) {
+    private GetPeersResponse(int requestNonce,
+                             HashSet<Peer> reportedPeers,
+                             @Nullable List<Integer> supportedCapabilities,
+                             int messageVersion) {
         super(messageVersion);
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.GetPeersResponse.Builder builder = PB.GetPeersResponse.newBuilder()
+                .setRequestNonce(requestNonce)
+                .addAllReportedPeers(reportedPeers.stream()
+                        .map(Peer::toProtoMessage)
+                        .collect(Collectors.toList()));
+
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+
         return getNetworkEnvelopeBuilder()
-                .setGetPeersResponse(PB.GetPeersResponse.newBuilder()
-                        .setRequestNonce(requestNonce)
-                        .addAllReportedPeers(reportedPeers.stream()
-                                .map(Peer::toProtoMessage)
-                                .collect(Collectors.toList()))
-                        .addAllSupportedCapabilities(supportedCapabilities))
+                .setGetPeersResponse(builder)
                 .build();
     }
 
-    public static GetPeersResponse fromProto(PB.GetPeersResponse getPeersResponse, int messageVersion) {
+    public static GetPeersResponse fromProto(PB.GetPeersResponse proto, int messageVersion) {
         HashSet<Peer> reportedPeers = new HashSet<>(
-                getPeersResponse.getReportedPeersList()
+                proto.getReportedPeersList()
                         .stream()
                         .map(peer -> new Peer(new NodeAddress(peer.getNodeAddress().getHostName(),
                                 peer.getNodeAddress().getPort())))
                         .collect(Collectors.toList()));
-        return new GetPeersResponse(getPeersResponse.getRequestNonce(), reportedPeers, messageVersion);
+        return new GetPeersResponse(proto.getRequestNonce(),
+                reportedPeers,
+                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
+                messageVersion);
     }
 }

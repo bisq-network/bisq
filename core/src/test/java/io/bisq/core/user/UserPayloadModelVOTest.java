@@ -42,7 +42,8 @@ public class UserPayloadModelVOTest {
         vo.setAccountId("accountId");
         vo.setDisplayedAlert(new Alert("message", true, "version", new byte[]{12, -64, 12}, "string", null));
         vo.setDevelopersFilter(new Filter(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
-                Lists.newArrayList(), Lists.newArrayList(), "string", new byte[]{10, 0, 0}, null));
+                Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
+                false, "string", new byte[]{10, 0, 0}, null));
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));

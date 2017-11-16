@@ -1,9 +1,9 @@
 package io.bisq.network.p2p;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
+import java.util.List;
 
 public interface SupportedCapabilitiesMessage {
     @Nullable
-    ArrayList<Integer> getSupportedCapabilities();
+    List<Integer> getSupportedCapabilities();
 }

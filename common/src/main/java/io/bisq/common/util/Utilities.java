@@ -24,6 +24,7 @@ import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
@@ -37,10 +38,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -377,6 +375,28 @@ public class Utilities {
 
     public static boolean isAltPressed(KeyCode keyCode, KeyEvent keyEvent) {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
+        return ArrayUtils.addAll(array1, array2);
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, array3));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, array4)));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4, byte[] array5) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, ArrayUtils.addAll(array4, array5))));
+    }
+
+    public static Date getUTCDate(int year, int month, int dayOfMonth) {
+        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {

@@ -201,6 +201,35 @@ public class TradeWalletService {
         return tradingFeeTx;
     }
 
+    public Transaction estimateBtcTradingFeeTxSize(Address fundingAddress,
+                                                   Address reservedForTradeAddress,
+                                                   Address changeAddress,
+                                                   Coin reservedFundsForOffer,
+                                                   boolean useSavingsWallet,
+                                                   Coin tradingFee,
+                                                   Coin txFee,
+                                                   String feeReceiverAddresses)
+            throws InsufficientMoneyException, AddressFormatException {
+        Transaction tradingFeeTx = new Transaction(params);
+        tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
+        tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
+
+        SendRequest sendRequest = SendRequest.forTx(tradingFeeTx);
+        sendRequest.shuffleOutputs = false;
+        sendRequest.aesKey = aesKey;
+        if (useSavingsWallet)
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        else
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
+
+        sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.changeAddress = changeAddress;
+        checkNotNull(wallet, "Wallet must not be null");
+        wallet.completeTx(sendRequest);
+        return tradingFeeTx;
+    }
 
     public Transaction completeBsqTradingFeeTx(Transaction preparedBsqTx,
                                                Address fundingAddress,

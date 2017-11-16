@@ -28,6 +28,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -59,6 +60,7 @@ public final class DisputeResult implements NetworkPayload {
 
     private final String tradeId;
     private final int traderId;
+    @Setter
     @Nullable
     private Winner winner;
     private int reasonOrdinal = Reason.OTHER.ordinal();
@@ -66,12 +68,19 @@ public final class DisputeResult implements NetworkPayload {
     private final BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
     private final BooleanProperty screenCastProperty = new SimpleBooleanProperty();
     private final StringProperty summaryNotesProperty = new SimpleStringProperty("");
+    @Setter
+    @Nullable
     private DisputeCommunicationMessage disputeCommunicationMessage;
+    @Setter
+    @Nullable
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
     private long sellerPayoutAmount;
+    @Setter
+    @Nullable
     private byte[] arbitratorPubKey;
     private long closeDate;
+    @Setter
     private boolean isLoserPublisher;
 
     public DisputeResult(String tradeId, int traderId) {
@@ -81,17 +90,17 @@ public final class DisputeResult implements NetworkPayload {
 
     public DisputeResult(String tradeId,
                          int traderId,
-                         Winner winner,
+                         @Nullable Winner winner,
                          int reasonOrdinal,
                          boolean tamperProofEvidence,
                          boolean idVerification,
                          boolean screenCast,
                          String summaryNotes,
-                         DisputeCommunicationMessage disputeCommunicationMessage,
-                         byte[] arbitratorSignature,
+                         @Nullable DisputeCommunicationMessage disputeCommunicationMessage,
+                         @Nullable byte[] arbitratorSignature,
                          long buyerPayoutAmount,
                          long sellerPayoutAmount,
-                         byte[] arbitratorPubKey,
+                         @Nullable byte[] arbitratorPubKey,
                          long closeDate,
                          boolean isLoserPublisher) {
         this.tradeId = tradeId;
@@ -125,7 +134,7 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                DisputeCommunicationMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
+                proto.getDisputeCommunicationMessage() == null ? null : DisputeCommunicationMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
                 proto.getArbitratorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),
@@ -144,15 +153,16 @@ public final class DisputeResult implements NetworkPayload {
                 .setIdVerification(idVerificationProperty.get())
                 .setScreenCast(screenCastProperty.get())
                 .setSummaryNotes(summaryNotesProperty.get())
-                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
-                .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)
-                .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
                 .setCloseDate(closeDate)
                 .setIsLoserPublisher(isLoserPublisher);
 
+        Optional.ofNullable(arbitratorSignature).ifPresent(arbitratorSignature -> builder.setArbitratorSignature(ByteString.copyFrom(arbitratorSignature)));
+        Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
         Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(PB.DisputeResult.Winner.valueOf(winner.name())));
+        Optional.ofNullable(disputeCommunicationMessage).ifPresent(disputeCommunicationMessage ->
+                builder.setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
 
         return builder.build();
     }
@@ -193,22 +203,6 @@ public final class DisputeResult implements NetworkPayload {
         return summaryNotesProperty;
     }
 
-    public void setDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        this.disputeCommunicationMessage = disputeCommunicationMessage;
-    }
-
-    public DisputeCommunicationMessage getDisputeCommunicationMessage() {
-        return disputeCommunicationMessage;
-    }
-
-    public void setArbitratorSignature(byte[] arbitratorSignature) {
-        this.arbitratorSignature = arbitratorSignature;
-    }
-
-    public byte[] getArbitratorSignature() {
-        return arbitratorSignature;
-    }
-
     public void setBuyerPayoutAmount(Coin buyerPayoutAmount) {
         this.buyerPayoutAmount = buyerPayoutAmount.value;
     }
@@ -225,35 +219,11 @@ public final class DisputeResult implements NetworkPayload {
         return Coin.valueOf(sellerPayoutAmount);
     }
 
-    public void setArbitratorPubKey(byte[] arbitratorPubKey) {
-        this.arbitratorPubKey = arbitratorPubKey;
-    }
-
-    public byte[] getArbitratorPubKey() {
-        return arbitratorPubKey;
-    }
-
     public void setCloseDate(Date closeDate) {
         this.closeDate = closeDate.getTime();
     }
 
     public Date getCloseDate() {
         return new Date(closeDate);
-    }
-
-    public void setWinner(Winner winner) {
-        this.winner = winner;
-    }
-
-    public Winner getWinner() {
-        return winner;
-    }
-
-    public void setLoserIsPublisher(boolean loserPublisher) {
-        this.isLoserPublisher = loserPublisher;
-    }
-
-    public boolean isLoserPublisher() {
-        return isLoserPublisher;
     }
 }

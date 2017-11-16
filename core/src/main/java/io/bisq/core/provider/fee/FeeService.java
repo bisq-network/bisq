@@ -55,7 +55,7 @@ public class FeeService {
 
     // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
     // fees are per byte
-    public static final long BTC_DEFAULT_TX_FEE = 200; // fees are between 50-400 sat/byte so we try to stay in average
+    public static final long BTC_DEFAULT_TX_FEE = 100; // fees are between 50-400 sat/byte so we try to stay in average
     public static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
     public static final long DOGE_DEFAULT_TX_FEE = DOGE_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;  // 200 bytes tx -> 200*5_000_000L=1_000_000_000 (1 DOGE)
     public static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
@@ -95,16 +95,16 @@ public class FeeService {
 
         /* How to calculate:
               MIN_MAKER_FEE_IN_BASE_CUR = target fiat price * 100000000 / price (in btc: 0.5*100000000/2500)
-              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount 
+              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount
                                              (in btc: 5*100000000/2500 / 1)
                                              (in ltc: 5*100000000/40 / 50)
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 0.5 USD at BTC price 2500 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 1 USD at BTC price 5000 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at BTC price 2500 USD for 1 BTC (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at BTC price 2500 USD
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 5000 USD for 1 BTC (maxTradeAmount)
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 5000 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
@@ -115,10 +115,10 @@ public class FeeService {
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
                 break;
             case "DOGE":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD 
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000_000_000L;
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at DOGE price 0.003 USD  for 800 000 DOGE (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD 
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD
                 txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             case "DASH":
@@ -161,7 +161,7 @@ public class FeeService {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.warn("Could not load fees. " + throwable.toString());
+                    log.warn("Could not load fees. feeProvider={}, error={}", feeProvider.toString(), throwable.toString());
                     if (faultHandler != null)
                         UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
                 }

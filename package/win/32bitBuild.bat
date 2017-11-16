@@ -5,7 +5,7 @@
 :: 32 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
-SET version=0.5.3
+SET version=0.6.0
 
 :: Private setup
 SET outdir=\\VBOXSVR\vm_shared_windows_32bit
@@ -23,8 +23,8 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -srcfiles %outdir%\Bisq.jar ^
 -outfile Bisq ^
 -Bruntime="%JAVA_HOME%\jre"
- 
-:: when we have support for security manager we use that 
+
+:: when we have support for security manager we use that
 :: -BjvmOptions=-Djava.security.manager ^
 :: -BjvmOptions=-Djava.security.debug=failure ^
 :: -BjvmOptions=-Djava.security.policy=file:bisq.policy ^

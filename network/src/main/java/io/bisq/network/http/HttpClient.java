@@ -106,10 +106,15 @@ public class HttpClient {
                 throw new HttpException(error);
             }
         } catch (Throwable t) {
-            throw new IOException("Error at requestWithGETNoProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage());
+            final String message = "Error at requestWithGETNoProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage();
+            log.error(message);
+            throw new IOException(message);
         } finally {
-            if (connection != null)
-                connection.getInputStream().close();
+            try {
+                if (connection != null)
+                    connection.getInputStream().close();
+            } catch (Throwable ignore) {
+            }
         }
     }
 

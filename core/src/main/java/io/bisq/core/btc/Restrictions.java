@@ -64,11 +64,12 @@ public class Restrictions {
         return MIN_TRADE_AMOUNT;
     }
 
+    // Can be reduced but not increased. Otherwise would break existing offers!
     public static Coin getMaxBuyerSecurityDeposit() {
         if (MAX_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(20_000_000); // 500 EUR @ 2500 EUR/BTC
+                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(5_000_000); // 250 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_200_000_000); // 500 EUR @ 40 EUR/LTC
@@ -88,7 +89,7 @@ public class Restrictions {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(100_000); // 2.5 EUR @ 2500 EUR/BTC
+                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000); // 2.5 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(6_000_000); // 2.4 EUR @ 40 EUR/LTC
@@ -107,7 +108,7 @@ public class Restrictions {
         if (DEFAULT_BUYER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(3_000_000); // 75 EUR @ 2500 EUR/BTC
+                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 50 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(200_000_000); // 75 EUR @ 40 EUR/LTC
@@ -126,7 +127,7 @@ public class Restrictions {
         if (SELLER_SECURITY_DEPOSIT == null)
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 25 EUR @ 2500 EUR/BTC
+                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(300_000); // 15 EUR @ 5000 EUR/BTC
                     break;
                 case "LTC":
                     SELLER_SECURITY_DEPOSIT = Coin.valueOf(60_000_000); // 25 EUR @ 40 EUR/LTC

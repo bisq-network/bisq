@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.3</version>
+    <version>0.6.0</version>
     <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -42,13 +42,11 @@
         <module>common</module>
         <module>network</module>
         <module>core</module>
-        <module>jsocks</module>
-        <module>jtorctl</module>
-        <module>jtorproxy</module>
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>
         <module>provider</module>
+        <module>consensus</module>
     </modules>
 
     <build>
@@ -66,7 +64,7 @@
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.5.3</version>
+                <version>0.6.0</version>
                 <configuration>
                     <protocExecutable>/usr/local/bin/protoc</protocExecutable>
                 </configuration>
@@ -101,7 +99,7 @@
         <dependency>
             <groupId>com.github.bisq-network.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>b5c2f768</version>
+            <version>88b7e34d</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>

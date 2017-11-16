@@ -23,8 +23,8 @@ import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import io.bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnlinePayload {
+public final class OfferPayload implements ProtectedStoragePayload, RequiresOwnerIsOnlinePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -65,6 +65,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
             return PB.OfferPayload.Direction.valueOf(direction.name());
         }
     }
+
+    // Keys for extra map
+    public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,9 +134,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+
+    // extraDataMap used from v0.6 on for hashOfPaymentAccount
+    // key ACCOUNT_AGE_WITNESS, value: hex string of hashOfPaymentAccount byte array
     @Nullable
     private final Map<String, String> extraDataMap;
     private final int protocolVersion;
@@ -286,6 +293,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
+
         return new OfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
@@ -348,7 +356,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // In the offer we support base and counter currency
     // Fiat offers have base currency BTC and counterCurrency Fiat
     // Altcoins have base currency Altcoin and counterCurrency BTC
-    // The rest of the app does not support yet that concept of base currency and counter currencies 
+    // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
         return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();

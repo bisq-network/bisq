@@ -28,6 +28,7 @@ import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ import java.util.concurrent.ThreadFactory;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
+@Slf4j
 public class SeedNodeMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
@@ -55,7 +57,7 @@ public class SeedNodeMain extends BisqExecutable {
 
         Utilities.removeCryptographyRestrictions();
     }
-    
+
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("SeedNodeMain")

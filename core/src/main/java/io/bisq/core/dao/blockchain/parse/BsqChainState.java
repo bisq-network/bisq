@@ -77,8 +77,12 @@ public class BsqChainState implements PersistableEnvelope {
 
     // TEST NET
     // Phase 0 initial genesis tx 6.10.2017: 2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a
-    private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
-    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
+   // private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
+   // private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
+
+    // Rebased genesis tx 9th november 2017
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "f8b65c65624bd822f92480c39959f8ae4a6f94a9841c1625464ec6353cfba1d9";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT =  1227630;
 
     // REG TEST
     private static final String BTC_REG_TEST_GENESIS_TX_ID = "321a2156d6cac631d3e574caf54a5a401e51971280c14b18b5f5877026a94d47";
@@ -220,7 +224,7 @@ public class BsqChainState implements PersistableEnvelope {
     public void applySnapshot() {
         lock.write(() -> {
             checkNotNull(storage, "storage must not be null");
-            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState");
+            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState", 100);
             bsqBlocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
