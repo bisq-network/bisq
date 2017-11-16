@@ -10,7 +10,8 @@ import io.bisq.generated.protobuffer.PB;
  * We store it as a list in PB to keep storage size small (map would use hash as key which is in data object anyway).
  * Not using a map also give more tolerance with data structure changes.
  * This data structure does not use a verification of the owners signature. ProtectedStoragePayload is used if that is required.
- * Currently we use it only for the AccountAgeWitness data.
+ * Currently we use it only for the AccountAgeWitness and TradeStatistics data.
+ * It is used for an append only data storage because removal would require owner verification.
  */
 public interface PersistableNetworkPayload extends NetworkPayload, PersistablePayload {
 

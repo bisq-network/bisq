@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 // That class wraps a map but is represented in PB as a list to reduce data size (no key).
-// PB also does not support a byte array as key and would require some quirks to support such a map (using hex string 
+// PB also does not support a byte array as key and would require some quirks to support such a map (using hex string
 // would render our 20 byte keys to 40 bytes as HEX encoded).
 @Slf4j
 public class PersistableNetworkPayloadCollection implements PersistableEnvelope {
