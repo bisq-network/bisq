@@ -34,7 +34,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProvidersRepository {
     private static final String NODES = "http://xc3nh4juf2hshy7e.onion/, " + // @emzy
-            "http://ceaanhbvluug4we6.onion/"; // @mrosseel
+            "http://ceaanhbvluug4we6.onion/, " +// @mrosseel
+            "http://rb2l2qale2pqzjyo.onion/";  // @sqrrm
+
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 
