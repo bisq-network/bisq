@@ -68,6 +68,7 @@ public class ProviderMain {
 
         handleGetAllMarketPrices(args);
         handleGetFees();
+        handleGetVersion();
     }
 
     private static void handleGetAllMarketPrices(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
@@ -90,6 +91,13 @@ public class ProviderMain {
         get("/getFees", (req, res) -> {
             log.info("Incoming getFees request from: " + req.userAgent());
             return feeRequestService.getJson();
+        });
+    }
+
+    private static void handleGetVersion() throws IOException {
+        get("/getVersion", (req, res) -> {
+            log.info("Incoming getVersion request from: " + req.userAgent());
+            return ProviderVersion.VERSION;
         });
     }
 }
