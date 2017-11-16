@@ -87,7 +87,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         new FutureCallback<Transaction>() {
                             @Override
                             public void onSuccess(Transaction transaction) {
-                                // we delay one render frame to be sure we don't get called before the method call has 
+                                // we delay one render frame to be sure we don't get called before the method call has
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
@@ -100,7 +100,7 @@ public class CreateTakerFeeTx extends TradeTask {
 
                                         complete();
                                     } else {
-                                        log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                        log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                                     }
                                 });
                             }
@@ -110,7 +110,7 @@ public class CreateTakerFeeTx extends TradeTask {
                                 if (!completed) {
                                     failed(t);
                                 } else {
-                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                                 }
                             }
                         });
@@ -128,8 +128,8 @@ public class CreateTakerFeeTx extends TradeTask {
                 Transaction signedTx = processModel.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(signedTx);
-                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                // if it gets committed 2 times 
+                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
 
                 // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
@@ -144,11 +144,11 @@ public class CreateTakerFeeTx extends TradeTask {
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
                                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                                
+
                                 complete();
                             }
                         } else {
-                            log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                         }
                     }
 
@@ -162,7 +162,7 @@ public class CreateTakerFeeTx extends TradeTask {
                                     + t.getMessage());
                             failed(t);
                         } else {
-                            log.warn("We got the callback called after the timeout has been triggered a complete().");
+                            log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                         }
                     }
                 });

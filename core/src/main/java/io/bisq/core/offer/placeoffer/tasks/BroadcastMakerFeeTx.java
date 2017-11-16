@@ -97,7 +97,7 @@ public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
                                             });
                                 }
                             } else {
-                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                             }
                         }
 
@@ -111,7 +111,7 @@ public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
                                         + t.getMessage());
                                 failed(t);
                             } else {
-                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                             }
                         }
                     });
