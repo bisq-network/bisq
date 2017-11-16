@@ -111,7 +111,8 @@ public class TradeStatisticsManager {
             public void onAdded(ProtectedStorageEntry data) {
                 final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
                 if (protectedStoragePayload instanceof TradeStatistics)
-                    p2PService.addPersistableNetworkPayload(ConvertToTradeStatistics2((TradeStatistics) protectedStoragePayload), true);
+                    p2PService.getP2PDataStorage().addPersistableNetworkPayload(ConvertToTradeStatistics2((TradeStatistics) protectedStoragePayload),
+                            p2PService.getNetworkNode().getNodeAddress(), true, false, false, false);
             }
 
             @Override
