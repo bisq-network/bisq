@@ -53,6 +53,7 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAndAddress("btc.jochen-hoenicke.de", "37.221.198.57", "https://github.com/jhoenicke"),
                         BtcNode.fromHostNameAndAddress("btc.vante.me", "138.68.117.247", "https://github.com/mrosseel"),
                         BtcNode.fromHostName("mxdtrjhe2yfsx3pg.onion", "https://github.com/mrosseel"),
+                        BtcNode.fromHostName("7sl6havdhtgefwo2.onion", "https://github.com/themighty1"),
                         BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
                 ) :
                 new ArrayList<>();
