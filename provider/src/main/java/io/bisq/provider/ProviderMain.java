@@ -95,7 +95,6 @@ public class ProviderMain {
     }
 
     private static void handleGetVersion() throws IOException {
-        FeeRequestService feeRequestService = new FeeRequestService();
         get("/getVersion", (req, res) -> {
             log.info("Incoming getVersion request from: " + req.userAgent());
             return ProviderVersion.VERSION;
