@@ -27,7 +27,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
 
     public PreliminaryGetDataRequest(int nonce,
                                      Set<byte[]> excludedKeys) {
-        this(nonce, excludedKeys, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
+        this(nonce, excludedKeys, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 

@@ -80,6 +80,7 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
+            // new NodeAddress("vjkh4ykq7x5skdlt.onion:8001"), // dev test
 
             // BTC regtest
             // For development you need to change that to your local onion addresses

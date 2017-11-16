@@ -28,6 +28,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ *
+ * @deprecated  Was used in pre v0.6.0 version
+ */
+@Deprecated
 @Slf4j
 @EqualsAndHashCode(exclude = {"signaturePubKeyBytes", "signaturePubKey"})
 @Value

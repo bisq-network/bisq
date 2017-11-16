@@ -42,7 +42,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice) {
-        this(offerId, pubKeyRing, takersTradePrice, Capabilities.getCapabilities(), Version.getP2PMessageVersion());
+        this(offerId, pubKeyRing, takersTradePrice, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 

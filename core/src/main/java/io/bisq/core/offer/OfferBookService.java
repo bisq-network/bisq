@@ -125,7 +125,7 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(offer.getOfferPayload(), true);
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
         if (result) {
             log.trace("Add offer to network was successful. OfferPayload ID = " + offer.getId());
             resultHandler.handleResult();

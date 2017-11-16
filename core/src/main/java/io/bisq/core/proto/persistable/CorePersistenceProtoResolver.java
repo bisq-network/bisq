@@ -16,7 +16,6 @@ import io.bisq.core.dao.vote.VoteItemsList;
 import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.TradableList;
-import io.bisq.core.trade.statistics.TradeStatisticsList;
 import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
@@ -65,7 +64,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             new Storage<>(storageDir, this),
                             btcWalletService.get());
                 case TRADE_STATISTICS_LIST:
-                    return TradeStatisticsList.fromProto(proto.getTradeStatisticsList());
+                    throw new ProtobufferException("TRADE_STATISTICS_LIST is not used anymore");
                 case DISPUTE_LIST:
                     return DisputeList.fromProto(proto.getDisputeList(),
                             this,

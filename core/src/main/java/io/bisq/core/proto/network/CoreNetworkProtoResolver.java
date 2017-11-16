@@ -17,7 +17,6 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
-import io.bisq.core.payment.AccountAgeWitness;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
@@ -159,9 +158,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case COMPENSATION_REQUEST_PAYLOAD:
                     return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
                 case TRADE_STATISTICS:
+                    // Still used to convert TradeStatistics data from pre v0.6 versions
                     return TradeStatistics.fromProto(proto.getTradeStatistics());
-                case ACCOUNT_AGE_WITNESS:
-                    return AccountAgeWitness.fromProto(proto.getAccountAgeWitness());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:

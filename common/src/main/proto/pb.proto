@@ -348,17 +348,21 @@ message StoragePayload {
         Arbitrator arbitrator = 2;
         Mediator mediator = 3;
         Filter filter = 4;
+
+        // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
+        // versions and convert it to TradeStatistics2 objects.
         TradeStatistics trade_statistics = 5;
+
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
         CompensationRequestPayload compensation_request_payload = 8;
-        AccountAgeWitness account_age_witness = 9;
     }
 }
 
 message PersistableNetworkPayload {
     oneof message {
         AccountAgeWitness account_age_witness = 1;
+        TradeStatistics2 trade_statistics2 = 2;
     }
 }
 
@@ -565,6 +569,8 @@ message Filter {
     bool prevent_public_btc_network = 12;
 }
 
+// not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
+// versions and convert it to TradeStatistics2 objects.
 message TradeStatistics {
     string base_currency = 1;
     string counter_currency = 2;
@@ -584,6 +590,24 @@ message TradeStatistics {
     map<string, string> extra_data = 16;
 }
 
+message TradeStatistics2 {
+    string base_currency = 1;
+    string counter_currency = 2;
+    OfferPayload.Direction direction = 3;
+    int64 trade_price = 4;
+    int64 trade_amount = 5;
+    int64 trade_date = 6;
+    string payment_method_id = 7;
+    int64 offer_date = 8;
+    bool offer_use_market_based_price = 9;
+    double offer_market_price_margin = 10;
+    int64 offer_amount = 11;
+    int64 offer_min_amount = 12;
+    string offer_id = 13;
+    string deposit_tx_id = 14;
+    bytes hash = 15;
+    map<string, string> extra_data = 16;
+}
 
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
@@ -936,7 +960,7 @@ message PersistableEnvelope {
         NavigationPath navigation_path = 5;
 
         TradableList tradable_list = 6;
-        TradeStatisticsList trade_statistics_list = 7;
+        TradeStatisticsList trade_statistics_list = 7; // deprecated  Was used in pre v0.6.0 version. Not used anymore.
         DisputeList dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
@@ -1025,6 +1049,7 @@ message TradableList {
     repeated Tradable tradable = 1;
 }
 
+// deprecated  Was used in pre v0.6.0 version. Not used anymore but leave it as it is used in PersistableEnvelope
 message TradeStatisticsList {
     repeated TradeStatistics trade_statistics = 1;
 }

@@ -69,9 +69,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
     private final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
 
-    private final Storage<PersistableEntryMap> persistedEntryMapStorage;
-    private PersistableEntryMap persistableEntryMap;
-
     @Getter
     private PersistableNetworkPayloadCollection persistableNetworkPayloadCollection;
     private final Storage<PersistableNetworkPayloadCollection> persistableNetworkPayloadMapStorage;
@@ -94,9 +91,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         networkNode.addConnectionListener(this);
 
         sequenceNumberMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        persistedEntryMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
-        persistedEntryMapStorage.setNumMaxBackupFiles(1);
 
         persistableNetworkPayloadMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
         persistableNetworkPayloadMapStorage.setNumMaxBackupFiles(1);
@@ -114,46 +109,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     // This method is called at startup in a non-user thread.
     // We should not have any threading issues here as the p2p network is just initializing
-    public synchronized void readEntryMapFromResources(String resourceFileName) {
-        final String storageFileName = "EntryMap";
-        File dbDir = new File(storageDir.getAbsolutePath());
-        if (!dbDir.exists() && !dbDir.mkdir())
-            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
-
-        final File destinationFile = new File(Paths.get(storageDir.getAbsolutePath(), storageFileName).toString());
-        if (!destinationFile.exists()) {
-            try {
-                log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
-                FileUtil.resourceToFile(resourceFileName, destinationFile);
-            } catch (ResourceNotFoundException e) {
-                log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
-            } catch (Throwable e) {
-                log.error("Could not copy resourceFile " + resourceFileName + " to " +
-                        destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            log.debug(storageFileName + " file exists already.");
-        }
-        // takes about 4 seconds with PB! :-(
-        persistableEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName, 100);
-
-        if (persistableEntryMap != null) {
-            map.putAll(persistableEntryMap.getMap());
-            log.info("persistedEntryMap size=" + map.size());
-
-            // In case another object is already listening...
-            if (!hashMapChangedListeners.isEmpty())
-                map.values().stream()
-                        .forEach(protectedStorageEntry -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry)));
-        } else {
-            persistableEntryMap = new PersistableEntryMap();
-        }
-    }
-
-    // This method is called at startup in a non-user thread.
-    // We should not have any threading issues here as the p2p network is just initializing
-    public synchronized void readPersistableNetworkPayloadMapFromResources(String resourceFileName) {
+    public synchronized void readFromResources(String resourceFileName) {
         final String storageFileName = "PersistableNetworkPayloadMap";
         File dbDir = new File(storageDir.getAbsolutePath());
         if (!dbDir.exists() && !dbDir.mkdir())
@@ -175,7 +131,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             log.debug(storageFileName + " file exists already.");
         }
         persistableNetworkPayloadCollection = persistableNetworkPayloadMapStorage.initAndGetPersistedWithFileName(storageFileName, 100);
-
         if (persistableNetworkPayloadCollection != null) {
             log.info("persistableNetworkPayloadMap size=" + persistableNetworkPayloadCollection.getMap().size());
 
@@ -240,7 +195,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             Log.traceCall(Utilities.toTruncatedString(networkEnvelop) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (networkEnvelop instanceof AddDataMessage) {
-                    add(((AddDataMessage) networkEnvelop).getProtectedStorageEntry(), peersNodeAddress, null, false);
+                    addProtectedStorageEntry(((AddDataMessage) networkEnvelop).getProtectedStorageEntry(), peersNodeAddress, null, false);
                 } else if (networkEnvelop instanceof RemoveDataMessage) {
                     remove(((RemoveDataMessage) networkEnvelop).getProtectedStorageEntry(), peersNodeAddress, false);
                 } else if (networkEnvelop instanceof RemoveMailboxDataMessage) {
@@ -358,14 +313,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                       @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
+    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
+                                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         Log.traceCall("with allowBroadcast=true");
-        return add(protectedStorageEntry, sender, listener, isDataOwner, true);
+        return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);
     }
 
-    public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                       @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
+    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
+                                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
         Log.traceCall("with allowBroadcast=" + allowBroadcast);
         final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = getHashAsByteArray(protectedStoragePayload);
@@ -385,13 +340,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
-
-                // If we get a PersistedStoragePayload we save to disc
-                if (protectedStoragePayload instanceof PersistableNetworkPayload) {
-                    persistableEntryMap.put(hashOfPayload, protectedStorageEntry);
-                    persistedEntryMapStorage.queueUpForSave(persistableEntryMap, 2000);
-                }
-
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
                 // printData("after add");
             } else {

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-//TODO use protobuffer instead of json
+//TODO consider alternative https://www.bitgo.com/api/v1/tx/fee?numBlocks=3
 @Slf4j
 public class BtcFeesProvider {
     static int CAPACITY = 12; // we request each 5 min. so we take average of last hour

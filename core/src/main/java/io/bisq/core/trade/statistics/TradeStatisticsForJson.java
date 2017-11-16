@@ -41,7 +41,7 @@ public final class TradeStatisticsForJson {
     public long primaryMarketTradeAmount;
     public long primaryMarketTradeVolume;
 
-    public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
+    public TradeStatisticsForJson(TradeStatistics2 tradeStatistics) {
         this.direction = OfferPayload.Direction.valueOf(tradeStatistics.getDirection().name());
         this.currency = tradeStatistics.getCurrencyCode();
         this.paymentMethod = tradeStatistics.getOfferPaymentMethod();

@@ -146,12 +146,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.start(this);
     }
 
-    public void readEntryMapFromResources(String resourceFileName) {
-        p2PDataStorage.readEntryMapFromResources(resourceFileName);
-    }
-
-    public void readPersistableNetworkPayloadMapFromResources(String resourceFileName) {
-        p2PDataStorage.readPersistableNetworkPayloadMapFromResources(resourceFileName);
+    public void readFromResources(String resourceFileName) {
+        p2PDataStorage.readFromResources(resourceFileName);
     }
 
     public void onAllServicesInitialized() {
@@ -613,7 +609,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };
-                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
+                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
                     if (!result) {
                         //TODO remove and add again with a delay to ensure the data will be broadcasted
                         // The p2PDataStorage.remove makes probably sense but need to be analysed more.
@@ -686,12 +682,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return p2PDataStorage.addPersistableNetworkPayload(payload, networkNode.getNodeAddress(), true, true, reBroadcast, false);
     }
 
-    public boolean addData(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
+    public boolean addProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload, boolean isDataOwner) {
         Log.traceCall();
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedStorageEntry(protectedStoragePayload, keyRing.getSignatureKeyPair());
-                return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
+                return p2PDataStorage.addProtectedStorageEntry(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
