@@ -120,8 +120,7 @@ public class TradeStatisticsManager {
             }
         });
 
-        applyBisqMarketPrice();
-
+        priceFeedService.applyLatestBisqMarketPrice(tradeStatisticsSet);
         dump();
 
         // print all currencies sorted by nr. of trades
@@ -150,31 +149,6 @@ public class TradeStatisticsManager {
         }
     }
 
-    // TODO move to priceFeedService
-    private void applyBisqMarketPrice() {
-        // takes about 10 ms for 5000 items
-        Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
-        tradeStatisticsSet.stream().forEach(e -> {
-            final List<TradeStatistics2> list;
-            final String currencyCode = e.getCurrencyCode();
-            if (mapByCurrencyCode.containsKey(currencyCode)) {
-                list = mapByCurrencyCode.get(currencyCode);
-            } else {
-                list = new ArrayList<>();
-                mapByCurrencyCode.put(currencyCode, list);
-            }
-            list.add(e);
-        });
-
-        mapByCurrencyCode.values().stream()
-                .filter(list -> !list.isEmpty())
-                .forEach(list -> {
-                    list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
-                    TradeStatistics2 tradeStatistics = list.get(list.size() - 1);
-                    priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
-                });
-    }
-
     public void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
         if (!tradeStatisticsSet.contains(tradeStatistics)) {
             boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))).findAny().isPresent();
@@ -185,8 +159,7 @@ public class TradeStatisticsManager {
                 tradeStatistics.getTradePrice().getValue();
 
                 if (storeLocally) {
-                    applyBisqMarketPrice();
-
+                    priceFeedService.applyLatestBisqMarketPrice(tradeStatisticsSet);
                     dump();
                 }
             } else {
