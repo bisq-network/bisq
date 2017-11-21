@@ -24,12 +24,15 @@ import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
 import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
+import io.bisq.gui.util.validation.altcoins.XCNAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.OctocoinParams;
+import io.bisq.gui.util.validation.params.PARTParams;
 import io.bisq.gui.util.validation.params.PNCParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import io.bisq.gui.util.validation.params.WACoinsParams;
-import io.bisq.gui.util.validation.params.btc.BtcMainNetParams;
+import io.bisq.gui.util.validation.params.TerracoinParams;
+import io.bisq.gui.util.validation.params.btc.BtcMainNetParamsForValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Address;
@@ -92,7 +95,9 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
-                                Address.fromBase58(BtcMainNetParams.get(), input);
+                                // We cannot use MainNetParams because that would be one of the other base currencies,
+                                // so we cloned the MainNetParams to BtcMainNetParamsForValidation
+                                Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
                                 return new ValidationResult(true);
                         }
                         return new ValidationResult(true);
@@ -206,6 +211,22 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                     // Example for BTC, though for BTC we use the BitcoinJ library address check
+                case "PART":
+                    if (input.matches("^[RP][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
+                        if (verifyChecksum(input)) {
+                            try {
+                                Address.fromBase58(PARTParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
@@ -289,7 +310,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                 case "ZEN":
                     try {
                         // Get the non Base58 form of the address and the bytecode of the first two bytes
-                        byte [] byteAddress = Base58.decodeChecked(input);
+                        byte[] byteAddress = Base58.decodeChecked(input);
                         int version0 = byteAddress[0] & 0xFF;
                         int version1 = byteAddress[1] & 0xFF;
 
@@ -300,39 +321,48 @@ public final class AltCoinAddressValidator extends InputValidator {
                         if (version0 == 0x16 && version1 == 0x9A) {
                             // Address starts with "zc"
                             return new ValidationResult(false, Res.get("validation.altcoin.zAddressesNotSupported"));
-                        }
-                        else if (version0 == 0x1C && (version1 == 0xB8 || version1 == 0xBD)) {
+                        } else if (version0 == 0x1C && (version1 == 0xB8 || version1 == 0xBD)) {
                             // "t1" or "t3" address
                             return new ValidationResult(true);
-                        }
-                        else if (version0 == 0x20 && (version1 == 0x89 || version1 == 0x96)) {
+                        } else if (version0 == 0x20 && (version1 == 0x89 || version1 == 0x96)) {
                             // "zn" or "zs" address
                             return new ValidationResult(true);
-                        }
-                        else {
+                        } else {
                             // Unknown Type
                             return new ValidationResult(false);
                         }
-                    }
-                    catch (AddressFormatException e) {
+                    } catch (AddressFormatException e) {
                         // Unhandled Exception (probably a checksum error)
                         return new ValidationResult(false);
                     }
                 case "WAC":
                     try {
                         Address.fromBase58(WACoinsParams.get(), input);
-                    }
-                    catch (AddressFormatException e) {
+                    } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                     return new ValidationResult(true);
-		        case "DCT":
+                case "DCT":
                     if (input.matches("^(?=.{5,63}$)([a-z][a-z0-9-]+[a-z0-9])(\\.[a-z][a-z0-9-]+[a-z0-9])*$"))
                         return new ValidationResult(true);
                     else
                         return regexTestFailed;
-		        case "ELLA":
+                case "ELLA":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
+                case "XCN": // https://bitcointalk.org/index.php?topic=1801595
+                    return XCNAddressValidator.ValidateAddress(input);
+                case "TRC":
+                    try {
+                        Address.fromBase58(TerracoinParams.get(), input);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                    return new ValidationResult(true);
+                case "INXT":
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else

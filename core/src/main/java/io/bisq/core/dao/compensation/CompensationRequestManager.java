@@ -30,7 +30,7 @@ import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -86,9 +86,9 @@ public class CompensationRequestManager implements PersistedDataHost {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
-                    final StoragePayload storagePayload = data.getStoragePayload();
-                    if (storagePayload instanceof CompensationRequestPayload)
-                        addToList((CompensationRequestPayload) storagePayload, true);
+                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                    if (protectedStoragePayload instanceof CompensationRequestPayload)
+                        addToList((CompensationRequestPayload) protectedStoragePayload, true);
                 }
 
                 @Override
@@ -99,9 +99,9 @@ public class CompensationRequestManager implements PersistedDataHost {
 
             // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
             p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
-                final StoragePayload storagePayload = e.getStoragePayload();
-                if (storagePayload instanceof CompensationRequestPayload)
-                    addToList((CompensationRequestPayload) storagePayload, false);
+                final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof CompensationRequestPayload)
+                    addToList((CompensationRequestPayload) protectedStoragePayload, false);
             });
         }
     }
@@ -109,7 +109,7 @@ public class CompensationRequestManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+            PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests", 100);
             if (persisted != null)
                 model.setPersistedCompensationRequest(persisted.getList());
         }
@@ -122,7 +122,7 @@ public class CompensationRequestManager implements PersistedDataHost {
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
-        p2PService.addData(compensationRequestPayload, true);
+        p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
     }
 
     public void addToList(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {

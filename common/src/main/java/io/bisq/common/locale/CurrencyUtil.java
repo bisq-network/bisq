@@ -92,10 +92,11 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
+        result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("DEC", "DECENT"));
+        result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
@@ -104,7 +105,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
-        result.add(new CryptoCurrency("IOP", "Fermat"));
+        result.add(new CryptoCurrency("IOP", "Internet Of People"));
+        result.add(new CryptoCurrency("INXT", "Internext", true));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
@@ -118,6 +120,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("888", "OctoCoin"));
+        result.add(new CryptoCurrency("PART", "Particl"));
         result.add(new CryptoCurrency("PASC", "Pascal Coin", true));
         result.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
         result.add(new CryptoCurrency("PIVX", "PIVX"));
@@ -129,10 +132,12 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("TRC", "Terracoin"));
+
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("WAC", "WACoins"));
-        result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
+        result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
 
         result.sort(TradeCurrency::compareTo);
@@ -247,14 +252,17 @@ public class CurrencyUtil {
             if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent()) {
                 return Optional.of(cryptoCurrencyOptional.get());
             } else {
-                return Optional.empty();
+                return Optional.<TradeCurrency>empty();
             }
         }
     }
 
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
-        return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
+        if (countryCode.equals("XK"))
+            return new FiatCurrency("EUR");
+        else
+            return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
     }
 
 

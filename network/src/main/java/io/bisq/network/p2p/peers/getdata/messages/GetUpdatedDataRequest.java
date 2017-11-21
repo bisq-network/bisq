@@ -46,13 +46,15 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.GetUpdatedDataRequest.Builder builder = PB.GetUpdatedDataRequest.newBuilder()
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setNonce(nonce)
+                .addAllExcludedKeys(excludedKeys.stream()
+                        .map(ByteString::copyFrom)
+                        .collect(Collectors.toList()));
+
         return getNetworkEnvelopeBuilder()
-                .setGetUpdatedDataRequest(PB.GetUpdatedDataRequest.newBuilder()
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setNonce(nonce)
-                        .addAllExcludedKeys(excludedKeys.stream()
-                                .map(ByteString::copyFrom)
-                                .collect(Collectors.toList())))
+                .setGetUpdatedDataRequest(builder)
                 .build();
     }
 

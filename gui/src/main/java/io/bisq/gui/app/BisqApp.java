@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
@@ -50,7 +51,6 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
-import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
@@ -91,6 +91,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -167,28 +168,26 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
+        Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
+                Capabilities.Capability.TRADE_STATISTICS.ordinal(),
+                Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
+                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
+        )));
+
         try {
             // Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-/*
-            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
-            Injector injector = Guice.createInjector(new GraphvizModule());
-            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
-            grapher.setOut(out);
-            grapher.setRankdir("TB");
-            grapher.graph(injector);
-*/
 
             // All classes which are persisting objects need to be added here
             // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
-            persistedDataHosts.add(injector.getInstance(Preferences.class));
+            final Preferences preferences = injector.getInstance(Preferences.class);
+            persistedDataHosts.add(preferences);
             persistedDataHosts.add(injector.getInstance(User.class));
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
-            persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
             persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));

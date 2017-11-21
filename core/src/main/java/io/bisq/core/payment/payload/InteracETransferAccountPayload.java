@@ -24,6 +24,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -31,13 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class InteracETransferAccountPayload extends PaymentAccountPayload {
-    private String email;
-    private String holderName;
-    private String question;
-    private String answer;
+    private String email = "";
+    private String holderName = "";
+    private String question = "";
+    private String answer = "";
 
-    public InteracETransferAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public InteracETransferAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -47,13 +54,16 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
 
     private InteracETransferAccountPayload(String paymentMethod,
                                            String id,
-                                           long maxTradePeriod,
                                            String email,
                                            String holderName,
                                            String question,
-                                           String answer) {
-        this(paymentMethod, id, maxTradePeriod);
-
+                                           String answer,
+                                           long maxTradePeriod,
+                                           @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.email = email;
         this.holderName = holderName;
         this.question = question;
@@ -74,11 +84,12 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 proto.getInteracETransferAccountPayload().getEmail(),
                 proto.getInteracETransferAccountPayload().getHolderName(),
                 proto.getInteracETransferAccountPayload().getQuestion(),
-                proto.getInteracETransferAccountPayload().getAnswer());
+                proto.getInteracETransferAccountPayload().getAnswer(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -97,5 +108,12 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 "Email: " + email + "\n" +
                 "Secret question: " + question + "\n" +
                 "Answer: " + answer;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(email.getBytes(Charset.forName("UTF-8")),
+                ArrayUtils.addAll(question.getBytes(Charset.forName("UTF-8")),
+                        answer.getBytes(Charset.forName("UTF-8")))));
     }
 }

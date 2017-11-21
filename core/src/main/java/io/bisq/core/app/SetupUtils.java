@@ -32,6 +32,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.Security;
+import java.util.Date;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -79,22 +80,24 @@ public class SetupUtils {
         checkCryptoThread.start();
     }
 
-    public static BooleanProperty loadEntryMap(P2PService p2PService) {
+    public static BooleanProperty readFromResources(P2PService p2PService) {
         BooleanProperty result = new SimpleBooleanProperty();
-        Thread loadEntryMapThread = new Thread() {
+        Thread thread = new Thread() {
             @Override
             public void run() {
-                Thread.currentThread().setName("loadEntryMapThread");
-                // Used to load different EntryMap files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
+                Thread.currentThread().setName("readFromResourcesThread");
+                // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
                 final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-                final String storageFileName = "EntryMap_"
+                final String storageFileName = "PersistableNetworkPayloadMap_"
                         + baseCurrencyNetwork.getCurrencyCode() + "_"
                         + baseCurrencyNetwork.getNetwork();
-                p2PService.readEntryMapFromResources(storageFileName);
+                long ts = new Date().getTime();
+                p2PService.readFromResources(storageFileName);
+                log.info("readPersistableNetworkPayloadMapFromResources took {} ms", (new Date().getTime() - ts));
                 UserThread.execute(() -> result.set(true));
             }
         };
-        loadEntryMapThread.start();
+        thread.start();
         return result;
     }
 }

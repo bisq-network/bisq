@@ -30,6 +30,7 @@ import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
 import javafx.beans.property.*;
@@ -38,10 +39,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -91,7 +89,7 @@ public class PriceFeedService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
+    public void setCurrencyCodeOnInit() {
         if (getCurrencyCode() == null) {
             final TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
             final String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";
@@ -120,7 +118,7 @@ public class PriceFeedService {
         }, (errorMessage, throwable) -> {
             // Try other provider if more then 1 is available
             if (providersRepository.hasMoreProviders()) {
-                providersRepository.setNewRandomBaseUrl();
+                providersRepository.selectNewRandomBaseUrl();
                 priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
             }
             UserThread.runAfter(() -> {
@@ -140,7 +138,7 @@ public class PriceFeedService {
         else
             return null;
     }
-    
+
     public void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,
@@ -198,6 +196,30 @@ public class PriceFeedService {
             return new Date(ts * 1000);
         } else
             return new Date();
+    }
+
+    public void applyLatestBisqMarketPrice(HashSet<TradeStatistics2> tradeStatisticsSet) {
+        // takes about 10 ms for 5000 items
+        Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
+        tradeStatisticsSet.stream().forEach(e -> {
+            final List<TradeStatistics2> list;
+            final String currencyCode = e.getCurrencyCode();
+            if (mapByCurrencyCode.containsKey(currencyCode)) {
+                list = mapByCurrencyCode.get(currencyCode);
+            } else {
+                list = new ArrayList<>();
+                mapByCurrencyCode.put(currencyCode, list);
+            }
+            list.add(e);
+        });
+
+        mapByCurrencyCode.values().stream()
+                .filter(list -> !list.isEmpty())
+                .forEach(list -> {
+                    list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+                    TradeStatistics2 tradeStatistics = list.get(list.size() - 1);
+                    setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
+                });
     }
 
 

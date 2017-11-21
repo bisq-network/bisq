@@ -25,6 +25,7 @@ import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
@@ -70,127 +71,127 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
         addGroup("OfferAvailabilityProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                SendOfferAvailabilityRequest.class,
-                                ProcessOfferAvailabilityResponse.class)
+                        SendOfferAvailabilityRequest.class,
+                        ProcessOfferAvailabilityResponse.class)
                 ));
 
         addGroup("PlaceOfferProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                ValidateOffer.class,
-                                CreateMakerFeeTx.class,
-                                AddOfferToRemoteOfferBook.class,
-                                BroadcastMakerFeeTx.class)
+                        ValidateOffer.class,
+                        CreateMakerFeeTx.class,
+                        AddOfferToRemoteOfferBook.class,
+                        BroadcastMakerFeeTx.class)
                 ));
 
         addGroup("BuyerAsMakerProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                MakerProcessPayDepositRequest.class,
-                                CheckIfPeerIsBanned.class,
-                                MakerVerifyArbitratorSelection.class,
-                                MakerVerifyMediatorSelection.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
-                                MakerCreateAndSignContract.class,
-                                BuyerAsMakerCreatesAndSignsDepositTx.class,
-                                MakerSetupDepositTxListener.class,
-                                MakerSendPublishDepositTxRequest.class,
+                        MakerProcessPayDepositRequest.class,
+                        CheckIfPeerIsBanned.class,
+                        MakerVerifyArbitratorSelection.class,
+                        MakerVerifyMediatorSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerSetupDepositTxListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                                MakerProcessDepositTxPublishedMessage.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
-                                MakerPublishTradeStatistics.class,
+                        MakerProcessDepositTxPublishedMessage.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
+                        PublishTradeStatistics.class,
 
-                                CheckIfPeerIsBanned.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
-                                BuyerAsMakerSignPayoutTx.class,
-                                BuyerSendCounterCurrencyTransferStartedMessage.class,
-                                BuyerSetupPayoutTxListener.class)
+                        CheckIfPeerIsBanned.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
+                        BuyerAsMakerSignPayoutTx.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+                        BuyerSetupPayoutTxListener.class)
                 ));
         addGroup("SellerAsTakerProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                TakerSelectArbitrator.class,
-                                TakerSelectMediator.class,
-                                CreateTakerFeeTx.class,
-                                TakerPublishTakerFeeTx.class,
-                                SellerAsTakerCreatesDepositTxInputs.class,
-                                TakerSendPayDepositRequest.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        TakerSelectArbitrator.class,
+                        TakerSelectMediator.class,
+                        CreateTakerFeeTx.class,
+                        TakerPublishTakerFeeTx.class,
+                        SellerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                                TakerProcessPublishDepositTxRequest.class,
-                                CheckIfPeerIsBanned.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                TakerVerifyAndSignContract.class,
-                                SellerAsTakerSignAndPublishDepositTx.class,
-                                TakerSendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        CheckIfPeerIsBanned.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        TakerVerifyAndSignContract.class,
+                        SellerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                                SellerProcessCounterCurrencyTransferStartedMessage.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
+                        SellerProcessCounterCurrencyTransferStartedMessage.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
 
-                                CheckIfPeerIsBanned.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                SellerSignAndFinalizePayoutTx.class,
-                                SellerBroadcastPayoutTx.class,
-                                SellerSendPayoutTxPublishedMessage.class)
+                        CheckIfPeerIsBanned.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        SellerSignAndFinalizePayoutTx.class,
+                        SellerBroadcastPayoutTx.class,
+                        SellerSendPayoutTxPublishedMessage.class)
                 ));
         addGroup("BuyerAsTakerProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                TakerSelectArbitrator.class,
-                                TakerSelectMediator.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                CreateTakerFeeTx.class,
-                                TakerPublishTakerFeeTx.class,
-                                BuyerAsTakerCreatesDepositTxInputs.class,
-                                TakerSendPayDepositRequest.class,
+                        TakerSelectArbitrator.class,
+                        TakerSelectMediator.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        CreateTakerFeeTx.class,
+                        TakerPublishTakerFeeTx.class,
+                        BuyerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                                TakerProcessPublishDepositTxRequest.class,
-                                CheckIfPeerIsBanned.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                TakerVerifyAndSignContract.class,
-                                BuyerAsTakerSignAndPublishDepositTx.class,
-                                TakerSendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        CheckIfPeerIsBanned.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        TakerVerifyAndSignContract.class,
+                        BuyerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                                CheckIfPeerIsBanned.class,
-                                TakerVerifyMakerAccount.class,
-                                TakerVerifyMakerFeePayment.class,
-                                BuyerAsMakerSignPayoutTx.class,
-                                BuyerSendCounterCurrencyTransferStartedMessage.class,
-                                BuyerSetupPayoutTxListener.class)
+                        CheckIfPeerIsBanned.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyMakerFeePayment.class,
+                        BuyerAsMakerSignPayoutTx.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+                        BuyerSetupPayoutTxListener.class)
                 ));
         addGroup("SellerAsMakerProtocol: ",
                 FXCollections.observableArrayList(Arrays.asList(
-                                MakerProcessPayDepositRequest.class,
-                                CheckIfPeerIsBanned.class,
-                                MakerVerifyArbitratorSelection.class,
-                                MakerVerifyMediatorSelection.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
-                                MakerCreateAndSignContract.class,
-                                SellerAsMakerCreatesAndSignsDepositTx.class,
-                                MakerSetupDepositTxListener.class,
-                                MakerSendPublishDepositTxRequest.class,
+                        MakerProcessPayDepositRequest.class,
+                        CheckIfPeerIsBanned.class,
+                        MakerVerifyArbitratorSelection.class,
+                        MakerVerifyMediatorSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
+                        MakerCreateAndSignContract.class,
+                        SellerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerSetupDepositTxListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                                MakerProcessDepositTxPublishedMessage.class,
-                                MakerPublishTradeStatistics.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
+                        MakerProcessDepositTxPublishedMessage.class,
+                        PublishTradeStatistics.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
 
-                                SellerProcessCounterCurrencyTransferStartedMessage.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
+                        SellerProcessCounterCurrencyTransferStartedMessage.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
 
-                                CheckIfPeerIsBanned.class,
-                                MakerVerifyTakerAccount.class,
-                                MakerVerifyTakerFeePayment.class,
-                                SellerSignAndFinalizePayoutTx.class,
-                                SellerBroadcastPayoutTx.class,
-                                SellerSendPayoutTxPublishedMessage.class)
+                        CheckIfPeerIsBanned.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerVerifyTakerFeePayment.class,
+                        SellerSignAndFinalizePayoutTx.class,
+                        SellerBroadcastPayoutTx.class,
+                        SellerSendPayoutTxPublishedMessage.class)
                 ));
     }
 

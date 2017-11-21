@@ -54,7 +54,7 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
 
     @Override
     public void readPersisted() {
-        DisputeList persisted = storage.initAndGetPersisted(this);
+        DisputeList persisted = storage.initAndGetPersisted(this, 50);
         if (persisted != null)
             list.addAll(persisted.getList());
     }

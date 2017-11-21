@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.ChaseQuickPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.ChaseQuickPayAccountPayload;
@@ -50,9 +51,9 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public ChaseQuickPayForm(PaymentAccount paymentAccount, ChaseQuickPayValidator chaseQuickPayValidator,
+    public ChaseQuickPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ChaseQuickPayValidator chaseQuickPayValidator,
                              InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.chaseQuickPayAccount = (ChaseQuickPayAccount) paymentAccount;
         this.chaseQuickPayValidator = chaseQuickPayValidator;
     }
@@ -79,7 +80,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -108,7 +109,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

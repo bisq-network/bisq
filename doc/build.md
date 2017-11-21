@@ -1,4 +1,4 @@
-﻿Building From Source
+﻿﻿Building From Source
 ====================
 
 This guide will walk you through the process of building bisq from source.
@@ -83,7 +83,7 @@ idea.max.intellisense.filesize=12500
 Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configured-limit-2560000-code-insight-features-not-availabl
 
 At IntelliJ 14 you need to edit the idea.properties in the app container:
-/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
+/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties
 
 ### 2.2 If using Intellij install the Lombok plugin
 https://plugins.jetbrains.com/plugin/6317-lombok-plugin
@@ -94,9 +94,9 @@ Build bisq
 ### 1. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
-   
-    $ git clone https://github.com/bitsquare/bitsquare.git bisq
-    $ cd bisq
+
+    $ git clone https://github.com/bisq-network/exchange.git exchange
+    $ cd exchange
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
@@ -112,7 +112,7 @@ If you want to build the binaries check out the build scripts under the package 
 
 DAO full node
 -----------------
-If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
+If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and
 use dedicated program arguments for the bisq node.
 See https://github.com/bisq-network/exchange/blob/master/doc/rpc.md for more details.
 

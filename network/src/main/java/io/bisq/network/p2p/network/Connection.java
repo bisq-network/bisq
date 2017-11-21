@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;
@@ -19,9 +20,11 @@ import io.bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import io.bisq.network.p2p.peers.keepalive.messages.Pong;
 import io.bisq.network.p2p.storage.messages.AddDataMessage;
+import io.bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -103,7 +106,7 @@ public class Connection implements MessageListener {
     private OutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
-    private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
+    private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
     private volatile boolean stopped;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
@@ -241,6 +244,8 @@ public class Connection implements MessageListener {
                     if (protoOutputStreamLock.isLocked())
                         protoOutputStreamLock.unlock();
                 }
+            } else {
+                log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -249,41 +254,28 @@ public class Connection implements MessageListener {
 
     public boolean isCapabilitySupported(NetworkEnvelope networkEnvelop) {
         if (networkEnvelop instanceof AddDataMessage) {
-            final StoragePayload storagePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload();
-            if (storagePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
-                if (supportedCapabilities != null) {
-                    for (int messageCapability : requiredCapabilities) {
-                        for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability)
-                                return true;
-                        }
-                    }
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
-                    return false;
-                } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "connection: " + this.toString() + "\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
-                    return false;
-                }
-            } else {
-                return true;
-            }
+            final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload();
+            return !(protectedStoragePayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) protectedStoragePayload);
+        } else if (networkEnvelop instanceof AddPersistableNetworkPayloadMessage) {
+            final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload();
+            return !(persistableNetworkPayload instanceof CapabilityRequiringPayload) || isCapabilitySupported((CapabilityRequiringPayload) persistableNetworkPayload);
         } else {
             return true;
         }
     }
 
+    private boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
+        final List<Integer> requiredCapabilities = payload.getRequiredCapabilities();
+        final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
+        return Capabilities.isCapabilitySupported(requiredCapabilities, supportedCapabilities);
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isCapabilityRequired(NetworkEnvelope networkEnvelop) {
-        return networkEnvelop instanceof AddDataMessage && (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getStoragePayload() instanceof CapabilityRequiringPayload;
+        return (networkEnvelop instanceof AddDataMessage &&
+                (((AddDataMessage) networkEnvelop).getProtectedStorageEntry()).getProtectedStoragePayload() instanceof CapabilityRequiringPayload) ||
+                (networkEnvelop instanceof AddPersistableNetworkPayloadMessage &&
+                        (((AddPersistableNetworkPayloadMessage) networkEnvelop).getPersistableNetworkPayload() instanceof CapabilityRequiringPayload));
     }
 
     public List<Integer> getSupportedCapabilities() {
@@ -386,7 +378,7 @@ public class Connection implements MessageListener {
 
         peersNodeAddressProperty.set(peerNodeAddress);
 
-        if (BanList.contains(peerNodeAddress)) {
+        if (BanList.isBanned(peerNodeAddress)) {
             log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
             sharedModel.reportInvalidRequest(RuleViolation.PEER_BANNED);
         }
@@ -817,6 +809,15 @@ public class Connection implements MessageListener {
                             log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
                         } else {
                             exceeds = size > PERMITTED_MESSAGE_SIZE;
+                        }
+
+                        if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage &&
+                                !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
+                            log.warn("PersistableNetworkPayload.verifyHashSize failed. hashSize={}; object={}",
+                                    ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().getHash().length,
+                                    Utilities.toTruncatedString(proto));
+                            if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
+                                return;
                         }
 
                         if (exceeds) {

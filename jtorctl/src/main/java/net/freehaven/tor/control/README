@@ -1,4 +1,0 @@
-We broke the version detection stuff in Tor 0.1.2.16 / 0.2.0.4-alpha.
-Somebody should rip out the v0 control protocol stuff from here, and
-it should start working again. -RD
-

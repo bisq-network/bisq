@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.5.3</version>
+        <version>0.6.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,11 +18,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>jtorproxy</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.github.JesusMcCloud.netlayer</groupId>
+            <artifactId>tor.native</artifactId>
+            <version>e7195748</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>

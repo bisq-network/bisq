@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.5.3"
+version="0.6.0"
 
 target_dir="/Users/dev/Documents/__bisq/_releases/$version"
 src_dir="/Users/dev/Documents/intellij/bisq"
@@ -26,13 +26,13 @@ deb32="Bisq-32bit-$version.deb"
 cp "/Users/dev/vm_shared_ubuntu14_32bit/$deb32" "$target_dir/"
 
 deb64="Bisq-64bit-$version.deb"
-cp "/Users/dev/vm_shared_ubuntu/$deb64" "$target_dir/" 
+cp "/Users/dev/vm_shared_ubuntu/$deb64" "$target_dir/"
 
 #rpm32="Bisq-32bit-$version.rpm"
 #cp "/Users/dev/vm_shared_ubuntu14_32bit/$rpm32" "$target_dir/"
 
 #rpm64="Bisq-64bit-$version.rpm"
-#cp "/Users/dev/vm_shared_ubuntu/$rpm64" "$target_dir/" 
+#cp "/Users/dev/vm_shared_ubuntu/$rpm64" "$target_dir/"
 
 
 exe="Bisq-$version.exe"

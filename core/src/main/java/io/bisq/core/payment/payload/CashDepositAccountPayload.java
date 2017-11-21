@@ -27,8 +27,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -37,7 +41,7 @@ import java.util.Optional;
 @Getter
 @Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
-    private String holderName;
+    private String holderName = "";
     @Nullable
     private String holderEmail;
     @Nullable
@@ -55,8 +59,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     @Nullable
     private String bankId;
 
-    public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public CashDepositAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -66,18 +70,23 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
 
     private CashDepositAccountPayload(String paymentMethodName,
                                       String id,
-                                      long maxTradePeriod,
                                       String countryCode,
                                       String holderName,
-                                      @SuppressWarnings("NullableProblems") String holderEmail,
-                                      @SuppressWarnings("NullableProblems") String bankName,
-                                      @SuppressWarnings("NullableProblems") String branchId,
-                                      @SuppressWarnings("NullableProblems") String accountNr,
-                                      @SuppressWarnings("NullableProblems") String accountType,
-                                      @SuppressWarnings("NullableProblems") String requirements,
-                                      @SuppressWarnings("NullableProblems") String holderTaxId,
-                                      @SuppressWarnings("NullableProblems") String bankId) {
-        super(paymentMethodName, id, maxTradePeriod, countryCode);
+                                      @Nullable String holderEmail,
+                                      @Nullable String bankName,
+                                      @Nullable String branchId,
+                                      @Nullable String accountNr,
+                                      @Nullable String accountType,
+                                      @Nullable String requirements,
+                                      @Nullable String holderTaxId,
+                                      @Nullable String bankId,
+                                      long maxTradePeriod,
+                                      @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName,
+                id,
+                countryCode,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
         this.holderName = holderName;
         this.holderEmail = holderEmail;
         this.bankName = bankName;
@@ -116,7 +125,6 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
         PB.CashDepositAccountPayload cashDepositAccountPayload = countryBasedPaymentAccountPayload.getCashDepositAccountPayload();
         return new CashDepositAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 cashDepositAccountPayload.getHolderName(),
                 cashDepositAccountPayload.getHolderEmail().isEmpty() ? null : cashDepositAccountPayload.getHolderEmail(),
@@ -126,7 +134,9 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 cashDepositAccountPayload.getAccountType().isEmpty() ? null : cashDepositAccountPayload.getAccountType(),
                 cashDepositAccountPayload.getRequirements().isEmpty() ? null : cashDepositAccountPayload.getRequirements(),
                 cashDepositAccountPayload.getHolderTaxId().isEmpty() ? null : cashDepositAccountPayload.getHolderTaxId(),
-                cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId());
+                cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId(),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -151,7 +161,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
                 BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
-        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ?
+        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
                 (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
         String requirementsString = requirements != null && !requirements.isEmpty() ?
                 ("Extra requirements: " + requirements + "\n") : "";
@@ -165,7 +175,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 branchId +
                 accountNr +
                 accountType +
-                holderIdString +
+                holderTaxIdString +
                 requirementsString +
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
@@ -177,5 +187,28 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     @Nullable
     public String getBankId() {
         return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        String bankName = BankUtil.isBankNameRequired(countryCode) ? this.bankName : "";
+        String bankId = BankUtil.isBankIdRequired(countryCode) ? this.bankId : "";
+        String branchId = BankUtil.isBranchIdRequired(countryCode) ? this.branchId : "";
+        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? this.accountNr : "";
+        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? this.accountType : "";
+        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
+                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+
+        // We don't add holderName and holderEmail because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+
+        String all = bankName +
+                bankId +
+                branchId +
+                accountNr +
+                accountType +
+                holderTaxIdString;
+
+        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
     }
 }

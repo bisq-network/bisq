@@ -27,8 +27,9 @@ public class FiatVolumeValidator extends MonetaryValidator {
 
     @Override
     protected double getMaxValue() {
-        // hard to say what the max value should be (zimbabwe dollar....)?
-        return 100_000_000;
+        // Hard to say what the max value should be (zimbabwe dollar....)?
+        // Lets set it to Double.MAX_VALUE until we find some reasonable number
+        return Double.MAX_VALUE;
     }
 
     @Inject

@@ -55,7 +55,7 @@ public class TakerPublishTakerFeeTx extends TradeTask {
                                 trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
                                 complete();
                             } else {
-                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                             }
                         }
 
@@ -66,7 +66,7 @@ public class TakerPublishTakerFeeTx extends TradeTask {
                                 appendToErrorMessage("Trading fee payment failed. Maybe your network connection was lost. Please try again.");
                                 failed(t);
                             } else {
-                                log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                             }
                         }
                     });

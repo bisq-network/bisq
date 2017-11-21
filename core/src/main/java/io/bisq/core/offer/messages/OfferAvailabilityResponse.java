@@ -27,7 +27,9 @@ import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
@@ -35,10 +37,11 @@ import java.util.ArrayList;
 @Value
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     private final AvailabilityResult availabilityResult;
-    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    @Nullable
+    private final List<Integer> supportedCapabilities;
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
-        this(offerId, availabilityResult, Version.getP2PMessageVersion());
+        this(offerId, availabilityResult, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 
@@ -46,24 +49,32 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult, int messageVersion) {
+    private OfferAvailabilityResponse(String offerId,
+                                      AvailabilityResult availabilityResult,
+                                      @Nullable List<Integer> supportedCapabilities,
+                                      int messageVersion) {
         super(messageVersion, offerId);
         this.availabilityResult = availabilityResult;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.OfferAvailabilityResponse.Builder builder = PB.OfferAvailabilityResponse.newBuilder()
+                .setOfferId(offerId)
+                .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()));
+
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+
         return getNetworkEnvelopeBuilder()
-                .setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder()
-                        .setOfferId(offerId)
-                        .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
-                        .addAllSupportedCapabilities(supportedCapabilities))
+                .setOfferAvailabilityResponse(builder)
                 .build();
     }
 
     public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto, int messageVersion) {
         return new OfferAvailabilityResponse(proto.getOfferId(),
                 ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()),
+                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion);
     }
 }

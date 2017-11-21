@@ -24,8 +24,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -35,9 +39,8 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks = new ArrayList<>();
 
-    public SpecificBanksAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
-        email = "";  //email must not be null but empty string, otherwise hash check fails for contract
+    public SpecificBanksAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -47,7 +50,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
 
     private SpecificBanksAccountPayload(String paymentMethodName,
                                         String id,
-                                        long maxTradePeriod,
                                         String countryCode,
                                         String holderName,
                                         String bankName,
@@ -56,11 +58,11 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String accountType,
                                         String holderTaxId,
                                         String bankId,
-                                        String email,
-                                        ArrayList<String> acceptedBanks) {
+                                        ArrayList<String> acceptedBanks,
+                                        long maxTradePeriod,
+                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
-                maxTradePeriod,
                 countryCode,
                 holderName,
                 bankName,
@@ -69,7 +71,9 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 accountType,
                 holderTaxId,
                 bankId,
-                email);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
+
         this.acceptedBanks = acceptedBanks;
     }
 
@@ -98,7 +102,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
         PB.SpecificBanksAccountPayload specificBanksAccountPayload = bankAccountPayload.getSpecificBanksAccountPayload();
         return new SpecificBanksAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getHolderName(),
                 bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
@@ -107,9 +110,9 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail(),
-                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
-        );
+                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

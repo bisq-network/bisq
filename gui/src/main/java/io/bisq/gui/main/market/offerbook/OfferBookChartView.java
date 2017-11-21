@@ -110,7 +110,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offers"), model.preferences));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offer"),
+                Res.get("shared.offers"),
+                model.preferences));
 
         Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
         HBox currencyHBox = new HBox();

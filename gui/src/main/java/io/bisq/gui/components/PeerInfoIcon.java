@@ -1,10 +1,14 @@
 package io.bisq.gui.components;
 
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
+import io.bisq.gui.util.BSFormatter;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -18,11 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    private final String hostName;
     private final String tooltipText;
     private final int numTrades;
     private final Map<String, String> peerTagMap;
@@ -30,20 +34,69 @@ public class PeerInfoIcon extends Group {
     private final Label tagLabel;
     private final Pane tagPane;
     private final Pane numTradesPane;
+    private final String hostName;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades,
-                        PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
-        this.hostName = hostName;
-        this.tooltipText = tooltipText;
+    public PeerInfoIcon(NodeAddress nodeAddress,
+                        String role,
+                        int numTrades,
+                        PrivateNotificationManager privateNotificationManager,
+                        Offer offer,
+                        Preferences preferences,
+                        AccountAgeWitnessService accountAgeWitnessService,
+                        BSFormatter formatter) {
         this.numTrades = numTrades;
+
+        hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
+        String address = nodeAddress != null ? nodeAddress.getFullAddress() : "";
 
         peerTagMap = preferences.getPeerTagMap();
 
+        boolean hasTraded = numTrades > 0;
+        final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
+        final long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+        final String accountAge = isFiatCurrency ?
+                makersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(makersAccountAge)) :
+                        Res.get("peerInfoIcon.tooltip.unknownAge") :
+                "";
+        tooltipText = hasTraded ?
+                Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
+                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
+
+        // outer circle
+        Color ringColor;
+        if (isFiatCurrency) {
+            switch (accountAgeWitnessService.getAccountAgeCategory(makersAccountAge)) {
+                case TWO_MONTHS_OR_MORE:
+                    ringColor = Color.rgb(0, 225, 0); // > 2 months green
+                    break;
+                case ONE_TO_TWO_MONTHS:
+                    ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
+                    break;
+                case LESS_ONE_MONTH:
+                default:
+                    ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    break;
+            }
+
+
+        } else {
+            // for altcoins we always display green
+            ringColor = Color.rgb(0, 225, 0);
+        }
+
+        double outerSize = 26;
+        Canvas outerBackground = new Canvas(outerSize, outerSize);
+        GraphicsContext outerBackgroundGc = outerBackground.getGraphicsContext2D();
+        outerBackgroundGc.setFill(ringColor);
+        outerBackgroundGc.fillOval(0, 0, outerSize, outerSize);
+        outerBackground.setLayoutY(1);
+
+        // inner circle
         int maxIndices = 15;
         int intValue = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] bytes = md.digest(hostName.getBytes());
+            byte[] bytes = md.digest(address.getBytes());
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
                     | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 
@@ -58,20 +111,21 @@ public class PeerInfoIcon extends Group {
         int green = (intValue >> 16) % 256;
         int blue = (intValue >> 24) % 256;
 
-        Color color = Color.rgb(red, green, blue);
-        color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
+        Color innerColor = Color.rgb(red, green, blue);
+        innerColor = innerColor.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
-        double SIZE = 26;
-        Canvas background = new Canvas(SIZE, SIZE);
-        GraphicsContext gc = background.getGraphicsContext2D();
-        gc.setFill(color);
-        gc.fillOval(0, 0, SIZE, SIZE);
-        background.setLayoutY(1);
-
+        double innerSize = 22;
+        Canvas innerBackground = new Canvas(innerSize, innerSize);
+        GraphicsContext innerBackgroundGc = innerBackground.getGraphicsContext2D();
+        innerBackgroundGc.setFill(innerColor);
+        innerBackgroundGc.fillOval(0, 0, innerSize, innerSize);
+        innerBackground.setLayoutY(3);
+        innerBackground.setLayoutX(2);
 
         ImageView avatarImageView = new ImageView();
         avatarImageView.setId("avatar_" + index);
-        avatarImageView.setScaleX(intValue % 2 == 0 ? 1d : -1d);
+        avatarImageView.setLayoutX(0);
+        avatarImageView.setLayoutY(1);
 
         numTradesPane = new Pane();
         numTradesPane.relocate(18, 14);
@@ -95,11 +149,17 @@ public class PeerInfoIcon extends Group {
 
         updatePeerInfoIcon();
 
-        getChildren().addAll(background, avatarImageView, tagPane, numTradesPane);
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
+        final String accountAgeTagEditor = isFiatCurrency ?
+                makersAccountAge > -1 ?
+                        formatter.formatAccountAge(makersAccountAge) :
+                        Res.get("peerInfo.unknownAge") :
+                null;
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
                 .hostName(hostName)
                 .numTrades(numTrades)
+                .accountAge(accountAgeTagEditor)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(hostName, newTag);
@@ -112,7 +172,8 @@ public class PeerInfoIcon extends Group {
         String tag;
         if (peerTagMap.containsKey(hostName)) {
             tag = peerTagMap.get(hostName);
-            Tooltip.install(this, new Tooltip(Res.get("peerInfoIcon.tooltip", tooltipText, tag)));
+            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
+            Tooltip.install(this, new Tooltip(text));
         } else {
             tag = "";
             Tooltip.install(this, new Tooltip(tooltipText));

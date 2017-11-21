@@ -86,10 +86,10 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(acceptedArbitrators)
                 .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
-                        storage -> ((PB.StoragePayload) storage).getArbitrator())));
+                        message -> ((PB.StoragePayload) message).getArbitrator())));
         Optional.ofNullable(acceptedMediators)
                 .ifPresent(e -> builder.addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators,
-                        storage -> ((PB.StoragePayload) storage).getMediator())));
+                        message -> ((PB.StoragePayload) message).getMediator())));
         return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 

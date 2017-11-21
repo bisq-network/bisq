@@ -20,6 +20,7 @@ package io.bisq.gui.components.paymentmethods;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -50,9 +51,9 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public PerfectMoneyForm(PaymentAccount paymentAccount, PerfectMoneyValidator perfectMoneyValidator, InputValidator inputValidator, GridPane gridPane, int
+    public PerfectMoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PerfectMoneyValidator perfectMoneyValidator, InputValidator inputValidator, GridPane gridPane, int
             gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.perfectMoneyAccount = (PerfectMoneyAccount) paymentAccount;
         this.perfectMoneyValidator = perfectMoneyValidator;
     }
@@ -72,7 +73,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         currencyComboBox.setItems(FXCollections.observableArrayList(new FiatCurrency("USD"), new FiatCurrency("EUR")));
         currencyComboBox.getSelectionModel().select(0);
 
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
 
@@ -98,7 +99,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
 
-        addAllowedPeriod();
+        addLimitations();
     }
 
     @Override

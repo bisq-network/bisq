@@ -97,7 +97,7 @@ public abstract class NetworkNode implements MessageListener {
                     if (duration > CREATE_SOCKET_TIMEOUT_MILLIS)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
 
-                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many double 
+                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many double
                     // sided connections we check again if we still don't have any connection for that node address.
                     Connection existingConnection = getInboundConnection(peersNodeAddress);
                     if (existingConnection == null)
@@ -252,7 +252,7 @@ public abstract class NetworkNode implements MessageListener {
     }
 
     public Set<Connection> getAllConnections() {
-        // Can contain inbound and outbound connections with the same peer node address, 
+        // Can contain inbound and outbound connections with the same peer node address,
         // as connection hashcode is using uid and port info
         Set<Connection> set = new HashSet<>(inBoundConnections);
         set.addAll(outBoundConnections);
@@ -260,7 +260,7 @@ public abstract class NetworkNode implements MessageListener {
     }
 
     public Set<Connection> getConfirmedConnections() {
-        // Can contain inbound and outbound connections with the same peer node address, 
+        // Can contain inbound and outbound connections with the same peer node address,
         // as connection hashcode is using uid and port info
         return getAllConnections().stream()
                 .filter(Connection::hasPeersNodeAddress)
@@ -349,7 +349,8 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void createExecutorService() {
-        executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 15, 30, 60);
+        if (executorService == null)
+            executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 15, 30, 60);
     }
 
     void startServer(ServerSocket serverSocket) {

@@ -119,7 +119,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private void onApplyPassword(BusyAnimation busyAnimation, Label deriveStatusLabel) {
         String password = passwordField.getText();
-        checkArgument(password.length() < 50, Res.get("password.tooLong"));
+        checkArgument(password.length() < 500, Res.get("password.tooLong"));
 
         pwButton.setDisable(true);
         deriveStatusLabel.setText(Res.get("password.deriveKey"));
@@ -146,14 +146,20 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                             .show();
                 }
             } else {
-                walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                new Popup<>()
-                        .feedback(Res.get("password.walletEncrypted"))
-                        .show();
-                passwordField.setText("");
-                repeatedPasswordField.setText("");
-                walletsManager.clearBackup();
-                walletsManager.backupWallets();
+                try {
+                    walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+                    new Popup<>()
+                            .feedback(Res.get("password.walletEncrypted"))
+                            .show();
+                    passwordField.setText("");
+                    repeatedPasswordField.setText("");
+                    walletsManager.clearBackup();
+                    walletsManager.backupWallets();
+                } catch (Throwable t) {
+                    new Popup<>()
+                            .warning(Res.get("password.walletEncryptionFailed"))
+                            .show();
+                }
             }
             setText();
         });

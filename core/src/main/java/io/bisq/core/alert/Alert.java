@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @ToString
 @Slf4j
-public final class Alert implements StoragePayload {
+public final class Alert implements ProtectedStoragePayload {
     private final String message;
     private final boolean isUpdateInfo;
     private final String version;

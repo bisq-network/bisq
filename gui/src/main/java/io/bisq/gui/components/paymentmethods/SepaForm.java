@@ -18,6 +18,7 @@
 package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.*;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.SepaAccount;
@@ -74,10 +75,10 @@ public class SepaForm extends PaymentMethodForm {
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    public SepaForm(PaymentAccount paymentAccount, IBANValidator ibanValidator,
+    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
                     BICValidator bicValidator, InputValidator inputValidator,
                     GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
@@ -158,7 +159,7 @@ public class SepaForm extends PaymentMethodForm {
 
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
@@ -350,6 +351,6 @@ public class SepaForm extends PaymentMethodForm {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);
         }
-        addAllowedPeriod();
+        addLimitations();
     }
 }

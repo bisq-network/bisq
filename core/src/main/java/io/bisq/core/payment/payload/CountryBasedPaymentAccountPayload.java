@@ -23,6 +23,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -30,15 +35,21 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
-    protected String countryCode;
+    protected String countryCode = "";
 
-    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
-        super(paymentMethodName, id, maxTradePeriod);
-
+    CountryBasedPaymentAccountPayload(String paymentMethodName, String id) {
+        super(paymentMethodName, id);
     }
 
-    protected CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
-        this(paymentMethodName, id, maxTradePeriod);
+    protected CountryBasedPaymentAccountPayload(String paymentMethodName,
+                                                String id,
+                                                String countryCode,
+                                                long maxTradePeriod,
+                                                @Nullable Map<String, String> excludeFromJsonDataMap) {
+        super(paymentMethodName,
+                id,
+                maxTradePeriod,
+                excludeFromJsonDataMap);
 
         this.countryCode = countryCode;
     }
@@ -51,8 +62,12 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
                 .setCountryBasedPaymentAccountPayload(builder);
     }
 
-
     abstract public String getPaymentDetails();
 
     abstract public String getPaymentDetailsForTradePopup();
+
+    @Override
+    protected byte[] getAgeWitnessInputData(byte[] data) {
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(countryCode.getBytes(Charset.forName("UTF-8")), data));
+    }
 }

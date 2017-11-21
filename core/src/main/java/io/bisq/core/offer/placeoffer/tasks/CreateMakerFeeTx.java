@@ -88,7 +88,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         new FutureCallback<Transaction>() {
                             @Override
                             public void onSuccess(Transaction transaction) {
-                                // we delay one render frame to be sure we don't get called before the method call has 
+                                // we delay one render frame to be sure we don't get called before the method call has
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
@@ -100,7 +100,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                                         walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
                                         complete();
                                     } else {
-                                        log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                        log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
                                     }
                                 });
                             }
@@ -110,7 +110,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                                 if (!completed) {
                                     failed(t);
                                 } else {
-                                    log.warn("We got the callback called after the timeout has been triggered a complete().");
+                                    log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                                 }
                             }
                         });
@@ -128,8 +128,8 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 Transaction signedTx = model.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(signedTx);
-                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                // if it gets committed 2 times 
+                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
 
                 // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
@@ -141,7 +141,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                             checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
-                            log.error("onSuccess, offerid={}, OFFER_FUNDING", id);
+                            log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                             complete();

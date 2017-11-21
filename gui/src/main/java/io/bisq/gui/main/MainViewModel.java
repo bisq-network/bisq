@@ -50,9 +50,10 @@ import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
@@ -72,11 +73,14 @@ import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.CloseConnectionReason;
@@ -112,6 +116,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MainViewModel implements ViewModel {
+    private static final long STARTUP_TIMEOUT_MINUTES = 4;
+
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
@@ -120,7 +126,7 @@ public class MainViewModel implements ViewModel {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final DisputeManager disputeManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final AlertManager alertManager;
     private final PrivateNotificationManager privateNotificationManager;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
@@ -137,6 +143,7 @@ public class MainViewModel implements ViewModel {
     private final BisqEnvironment bisqEnvironment;
     private final FailedTradesManager failedTradesManager;
     private final ClosedTradableManager closedTradableManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
 
     // BTC network
@@ -145,12 +152,13 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
-    final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
+    private final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
     final BooleanProperty isExternallyProvidedPrice = new SimpleBooleanProperty(true);
     final BooleanProperty isPriceAvailable = new SimpleBooleanProperty(false);
+    final IntegerProperty marketPriceUpdated = new SimpleIntegerProperty(0);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -189,7 +197,7 @@ public class MainViewModel implements ViewModel {
     private MonadicBinding<String> marketPriceBinding;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
-    private Popup startupTimeoutPopup;
+    private TorNetworkSettingsWindow torNetworkSettingsWindow;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
@@ -210,7 +218,7 @@ public class MainViewModel implements ViewModel {
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
-                         ClosedTradableManager closedTradableManager,
+                         ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -238,6 +246,7 @@ public class MainViewModel implements ViewModel {
         this.bisqEnvironment = bisqEnvironment;
         this.failedTradesManager = failedTradesManager;
         this.closedTradableManager = closedTradableManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
@@ -259,6 +268,7 @@ public class MainViewModel implements ViewModel {
         //noinspection ConstantConditions,ConstantConditions
         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
+        //noinspection ConstantConditions,ConstantConditions,PointlessBooleanExpression
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
@@ -271,11 +281,8 @@ public class MainViewModel implements ViewModel {
         }
     }
 
-    private void startLoadEntryMap() {
-        log.info("startLoadEntryMap");
-
-        BooleanProperty result = SetupUtils.loadEntryMap(p2PService);
-        result.addListener((observable, oldValue, newValue) -> {
+    private void readMapsFromResources() {
+        SetupUtils.readFromResources(p2PService).addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 startBasicServices();
         });
@@ -289,7 +296,7 @@ public class MainViewModel implements ViewModel {
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
-                showStartupTimeoutPopup();
+                showTorNetworkSettingsWindow();
         };
 
         Timer startupTimeout = UserThread.runAfter(() -> {
@@ -297,8 +304,8 @@ public class MainViewModel implements ViewModel {
             if (walletsManager.areWalletsEncrypted())
                 walletInitialized.addListener(walletInitializedListener);
             else
-                showStartupTimeoutPopup();
-        }, 4, TimeUnit.MINUTES);
+                showTorNetworkSettingsWindow();
+        }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
 
@@ -310,7 +317,7 @@ public class MainViewModel implements ViewModel {
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady,
                 (a, b) -> {
-                    log.info("\nwalletInitialized={}\n" +
+                    log.debug("\nwalletInitialized={}\n" +
                                     "p2pNetWorkReady={}",
                             a, b);
                     return a && b;
@@ -320,27 +327,16 @@ public class MainViewModel implements ViewModel {
                 startupTimeout.stop();
                 walletInitialized.removeListener(walletInitializedListener);
                 onBasicServicesInitialized();
-                if (startupTimeoutPopup != null)
-                    startupTimeoutPopup.hide();
+                if (torNetworkSettingsWindow != null)
+                    torNetworkSettingsWindow.hide();
             }
         });
     }
 
-    private void showStartupTimeoutPopup() {
+    private void showTorNetworkSettingsWindow() {
         MainView.blur();
-        String details;
-        if (!walletInitialized.get()) {
-            details = Res.get("popup.warning.cannotConnectAtStartup", Res.getBaseCurrencyName().toLowerCase());
-        } else if (!p2pNetWorkReady.get()) {
-            details = Res.get("popup.warning.cannotConnectAtStartup", Res.get("shared.P2P"));
-        } else {
-            log.error("Startup timeout with unknown problem.");
-            details = Res.get("popup.warning.unknownProblemAtStartup");
-        }
-        startupTimeoutPopup = new Popup<>();
-        startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
-                .useShutDownButton()
-                .show();
+        torNetworkSettingsWindow = new TorNetworkSettingsWindow(preferences).useShutDownButton();
+        torNetworkSettingsWindow.show();
     }
 
 
@@ -404,24 +400,37 @@ public class MainViewModel implements ViewModel {
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
-                log.info("onTorNodeReady");
+                log.debug("onTorNodeReady");
                 bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
 
                 if (preferences.getUseTorForBitcoinJ())
                     initWalletService();
+
+                // We want to get early connected to the price relay so we call it already now
+                long ts = new Date().getTime();
+                final boolean[] logged = {false};
+                priceFeedService.setCurrencyCodeOnInit();
+                priceFeedService.requestPriceFeed(price -> {
+                            if (!logged[0]) {
+                                log.info("We received data from the price relay after {} ms.",
+                                        (new Date().getTime() - ts));
+                                logged[0] = true;
+                            }
+                        },
+                        (errorMessage, throwable) -> log.error("requestPriceFeed failed:" + errorMessage));
             }
 
             @Override
             public void onHiddenServicePublished() {
-                log.info("onHiddenServicePublished");
+                log.debug("onHiddenServicePublished");
                 hiddenServicePublished.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.hiddenServicePublished"));
             }
 
             @Override
             public void onRequestingDataCompleted() {
-                log.info("onRequestingDataCompleted");
+                log.debug("onRequestingDataCompleted");
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
                 splashP2PNetworkAnimationVisible.set(false);
@@ -430,7 +439,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoSeedNodeAvailable() {
-                log.info("onNoSeedNodeAvailable");
+                log.warn("onNoSeedNodeAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0)
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noSeedNodesAvailable"));
                 else
@@ -442,7 +451,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onNoPeersAvailable() {
-                log.info("onNoPeersAvailable");
+                log.warn("onNoPeersAvailable");
                 if (p2PService.getNumConnectedPeers().get() == 0) {
                     p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.noNodesAvailable"));
                     bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noNodesAvailable"));
@@ -457,7 +466,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onBootstrapComplete() {
-                log.info("onBootstrapComplete");
+                log.debug("onBootstrapComplete");
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
             }
@@ -469,6 +478,11 @@ public class MainViewModel implements ViewModel {
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
                 p2pNetworkLabelId.set("splash-error-state-msg");
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+                showTorNetworkSettingsWindow();
             }
         });
 
@@ -545,7 +559,7 @@ public class MainViewModel implements ViewModel {
 
         walletsSetup.initialize(null,
                 () -> {
-                    log.info("walletsSetup.onInitialized");
+                    log.debug("walletsSetup.onInitialized");
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
                     // We only check one as we apply encryption to all or none
@@ -601,6 +615,9 @@ public class MainViewModel implements ViewModel {
             if (newValue)
                 applyTradePeriodState();
         });
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
+                .show());
 
         // walletService
         btcWalletService.addBalanceListener(new BalanceListener() {
@@ -613,6 +630,8 @@ public class MainViewModel implements ViewModel {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
+        removeOffersWithoutAccountAgeWitness();
+
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
@@ -621,12 +640,26 @@ public class MainViewModel implements ViewModel {
         p2PService.onAllServicesInitialized();
 
         feeService.onAllServicesInitialized();
+        GUIUtil.setFeeService(feeService);
 
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         tradeStatisticsManager.onAllServicesInitialized();
 
-        priceFeedService.onAllServicesInitialized();
+        accountAgeWitnessService.onAllServicesInitialized();
+
+        priceFeedService.setCurrencyCodeOnInit();
+
+        filterManager.onAllServicesInitialized();
+        filterManager.addListener(filter -> {
+            if (filter != null) {
+                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
+                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed"))).show();
+
+                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
+                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay"))).show();
+            }
+        });
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
@@ -695,11 +728,11 @@ public class MainViewModel implements ViewModel {
                     log.info("Localhost peer detected.");
                     UserThread.execute(() -> {
                         bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
-                        startLoadEntryMap();
+                        readMapsFromResources();
                     });
                 } catch (Throwable e) {
                     log.info("Localhost peer not detected.");
-                    UserThread.execute(MainViewModel.this::startLoadEntryMap);
+                    UserThread.execute(MainViewModel.this::readMapsFromResources);
                 } finally {
                     if (socket != null) {
                         try {
@@ -713,7 +746,7 @@ public class MainViewModel implements ViewModel {
         checkIfLocalHostNodeIsRunningThread.start();
     }
 
-    private BooleanProperty checkCryptoSetup() {
+    private void checkCryptoSetup() {
         BooleanProperty result = new SimpleBooleanProperty();
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
@@ -756,8 +789,6 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
-
-        return result;
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
@@ -974,6 +1005,16 @@ public class MainViewModel implements ViewModel {
                 item.setPriceAvailable(false);
             }
             item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
+
+            final String code = item.currencyCode;
+            if (selectedPriceFeedComboBoxItemProperty.get() != null &&
+                    selectedPriceFeedComboBoxItemProperty.get().currencyCode.equals(code)) {
+                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
+                isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());
+                isPriceAvailable.set(item.isPriceAvailable());
+                marketPriceUpdated.set(marketPriceUpdated.get() + 1);
+            }
         });
     }
 
@@ -991,18 +1032,6 @@ public class MainViewModel implements ViewModel {
             findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                     .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
         }
-
-        // Need a delay a bit as we get item.isPriceAvailable() set after that call.
-        // (In case we add a new currency in settings)
-        UserThread.runAfter(() -> {
-            if (item != null) {
-                String code = item.currencyCode;
-                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
-                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable() && item.isExternallyProvidedPrice());
-                isExternallyProvidedPrice.set(item.isExternallyProvidedPrice());
-                isPriceAvailable.set(item.isPriceAvailable());
-            }
-        }, 100, TimeUnit.MILLISECONDS);
     }
 
     private Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {
@@ -1045,7 +1074,7 @@ public class MainViewModel implements ViewModel {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
-                    log.error("swapPendingOfferFundingEntries, offerid={}, OFFER_FUNDING", addressEntry.getOfferId());
+                    log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
     }
@@ -1173,14 +1202,46 @@ public class MainViewModel implements ViewModel {
         showPendingTradesNotification.set(numPendingTrades > 0);
     }
 
+    private void removeOffersWithoutAccountAgeWitness() {
+        if (new Date().after(AccountAgeWitnessService.FULL_ACTIVATION)) {
+            openOfferManager.getObservableList().stream()
+                    .filter(e -> CurrencyUtil.isFiatCurrency(e.getOffer().getCurrencyCode()))
+                    .filter(e -> !e.getOffer().getAccountAgeWitnessHashAsHex().isPresent())
+                    .forEach(e -> {
+                        new Popup<>().warning(Res.get("popup.warning.offerWithoutAccountAgeWitness", e.getId()))
+                                .actionButtonText(Res.get("popup.warning.offerWithoutAccountAgeWitness.confirm"))
+                                .onAction(() -> {
+                                    openOfferManager.removeOffer(e.getOffer(),
+                                            () -> {
+                                                log.info("Offer with ID {} is removed", e.getId());
+                                            },
+                                            log::error);
+                                })
+                                .hideCloseButton()
+                                .show();
+                    });
+        }
+    }
+
     private void setupDevDummyPaymentAccounts() {
         if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
-            OKPayAccount okPayAccount = new OKPayAccount();
-            okPayAccount.init();
-            okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-            okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-            okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
-            user.addPaymentAccount(okPayAccount);
+            PerfectMoneyAccount perfectMoneyAccount = new PerfectMoneyAccount();
+            perfectMoneyAccount.init();
+            perfectMoneyAccount.setAccountNr("dummy_" + new Random().nextInt(100));
+            perfectMoneyAccount.setAccountName("PerfectMoney dummy");// Don't translate only for dev
+            perfectMoneyAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
+            user.addPaymentAccount(perfectMoneyAccount);
+
+            if (p2PService.isBootstrapped()) {
+                accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
+            } else {
+                p2PService.addP2PServiceListener(new BootstrapListener() {
+                    @Override
+                    public void onBootstrapComplete() {
+                        accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
+                    }
+                });
+            }
 
             CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
             cryptoCurrencyAccount.init();

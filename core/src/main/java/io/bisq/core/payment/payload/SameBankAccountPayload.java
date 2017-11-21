@@ -22,15 +22,19 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Slf4j
 public final class SameBankAccountPayload extends BankAccountPayload {
 
-    public SameBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
-        email = ""; //email must not be null but empty string, otherwise hash check fails for contract
+    public SameBankAccountPayload(String paymentMethod, String id) {
+        super(paymentMethod, id);
     }
 
 
@@ -40,7 +44,6 @@ public final class SameBankAccountPayload extends BankAccountPayload {
 
     private SameBankAccountPayload(String paymentMethodName,
                                    String id,
-                                   long maxTradePeriod,
                                    String countryCode,
                                    String holderName,
                                    String bankName,
@@ -49,10 +52,10 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                    String accountType,
                                    String holderTaxId,
                                    String bankId,
-                                   String email) {
+                                   long maxTradePeriod,
+                                   @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
-                maxTradePeriod,
                 countryCode,
                 holderName,
                 bankName,
@@ -61,7 +64,9 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 accountType,
                 holderTaxId,
                 bankId,
-                email);
+                maxTradePeriod,
+                excludeFromJsonDataMap);
+
     }
 
     @Override
@@ -85,7 +90,6 @@ public final class SameBankAccountPayload extends BankAccountPayload {
         PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getMaxTradePeriod(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getHolderName(),
                 bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
@@ -94,7 +98,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
                 bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-                bankAccountPayload.getEmail().isEmpty() ? null : bankAccountPayload.getEmail());
+                proto.getMaxTradePeriod(),
+                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
