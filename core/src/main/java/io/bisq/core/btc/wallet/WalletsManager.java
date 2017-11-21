@@ -63,12 +63,17 @@ public class WalletsManager {
     }
 
     public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter aesKey) {
-        btcWalletService.encryptWallet(keyCrypterScrypt, aesKey);
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
-            bsqWalletService.encryptWallet(keyCrypterScrypt, aesKey);
+        try {
+            btcWalletService.encryptWallet(keyCrypterScrypt, aesKey);
+            if (BisqEnvironment.isBaseCurrencySupportingBsq())
+                bsqWalletService.encryptWallet(keyCrypterScrypt, aesKey);
 
-        // we save the key for the trade wallet as we don't require passwords here
-        tradeWalletService.setAesKey(aesKey);
+            // we save the key for the trade wallet as we don't require passwords here
+            tradeWalletService.setAesKey(aesKey);
+        } catch (Throwable t) {
+            log.error(t.toString());
+            throw t;
+        }
     }
 
     public String getWalletsAsString(boolean includePrivKeys) {

@@ -25,7 +25,9 @@ import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
@@ -34,12 +36,13 @@ import java.util.ArrayList;
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     private final PubKeyRing pubKeyRing;
     private final long takersTradePrice;
-    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    @Nullable
+    private final List<Integer> supportedCapabilities;
 
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice) {
-        this(offerId, pubKeyRing, takersTradePrice, Version.getP2PMessageVersion());
+        this(offerId, pubKeyRing, takersTradePrice, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
 
@@ -50,20 +53,25 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private OfferAvailabilityRequest(String offerId,
                                      PubKeyRing pubKeyRing,
                                      long takersTradePrice,
+                                     @Nullable List<Integer> supportedCapabilities,
                                      int messageVersion) {
         super(messageVersion, offerId);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.OfferAvailabilityRequest.Builder builder = PB.OfferAvailabilityRequest.newBuilder()
+                .setOfferId(offerId)
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .setTakersTradePrice(takersTradePrice);
+
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+
         return getNetworkEnvelopeBuilder()
-                .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
-                        .setOfferId(offerId)
-                        .setPubKeyRing(pubKeyRing.toProtoMessage())
-                        .setTakersTradePrice(takersTradePrice)
-                        .addAllSupportedCapabilities(supportedCapabilities))
+                .setOfferAvailabilityRequest(builder)
                 .build();
     }
 
@@ -71,6 +79,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),
+                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion);
     }
 }

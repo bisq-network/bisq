@@ -32,8 +32,8 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new SepaAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod(),
+    protected PaymentAccountPayload createPayload() {
+        return new SepaAccountPayload(paymentMethod.getId(), id,
                 CountryUtil.getAllSepaCountries());
     }
 
@@ -48,14 +48,6 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
 
     public String getHolderName() {
         return ((SepaAccountPayload) paymentAccountPayload).getHolderName();
-    }
-
-    public void setEmail(String value) {
-        ((SepaAccountPayload) paymentAccountPayload).setEmail(value);
-    }
-
-    public String getEmail() {
-        return ((SepaAccountPayload) paymentAccountPayload).getEmail();
     }
 
     public void setIban(String iban) {

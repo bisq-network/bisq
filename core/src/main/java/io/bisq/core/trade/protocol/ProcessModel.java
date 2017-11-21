@@ -29,9 +29,9 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
-import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -48,13 +48,11 @@ import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -71,6 +69,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private Offer offer;
     transient private User user;
     transient private FilterManager filterManager;
+    transient private AccountAgeWitnessService accountAgeWitnessService;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
 
@@ -206,6 +205,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          TradeWalletService tradeWalletService,
                                          User user,
                                          FilterManager filterManager,
+                                         AccountAgeWitnessService accountAgeWitnessService,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -217,6 +217,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.tradeWalletService = tradeWalletService;
         this.user = user;
         this.filterManager = filterManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
@@ -239,12 +240,11 @@ public class ProcessModel implements Model, PersistablePayload {
 
     @Override
     public void persist() {
-        throw new NotImplementedException("persist is not implemented in that class");
+        log.warn("persist is not implemented in that class");
     }
 
     @Override
     public void onComplete() {
-        throw new NotImplementedException("persist is not implemented in that class");
     }
 
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
@@ -260,39 +260,6 @@ public class ProcessModel implements Model, PersistablePayload {
         else
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
-    }
-
-    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
-                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
-                                    paymentAccountPayload.getPaymentMethodId());
-                            if (samePaymentMethodId) {
-                                try {
-                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                    String result = (String) method.invoke(paymentAccountPayload);
-                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
-                                    return result.equals(paymentAccountFilter.getValue());
-                                } catch (Throwable e) {
-                                    log.error(e.getMessage());
-                                    return false;
-                                }
-                            } else {
-                                return false;
-                            }
-                        })
-                        .findAny()
-                        .isPresent();
-    }
-
-    public boolean isNodeBanned(NodeAddress nodeAddress) {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress.getHostNameWithoutPostFix()))
-                        .findAny()
-                        .isPresent();
     }
 
     public Coin getFundsNeededForTradeAsLong() {

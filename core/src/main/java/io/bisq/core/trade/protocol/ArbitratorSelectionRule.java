@@ -17,10 +17,10 @@
 
 package io.bisq.core.trade.protocol;
 
+import io.bisq.common.crypto.Hash;
 import io.bisq.core.offer.Offer;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Sha256Hash;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ public class ArbitratorSelectionRule {
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
-        int index = Math.abs(Arrays.hashCode(Sha256Hash.hash(offer.getId().getBytes()))) % candidates.size();
+        int index = Math.abs(Arrays.hashCode(Hash.getSha256Hash(offer.getId().getBytes()))) % candidates.size();
         NodeAddress selectedArbitrator = candidates.get(index);
         log.debug("selectedArbitrator " + selectedArbitrator);
         return selectedArbitrator;

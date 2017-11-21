@@ -24,6 +24,7 @@ import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import javafx.scene.input.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
@@ -31,11 +32,13 @@ import org.bitcoinj.core.Utils;
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Random;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -374,6 +377,28 @@ public class Utilities {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
+        return ArrayUtils.addAll(array1, array2);
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, array3));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, array4)));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4, byte[] array5) {
+        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, ArrayUtils.addAll(array4, array5))));
+    }
+
+    public static Date getUTCDate(int year, int month, int dayOfMonth) {
+        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
@@ -449,5 +474,55 @@ public class Utilities {
     @SuppressWarnings("unchecked")
     public static String collectionToCSV(Collection collection) {
         return collection.stream().map(Object::toString).collect(Collectors.joining(",")).toString();
+    }
+
+    public static void removeCryptographyRestrictions() {
+        if (!isRestrictedCryptography()) {
+            System.out.println("Cryptography restrictions removal not needed");
+            return;
+        }
+        try {
+        /*
+         * Do the following, but with reflection to bypass access checks:
+         *
+         * JceSecurity.isRestricted = false;
+         * JceSecurity.defaultPolicy.perms.clear();
+         * JceSecurity.defaultPolicy.add(CryptoAllPermission.INSTANCE);
+         */
+            final Class<?> jceSecurity = Class.forName("javax.crypto.JceSecurity");
+            final Class<?> cryptoPermissions = Class.forName("javax.crypto.CryptoPermissions");
+            final Class<?> cryptoAllPermission = Class.forName("javax.crypto.CryptoAllPermission");
+
+            final Field isRestrictedField = jceSecurity.getDeclaredField("isRestricted");
+            isRestrictedField.setAccessible(true);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(isRestrictedField, isRestrictedField.getModifiers() & ~Modifier.FINAL);
+            isRestrictedField.set(null, false);
+
+            final Field defaultPolicyField = jceSecurity.getDeclaredField("defaultPolicy");
+            defaultPolicyField.setAccessible(true);
+            final PermissionCollection defaultPolicy = (PermissionCollection) defaultPolicyField.get(null);
+
+            final Field perms = cryptoPermissions.getDeclaredField("perms");
+            perms.setAccessible(true);
+            ((Map<?, ?>) perms.get(defaultPolicy)).clear();
+
+            final Field instance = cryptoAllPermission.getDeclaredField("INSTANCE");
+            instance.setAccessible(true);
+            defaultPolicy.add((Permission) instance.get(null));
+
+            System.out.println("Successfully removed cryptography restrictions");
+        } catch (final Exception e) {
+            System.err.println("Failed to remove cryptography restrictions" + e);
+        }
+    }
+
+    public static boolean isRestrictedCryptography() {
+        // This matches Oracle Java 7 and 8, but not Java 9 or OpenJDK.
+        final String name = System.getProperty("java.runtime.name");
+        final String ver = System.getProperty("java.version");
+        return name != null && name.equals("Java(TM) SE Runtime Environment")
+                && ver != null && (ver.startsWith("1.7") || ver.startsWith("1.8"));
     }
 }

@@ -71,15 +71,12 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private Button forgotPasswordButton;
     private Button restoreButton;
     private TextArea seedWordsTextArea;
-    private DatePicker restoreDatePicker;
+    private DatePicker datePicker;
     private final SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
-    private final SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
     private final BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
     private ChangeListener<String> changeListener;
     private ChangeListener<String> wordsTextAreaChangeListener;
-    private ChangeListener<Boolean> datePickerChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
-    private ChangeListener<LocalDate> dateChangeListener;
     private LocalDate walletCreationDate;
     private final WalletsManager walletsManager;
 
@@ -135,15 +132,13 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         if (seedWordsValidChangeListener != null) {
             seedWordsValid.removeListener(seedWordsValidChangeListener);
-            dateValid.removeListener(datePickerChangeListener);
             seedWordsTextArea.textProperty().removeListener(wordsTextAreaChangeListener);
-            restoreDatePicker.valueProperty().removeListener(dateChangeListener);
             restoreButton.disableProperty().unbind();
             restoreButton.setOnAction(null);
             seedWordsTextArea.setText("");
-            restoreDatePicker.setValue(null);
+            datePicker.setValue(null);
             seedWordsTextArea.getStyleClass().remove("validation_error");
-            restoreDatePicker.getStyleClass().remove("validation_error");
+            datePicker.getStyleClass().remove("validation_error");
         }
     }
 
@@ -189,7 +184,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
             String password = passwordTextField.getText();
-            checkArgument(password.length() < 50, Res.get("password.tooLong"));
+            checkArgument(password.length() < 500, Res.get("password.tooLong"));
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt != null) {
                 busyAnimation.play();
@@ -275,7 +270,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("seed.creationDate"));
-        restoreDatePicker = labelDatePickerTuple2.second;
+        datePicker = labelDatePickerTuple2.second;
         restoreButton = addButton(gridPane, ++rowIndex, Res.get("seed.restore"));
         restoreButton.setDefaultButton(true);
         stage.setHeight(340);
@@ -283,10 +278,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
-
+        log.info("walletCreationDate "+walletCreationDate);
+        datePicker.setValue(walletCreationDate);
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !seedWordsEdited.get(),
+                seedWordsValid, seedWordsEdited));
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
@@ -307,25 +302,15 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             }
         };
 
-        datePickerChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue)
-                restoreDatePicker.getStyleClass().remove("validation_error");
-            else
-                restoreDatePicker.getStyleClass().add("validation_error");
-        };
-        dateChangeListener = (observable, oldValue, newValue) -> dateValid.set(walletCreationDate.equals(newValue));
-
         seedWordsValid.addListener(seedWordsValidChangeListener);
-        dateValid.addListener(datePickerChangeListener);
         seedWordsTextArea.textProperty().addListener(wordsTextAreaChangeListener);
-        restoreDatePicker.valueProperty().addListener(dateChangeListener);
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !seedWordsEdited.get(),
+                seedWordsValid, seedWordsEdited));
 
         restoreButton.setOnAction(e -> onRestore());
 
         seedWordsTextArea.getStyleClass().remove("validation_error");
-        restoreDatePicker.getStyleClass().remove("validation_error");
+        datePicker.getStyleClass().remove("validation_error");
 
         layout();
     }
@@ -355,7 +340,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void doRestore() {
-        long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        long date = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
         walletsManager.restoreSeedWords(
                 seed,

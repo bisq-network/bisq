@@ -27,6 +27,8 @@ import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.PublishTradeStatistics;
+import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -99,7 +101,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress, ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
@@ -107,21 +109,25 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> handleTaskRunnerSuccess("handleTakeOfferRequest"),
-                this::handleTaskRunnerFault);
+                errorMessage -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
                 CheckIfPeerIsBanned.class,
                 MakerVerifyArbitratorSelection.class,
                 MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
+                VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositTxListener.class,
                 MakerSendPublishDepositTxRequest.class
         );
-
-        startTimeout();
+        // We don't use a timeout here because if the DepositTxPublishedMessage does not arrive we
+        // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network
         taskRunner.run();
     }
 
@@ -136,7 +142,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> {
-                    stopTimeout();
                     handleTaskRunnerSuccess("handle DepositTxPublishedMessage");
                 },
                 this::handleTaskRunnerFault);
@@ -144,7 +149,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 MakerProcessDepositTxPublishedMessage.class,
                 MakerVerifyTakerAccount.class,
                 MakerVerifyTakerFeePayment.class,
-                MakerPublishTradeStatistics.class
+                PublishTradeStatistics.class
         );
         taskRunner.run();
     }

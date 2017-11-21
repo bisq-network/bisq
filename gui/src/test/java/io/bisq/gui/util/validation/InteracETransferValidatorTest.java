@@ -17,12 +17,25 @@
 
 package io.bisq.gui.util.validation;
 
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCurrencyNetwork;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class InteracETransferValidatorTest {
+    @Before
+    public void setup() {
+        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
+        Res.setBaseCurrencyCode(currencyCode);
+        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
+        CurrencyUtil.setBaseCurrencyCode(currencyCode);
+    }
 
     @Test
     public void validate() throws Exception {

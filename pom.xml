@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.1</version>
+    <version>0.6.0</version>
     <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -24,13 +24,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bitsquare/bitsquare/issues</url>
+        <url>https://github.com/bisq-network/exchange/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bitsquare/bitsquare</connection>
-        <developerConnection>scm:git:https://github.com/bitsquare/bitsquare</developerConnection>
-        <url>scm:git:https://github.com/bitsquare/bitsquare</url>
+        <connection>scm:git:https://github.com/bisq-network/exchange</connection>
+        <developerConnection>scm:git:https://github.com/bisq-network/exchange</developerConnection>
+        <url>scm:git:https://github.com/bisq-network/exchange</url>
     </scm>
 
     <properties>
@@ -42,13 +42,11 @@
         <module>common</module>
         <module>network</module>
         <module>core</module>
-        <module>jsocks</module>
-        <module>jtorctl</module>
-        <module>jtorproxy</module>
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>
         <module>provider</module>
+        <module>consensus</module>
     </modules>
 
     <build>
@@ -66,7 +64,7 @@
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.5.1</version>
+                <version>0.6.0</version>
                 <configuration>
                     <protocExecutable>/usr/local/bin/protoc</protocExecutable>
                 </configuration>
@@ -85,6 +83,10 @@
 
     <repositories>
         <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
             <id>sonatype-oss-snapshot</id>
             <snapshots/>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -92,14 +94,12 @@
     </repositories>
 
     <dependencies>
-        <!--bitcoinj
-           Needs local installation!
-           See doc/build.md for further info
-       -->
+        <!-- NOTE: our custom bitcoinj dependency is resolved transitively
+             via the libdohj dependency below -->
         <dependency>
-            <groupId>org.libdohj</groupId>
+            <groupId>com.github.bisq-network.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>0.14.2</version>
+            <version>88b7e34d</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
@@ -125,14 +125,15 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>4.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!--crypto
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-        </dependency>
-        -->
+        <!--crypto TODO why are versions removed here?-->
         <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -157,7 +158,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>19.0</version>
+            <version>20.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -185,13 +186,7 @@
             <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.3.0</version>
-        </dependency>
--->
+
         <!--logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -229,18 +224,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>3.3.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
@@ -256,7 +239,7 @@
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                    <crypto.policy>unlimited</crypto.policy>
+                <crypto.policy>unlimited</crypto.policy>
             </properties>
         </profile>
     </profiles>

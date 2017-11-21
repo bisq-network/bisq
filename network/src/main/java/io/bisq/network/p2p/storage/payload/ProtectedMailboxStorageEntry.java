@@ -30,7 +30,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     }
 
     public MailboxStoragePayload getMailboxStoragePayload() {
-        return (MailboxStoragePayload) getStoragePayload();
+        return (MailboxStoragePayload) getProtectedStoragePayload();
     }
 
 
@@ -68,7 +68,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         ProtectedStorageEntry entry = ProtectedStorageEntry.fromProto(proto.getEntry(), resolver);
         return new ProtectedMailboxStorageEntry(
                 entry.getCreationTimeStamp(),
-                (MailboxStoragePayload) entry.getStoragePayload(),
+                (MailboxStoragePayload) entry.getProtectedStoragePayload(),
                 entry.getOwnerPubKey().getEncoded(),
                 entry.getSequenceNumber(),
                 entry.getSignature(),

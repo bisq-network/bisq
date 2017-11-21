@@ -22,6 +22,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.BusyAnimation;
@@ -56,6 +57,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -119,8 +123,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Pane owner;
     protected GridPane gridPane;
     protected Button closeButton;
-    protected Optional<Runnable> closeHandlerOptional = Optional.empty();
-    protected Optional<Runnable> actionHandlerOptional = Optional.empty();
+    protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
     protected Stage stage;
     protected boolean showReportErrorButtons;
     protected Label messageLabel;
@@ -335,7 +339,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues"));
         //noinspection unchecked
         return (T) this;
     }
@@ -724,29 +728,33 @@ public abstract class Overlay<T extends Overlay> {
     private void addReportErrorButtons() {
         messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
+        Button logButton = new Button(Res.get("popup.reportError.log"));
+        GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
+        GridPane.setHalignment(logButton, HPos.RIGHT);
+        GridPane.setRowIndex(logButton, ++rowIndex);
+        GridPane.setColumnIndex(logButton, 1);
+        gridPane.getChildren().add(logButton);
+        logButton.setOnAction(event -> {
+            try {
+                File dataDir = new File(BisqEnvironment.getStaticAppDataDir());
+                File logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
+                Utilities.openFile(logFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
+        });
+
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
-        GridPane.setMargin(gitHubButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, ++rowIndex);
         GridPane.setColumnIndex(gitHubButton, 1);
         gridPane.getChildren().add(gitHubButton);
-
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
-        });
-
-        Button forumButton = new Button(Res.get("popup.reportError.forum"));
-        GridPane.setHalignment(forumButton, HPos.RIGHT);
-        GridPane.setRowIndex(forumButton, ++rowIndex);
-        GridPane.setColumnIndex(forumButton, 1);
-        gridPane.getChildren().add(forumButton);
-
-        forumButton.setOnAction(event -> {
-            if (message != null)
-                Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bisq.io");
+            GUIUtil.openWebPage("https://github.com/bisq-network/exchange/issues");
+            hide();
         });
     }
 

@@ -59,8 +59,10 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
 
             processModel.removeMailboxMessageAfterProcessing(trade);
 
-            trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
-            log.error("MakerProcessDepositTxPublishedMessage, offerid={}, RESERVED_FOR_TRADE", trade.getId());
+            // If we got already the confirmation we don't want to apply an earlier state
+            if (trade.getState() != Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK)
+                trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 
             complete();

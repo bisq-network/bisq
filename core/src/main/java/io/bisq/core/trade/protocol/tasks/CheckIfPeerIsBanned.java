@@ -38,18 +38,26 @@ public class CheckIfPeerIsBanned extends TradeTask {
         try {
             runInterceptHook();
 
-            final NodeAddress tempTradingPeerNodeAddress = processModel.getTempTradingPeerNodeAddress();
-            if (tempTradingPeerNodeAddress != null && processModel.isNodeBanned(tempTradingPeerNodeAddress)) {
-                failed("Other trader is banned by his node address.\n" +
-                        "tradingPeerNodeAddress=" + tempTradingPeerNodeAddress);
+            final NodeAddress nodeAddress = processModel.getTempTradingPeerNodeAddress();
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload());
+            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
 
-                PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload());
-                final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
-                if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
-                    failed("Other trader is banned by his trading account data.\n" +
-                            "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
-                            "banFilter=" + appliedPaymentAccountFilter[0].toString());
-                }
+            if (nodeAddress != null && processModel.getFilterManager().isNodeAddressBanned(nodeAddress.getHostNameWithoutPostFix())) {
+                failed("Other trader is banned by his node address.\n" +
+                        "tradingPeerNodeAddress=" + nodeAddress);
+            } else if (processModel.getFilterManager().isOfferIdBanned(trade.getId())) {
+                failed("Offer ID is banned.\n" +
+                        "Offer ID=" + trade.getId());
+            } else if (processModel.getFilterManager().isCurrencyBanned(trade.getOffer().getCurrencyCode())) {
+                failed("Currency is banned.\n" +
+                        "Currency code=" + trade.getOffer().getCurrencyCode());
+            } else if (processModel.getFilterManager().isPaymentMethodBanned(trade.getOffer().getPaymentMethod())) {
+                failed("Payment method is banned.\n" +
+                        "Payment method=" + trade.getOffer().getPaymentMethod().getId());
+            } else if (processModel.getFilterManager().isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
+                failed("Other trader is banned by his trading account data.\n" +
+                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
+                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
             } else {
                 complete();
             }

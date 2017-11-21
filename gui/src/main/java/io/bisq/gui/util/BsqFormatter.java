@@ -18,20 +18,25 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.provider.price.MarketPrice;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.text.DecimalFormat;
 
+@Slf4j
 public class BsqFormatter extends BSFormatter {
-    private static final Logger log = LoggerFactory.getLogger(BsqFormatter.class);
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
     private final String prefix = "B";
+    private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.###");
+    private final DecimalFormat marketCapFormat = new DecimalFormat("###,###,###");
 
     @Inject
     private BsqFormatter() {
@@ -56,6 +61,8 @@ public class BsqFormatter extends BSFormatter {
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
         }
+
+        amountFormat.setMinimumFractionDigits(3);
     }
 
     /**
@@ -81,6 +88,19 @@ public class BsqFormatter extends BSFormatter {
             log.error(e.toString());
             e.printStackTrace();
             throw new RuntimeException(e);
+        }
+    }
+
+    public String formatAmountWithGroupSeparatorAndCode(Coin amount) {
+        return amountFormat.format(MathUtils.scaleDownByPowerOf10(amount.value, 3)) + " BSQ";
+    }
+
+    public String formatMarketCap(MarketPrice bsqPriceMarketPrice, MarketPrice fiatMarketPrice, Coin issuedAmount) {
+        if (bsqPriceMarketPrice != null && fiatMarketPrice != null) {
+            double marketCap = bsqPriceMarketPrice.getPrice() * fiatMarketPrice.getPrice() * (MathUtils.scaleDownByPowerOf10(issuedAmount.value, 3));
+            return marketCapFormat.format(MathUtils.doubleToLong(marketCap)) + " " + fiatMarketPrice.getCurrencyCode();
+        } else {
+            return "";
         }
     }
 }

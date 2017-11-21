@@ -7,4 +7,6 @@ public interface SetupListener {
 
     @SuppressWarnings("unused")
     void onSetupFailed(Throwable throwable);
+
+    void onRequestCustomBridges();
 }

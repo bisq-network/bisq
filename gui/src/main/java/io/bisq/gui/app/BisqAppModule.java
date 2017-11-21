@@ -31,6 +31,7 @@ import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
+import io.bisq.core.network.CoreSeedNodesRepository;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.network.CoreNetworkProtoResolver;
 import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -42,6 +43,8 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
+import io.bisq.network.p2p.network.BridgeAddressProvider;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
@@ -49,7 +52,7 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class BisqAppModule extends AppModule {
+public class BisqAppModule extends AppModule {
 
     private final Stage primaryStage;
 
@@ -69,6 +72,9 @@ class BisqAppModule extends AppModule {
         bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
+
+        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
@@ -78,7 +84,6 @@ class BisqAppModule extends AppModule {
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());

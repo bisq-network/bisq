@@ -19,6 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -29,7 +30,10 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 // We use a MailboxMessage here because the taker has paid already the trade fee and it could be that
@@ -50,6 +54,11 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
+    // added in v 0.6. can be null if we trade with an older peer
+    @Nullable
+    private final byte[] accountAgeWitnessSignatureOfPreparedDepositTx;
+    private final long currentDate;
+
     public PublishDepositTxRequest(String tradeId,
                                    PaymentAccountPayload makerPaymentAccountPayload,
                                    String makerAccountId,
@@ -60,7 +69,9 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                    byte[] preparedDepositTx,
                                    List<RawTransactionInput> makerInputs,
                                    NodeAddress senderNodeAddress,
-                                   String uid) {
+                                   String uid,
+                                   @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                   long currentDate) {
         this(tradeId,
                 makerPaymentAccountPayload,
                 makerAccountId,
@@ -72,7 +83,9 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 makerInputs,
                 senderNodeAddress,
                 uid,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                accountAgeWitnessSignatureOfPreparedDepositTx,
+                currentDate);
     }
 
 
@@ -91,7 +104,9 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                                     List<RawTransactionInput> makerInputs,
                                     NodeAddress senderNodeAddress,
                                     String uid,
-                                    int messageVersion) {
+                                    int messageVersion,
+                                    @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                    long currentDate) {
         super(messageVersion, tradeId);
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.makerAccountId = makerAccountId;
@@ -103,23 +118,30 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         this.makerInputs = makerInputs;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
+        this.accountAgeWitnessSignatureOfPreparedDepositTx = accountAgeWitnessSignatureOfPreparedDepositTx;
+        this.currentDate = currentDate;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        final PB.PublishDepositTxRequest.Builder builder = PB.PublishDepositTxRequest.newBuilder()
+                .setTradeId(tradeId)
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setMakerAccountId(makerAccountId)
+                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+                .setMakerContractAsJson(makerContractAsJson)
+                .setMakerContractSignature(makerContractSignature)
+                .setMakerPayoutAddressString(makerPayoutAddressString)
+                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+                .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setUid(uid);
+
+        Optional.ofNullable(accountAgeWitnessSignatureOfPreparedDepositTx).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(e)));
+        builder.setCurrentDate(currentDate);
+
         return getNetworkEnvelopeBuilder()
-                .setPublishDepositTxRequest(PB.PublishDepositTxRequest.newBuilder()
-                        .setTradeId(tradeId)
-                        .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                        .setMakerAccountId(makerAccountId)
-                        .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
-                        .setMakerContractAsJson(makerContractAsJson)
-                        .setMakerContractSignature(makerContractSignature)
-                        .setMakerPayoutAddressString(makerPayoutAddressString)
-                        .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                        .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                .setPublishDepositTxRequest(builder)
                 .build();
     }
 
@@ -139,7 +161,9 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 makerInputs,
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfPreparedDepositTx()),
+                proto.getCurrentDate());
     }
 
 
@@ -156,6 +180,8 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 ",\n     makerInputs=" + makerInputs +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     uid='" + uid + '\'' +
+                ",\n     accountAgeWitnessSignatureOfPreparedDepositTx=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfPreparedDepositTx) +
+                ",\n     currentDate=" + new Date(currentDate) +
                 "\n} " + super.toString();
     }
 }

@@ -238,7 +238,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
                             withdrawToTextField.getText(), amountOfSelectedItems);
                 } catch (InsufficientFundsException e) {
-                    new Popup<>().warning(e.getMessage()).show();
+                    new Popup<>().warning(e.toString()).show();
                 } catch (Throwable t) {
                     new Popup<>().error(Res.get("popup.error.createTx", t.toString())).show();
                 }
@@ -276,7 +276,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.toString());
-                new Popup<>().warning(e.getMessage()).show();
+                new Popup<>().warning(e.toString()).show();
             }
         }
     }
@@ -367,8 +367,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             log.warn(e.getMessage());
             new Popup<>().warning(Res.get("funds.withdrawal.notEnoughFunds")).show();
         } catch (Throwable e) {
-            log.warn(e.getMessage());
-            new Popup<>().warning(e.getMessage()).show();
+            log.warn(e.toString());
+            new Popup<>().warning(e.toString()).show();
         }
     }
 
@@ -388,9 +388,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
-
-        if (DevEnv.DEV_MODE)
-            withdrawToTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
@@ -401,7 +398,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } else if (failedTradesManager.getTradeById(offerId).isPresent()) {
             return Optional.of(failedTradesManager.getTradeById(offerId).get());
         } else {
-            return Optional.empty();
+            return Optional.<Tradable>empty();
         }
     }
 

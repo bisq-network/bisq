@@ -20,6 +20,7 @@ package io.bisq.gui.components.paymentmethods;
 import com.google.common.base.Joiner;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.SpecificBanksAccountPayload;
@@ -44,9 +45,9 @@ public class SpecificBankForm extends BankForm {
         return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
-    public SpecificBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
+    public SpecificBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
                             GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter, closeHandler);
         this.specificBanksAccountPayload = (SpecificBanksAccountPayload) paymentAccount.paymentAccountPayload;
     }
 

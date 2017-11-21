@@ -9,24 +9,26 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
 
 @Getter
 @EqualsAndHashCode
+@Slf4j
 public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload {
-    private final StoragePayload storagePayload;
+    private final ProtectedStoragePayload protectedStoragePayload;
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
     private int sequenceNumber;
     private byte[] signature;
     private long creationTimeStamp;
 
-    public ProtectedStorageEntry(StoragePayload storagePayload,
+    public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
                                  PublicKey ownerPubKey,
                                  int sequenceNumber,
                                  byte[] signature) {
-        this.storagePayload = storagePayload;
+        this.protectedStoragePayload = protectedStoragePayload;
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
         this.ownerPubKey = ownerPubKey;
 
@@ -41,11 +43,11 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected ProtectedStorageEntry(long creationTimeStamp,
-                                    StoragePayload storagePayload,
+                                    ProtectedStoragePayload protectedStoragePayload,
                                     byte[] ownerPubKeyBytes,
                                     int sequenceNumber,
                                     byte[] signature) {
-        this.storagePayload = storagePayload;
+        this.protectedStoragePayload = protectedStoragePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
 
@@ -58,7 +60,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
     public Message toProtoMessage() {
         return PB.ProtectedStorageEntry.newBuilder()
-                .setStoragePayload((PB.StoragePayload) storagePayload.toProtoMessage())
+                .setStoragePayload((PB.StoragePayload) protectedStoragePayload.toProtoMessage())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
@@ -69,7 +71,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public static ProtectedStorageEntry fromProto(PB.ProtectedStorageEntry proto,
                                                   NetworkProtoResolver resolver) {
         return new ProtectedStorageEntry(proto.getCreationTimeStamp(),
-                StoragePayload.fromProto(proto.getStoragePayload(), resolver),
+                ProtectedStoragePayload.fromProto(proto.getStoragePayload(), resolver),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSequenceNumber(),
                 proto.getSignature().toByteArray());
@@ -91,7 +93,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     public void backDate() {
-        creationTimeStamp -= storagePayload.getTTL() / 2;
+        creationTimeStamp -= protectedStoragePayload.getTTL() / 2;
     }
 
     public void updateSequenceNumber(int sequenceNumber) {
@@ -103,7 +105,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
+        return (System.currentTimeMillis() - creationTimeStamp) > protectedStoragePayload.getTTL();
     }
 
 

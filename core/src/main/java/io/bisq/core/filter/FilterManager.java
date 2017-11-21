@@ -22,13 +22,19 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BitcoinNodes;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
@@ -36,8 +42,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.bitcoinj.core.Utils.HEX;
@@ -45,10 +55,27 @@ import static org.bitcoinj.core.Utils.HEX;
 public class FilterManager {
     private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
 
+    public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
+    public static final String BANNED_SEED_NODES = "bannedSeedNodes";
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface Listener {
+        void onFilterAdded(Filter filter);
+    }
+
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
+    private final Preferences preferences;
+    private final BisqEnvironment bisqEnvironment;
+    private final ProvidersRepository providersRepository;
+    private boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
+    private final List<Listener> listeners = new ArrayList<>();
 
     @SuppressWarnings("ConstantConditions")
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
@@ -62,32 +89,79 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, User user,
+    public FilterManager(P2PService p2PService,
+                         KeyRing keyRing,
+                         User user,
+                         Preferences preferences,
+                         BisqEnvironment bisqEnvironment,
+                         ProvidersRepository providersRepository,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
+        this.preferences = preferences;
+        this.bisqEnvironment = bisqEnvironment;
+        this.providersRepository = providersRepository;
+        this.ignoreDevMsg = ignoreDevMsg;
+    }
 
+    public void onAllServicesInitialized() {
         if (!ignoreDevMsg) {
+
+            final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
+            list.forEach(e -> {
+                final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof Filter)
+                    addFilter((Filter) protectedStoragePayload);
+            });
+
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getStoragePayload();
-                        if (verifySignature(filter))
-                            filterProperty.set(filter);
+                    if (data.getProtectedStoragePayload() instanceof Filter) {
+                        Filter filter = (Filter) data.getProtectedStoragePayload();
+                        addFilter(filter);
                     }
                 }
 
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Filter) {
-                        Filter filter = (Filter) data.getStoragePayload();
-                        if (verifySignature(filter))
+                    if (data.getProtectedStoragePayload() instanceof Filter) {
+                        Filter filter = (Filter) data.getProtectedStoragePayload();
+                        if (verifySignature(filter)) {
+                            bisqEnvironment.saveBannedSeedNodes(null);
+
+                            bisqEnvironment.saveBannedPriceRelayNodes(null);
+                            providersRepository.applyBannedNodes(null);
+                            providersRepository.selectNewRandomBaseUrl();
+
                             filterProperty.set(null);
+                        }
                     }
                 }
             });
+        }
+    }
+
+    private void addFilter(Filter filter) {
+        if (verifySignature(filter)) {
+            // Seed nodes are requested at startup before we get the filter so we only apply the banned
+            // nodes at the next startup and don't update the list in the P2P network domain.
+            // We persist it to the property file which is read before any other initialisation.
+            bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
+
+            // Banned price relay nodes we can apply at runtime
+            final List<String> priceRelayNodes = filter.getPriceRelayNodes();
+            bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+            providersRepository.applyBannedNodes(priceRelayNodes);
+            providersRepository.selectNewRandomBaseUrl();
+
+            filterProperty.set(filter);
+            listeners.stream().forEach(e -> e.onFilterAdded(filter));
+
+            if (filter.isPreventPublicBtcNetwork() &&
+                    preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.PUBLIC.ordinal())
+                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
         }
     }
 
@@ -96,10 +170,15 @@ public class FilterManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ReadOnlyObjectProperty<Filter> filterProperty() {
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public ObjectProperty<Filter> filterProperty() {
         return filterProperty;
     }
 
+    @Nullable
     public Filter getFilter() {
         return filterProperty.get();
     }
@@ -114,7 +193,7 @@ public class FilterManager {
             signAndAddSignatureToFilter(filter);
             user.setDevelopersFilter(filter);
 
-            boolean result = p2PService.addData(filter, true);
+            boolean result = p2PService.addProtectedStorageEntry(filter, true);
             if (result)
                 log.trace("Add filter to network was successful. FilterMessage = " + filter);
 
@@ -162,17 +241,82 @@ public class FilterManager {
         }
     }
 
+    // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
-        PB.Filter.Builder builder = PB.Filter.newBuilder().addAllBannedNodeAddress(filter.getBannedNodeAddress())
+        PB.Filter.Builder builder = PB.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())
+                .addAllBannedNodeAddress(filter.getBannedNodeAddress())
                 .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()
                         .map(PaymentAccountFilter::toProtoMessage)
                         .collect(Collectors.toList()));
+
+        Optional.ofNullable(filter.getBannedCurrencies()).ifPresent(builder::addAllBannedCurrencies);
+        Optional.ofNullable(filter.getBannedPaymentMethods()).ifPresent(builder::addAllBannedPaymentMethods);
+
         return Utils.HEX.encode(builder.build().toByteArray());
     }
 
     @Nullable
     public Filter getDevelopersFilter() {
         return user.getDevelopersFilter();
+    }
+
+    public boolean isCurrencyBanned(String currencyCode) {
+        return getFilter() != null &&
+                getFilter().getBannedCurrencies() != null &&
+                getFilter().getBannedCurrencies().stream()
+                        .filter(e -> e.equals(currencyCode))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
+        return getFilter() != null &&
+                getFilter().getBannedPaymentMethods() != null &&
+                getFilter().getBannedPaymentMethods().stream()
+                        .filter(e -> e.equals(paymentMethod.getId()))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isOfferIdBanned(String offerId) {
+        return getFilter() != null &&
+                getFilter().getBannedOfferIds().stream()
+                        .filter(e -> e.equals(offerId))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isNodeAddressBanned(String nodeAddress) {
+        return getFilter() != null &&
+                getFilter().getBannedNodeAddress().stream()
+                        .filter(e -> e.equals(nodeAddress))
+                        .findAny()
+                        .isPresent();
+    }
+
+    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
+                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
+        return getFilter() != null &&
+                getFilter().getBannedPaymentAccounts().stream()
+                        .filter(paymentAccountFilter -> {
+                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
+                                    paymentAccountPayload.getPaymentMethodId());
+                            if (samePaymentMethodId) {
+                                try {
+                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
+                                    String result = (String) method.invoke(paymentAccountPayload);
+                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
+                                    return result.equals(paymentAccountFilter.getValue());
+                                } catch (Throwable e) {
+                                    log.error(e.getMessage());
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        })
+                        .findAny()
+                        .isPresent();
     }
 }

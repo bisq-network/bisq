@@ -19,10 +19,11 @@ package io.bisq.core.btc;
 
 public enum RegTestHost {
 
+    NONE,
     LOCALHOST,
     REG_TEST_SERVER; // 188.226.179.109
 
-    public static final RegTestHost DEFAULT = LOCALHOST;
+    public static final RegTestHost DEFAULT = NONE;
     public static final String SERVER_IP = "188.226.179.109";
 
 }

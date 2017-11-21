@@ -410,12 +410,12 @@ public class BtcWalletService extends WalletService {
             if (!Arrays.equals(pubKey, multiSigAddressEntry.getPubKey())) {
                 log.error("Pub Key from AddressEntry does not match key pair from trade data. Trade ID={}\n" +
                         "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
-                multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+                multiSigKeyPair = findKeyFromPubKey(pubKey);
             }
         } else {
             log.error("multiSigAddressEntry not found for trade ID={}.\n" +
                     "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
-            multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+            multiSigKeyPair = findKeyFromPubKey(pubKey);
         }
 
         return multiSigKeyPair;
@@ -787,7 +787,7 @@ public class BtcWalletService extends WalletService {
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
         sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
-        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+        Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
             addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);

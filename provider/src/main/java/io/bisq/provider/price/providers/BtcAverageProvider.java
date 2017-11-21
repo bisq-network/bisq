@@ -69,7 +69,7 @@ public class BtcAverageProvider {
         long ts = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
-            // We need to check the type as we get an unexpected "timestamp" object at the end: 
+            // We need to check the type as we get an unexpected "timestamp" object at the end:
             if (value instanceof LinkedTreeMap) {
                 //noinspection unchecked
                 LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
@@ -77,10 +77,23 @@ public class BtcAverageProvider {
                 // We ignore venezuelan currency as the official exchange rate is wishful thinking only....
                 // We should use that api with a custom provider: http://api.bitcoinvenezuela.com/1
                 if (!("VEF".equals(currencyCode))) {
-                    marketPriceMap.put(currencyCode,
-                            new PriceData(currencyCode,
-                                    (double) data.get("last"),
-                                    ts));
+                    try {
+                        final Object lastAsObject = data.get("last");
+                        double last = 0;
+                        if (lastAsObject instanceof String)
+                            last = Double.valueOf((String) lastAsObject);
+                        else if (lastAsObject instanceof Double)
+                            last = (double) lastAsObject;
+                        else
+                            log.warn("Unexpected data type: lastAsObject=" + lastAsObject);
+
+                        marketPriceMap.put(currencyCode,
+                                new PriceData(currencyCode,
+                                        last,
+                                        ts));
+                    } catch (Throwable exception) {
+                        log.error("Error converting btcaverage data: " + currencyCode, exception);
+                    }
                 }
             }
         });

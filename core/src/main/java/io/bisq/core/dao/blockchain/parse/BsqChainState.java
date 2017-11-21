@@ -29,6 +29,7 @@ import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -61,51 +62,31 @@ public class BsqChainState implements PersistableEnvelope {
 
     private static final int SNAPSHOT_GRID = 100;  // set high to deactivate
     private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
+    public static final Coin GENESIS_TOTAL_SUPPLY = Coin.COIN.multiply(25);
 
     //mainnet
     // this tx has a lot of outputs
     // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
     // BLOCK_HEIGHT 411779
     // 411812 has 693 recursions
+    // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
     // BTC MAIN NET
-    // private static final String BTC_GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
-    //private static final int BTC_GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
-    private static final String BTC_GENESIS_TX_ID = "4371a1579bccc672231178cc5fe9fbb9366774d3bcbf21545a82f637f4b61a06";
-    private static final int BTC_GENESIS_BLOCK_HEIGHT = 473000; // 2017-06-26
-
-    // LTC MAIN NET
-    private static final String LTC_GENESIS_TX_ID = "44074e68c1168d67871b3e9af0e65d6d7c820b03ba15445df2c4089729985fb6";
-    private static final int LTC_GENESIS_BLOCK_HEIGHT = 1220170; // 2017-06-11
-    // 1186935
-
-    //1220127
-    // block 300000 2014-05-10
-    // block 350000 2015-03-30
-    // block 400000 2016-02-25
-    // block 450000 2017-01-25
-
-    // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "da216721fb915da499fe0400d08362f44b672096f37c74501c2f9bcaa7760656";
-    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 363;
-
-    // LTC REG TEST
-    private static final String LTC_REG_TEST_GENESIS_TX_ID = "3551aa22fbf2e237df3d96d94f286aecc4f3109a7dcd873c5c51e30a6398172c";
-    private static final int LTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 105;
-
+    private static final String BTC_GENESIS_TX_ID = "e5c8313c4144d219b5f6b2dacf1d36f2d43a9039bb2fcd1bd57f8352a9c9809a";
+    private static final int BTC_GENESIS_BLOCK_HEIGHT = 477865; // 2017-07-28
 
     // TEST NET
-    // 0.5 BTC to grazcoin ms4ewGfJEv5RTnBD2moDoP5Kp1uJJwDGSX
-    // 0.3 BTC to alice: myjn5JVuQLN9S4QwGzY4VrD86819Zc2uhj
-    // 0.2BTC to bob: mx3xo655TAjC5r7ScuVEU8b6FMLomnKSeX
-    private static final String BTC_TEST_NET_GENESIS_TX_ID = "e360c3c77f43d53cbbf3dc8064c888a10310930a6427770ce4c8ead388edf17c";
-    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1119668;
+    // Phase 0 initial genesis tx 6.10.2017: 2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a
+   // private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
+   // private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
 
-    private static final String LTC_TEST_NET_GENESIS_TX_ID = "not set";
-    private static final int LTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1;
+    // Rebased genesis tx 9th november 2017
+    private static final String BTC_TEST_NET_GENESIS_TX_ID = "f8b65c65624bd822f92480c39959f8ae4a6f94a9841c1625464ec6353cfba1d9";
+    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT =  1227630;
 
-
-    // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
+    // REG TEST
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "321a2156d6cac631d3e574caf54a5a401e51971280c14b18b5f5877026a94d47";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 111;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +100,7 @@ public class BsqChainState implements PersistableEnvelope {
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private int chainHeadHeight = 0;
+    @Nullable
     private Tx genesisTx;
 
     // not impl in PB yet
@@ -151,10 +133,6 @@ public class BsqChainState implements PersistableEnvelope {
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
         switch (BisqEnvironment.getBaseCurrencyNetwork()) {
-            case BTC_MAINNET:
-                genesisTxId = BTC_GENESIS_TX_ID;
-                genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
-                break;
             case BTC_TESTNET:
                 genesisTxId = BTC_TEST_NET_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
@@ -163,19 +141,10 @@ public class BsqChainState implements PersistableEnvelope {
                 genesisTxId = BTC_REG_TEST_GENESIS_TX_ID;
                 genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
-
-            case LTC_TESTNET:
-                genesisTxId = LTC_TEST_NET_GENESIS_TX_ID;
-                genesisBlockHeight = LTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
-                break;
-            case LTC_REGTEST:
-                genesisTxId = LTC_REG_TEST_GENESIS_TX_ID;
-                genesisBlockHeight = LTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
-                break;
-            case LTC_MAINNET:
+            case BTC_MAINNET:
             default:
-                genesisTxId = LTC_GENESIS_TX_ID;
-                genesisBlockHeight = LTC_GENESIS_BLOCK_HEIGHT;
+                genesisTxId = BTC_GENESIS_TX_ID;
+                genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
                 break;
         }
 
@@ -192,7 +161,7 @@ public class BsqChainState implements PersistableEnvelope {
                           String genesisTxId,
                           int genesisBlockHeight,
                           int chainHeadHeight,
-                          Tx genesisTx) {
+                          @Nullable Tx genesisTx) {
         this.bsqBlocks = bsqBlocks;
         this.txMap = txMap;
         this.unspentTxOutputsMap = unspentTxOutputsMap;
@@ -214,7 +183,7 @@ public class BsqChainState implements PersistableEnvelope {
     }
 
     private PB.BsqChainState.Builder getBsqChainStateBuilder() {
-        return PB.BsqChainState.newBuilder()
+        final PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder()
                 .addAllBsqBlocks(bsqBlocks.stream()
                         .map(BsqBlock::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -226,8 +195,11 @@ public class BsqChainState implements PersistableEnvelope {
                                 v -> v.getValue().toProtoMessage())))
                 .setGenesisTxId(genesisTxId)
                 .setGenesisBlockHeight(genesisBlockHeight)
-                .setChainHeadHeight(chainHeadHeight)
-                .setGenesisTx(genesisTx.toProtoMessage());
+                .setChainHeadHeight(chainHeadHeight);
+
+        Optional.ofNullable(genesisTx).ifPresent(e -> builder.setGenesisTx(genesisTx.toProtoMessage()));
+
+        return builder;
     }
 
     public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
@@ -241,8 +213,7 @@ public class BsqChainState implements PersistableEnvelope {
                 proto.getGenesisTxId(),
                 proto.getGenesisBlockHeight(),
                 proto.getChainHeadHeight(),
-                Tx.fromProto(proto.getGenesisTx())
-        );
+                proto.hasGenesisTx() ? Tx.fromProto(proto.getGenesisTx()) : null);
     }
 
 
@@ -253,7 +224,7 @@ public class BsqChainState implements PersistableEnvelope {
     public void applySnapshot() {
         lock.write(() -> {
             checkNotNull(storage, "storage must not be null");
-            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState");
+            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState", 100);
             bsqBlocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
@@ -405,6 +376,29 @@ public class BsqChainState implements PersistableEnvelope {
         });
     }
 
+    public Coin getTotalBurntFee() {
+        return lock.read(() -> Coin.valueOf(getTxMap().entrySet().stream().mapToLong(e -> e.getValue().getBurntFee()).sum()));
+    }
+
+    public Set<Tx> getFeeTransactions() {
+        return lock.read(() -> getTxMap().entrySet().stream().filter(e -> e.getValue().getBurntFee() > 0).map(Map.Entry::getValue).collect(Collectors.toSet()));
+    }
+
+    public Coin getIssuedAmount() {
+        return lock.read(() -> BsqChainState.GENESIS_TOTAL_SUPPLY);
+    }
+
+    public Set<TxOutput> getUnspentTxOutputs() {
+        return lock.read(() -> getAllTxOutputs().stream().filter(e -> e.isVerified() && e.isUnspent()).collect(Collectors.toSet()));
+    }
+
+    public Set<TxOutput> getSpentTxOutputs() {
+        return lock.read(() -> getAllTxOutputs().stream().filter(e -> e.isVerified() && !e.isUnspent()).collect(Collectors.toSet()));
+    }
+
+    public Set<Tx> getTransactions() {
+        return lock.read(() -> getTxMap().entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toSet()));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope read access

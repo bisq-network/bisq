@@ -6,16 +6,29 @@ import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.geometry.Insets;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Screen;
 
 import static io.bisq.gui.util.FormBuilder.addHyperlinkWithIcon;
 
 public class TacWindow extends Overlay<TacWindow> {
 
+    private final boolean smallScreen;
+
     @Inject
     public TacWindow() {
         type = Type.Attention;
-        width = 900;
+
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+        final double primaryScreenBoundsWidth = primaryScreenBounds.getWidth();
+        smallScreen = primaryScreenBoundsWidth < 1024;
+        if (smallScreen) {
+            this.width = primaryScreenBoundsWidth * 0.8;
+            log.warn("Very small screen: primaryScreenBounds=" + primaryScreenBounds.toString());
+        } else {
+            width = 900;
+        }
     }
 
     @Override
@@ -39,7 +52,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "3. The " + Res.getBaseCurrencyName() + " market price is delivered by 3rd parties (BitcoinAverage, Poloniex, Coinmarketcap). " +
                 "It is your responsibility to verify the price with other sources for correctness.\n\n" +
 
-                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\"  the users confirms " +
+                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the users confirms " +
                 "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
 
                 "5. Any dispute, controversy or claim arising out of or relating to the use of the software shall be settled by arbitration in " +
@@ -66,10 +79,11 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        messageLabel.setStyle("-fx-font-size: 12;");
+        String fontSize = smallScreen ? "9" : "12";
+        messageLabel.setStyle("-fx-font-size: " + fontSize + ";");
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bisq.io/arbitration_system.pdf");
-        hyperlinkWithIcon.setStyle("-fx-font-size: 12;");
+                "https://bisq.network/arbitration_system.pdf");
+        hyperlinkWithIcon.setStyle("-fx-font-size: " + fontSize + ";");
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }
 

@@ -26,6 +26,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -34,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 public class BuyerSetupPayoutTxListener extends TradeTask {
     // Use instance fields to not get eaten up by the GC
     private Subscription tradeStateSubscription;
-    private AddressConfidenceListener listener;
+    private AddressConfidenceListener confidenceListener;
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public BuyerSetupPayoutTxListener(TaskRunner taskHandler, Trade trade) {
@@ -43,33 +44,30 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
 
     @Override
     protected void run() {
-
         try {
             runInterceptHook();
             if (!trade.isPayoutPublished()) {
                 BtcWalletService walletService = processModel.getBtcWalletService();
                 final String id = processModel.getOffer().getId();
                 Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddress();
-                if (isInNetwork(walletService.getConfidenceForAddress(address))) {
-                    trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
-                    swapMultiSigEntry();
+
+                final TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
+                if (isInNetwork(confidence)) {
+                    applyConfidence(confidence);
                 } else {
-                    listener = new AddressConfidenceListener(address) {
+                    confidenceListener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isInNetwork(confidence)) {
-                                trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
-                                swapMultiSigEntry();
-                            }
+                            if (isInNetwork(confidence))
+                                applyConfidence(confidence);
                         }
                     };
-                    walletService.addAddressConfidenceListener(listener);
+                    walletService.addAddressConfidenceListener(confidenceListener);
 
                     tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
-                        log.debug("BuyerSetupListenerForPayoutTx tradeStateSubscription tradeState=" + newValue);
                         if (trade.isPayoutPublished()) {
-                            walletService.removeAddressConfidenceListener(listener);
                             swapMultiSigEntry();
+
                             // hack to remove tradeStateSubscription at callback
                             UserThread.execute(this::unSubscribe);
                         }
@@ -84,12 +82,27 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
         }
     }
 
+    private void applyConfidence(TransactionConfidence confidence) {
+        if (trade.getPayoutTx() == null) {
+            Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
+            trade.setPayoutTx(walletTx);
+            BtcWalletService.printTx("payoutTx received from network", walletTx);
+            trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+        } else {
+            log.info("We got the payout tx already set from BuyerProcessPayoutTxPublishedMessage. tradeId={}, state={}", trade.getId(), trade.getState());
+        }
+
+        swapMultiSigEntry();
+
+        // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
+        UserThread.execute(this::unSubscribe);
+    }
+
     private void swapMultiSigEntry() {
         processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {
-        log.debug("onTransactionConfidenceChanged " + confidence);
         return confidence != null &&
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
@@ -98,6 +111,8 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
     private void unSubscribe() {
         if (tradeStateSubscription != null)
             tradeStateSubscription.unsubscribe();
-    }
 
+        if (confidenceListener != null)
+            processModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
+    }
 }

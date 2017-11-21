@@ -18,6 +18,7 @@
 package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.*;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.SepaAccount;
@@ -28,7 +29,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BICValidator;
-import io.bisq.gui.util.validation.EmailValidator;
 import io.bisq.gui.util.validation.IBANValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.collections.FXCollections;
@@ -46,15 +46,15 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.bisq.gui.util.FormBuilder.*;
+import static io.bisq.gui.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class SepaForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) paymentAccountPayload;
 
-        final String title = Res.get("payment.account.owner") + " / " + Res.get("payment.email");
-        final String value = sepaAccountPayload.getHolderName() + " / " + sepaAccountPayload.getEmail();
+        final String title = Res.get("payment.account.owner");
+        final String value = sepaAccountPayload.getHolderName();
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
@@ -74,17 +74,14 @@ public class SepaForm extends PaymentMethodForm {
     private final List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
     private ComboBox<TradeCurrency> currencyComboBox;
-    private final EmailValidator emailValidator;
 
-    public SepaForm(PaymentAccount paymentAccount, IBANValidator ibanValidator,
+    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
                     BICValidator bicValidator, InputValidator inputValidator,
                     GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
-
-        emailValidator = new EmailValidator();
     }
 
     @Override
@@ -98,15 +95,6 @@ public class SepaForm extends PaymentMethodForm {
             sepaAccount.setHolderName(newValue);
             updateFromInputs();
         });
-
-
-        InputTextField emailTextField = addLabelInputTextField(gridPane,
-                ++gridRow, Res.get("payment.email")).second;
-        emailTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            sepaAccount.setEmail(newValue);
-            updateFromInputs();
-        });
-        emailTextField.setValidator(emailValidator);
 
         ibanInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
         ibanInputTextField.setValidator(ibanValidator);
@@ -171,7 +159,7 @@ public class SepaForm extends PaymentMethodForm {
 
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
-        addAllowedPeriod();
+        addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
@@ -328,7 +316,6 @@ public class SepaForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && emailValidator.validate(sepaAccount.getEmail()).isValid
                 && bicValidator.validate(sepaAccount.getBic()).isValid
                 && ibanValidator.validate(sepaAccount.getIban()).isValid
                 && inputValidator.validate(sepaAccount.getHolderName()).isValid
@@ -344,7 +331,6 @@ public class SepaForm extends PaymentMethodForm {
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(sepaAccount.getPaymentMethod().getId()));
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaAccount.getHolderName());
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), sepaAccount.getEmail()).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
@@ -365,6 +351,6 @@ public class SepaForm extends PaymentMethodForm {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);
         }
-        addAllowedPeriod();
+        addLimitations();
     }
 }

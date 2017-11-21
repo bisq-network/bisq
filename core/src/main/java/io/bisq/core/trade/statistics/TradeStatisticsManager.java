@@ -6,17 +6,17 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
-import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.Trade;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
@@ -25,53 +25,59 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class TradeStatisticsManager implements PersistedDataHost {
-    private final Storage<TradeStatisticsList> statisticsStorage;
+public class TradeStatisticsManager {
+
+    static TradeStatistics2 ConvertToTradeStatistics2(TradeStatistics tradeStatistics) {
+        return new TradeStatistics2(tradeStatistics.getDirection(),
+                tradeStatistics.getBaseCurrency(),
+                tradeStatistics.getCounterCurrency(),
+                tradeStatistics.getOfferPaymentMethod(),
+                tradeStatistics.getOfferDate(),
+                tradeStatistics.isOfferUseMarketBasedPrice(),
+                tradeStatistics.getOfferMarketPriceMargin(),
+                tradeStatistics.getOfferAmount(),
+                tradeStatistics.getOfferMinAmount(),
+                tradeStatistics.getOfferId(),
+                tradeStatistics.getTradePrice().getValue(),
+                tradeStatistics.getTradeAmount().getValue(),
+                tradeStatistics.getTradeDate().getTime(),
+                tradeStatistics.getDepositTxId(),
+                null,
+                tradeStatistics.getExtraDataMap());
+    }
+
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
+    private final PriceFeedService priceFeedService;
     private final boolean dumpStatistics;
-    private final ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
-    private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
-    private List<TradeStatistics> persistedTradeStatisticsList;
+    private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
+    private final HashSet<TradeStatistics2> tradeStatisticsSet = new HashSet<>();
 
     @Inject
-    public TradeStatisticsManager(Storage<TradeStatisticsList> statisticsStorage,
-                                  P2PService p2PService,
+    public TradeStatisticsManager(P2PService p2PService,
+                                  PriceFeedService priceFeedService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
-        this.statisticsStorage = statisticsStorage;
         this.p2PService = p2PService;
+        this.priceFeedService = priceFeedService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
-        this.statisticsStorage.setNumMaxBackupFiles(1);
-
-        // TODO can be removed later. Just to clean up the old PersistedEntryMap and TradeStatisticsList which did 
-        // not support multi base currencies 
+        // delay to not stress startup
         UserThread.runAfter(() -> {
-            String pathname = Paths.get(storageDir.getAbsolutePath(), "TradeStatisticsList").toString();
             try {
-                FileUtil.deleteFile(new File(pathname));
+                //TODO can be removed at some point...
+                // Remove files from pre v0.6.0 versions
+                FileUtil.deleteFileIfExists(new File(Paths.get(storageDir.getAbsolutePath(), "TradeStatistics").toString()));
+                FileUtil.deleteFileIfExists(new File(Paths.get(storageDir.getAbsolutePath(), "EntryMap").toString()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            pathname = Paths.get(storageDir.getAbsolutePath(), "PersistedEntryMap").toString();
-            try {
-                FileUtil.deleteFile(new File(pathname));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }, 1);
-    }
-
-    @Override
-    public void readPersisted() {
-        TradeStatisticsList persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
-        if (persisted != null)
-            persistedTradeStatisticsList = persisted.getList();
+        }, 60);
     }
 
     public void onAllServicesInitialized() {
@@ -88,30 +94,25 @@ public class TradeStatisticsManager implements PersistedDataHost {
             jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
 
-        if (persistedTradeStatisticsList != null)
-            persistedTradeStatisticsList.stream().forEach(e -> add(e, false));
+        p2PService.getP2PDataStorage().addPersistableNetworkPayloadMapListener(payload -> {
+            if (payload instanceof TradeStatistics2)
+                addToMap((TradeStatistics2) payload, true);
+        });
 
+        p2PService.getP2PDataStorage().getPersistableNetworkPayloadCollection().getMap().values().forEach(e -> {
+            if (e instanceof TradeStatistics2)
+                addToMap((TradeStatistics2) e, false);
+        });
+
+        //TODO can be removed after version older than v0.6.0 are not used anymore
+        // We listen to TradeStatistics objects from old clients as well and convert them into TradeStatistics2 objects
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics) {
-                    if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
-                        add((TradeStatistics) storagePayload, true);
-                    } else {
-                        // We filter old data items delivered by nodes which still 
-                        // have 0.5.0 running (we got BTC trade statistic items in v0.5.0)
-                        Calendar calendar = Calendar.getInstance();
-                        calendar.set(Calendar.DATE, 28);
-                        calendar.set(Calendar.MONTH, 5);
-                        calendar.set(Calendar.YEAR, 2017);
-                        calendar.setTimeZone(TimeZone.getDefault());
-
-                        final TradeStatistics tradeStatistics = (TradeStatistics) storagePayload;
-                        if (tradeStatistics.getTradeDate().after(calendar.getTime()))
-                            add(tradeStatistics, true);
-                    }
-                }
+                final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                if (protectedStoragePayload instanceof TradeStatistics)
+                    p2PService.getP2PDataStorage().addPersistableNetworkPayload(ConvertToTradeStatistics2((TradeStatistics) protectedStoragePayload),
+                            p2PService.getNetworkNode().getNodeAddress(), true, false, false, false);
             }
 
             @Override
@@ -120,32 +121,46 @@ public class TradeStatisticsManager implements PersistedDataHost {
             }
         });
 
-        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
-        final List<ProtectedStorageEntry> list = new ArrayList<>(p2PService.getP2PDataStorage().getMap().values());
-        list.forEach(e -> {
-            final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof TradeStatistics)
-                add((TradeStatistics) storagePayload, false);
-
-        });
-
-        statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
+        priceFeedService.applyLatestBisqMarketPrice(tradeStatisticsSet);
         dump();
 
         // print all currencies sorted by nr. of trades
         // printAllCurrencyStats();
-
     }
 
-    public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
+    public void publishTradeStatistics(List<Trade> trades) {
+        for (int i = 0; i < trades.size(); i++) {
+            Trade trade = trades.get(i);
+            TradeStatistics2 tradeStatistics = new TradeStatistics2(trade.getOffer().getOfferPayload(),
+                    trade.getTradePrice(),
+                    trade.getTradeAmount(),
+                    trade.getDate(),
+                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""));
+            addToMap(tradeStatistics, true);
+
+            // We only republish trades from last 10 days
+            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
+                long delay = 5000;
+                long minDelay = (i + 1) * delay;
+                long maxDelay = (i + 2) * delay;
+                UserThread.runAfterRandomDelay(() -> {
+                    p2PService.addPersistableNetworkPayload(tradeStatistics, true);
+                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
+    public void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
         if (!tradeStatisticsSet.contains(tradeStatistics)) {
             boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))).findAny().isPresent();
             if (!itemAlreadyAdded) {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
 
+                tradeStatistics.getTradePrice().getValue();
+
                 if (storeLocally) {
-                    statisticsStorage.queueUpForSave(new TradeStatisticsList(new ArrayList<>(tradeStatisticsSet)), 2000);
+                    priceFeedService.applyLatestBisqMarketPrice(tradeStatisticsSet);
                     dump();
                 }
             } else {
@@ -154,7 +169,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
         }
     }
 
-    public ObservableSet<TradeStatistics> getObservableTradeStatisticsSet() {
+    public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
         return observableTradeStatisticsSet;
     }
 
@@ -175,8 +190,8 @@ public class TradeStatisticsManager implements PersistedDataHost {
     }
 
     private void printAllCurrencyStats() {
-        Map<String, Set<TradeStatistics>> map1 = new HashMap<>();
-        for (TradeStatistics tradeStatistics : tradeStatisticsSet) {
+        Map<String, Set<TradeStatistics2>> map1 = new HashMap<>();
+        for (TradeStatistics2 tradeStatistics : tradeStatisticsSet) {
             if (CurrencyUtil.isFiatCurrency(tradeStatistics.getCounterCurrency())) {
                 final String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
                 if (!map1.containsKey(counterCurrency))
@@ -186,27 +201,78 @@ public class TradeStatisticsManager implements PersistedDataHost {
             }
         }
 
-        StringBuilder sb1 = new StringBuilder();
+        StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
         map1.entrySet().stream()
                 .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
                 .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
         log.error(sb1.toString());
 
-        Map<String, Set<TradeStatistics>> map2 = new HashMap<>();
-        for (TradeStatistics tradeStatistics : tradeStatisticsSet) {
-            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getCounterCurrency())) {
-                final String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
-                if (!map2.containsKey(counterCurrency))
-                    map2.put(counterCurrency, new HashSet<>());
+        Map<String, Set<TradeStatistics2>> map2 = new HashMap<>();
+        for (TradeStatistics2 tradeStatistics : tradeStatisticsSet) {
+            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getBaseCurrency())) {
+                final String code = CurrencyUtil.getNameAndCode(tradeStatistics.getBaseCurrency());
+                if (!map2.containsKey(code))
+                    map2.put(code, new HashSet<>());
 
-                map2.get(counterCurrency).add(tradeStatistics);
+                map2.get(code).add(tradeStatistics);
             }
         }
 
-        StringBuilder sb2 = new StringBuilder();
+        List<String> allCryptoCurrencies = new ArrayList<>();
+        Set<String> coinsWithValidator = new HashSet<>();
+        coinsWithValidator.add("BTC");
+        coinsWithValidator.add("LTC");
+        coinsWithValidator.add("DOGE");
+        coinsWithValidator.add("DASH");
+        coinsWithValidator.add("ETH");
+        coinsWithValidator.add("PIVX");
+        coinsWithValidator.add("IOP");
+        coinsWithValidator.add("888");
+        coinsWithValidator.add("ZEC");
+        coinsWithValidator.add("GBYTE");
+        coinsWithValidator.add("NXT");
+        coinsWithValidator.add("PNC");
+        coinsWithValidator.add("ZEN");
+        coinsWithValidator.add("WAC");
+        coinsWithValidator.add("DEC");
+
+        // v0.6: DECENT, Pranacoin, WACoins, ZenCash, Ellaism, Cryptonite, Terracoin, Internext
+        Set<String> newlyAdded = new HashSet<>();
+        newlyAdded.add("DCT");
+        newlyAdded.add("PNC");
+        newlyAdded.add("WAC");
+        newlyAdded.add("ZEN");
+        newlyAdded.add("ELLA");
+        newlyAdded.add("XCN");
+        newlyAdded.add("TRC");
+        newlyAdded.add("INXT");
+        newlyAdded.add("PART");
+
+        CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
+        StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
+        StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
         map2.entrySet().stream()
                 .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
-                .forEach(e -> sb2.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+                .forEach(e -> {
+                    final String key = e.getKey();
+                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
+                    // key is: USD Tether (USDT)
+                    String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        allCryptoCurrencies.remove(key);
+                });
         log.error(sb2.toString());
+
+        // Not considered age of newly added coins, so take care with removal if coin was added recently.
+        allCryptoCurrencies.sort(String::compareTo);
+        allCryptoCurrencies.stream()
+                .forEach(e -> {
+                    // key is: USD Tether (USDT)
+                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        sb3.append(e).append("\n");
+                });
+        log.error(sb3.toString());
     }
 }

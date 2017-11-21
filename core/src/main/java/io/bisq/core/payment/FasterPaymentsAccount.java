@@ -31,8 +31,8 @@ public final class FasterPaymentsAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload getPayload() {
-        return new FasterPaymentsAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload createPayload() {
+        return new FasterPaymentsAccountPayload(paymentMethod.getId(), id);
     }
 
     public void setSortCode(String value) {
@@ -49,13 +49,5 @@ public final class FasterPaymentsAccount extends PaymentAccount {
 
     public String getAccountNr() {
         return ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr();
-    }
-
-    public void setEmail(String value) {
-        ((FasterPaymentsAccountPayload) paymentAccountPayload).setEmail(value);
-    }
-
-    public String getEmail() {
-        return ((FasterPaymentsAccountPayload) paymentAccountPayload).getEmail();
     }
 }

@@ -24,6 +24,8 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.util.Utilities;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.BootstrapListener;
@@ -90,6 +92,7 @@ public class ArbitratorManager {
     private final ArbitratorService arbitratorService;
     private final User user;
     private final Preferences preferences;
+    private final FilterManager filterManager;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
     private List<Arbitrator> persistedAcceptedArbitrators;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
@@ -100,11 +103,12 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences) {
+    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences, FilterManager filterManager) {
         this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
         this.user = user;
         this.preferences = preferences;
+        this.filterManager = filterManager;
     }
 
     public void shutDown() {
@@ -121,15 +125,15 @@ public class ArbitratorManager {
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator)
+                if (data.getProtectedStoragePayload() instanceof Arbitrator)
                     updateArbitratorMap();
             }
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Arbitrator) {
+                if (data.getProtectedStoragePayload() instanceof Arbitrator) {
                     updateArbitratorMap();
-                    final Arbitrator arbitrator = (Arbitrator) data.getStoragePayload();
+                    final Arbitrator arbitrator = (Arbitrator) data.getProtectedStoragePayload();
                     user.removeAcceptedArbitrator(arbitrator);
                     user.removeAcceptedMediator(getMediator(arbitrator));
                 }
@@ -155,6 +159,8 @@ public class ArbitratorManager {
                 });
         }
 
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> updateArbitratorMap());
+
         updateArbitratorMap();
     }
 
@@ -170,8 +176,20 @@ public class ArbitratorManager {
         Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
-                .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
-                        && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
+                .filter(e -> {
+                    final boolean isInPublicKeyInList = isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()));
+                    if (!isInPublicKeyInList)
+                        log.warn("We got an arbitrator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                                Utilities.bytesAsHexString(e.getRegistrationPubKey()),
+                                e.getNodeAddress().getFullAddress());
+                    final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
+                            e.getRegistrationPubKey(),
+                            e.getRegistrationSignature());
+                    if (!isSigValid)
+                        log.warn("Sig check for arbitrator failed. Arbitrator=", e.toString());
+
+                    return isInPublicKeyInList && isSigValid;
+                })
                 .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);

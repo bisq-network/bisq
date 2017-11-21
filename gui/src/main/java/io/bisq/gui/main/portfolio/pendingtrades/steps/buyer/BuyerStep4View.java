@@ -139,25 +139,19 @@ public class BuyerStep4View extends TradeStepView {
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
-            model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
-
             handleTradeCompleted();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         });
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
-        if (DevEnv.DEV_MODE) {
-            withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
-        } else {
-            String key = "tradeCompleted" + trade.getId();
-            //noinspection ConstantConditions
-            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-                DontShowAgainLookup.dontShowAgain(key, true);
-                new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
-                        .notification(Res.get("notification.tradeCompleted.msg"))
-                        .autoClose()
-                        .show();
-            }
+        String key = "tradeCompleted" + trade.getId();
+        //noinspection ConstantConditions
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+            DontShowAgainLookup.dontShowAgain(key, true);
+            new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
+                    .notification(Res.get("notification.tradeCompleted.msg"))
+                    .autoClose()
+                    .show();
         }
     }
 
@@ -276,6 +270,7 @@ public class BuyerStep4View extends TradeStepView {
         }
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
+        model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
     }
 
     private void validateWithdrawAddress() {

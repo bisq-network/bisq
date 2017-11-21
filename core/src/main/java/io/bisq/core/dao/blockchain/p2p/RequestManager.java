@@ -141,7 +141,11 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
         if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
             final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             seedNodeAddresses.remove(nodeAddress);
-            requestBlocksHandlerMap.remove(nodeAddress);
+            requestBlocksHandlerMap.entrySet().stream()
+                    .filter(e -> e.getKey().first.equals(nodeAddress))
+                    .findAny()
+                    .map(Map.Entry::getValue)
+                    .ifPresent(requestBlocksHandlerMap::remove);
         }
     }
 
@@ -174,7 +178,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
+        log.info("onAwakeFromStandby");
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -271,7 +275,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
 
                                 @Override
                                 public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    log.trace("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                    log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                             "ErrorMessage={}", peersNodeAddress, errorMessage);
 
                                     peerManager.handleConnectionFault(peersNodeAddress);
@@ -327,9 +331,11 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                             List<NodeAddress> list = seedNodeAddresses.stream()
                                     .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
                                     .collect(Collectors.toList());
+                            Collections.shuffle(list);
 
                             if (!list.isEmpty()) {
                                 NodeAddress nextCandidate = list.get(0);
+                                seedNodeAddresses.remove(nextCandidate);
                                 log.info("We try requestBlocks with {}", nextCandidate);
                                 requestBlocks(nextCandidate, startBlockHeight);
                             } else {

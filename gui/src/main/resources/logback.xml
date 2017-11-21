@@ -10,6 +10,7 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
+<!--
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
@@ -24,15 +25,16 @@
     <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
     <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
 
-    <!-- We get too many errors logged from connection issues-->
+    &lt;!&ndash; We get too many errors logged from connection issues&ndash;&gt;
     <logger name="org.bitcoinj.net.BlockingClient" level="OFF"/>
+-->
 
-    <!-- 
+    <!--
      <logger name="org.bitcoinj.net.ConnectionHandler" level="WARN"/>
-    
-    
+
+
      <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="WARN"/>
-     
+
      -->
 
 </configuration>

@@ -31,6 +31,7 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +42,6 @@ import java.util.List;
 @Slf4j
 public class BsqLiteNode extends BsqNode {
     private final BsqLiteNodeExecutor bsqLiteNodeExecutor;
-    private RequestManager requestBlocksManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,11 +54,13 @@ public class BsqLiteNode extends BsqNode {
                        BsqParser bsqParser,
                        BsqLiteNodeExecutor bsqLiteNodeExecutor,
                        BsqChainState bsqChainState,
-                       FeeService feeService) {
+                       FeeService feeService,
+                       SeedNodesRepository seedNodesRepository) {
         super(p2PService,
                 bsqParser,
                 bsqChainState,
-                feeService);
+                feeService,
+                seedNodesRepository);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 
@@ -76,16 +78,16 @@ public class BsqLiteNode extends BsqNode {
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
 
-        requestBlocksManager = new RequestManager(p2PService.getNetworkNode(),
+        requestManager = new RequestManager(p2PService.getNetworkNode(),
                 p2PService.getPeerManager(),
                 p2PService.getBroadcaster(),
-                p2PService.getSeedNodeAddresses(),
+                seedNodesRepository.getSeedNodeAddresses(),
                 bsqChainState,
                 new RequestManager.Listener() {
                     @Override
                     public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
                         List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
-                        log.info("received msg with {} items", bsqBlockList.size(), bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+                        log.info("received msg with {} items", bsqBlockList.size());
                         if (bsqBlockList.size() > 0)
                             log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
                         // Be safe and reset all mutable data in case the provider would not have done it
@@ -147,7 +149,7 @@ public class BsqLiteNode extends BsqNode {
 
     @Override
     protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
-        requestBlocksManager.requestBlocks(startBlockHeight);
+        requestManager.requestBlocks(startBlockHeight);
     }
 
     @Override

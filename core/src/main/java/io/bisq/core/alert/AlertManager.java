@@ -26,7 +26,7 @@ import io.bisq.core.user.User;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -70,9 +70,9 @@ public class AlertManager {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
-                    final StoragePayload storagePayload = data.getStoragePayload();
-                    if (storagePayload instanceof Alert) {
-                        Alert alert = (Alert) storagePayload;
+                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                    if (protectedStoragePayload instanceof Alert) {
+                        Alert alert = (Alert) protectedStoragePayload;
                         if (verifySignature(alert))
                             alertMessageProperty.set(alert);
                     }
@@ -80,9 +80,9 @@ public class AlertManager {
 
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
-                    final StoragePayload storagePayload = data.getStoragePayload();
-                    if (storagePayload instanceof Alert) {
-                        if (verifySignature((Alert) storagePayload))
+                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                    if (protectedStoragePayload instanceof Alert) {
+                        if (verifySignature((Alert) protectedStoragePayload))
                             alertMessageProperty.set(null);
                     }
                 }
@@ -108,7 +108,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addData(alert, true);
+            boolean result = p2PService.addProtectedStorageEntry(alert, true);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
             }

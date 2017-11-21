@@ -67,7 +67,7 @@ public final class Navigation implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        NavigationPath persisted = storage.initAndGetPersisted(navigationPath, "NavigationPath");
+        NavigationPath persisted = storage.initAndGetPersisted(navigationPath, "NavigationPath", 300);
         if (persisted != null) {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {

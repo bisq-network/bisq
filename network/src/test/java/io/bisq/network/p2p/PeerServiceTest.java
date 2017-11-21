@@ -117,12 +117,16 @@ public class PeerServiceTest {
                 @Override
                 public void onSetupFailed(Throwable throwable) {
                 }
+
+                @Override
+                public void onRequestCustomBridges() {
+                }
             });
         }
         Thread.sleep(30_000);
-        
+
        /* latch = new CountDownLatch(2);
-        
+
         seedNode.createAndStartP2PService(nodeAddress, MAX_CONNECTIONS, useLocalhostForP2P, 2, true,
                 seedNodeAddresses, new P2PServiceListener() {
                     @Override
@@ -156,7 +160,7 @@ public class PeerServiceTest {
 
                     }
                 });
-        
+
         P2PService p2PService = seedNode.getSeedNodeP2PService();
         latch.await();
         Thread.sleep(500);*/
@@ -208,6 +212,11 @@ public class PeerServiceTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
+
+            @Override
+            public void onRequestCustomBridges() {
+
+            }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
 
@@ -245,6 +254,11 @@ public class PeerServiceTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
+
+            @Override
+            public void onRequestCustomBridges() {
+
+            }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
         latch.await();
@@ -264,7 +278,7 @@ public class PeerServiceTest {
         Thread.sleep(1000);
         DummySeedNode seedNode2 = getAndStartSeedNode(8002);
 
-        // authentication: 
+        // authentication:
         // node2 -> node1 RequestAuthenticationMessage
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
@@ -300,7 +314,7 @@ public class PeerServiceTest {
         // wait until Peers msg finished
         Thread.sleep(sleepTime);
 
-        // authentication: 
+        // authentication:
         // authentication from seedNode3 to seedNode1, then from seedNode1 to seedNode3
         // authentication from seedNode3 to seedNode2, then from seedNode2 to seedNode3
         SeedNode seedNode3 = getAndStartSeedNode(8003);
@@ -347,7 +361,7 @@ public class PeerServiceTest {
         SeedNode seedNode1 = getAndStartSeedNode(8001);
         SeedNode seedNode2 = getAndStartSeedNode(8002);
 
-        // authentication: 
+        // authentication:
         // node2 -> node1 RequestAuthenticationMessage
         // node1: close connection
         // node1 -> node2 ChallengeMessage on new connection
@@ -479,6 +493,10 @@ public class PeerServiceTest {
 
                     @Override
                     public void onSetupFailed(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges() {
                     }
                 });
         latch.await();

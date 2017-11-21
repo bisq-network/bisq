@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main;
 
+import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
@@ -36,6 +37,7 @@ import io.bisq.gui.main.market.MarketView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.util.BSFormatter;
@@ -58,7 +60,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 
-import static javafx.beans.binding.Bindings.createBooleanBinding;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
@@ -149,14 +150,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }
 
         // TODO can be removed once DAO is released
-        UserThread.runAfter(() -> {
-            root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
-                    daoButton.setVisible(true);
-                    daoButton.setManaged(true);
-                }
-            });
-        }, 1);
+        if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+            UserThread.runAfter(() -> {
+                root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
+                        daoButton.setVisible(true);
+                        daoButton.setManaged(true);
+                    }
+                });
+            }, 1);
+        }
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
@@ -328,7 +331,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
-        btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
+        btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setOnMouseEntered(e -> {
@@ -352,7 +355,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
-        poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
+        poloniexIconButton.setManaged(poloniexIconButton.isVisible());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setOnMouseEntered(e -> {
@@ -370,9 +373,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Label label = new Label(Res.get("mainView.marketPrice.provider"));
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
-        label.visibleProperty().bind(createBooleanBinding(() -> model.isCryptoCurrencyPriceFeedSelected.get() || model.isFiatCurrencyPriceFeedSelected.get(),
-                model.isCryptoCurrencyPriceFeedSelected, model.isFiatCurrencyPriceFeedSelected));
-        label.managedProperty().bind(label.visibleProperty());
+
+        model.marketPriceUpdated.addListener((observable, oldValue, newValue) -> {
+            updateMarketPriceLabel(label);
+        });
 
         HBox hBox2 = new HBox();
         hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);
@@ -382,6 +386,23 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setPadding(new Insets(11, 0, 0, 0));
         vBox.getChildren().addAll(priceComboBox, hBox2);
         return new Tuple2<>(priceComboBox, vBox);
+    }
+
+    private void updateMarketPriceLabel(Label label) {
+        if (model.isPriceAvailable.get()) {
+            if (model.isExternallyProvidedPrice.get()) {
+                label.setText(Res.get("mainView.marketPrice.provider"));
+                label.setTooltip(null);
+            } else {
+                label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
+                final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
+                tooltip.setStyle("-fx-font-size: 12");
+                label.setTooltip(tooltip);
+            }
+        } else {
+            label.setText("");
+            label.setTooltip(null);
+        }
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
@@ -451,16 +472,32 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
 
+        Button showTorNetworkSettingsButton = new Button(Res.get("settings.net.openTorSettingsButton"));
+        showTorNetworkSettingsButton.setVisible(false);
+        showTorNetworkSettingsButton.setManaged(false);
+        showTorNetworkSettingsButton.setOnAction(e -> {
+            new TorNetworkSettingsWindow(model.preferences).show();
+        });
+
         ImageView splashP2PNetworkIcon = new ImageView();
         splashP2PNetworkIcon.setId("image-connection-tor");
         splashP2PNetworkIcon.setVisible(false);
         splashP2PNetworkIcon.setManaged(false);
         HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
 
+        // If after 20 sec we have not got connected we show "open network settings" button
+        Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
+            showTorNetworkSettingsButton.setVisible(true);
+            showTorNetworkSettingsButton.setManaged(true);
+        }, 20);
+
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkIcon.setId(newValue);
             splashP2PNetworkIcon.setVisible(true);
             splashP2PNetworkIcon.setManaged(true);
+
+            // if we can connect in 10 sec. we know that tor is working
+            showTorNetworkSettingsTimer.stop();
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
@@ -471,7 +508,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
         splashP2PNetworkBox.setPrefHeight(50);
-        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon);
+        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon, showTorNetworkSettingsButton);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
         return vBox;

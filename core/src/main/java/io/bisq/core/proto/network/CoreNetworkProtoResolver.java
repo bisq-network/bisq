@@ -30,10 +30,7 @@ import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import io.bisq.network.p2p.peers.keepalive.messages.Pong;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
-import io.bisq.network.p2p.storage.messages.AddDataMessage;
-import io.bisq.network.p2p.storage.messages.RefreshOfferMessage;
-import io.bisq.network.p2p.storage.messages.RemoveDataMessage;
-import io.bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
+import io.bisq.network.p2p.storage.messages.*;
 import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -120,6 +117,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
                     return NewBsqBlockBroadcastMessage.fromProto(proto.getNewBsqBlockBroadcastMessage(), messageVersion);
 
+                case ADD_PERSISTABLE_NETWORK_PAYLOAD_MESSAGE:
+                    return AddPersistableNetworkPayloadMessage.fromProto(proto.getAddPersistableNetworkPayloadMessage(), this, messageVersion);
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" + proto.getMessageCase());
             }
@@ -159,6 +158,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case COMPENSATION_REQUEST_PAYLOAD:
                     return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
                 case TRADE_STATISTICS:
+                    // Still used to convert TradeStatistics data from pre v0.6 versions
                     return TradeStatistics.fromProto(proto.getTradeStatistics());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());

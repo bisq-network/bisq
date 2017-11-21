@@ -1,15 +1,15 @@
 package io.bisq.network.p2p.storage.mocks;
 
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.Map;
 
 @SuppressWarnings("ALL")
-public class MockData implements StoragePayload {
+public class MockData implements ProtectedStoragePayload {
     public final String msg;
     public final PublicKey publicKey;
     public long ttl;
@@ -63,6 +63,6 @@ public class MockData implements StoragePayload {
 
     @Override
     public PB.ProtectedMailboxStorageEntry toProtoMessage() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("toProtoMessage not impl.");
     }
 }

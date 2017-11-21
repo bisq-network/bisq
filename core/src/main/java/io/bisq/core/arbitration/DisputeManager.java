@@ -530,12 +530,11 @@ public class DisputeManager implements PersistedDataHost {
             if (!disputes.contains(dispute)) {
                 final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
                 if (!storedDisputeOptional.isPresent()) {
+                    dispute.setStorage(getDisputeStorage());
+                    disputes.add(dispute);
                     Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
                     if (tradeOptional.isPresent())
                         tradeOptional.get().setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER);
-
-                    dispute.setStorage(getDisputeStorage());
-                    disputes.add(dispute);
                 } else {
                     log.warn("We got a dispute already open for that trade and trading peer.\n" +
                             "TradeId = " + dispute.getTradeId());

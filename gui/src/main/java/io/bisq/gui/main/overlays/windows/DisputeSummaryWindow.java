@@ -66,7 +66,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
-    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
+    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.<Runnable>empty();
     private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
@@ -185,7 +185,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
             disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
             disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setLoserIsPublisher(peersDisputeResult.isLoserPublisher());
+            disputeResult.setLoserPublisher(peersDisputeResult.isLoserPublisher());
             disputeResult.setReason(peersDisputeResult.getReason());
             disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
@@ -534,7 +534,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     closeTicketButton.disableProperty().unbind();
                     dispute.setDisputeResult(disputeResult);
 
-                    disputeResult.setLoserIsPublisher(isLoserPublisherCheckBox.isSelected());
+                    disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
                     String text = Res.get("disputeSummaryWindow.close.msg",
                             formatter.formatDateTime(disputeResult.getCloseDate()),

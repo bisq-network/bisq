@@ -27,6 +27,8 @@ import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import io.bisq.core.trade.protocol.tasks.PublishTradeStatistics;
+import io.bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -102,6 +104,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 BuyerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class
         );
+
+        //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
+        // We should add an error message the peer sends us in such cases.
         startTimeout();
         taskRunner.run();
     }
@@ -125,10 +130,12 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerProcessPublishDepositTxRequest.class,
                 CheckIfPeerIsBanned.class,
                 TakerVerifyMakerAccount.class,
+                VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 BuyerAsTakerSignAndPublishDepositTx.class,
-                TakerSendDepositTxPublishedMessage.class
+                TakerSendDepositTxPublishedMessage.class,
+                PublishTradeStatistics.class
         );
         taskRunner.run();
     }

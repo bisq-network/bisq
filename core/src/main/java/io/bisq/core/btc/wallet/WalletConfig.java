@@ -101,8 +101,6 @@ public class WalletConfig extends AbstractIdleService {
     private InputStream checkpoints;
     private boolean blockingStartup = true;
 
-    private String userAgent;
-    private String version;
     @Nullable
     private PeerDiscovery discovery;
 
@@ -266,18 +264,6 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     /**
-     * Sets the string that will appear in the subver field of the version message.
-     *
-     * @param userAgent A short string that should be the name of your app, e.g. "My Wallet"
-     * @param version   A short string that contains the version number, e.g. "1.0-BETA"
-     */
-    public WalletConfig setUserAgent(String userAgent, String version) {
-        this.userAgent = checkNotNull(userAgent);
-        this.version = checkNotNull(version);
-        return this;
-    }
-
-    /**
      * If a seed is set here then any existing wallet that matches the file name will be renamed to a backup name,
      * the chain file will be deleted, and the wallet object will be instantiated with the given seed instead of
      * a fresh one being created. This is intended for restoring a wallet from the original seed. To implement restore
@@ -320,8 +306,6 @@ public class WalletConfig extends AbstractIdleService {
      * or block chain download is started. You can tweak the objects configuration here.
      */
     void onSetupCompleted() {
-       /* if (!params.equals(RegTestParams.get()))
-            peerGroup().setMaxConnections(11);*/
     }
 
     /**
@@ -431,7 +415,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                vPeerGroup.setMaxConnections(peerAddresses.length);
+                vPeerGroup.setMaxConnections(Math.min(PeerGroup.DEFAULT_CONNECTIONS, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
@@ -440,7 +424,9 @@ public class WalletConfig extends AbstractIdleService {
             vPeerGroup.addWallet(vBtcWallet);
 
             if (vBsqWallet != null) {
+                //noinspection ConstantConditions
                 vChain.addWallet(vBsqWallet);
+                //noinspection ConstantConditions
                 vPeerGroup.addWallet(vBsqWallet);
             }
 
@@ -560,6 +546,7 @@ public class WalletConfig extends AbstractIdleService {
             vPeerGroup.stop();
             vBtcWallet.saveToFile(vBtcWalletFile);
             if (vBsqWallet != null && vBsqWalletFile != null)
+                //noinspection ConstantConditions,ConstantConditions
                 vBsqWallet.saveToFile(vBsqWalletFile);
             vStore.close();
 

@@ -76,8 +76,8 @@ public class OfferBookService {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
@@ -88,8 +88,8 @@ public class OfferBookService {
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                    if (data.getProtectedStoragePayload() instanceof OfferPayload) {
+                        OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onRemoved(offer);
@@ -125,7 +125,7 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(offer.getOfferPayload(), true);
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
         if (result) {
             log.trace("Add offer to network was successful. OfferPayload ID = " + offer.getId());
             resultHandler.handleResult();
@@ -157,9 +157,9 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.getStoragePayload() instanceof OfferPayload)
+                .filter(data -> data.getProtectedStoragePayload() instanceof OfferPayload)
                 .map(data -> {
-                    OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                    OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
                     Offer offer = new Offer(offerPayload);
                     offer.setPriceFeedService(priceFeedService);
                     return offer;

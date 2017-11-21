@@ -33,7 +33,7 @@
         <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="4"/>
+    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
 
     <Label fx:id="bitcoinPeersLabel" GridPane.rowIndex="0"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
@@ -42,13 +42,20 @@
     <Label fx:id="useTorForBtcJLabel" GridPane.rowIndex="1"/>
     <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-    <Label fx:id="btcNodesLabel" GridPane.rowIndex="2"/>
-    <InputTextField fx:id="btcNodes" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <Label fx:id="bitcoinNodesLabel" GridPane.rowIndex="2"/>
+    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" spacing="10">
+        <RadioButton fx:id="useProvidedNodesRadio"/>
+        <RadioButton fx:id="useCustomNodesRadio"/>
+        <RadioButton fx:id="usePublicNodesRadio"/>
+    </HBox>
 
-    <Label fx:id="reSyncSPVChainLabel" GridPane.rowIndex="3"/>
-    <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    <Label fx:id="btcNodesLabel" GridPane.rowIndex="3"/>
+    <InputTextField fx:id="btcNodesInputTextField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="4" GridPane.rowSpan="3">
+    <Label fx:id="reSyncSPVChainLabel" GridPane.rowIndex="4"/>
+    <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="4">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -57,20 +64,20 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label fx:id="onionAddressLabel" GridPane.rowIndex="4">
+    <Label fx:id="onionAddressLabel" GridPane.rowIndex="5">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="onionAddress" GridPane.rowIndex="4" GridPane.columnIndex="1"
+    <TextField fx:id="onionAddress" GridPane.rowIndex="5" GridPane.columnIndex="1"
                editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </TextField>
 
-    <Label fx:id="p2PPeersLabel" GridPane.rowIndex="5"/>
-    <TableView fx:id="tableView" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="p2PPeersLabel" GridPane.rowIndex="6"/>
+    <TableView fx:id="tableView" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
                GridPane.vgrow="SOMETIMES">
         <columns>
             <TableColumn fx:id="onionAddressColumn" minWidth="220">
@@ -111,9 +118,11 @@
         </columns>
     </TableView>
 
-    <Label fx:id="totalTrafficLabel" GridPane.rowIndex="6"/>
-    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
+    <Label fx:id="totalTrafficLabel" GridPane.rowIndex="7"/>
+    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
+
+    <Button fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>

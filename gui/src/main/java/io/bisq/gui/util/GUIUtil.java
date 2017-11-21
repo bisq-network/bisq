@@ -34,6 +34,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountList;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -74,6 +75,11 @@ import java.util.stream.Collectors;
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     public final static String EDIT_FLAG = "EDIT_FLAG";
+    private static FeeService feeService;
+
+    public static void setFeeService(FeeService feeService) {
+        GUIUtil.feeService = feeService;
+    }
 
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
@@ -91,11 +97,11 @@ public class GUIUtil {
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
-            new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
-                    .dontShowAgainId(key)
+            new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable::run)
                     .useIUnderstandButton()
                     .show();
+            DontShowAgainLookup.dontShowAgain(key, true);
         } else {
             runnable.run();
         }
@@ -107,7 +113,7 @@ public class GUIUtil {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (directory != null && !directory.isEmpty()) {
                 Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName);
+                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
                 paymentAccountsStorage.queueUpForSave();
                 new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
             }
@@ -128,7 +134,7 @@ public class GUIUtil {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
                 Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     persisted.getList().stream().forEach(paymentAccount -> {
@@ -194,7 +200,7 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFix, Preferences preferences) {
+    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFixSingle, String postFixMulti, Preferences preferences) {
         return new StringConverter<CurrencyListItem>() {
             @Override
             public String toString(CurrencyListItem item) {
@@ -207,8 +213,10 @@ public class GUIUtil {
                         return "▼ " + Res.get("list.currency.editList");
                     default:
                         String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.isSortMarketCurrenciesNumerically())
-                            displayString += " - " + item.numTrades + " " + postFix;
+                        if (preferences.isSortMarketCurrenciesNumerically()) {
+                            final int numTrades = item.numTrades;
+                            displayString += " - " + numTrades + " " + (numTrades == 1 ? postFixSingle : postFixMulti);
+                        }
                         return tradeCurrency.getDisplayPrefix() + displayString;
                 }
             }
@@ -241,9 +249,15 @@ public class GUIUtil {
         };
     }
 
-    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, @Nullable CurrencyListItem showAllCurrencyListItem, Preferences preferences) {
-        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+    // TODO could be done more elegantly...
+    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList,
+                                             ObservableList<CurrencyListItem> currencyListItems,
+                                             @Nullable CurrencyListItem showAllCurrencyListItem,
+                                             Preferences preferences) {
         Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
+        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+
+        // We get the list of all offers or trades. We want to find out how many items at each currency we have.
         tradeCurrencyList.stream().forEach(tradeCurrency -> {
             tradeCurrencySet.add(tradeCurrency);
             String code = tradeCurrency.getCode();
@@ -251,6 +265,17 @@ public class GUIUtil {
                 tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
             else
                 tradesPerCurrencyMap.put(code, 1);
+        });
+
+        Set<TradeCurrency> userSet = new HashSet<>(preferences.getFiatCurrencies());
+        userSet.addAll(preferences.getCryptoCurrencies());
+        // Now all those items which are not in the offers or trades list but comes from the user preferred currency list
+        // will get set to 0
+        userSet.stream().forEach(tradeCurrency -> {
+            tradeCurrencySet.add(tradeCurrency);
+            String code = tradeCurrency.getCode();
+            if (!tradesPerCurrencyMap.containsKey(code))
+                tradesPerCurrencyMap.put(code, 0);
         });
 
         List<CurrencyListItem> list = tradeCurrencySet.stream()

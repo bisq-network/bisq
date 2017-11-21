@@ -52,9 +52,7 @@ public class AddDataMessageTest {
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
         PB.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
 
-        //TODO CoreProtobufferResolver is not accessible here
-        // We should refactor it so that the classes themselves know how to deserialize
-        // so we don't get dependencies from core objects here
+        //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common. 
       /*  AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);
 
         assertTrue(dataMessage1.protectedStorageEntry.getStoragePayload().equals(dataMessage2.protectedStorageEntry.getStoragePayload()));

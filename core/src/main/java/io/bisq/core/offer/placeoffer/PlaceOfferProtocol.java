@@ -17,6 +17,7 @@
 
 package io.bisq.core.offer.placeoffer;
 
+import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
@@ -31,6 +32,7 @@ public class PlaceOfferProtocol {
 
     private final PlaceOfferModel model;
     private final TransactionResultHandler resultHandler;
+    private final ErrorMessageHandler errorMessageHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +40,11 @@ public class PlaceOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PlaceOfferProtocol(PlaceOfferModel model,
-                              TransactionResultHandler resultHandler) {
+                              TransactionResultHandler resultHandler,
+                              ErrorMessageHandler errorMessageHandler) {
         this.model = model;
         this.resultHandler = resultHandler;
+        this.errorMessageHandler = errorMessageHandler;
     }
 
 
@@ -66,7 +70,7 @@ public class PlaceOfferProtocol {
                                 },
                                 log::error);
                     }
-                    log.error(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
         taskRunner.addTasks(

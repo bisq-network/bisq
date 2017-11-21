@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,15 +42,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class Filter implements StoragePayload {
+public final class Filter implements ProtectedStoragePayload {
     private final List<String> bannedOfferIds;
     private final List<String> bannedNodeAddress;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
 
+    // Because we added those fields in v 0.5.4 and old versions do not have it we annotate it with @Nullable
+    @Nullable
+    private final List<String> bannedCurrencies;
+    @Nullable
+    private final List<String> bannedPaymentMethods;
+
+    // added in v0.6
+    @Nullable
+    private final List<String> arbitrators;
+    @Nullable
+    private final List<String> seedNodes;
+    @Nullable
+    private final List<String> priceRelayNodes;
+    private final boolean preventPublicBtcNetwork;
+
     private String signatureAsBase64;
     private byte[] ownerPubKeyBytes;
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;
@@ -58,10 +73,22 @@ public final class Filter implements StoragePayload {
 
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
-                  List<PaymentAccountFilter> bannedPaymentAccounts) {
+                  List<PaymentAccountFilter> bannedPaymentAccounts,
+                  @Nullable List<String> bannedCurrencies,
+                  @Nullable List<String> bannedPaymentMethods,
+                  @Nullable List<String> arbitrators,
+                  @Nullable List<String> seedNodes,
+                  @Nullable List<String> priceRelayNodes,
+                  boolean preventPublicBtcNetwork) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
+        this.bannedCurrencies = bannedCurrencies;
+        this.bannedPaymentMethods = bannedPaymentMethods;
+        this.arbitrators = arbitrators;
+        this.seedNodes = seedNodes;
+        this.priceRelayNodes = priceRelayNodes;
+        this.preventPublicBtcNetwork = preventPublicBtcNetwork;
     }
 
 
@@ -73,12 +100,24 @@ public final class Filter implements StoragePayload {
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
+                  @Nullable List<String> bannedCurrencies,
+                  @Nullable List<String> bannedPaymentMethods,
+                  @Nullable List<String> arbitrators,
+                  @Nullable List<String> seedNodes,
+                  @Nullable List<String> priceRelayNodes,
+                  boolean preventPublicBtcNetwork,
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
         this(bannedOfferIds,
                 bannedNodeAddress,
-                bannedPaymentAccounts);
+                bannedPaymentAccounts,
+                bannedCurrencies,
+                bannedPaymentMethods,
+                arbitrators,
+                seedNodes,
+                priceRelayNodes,
+                preventPublicBtcNetwork);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -98,8 +137,16 @@ public final class Filter implements StoragePayload {
                 .addAllBannedNodeAddress(bannedNodeAddress)
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .setSignatureAsBase64(signatureAsBase64)
-                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
+                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
+                .setPreventPublicBtcNetwork(preventPublicBtcNetwork);
+
+        Optional.ofNullable(bannedCurrencies).ifPresent(builder::addAllBannedCurrencies);
+        Optional.ofNullable(bannedPaymentMethods).ifPresent(builder::addAllBannedPaymentMethods);
+        Optional.ofNullable(arbitrators).ifPresent(builder::addAllArbitrators);
+        Optional.ofNullable(seedNodes).ifPresent(builder::addAllSeedNodes);
+        Optional.ofNullable(priceRelayNodes).ifPresent(builder::addAllPriceRelayNodes);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+
         return PB.StoragePayload.newBuilder().setFilter(builder).build();
     }
 
@@ -109,6 +156,12 @@ public final class Filter implements StoragePayload {
                 proto.getBannedPaymentAccountsList().stream()
                         .map(PaymentAccountFilter::fromProto)
                         .collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : proto.getBannedCurrenciesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : proto.getBannedPaymentMethodsList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getArbitratorsList()) ? null : proto.getArbitratorsList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : proto.getSeedNodesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : proto.getPriceRelayNodesList().stream().collect(Collectors.toList()),
+                proto.getPreventPublicBtcNetwork(),
                 proto.getSignatureAsBase64(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());

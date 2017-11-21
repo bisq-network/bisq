@@ -196,8 +196,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("1");
-                        price.set("2500");
+                        amount.set("0.0001");
+                        price.set("7000");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -208,8 +208,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         price.set("0.003");
                         break;
                     case "DASH":
-                        amount.set("2");
-                        price.set("0.07");
+                        amount.set("0.1");
+                        price.set("40");
                         break;
                 }
 
@@ -301,7 +301,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     dataModel.calculateTotalToPay();
 
                     if (!inputIsMarketBasedPrice) {
-                        if (marketPrice != null && marketPrice.isValid()) {
+                        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                             double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = btcFormatter.parseNumberStringToDouble(price.get());
@@ -338,7 +338,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             final String currencyCode = dataModel.getTradeCurrencyCode().get();
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                            if (marketPrice != null && marketPrice.isValid()) {
+                            if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
@@ -367,6 +367,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             }
                         }
                     }
+                } catch (NumberFormatException t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
+                    new Popup<>().warning(Res.get("validation.NaN")).show();
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
@@ -462,8 +466,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void updateMarketPriceAvailable() {
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
-        marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
-        dataModel.setMarketPriceAvailable(marketPrice != null);
+        marketPriceAvailableProperty.set(marketPrice == null || !marketPrice.isExternallyProvidedPrice() ? 0 : 1);
+        dataModel.setMarketPriceAvailable(marketPrice != null && marketPrice.isExternallyProvidedPrice());
     }
 
     private void addListeners() {
@@ -522,11 +526,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
-        if (dataModel.paymentAccount != null) {
-            final String currencyCode = dataModel.getTradeCurrencyCode().get();
-            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
-        }
-
+        if (dataModel.paymentAccount != null)
+            btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
+        btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
         btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
         final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
@@ -595,19 +597,20 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (amount.get() != null)
             amountValidationResult.set(isBtcInputValid(amount.get()));
 
-        final String currencyCode = dataModel.getTradeCurrencyCode().get();
-        btcValidator.setMaxValue(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode));
+        btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
+        btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
 
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
-        marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+        marketPriceAvailableProperty.set(marketPrice == null || !marketPrice.isExternallyProvidedPrice() ? 0 : 1);
         updateButtonDisableState();
     }
 
     void onShowPayFundsScreen() {
+        dataModel.estimateTxSize();
         dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();

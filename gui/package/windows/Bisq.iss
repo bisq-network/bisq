@@ -3,13 +3,13 @@
 [Setup]
 AppId={{bisq}}
 AppName=Bisq
-AppVersion=${project.version}
+AppVersion=0.6.0
 AppVerName=Bisq
 AppPublisher=Bisq
 AppComments=Bisq
 AppCopyright=Copyright (C) 2016
-AppPublisherURL=https://bisq.io
-AppSupportURL=https://bisq.io
+AppPublisherURL=https://bisq.network
+AppSupportURL=https://bisq.network
 ;AppUpdatesURL=http://java.com/
 DefaultDirName={localappdata}\Bisq
 DisableStartupPrompt=Yes
@@ -27,8 +27,8 @@ OutputBaseFilename=Bisq
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
-; SetupIconFile=Bisq.ico
-; UninstallDisplayIcon=Bisq.ico
+SetupIconFile=Bisq.ico
+UninstallDisplayIcon={app}\Bisq.ico
 UninstallDisplayName=Bisq
 WizardImageStretch=No
 WizardSmallImageFile=Bisq-setup-icon.bmp

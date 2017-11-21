@@ -257,7 +257,8 @@ public class SellerStep3View extends TradeStepView {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
-                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
+                    if (!(paymentAccountPayload instanceof WesternUnionAccountPayload))
+                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
@@ -287,7 +288,7 @@ public class SellerStep3View extends TradeStepView {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
-        String message;
+        String message = "";
         String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
@@ -299,12 +300,14 @@ public class SellerStep3View extends TradeStepView {
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
-            else
+            else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload))
                 message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
 
             String part = Res.get("portfolio.pending.step3_seller.openDispute");
             if (paymentAccountPayload instanceof CashDepositAccountPayload)
                 message = message + Res.get("portfolio.pending.step3_seller.cash", part);
+            else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
+                message = message + Res.get("portfolio.pending.step3_seller.westernUnion", part);
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
@@ -325,7 +328,7 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
-        if (trade.isPayoutPublished())
+        if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
         model.dataModel.onFiatPaymentReceived(() -> {
@@ -350,9 +353,9 @@ public class SellerStep3View extends TradeStepView {
             else if (paymentAccountPayload instanceof SepaAccountPayload)
                 return Optional.of(((SepaAccountPayload) paymentAccountPayload).getHolderName());
             else
-                return Optional.empty();
+                return Optional.<String>empty();
         } else {
-            return Optional.empty();
+            return Optional.<String>empty();
         }
     }
 }

@@ -110,7 +110,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offers"), model.preferences));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offer"),
+                Res.get("shared.offers"),
+                model.preferences));
 
         Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
         HBox currencyHBox = new HBox();
@@ -410,8 +412,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
+        // Lets remove that as it is not really relevant and seems to be confusing to some users
         // accumulated
-        TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
+       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
         accumulatedColumn.setMinWidth(100);
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -431,9 +434,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         };
                     }
                 });
-
+*/
         if (direction == OfferPayload.Direction.BUY) {
-            tableView.getColumns().add(accumulatedColumn);
+            // tableView.getColumns().add(accumulatedColumn);
             tableView.getColumns().add(volumeColumn);
             tableView.getColumns().add(amountColumn);
             tableView.getColumns().add(priceColumn);
@@ -441,7 +444,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             tableView.getColumns().add(priceColumn);
             tableView.getColumns().add(amountColumn);
             tableView.getColumns().add(volumeColumn);
-            tableView.getColumns().add(accumulatedColumn);
+            //tableView.getColumns().add(accumulatedColumn);
         }
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

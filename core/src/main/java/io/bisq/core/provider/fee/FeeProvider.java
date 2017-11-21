@@ -65,9 +65,4 @@ public class FeeProvider extends HttpClientProvider {
         }
         return new Tuple2<>(tsMap, map);
     }
-
-    @Override
-    public String toString() {
-        return "FeeProvider";
-    }
 }

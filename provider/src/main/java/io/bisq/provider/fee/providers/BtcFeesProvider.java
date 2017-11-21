@@ -5,45 +5,60 @@ import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.common.util.MathUtils;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.fee.FeeRequestService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
-//TODO use protobuffer instead of json
+//TODO consider alternative https://www.bitgo.com/api/v1/tx/fee?numBlocks=3
+@Slf4j
 public class BtcFeesProvider {
-    private static final Logger log = LoggerFactory.getLogger(BtcFeesProvider.class);
+    static int CAPACITY = 12; // we request each 5 min. so we take average of last hour
+    static int MAX_BLOCKS = 20;
 
     private final HttpClient httpClient;
+    LinkedList<Long> fees = new LinkedList<>();
 
     // other: https://estimatefee.com/n/2
     public BtcFeesProvider() {
-        this.httpClient = new HttpClient("https://bitcoinfees.21.co/api/v1/fees/");
+        this.httpClient = new HttpClient("https://bitcoinfees.earn.com/api/v1/fees/");
     }
 
     public Long getFee() throws IOException {
-        // prev. used:  https://bitcoinfees.21.co/api/v1/fees/recommended
+        // prev. used:  https://bitcoinfees.earn.com/api/v1/fees/recommended
         // but was way too high
 
-        //https://bitcoinfees.21.co/api/v1/fees/list
+        // https://bitcoinfees.earn.com/api/v1/fees/list
         String response = httpClient.requestWithGET("list", "User-Agent", "");
         log.info("Get recommended fee response:  " + response);
 
         LinkedTreeMap<String, ArrayList<LinkedTreeMap<String, Double>>> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         final long[] fee = new long[1];
-        // we want a fee which is at least in 10 blocks in (21.co estimation seem to be way too high, so we get 
+        // we want a fee which is at least in 20 blocks in (21.co estimation seem to be way too high, so we get
         // prob much faster in
-        int maxBlocks = 10;
         treeMap.entrySet().stream()
                 .flatMap(e -> e.getValue().stream())
                 .forEach(e -> {
                     Double maxDelay = e.get("maxDelay");
-                    if (maxDelay <= maxBlocks && fee[0] == 0)
+                    if (maxDelay <= MAX_BLOCKS && fee[0] == 0)
                         fee[0] = MathUtils.roundDoubleToLong(e.get("maxFee"));
                 });
         fee[0] = Math.min(Math.max(fee[0], FeeRequestService.BTC_MIN_TX_FEE), FeeRequestService.BTC_MAX_TX_FEE);
-        log.info("fee " + fee[0]);
-        return fee[0];
+
+        return getAverage(fee[0]);
+    }
+
+    // We take the average of the last 12 calls (every 5 minute) so we smooth extreme values.
+    // We observed very radical jumps in the fee estimations, so that should help to avoid that.
+    long getAverage(long newFee) {
+        log.info("new fee " + newFee);
+        fees.add(newFee);
+        long average = ((Double) fees.stream().mapToDouble(e -> e).average().getAsDouble()).longValue();
+        log.info("average of last {} calls: {}", fees.size(), average);
+        if (fees.size() == CAPACITY)
+            fees.removeFirst();
+
+        return average;
     }
 }

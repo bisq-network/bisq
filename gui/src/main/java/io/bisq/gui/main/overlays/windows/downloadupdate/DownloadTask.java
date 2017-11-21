@@ -1,23 +1,24 @@
 /*
- * This file is part of Bitsquare.
+ * This file is part of Bisq.
  *
- * Bitsquare is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.collect.Lists;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import javafx.concurrent.Task;
 import lombok.Getter;
@@ -90,11 +91,11 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
                     return fileDescriptor;
                 })
                 .map(fileDescriptor -> {
-                    log.info("Downloading {}", fileDescriptor.getFileName());
+                    log.info("Downloading {}", fileDescriptor.getLoadUrl());
                     try {
                         updateMessage(fileDescriptor.getFileName());
                         download(new URL(fileDescriptor.getLoadUrl()), fileDescriptor.getSaveFile());
-                        log.info("Download for {} done", fileDescriptor.getFileName());
+                        log.info("Download for {} done", fileDescriptor.getLoadUrl());
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.OK);
                     } catch (Exception e) {
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.FAIL);
@@ -107,12 +108,16 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
     }
 
     private void download(URL url, File outputFile) throws IOException {
+        if (outputFile.exists()) {
+            log.info("We found an existing file and rename it as *.backup.");
+            FileUtil.renameFile(outputFile, new File(outputFile.getAbsolutePath() + ".backup"));
+        }
+
         URLConnection urlConnection = url.openConnection();
         urlConnection.connect();
         int fileSize = urlConnection.getContentLength();
         copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, fileSize);
     }
-
 
     public void copyInputStreamToFileNew(final InputStream source, final File destination, int fileSize) throws IOException {
         try {
