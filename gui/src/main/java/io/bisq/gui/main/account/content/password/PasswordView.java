@@ -136,8 +136,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     new Popup<>()
                             .feedback(Res.get("password.walletDecrypted"))
                             .show();
-                    passwordField.setText("");
-                    repeatedPasswordField.setText("");
+                    passwordField.clear();
+                    repeatedPasswordField.clear();
                     walletsManager.backupWallets();
                 } else {
                     pwButton.setDisable(false);
@@ -151,8 +151,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     new Popup<>()
                             .feedback(Res.get("password.walletEncrypted"))
                             .show();
-                    passwordField.setText("");
-                    repeatedPasswordField.setText("");
+                    passwordField.clear();
+                    repeatedPasswordField.clear();
                     walletsManager.clearBackup();
                     walletsManager.backupWallets();
                 } catch (Throwable t) {
