@@ -47,7 +47,6 @@ public class TableGroupHeadline extends Pane {
         Pane bg = new StackPane();
         bg.setId("table-group-headline");
         bg.prefWidthProperty().bind(widthProperty());
-        bg.prefHeightProperty().bind(heightProperty());
 
         label = new Label();
         label.textProperty().bind(text);
