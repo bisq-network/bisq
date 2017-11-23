@@ -65,9 +65,6 @@ public class FiatVolumeValidatorTest {
         assertFalse(validator.validate("1.000,1").isValid);
         assertFalse(validator.validate("0.009").isValid);
         assertFalse(validator.validate(String.valueOf(validator.getMinValue() - 1)).isValid);
-        assertFalse(validator.validate(String.valueOf(validator.getMaxValue() + 1)).isValid);
         assertFalse(validator.validate(String.valueOf(Double.MIN_VALUE)).isValid);
-        assertFalse(validator.validate(String.valueOf(Double.MAX_VALUE)).isValid);
-
     }
 }
