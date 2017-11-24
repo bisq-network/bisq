@@ -221,6 +221,7 @@ public class TradeStatisticsManager {
         List<String> allCryptoCurrencies = new ArrayList<>();
         Set<String> coinsWithValidator = new HashSet<>();
         coinsWithValidator.add("BTC");
+        coinsWithValidator.add("BSQ");
         coinsWithValidator.add("LTC");
         coinsWithValidator.add("DOGE");
         coinsWithValidator.add("DASH");
@@ -231,13 +232,21 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("ZEC");
         coinsWithValidator.add("GBYTE");
         coinsWithValidator.add("NXT");
+        //v0.6.0
+        coinsWithValidator.add("DCT");
         coinsWithValidator.add("PNC");
-        coinsWithValidator.add("ZEN");
         coinsWithValidator.add("WAC");
-        coinsWithValidator.add("DEC");
+        coinsWithValidator.add("ZEN");
+        coinsWithValidator.add("ELLA");
+        coinsWithValidator.add("XCN");
+        coinsWithValidator.add("TRC");
+        coinsWithValidator.add("INXT");
+        coinsWithValidator.add("PART");
+        // v0.6.1
+        coinsWithValidator.add("MAD");
 
-        // v0.6: DECENT, Pranacoin, WACoins, ZenCash, Ellaism, Cryptonite, Terracoin, Internext
         Set<String> newlyAdded = new HashSet<>();
+        // v0.6.0
         newlyAdded.add("DCT");
         newlyAdded.add("PNC");
         newlyAdded.add("WAC");
@@ -247,6 +256,8 @@ public class TradeStatisticsManager {
         newlyAdded.add("TRC");
         newlyAdded.add("INXT");
         newlyAdded.add("PART");
+        // v0.6.1
+        newlyAdded.add("MAD");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
