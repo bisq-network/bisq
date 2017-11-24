@@ -24,7 +24,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class TableGroupHeadline extends Pane {
 
     private final Label label;
@@ -52,8 +54,7 @@ public class TableGroupHeadline extends Pane {
         label = new Label();
         label.textProperty().bind(text);
         label.setLayoutX(8);
-        label.setLayoutY(-8);
-        label.setPadding(new Insets(0, 7, 0, 5));
+        label.setPadding(new Insets(-8, 7, 0, 5));
         setActive();
         getChildren().addAll(bg, label);
     }
