@@ -64,7 +64,10 @@ public class PaymentAccountUtil {
             if (!matchesCountryCodes)
                 return false;
 
-            if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
+            if (paymentAccount instanceof SepaAccount ||
+                    paymentAccount instanceof SepaInstantAccount ||
+                    offer.getPaymentMethod().equals(PaymentMethod.SEPA) ||
+                    offer.getPaymentMethod().equals(PaymentMethod.SEPA_INSTANT)) {
                 return arePaymentMethodsEqual;
             } else if (paymentAccount instanceof BankAccount && (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
                     offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))) {

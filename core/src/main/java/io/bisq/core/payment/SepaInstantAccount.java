@@ -20,7 +20,7 @@ package io.bisq.core.payment;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.payment.payload.SepaAccountPayload;
+import io.bisq.core.payment.payload.SepaInstantAccountPayload;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
@@ -28,53 +28,53 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public final class SepaInstantAccount extends CountryBasedPaymentAccount implements BankAccount {
     public SepaInstantAccount() {
-        super(PaymentMethod.SEPA);
+        super(PaymentMethod.SEPA_INSTANT);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new SepaAccountPayload(paymentMethod.getId(), id,
-                CountryUtil.getAllSepaCountries());
+        return new SepaInstantAccountPayload(paymentMethod.getId(), id,
+                CountryUtil.getAllSepaInstantCountries());
     }
 
     @Override
     public String getBankId() {
-        return ((SepaAccountPayload) paymentAccountPayload).getBic();
+        return ((SepaInstantAccountPayload) paymentAccountPayload).getBic();
     }
 
     public void setHolderName(String holderName) {
-        ((SepaAccountPayload) paymentAccountPayload).setHolderName(holderName);
+        ((SepaInstantAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((SepaAccountPayload) paymentAccountPayload).getHolderName();
+        return ((SepaInstantAccountPayload) paymentAccountPayload).getHolderName();
     }
 
     public void setIban(String iban) {
-        ((SepaAccountPayload) paymentAccountPayload).setIban(iban);
+        ((SepaInstantAccountPayload) paymentAccountPayload).setIban(iban);
     }
 
     public String getIban() {
-        return ((SepaAccountPayload) paymentAccountPayload).getIban();
+        return ((SepaInstantAccountPayload) paymentAccountPayload).getIban();
     }
 
     public void setBic(String bic) {
-        ((SepaAccountPayload) paymentAccountPayload).setBic(bic);
+        ((SepaInstantAccountPayload) paymentAccountPayload).setBic(bic);
     }
 
     public String getBic() {
-        return ((SepaAccountPayload) paymentAccountPayload).getBic();
+        return ((SepaInstantAccountPayload) paymentAccountPayload).getBic();
     }
 
     public List<String> getAcceptedCountryCodes() {
-        return ((SepaAccountPayload) paymentAccountPayload).getAcceptedCountryCodes();
+        return ((SepaInstantAccountPayload) paymentAccountPayload).getAcceptedCountryCodes();
     }
 
     public void addAcceptedCountry(String countryCode) {
-        ((SepaAccountPayload) paymentAccountPayload).addAcceptedCountry(countryCode);
+        ((SepaInstantAccountPayload) paymentAccountPayload).addAcceptedCountry(countryCode);
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        ((SepaAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
+        ((SepaInstantAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
 }

@@ -352,6 +352,8 @@ public class SellerStep3View extends TradeStepView {
                 return Optional.of(((BankAccountPayload) paymentAccountPayload).getHolderName());
             else if (paymentAccountPayload instanceof SepaAccountPayload)
                 return Optional.of(((SepaAccountPayload) paymentAccountPayload).getHolderName());
+            else  if (paymentAccountPayload instanceof SepaInstantAccountPayload)
+                return Optional.of(((SepaInstantAccountPayload) paymentAccountPayload).getHolderName());
             else
                 return Optional.<String>empty();
         } else {

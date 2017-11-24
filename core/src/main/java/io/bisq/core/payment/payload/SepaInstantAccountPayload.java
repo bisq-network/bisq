@@ -45,7 +45,6 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
     private String iban = "";
     @Setter
     private String bic = "";
-    private String email = ""; // not used anymore but need to keep it for backward compatibility, must not be null but empty string, otherwise hash check fails for contract
 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
@@ -69,7 +68,6 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
                                       String holderName,
                                       String iban,
                                       String bic,
-                                      String email,
                                       List<String> acceptedCountryCodes,
                                       long maxTradePeriod,
                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
@@ -82,22 +80,20 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
-        this.email = email;
         this.acceptedCountryCodes = acceptedCountryCodes;
     }
 
     @Override
     public Message toProtoMessage() {
-        PB.SepaAccountPayload.Builder builder =
-                PB.SepaAccountPayload.newBuilder()
+        PB.SepaInstantAccountPayload.Builder builder =
+                PB.SepaInstantAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
-                        .setEmail(email)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
         final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
-                .setSepaAccountPayload(builder);
+                .setSepaInstantAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
                 .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload)
                 .build();
@@ -105,15 +101,14 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
 
     public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
+        PB.SepaInstantAccountPayload sepaInstantAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaInstantAccountPayload();
         return new SepaInstantAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                sepaAccountPayloadPB.getHolderName(),
-                sepaAccountPayloadPB.getIban(),
-                sepaAccountPayloadPB.getBic(),
-                sepaAccountPayloadPB.getEmail(),
-                new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()),
+                sepaInstantAccountPayloadPB.getHolderName(),
+                sepaInstantAccountPayloadPB.getIban(),
+                sepaInstantAccountPayloadPB.getBic(),
+                new ArrayList<>(sepaInstantAccountPayloadPB.getAcceptedCountryCodesList()),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -135,7 +130,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
 
     @Override
     public String getPaymentDetails() {
-        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", Country code: " + getCountryCode();
+        return "SEPA Instant - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", Country code: " + getCountryCode();
     }
 
     @Override
