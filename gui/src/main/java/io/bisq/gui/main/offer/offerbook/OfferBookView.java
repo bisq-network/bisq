@@ -225,6 +225,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> {
             priceColumn.setSortType(newValue);
         });
+        priceColumn.setSortType(model.priceSortTypeProperty.get());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
