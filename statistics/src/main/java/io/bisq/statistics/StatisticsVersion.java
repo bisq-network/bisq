@@ -15,9 +15,9 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.provider;
+package io.bisq.statistics;
 
-public class ProviderVersion {
+public class StatisticsVersion {
     // Bisq v0.6.1 did not change anything relevant for that project so we stick with 0.6.0
     public static final String VERSION = "0.6.0";
 }

@@ -9,6 +9,7 @@ import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
+import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -49,9 +50,19 @@ public class SeedNode {
     public SeedNode() {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
-        log.info("Log files under: {}.log", logPath);
-        Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+
+        log.info("Log files under: " + logPath);
+        log.info("ProviderVersion.VERSION: " + SeedNodeVersion.VERSION);
+        log.info("Bisq exchange Version{" +
+                "VERSION=" + Version.VERSION +
+                ", P2P_NETWORK_VERSION=" + Version.P2P_NETWORK_VERSION +
+                ", LOCAL_DB_VERSION=" + Version.LOCAL_DB_VERSION +
+                ", TRADE_PROTOCOL_VERSION=" + Version.TRADE_PROTOCOL_VERSION +
+                ", BASE_CURRENCY_NETWORK=NOT SET"   +
+                ", getP2PNetworkId()=NOT SET"  +
+                '}');
+        Utilities.printSysInfo();
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
