@@ -258,6 +258,9 @@ public class TradeStatisticsManager {
         newlyAdded.add("PART");
         // v0.6.1
         newlyAdded.add("MAD");
+        newlyAdded.add("BCH");
+        newlyAdded.add("BCHC");
+        newlyAdded.add("BTG");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));

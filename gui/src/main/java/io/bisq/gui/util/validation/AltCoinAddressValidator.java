@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.util.validation.altcoins.*;
 import io.bisq.gui.util.validation.params.*;
+import io.bisq.gui.util.validation.params.btc.BTGParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParamsForValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
@@ -345,6 +346,27 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(true);
                     else
                         return regexTestFailed;
+                case "BCH":
+                    try {
+                        Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "BCHC":
+                    try {
+                        Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "BTG":
+                    try {
+                        Address.fromBase58(BTGParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
                     // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
