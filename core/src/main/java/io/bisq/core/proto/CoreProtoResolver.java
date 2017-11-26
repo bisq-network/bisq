@@ -45,6 +45,8 @@ public class CoreProtoResolver implements ProtoResolver {
                             return CashDepositAccountPayload.fromProto(proto);
                         case SEPA_ACCOUNT_PAYLOAD:
                             return SepaAccountPayload.fromProto(proto);
+                        case SEPA_INSTANT_ACCOUNT_PAYLOAD:
+                            return SepaInstantAccountPayload.fromProto(proto);
                         default:
                             throw new ProtobufferException("Unknown proto message case" +
                                     "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload)." +

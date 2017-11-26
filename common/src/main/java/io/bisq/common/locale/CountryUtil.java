@@ -37,6 +37,10 @@ public class CountryUtil {
         return list;
     }
 
+    public static List<Country> getAllSepaInstantEuroCountries() {
+        return getAllSepaEuroCountries();
+    }
+
     private static void populateCountryListByCodes(List<Country> list, String[] codes) {
         for (String code : codes) {
             Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), code, "");
@@ -56,6 +60,10 @@ public class CountryUtil {
         return countryCodesToCompare.toString().equals(countryCodesBase.toString());
     }
 
+    public static boolean containsAllSepaInstantEuroCountries(List<String> countryCodesToCompare) {
+        return containsAllSepaEuroCountries(countryCodesToCompare);
+    }
+
     public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
@@ -65,11 +73,27 @@ public class CountryUtil {
         return list;
     }
 
+    public static List<Country> getAllSepaInstantNonEuroCountries() {
+        return getAllSepaNonEuroCountries();
+    }
+
     public static List<Country> getAllSepaCountries() {
         List<Country> list = new ArrayList<>();
         list.addAll(getAllSepaEuroCountries());
         list.addAll(getAllSepaNonEuroCountries());
         return list;
+    }
+
+    public static List<Country> getAllSepaInstantCountries() {
+        // TODO find reliable source for list
+        // //Austria, Estonia, Germany, Italy, Latvia, Lithuania, the Netherlands and Spain.
+
+       /* List<Country> list = new ArrayList<>();
+        String[] codes = {"AT", "DE", "EE",
+                "IT", "LV", "LT", "NL", "ES"};
+        populateCountryListByCodes(list, codes);
+        list.sort((a, b) -> a.name.compareTo(b.name));*/
+        return getAllSepaCountries();
     }
 
     public static Country getDefaultCountry() {

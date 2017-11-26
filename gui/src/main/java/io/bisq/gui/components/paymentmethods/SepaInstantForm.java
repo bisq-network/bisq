@@ -21,9 +21,9 @@ import io.bisq.common.locale.*;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.SepaAccount;
+import io.bisq.core.payment.SepaInstantAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.SepaAccountPayload;
+import io.bisq.core.payment.payload.SepaInstantAccountPayload;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
@@ -48,25 +48,25 @@ import java.util.List;
 
 import static io.bisq.gui.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
-public class SepaForm extends PaymentMethodForm {
+public class SepaInstantForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) paymentAccountPayload;
+        SepaInstantAccountPayload sepaInstantAccountPayload = (SepaInstantAccountPayload) paymentAccountPayload;
 
         final String title = Res.get("payment.account.owner");
-        final String value = sepaAccountPayload.getHolderName();
+        final String value = sepaInstantAccountPayload.getHolderName();
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.getWithCol("payment.bank.country"),
-                CountryUtil.getNameAndCode(sepaAccountPayload.getCountryCode()));
+                CountryUtil.getNameAndCode(sepaInstantAccountPayload.getCountryCode()));
         // IBAN, BIC will not be translated
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaAccountPayload.getIban());
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaAccountPayload.getBic());
+        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaInstantAccountPayload.getIban());
+        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaInstantAccountPayload.getBic());
         return gridRow;
     }
 
-    private final SepaAccount sepaAccount;
+    private final SepaInstantAccount sepaInstantAccount;
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
     private InputTextField ibanInputTextField;
@@ -75,11 +75,11 @@ public class SepaForm extends PaymentMethodForm {
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
-                    BICValidator bicValidator, InputValidator inputValidator,
-                    GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public SepaInstantForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
+                           BICValidator bicValidator, InputValidator inputValidator,
+                           GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.sepaAccount = (SepaAccount) paymentAccount;
+        this.sepaInstantAccount = (SepaInstantAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
     }
@@ -92,21 +92,21 @@ public class SepaForm extends PaymentMethodForm {
                 Res.getWithCol("payment.account.owner")).second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            sepaAccount.setHolderName(newValue);
+            sepaInstantAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
         ibanInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            sepaAccount.setIban(newValue);
+            sepaInstantAccount.setIban(newValue);
             updateFromInputs();
 
         });
         InputTextField bicInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            sepaAccount.setBic(newValue);
+            sepaInstantAccount.setBic(newValue);
             updateFromInputs();
 
         });
@@ -148,7 +148,7 @@ public class SepaForm extends PaymentMethodForm {
         });
         countryComboBox.setOnAction(e -> {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
-            sepaAccount.setCountry(selectedItem);
+            sepaInstantAccount.setCountry(selectedItem);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(selectedItem.code);
             setupCurrency(selectedItem, currency);
 
@@ -162,11 +162,11 @@ public class SepaForm extends PaymentMethodForm {
         addLimitations();
         addAccountNameTextFieldWithAutoFillCheckBox();
 
-        countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
+        countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaInstantCountries()));
         Country country = CountryUtil.getDefaultCountry();
-        if (CountryUtil.getAllSepaCountries().contains(country)) {
+        if (CountryUtil.getAllSepaInstantCountries().contains(country)) {
             countryComboBox.getSelectionModel().select(country);
-            sepaAccount.setCountry(country);
+            sepaInstantAccount.setCountry(country);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
             setupCurrency(country, currency);
         }
@@ -175,12 +175,12 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void setupCurrency(Country country, TradeCurrency currency) {
-        if (CountryUtil.getAllSepaEuroCountries().contains(country)) {
+        if (CountryUtil.getAllSepaInstantEuroCountries().contains(country)) {
             currencyTextField.setVisible(true);
             currencyTextField.setManaged(true);
             currencyComboBox.setVisible(false);
             currencyComboBox.setManaged(false);
-            sepaAccount.setSingleTradeCurrency(currency);
+            sepaInstantAccount.setSingleTradeCurrency(currency);
             currencyTextField.setText(Res.get("payment.currencyWithSymbol", currency.getNameAndCode()));
         } else {
             currencyComboBox.setVisible(true);
@@ -190,7 +190,7 @@ public class SepaForm extends PaymentMethodForm {
             currencyComboBox.setItems(FXCollections.observableArrayList(currency,
                     CurrencyUtil.getFiatCurrency("EUR").get()));
             currencyComboBox.setOnAction(e2 -> {
-                sepaAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+                sepaInstantAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
                 updateCountriesSelection(true, euroCountryCheckBoxes);
                 autoFillNameTextField();
             });
@@ -211,12 +211,12 @@ public class SepaForm extends PaymentMethodForm {
 
     private void addEuroCountriesGrid(boolean isEditable) {
         addCountriesGrid(isEditable, Res.get("payment.accept.euro"), euroCountryCheckBoxes,
-                CountryUtil.getAllSepaEuroCountries());
+                CountryUtil.getAllSepaInstantEuroCountries());
     }
 
     private void addNonEuroCountriesGrid(boolean isEditable) {
         addCountriesGrid(isEditable, Res.get("payment.accept.nonEuro"), nonEuroCountryCheckBoxes,
-                CountryUtil.getAllSepaNonEuroCountries());
+                CountryUtil.getAllSepaInstantNonEuroCountries());
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
@@ -249,9 +249,9 @@ public class SepaForm extends PaymentMethodForm {
             checkBox.setTooltip(new Tooltip(country.name));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())
-                    sepaAccount.addAcceptedCountry(countryCode);
+                    sepaInstantAccount.addAcceptedCountry(countryCode);
                 else
-                    sepaAccount.removeAcceptedCountry(countryCode);
+                    sepaInstantAccount.removeAcceptedCountry(countryCode);
 
                 updateAllInputsValid();
             });
@@ -267,19 +267,19 @@ public class SepaForm extends PaymentMethodForm {
     private void updateCountriesSelection(boolean isEditable, List<CheckBox> checkBoxList) {
         checkBoxList.stream().forEach(checkBox -> {
             String countryCode = (String) checkBox.getUserData();
-            TradeCurrency selectedCurrency = sepaAccount.getSelectedTradeCurrency();
+            TradeCurrency selectedCurrency = sepaInstantAccount.getSelectedTradeCurrency();
             if (selectedCurrency == null) {
                 Country country = CountryUtil.getDefaultCountry();
-                if (CountryUtil.getAllSepaCountries().contains(country))
+                if (CountryUtil.getAllSepaInstantCountries().contains(country))
                     selectedCurrency = CurrencyUtil.getCurrencyByCountryCode(country.code);
             }
 
             boolean selected;
             if (isEditable && selectedCurrency != null) {
                 selected = true;
-                sepaAccount.addAcceptedCountry(countryCode);
+                sepaInstantAccount.addAcceptedCountry(countryCode);
             } else {
-                selected = sepaAccount.getAcceptedCountryCodes().contains(countryCode);
+                selected = sepaInstantAccount.getAcceptedCountryCodes().contains(countryCode);
             }
             checkBox.setSelected(selected);
         });
@@ -308,35 +308,35 @@ public class SepaForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && bicValidator.validate(sepaAccount.getBic()).isValid
-                && ibanValidator.validate(sepaAccount.getIban()).isValid
-                && inputValidator.validate(sepaAccount.getHolderName()).isValid
-                && sepaAccount.getAcceptedCountryCodes().size() > 0
-                && sepaAccount.getSingleTradeCurrency() != null
-                && sepaAccount.getCountry() != null);
+                && bicValidator.validate(sepaInstantAccount.getBic()).isValid
+                && ibanValidator.validate(sepaInstantAccount.getIban()).isValid
+                && inputValidator.validate(sepaInstantAccount.getHolderName()).isValid
+                && sepaInstantAccount.getAcceptedCountryCodes().size() > 0
+                && sepaInstantAccount.getSingleTradeCurrency() != null
+                && sepaInstantAccount.getCountry() != null);
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaInstantAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
-                Res.get(sepaAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaAccount.getHolderName());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);
+                Res.get(sepaInstantAccount.getPaymentMethod().getId()));
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaInstantAccount.getHolderName());
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaInstantAccount.getIban()).second.setMouseTransparent(false);
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, "BIC:", sepaInstantAccount.getBic()).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
-                sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
-        TradeCurrency singleTradeCurrency = sepaAccount.getSingleTradeCurrency();
+                sepaInstantAccount.getCountry() != null ? sepaInstantAccount.getCountry().name : "");
+        TradeCurrency singleTradeCurrency = sepaInstantAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         String countries;
         Tooltip tooltip = null;
-        if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {
+        if (CountryUtil.containsAllSepaInstantEuroCountries(sepaInstantAccount.getAcceptedCountryCodes())) {
             countries = Res.getWithCol("shared.allEuroCountries");
         } else {
-            countries = CountryUtil.getCodesString(sepaAccount.getAcceptedCountryCodes());
-            tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaAccount.getAcceptedCountryCodes()));
+            countries = CountryUtil.getCodesString(sepaInstantAccount.getAcceptedCountryCodes());
+            tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaInstantAccount.getAcceptedCountryCodes()));
         }
         TextField acceptedCountries = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
         if (tooltip != null) {

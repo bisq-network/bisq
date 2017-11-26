@@ -20,23 +20,14 @@ package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
-import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
-import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
-import io.bisq.gui.util.validation.altcoins.PNCAddressValidator;
-import io.bisq.gui.util.validation.altcoins.XCNAddressValidator;
-import io.bisq.gui.util.validation.params.IOPParams;
-import io.bisq.gui.util.validation.params.OctocoinParams;
-import io.bisq.gui.util.validation.params.PARTParams;
-import io.bisq.gui.util.validation.params.PNCParams;
-import io.bisq.gui.util.validation.params.PivxParams;
-import io.bisq.gui.util.validation.params.WACoinsParams;
-import io.bisq.gui.util.validation.params.TerracoinParams;
+import io.bisq.gui.util.validation.altcoins.*;
+import io.bisq.gui.util.validation.params.*;
+import io.bisq.gui.util.validation.params.btc.BTGParams;
 import io.bisq.gui.util.validation.params.btc.BtcMainNetParamsForValidation;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Base58;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -63,11 +54,6 @@ public final class AltCoinAddressValidator extends InputValidator {
         if (!validationResult.isValid || currencyCode == null) {
             return validationResult;
         } else {
-
-            // Validation:
-            // 1: With a regex checking the correct structure of an address
-            // 2: If the address contains a checksum, verify the checksum
-
             ValidationResult wrongChecksum = new ValidationResult(false,
                     Res.get("validation.altcoin.wrongChecksum"));
             ValidationResult regexTestFailed = new ValidationResult(false,
@@ -99,6 +85,28 @@ public final class AltCoinAddressValidator extends InputValidator {
                                 // so we cloned the MainNetParams to BtcMainNetParamsForValidation
                                 Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
                                 return new ValidationResult(true);
+                        }
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "BSQ":
+                    if (!input.startsWith("B"))
+                        return new ValidationResult(false, Res.get("validation.altcoin.invalidAddress",
+                                currencyCode, "BSQ address must start with \"B\""));
+
+                    String addressAsBtc = input.substring(1, input.length());
+                    try {
+                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
+                            case BTC_MAINNET:
+                                Address.fromBase58(MainNetParams.get(), addressAsBtc);
+                                break;
+                            case BTC_TESTNET:
+                                Address.fromBase58(TestNet3Params.get(), addressAsBtc);
+                                break;
+                            case BTC_REGTEST:
+                                Address.fromBase58(RegTestParams.get(), addressAsBtc);
+                                break;
                         }
                         return new ValidationResult(true);
                     } catch (AddressFormatException e) {
@@ -182,63 +190,20 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
-                case "BSQ":
-                    if (!input.startsWith("B"))
-                        return new ValidationResult(false, Res.get("validation.altcoin.invalidAddress",
-                                currencyCode, "BSQ address must start with \"B\""));
-
-                    String addressAsBtc = input.substring(1, input.length());
-                    try {
-                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
-                            case BTC_MAINNET:
-                                Address.fromBase58(MainNetParams.get(), addressAsBtc);
-                                break;
-                            case BTC_TESTNET:
-                                Address.fromBase58(TestNet3Params.get(), addressAsBtc);
-                                break;
-                            case BTC_REGTEST:
-                                Address.fromBase58(RegTestParams.get(), addressAsBtc);
-                                break;
-                        }
-                        return new ValidationResult(true);
-                    } catch (AddressFormatException e) {
-                        return new ValidationResult(false, getErrorMessage(e));
-                    }
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
-                    // Example for BTC, though for BTC we use the BitcoinJ library address check
-                case "PART":
-                    if (input.matches("^[RP][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
-                        //noinspection ConstantConditions
-                        if (verifyChecksum(input)) {
-                            try {
-                                Address.fromBase58(PARTParams.get(), input);
-                                return new ValidationResult(true);
-                            } catch (AddressFormatException e) {
-                                return new ValidationResult(false, getErrorMessage(e));
-                            }
-                        } else {
-                            return wrongChecksum;
-                        }
-                    } else {
-                        return regexTestFailed;
-                    }
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
-                        if (verifyChecksum(input)) {
-                            try {
-                                Address.fromBase58(PivxParams.get(), input);
-                                return new ValidationResult(true);
-                            } catch (AddressFormatException e) {
-                                return new ValidationResult(false, getErrorMessage(e));
-                            }
-                        } else {
-                            return wrongChecksum;
+                        try {
+                            Address.fromBase58(PivxParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
                         }
                     } else {
                         return regexTestFailed;
@@ -246,15 +211,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                 case "IOP":
                     if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
-                        if (verifyChecksum(input)) {
-                            try {
-                                Address.fromBase58(IOPParams.get(), input);
-                                return new ValidationResult(true);
-                            } catch (AddressFormatException e) {
-                                return new ValidationResult(false, getErrorMessage(e));
-                            }
-                        } else {
-                            return wrongChecksum;
+                        try {
+                            Address.fromBase58(IOPParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
                         }
                     } else {
                         return regexTestFailed;
@@ -292,6 +253,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (NxtReedSolomonValidator.DecodeException e) {
                         return wrongChecksum;
                     }
+                case "DCT":
+                    if (input.matches("^(?=.{5,63}$)([a-z][a-z0-9-]+[a-z0-9])(\\.[a-z][a-z0-9-]+[a-z0-9])*$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
                 case "PNC":
                     if (input.matches("^[P3][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (PNCAddressValidator.ValidateAddress(input)) {
@@ -307,6 +273,13 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
+                case "WAC":
+                    try {
+                        Address.fromBase58(WACoinsParams.get(), input);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                    return new ValidationResult(true);
                 case "ZEN":
                     try {
                         // Get the non Base58 form of the address and the bytecode of the first two bytes
@@ -335,25 +308,14 @@ public final class AltCoinAddressValidator extends InputValidator {
                         // Unhandled Exception (probably a checksum error)
                         return new ValidationResult(false);
                     }
-                case "WAC":
-                    try {
-                        Address.fromBase58(WACoinsParams.get(), input);
-                    } catch (AddressFormatException e) {
-                        return new ValidationResult(false, getErrorMessage(e));
-                    }
-                    return new ValidationResult(true);
-                case "DCT":
-                    if (input.matches("^(?=.{5,63}$)([a-z][a-z0-9-]+[a-z0-9])(\\.[a-z][a-z0-9-]+[a-z0-9])*$"))
-                        return new ValidationResult(true);
-                    else
-                        return regexTestFailed;
                 case "ELLA":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
-                case "XCN": // https://bitcointalk.org/index.php?topic=1801595
+                case "XCN":
+                    // https://bitcointalk.org/index.php?topic=1801595
                     return XCNAddressValidator.ValidateAddress(input);
                 case "TRC":
                     try {
@@ -367,6 +329,45 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "PART":
+                    if (input.matches("^[RP][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
+                        try {
+                            Address.fromBase58(PARTParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
+                case "MDC":
+                    if (input.matches("^L[a-zA-Z0-9]{26,33}$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
+                case "BCH":
+                    try {
+                        Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "BCHC":
+                    try {
+                        Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "BTG":
+                    try {
+                        Address.fromBase58(BTGParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                    // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
@@ -378,17 +379,4 @@ public final class AltCoinAddressValidator extends InputValidator {
     private String getErrorMessage(AddressFormatException e) {
         return Res.get("validation.altcoin.invalidAddress", currencyCode, e.getMessage());
     }
-
-    @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
-    private boolean verifyChecksum(String input) {
-        // TODO
-        return true;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }

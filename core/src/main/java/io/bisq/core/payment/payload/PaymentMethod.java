@@ -28,10 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
@@ -49,6 +46,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
+    public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
     public static final String FASTER_PAYMENTS_ID = "FASTER_PAYMENTS";
     public static final String NATIONAL_BANK_ID = "NATIONAL_BANK";
     public static final String SAME_BANK_ID = "SAME_BANK";
@@ -66,6 +64,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod OK_PAY;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
+    public static PaymentMethod SEPA_INSTANT;
     public static PaymentMethod FASTER_PAYMENTS;
     public static PaymentMethod NATIONAL_BANK;
     public static PaymentMethod SAME_BANK;
@@ -156,6 +155,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             ALL_VALUES = new ArrayList<>(Arrays.asList(
                     // EUR
                     SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
+                    SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, maxTradeLimitMidRisk),
 
                     // UK
                     FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
@@ -189,6 +189,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
             ));
         }
+        ALL_VALUES.sort((o1, o2) -> {
+            String id1 = o1.getId();
+            if (id1.equals(CLEAR_X_CHANGE_ID))
+                id1 = "ZELLE";
+            String id2 = o2.getId();
+            if (id2.equals(CLEAR_X_CHANGE_ID))
+                id2 = "ZELLE";
+            return id1.compareTo(id2);
+        });
         return ALL_VALUES;
     }
 

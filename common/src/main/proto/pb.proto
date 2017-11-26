@@ -854,6 +854,7 @@ message CountryBasedPaymentAccountPayload {
         CashDepositAccountPayload cash_deposit_account_payload = 3;
         SepaAccountPayload sepa_account_payload = 4;
         WesternUnionAccountPayload western_union_account_payload = 5;
+        SepaInstantAccountPayload sepa_instant_account_payload = 6;
     }
 }
 
@@ -908,6 +909,13 @@ message SepaAccountPayload {
     string bic = 3;
     string email = 4;  // not used anymore but keep for backward compatibility
     repeated string accepted_country_codes = 5;
+}
+
+message SepaInstantAccountPayload {
+    string holder_name = 1;
+    string iban = 2;
+    string bic = 3;
+    repeated string accepted_country_codes = 4;
 }
 
 message CryptoCurrencyAccountPayload {

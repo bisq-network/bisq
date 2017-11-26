@@ -28,6 +28,8 @@ public class PaymentAccountFactory {
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:
                 return new SepaAccount();
+            case PaymentMethod.SEPA_INSTANT_ID:
+                return new SepaInstantAccount();
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsAccount();
             case PaymentMethod.NATIONAL_BANK_ID:

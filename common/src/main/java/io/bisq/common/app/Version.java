@@ -29,7 +29,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "0.6.0"; 
+    public static final String VERSION = "0.6.1"; 
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
