@@ -584,7 +584,7 @@ public class Connection implements MessageListener {
         }
 
         public boolean reportInvalidRequest(RuleViolation ruleViolation) {
-            log.warn("We got reported an corrupt request " + ruleViolation + "\n\tconnection=" + this);
+            log.warn("We got reported ruleViolation " + ruleViolation + "\n\tconnection=" + this);
             int numRuleViolations;
             if (ruleViolations.containsKey(ruleViolation))
                 numRuleViolations = ruleViolations.get(ruleViolation);
@@ -602,11 +602,13 @@ public class Connection implements MessageListener {
                         "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
                 this.ruleViolation = ruleViolation;
                 if (ruleViolation == RuleViolation.PEER_BANNED) {
-                    log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
+                    log.warn("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", connection.getPeersNodeAddressOptional());
                     shutDown(CloseConnectionReason.PEER_BANNED);
                 } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
+                    log.warn("We close connection due RuleViolation.INVALID_CLASS");
                     shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
                 } else {
+                    log.warn("We close connection due RuleViolation.RULE_VIOLATION");
                     shutDown(CloseConnectionReason.RULE_VIOLATION);
                 }
 
@@ -627,7 +629,6 @@ public class Connection implements MessageListener {
         }
 
         public void handleConnectionException(Throwable e) {
-            Log.traceCall(e.toString());
             if (e instanceof SocketException) {
                 if (socket.isClosed())
                     closeConnectionReason = CloseConnectionReason.SOCKET_CLOSED;
@@ -635,11 +636,13 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.debug("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
             } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
             } else if (e instanceof OptionalDataException || e instanceof StreamCorruptedException) {
                 closeConnectionReason = CloseConnectionReason.CORRUPTED_DATA;
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
             } else {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
@@ -651,7 +654,6 @@ public class Connection implements MessageListener {
                         e.toString());
                 e.printStackTrace();
             }
-
             shutDown(closeConnectionReason);
         }
 

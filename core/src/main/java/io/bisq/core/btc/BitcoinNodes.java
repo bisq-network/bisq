@@ -42,19 +42,19 @@ public class BitcoinNodes {
     public List<BtcNode> getProvidedBtcNodes() {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
-                        BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
                         BtcNode.fromHostNameAndAddress("kirsche.emzy.de", "78.47.61.83", "https://github.com/emzy"),
                         BtcNode.fromHostName("poyvpdt762gllauu.onion", "https://github.com/emzy"),
-                        BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
-                        BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", "https://github.com/sqrrm"),
+                        BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
                         BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", "https://github.com/alexej996"),
                         BtcNode.fromHostName("vlf5i3grro3wux24.onion", "https://github.com/alexej996"),
+                        BtcNode.fromHostName("3r44ddzjitznyahw.onion", "https://github.com/sqrrm"),
+                        BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", "https://github.com/sqrrm"),
+                        BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek"),
                         BtcNode.fromHostNameAndAddress("bcwat.ch", "5.189.166.193", "https://github.com/sgeisler"),
                         BtcNode.fromHostNameAndAddress("btc.jochen-hoenicke.de", "37.221.198.57", "https://github.com/jhoenicke"),
                         BtcNode.fromHostNameAndAddress("btc.vante.me", "138.68.117.247", "https://github.com/mrosseel"),
                         BtcNode.fromHostName("mxdtrjhe2yfsx3pg.onion", "https://github.com/mrosseel"),
-                        BtcNode.fromHostName("7sl6havdhtgefwo2.onion", "https://github.com/themighty1"),
-                        BtcNode.fromHostNameAndAddress("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", "https://github.com/tbocek")
+                        BtcNode.fromHostName("7sl6havdhtgefwo2.onion", "https://github.com/themighty1")
                 ) :
                 new ArrayList<>();
     }
