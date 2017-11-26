@@ -53,8 +53,10 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAddressAndPort("bcwat.ch", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
                         BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),  //
                         BtcNode.fromHostNameAddressAndPort("btc.vante.me", "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
-                        BtcNode.fromOnion("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel")/*,
-                        BtcNode.fromOnion("7sl6havdhtgefwo2.onion", BtcNode.DEFAULT_PORT, "https://github.com/themighty1")*/
+                        BtcNode.fromOnion("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
+                        /*BtcNode.fromOnion("7sl6havdhtgefwo2.onion", BtcNode.DEFAULT_PORT, "https://github.com/themighty1"),*/ // node is dead atm
+                        BtcNode.fromAddressAndPort("62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
+                        BtcNode.fromAddressAndPort("163.172.171.119", BtcNode.DEFAULT_PORT, "https://github.com/emzy")
                 ) :
                 new ArrayList<>();
     }
@@ -109,6 +111,10 @@ public class BitcoinNodes {
 
         public static BtcNode fromHostNameAddressAndPort(String hostName, String address, int port, @Nullable String operator) {
             return new BtcNode(hostName, address, port, operator);
+        }
+
+        public static BtcNode fromAddressAndPort(String address, int port, @Nullable String operator) {
+            return new BtcNode(null, address, port, operator);
         }
 
         private BtcNode(@Nullable String hostName, @Nullable String address, int port, @Nullable String operator) {
