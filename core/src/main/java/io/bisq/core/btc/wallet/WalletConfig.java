@@ -415,7 +415,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10
+                // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
                 vPeerGroup.setMaxConnections(Math.min(10, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {

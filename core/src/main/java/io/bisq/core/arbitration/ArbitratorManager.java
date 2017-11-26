@@ -180,7 +180,7 @@ public class ArbitratorManager {
                     final String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
                     final boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
                     if (!isInPublicKeyInList) {
-                        if (pubKeyAsHex.equals(DevEnv.DEV_PRIVILEGE_PUB_KEY))
+                        if (DevEnv.DEV_PRIVILEGE_PUB_KEY.equals(pubKeyAsHex))
                             log.info("We got the DEV_PRIVILEGE_PUB_KEY in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());

@@ -584,7 +584,7 @@ public class Connection implements MessageListener {
         }
 
         public boolean reportInvalidRequest(RuleViolation ruleViolation) {
-            log.warn("We got reported ruleViolation " + ruleViolation + "\n\tconnection=" + this);
+            log.warn("We got reported the ruleViolation {} at connection {}", ruleViolation, connection);
             int numRuleViolations;
             if (ruleViolations.containsKey(ruleViolation))
                 numRuleViolations = ruleViolations.get(ruleViolation);
@@ -636,13 +636,13 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), connection);
             } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
-                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), connection);
             } else if (e instanceof OptionalDataException || e instanceof StreamCorruptedException) {
                 closeConnectionReason = CloseConnectionReason.CORRUPTED_DATA;
-                log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
+                log.warn("Shut down caused by exception {} on connection={}", e.toString(), connection);
             } else {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;

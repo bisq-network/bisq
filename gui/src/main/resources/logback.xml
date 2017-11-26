@@ -10,11 +10,6 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <!--
-    See https://github.com/JesusMcCloud/netlayer/issues/5
-    -->
-    <logger name="org.berndpruenster.netlayer.tor.Tor" level="WARN"/>
-
 <!--
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
 

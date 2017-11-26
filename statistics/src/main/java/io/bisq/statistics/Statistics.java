@@ -41,8 +41,10 @@ import java.util.Arrays;
 
 @Slf4j
 public class Statistics {
-    private static BisqEnvironment bisqEnvironment;
+    // Bisq v0.6.1 did not change anything relevant for that project so we stick with 0.6.0
+    public static final String VERSION = "0.6.0";
 
+    private static BisqEnvironment bisqEnvironment;
     public static void setEnvironment(BisqEnvironment bisqEnvironment) {
         Statistics.bisqEnvironment = bisqEnvironment;
     }
@@ -60,7 +62,7 @@ public class Statistics {
         Log.setup(logPath);
         Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
         log.info("Log files under: " + logPath);
-        log.info("ProviderVersion.VERSION: " + StatisticsVersion.VERSION);
+        log.info("Statistics.VERSION: " + VERSION);
         log.info("Bisq exchange Version{" +
                 "VERSION=" + Version.VERSION +
                 ", P2P_NETWORK_VERSION=" + Version.P2P_NETWORK_VERSION +

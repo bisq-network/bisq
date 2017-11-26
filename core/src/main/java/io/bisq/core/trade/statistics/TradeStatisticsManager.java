@@ -244,6 +244,9 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("PART");
         // v0.6.1
         coinsWithValidator.add("MAD");
+        coinsWithValidator.add("BCH");
+        coinsWithValidator.add("BCHC");
+        coinsWithValidator.add("BTG");
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
