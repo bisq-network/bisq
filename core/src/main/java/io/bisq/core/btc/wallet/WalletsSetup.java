@@ -208,8 +208,7 @@ public class WalletsSetup {
             try {
                 walletConfig.stopAsync();
                 walletConfig.awaitTerminated(5, TimeUnit.SECONDS);
-            } catch (Throwable e) {
-                // ignore
+            } catch (Throwable ignore) {
             }
             shutDownComplete.set(true);
         } else {
