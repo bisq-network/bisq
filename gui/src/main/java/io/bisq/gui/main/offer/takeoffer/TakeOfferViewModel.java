@@ -229,11 +229,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         } else {
             //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
-                btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
-                btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
-                .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-                .show();
+                    btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                    btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
+                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                    .show();
             return false;
         }
 
@@ -269,15 +269,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 if (!dataModel.isMinAmountLessOrEqualAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                        Res.get("takeOffer.validation.amountSmallerThanMinAmount")));
+                            Res.get("takeOffer.validation.amountSmallerThanMinAmount")));
 
                 if (dataModel.isAmountLargerThanOfferAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                        Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
                 if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                        Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
         }
     }
@@ -387,10 +387,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private void updateButtonDisableState() {
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid
-            && dataModel.isMinAmountLessOrEqualAmount()
-            && !dataModel.isAmountLargerThanOfferAmount()
-            && isOfferAvailable.get()
-            && !dataModel.wouldCreateDustForMaker();
+                && dataModel.isMinAmountLessOrEqualAmount()
+                && !dataModel.isAmountLargerThanOfferAmount()
+                && isOfferAvailable.get()
+                && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
@@ -443,7 +443,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
-                    connection.getPeersNodeAddressOptional().get().equals(offer.getMakerNodeAddress())) {
+                        connection.getPeersNodeAddressOptional().get().equals(offer.getMakerNodeAddress())) {
                     offerWarning.set(Res.get("takeOffer.warning.connectionToPeerLost"));
                     updateSpinnerInfo();
                 }
@@ -461,9 +461,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private void updateSpinnerInfo() {
         if (!showPayFundsScreenDisplayed.get() ||
-            offerWarning.get() != null ||
-            errorMessage.get() != null ||
-            showTransactionPublishedScreen.get()) {
+                offerWarning.get() != null ||
+                errorMessage.get() != null ||
+                showTransactionPublishedScreen.get()) {
             spinnerInfoText.set("");
         } else if (dataModel.isWalletFunded.get()) {
             spinnerInfoText.set("");
@@ -576,7 +576,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-            GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
     }
 
     public String getTakerFee() {
@@ -600,7 +600,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-            GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
 
     }
 

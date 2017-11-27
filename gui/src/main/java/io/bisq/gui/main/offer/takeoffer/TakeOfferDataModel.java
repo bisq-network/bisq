@@ -57,7 +57,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -153,9 +152,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
-            () -> {
-            },
-            errorMessage -> new Popup<>().warning(errorMessage).show());
+                () -> {
+                },
+                errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
     @Override
@@ -185,8 +184,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, myLimit)));
 
         securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
-            getBuyerSecurityDeposit() :
-            getSellerSecurityDeposit();
+                getBuyerSecurityDeposit() :
+                getSellerSecurityDeposit();
 
         // We request to get the actual estimated fee
         requestTxFee();
@@ -289,19 +288,19 @@ class TakeOfferDataModel extends ActivatableDataModel {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
-                txFeeFromFeeService,
-                getTakerFee(),
-                isCurrencyForTakerFeeBtc(),
-                tradePrice.getValue(),
-                fundsNeededForTrade,
-                offer,
-                paymentAccount.getId(),
-                useSavingsWallet,
-                tradeResultHandler,
-                errorMessage -> {
-                    log.warn(errorMessage);
-                    new Popup<>().warning(errorMessage).show();
-                }
+                    txFeeFromFeeService,
+                    getTakerFee(),
+                    isCurrencyForTakerFeeBtc(),
+                    tradePrice.getValue(),
+                    fundsNeededForTrade,
+                    offer,
+                    paymentAccount.getId(),
+                    useSavingsWallet,
+                    tradeResultHandler,
+                    errorMessage -> {
+                        log.warn(errorMessage);
+                        new Popup<>().warning(errorMessage).show();
+                    }
             );
         }
     }
@@ -414,9 +413,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     boolean isBsqForFeeAvailable() {
         final Coin takerFee = getTakerFee(false);
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-            takerFee != null &&
-            bsqWalletService.getAvailableBalance() != null &&
-            !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
+                takerFee != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
 
     long getMaxTradeLimit() {
@@ -446,8 +445,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (tradePrice != null && offer != null &&
-            amount.get() != null &&
-            !amount.get().isZero()) {
+                amount.get() != null &&
+                !amount.get().isZero()) {
             volume.set(tradePrice.getVolumeByAmount(amount.get()));
             //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
@@ -530,9 +529,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection ConstantConditions,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
-                .headLine(Res.get("notification.walletUpdate.headline"))
-                .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                .autoClose();
+                    .headLine(Res.get("notification.walletUpdate.headline"))
+                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
+                    .autoClose();
 
             walletFundedNotification.show();
         }

@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 /**
  * This class holds utility methods for the creation of an Offer.
  * Most of these are extracted here because they are used both in the GUI and in the API.
- * <p>
+ * <p/>
  * Long-term there could be a GUI-agnostic OfferService which provides these and other functionalities to both the
  * GUI and the API.
  */
