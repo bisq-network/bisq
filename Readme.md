@@ -30,6 +30,11 @@ start with UI, so you can make all necessary configurations.
 is not advisable. By default they both write to the same configuration location.
 Changing the appname can fix this issue.
 
+## Compiling the API
+
+This step needs to be done before you can start the API with UI or headless:
+
+```mvn clean install```
 
 ## Getting started: with UI
 
