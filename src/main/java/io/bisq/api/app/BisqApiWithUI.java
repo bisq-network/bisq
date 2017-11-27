@@ -51,11 +51,11 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
-import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.SystemTray;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.app.BisqAppModule;
 import io.bisq.gui.common.UITimer;
 import io.bisq.gui.common.view.CachingViewLoader;
@@ -129,7 +129,9 @@ public class BisqApiWithUI extends Application {
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
 
+
         shutDownHandler = this::stop;
+        BisqApp.shutDownHandler = shutDownHandler;
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
@@ -182,7 +184,7 @@ public class BisqApiWithUI extends Application {
             persistedDataHosts.add(injector.getInstance(User.class));
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
-            persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
+            persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));

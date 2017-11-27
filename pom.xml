@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>bisq-api</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.5</version>
+    <version>v0.6.1</version>
     <description>API for Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -36,7 +36,7 @@
 
     <properties>
         <dropwizard.version>1.1.4</dropwizard.version>
-        <bisq.version>0.5.3</bisq.version>
+        <bisq.version>${version}</bisq.version>
     </properties>
 
     <repositories>
@@ -62,6 +62,22 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <!-- put your configurations here -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -69,7 +85,7 @@
         <dependency>
             <groupId>com.github.bisq-network.bisq-exchange</groupId>
             <artifactId>gui</artifactId>
-            <version>Development-SNAPSHOT</version>
+            <version>v0.6.1</version>
         </dependency>
 
         <!-- dependencies from bisq root pom -->
