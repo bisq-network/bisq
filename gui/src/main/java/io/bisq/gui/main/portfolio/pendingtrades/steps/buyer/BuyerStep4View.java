@@ -23,6 +23,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;
@@ -31,6 +32,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.transactions.TransactionsView;
@@ -60,6 +62,8 @@ public class BuyerStep4View extends TradeStepView {
 
     private InputTextField withdrawAddressTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
+    private TitledGroupBg withdrawTitledGroupBg;
+    private Label withdrawAddressLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,15 +118,25 @@ public class BuyerStep4View extends TradeStepView {
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void addContent() {
-        addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
+        addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
         addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
 
         addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
-        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.totalPaid"), model.getTotalFees());
         addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
+        final String miningFee = model.dataModel.isMaker() ?
+                Res.get("portfolio.pending.step5_buyer.makersMiningFee") :
+                Res.get("portfolio.pending.step5_buyer.takersMiningFee");
+        addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
+        withdrawTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress")).second;
+        final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
+        withdrawAddressLabel = tuple2.first;
+        withdrawAddressLabel.setManaged(false);
+        withdrawAddressLabel.setVisible(false);
+        withdrawAddressTextField = tuple2.second;
+        withdrawAddressTextField.setManaged(false);
+        withdrawAddressTextField.setVisible(false);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
@@ -142,7 +156,7 @@ public class BuyerStep4View extends TradeStepView {
             handleTradeCompleted();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         });
-        withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
+        withdrawToExternalWalletButton.setOnAction(e -> onWithdrawal());
 
         String key = "tradeCompleted" + trade.getId();
         //noinspection ConstantConditions
@@ -153,6 +167,16 @@ public class BuyerStep4View extends TradeStepView {
                     .autoClose()
                     .show();
         }
+    }
+
+    private void onWithdrawal() {
+        withdrawAddressLabel.setManaged(true);
+        withdrawAddressLabel.setVisible(true);
+        withdrawAddressTextField.setManaged(true);
+        withdrawAddressTextField.setVisible(true);
+        GridPane.setRowSpan(withdrawTitledGroupBg, 2);
+        withdrawToExternalWalletButton.setDefaultButton(true);
+        withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -177,37 +201,28 @@ public class BuyerStep4View extends TradeStepView {
                     if (toAddresses.isEmpty()) {
                         validateWithdrawAddress();
                     } else if (Restrictions.isAboveDust(amount, fee)) {
-                        if (DevEnv.DEV_MODE) {
-                            doWithdrawal(amount, fee);
-                        } else {
-                            BSFormatter formatter = model.btcFormatter;
-                            //noinspection ConstantConditions
-                            if (!DevEnv.DEV_MODE) {
-                                int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                                double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                                double kb = txSize / 1000d;
-                                String recAmount = formatter.formatCoinWithCode(receiverAmount);
-                                new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
-                                        .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                                formatter.formatCoinWithCode(amount),
-                                                fromAddresses,
-                                                toAddresses,
-                                                formatter.formatCoinWithCode(fee),
-                                                feePerByte,
-                                                kb,
-                                                recAmount))
-                                        .actionButtonText(Res.get("shared.yes"))
-                                        .onAction(() -> doWithdrawal(amount, fee))
-                                        .closeButtonText(Res.get("shared.cancel"))
-                                        .onClose(() -> {
-                                            useSavingsWalletButton.setDisable(false);
-                                            withdrawToExternalWalletButton.setDisable(false);
-                                        })
-                                        .show();
-                            } else {
-                                doWithdrawal(amount, fee);
-                            }
-                        }
+                        BSFormatter formatter = model.btcFormatter;
+                        int txSize = feeEstimationTransaction.bitcoinSerialize().length;
+                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
+                        double kb = txSize / 1000d;
+                        String recAmount = formatter.formatCoinWithCode(receiverAmount);
+                        new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
+                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
+                                        formatter.formatCoinWithCode(amount),
+                                        fromAddresses,
+                                        toAddresses,
+                                        formatter.formatCoinWithCode(fee),
+                                        feePerByte,
+                                        kb,
+                                        recAmount))
+                                .actionButtonText(Res.get("shared.yes"))
+                                .onAction(() -> doWithdrawal(amount, fee))
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .onClose(() -> {
+                                    useSavingsWalletButton.setDisable(false);
+                                    withdrawToExternalWalletButton.setDisable(false);
+                                })
+                                .show();
                     } else {
                         new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }
