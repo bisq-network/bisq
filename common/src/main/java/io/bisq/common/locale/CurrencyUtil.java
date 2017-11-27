@@ -18,6 +18,7 @@
 package io.bisq.common.locale;
 
 import io.bisq.common.GlobalSettings;
+import io.bisq.common.app.DevEnv;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -86,7 +87,8 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
 
-        // result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        if (DevEnv.DAO_PHASE2_ACTIVATED)
+            result.add(new CryptoCurrency("BSQ", "Bisq Token"));
 
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
@@ -162,7 +164,8 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        //  result.add(new CryptoCurrency("BSQ", "Bisq Token"));
+        if (DevEnv.DAO_PHASE2_ACTIVATED)
+            result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         if (!baseCurrencyCode.equals("DASH"))

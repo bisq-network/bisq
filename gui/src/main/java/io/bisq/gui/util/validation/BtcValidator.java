@@ -76,7 +76,7 @@ public class BtcValidator extends NumberValidator {
             if (Restrictions.isAboveDust(coin))
                 return new ValidationResult(true);
             else
-                return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
+                return new ValidationResult(false, Res.get("validation.btc.amountBelowDust", formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         } catch (Throwable t) {
             return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
         }

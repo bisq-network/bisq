@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.wallet.send;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.util.CoinUtil;
@@ -66,6 +67,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private Button sendButton;
     private InputTextField receiversAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
+    private BsqBalanceListener balanceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +104,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Restrictions.getMinNonDustOutput().value));
         amountInputTextField.setValidator(bsqValidator);
 
-
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 verifyInputs();
@@ -137,7 +138,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 @Override
                                 public void onSuccess(@Nullable Transaction transaction) {
                                     if (transaction != null) {
-                                        log.error("Successfully sent tx with id " + transaction.getHashAsString());
+                                        log.debug("Successfully sent tx with id " + transaction.getHashAsString());
                                     }
                                 }
 
@@ -147,6 +148,9 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                     new Popup<>().warning(t.toString());
                                 }
                             });
+
+                            receiversAddressInputTextField.setText("");
+                            amountInputTextField.setText("");
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
@@ -166,6 +170,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 }
             }
         });
+
+        balanceListener = (availableBalance, unverifiedBalance) -> verifyInputs();
     }
 
     @Override
@@ -173,6 +179,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.activate();
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
+        bsqWalletService.addBsqBalanceListener(balanceListener);
         verifyInputs();
     }
 
@@ -181,6 +188,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.deactivate();
         receiversAddressInputTextField.focusedProperty().removeListener(focusOutListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
+        bsqWalletService.removeBsqBalanceListener(balanceListener);
     }
 
     private void verifyInputs() {

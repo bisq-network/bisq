@@ -25,6 +25,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Tradable;
@@ -360,7 +361,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } catch (AddressFormatException e) {
             new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup<>().warning(Res.get("validation.btc.amountBelowDust")).show();
+            new Popup<>().warning(Res.get("validation.btc.amountBelowDust", formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
         } catch (AddressEntryException e) {
             new Popup<>().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
