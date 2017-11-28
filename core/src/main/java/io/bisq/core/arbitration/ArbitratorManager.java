@@ -177,11 +177,18 @@ public class ArbitratorManager {
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> {
-                    final boolean isInPublicKeyInList = isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()));
-                    if (!isInPublicKeyInList)
-                        log.warn("We got an arbitrator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
-                                Utilities.bytesAsHexString(e.getRegistrationPubKey()),
-                                e.getNodeAddress().getFullAddress());
+                    final String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
+                    final boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
+                    if (!isInPublicKeyInList) {
+                        if (DevEnv.DEV_PRIVILEGE_PUB_KEY.equals(pubKeyAsHex))
+                            log.info("We got the DEV_PRIVILEGE_PUB_KEY in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                                    Utilities.bytesAsHexString(e.getRegistrationPubKey()),
+                                    e.getNodeAddress().getFullAddress());
+                        else
+                            log.warn("We got an arbitrator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                                    Utilities.bytesAsHexString(e.getRegistrationPubKey()),
+                                    e.getNodeAddress().getFullAddress());
+                    }
                     final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
                             e.getRegistrationPubKey(),
                             e.getRegistrationSignature());

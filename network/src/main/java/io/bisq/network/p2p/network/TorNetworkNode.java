@@ -49,6 +49,7 @@ public class TorNetworkNode extends NetworkNode {
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allShutDown;
+    private Tor tor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,13 +89,16 @@ public class TorNetworkNode extends NetworkNode {
     // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
         try {
-            final Tor tor = Tor.getDefault();
+            tor = Tor.getDefault();
             return tor != null ? tor.getProxy() : null;
         } catch (TorCtlException e) {
-            log.error("Error at getSocksProxy: " + e.toString());
+            log.error("TorCtlException at getSocksProxy: " + e.toString());
             e.printStackTrace();
+            return null;
+        } catch (Throwable t) {
+            log.error("Error at getSocksProxy: " + t.toString());
+            return null;
         }
-        return null;
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
@@ -118,8 +122,11 @@ public class TorNetworkNode extends NetworkNode {
                     log.error("Shutdown executorService failed with exception: " + t.getMessage());
                     t.printStackTrace();
                 } finally {
-                    if (shutDownCompleteHandler != null)
-                        shutDownCompleteHandler.run();
+                    try {
+                        if (shutDownCompleteHandler != null)
+                            shutDownCompleteHandler.run();
+                    } catch (Throwable ignore) {
+                    }
                 }
             }
         });
@@ -133,7 +140,6 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown torNetworkNode");
                 try {
-                    final Tor tor = Tor.getDefault();
                     if (tor != null)
                         tor.shutdown();
                     log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
@@ -237,6 +243,7 @@ public class TorNetworkNode extends NetworkNode {
             } catch (TorCtlException e) {
                 log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
                 restartTor(e.getMessage());
+            } catch (Throwable ignore) {
             }
 
             return null;

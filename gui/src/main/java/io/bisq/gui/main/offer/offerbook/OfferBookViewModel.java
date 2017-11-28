@@ -342,9 +342,9 @@ class OfferBookViewModel extends ActivatableViewModel {
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\n" +Res.get("offerbook.offerersAcceptedBankSeatsEuro");
+                    result += "\n" + Res.get("offerbook.offerersAcceptedBankSeatsEuro");
                 else
-                    result += "\n" +Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                    result += "\n" + Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
                     result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);

@@ -7,6 +7,7 @@ import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Log;
+import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -40,8 +41,10 @@ import java.util.Arrays;
 
 @Slf4j
 public class Statistics {
-    private static BisqEnvironment bisqEnvironment;
+    // Bisq v0.6.1 did not change anything relevant for that project so we stick with 0.6.0
+    public static final String VERSION = "0.6.0";
 
+    private static BisqEnvironment bisqEnvironment;
     public static void setEnvironment(BisqEnvironment bisqEnvironment) {
         Statistics.bisqEnvironment = bisqEnvironment;
     }
@@ -57,9 +60,18 @@ public class Statistics {
     public Statistics() {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
-        log.info("Log files under: " + logPath);
-        Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        log.info("Log files under: " + logPath);
+        log.info("Statistics.VERSION: " + VERSION);
+        log.info("Bisq exchange Version{" +
+                "VERSION=" + Version.VERSION +
+                ", P2P_NETWORK_VERSION=" + Version.P2P_NETWORK_VERSION +
+                ", LOCAL_DB_VERSION=" + Version.LOCAL_DB_VERSION +
+                ", TRADE_PROTOCOL_VERSION=" + Version.TRADE_PROTOCOL_VERSION +
+                ", BASE_CURRENCY_NETWORK=NOT SET"   +
+                ", getP2PNetworkId()=NOT SET"  +
+                '}');
+        Utilities.printSysInfo();
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {

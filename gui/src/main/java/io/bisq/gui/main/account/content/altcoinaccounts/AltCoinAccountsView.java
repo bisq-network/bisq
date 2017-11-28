@@ -148,6 +148,17 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                             .useIUnderstandButton()
                             .show();
                     break;
+                case "BCH":
+                case "BCHC":
+                    new Popup<>().information(Res.get("account.altcoin.popup.bch"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
+                case "BTG":
+                    new Popup<>().information(Res.get("account.altcoin.popup.btg"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
             }
 
             if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&

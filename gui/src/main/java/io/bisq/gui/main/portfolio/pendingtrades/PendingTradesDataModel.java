@@ -223,24 +223,45 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return tradeManager.isMyOffer(offer);
     }
 
-    private boolean isMaker() {
+    public boolean isMaker() {
         return isMaker;
     }
 
-    Coin getTotalFees() {
+    Coin getTradeFeeInBTC() {
+        Trade trade = getTrade();
+        if (trade != null) {
+            Offer offer = trade.getOffer();
+            if (isMaker()) {
+                if (offer.isCurrencyForMakerFeeBtc())
+                    return offer.getMakerFee();
+                else
+                    return Coin.ZERO;// getTradeFeeAsBsq is used for BSQ
+            } else {
+                if (trade.isCurrencyForTakerFeeBtc())
+                    return trade.getTakerFee();
+                else
+                    return Coin.ZERO; // getTradeFeeAsBsq is used for BSQ
+            }
+        } else {
+            log.error("Trade is null at getTotalFees");
+            return Coin.ZERO;
+        }
+    }
+
+    Coin getTxFee() {
         Trade trade = getTrade();
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
                 if (offer.isCurrencyForMakerFeeBtc())
-                    return offer.getMakerFee().add(offer.getTxFee());
+                    return offer.getTxFee();
                 else
-                    return offer.getTxFee().subtract(offer.getMakerFee());
+                    return offer.getTxFee().subtract(offer.getMakerFee()); // BSQ will be used as part of the miner fee
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
-                    return trade.getTakerFee().add(trade.getTxFee().multiply(3));
+                    return trade.getTxFee().multiply(3);
                 else
-                    return trade.getTxFee().multiply(3).subtract(trade.getTakerFee());
+                    return trade.getTxFee().multiply(3).subtract(trade.getTakerFee()); // BSQ will be used as part of the miner fee
             }
         } else {
             log.error("Trade is null at getTotalFees");
@@ -254,12 +275,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
                 if (offer.isCurrencyForMakerFeeBtc())
-                    return Coin.ZERO;
+                    return Coin.ZERO; // getTradeFeeInBTC is used for BTC
                 else
                     return offer.getMakerFee();
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
-                    return Coin.ZERO;
+                    return Coin.ZERO; // getTradeFeeInBTC is used for BTC
                 else
                     return trade.getTakerFee();
             }

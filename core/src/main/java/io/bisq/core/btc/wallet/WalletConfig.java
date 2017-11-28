@@ -415,7 +415,8 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                vPeerGroup.setMaxConnections(Math.min(PeerGroup.DEFAULT_CONNECTIONS, peerAddresses.length));
+                // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
+                vPeerGroup.setMaxConnections(Math.min(10, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
@@ -528,11 +529,11 @@ public class WalletConfig extends AbstractIdleService {
         if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                Thread.currentThread().setName("ShutdownHook");
                 try {
                     WalletConfig.this.stopAsync();
                     WalletConfig.this.awaitTerminated();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Throwable ignore) {
                 }
             }
         });
@@ -557,6 +558,7 @@ public class WalletConfig extends AbstractIdleService {
             vChain = null;
         } catch (BlockStoreException e) {
             throw new IOException(e);
+        } catch (Throwable ignore) {
         }
     }
 

@@ -35,7 +35,9 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.network.p2p.P2PService;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.Coin;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -242,15 +244,24 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTrade() != null ? btcFormatter.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
-    public String getTotalFees() {
-        Coin totalFees = dataModel.getTotalFees();
-        if (trade != null && totalFees.isPositive()) {
-            Coin tradeFeeAsBsq = dataModel.getTradeFeeAsBsq();
-            String percentage = GUIUtil.getPercentageOfTradeAmount(totalFees, trade.getTradeAmount(), btcFormatter);
-            if (tradeFeeAsBsq.isPositive()) {
-                return btcFormatter.formatCoinWithCode(totalFees) + percentage + " + " + bsqFormatter.formatCoinWithCode(tradeFeeAsBsq);
+    public String getTxFee() {
+        if (trade != null) {
+            Coin txFee = dataModel.getTxFee();
+            String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(), btcFormatter);
+            return btcFormatter.formatCoinWithCode(txFee) + percentage;
+        } else {
+            return "";
+        }
+    }
+
+    public String getTradeFee() {
+        if (trade != null && dataModel.getOffer() != null) {
+            if (dataModel.getOffer().isCurrencyForMakerFeeBtc()) {
+                Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
+                String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
+                return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
             } else {
-                return btcFormatter.formatCoinWithCode(totalFees) + percentage;
+                return bsqFormatter.formatCoinWithCode(dataModel.getTradeFeeAsBsq());
             }
         } else {
             return "";
