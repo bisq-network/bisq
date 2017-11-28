@@ -90,6 +90,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
     final StringProperty makerFee = new SimpleStringProperty();
+    final StringProperty makerFeeWithCode = new SimpleStringProperty();
     final StringProperty makerFeeCurrencyCode = new SimpleStringProperty();
 
     // Positive % value means always a better price form the maker's perspective:
@@ -196,8 +197,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("0.0001");
-                        price.set("7000");
+                        amount.set("0.1");
+                        price.set("0.00001");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -461,6 +462,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void applyMakerFee() {
         makerFee.set(getFormatterForMakerFee().formatCoin(dataModel.getMakerFee()));
+        makerFeeWithCode.set(getFormatterForMakerFee().formatCoinWithCode(dataModel.getMakerFee()));
         makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
     }
 
@@ -634,8 +636,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     }
 
-    void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
-        dataModel.setPreferredCurrencyForMakerFeeBtc(currencyForMakerFeeBtc);
+    void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
+        dataModel.setPreferredCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
         applyMakerFee();
     }
 
