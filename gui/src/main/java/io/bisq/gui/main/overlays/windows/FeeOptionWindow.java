@@ -17,59 +17,81 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.core.filter.PaymentAccountFilter;
-import io.bisq.gui.components.InputTextField;
+import io.bisq.common.util.Tuple3;
 import io.bisq.gui.main.overlays.Overlay;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.bisq.gui.util.FormBuilder.addLabelCheckBox;
-import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
+import static io.bisq.gui.util.FormBuilder.*;
 
 public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface ResultHandler {
+        void handle(boolean isCurrencyForMakerFeeBtc);
+    }
+
+    private TextField makerFeeTextField;
+    private ChangeListener<Toggle> toggleChangeListener;
+    private ResultHandler resultHandler;
+    private final StringProperty makerFeeWithCodeProperty;
+    private final boolean isCurrencyForMakerFeeBtc;
+    private ToggleGroup toggleGroup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FeeOptionWindow() {
+    public FeeOptionWindow(StringProperty makerFeeWithCodeProperty, boolean isCurrencyForMakerFeeBtc) {
+        this.makerFeeWithCodeProperty = makerFeeWithCodeProperty;
+        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
         type = Type.Attention;
     }
 
     public void show() {
         if (headLine == null)
-            headLine = Res.get("header.headline");
+            headLine = Res.get("feeOptionWindow.headline");
 
         width = 900;
         createGridPane();
         addHeadLine();
         addSeparator();
         addContent();
+        addCloseButton();
+        addDontShowAgainCheckBox();
         applyStyles();
         display();
     }
 
+    public FeeOptionWindow onResultHandler(ResultHandler resultHandler) {
+        this.resultHandler = resultHandler;
+        return this;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void createGridPane() {
+        super.createGridPane();
+        gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
+                        "-fx-background-radius: 5 5 5 5;" +
+                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
+                        "-fx-background-insets: 10;"
+        );
+    }
 
     @Override
     protected void setupKeyHandler(Scene scene) {
@@ -83,103 +105,36 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         }
     }
 
+    protected void doClose() {
+        super.doClose();
+        if (makerFeeTextField != null)
+            makerFeeTextField.textProperty().unbind();
+        if (toggleGroup != null)
+            toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
+    }
+
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
-            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+        Label label = addLabel(gridPane, ++rowIndex, Res.get("feeOptionWindow.info"));
+        GridPane.setColumnSpan(label, 2);
+        GridPane.setHalignment(label, HPos.LEFT);
 
-        InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
-        InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
-        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
-        GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
-        InputTextField bannedCurrenciesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies")).second;
-        InputTextField bannedPaymentMethodsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
-        InputTextField arbitratorsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators")).second;
-        InputTextField seedNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode")).second;
-        InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
-        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
+        toggleGroup = new ToggleGroup();
+        Tuple3<Label, RadioButton, RadioButton> tuple = addLabelRadioButtonRadioButton(gridPane,
+                ++rowIndex,
+                toggleGroup,
+                Res.get("feeOptionWindow.optionsLabel"),
+                "BTC",
+                "BSQ");
+        RadioButton radioButtonBTC = tuple.second;
+        RadioButton radioButtonBSQ = tuple.third;
+        toggleGroup.selectToggle(isCurrencyForMakerFeeBtc ? radioButtonBTC : radioButtonBSQ);
 
-        Button sendButton = new Button(Res.get("filterWindow.add"));
-        sendButton.setOnAction(e -> {
-            List<String> offerIds = new ArrayList<>();
-            List<String> nodes = new ArrayList<>();
-            List<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
-            List<String> bannedCurrencies = new ArrayList<>();
-            List<String> bannedPaymentMethods = new ArrayList<>();
-            List<String> arbitrators = new ArrayList<>();
-            List<String> seedNodes = new ArrayList<>();
-            List<String> priceRelayNodes = new ArrayList<>();
+        toggleChangeListener = (observable, oldValue, newValue) -> {
+            resultHandler.handle(newValue == radioButtonBTC);
+        };
+        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
 
-            if (!offerIdsInputTextField.getText().isEmpty()) {
-                offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!nodesInputTextField.getText().isEmpty()) {
-                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
-            }
-
-            if (!paymentAccountFilterInputTextField.getText().isEmpty()) {
-                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()
-                        .replace(", ", ",")
-                        .split(","))
-                        .stream().map(item -> {
-                            String[] list = item.split("\\|");
-                            if (list.length == 3)
-                                return new PaymentAccountFilter(list[0], list[1], list[2]);
-                            else
-                                return new PaymentAccountFilter("", "", "");
-                        })
-                        .collect(Collectors.toList()));
-            }
-
-            if (!bannedCurrenciesInputTextField.getText().isEmpty()) {
-                bannedCurrencies = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedCurrenciesInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!bannedPaymentMethodsInputTextField.getText().isEmpty()) {
-                bannedPaymentMethods = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedPaymentMethodsInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!arbitratorsInputTextField.getText().isEmpty()) {
-                arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
-            }
-
-            if (!seedNodesInputTextField.getText().isEmpty()) {
-                seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
-            }
-
-            if (!priceRelayNodesInputTextField.getText().isEmpty()) {
-                priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
-            }
-        });
-
-
-        closeButton = new Button(Res.get("shared.close"));
-        closeButton.setOnAction(e -> {
-            hide();
-            closeHandlerOptional.ifPresent(Runnable::run);
-        });
-
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        makerFeeTextField = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
+        makerFeeTextField.textProperty().bind(makerFeeWithCodeProperty);
     }
 }

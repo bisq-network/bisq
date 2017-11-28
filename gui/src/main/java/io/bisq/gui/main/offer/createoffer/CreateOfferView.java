@@ -48,6 +48,7 @@ import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.withdrawal.WithdrawalView;
 import io.bisq.gui.main.offer.OfferView;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.windows.FeeOptionWindow;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
@@ -499,7 +500,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         buyerSecurityDepositInputTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
 
-        if (model.dataModel.isBsqForFeeAvailable()) {
+        if (model.dataModel.isBsqForFeeAvailable() && makerFeeTextField != null) {
             makerFeeTextField.textProperty().bind(model.makerFee);
             makerFeeCurrencyLabel.textProperty().bind(model.makerFeeCurrencyCode);
         }
@@ -552,7 +553,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addressTextField.amountAsCoinProperty().unbind();
         buyerSecurityDepositInputTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
 
-        if (model.dataModel.isBsqForFeeAvailable()) {
+        if (model.dataModel.isBsqForFeeAvailable() && makerFeeTextField != null) {
             makerFeeTextField.textProperty().unbind();
             makerFeeCurrencyLabel.textProperty().unbind();
         }
@@ -893,10 +894,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 cancelButton1.setManaged(false);
                 cancelButton1.setOnAction(null);
 
+                showFeeOption();
+
                 int delay = 500;
                 int diff = 100;
-                transitions.fadeOutAndRemove(titledGroupBg, delay, (event) -> onShowPayFundsScreen());
-                if (model.dataModel.isBsqForFeeAvailable()) {
+                transitions.fadeOutAndRemove(titledGroupBg, delay, (event) -> {
+                });
+                if (model.dataModel.isBsqForFeeAvailable() && makerFeeTextLabel!=null) {
                     delay -= diff;
                     transitions.fadeOutAndRemove(makerFeeTextLabel, delay);
                     transitions.fadeOutAndRemove(makerFeeRowHBox, delay);
@@ -912,6 +916,20 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 transitions.fadeOutAndRemove(sellerSecurityDepositValueCurrencyBox, delay);*/
             }
         });
+    }
+
+    private void showFeeOption() {
+        String key = "";
+        if (model.dataModel.getPreferences().showAgain(key)) {
+            new FeeOptionWindow(model.makerFeeWithCode, model.dataModel.isCurrencyForMakerFeeBtc())
+                    .onResultHandler(model::setIsCurrencyForMakerFeeBtc)
+                    .onAction(this::onShowPayFundsScreen)
+                    .hideCloseButton()
+                    .dontShowAgainId(key)
+                    .show();
+        } else {
+            onShowPayFundsScreen();
+        }
     }
 
     private void addMakerFeeRow() {
@@ -1314,7 +1332,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void updateFeeToggleButtons(boolean btcSelected) {
         if (model.dataModel.isBsqForFeeAvailable()) {
-            model.setCurrencyForMakerFeeBtc(btcSelected);
+            model.setIsCurrencyForMakerFeeBtc(btcSelected);
             if (btcSelected || model.dataModel.isBsqForFeeAvailable()) {
                 if (!payFeeInBtcButton.isSelected() && btcSelected)
                     payFeeInBtcButton.setSelected(true);
