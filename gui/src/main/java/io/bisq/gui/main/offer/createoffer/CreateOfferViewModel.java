@@ -194,7 +194,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
                         amount.set("0.1");
-                        price.set("0.00001");
+                        price.set("0.0001");
                         break;
                     case "LTC":
                         amount.set("50");

@@ -67,8 +67,8 @@ public class FeeService {
 
     private static final long MIN_MAKER_FEE_IN_MBSQ = 50; // about 0.05 EUR if 1 BSQ = 1 EUR
     private static final long MIN_TAKER_FEE_IN_MBSQ = 50;
-    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 500; // about 0.5 EUR if 1 BSQ = 1 EUR
-    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 500;
+    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 2000; // about 2 USD at BTC price 10000 USD for 1 BTC if 1 BSQ = 1 USD -> 10% of BTC fee
+    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 2000;
 
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
@@ -101,10 +101,10 @@ public class FeeService {
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 1 USD at BTC price 5000 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 2 USD at BTC price 10000 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 5000 USD for 1 BTC (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 5000 USD
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD for 1 BTC (maxTradeAmount)
+                DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
             case "LTC":
