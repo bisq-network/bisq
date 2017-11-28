@@ -116,6 +116,7 @@ public class BisqApp extends Application {
     private MainView mainView;
     private boolean shutDownRequested;
 
+    // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() throws Exception {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
