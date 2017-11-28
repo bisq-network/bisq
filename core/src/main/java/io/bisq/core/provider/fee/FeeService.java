@@ -68,7 +68,7 @@ public class FeeService {
     private static final long MIN_MAKER_FEE_IN_MBSQ = 50; // about 0.05 EUR if 1 BSQ = 1 EUR
     private static final long MIN_TAKER_FEE_IN_MBSQ = 50;
     private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 500; // about 0.5 EUR if 1 BSQ = 1 EUR
-    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 750;
+    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 500;
 
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!

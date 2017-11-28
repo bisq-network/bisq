@@ -85,8 +85,6 @@ public class BsqFormatter extends BSFormatter {
         try {
             return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
         } catch (AddressFormatException e) {
-            log.error(e.toString());
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

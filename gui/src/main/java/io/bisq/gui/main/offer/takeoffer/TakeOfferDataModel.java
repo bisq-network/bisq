@@ -74,7 +74,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final TradeWalletService tradeWalletService;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -376,8 +376,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
             this.useSavingsWallet = false;
     }
 
-    void setCurrencyForTakerFeeBtc(boolean currencyForTakerFeeBtc) {
-        preferences.setPayFeeInBtc(currencyForTakerFeeBtc);
+    void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
     }
 
 

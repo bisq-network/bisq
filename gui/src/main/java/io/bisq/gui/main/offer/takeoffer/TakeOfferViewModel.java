@@ -76,6 +76,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty offerWarning = new SimpleStringProperty();
     final StringProperty spinnerInfoText = new SimpleStringProperty("");
     final StringProperty takerFee = new SimpleStringProperty();
+    final StringProperty takerFeeWithCode = new SimpleStringProperty();
     final StringProperty takerFeeCurrencyCode = new SimpleStringProperty();
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
@@ -239,13 +240,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     }
 
-    void setCurrencyForTakerFeeBtc(boolean currencyForTakerFeeBtc) {
-        dataModel.setCurrencyForTakerFeeBtc(currencyForTakerFeeBtc);
+    void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        dataModel.setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
         applyTakerFee();
     }
 
     private void applyTakerFee() {
         takerFee.set(getFormatter().formatCoin(dataModel.getTakerFee()));
+        takerFeeWithCode.set(getFormatter().formatCoinWithCode(dataModel.getTakerFee()));
         takerFeeCurrencyCode.set(dataModel.isCurrencyForTakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
     }
 

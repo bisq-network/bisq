@@ -77,7 +77,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -718,10 +718,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
             return txFeeFromFeeService;
         else
             return txFeeFromFeeService.subtract(getMakerFee());
-    }
-
-    public Preferences getPreferences() {
-        return preferences;
     }
 
     public void swapTradeToSavings() {

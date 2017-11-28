@@ -25,6 +25,7 @@ import javafx.scene.effect.Effect;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import org.bitcoinj.core.Coin;
+import javax.annotation.Nullable;
 
 public class BalanceTextField extends AnchorPane {
 
@@ -33,6 +34,8 @@ public class BalanceTextField extends AnchorPane {
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
     private BSFormatter formatter;
+    @Nullable
+    private Coin balance;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +58,16 @@ public class BalanceTextField extends AnchorPane {
     }
 
     public void setBalance(Coin balance) {
+        this.balance = balance;
+
         updateBalance(balance);
     }
 
     public void setTargetAmount(Coin targetAmount) {
         this.targetAmount = targetAmount;
+
+        if (this.balance != null)
+            updateBalance(balance);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,12 +77,14 @@ public class BalanceTextField extends AnchorPane {
     private void updateBalance(Coin balance) {
         if (formatter != null)
             textField.setText(formatter.formatCoinWithCode(balance));
+
         if (targetAmount != null) {
             if (balance.compareTo(targetAmount) >= 0)
                 textField.setEffect(fundedEffect);
             else
                 textField.setEffect(notFundedEffect);
+        } else {
+            textField.setEffect(null);
         }
     }
-
 }
