@@ -31,8 +31,6 @@ import joptsimple.OptionSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -44,7 +42,6 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 @Slf4j
 public class SeedNodeMain extends BisqExecutable {
-    private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
     private SeedNode seedNode;
