@@ -71,7 +71,7 @@ public class TxIdTextField extends AnchorPane {
         txConfidenceIndicator.setVisible(false);
         AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
         progressIndicatorTooltip = new Tooltip("-");
-        Tooltip.install(txConfidenceIndicator, progressIndicatorTooltip);
+        txConfidenceIndicator.setTooltip(progressIndicatorTooltip);
 
         copyIcon = new Label();
         copyIcon.setLayoutY(3);

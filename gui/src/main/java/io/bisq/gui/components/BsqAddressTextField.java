@@ -50,7 +50,7 @@ public class BsqAddressTextField extends AnchorPane {
         textField.setEditable(false);
         textField.textProperty().bind(address);
         String tooltipText = Res.get("addressTextField.copyToClipboard");
-        Tooltip.install(textField, new Tooltip(tooltipText));
+        textField.setTooltip(new Tooltip(tooltipText));
 
         textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
         textField.setOnMouseReleased(event -> {
@@ -75,7 +75,7 @@ public class BsqAddressTextField extends AnchorPane {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(copyIcon, new Tooltip(Res.get("addressTextField.copyToClipboard")));
+        copyIcon.setTooltip(new Tooltip(Res.get("addressTextField.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {
             if (address.get() != null && address.get().length() > 0)

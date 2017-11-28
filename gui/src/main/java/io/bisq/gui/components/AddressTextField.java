@@ -56,7 +56,7 @@ public class AddressTextField extends AnchorPane {
         textField.setEditable(false);
         textField.textProperty().bind(address);
         String tooltipText = Res.get("addressTextField.openWallet");
-        Tooltip.install(textField, new Tooltip(tooltipText));
+        textField.setTooltip(new Tooltip(tooltipText));
 
         textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
         textField.setOnMouseReleased(event -> {
@@ -73,7 +73,7 @@ public class AddressTextField extends AnchorPane {
         Label extWalletIcon = new Label();
         extWalletIcon.setLayoutY(3);
         extWalletIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(extWalletIcon, new Tooltip(tooltipText));
+        extWalletIcon.setTooltip(new Tooltip(tooltipText));
         AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
         extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 

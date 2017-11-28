@@ -104,7 +104,7 @@ public class BisqApp extends Application {
     public static Runnable shutDownHandler;
     private static Stage primaryStage;
 
-    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+    protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
@@ -116,11 +116,9 @@ public class BisqApp extends Application {
     private MainView mainView;
     private boolean shutDownRequested;
 
-    @SuppressWarnings("PointlessBooleanExpression")
+    // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
-    public void start(Stage stage) throws IOException {
-        BisqApp.primaryStage = stage;
-
+    public void init() throws Exception {
         String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
@@ -173,6 +171,12 @@ public class BisqApp extends Application {
                 Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
                 Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
         )));
+    }
+
+    @SuppressWarnings("PointlessBooleanExpression")
+    @Override
+    public void start(Stage stage) throws IOException {
+        BisqApp.primaryStage = stage;
 
         try {
             // Guice
@@ -223,12 +227,6 @@ public class BisqApp extends Application {
             CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-
-           /* Storage.setDatabaseCorruptionHandler((String fileName) -> {
-                corruptedDatabaseFiles.add(fileName);
-                if (mainView != null)
-                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-            });*/
 
             scene = new Scene(mainView.getRoot(), 1200, 710); //740
 
@@ -307,9 +305,6 @@ public class BisqApp extends Application {
 
             // make the UI visible
             primaryStage.show();
-
-            // Used only for migrating old trade statistic to new data structure
-            //injector.getInstance(TradeStatisticsMigrationTool.class);
 
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();
