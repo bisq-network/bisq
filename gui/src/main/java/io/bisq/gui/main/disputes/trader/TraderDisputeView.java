@@ -708,7 +708,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
                             statusIcon.setStyle("-fx-font-size: 10;");
-                            Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
+                            copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
 
@@ -885,14 +885,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         private void showMailboxIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
-                            Tooltip.install(statusIcon, new Tooltip(Res.get("support.savedInMailbox")));
+                            statusIcon.setTooltip(new Tooltip(Res.get("support.savedInMailbox")));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
 
                         private void showArrivedIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.OK, "14");
-                            Tooltip.install(statusIcon, new Tooltip(Res.get("support.arrived")));
+                            statusIcon.setTooltip(new Tooltip(Res.get("support.arrived")));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
                     };

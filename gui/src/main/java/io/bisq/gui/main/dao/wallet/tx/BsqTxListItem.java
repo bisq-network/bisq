@@ -116,7 +116,7 @@ class BsqTxListItem {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
-                // We don't support send txs with multiple outputs to multiple receivers, so we can 
+                // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
                 sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                 break;
@@ -148,7 +148,7 @@ class BsqTxListItem {
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setPrefHeight(30);
         txConfidenceIndicator.setPrefWidth(30);
-        Tooltip.install(txConfidenceIndicator, tooltip);
+        txConfidenceIndicator.setTooltip(tooltip);
 
         txConfidenceListener = new TxConfidenceListener(txId) {
             @Override

@@ -43,7 +43,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
+        copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 0.0);
         copyIcon.setOnMouseClicked(e -> {
