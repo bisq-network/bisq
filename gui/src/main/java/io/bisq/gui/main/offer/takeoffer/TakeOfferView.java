@@ -722,7 +722,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addButtons() {
         nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
-        nextButton.setOnAction(e -> showFeeOption());
+        nextButton.setOnAction(e -> {
+            if (DevEnv.DAO_TRADING_ACTIVATED)
+                showFeeOption();
+            else
+                onShowPayFundsScreen();
+        });
 
         cancelButton1 = new Button(Res.get("shared.cancel"));
         cancelButton1.setDefaultButton(false);

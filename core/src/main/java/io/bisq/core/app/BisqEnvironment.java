@@ -80,6 +80,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
 
     private static String staticAppDataDir;
+
     public static String getStaticAppDataDir() {
         return staticAppDataDir;
     }

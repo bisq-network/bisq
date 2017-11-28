@@ -951,14 +951,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
-        return getFiatPriceValidator().validate(input);
+        return getPriceValidator().validate(input);
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
         return getVolumeValidator().validate(input);
     }
 
-    private MonetaryValidator getFiatPriceValidator() {
+    private MonetaryValidator getPriceValidator() {
         return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatPriceValidator;
     }
 

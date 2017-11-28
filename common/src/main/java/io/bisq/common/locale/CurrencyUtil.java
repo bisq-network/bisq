@@ -87,7 +87,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
 
-        if (DevEnv.DAO_PHASE2_ACTIVATED)
+        if (DevEnv.DAO_TRADING_ACTIVATED)
             result.add(new CryptoCurrency("BSQ", "Bisq Token"));
 
         if (!baseCurrencyCode.equals("BTC"))
@@ -164,7 +164,7 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        if (DevEnv.DAO_PHASE2_ACTIVATED)
+        if (DevEnv.DAO_TRADING_ACTIVATED)
             result.add(new CryptoCurrency("BSQ", "Bisq Token"));
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));

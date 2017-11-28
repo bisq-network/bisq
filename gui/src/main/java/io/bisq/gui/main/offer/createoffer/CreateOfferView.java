@@ -848,8 +848,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
         nextButton.setOnAction(e -> {
-            if (model.isPriceInRange())
-                showFeeOption();
+            if (model.isPriceInRange()) {
+                if (DevEnv.DAO_TRADING_ACTIVATED)
+                    showFeeOption();
+                else
+                    onShowPayFundsScreen();
+            }
         });
     }
 
