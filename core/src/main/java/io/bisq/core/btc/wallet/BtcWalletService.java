@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
@@ -33,7 +32,6 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
@@ -126,60 +124,12 @@ public class BtcWalletService extends WalletService {
     // CompensationRequest tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Tuple2<Transaction, Integer> getPreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx) throws
-            InsufficientMoneyException, ChangeBelowDustException {
+    public Transaction completePreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData) throws
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // (BsqFee)tx has following structure:
         // inputs [1-n] BSQ inputs (fee)
         // outputs [0-1] BSQ request fee change output
-
-        // We add BTC input for BSQ issuance. Result tx looks like:
-        // inputs [1-n] BSQ inputs
-        // inputs [1-n] BTC inputs for BSQ issuance
-        // outputs [0-1] BSQ request fee change output -> need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
-        // outputs [1] BSQ output for issuance
-
-        Transaction tx = new Transaction(params);
-        // Copy inputs from BSQ fee tx
-        feeTx.getInputs().stream().forEach(tx::addInput);
-        int indexOfBtcFirstInput = feeTx.getInputs().size();
-
-        // Add BTC inputs for issuanceAmount
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        CoinSelection coinSelection = coinSelector.select(issuanceAmount, wallet.calculateAllSpendCandidates());
-        coinSelection.gathered.stream().forEach(tx::addInput);
-
-        // Need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
-        // BSQ change outputs from BSQ fee inputs.
-        feeTx.getOutputs().stream().forEach(tx::addOutput);
-
-        // BSQ issuance output
-        tx.addOutput(issuanceAmount, issuanceAddress);
-
-
-        // We don't add the BTC change output from BTC issuance inputs because we will add the miner fee and there we
-        // generate anyway a BTC change output. We don't wan to have twice the change outputs for issuance and for miner fee.
-
-        // BTC change output from BTC issuance inputs
-       /* Coin changeFromIssuance = coinSelector.getChange(issuanceAmount, coinSelection);
-        if (changeFromIssuance.isPositive()) {
-            Address changeAddress = getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-            if (changeAddress != null)
-                tx.addOutput(changeFromIssuance, changeAddress);
-        }
-*/
-        printTx("getPreparedCompensationRequestTx", tx);
-        return new Tuple2<>(tx, indexOfBtcFirstInput);
-    }
-
-    public Transaction completePreparedCompensationRequestTx(Transaction preparedTx, int indexOfBtcFirstInput, boolean useCustomTxFee, byte[] opReturnData) throws
-            TransactionVerificationException, WalletException, InsufficientMoneyException {
-
-        // preparedTx has following structure:
-        // inputs [1-n] BSQ inputs for request fee
-        // inputs [1-n] BTC inputs for BSQ issuance
-        // outputs [0-1] BSQ request fee change output
-        // outputs [1] BSQ issuance output
 
         // preparedCompensationRequestTx has following structure:
         // inputs [1-n] BSQ inputs for request fee
@@ -189,6 +139,19 @@ public class BtcWalletService extends WalletService {
         // outputs [0-1] BTC  change output from issuance and miner fee inputs
         // outputs [0-1] OP_RETURN with opReturnData
         // mining fee: BTC mining fee + burned BSQ fee
+
+        Transaction preparedTx = new Transaction(params);
+        // Copy inputs from BSQ fee tx
+        feeTx.getInputs().stream().forEach(preparedTx::addInput);
+        int indexOfBtcFirstInput = feeTx.getInputs().size();
+
+        // Need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
+        // BSQ change outputs from BSQ fee inputs.
+        feeTx.getOutputs().stream().forEach(preparedTx::addOutput);
+
+        // BSQ issuance output
+        preparedTx.addOutput(issuanceAmount, issuanceAddress);
+
 
         // safety check counter to avoid endless loops
         int counter = 0;

@@ -20,7 +20,6 @@ package io.bisq.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
@@ -251,25 +250,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        if (DevEnv.DEV_MODE) {
-                            doWithdraw(amount, fee, callback);
-                        } else {
-                            double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                            double kb = txSize / 1000d;
-                            new Popup<>().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
-                                    .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                            formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()),
-                                            withdrawFromTextField.getText(),
-                                            withdrawToTextField.getText(),
-                                            formatter.formatCoinWithCode(fee),
-                                            feePerByte,
-                                            kb,
-                                            formatter.formatCoinWithCode(receiverAmount)))
-                                    .actionButtonText(Res.get("shared.yes"))
-                                    .onAction(() -> doWithdraw(amount, fee, callback))
-                                    .closeButtonText(Res.get("shared.cancel"))
-                                    .show();
-                        }
+                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
+                        double kb = txSize / 1000d;
+                        new Popup<>().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
+                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
+                                        formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()),
+                                        withdrawFromTextField.getText(),
+                                        withdrawToTextField.getText(),
+                                        formatter.formatCoinWithCode(fee),
+                                        feePerByte,
+                                        kb,
+                                        formatter.formatCoinWithCode(receiverAmount)))
+                                .actionButtonText(Res.get("shared.yes"))
+                                .onAction(() -> doWithdraw(amount, fee, callback))
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .show();
                     } else {
                         new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }

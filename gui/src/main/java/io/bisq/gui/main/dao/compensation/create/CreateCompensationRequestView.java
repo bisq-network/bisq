@@ -22,13 +22,11 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -126,6 +124,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         new Date()
                 );
 
+                boolean walletExceptionMightBeCausedByBtCWallet = false;
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                     final Coin compensationRequestFee = feeService.getCreateCompensationRequestFee();
                     final Transaction feeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequestFee);
@@ -134,15 +133,11 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     bsqAddress = bsqAddress.substring(1, bsqAddress.length());
                     final Address issuanceAddress = Address.fromBase58(bsqWalletService.getParams(), bsqAddress);
                     final Coin issuanceAmount = compensationRequestPayload.getRequestedBsq();
-                    final Tuple2<Transaction, Integer> tuple = btcWalletService.getPreparedCompensationRequestTx(issuanceAmount,
-                            issuanceAddress,
-                            feeTx);
-                    Transaction preparedTx = tuple.first;
-                    int indexOfBtcFirstInput = tuple.second;
-                    checkArgument(!preparedTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
+                    walletExceptionMightBeCausedByBtCWallet = true;
+                    checkArgument(!feeTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
 
                     // We use the key of the first BSQ input for signing the data
-                    TransactionOutput connectedOutput = preparedTx.getInputs().get(0).getConnectedOutput();
+                    TransactionOutput connectedOutput = feeTx.getInputs().get(0).getConnectedOutput();
                     checkNotNull(connectedOutput, "connectedOutput must not be null");
                     DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
                     checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
@@ -159,12 +154,16 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
                     outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
                     outputStream.write(Hash.getSha256Ripemd160hash(dataAndSigAsBytes));
-                    byte bytes[] = outputStream.toByteArray();
+                    byte opReturnData[] = outputStream.toByteArray();
                     //TODO should we store the hash in the compensationRequestPayload object?
 
-
                     //TODO 1 Btc output (small payment to own compensation receiving address)
-                    Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(preparedTx, indexOfBtcFirstInput, false, bytes);
+                    walletExceptionMightBeCausedByBtCWallet = true;
+                    Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(issuanceAmount,
+                            issuanceAddress,
+                            feeTx,
+                            opReturnData);
+                    walletExceptionMightBeCausedByBtCWallet = false;
                     Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
                     int txSize = signedTx.bitcoinSerialize().length;
@@ -200,8 +199,10 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                             })
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
-                } catch (IOException | TransactionVerificationException | WalletException |
-                        InsufficientMoneyException | ChangeBelowDustException e) {
+                } catch (InsufficientMoneyException e) {
+                    BSFormatter formatter = walletExceptionMightBeCausedByBtCWallet ? btcFormatter : bsqFormatter;
+                    new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
+                } catch (IOException | TransactionVerificationException | WalletException  e) {
                     log.error(e.toString());
                     e.printStackTrace();
                     new Popup<>().warning(e.toString()).show();

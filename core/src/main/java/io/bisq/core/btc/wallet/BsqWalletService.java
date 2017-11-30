@@ -305,7 +305,7 @@ public class BsqWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws
-            InsufficientMoneyException, ChangeBelowDustException {
+            InsufficientMoneyException {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
