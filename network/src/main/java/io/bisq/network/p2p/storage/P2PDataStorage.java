@@ -73,6 +73,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private PersistableNetworkPayloadCollection persistableNetworkPayloadCollection;
     private final Storage<PersistableNetworkPayloadCollection> persistableNetworkPayloadMapStorage;
     private final CopyOnWriteArraySet<PersistableNetworkPayloadMapListener> persistableNetworkPayloadMapListeners = new CopyOnWriteArraySet<>();
+    private final Storage<PersistedEntryMap> persistedEntryMapStorage;
+    @Getter
+    private PersistedEntryMap persistedEntryMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +98,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         persistableNetworkPayloadMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
         persistableNetworkPayloadMapStorage.setNumMaxBackupFiles(1);
+
+        persistedEntryMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        persistedEntryMapStorage.setNumMaxBackupFiles(1);
     }
 
     @Override
@@ -109,7 +115,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     // This method is called at startup in a non-user thread.
     // We should not have any threading issues here as the p2p network is just initializing
-    public synchronized void readFromResources(String resourceFileName) {
+    public synchronized void readFromResources(String persistableNetworkPayloadMapFileName, String persistedEntryMapFileName) {
+        readPersistableNetworkPayloadMap(persistableNetworkPayloadMapFileName);
+        readPersistedEntryMap(persistedEntryMapFileName);
+    }
+
+    public synchronized void readPersistableNetworkPayloadMap(String resourceFileName) {
         final String storageFileName = "PersistableNetworkPayloadMap";
         File dbDir = new File(storageDir.getAbsolutePath());
         if (!dbDir.exists() && !dbDir.mkdir())
@@ -143,6 +154,45 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
+    public void readPersistedEntryMap(String resourceFileName) {
+        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap, 100);
+        if (persistedSequenceNumberMap != null)
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
+
+        final String storageFileName = "PersistedEntryMap";
+        File dbDir = new File(storageDir.getAbsolutePath());
+        if (!dbDir.exists() && !dbDir.mkdir())
+            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
+
+        final File destinationFile = new File(Paths.get(storageDir.getAbsolutePath(), storageFileName).toString());
+        if (!destinationFile.exists()) {
+            try {
+                FileUtil.resourceToFile(resourceFileName, destinationFile);
+            } catch (ResourceNotFoundException e) {
+                log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
+            } catch (Throwable e) {
+                log.error("Could not copy resourceFile " + resourceFileName + " to " +
+                        destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            log.debug(storageFileName + " file exists already.");
+        }
+
+        persistedEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName, 100);
+        if (persistedEntryMap != null) {
+            map.putAll(persistedEntryMap.getMap());
+            log.info("PersistedEntryMap size=" + map.size());
+
+            // In case another object is already listening...
+            if (!hashMapChangedListeners.isEmpty())
+                map.values().stream()
+                        .forEach(protectedStorageEntry -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry)));
+        } else {
+            persistedEntryMap = new PersistedEntryMap();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -168,9 +218,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     .forEach(entry -> {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
-                        if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
+                        if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableProtectedPayload)) {
                             toRemoveSet.add(protectedStorageEntry);
-                            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                            log.debug("We found an expired PersistableProtectedPayload entry. We remove the protectedStorageEntry:\n\t" +
+                                    Utilities.toTruncatedString(protectedStorageEntry));
                             map.remove(hashOfPayload);
                         }
                     });
@@ -340,6 +391,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
+
+                // If we get a PersistedStoragePayload we save to disc
+                if (protectedStoragePayload instanceof PersistableProtectedPayload) {
+                    persistedEntryMap.put(hashOfPayload, protectedStorageEntry);
+                    persistedEntryMapStorage.queueUpForSave(persistedEntryMap, 2000);
+                }
+
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
                 // printData("after add");
             } else {

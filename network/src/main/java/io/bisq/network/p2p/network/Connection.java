@@ -264,7 +264,7 @@ public class Connection implements MessageListener {
         }
     }
 
-    private boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
+    public boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
         final List<Integer> requiredCapabilities = payload.getRequiredCapabilities();
         final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
         return Capabilities.isCapabilitySupported(requiredCapabilities, supportedCapabilities);

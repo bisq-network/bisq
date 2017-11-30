@@ -60,4 +60,12 @@ public class HyperlinkWithIcon extends HBox {
         // TODO does not use the right style
         icon.setTooltip(tooltip);
     }
+
+    public void setText(String title) {
+        hyperlink.setText(title);
+    }
+
+    public void clear() {
+        hyperlink.setText("");
+    }
 }

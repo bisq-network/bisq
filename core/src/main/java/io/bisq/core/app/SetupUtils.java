@@ -88,12 +88,15 @@ public class SetupUtils {
                 Thread.currentThread().setName("readFromResourcesThread");
                 // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
                 final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-                final String storageFileName = "PersistableNetworkPayloadMap_"
+                final String persistableNetworkPayloadMapFileName = "PersistableNetworkPayloadMap_"
+                        + baseCurrencyNetwork.getCurrencyCode() + "_"
+                        + baseCurrencyNetwork.getNetwork();
+                final String persistedEntryMapFileName = "PersistedEntryMap_"
                         + baseCurrencyNetwork.getCurrencyCode() + "_"
                         + baseCurrencyNetwork.getNetwork();
                 long ts = new Date().getTime();
-                p2PService.readFromResources(storageFileName);
-                log.info("readPersistableNetworkPayloadMapFromResources took {} ms", (new Date().getTime() - ts));
+                p2PService.getP2PDataStorage().readFromResources(persistableNetworkPayloadMapFileName, persistedEntryMapFileName);
+                log.info("readFromResources took {} ms", (new Date().getTime() - ts));
                 UserThread.execute(() -> result.set(true));
             }
         };

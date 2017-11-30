@@ -33,7 +33,7 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.dao.voting.VotingView;
 import io.bisq.gui.main.dao.voting.vote.VoteView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
@@ -65,10 +65,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
 
     private final CompensationRequestManager compensationRequestManger;
-    private final BSFormatter formatter;
     private final Navigation navigation;
     private final FundCompensationRequestWindow fundCompensationRequestWindow;
-    private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     private SortedList<CompensationRequest> sortedList;
     private Subscription selectedCompensationRequestSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
@@ -81,15 +80,13 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
-                                          BSFormatter formatter,
                                           Navigation navigation,
                                           FundCompensationRequestWindow fundCompensationRequestWindow,
-                                          BSFormatter btcFormatter) {
+                                          BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
-        this.formatter = formatter;
         this.navigation = navigation;
         this.fundCompensationRequestWindow = fundCompensationRequestWindow;
-        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -127,6 +124,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         sortedList = new SortedList<>(compensationRequestManger.getObservableList());
         tableView.setItems(sortedList);
+        //sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         setColumns();
     }
 
@@ -172,7 +170,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane.setTopAnchor(gridPane, -20d);
                 bottomAnchorPane.getChildren().add(gridPane);
 
-                compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
+                compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter);
             }
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
@@ -194,7 +192,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 Button fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
                 fundButton.setOnAction(event -> fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
                         onAction(() -> {
-                            Coin amount = btcFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
+                            Coin amount = bsqFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
                             compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
                                     new FutureCallback<Transaction>() {
                                         @Override
@@ -237,7 +235,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.getCompensationRequestPayload().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getCompensationRequestPayload().getCreationDate()));
                                 else
                                     setText("");
                             }

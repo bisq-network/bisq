@@ -62,11 +62,11 @@ public class IssuanceVerification {
             if (compensationRequest.isPresent()) {
                 final CompensationRequest compensationRequest1 = compensationRequest.get();
                 final long bsqAmount = bsqTxOutput.getValue();
-                final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBtc().value;
+                final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBsq().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
                 Set<TxOutput> issuanceTxs = bsqChainState.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
-                // Sorting rule: the txs are sorted by inter-block dependency and 
+                // Sorting rule: the txs are sorted by inter-block dependency and
                 // at each recursive iteration we add another sorted list which can be parsed, so we have a reproducible
                 // sorting.
                 for (TxOutput txOutput : issuanceTxs) {

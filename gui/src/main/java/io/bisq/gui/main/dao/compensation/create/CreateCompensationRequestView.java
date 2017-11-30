@@ -19,8 +19,10 @@ package io.bisq.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -37,6 +39,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.scene.control.Button;
@@ -71,6 +74,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     private final CompensationRequestManager compensationRequestManager;
     private final P2PService p2PService;
     private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
 
     @Nullable
     private NodeAddress nodeAddress;
@@ -82,13 +86,14 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     @Inject
     private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
                                           CompensationRequestManager compensationRequestManager, P2PService p2PService,
-                                          KeyRing keyRing, BSFormatter btcFormatter) {
+                                          KeyRing keyRing, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
         this.compensationRequestManager = compensationRequestManager;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         p2pStorageSignaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }
@@ -96,8 +101,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Override
     public void initialize() {
-        compensationRequestDisplay = new CompensationRequestDisplay(root);
-        compensationRequestDisplay.removeAllFields();
+        compensationRequestDisplay = new CompensationRequestDisplay(root, bsqFormatter);
         compensationRequestDisplay.createAllFields(Res.get("dao.compensation.create.createNew"), 0);
         createButton = addButtonAfterGroup(root, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.create.create.button"));
     }
@@ -106,99 +110,104 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     protected void activate() {
         compensationRequestDisplay.fillWithMock();
         createButton.setOnAction(event -> {
-            //TODO
-            Date startDate = new Date();
-            Date endDate = new Date();
-
-            // TODO can be null if we are still not full connected
             nodeAddress = p2PService.getAddress();
+            if (p2PService.isBootstrapped()) {
+                checkNotNull(nodeAddress, "nodeAddress must not be null");
+                CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(
+                        UUID.randomUUID().toString(),
+                        compensationRequestDisplay.nameTextField.getText(),
+                        compensationRequestDisplay.titleTextField.getText(),
+                        compensationRequestDisplay.descriptionTextArea.getText(),
+                        compensationRequestDisplay.linkInputTextField.getText(),
+                        bsqFormatter.parseToCoin(compensationRequestDisplay.requestedBsqTextField.getText()),
+                        compensationRequestDisplay.bsqAddressTextField.getText(),
+                        nodeAddress,
+                        p2pStorageSignaturePubKey,
+                        new Date()
+                );
 
-            // TODO we neet to wait until all services are initiated before calling the code below
-            checkNotNull(nodeAddress, "nodeAddress must not be null");
-            CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(UUID.randomUUID().toString(),
-                    compensationRequestDisplay.nameTextField.getText(),
-                    compensationRequestDisplay.titleTextField.getText(),
-                    compensationRequestDisplay.categoryTextField.getText(),
-                    compensationRequestDisplay.descriptionTextField.getText(),
-                    compensationRequestDisplay.linkTextField.getText(),
-                    startDate,
-                    endDate,
-                    btcFormatter.parseToCoin(compensationRequestDisplay.requestedBTCTextField.getText()),
-                    compensationRequestDisplay.btcAddressTextField.getText(),
-                    nodeAddress,
-                    p2pStorageSignaturePubKey
-            );
+                try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    final Coin compensationRequestFee = feeService.getCreateCompensationRequestFee();
+                    final Transaction feeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequestFee);
+                    String bsqAddress = compensationRequestPayload.getBsqAddress();
+                    // Remove initial B
+                    bsqAddress = bsqAddress.substring(1, bsqAddress.length());
+                    final Address issuanceAddress = Address.fromBase58(bsqWalletService.getParams(), bsqAddress);
+                    final Coin issuanceAmount = compensationRequestPayload.getRequestedBsq();
+                    final Tuple2<Transaction, Integer> tuple = btcWalletService.getPreparedCompensationRequestTx(issuanceAmount,
+                            issuanceAddress,
+                            feeTx);
+                    Transaction preparedTx = tuple.first;
+                    int indexOfBtcFirstInput = tuple.second;
+                    checkArgument(!preparedTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
 
-            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
-                Transaction preparedSendTx = bsqWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
+                    // We use the key of the first BSQ input for signing the data
+                    TransactionOutput connectedOutput = preparedTx.getInputs().get(0).getConnectedOutput();
+                    checkNotNull(connectedOutput, "connectedOutput must not be null");
+                    DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+                    checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
 
-                checkArgument(!preparedSendTx.getInputs().isEmpty(), "preparedSendTx inputs must not be empty");
+                    // We get the JSON of the object excluding signature and feeTxId
+                    String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
+                    // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
+                    // encoded string.
+                    String signature = bsqKeyPair.signMessage(payloadAsJson);
+                    compensationRequestPayload.setSignature(signature);
 
-                // We use the key of the first BSQ input for signing the data
-                TransactionOutput connectedOutput = preparedSendTx.getInputs().get(0).getConnectedOutput();
-                checkNotNull(connectedOutput, "connectedOutput must not be null");
-                DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
-                checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
-
-                // We get the JSON of the object excluding signature and feeTxId
-                String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
-                log.error(payloadAsJson);
-                // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
-                // encoded string.
-                String signature = bsqKeyPair.signMessage(payloadAsJson);
-                compensationRequestPayload.setSignature(signature);
-
-                String dataAndSig = payloadAsJson + signature;
-                byte[] dataAndSigAsBytes = dataAndSig.getBytes();
-                outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
-                outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
-                outputStream.write(Utils.sha256hash160(dataAndSigAsBytes));
-                byte hash[] = outputStream.toByteArray();
-                //TODO should we store the hash in the compensationRequestPayload object?
+                    String dataAndSig = payloadAsJson + signature;
+                    byte[] dataAndSigAsBytes = dataAndSig.getBytes();
+                    outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
+                    outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
+                    outputStream.write(Hash.getSha256Ripemd160hash(dataAndSigAsBytes));
+                    byte bytes[] = outputStream.toByteArray();
+                    //TODO should we store the hash in the compensationRequestPayload object?
 
 
-                //TODO 1 Btc output (small payment to own compensation receiving address)
-                Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedSendTx, false, hash);
-                Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                Coin miningFee = signedTx.getFee();
-                int txSize = signedTx.bitcoinSerialize().length;
-                new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
-                        .confirmation(Res.get("dao.compensation.create.confirm.info",
-                                btcFormatter.formatCoinWithCode(createCompensationRequestFee),
-                                btcFormatter.formatCoinWithCode(miningFee),
-                                CoinUtil.getFeePerByte(miningFee, txSize),
-                                (txSize / 1000d)))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            bsqWalletService.commitTx(txWithBtcFee);
-                            // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                            // if it gets committed 2 times
-                            btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                            bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                @Override
-                                public void onSuccess(@Nullable Transaction transaction) {
-                                    checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
-                                    compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
-                                    compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
-                                    compensationRequestDisplay.clearForm();
-                                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                }
+                    //TODO 1 Btc output (small payment to own compensation receiving address)
+                    Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(preparedTx, indexOfBtcFirstInput, false, bytes);
+                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+                    Coin miningFee = signedTx.getFee();
+                    int txSize = signedTx.bitcoinSerialize().length;
+                    new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
+                            .confirmation(Res.get("dao.compensation.create.confirm.info",
+                                    bsqFormatter.formatCoinWithCode(issuanceAmount),
+                                    bsqFormatter.formatCoinWithCode(compensationRequestFee),
+                                    btcFormatter.formatCoinWithCode(miningFee),
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    (txSize / 1000d)))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> {
+                                bsqWalletService.commitTx(txWithBtcFee);
+                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                // if it gets committed 2 times
+                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                                bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                    @Override
+                                    public void onSuccess(@Nullable Transaction transaction) {
+                                        checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
+                                        compensationRequestPayload.setTxId(transaction.getHashAsString());
+                                        compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
+                                        compensationRequestDisplay.clearForm();
+                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                    }
 
-                                @Override
-                                public void onFailure(@NotNull Throwable t) {
-                                    log.error(t.toString());
-                                    new Popup<>().warning(t.toString()).show();
-                                }
-                            });
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } catch (IOException | TransactionVerificationException | WalletException |
-                    InsufficientMoneyException | ChangeBelowDustException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                new Popup<>().warning(e.toString()).show();
+                                    @Override
+                                    public void onFailure(@NotNull Throwable t) {
+                                        log.error(t.toString());
+                                        new Popup<>().warning(t.toString()).show();
+                                    }
+                                });
+                            })
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } catch (IOException | TransactionVerificationException | WalletException |
+                        InsufficientMoneyException | ChangeBelowDustException e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    new Popup<>().warning(e.toString()).show();
+                }
+            } else {
+                new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
             }
         });
     }

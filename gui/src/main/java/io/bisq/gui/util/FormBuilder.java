@@ -187,13 +187,20 @@ public class FormBuilder {
     // Label  + HyperlinkWithIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex,
-                                                                             String labelTitle, String title,
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane,
+                                                                             int rowIndex,
+                                                                             String labelTitle,
+                                                                             String title,
                                                                              String url) {
         return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, 0);
     }
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url, double top) {
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane,
+                                                                             int rowIndex,
+                                                                             String labelTitle,
+                                                                             String title,
+                                                                             String url,
+                                                                             double top) {
         Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);

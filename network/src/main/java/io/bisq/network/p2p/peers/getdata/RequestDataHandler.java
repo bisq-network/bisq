@@ -19,10 +19,7 @@ import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
-import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import io.bisq.network.p2p.storage.payload.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -102,6 +99,9 @@ class RequestDataHandler implements MessageListener {
             Set<byte[]> excludedKeys = dataStorage.getPersistableNetworkPayloadCollection().getMap().entrySet().stream()
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
+
+            // We add the keys from PersistedEntryMap. We don't expect hash collusion between the 2 different data containers.
+            dataStorage.getPersistedEntryMap().getMap().keySet().stream().forEach(e->excludedKeys.add(e.bytes));
 
             if (isPreliminaryDataRequest)
                 getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);

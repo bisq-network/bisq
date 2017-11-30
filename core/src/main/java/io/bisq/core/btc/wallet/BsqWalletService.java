@@ -231,7 +231,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Sign tx 
+    // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
@@ -252,7 +252,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Commit tx 
+    // Commit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx) {
@@ -262,7 +262,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Broadcast tx 
+    // Broadcast tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
@@ -300,7 +300,6 @@ public class BsqWalletService extends WalletService {
         return tx;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +309,7 @@ public class BsqWalletService extends WalletService {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
-        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a 
+        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a
         // non dust BTC output.
 
         // TODO check dust output
@@ -320,7 +319,7 @@ public class BsqWalletService extends WalletService {
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
-        //printTx("getPreparedBurnFeeTx", tx);
+        printTx("getPreparedBurnFeeTx", tx);
         return tx;
     }
 

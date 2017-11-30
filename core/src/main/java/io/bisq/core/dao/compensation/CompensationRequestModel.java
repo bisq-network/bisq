@@ -20,11 +20,12 @@ package io.bisq.core.dao.compensation;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.PeriodVerification;
 import io.bisq.core.dao.blockchain.parse.VotingVerification;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class CompensationRequestModel {
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
     @Getter
-    private final List<CompensationRequest> list = new ArrayList<>();
+    private final ObservableList<CompensationRequest> observableList = FXCollections.observableArrayList();
 
     @Inject
     public CompensationRequestModel(BsqChainState bsqChainState,
@@ -46,17 +47,18 @@ public class CompensationRequestModel {
     }
 
     public void setPersistedCompensationRequest(List<CompensationRequest> list) {
-        this.list.addAll(list);
+        this.observableList.clear();
+        this.observableList.addAll(list);
     }
 
     public Optional<CompensationRequest> findByAddress(String address) {
-        return list.stream()
-                .filter(e -> e.getCompensationRequestPayload().getBtcAddress().equals(address))
+        return observableList.stream()
+                .filter(e -> e.getCompensationRequestPayload().getBsqAddress().equals(address))
                 .findAny();
     }
 
 
     public void addCompensationRequest(CompensationRequest compensationRequest) {
-        list.add(compensationRequest);
+        observableList.add(compensationRequest);
     }
 }

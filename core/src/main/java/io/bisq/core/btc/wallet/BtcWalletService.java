@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
@@ -32,6 +33,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
@@ -121,6 +123,147 @@ public class BtcWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // CompensationRequest tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<Transaction, Integer> getPreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx) throws
+            InsufficientMoneyException, ChangeBelowDustException {
+
+        // (BsqFee)tx has following structure:
+        // inputs [1-n] BSQ inputs (fee)
+        // outputs [0-1] BSQ request fee change output
+
+        // We add BTC input for BSQ issuance. Result tx looks like:
+        // inputs [1-n] BSQ inputs
+        // inputs [1-n] BTC inputs for BSQ issuance
+        // outputs [0-1] BSQ request fee change output -> need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
+        // outputs [1] BSQ output for issuance
+
+        Transaction tx = new Transaction(params);
+        // Copy inputs from BSQ fee tx
+        feeTx.getInputs().stream().forEach(tx::addInput);
+        int indexOfBtcFirstInput = feeTx.getInputs().size();
+
+        // Add BTC inputs for issuanceAmount
+        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        CoinSelection coinSelection = coinSelector.select(issuanceAmount, wallet.calculateAllSpendCandidates());
+        coinSelection.gathered.stream().forEach(tx::addInput);
+
+        // Need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
+        // BSQ change outputs from BSQ fee inputs.
+        feeTx.getOutputs().stream().forEach(tx::addOutput);
+
+        // BSQ issuance output
+        tx.addOutput(issuanceAmount, issuanceAddress);
+
+
+        // We don't add the BTC change output from BTC issuance inputs because we will add the miner fee and there we
+        // generate anyway a BTC change output. We don't wan to have twice the change outputs for issuance and for miner fee.
+
+        // BTC change output from BTC issuance inputs
+       /* Coin changeFromIssuance = coinSelector.getChange(issuanceAmount, coinSelection);
+        if (changeFromIssuance.isPositive()) {
+            Address changeAddress = getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            if (changeAddress != null)
+                tx.addOutput(changeFromIssuance, changeAddress);
+        }
+*/
+        printTx("getPreparedCompensationRequestTx", tx);
+        return new Tuple2<>(tx, indexOfBtcFirstInput);
+    }
+
+    public Transaction completePreparedCompensationRequestTx(Transaction preparedTx, int indexOfBtcFirstInput, boolean useCustomTxFee, byte[] opReturnData) throws
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
+
+        // preparedTx has following structure:
+        // inputs [1-n] BSQ inputs for request fee
+        // inputs [1-n] BTC inputs for BSQ issuance
+        // outputs [0-1] BSQ request fee change output
+        // outputs [1] BSQ issuance output
+
+        // preparedCompensationRequestTx has following structure:
+        // inputs [1-n] BSQ inputs for request fee
+        // inputs [1-n] BTC inputs for BSQ issuance and  miner fee
+        // outputs [0-1] BSQ request fee change output
+        // outputs [1] BSQ issuance output
+        // outputs [0-1] BTC  change output from issuance and miner fee inputs
+        // outputs [0-1] OP_RETURN with opReturnData
+        // mining fee: BTC mining fee + burned BSQ fee
+
+        // safety check counter to avoid endless loops
+        int counter = 0;
+        // estimated size of input sig
+        final int sigSizePerInput = 106;
+        // typical size for a tx with 3 inputs
+        int txSizeWithUnsignedInputs = 300;
+        final Coin txFeePerByte = feeService.getTxFeePerByte();
+
+        Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+        checkNotNull(changeAddress, "changeAddress must not be null");
+
+        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        final List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
+        final List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
+        int numInputs = preparedBsqTxInputs.size();
+        Transaction resultTx = null;
+        boolean isFeeOutsideTolerance;
+        do {
+            counter++;
+            if (counter >= 10) {
+                checkNotNull(resultTx, "resultTx must not be null");
+                log.error("Could not calculate the fee. Tx=" + resultTx);
+                break;
+            }
+
+            Transaction tx = new Transaction(params);
+            preparedBsqTxInputs.stream().forEach(tx::addInput);
+            preparedBsqTxOutputs.stream().forEach(tx::addOutput);
+
+            SendRequest sendRequest = SendRequest.forTx(tx);
+            sendRequest.shuffleOutputs = false;
+            sendRequest.aesKey = aesKey;
+            // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
+            sendRequest.signInputs = false;
+
+            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
+
+            sendRequest.coinSelector = coinSelector;
+            sendRequest.changeAddress = changeAddress;
+            wallet.completeTx(sendRequest);
+
+            resultTx = sendRequest.tx;
+
+            // add OP_RETURN output
+            resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
+
+            numInputs = resultTx.getInputs().size();
+            txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
+            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            // calculated fee must be inside of a tolerance range with tx fee
+            isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
+        }
+        while (isFeeOutsideTolerance);
+
+        // Sign all BTC inputs
+        for (int i = indexOfBtcFirstInput; i < resultTx.getInputs().size(); i++) {
+            TransactionInput txIn = resultTx.getInputs().get(i);
+            checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
+                    "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
+            signTransactionInput(wallet, aesKey, resultTx, txIn, i);
+            checkScriptSig(resultTx, txIn, i);
+        }
+
+        checkWalletConsistency(wallet);
+        verifyTransaction(resultTx);
+
+        printTx("BTC wallet: Signed tx", resultTx);
+        return resultTx;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Add fee input to prepared BSQ send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +326,7 @@ public class BtcWalletService extends WalletService {
         final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
         Transaction resultTx = null;
-        boolean isFeeInTolerance;
+        boolean isFeeOutsideTolerance;
         do {
             counter++;
             if (counter >= 10) {
@@ -232,9 +375,9 @@ public class BtcWalletService extends WalletService {
             txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
             final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
-            isFeeInTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
+            isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
-        while (forcedChangeValue.isPositive() || isFeeInTolerance);
+        while (forcedChangeValue.isPositive() || isFeeOutsideTolerance);
 
         // Sign all BTC inputs
         for (int i = preparedBsqTxInputs.size(); i < resultTx.getInputs().size(); i++) {
@@ -248,9 +391,10 @@ public class BtcWalletService extends WalletService {
         checkWalletConsistency(wallet);
         verifyTransaction(resultTx);
 
-        //printTx("BTC wallet: Signed tx", resultTx);
+        printTx("BTC wallet: Signed tx", resultTx);
         return resultTx;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Commit tx

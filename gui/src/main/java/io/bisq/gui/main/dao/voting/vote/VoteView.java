@@ -74,6 +74,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
+    private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final VotingManager voteManager;
     private Button voteButton;
@@ -97,6 +98,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
+        this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
     }
@@ -124,7 +126,10 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             CompensationRequestVoteItem selectedItem = selectionModel.getSelectedItem();
             if (selectedItem != null) {
                 if (!CompensationViewItem.contains(selectedItem)) {
-                    CompensationViewItem.attach(selectedItem, compensationRequestsVBox, compensationRequestsLabelWidth,
+                    CompensationViewItem.attach(selectedItem,
+                            compensationRequestsVBox,
+                            compensationRequestsLabelWidth,
+                            bsqFormatter,
                             () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
