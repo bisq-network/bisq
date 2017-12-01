@@ -30,6 +30,7 @@ import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -287,10 +288,10 @@ public class FilterManager {
                         .isPresent();
     }
 
-    public boolean isNodeAddressBanned(String nodeAddress) {
+    public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress))
+                        .filter(e -> e.equals(nodeAddress.getFullAddress()))
                         .findAny()
                         .isPresent();
     }

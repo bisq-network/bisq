@@ -23,6 +23,8 @@ import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.util.BSFormatter;
 import javafx.scene.control.Label;
+import lombok.Getter;
+import lombok.Setter;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -35,6 +37,9 @@ class WithdrawalListItem {
     private final BSFormatter formatter;
     private Coin balance;
     private final String addressString;
+    @Setter
+    @Getter
+    private boolean isSelected;
 
     public WithdrawalListItem(AddressEntry addressEntry, BtcWalletService walletService,
                               BSFormatter formatter) {

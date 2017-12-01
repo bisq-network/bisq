@@ -742,7 +742,6 @@ public class BtcWalletService extends WalletService {
     }
 
     public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
                                                                        Coin amount)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
@@ -774,7 +773,8 @@ public class BtcWalletService extends WalletService {
                 final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
                 if (fee.compareTo(defaultMinFee) < 0)
                     fee = defaultMinFee;
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
+                // We use a dummy address for the output
+                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddressString(), amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;

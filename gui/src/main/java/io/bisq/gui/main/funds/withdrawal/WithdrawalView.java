@@ -42,9 +42,9 @@ import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,17 +67,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
-    Label amountLabel, fromLabel, toLabel;
+    Label inputsLabel, amountLabel, fromLabel, toLabel;
     @FXML
     Button withdrawButton;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
     TextField withdrawFromTextField, withdrawToTextField, amountTextField;
+    @FXML
+    RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
@@ -94,10 +98,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses;
-    private Coin amountOfSelectedItems = Coin.ZERO;
-    private final ObjectProperty<Coin> senderAmountAsCoinProperty = new SimpleObjectProperty<>(Coin.ZERO);
+    private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
+    private Coin amountAsCoin = Coin.ZERO;
+    private Coin sendersAmount = Coin.ZERO;
     private ChangeListener<String> amountListener;
     private ChangeListener<Boolean> amountFocusListener;
+    private ChangeListener<Toggle> feeToggleGroupListener, inputsToggleGroupListener;
+    private ToggleGroup feeToggleGroup, inputsToggleGroup;
+    private final BooleanProperty useAllInputs = new SimpleBooleanProperty(true);
+    private boolean feeExcluded;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,9 +133,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        amountLabel.setText(Res.getWithCol("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        fromLabel.setText(Res.getWithCol("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
-        toLabel.setText(Res.getWithCol("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
+        inputsLabel.setText(Res.getWithCol("funds.withdrawal.inputs"));
+        useAllInputsRadioButton.setText(Res.get("funds.withdrawal.useAllInputs"));
+        useCustomInputsRadioButton.setText(Res.get("funds.withdrawal.useCustomInputs"));
+        amountLabel.setText(Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()));
+        feeExcludedRadioButton.setText(Res.get("funds.withdrawal.feeExcluded"));
+        feeIncludedRadioButton.setText(Res.get("funds.withdrawal.feeIncluded"));
+        fromLabel.setText(Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
+        toLabel.setText(Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
         withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
 
         addressColumn.setText(Res.get("shared.address"));
@@ -155,7 +169,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountListener = (observable, oldValue, newValue) -> {
             if (amountTextField.focusedProperty().get()) {
                 try {
-                    senderAmountAsCoinProperty.set(formatter.parseToCoin(amountTextField.getText()));
+                    amountAsCoin = formatter.parseToCoin(amountTextField.getText());
                 } catch (Throwable t) {
                     log.error("Error at amountTextField input. " + t.toString());
                 }
@@ -163,12 +177,38 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         };
         amountFocusListener = (observable, oldValue, newValue) -> {
             if (oldValue && !newValue) {
-                if (senderAmountAsCoinProperty.get().isPositive())
-                    amountTextField.setText(formatter.formatCoin(senderAmountAsCoinProperty.get()));
+                if (amountAsCoin.isPositive())
+                    amountTextField.setText(formatter.formatCoin(amountAsCoin));
                 else
                     amountTextField.setText("");
             }
         };
+        feeToggleGroup = new ToggleGroup();
+        feeExcludedRadioButton.setToggleGroup(feeToggleGroup);
+        feeIncludedRadioButton.setToggleGroup(feeToggleGroup);
+        feeToggleGroupListener = (observable, oldValue, newValue) -> {
+            feeExcluded = newValue == feeExcludedRadioButton;
+            amountLabel.setText(feeExcluded ?
+                    Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()) :
+                    Res.getWithCol("funds.withdrawal.senderAmount", Res.getBaseCurrencyCode()));
+        };
+
+        inputsToggleGroup = new ToggleGroup();
+        useAllInputsRadioButton.setToggleGroup(inputsToggleGroup);
+        useCustomInputsRadioButton.setToggleGroup(inputsToggleGroup);
+        inputsToggleGroupListener = (observable, oldValue, newValue) -> {
+            useAllInputs.set(newValue == useAllInputsRadioButton);
+
+            updateInputSelection();
+        };
+    }
+
+    private void updateInputSelection() {
+        observableList.stream().forEach(item -> {
+            item.setSelected(useAllInputs.get());
+            selectForWithdrawal(item);
+        });
+        tableView.refresh();
     }
 
     @Override
@@ -182,6 +222,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField.textProperty().addListener(amountListener);
         amountTextField.focusedProperty().addListener(amountFocusListener);
         walletService.addBalanceListener(balanceListener);
+        feeToggleGroup.selectedToggleProperty().addListener(feeToggleGroupListener);
+        inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
+
+        if (feeToggleGroup.getSelectedToggle() == null)
+            feeToggleGroup.selectToggle(feeExcludedRadioButton);
+
+        if (inputsToggleGroup.getSelectedToggle() == null)
+            inputsToggleGroup.selectToggle(useAllInputsRadioButton);
+
+        updateInputSelection();
     }
 
     @Override
@@ -191,6 +241,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         walletService.removeBalanceListener(balanceListener);
         amountTextField.textProperty().removeListener(amountListener);
         amountTextField.focusedProperty().removeListener(amountFocusListener);
+        feeToggleGroup.selectedToggleProperty().removeListener(feeToggleGroupListener);
+        inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
     }
 
 
@@ -200,85 +252,77 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
     public void onWithdraw() {
-        if (areInputsValid()) {
-            FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
-                @Override
-                public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                    if (transaction != null) {
-                        log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                    } else {
-                        log.error("onWithdraw transaction is null");
-                    }
-
-                    List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
-                    trades.stream()
-                            .filter(Trade::isPayoutPublished)
-                            .forEach(trade -> {
-                                walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
-                                        .ifPresent(addressEntry -> {
-                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                tradeManager.addTradeToClosedTrades(trade);
-                                        });
-                            });
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    log.error("onWithdraw onFailure");
-                }
-            };
-
-
-            try {
-                // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then
-                // we have available and then the fee calculation would return 0
-                // TODO Get a proper fee calculation from BitcoinJ directly
-                Transaction feeEstimationTransaction = null;
-                try {
-                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
-                            withdrawToTextField.getText(), amountOfSelectedItems);
-                } catch (InsufficientFundsException e) {
-                    new Popup<>().warning(e.toString()).show();
-                } catch (Throwable t) {
-                    new Popup<>().error(Res.get("popup.error.createTx", t.toString())).show();
-                }
-                if (feeEstimationTransaction != null) {
-                    Coin fee = feeEstimationTransaction.getFee();
-                    Coin amount = senderAmountAsCoinProperty.get();
-                    Coin receiverAmount = amount.subtract(fee);
-                    int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
-
-                    if (receiverAmount.isPositive()) {
-                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                        double kb = txSize / 1000d;
-                        new Popup<>().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
-                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                        formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()),
-                                        withdrawFromTextField.getText(),
-                                        withdrawToTextField.getText(),
-                                        formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
-                                        formatter.formatCoinWithCode(receiverAmount)))
-                                .actionButtonText(Res.get("shared.yes"))
-                                .onAction(() -> doWithdraw(amount, fee, callback))
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .show();
-                    } else {
-                        new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
-                    }
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                log.error(e.toString());
-                new Popup<>().warning(e.toString()).show();
+        try {
+            // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
+            Transaction feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
+            if (feeExcluded && feeEstimationTransaction != null) {
+                sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
+                feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
             }
+            checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
+            Coin fee = feeEstimationTransaction.getFee();
+            sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
+            Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
+            if (areInputsValid()) {
+                int txSize = feeEstimationTransaction.bitcoinSerialize().length;
+                log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
+
+                if (receiverAmount.isPositive()) {
+                    double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
+                    double kb = txSize / 1000d;
+                    new Popup<>().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
+                            .confirmation(Res.get("shared.sendFundsDetailsWithFee",
+                                    formatter.formatCoinWithCode(sendersAmount),
+                                    withdrawFromTextField.getText(),
+                                    withdrawToTextField.getText(),
+                                    formatter.formatCoinWithCode(fee),
+                                    feePerByte,
+                                    kb,
+                                    formatter.formatCoinWithCode(receiverAmount)))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<Transaction>() {
+                                @Override
+                                public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                                    if (transaction != null) {
+                                        log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                                    } else {
+                                        log.error("onWithdraw transaction is null");
+                                    }
+
+                                    List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
+                                    trades.stream()
+                                            .filter(Trade::isPayoutPublished)
+                                            .forEach(trade -> {
+                                                walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                                        .ifPresent(addressEntry -> {
+                                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                                tradeManager.addTradeToClosedTrades(trade);
+                                                        });
+                                            });
+                                }
+
+                                @Override
+                                public void onFailure(@NotNull Throwable t) {
+                                    log.error("onWithdraw onFailure");
+                                }
+                            }))
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } else {
+                    new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
+                }
+            }
+        } catch (InsufficientFundsException ignore) {
+            new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            log.error(e.toString());
+            new Popup<>().warning(e.toString()).show();
         }
     }
 
-    private void selectForWithdrawal(WithdrawalListItem item, boolean isSelected) {
-        if (isSelected)
+    private void selectForWithdrawal(WithdrawalListItem item) {
+        if (item.isSelected())
             selectedItems.add(item);
         else
             selectedItems.remove(item);
@@ -288,13 +332,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 .collect(Collectors.toSet());
 
         if (!selectedItems.isEmpty()) {
-            amountOfSelectedItems = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
-            if (amountOfSelectedItems.isPositive()) {
-                senderAmountAsCoinProperty.set(amountOfSelectedItems);
-                amountTextField.setText(formatter.formatCoin(amountOfSelectedItems));
+            totalAvailableAmountOfSelectedItems = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
+            if (totalAvailableAmountOfSelectedItems.isPositive()) {
+                amountAsCoin = totalAvailableAmountOfSelectedItems;
+                amountTextField.setText(formatter.formatCoin(amountAsCoin));
             } else {
-                senderAmountAsCoinProperty.set(Coin.ZERO);
-                amountOfSelectedItems = Coin.ZERO;
+                amountAsCoin = Coin.ZERO;
+                totalAvailableAmountOfSelectedItems = Coin.ZERO;
                 amountTextField.setText("");
                 withdrawFromTextField.setText("");
             }
@@ -336,6 +380,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
+
+        updateInputSelection();
     }
 
     private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
@@ -369,21 +415,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void reset() {
-        selectedItems = new HashSet<>();
-
-        tableView.getSelectionModel().clearSelection();
-
         withdrawFromTextField.setText("");
         withdrawFromTextField.setPromptText(Res.get("funds.withdrawal.selectAddress"));
         withdrawFromTextField.setTooltip(null);
 
-        amountOfSelectedItems = Coin.ZERO;
-        senderAmountAsCoinProperty.set(Coin.ZERO);
+        totalAvailableAmountOfSelectedItems = Coin.ZERO;
+        amountAsCoin = Coin.ZERO;
+        sendersAmount = Coin.ZERO;
         amountTextField.setText("");
         amountTextField.setPromptText(Res.get("funds.withdrawal.setAmount"));
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
+
+        selectedItems.clear();
+        tableView.getSelectionModel().clearSelection();
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
@@ -399,7 +445,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private boolean areInputsValid() {
-        if (!senderAmountAsCoinProperty.get().isPositive()) {
+        if (!sendersAmount.isPositive()) {
             new Popup<>().warning(Res.get("validation.negative")).show();
             return false;
         }
@@ -408,12 +454,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
         }
-        if (!amountOfSelectedItems.isPositive()) {
+        if (!totalAvailableAmountOfSelectedItems.isPositive()) {
             new Popup<>().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
             return false;
         }
 
-        if (senderAmountAsCoinProperty.get().compareTo(amountOfSelectedItems) > 0) {
+        if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0) {
             new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
         }
@@ -491,24 +537,33 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             WithdrawalListItem> column) {
                         return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
-                            CheckBox checkBox;
+                            CheckBox checkBox = new CheckBox();
 
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (checkBox == null) {
-                                        checkBox = new CheckBox();
-                                        checkBox.setOnAction(e -> selectForWithdrawal(item, checkBox.isSelected()));
-                                        setGraphic(checkBox);
-                                    }
+                                    checkBox.setOnAction(e -> {
+                                        item.setSelected(checkBox.isSelected());
+                                        selectForWithdrawal(item);
+
+                                        // If all are selected we select useAllInputsRadioButton
+                                        if (observableList.size() == selectedItems.size()) {
+                                            inputsToggleGroup.selectToggle(useAllInputsRadioButton);
+                                        } else {
+                                            // We don't want to get deselected all when we activate the useCustomInputsRadioButton
+                                            // so we temporarily disable the listener
+                                            inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
+                                            inputsToggleGroup.selectToggle(useCustomInputsRadioButton);
+                                            useAllInputs.set(false);
+                                            inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
+                                        }
+                                    });
+                                    setGraphic(checkBox);
+                                    checkBox.setSelected(item.isSelected());
                                 } else {
-                                    setGraphic(null);
-                                    if (checkBox != null) {
-                                        checkBox.setOnAction(null);
-                                        checkBox = null;
-                                    }
-                                }
+                                    checkBox.setOnAction(null);
+                                    setGraphic(null);                                }
                             }
                         };
                     }

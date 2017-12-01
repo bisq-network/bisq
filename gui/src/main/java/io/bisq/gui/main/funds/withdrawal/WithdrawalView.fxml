@@ -39,22 +39,39 @@
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
         </padding>
 
-        <Label fx:id="amountLabel" GridPane.rowIndex="0"/>
-        <TextField fx:id="amountTextField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label fx:id="inputsLabel" GridPane.rowIndex="0"/>
+        <RadioButton fx:id="useAllInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="1">
+            <padding>
+                <Insets bottom="0.0" left="0.0" right="5.0" top="0.0"/>
+            </padding>
+        </RadioButton>
+        <RadioButton fx:id="useCustomInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
-        <Label fx:id="fromLabel" GridPane.rowIndex="1"/>
+
+        <Label fx:id="amountLabel" GridPane.rowIndex="1"/>
+        <TextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="120"/>
+        <RadioButton fx:id="feeExcludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="2">
+            <padding>
+                <Insets bottom="0.0" left="5.0" right="5.0" top="0.0"/>
+            </padding>
+        </RadioButton>
+        <RadioButton fx:id="feeIncludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+        <Label fx:id="fromLabel" GridPane.rowIndex="2"/>
         <TextField fx:id="withdrawFromTextField" editable="false" focusTraversable="false"
-                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                   GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-        <Label fx:id="toLabel" GridPane.rowIndex="2"/>
-        <TextField fx:id="withdrawToTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label fx:id="toLabel" GridPane.rowIndex="3"/>
+        <TextField fx:id="withdrawToTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
         <Button fx:id="withdrawButton" defaultButton="true" onAction="#onWithdraw"
-                GridPane.rowIndex="3"
+                GridPane.rowIndex="4"
                 GridPane.columnIndex="1"/>
 
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+            <ColumnConstraints hgrow="SOMETIMES"/>
+            <ColumnConstraints hgrow="SOMETIMES"/>
             <ColumnConstraints hgrow="ALWAYS"/>
         </columnConstraints>
         <rowConstraints>

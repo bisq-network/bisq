@@ -31,7 +31,6 @@ import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Transitions;
-import io.bisq.gui.util.validation.*;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
@@ -61,13 +60,6 @@ public class GuiModule extends AppModule {
         bind(BSFormatter.class).in(Singleton.class);
         bind(BsqFormatter.class).in(Singleton.class);
 
-        bind(IBANValidator.class).in(Singleton.class);
-        bind(BtcValidator.class).in(Singleton.class);
-        bind(FiatVolumeValidator.class).in(Singleton.class);
-        bind(FiatPriceValidator.class).in(Singleton.class);
-        bind(AltcoinValidator.class).in(Singleton.class);
-        bind(InputValidator.class).in(Singleton.class);
-        bind(PasswordValidator.class).in(Singleton.class);
         bind(Transitions.class).in(Singleton.class);
 
         bind(Stage.class).toInstance(primaryStage);

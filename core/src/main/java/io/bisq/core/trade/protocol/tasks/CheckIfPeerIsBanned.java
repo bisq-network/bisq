@@ -42,7 +42,7 @@ public class CheckIfPeerIsBanned extends TradeTask {
             PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getTradingPeer().getPaymentAccountPayload());
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
 
-            if (nodeAddress != null && processModel.getFilterManager().isNodeAddressBanned(nodeAddress.getHostNameWithoutPostFix())) {
+            if (nodeAddress != null && processModel.getFilterManager().isNodeAddressBanned(nodeAddress)) {
                 failed("Other trader is banned by his node address.\n" +
                         "tradingPeerNodeAddress=" + nodeAddress);
             } else if (processModel.getFilterManager().isOfferIdBanned(trade.getId())) {
