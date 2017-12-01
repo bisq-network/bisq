@@ -45,7 +45,7 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAddressAndPort("kirsche.emzy.de", "78.47.61.83", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
                         BtcNode.fromOnion("poyvpdt762gllauu.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
                         BtcNode.fromHostNameAndAddress("bitcoin.christophatteneder.com", "174.138.35.229", "https://github.com/ripcurlx"),
-                        BtcNode.fromOnion("r3dsojfhwcm7x7p6.onion", BtcNode.DEFAULT_PORT, "https://github.com/alexej996"),
+                        BtcNode.fromOnion("r3dsojfhwcm7x7p6.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
                         BtcNode.fromOnion("vlf5i3grro3wux24.onion", BtcNode.DEFAULT_PORT, "https://github.com/alexej996"),
                         BtcNode.fromOnion("3r44ddzjitznyahw.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"),
                         BtcNode.fromOnion("i3a5xtzfm4xwtybd.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"),
@@ -54,7 +54,6 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),  //
                         BtcNode.fromHostNameAddressAndPort("btc.vante.me", "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
                         BtcNode.fromOnion("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
-                        /*BtcNode.fromOnion("7sl6havdhtgefwo2.onion", BtcNode.DEFAULT_PORT, "https://github.com/themighty1"),*/ // node is dead atm
                         BtcNode.fromAddressAndPort("62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
                         BtcNode.fromAddressAndPort("163.172.171.119", BtcNode.DEFAULT_PORT, "https://github.com/emzy")
                 ) :
