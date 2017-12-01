@@ -42,7 +42,9 @@ import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -71,7 +73,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
-    Label amountLabel, fromLabel, toLabel;
+    Label inputsLabel, amountLabel, fromLabel, toLabel;
     @FXML
     Button withdrawButton;
     @FXML
@@ -79,7 +81,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML
-    RadioButton feeExcludedRadioButton, feeIncludedRadioButton;
+    RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
@@ -101,8 +103,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Coin sendersAmount = Coin.ZERO;
     private ChangeListener<String> amountListener;
     private ChangeListener<Boolean> amountFocusListener;
-    private ChangeListener<Toggle> feeToggleGroupListener;
-    private ToggleGroup feeToggleGroup;
+    private ChangeListener<Toggle> feeToggleGroupListener, inputsToggleGroupListener;
+    private ToggleGroup feeToggleGroup, inputsToggleGroup;
+    private final BooleanProperty useAllInputs = new SimpleBooleanProperty(true);
     private boolean feeExcluded;
 
 
@@ -130,6 +133,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        inputsLabel.setText(Res.getWithCol("funds.withdrawal.inputs"));
+        useAllInputsRadioButton.setText(Res.get("funds.withdrawal.useAllInputs"));
+        useCustomInputsRadioButton.setText(Res.get("funds.withdrawal.useCustomInputs"));
         amountLabel.setText(Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()));
         feeExcludedRadioButton.setText(Res.get("funds.withdrawal.feeExcluded"));
         feeIncludedRadioButton.setText(Res.get("funds.withdrawal.feeIncluded"));
@@ -186,6 +192,23 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()) :
                     Res.getWithCol("funds.withdrawal.senderAmount", Res.getBaseCurrencyCode()));
         };
+
+        inputsToggleGroup = new ToggleGroup();
+        useAllInputsRadioButton.setToggleGroup(inputsToggleGroup);
+        useCustomInputsRadioButton.setToggleGroup(inputsToggleGroup);
+        inputsToggleGroupListener = (observable, oldValue, newValue) -> {
+            useAllInputs.set(newValue == useAllInputsRadioButton);
+
+            updateInputSelection();
+        };
+    }
+
+    private void updateInputSelection() {
+        observableList.stream().forEach(item -> {
+            item.setSelected(useAllInputs.get());
+            selectForWithdrawal(item);
+        });
+        tableView.refresh();
     }
 
     @Override
@@ -200,8 +223,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField.focusedProperty().addListener(amountFocusListener);
         walletService.addBalanceListener(balanceListener);
         feeToggleGroup.selectedToggleProperty().addListener(feeToggleGroupListener);
+        inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
 
-        feeToggleGroup.selectToggle(feeExcludedRadioButton);
+        if (feeToggleGroup.getSelectedToggle() == null)
+            feeToggleGroup.selectToggle(feeExcludedRadioButton);
+
+        if (inputsToggleGroup.getSelectedToggle() == null)
+            inputsToggleGroup.selectToggle(useAllInputsRadioButton);
+
+        updateInputSelection();
     }
 
     @Override
@@ -212,6 +242,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField.textProperty().removeListener(amountListener);
         amountTextField.focusedProperty().removeListener(amountFocusListener);
         feeToggleGroup.selectedToggleProperty().removeListener(feeToggleGroupListener);
+        inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
     }
 
 
@@ -290,8 +321,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void selectForWithdrawal(WithdrawalListItem item, boolean isSelected) {
-        if (isSelected)
+    private void selectForWithdrawal(WithdrawalListItem item) {
+        if (item.isSelected())
             selectedItems.add(item);
         else
             selectedItems.remove(item);
@@ -349,6 +380,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
+
+        updateInputSelection();
     }
 
     private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
@@ -382,10 +415,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void reset() {
-        selectedItems = new HashSet<>();
-
-        tableView.getSelectionModel().clearSelection();
-
         withdrawFromTextField.setText("");
         withdrawFromTextField.setPromptText(Res.get("funds.withdrawal.selectAddress"));
         withdrawFromTextField.setTooltip(null);
@@ -398,6 +427,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
+
+        selectedItems.clear();
+        tableView.getSelectionModel().clearSelection();
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
@@ -505,23 +537,33 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             WithdrawalListItem> column) {
                         return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
-                            CheckBox checkBox;
+                            CheckBox checkBox = new CheckBox();
 
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (checkBox == null) {
-                                        checkBox = new CheckBox();
-                                        checkBox.setOnAction(e -> selectForWithdrawal(item, checkBox.isSelected()));
-                                        setGraphic(checkBox);
-                                    }
+                                    checkBox.setOnAction(e -> {
+                                        item.setSelected(checkBox.isSelected());
+                                        selectForWithdrawal(item);
+
+                                        // If all are selected we select useAllInputsRadioButton
+                                        if (observableList.size() == selectedItems.size()) {
+                                            inputsToggleGroup.selectToggle(useAllInputsRadioButton);
+                                        } else {
+                                            // We don't want to get deselected all when we activate the useCustomInputsRadioButton
+                                            // so we temporarily disable the listener
+                                            inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
+                                            inputsToggleGroup.selectToggle(useCustomInputsRadioButton);
+                                            useAllInputs.set(false);
+                                            inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
+                                        }
+                                    });
+                                    setGraphic(checkBox);
+                                    checkBox.setSelected(item.isSelected());
                                 } else {
+                                    checkBox.setOnAction(null);
                                     setGraphic(null);
-                                    if (checkBox != null) {
-                                        checkBox.setOnAction(null);
-                                        checkBox = null;
-                                    }
                                 }
                             }
                         };
