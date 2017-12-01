@@ -236,8 +236,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 // TODO Get a proper fee calculation from BitcoinJ directly
                 Transaction feeEstimationTransaction = null;
                 try {
-                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
-                            withdrawToTextField.getText(), amountOfSelectedItems);
+                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountOfSelectedItems);
                 } catch (InsufficientFundsException e) {
                     new Popup<>().warning(e.toString()).show();
                 } catch (Throwable t) {
