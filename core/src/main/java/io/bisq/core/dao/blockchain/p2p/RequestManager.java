@@ -289,11 +289,13 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                     requestBlocksHandlerMap.put(key, requestBlocksHandler);
                     requestBlocksHandler.requestBlocks(peersNodeAddress, startBlockHeight);
                 } else {
-                    //TODo check with re-orgs
+                    //TODO check with re-orgs
+                    // FIXME when a lot of blocks are created we get caught here. Seems to be a threading issue...
                     log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
                             "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
                     if (DevEnv.DEV_MODE)
-                        throw new RuntimeException("startBlockHeight must be larger than lastReceivedBlockHeight.");
+                        throw new RuntimeException("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
+                                startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
                 }
             } else {
                 log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + peersNodeAddress + "\n" +

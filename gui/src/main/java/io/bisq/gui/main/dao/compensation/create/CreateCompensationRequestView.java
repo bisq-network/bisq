@@ -65,7 +65,6 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     private CompensationRequestDisplay compensationRequestDisplay;
     private Button createButton;
 
-    private final PublicKey p2pStorageSignaturePubKey;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
@@ -73,9 +72,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     private final P2PService p2PService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
+    private final PublicKey p2pStorageSignaturePubKey;
 
-    @Nullable
-    private NodeAddress nodeAddress;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -107,9 +105,10 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     @Override
     protected void activate() {
         compensationRequestDisplay.fillWithMock();
+        
         createButton.setOnAction(event -> {
-            nodeAddress = p2PService.getAddress();
             if (p2PService.isBootstrapped()) {
+                NodeAddress nodeAddress = p2PService.getAddress();
                 checkNotNull(nodeAddress, "nodeAddress must not be null");
                 CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(
                         UUID.randomUUID().toString(),
@@ -202,7 +201,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 } catch (InsufficientMoneyException e) {
                     BSFormatter formatter = walletExceptionMightBeCausedByBtCWallet ? btcFormatter : bsqFormatter;
                     new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
-                } catch (IOException | TransactionVerificationException | WalletException  e) {
+                } catch (IOException | TransactionVerificationException | WalletException e) {
                     log.error(e.toString());
                     e.printStackTrace();
                     new Popup<>().warning(e.toString()).show();

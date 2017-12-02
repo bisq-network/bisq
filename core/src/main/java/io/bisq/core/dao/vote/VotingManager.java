@@ -101,7 +101,7 @@ public class VotingManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_VOTING) {
+        if (daoPeriodService.getPhaseProperty().get() == DaoPeriodService.Phase.OPEN_FOR_VOTING) {
             VoteItemsList activeVoteItemsList = new VoteItemsList(votingDefaultValues);
             setActiveVoteItemsList(activeVoteItemsList);
         }

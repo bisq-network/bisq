@@ -17,15 +17,13 @@
 
 package io.bisq.gui.main.dao.compensation.active;
 
-import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
@@ -45,33 +43,32 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
-import static io.bisq.gui.util.FormBuilder.addLabel;
+import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> {
 
     TableView<CompensationRequest> tableView;
-    private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
-            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
-
     private final CompensationRequestManager compensationRequestManger;
+    private final DaoPeriodService daoPeriodService;
     private final Navigation navigation;
-    private final FundCompensationRequestWindow fundCompensationRequestWindow;
     private final BsqFormatter bsqFormatter;
     private SortedList<CompensationRequest> sortedList;
-    private Subscription selectedCompensationRequestSubscription;
+    private Subscription selectedCompensationRequestSubscription, phaseSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
+    private int gridRow = 0;
+    private Label phaseInfoLabel;
+    private GridPane detailsGridPane;
     private GridPane gridPane;
+    private DaoPeriodService.Phase currentPhase;
+    private CompensationRequest selectedCompensationRequest;
+    private Button removeButton;
+    private Button voteButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,12 +77,12 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
+                                          DaoPeriodService daoPeriodService,
                                           Navigation navigation,
-                                          FundCompensationRequestWindow fundCompensationRequestWindow,
                                           BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
+        this.daoPeriodService = daoPeriodService;
         this.navigation = navigation;
-        this.fundCompensationRequestWindow = fundCompensationRequestWindow;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -96,7 +93,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane topAnchorPane = new AnchorPane();
         root.getItems().add(topAnchorPane);
 
-        GridPane gridPane = new GridPane();
+        gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         AnchorPane.setBottomAnchor(gridPane, 10d);
@@ -105,43 +102,56 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
+        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.compensation.active.phase.header"));
+        phaseInfoLabel = addLabel(gridPane, gridRow, "", Layout.FIRST_ROW_DISTANCE);
+
         TableGroupHeadline header = new TableGroupHeadline(Res.get("dao.compensation.active.header"));
-        GridPane.setRowIndex(header, 0);
-        GridPane.setMargin(header, new Insets(0, -10, -10, -10));
+        GridPane.setRowIndex(header, ++gridRow);
+        GridPane.setMargin(header, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         gridPane.getChildren().add(header);
         header.setMinHeight(20);
         header.setMaxHeight(20);
 
         tableView = new TableView<>();
-        GridPane.setRowIndex(tableView, 1);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        tableView.setMinHeight(70);
+        GridPane.setRowIndex(tableView, ++gridRow);
         GridPane.setMargin(tableView, new Insets(5, -15, -10, -10));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         gridPane.getChildren().add(tableView);
 
-        // tableView.setMinHeight(100);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        createColumns();
+
         sortedList = new SortedList<>(compensationRequestManger.getObservableList());
         tableView.setItems(sortedList);
-        //sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        setColumns();
+
     }
 
     @Override
     protected void activate() {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.getSelectionModel().clearSelection();
         selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
+
+        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
+            phaseInfoLabel.setText(Res.get("dao.compensation.active.phase.info", Res.get("dao.phase." + phase)));
+            if (!phase.equals(this.currentPhase)) {
+                this.currentPhase = phase;
+                onSelectCompensationRequest(selectedCompensationRequest);
+            }
+        });
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         selectedCompensationRequestSubscription.unsubscribe();
+        phaseSubscription.unsubscribe();
     }
 
     private void onSelectCompensationRequest(CompensationRequest compensationRequest) {
+        selectedCompensationRequest = compensationRequest;
         if (compensationRequest != null) {
             if (compensationRequestDisplay == null) {
                 ScrollPane scrollPane = new ScrollPane();
@@ -153,9 +163,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane bottomAnchorPane = new AnchorPane();
                 scrollPane.setContent(bottomAnchorPane);
 
-                gridPane = new GridPane();
-                gridPane.setHgap(5);
-                gridPane.setVgap(5);
+                detailsGridPane = new GridPane();
+                detailsGridPane.setHgap(5);
+                detailsGridPane.setVgap(5);
                 ColumnConstraints columnConstraints1 = new ColumnConstraints();
                 columnConstraints1.setHalignment(HPos.RIGHT);
                 columnConstraints1.setHgrow(Priority.SOMETIMES);
@@ -163,60 +173,78 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 ColumnConstraints columnConstraints2 = new ColumnConstraints();
                 columnConstraints2.setHgrow(Priority.ALWAYS);
                 columnConstraints2.setMinWidth(300);
-                gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
-                AnchorPane.setBottomAnchor(gridPane, 20d);
-                AnchorPane.setRightAnchor(gridPane, -10d);
-                AnchorPane.setLeftAnchor(gridPane, 10d);
-                AnchorPane.setTopAnchor(gridPane, -20d);
-                bottomAnchorPane.getChildren().add(gridPane);
+                detailsGridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+                AnchorPane.setBottomAnchor(detailsGridPane, 20d);
+                AnchorPane.setRightAnchor(detailsGridPane, 10d);
+                AnchorPane.setLeftAnchor(detailsGridPane, 10d);
+                AnchorPane.setTopAnchor(detailsGridPane, -20d);
+                bottomAnchorPane.getChildren().add(detailsGridPane);
 
-                compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter);
+                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter);
             }
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
-
-            //TODO
-            compensationRequest.setInVotePeriod(true);
-
-            if (compensationRequest.isWaitingForVotingPeriod()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
-            } else if (compensationRequest.isInVotePeriod()) {
-                Button voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
-                voteButton.setOnAction(event -> {
-                    compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
-                    //noinspection unchecked
-                    navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
-                });
-            } else if (compensationRequest.isInFundingPeriod()) {
-                checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
-                Button fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
-                fundButton.setOnAction(event -> fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
-                        onAction(() -> {
-                            Coin amount = bsqFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
-                            compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
-                                    new FutureCallback<Transaction>() {
-                                        @Override
-                                        public void onSuccess(Transaction transaction) {
-                                            UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
-                                        }
-
-                                        @Override
-                                        public void onFailure(@NotNull Throwable t) {
-                                            UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
-
-                                        }
-                                    });
-                        }).show());
-            } else if (compensationRequest.isClosed()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
-            }
             compensationRequestDisplay.setAllFieldsEditable(false);
-
             compensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
+
+            if (removeButton != null) {
+                removeButton.setManaged(false);
+                removeButton.setVisible(false);
+                removeButton = null;
+            }
+            if (voteButton != null) {
+                voteButton.setManaged(false);
+                voteButton.setVisible(false);
+                voteButton = null;
+            }
+
+            switch (daoPeriodService.getPhaseProperty().get()) {
+                case OPEN_FOR_COMPENSATION_REQUESTS:
+                    if (compensationRequestManger.isMyCompensationRequest(compensationRequest)) {
+                        if (removeButton == null) {
+                            removeButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.remove"));
+                            removeButton.setOnAction(event -> {
+                                if (!compensationRequestManger.removeCompensationRequest(compensationRequest))
+                                    new Popup<>().warning(Res.get("dao.compensation.active.remove.failed")).show();
+                            });
+                        } else {
+                            removeButton.setManaged(true);
+                            removeButton.setVisible(true);
+                        }
+                    }
+                    break;
+                case BREAK1:
+                    break;
+                case OPEN_FOR_VOTING:
+                    if (voteButton == null) {
+                        voteButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
+                        voteButton.setOnAction(event -> {
+                            compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
+                            //noinspection unchecked
+                            navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
+                        });
+                    } else {
+                        voteButton.setManaged(true);
+                        voteButton.setVisible(true);
+                    }
+                    break;
+                case BREAK2:
+                    break;
+                case VOTE_CONFIRMATION:
+                    //TODO
+                    log.warn("VOTE_CONFIRMATION");
+                    break;
+                case BREAK3:
+                    break;
+                case UNDEFINED:
+                default:
+                    log.warn("Undefined phase: " + daoPeriodService.getPhaseProperty());
+                    break;
+            }
         }
     }
 
-    private void setColumns() {
+    private void createColumns() {
         TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
@@ -247,7 +275,6 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
-
         TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
@@ -270,7 +297,6 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 });
         nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getName().compareTo(o2.getCompensationRequestPayload().getName()));
         tableView.getColumns().add(nameColumn);
-
 
         TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));

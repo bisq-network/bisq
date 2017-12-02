@@ -31,6 +31,7 @@ import java.util.Optional;
 
 @Slf4j
 public class CompensationRequestModel {
+
     private final BsqChainState bsqChainState;
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
@@ -57,8 +58,15 @@ public class CompensationRequestModel {
                 .findAny();
     }
 
-
     public void addCompensationRequest(CompensationRequest compensationRequest) {
         observableList.add(compensationRequest);
+    }
+
+    public void removeCompensationRequest(CompensationRequest compensationRequest) {
+        observableList.remove(compensationRequest);
+    }
+
+    public Optional<CompensationRequest> findCompensationRequest(CompensationRequestPayload compensationRequestPayload) {
+        return observableList.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny();
     }
 }

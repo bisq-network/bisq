@@ -392,7 +392,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
 
-                // If we get a PersistedStoragePayload we save to disc
+                // If we get a PersistedStoragePayload we add it to persistedEntryMap
                 if (protectedStoragePayload instanceof PersistableProtectedPayload) {
                     persistedEntryMap.put(hashOfPayload, protectedStorageEntry);
                     persistedEntryMapStorage.queueUpForSave(persistedEntryMap, 2000);
@@ -466,7 +466,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public boolean remove(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
         Log.traceCall();
-        ByteArray hashOfPayload = getHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
+        final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+        ByteArray hashOfPayload = getHashAsByteArray(protectedStoragePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey)
             log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -484,6 +485,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+
+            // If we get a PersistedStoragePayload we remove it from persistedEntryMap
+            if (protectedStoragePayload instanceof PersistableProtectedPayload) {
+                persistedEntryMap.remove(hashOfPayload);
+                persistedEntryMapStorage.queueUpForSave(persistedEntryMap, 2000);
+            }
         } else {
             log.debug("remove failed");
         }

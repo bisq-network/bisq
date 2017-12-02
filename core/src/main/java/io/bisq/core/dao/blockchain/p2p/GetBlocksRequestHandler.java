@@ -67,6 +67,7 @@ public class GetBlocksRequestHandler {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
         List<BsqBlock> bsqBlocks = bsqChainState.getResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
         final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());
+        log.debug("bsqBlocksResponse " + bsqBlocksResponse.getRequestNonce());
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

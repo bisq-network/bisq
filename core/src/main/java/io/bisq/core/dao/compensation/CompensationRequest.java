@@ -21,8 +21,7 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
@@ -31,24 +30,23 @@ import java.util.Optional;
 
 // Represents the state of the CompensationRequest data
 @Getter
-
+@Slf4j
 public final class CompensationRequest implements PersistablePayload {
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequest.class);
 
     private final CompensationRequestPayload compensationRequestPayload;
 
-    @Setter
+    @Setter //TODO
     private boolean accepted;
-    @Setter
+    @Setter //TODO
     private long fundsReceived;
     //TODO
     @Setter
     private boolean inVotePeriod = true;
-    @Setter
+    @Setter //TODO
     private boolean inFundingPeriod;
-    @Setter
+    @Setter //TODO
     private boolean closed;
-    @Setter
+    @Setter //TODO
     private boolean waitingForVotingPeriod;
 
     @Nullable

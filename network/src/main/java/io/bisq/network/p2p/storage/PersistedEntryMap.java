@@ -72,4 +72,8 @@ public class PersistedEntryMap implements PersistableEnvelope {
     public void put(P2PDataStorage.ByteArray key, ProtectedStorageEntry value) {
         map.put(key, value);
     }
+
+    public void remove(P2PDataStorage.ByteArray key) {
+        map.remove(key);
+    }
 }

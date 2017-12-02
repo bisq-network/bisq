@@ -120,12 +120,12 @@ public abstract class BsqNode {
 
                 @Override
                 public void onNoSeedNodeAvailable() {
+                    log.info("onAllServicesInitialized: onNoSeedNodeAvailable");
+                    onP2PNetworkReady();
                 }
 
                 @Override
                 public void onNoPeersAvailable() {
-                    log.info("onAllServicesInitialized: onNoPeersAvailable");
-                    onP2PNetworkReady();
                 }
 
                 @Override

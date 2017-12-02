@@ -103,12 +103,18 @@ public class CompensationRequestManager implements PersistedDataHost {
                 public void onAdded(ProtectedStorageEntry data) {
                     final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
                     if (protectedStoragePayload instanceof CompensationRequestPayload)
-                        addToList((CompensationRequestPayload) protectedStoragePayload, true);
+                        addCompensationRequestPayload((CompensationRequestPayload) protectedStoragePayload, true);
                 }
 
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
-                    // TODO
+                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+                    if (protectedStoragePayload instanceof CompensationRequestPayload) {
+                        model.findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(e -> {
+                            model.removeCompensationRequest(e);
+                            compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                        });
+                    }
                 }
             });
 
@@ -116,7 +122,7 @@ public class CompensationRequestManager implements PersistedDataHost {
             p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                 if (protectedStoragePayload instanceof CompensationRequestPayload)
-                    addToList((CompensationRequestPayload) protectedStoragePayload, false);
+                    addCompensationRequestPayload((CompensationRequestPayload) protectedStoragePayload, false);
             });
         }
 
@@ -134,7 +140,7 @@ public class CompensationRequestManager implements PersistedDataHost {
         p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
     }
 
-    public void addToList(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
+    public void addCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
         if (!contains(compensationRequestPayload)) {
             model.addCompensationRequest(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
@@ -142,6 +148,19 @@ public class CompensationRequestManager implements PersistedDataHost {
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }
+    }
+
+    public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
+        model.removeCompensationRequest(compensationRequest);
+        compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+        boolean result = false;
+        if (isMyCompensationRequest(compensationRequest))
+            result = p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
+        return result;
+    }
+
+    public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {
+        return keyRing.getPubKeyRing().getSignaturePubKey().equals(compensationRequest.getCompensationRequestPayload().getOwnerPubKey());
     }
 
     private boolean contains(CompensationRequestPayload compensationRequestPayload) {
