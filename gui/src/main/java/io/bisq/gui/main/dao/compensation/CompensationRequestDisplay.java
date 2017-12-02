@@ -102,7 +102,7 @@ public class CompensationRequestDisplay {
         descriptionTextArea.setText("Development work");
         linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
         requestedBsqTextField.setText("14000");
-        bsqAddressTextField.setText("Bn3QLx5c8m4e43gE6e2wNUnY2LLDNYnRzwM");
+        bsqAddressTextField.setText("BmzpRh4PsASanmBk7wiWs6ZZyaaDG3wBqD3");
     }
 
     public void setAllFieldsEditable(boolean isEditable) {

@@ -19,7 +19,6 @@ package io.bisq.core.dao.blockchain.parse;
 
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxOutputType;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestModel;
@@ -83,7 +82,7 @@ public class IssuanceVerification {
                         alreadyFundedBtc + btcAmount <= requestedBtc &&
                         bsqAmount >= MIN_BSQ_ISSUANCE_AMOUNT && bsqAmount <= MAX_BSQ_ISSUANCE_AMOUNT &&
                         votingVerification.isConversionRateValid(height, btcAmount, bsqAmount)) {
-                    btcTxOutput.setTxOutputType(TxOutputType.SPONSORING_BTC_OUTPUT);
+                    //btcTxOutput.setTxOutputType(TxOutputType.SPONSORING_BTC_OUTPUT);
                     tx.setTxType(TxType.ISSUANCE);
                     return true;
                 }

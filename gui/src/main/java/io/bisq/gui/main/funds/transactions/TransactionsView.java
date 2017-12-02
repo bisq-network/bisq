@@ -26,6 +26,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.Tradable;
@@ -93,6 +94,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private final BsqChainState bsqChainState;
     private final DisputeManager disputeManager;
     private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -110,7 +112,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                              TradeManager tradeManager, OpenOfferManager openOfferManager,
                              ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
                              BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
-                             DisputeManager disputeManager, Stage stage,
+                             BsqChainState bsqChainState, DisputeManager disputeManager, Stage stage,
                              OfferDetailsWindow offerDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -121,6 +123,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.formatter = formatter;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.bsqChainState = bsqChainState;
         this.disputeManager = disputeManager;
         this.stage = stage;
         this.offerDetailsWindow = offerDetailsWindow;
@@ -298,7 +301,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     return false;
                             })
                             .findAny();
-                    return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, tradableOptional, formatter);
+                    return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, tradableOptional, bsqChainState, formatter);
                 })
                 .collect(Collectors.toList());
 

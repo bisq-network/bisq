@@ -143,11 +143,11 @@ public class TxOutput implements PersistablePayload {
     }
 
     public boolean isCompensationRequestBtcOutput() {
-        return txOutputType == TxOutputType.COMPENSATION_REQUEST_BTC_OUTPUT;
+        return txOutputType == TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT;
     }
 
     public boolean isSponsoringBtcOutput() {
-        return txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
+        return false; //txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
     }
 
     public String getId() {
