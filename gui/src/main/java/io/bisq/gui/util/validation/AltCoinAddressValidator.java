@@ -368,7 +368,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                 case "DGB":
-                    if (input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                    if (input.matches("^L[a-zA-Z0-9]{34,40}$"))
                         return new ValidationResult(true);
                     else
                         return regexTestFailed;
