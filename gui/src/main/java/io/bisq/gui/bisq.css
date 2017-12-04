@@ -219,7 +219,13 @@ bg color of non edit textFields: fafafa
 }
 
 
-.dao-tx-type-unverified-icon, 
+.dao-tx-type-fee-icon,
+.dao-tx-type-fee-icon:hover {
+    -fx-text-fill: #5ab9ea;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
     -fx-cursor: hand;

@@ -25,6 +25,8 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -227,6 +229,59 @@ public class BsqWalletService extends WalletService {
                     .forEach(map::remove);
             return new HashSet<>(map.values());
         }
+    }
+
+    public Coin getValueSentFromMeForTransaction(Transaction transaction, BsqChainState bsqChainState) throws ScriptException {
+        Coin result = Coin.ZERO;
+        for (int i = 0; i < transaction.getInputs().size(); i++) {
+            TransactionInput input = transaction.getInputs().get(i);
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            final boolean isConfirmed = connectedOutput != null && connectedOutput.getParentTransaction() != null && connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            if (connectedOutput != null && connectedOutput.isMineOrWatched(wallet)) {
+                if (isConfirmed) {
+                    final Transaction parentTransaction = connectedOutput.getParentTransaction();
+                    if (parentTransaction != null) {
+                        Tx tx = bsqChainState.getTxMap().get(parentTransaction.getHash().toString());
+                        if (tx == null)
+                            tx = bsqChainState.getGenesisTx(); //todo put gen in txmap
+                        if (tx != null) {
+                            TxOutput txOutput = tx.getOutputs().get(connectedOutput.getIndex());
+                            if (txOutput.isVerified()) {
+                                result = result.add(connectedOutput.getValue());
+                            }
+                        }
+                    }
+                } else {
+                    result = result.add(connectedOutput.getValue());
+                }
+            }
+        }
+        return result;
+    }
+
+    public Coin getValueSentToMeForTransaction(Transaction transaction, BsqChainState bsqChainState) throws ScriptException {
+        Coin result = Coin.ZERO;
+        final String txId = transaction.getHashAsString();
+        for (int i = 0; i < transaction.getOutputs().size(); i++) {
+            TransactionOutput output = transaction.getOutputs().get(i);
+            final boolean isConfirmed = output.getParentTransaction() != null && output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            if (output.isMineOrWatched(wallet)) {
+                if (isConfirmed) {
+                    Tx tx = bsqChainState.getTxMap().get(txId);
+                    if (tx == null)
+                        tx = bsqChainState.getGenesisTx(); //todo put gen in txmap
+                    if (tx != null) {
+                        TxOutput txOutput = tx.getOutputs().get(i);
+                        if (txOutput.isVerified()) {
+                            result = result.add(output.getValue());
+                        }
+                    }
+                } else {
+                    result = result.add(output.getValue());
+                }
+            }
+        }
+        return result;
     }
 
 

@@ -227,6 +227,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                 btcWalletService,
                                 bsqChainState.getTxType(transaction.getHashAsString()),
                                 bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqChainState,
                                 bsqFormatter)
                 )
                 .collect(Collectors.toSet());
@@ -241,7 +242,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.dateTime"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
-        column.setMaxWidth(180);
+        column.setMaxWidth(column.getMinWidth() + 20);
+
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {
@@ -309,7 +311,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private void addAddressColumn() {
         TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.address"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(140);
+        column.setMinWidth(160);
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {
@@ -320,27 +322,54 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                         return new TableCell<BsqTxListItem, BsqTxListItem>() {
 
                             private AddressWithIconAndDirection field;
-                            private Label label;
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    String addressString = item.getAddress();
-                                    if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
-                                        if (field != null)
-                                            field.setOnAction(null);
+                                    TxType txType = item.getTxType();
+                                    String labelString = Res.get("dao.tx.type.enum." + txType.name());
+                                    Label label;
+                                    if (item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal()) {
+                                        if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
+                                            if (field != null)
+                                                field.setOnAction(null);
 
-                                        label = new Label(item.isBurnedBsqTx() ?
-                                                Res.get("dao.wallet.bsqFee") : Res.get("funds.tx.direction.self"));
-                                        setGraphic(label);
+                                            switch (txType) {
+                                                case UNDEFINED_TX_TYPE:
+                                                case UNVERIFIED:
+                                                    break;
+                                                case INVALID:
+                                                    break;
+                                                case GENESIS:
+                                                    break;
+                                                case TRANSFER_BSQ:
+                                                    if (item.getAmount().isZero())
+                                                        labelString = Res.get("funds.tx.direction.self");
+                                                    break;
+                                                case PAY_TRADE_FEE:
+                                                case COMPENSATION_REQUEST:
+                                                case VOTE:
+                                                    break;
+                                                case ISSUANCE:
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+
+                                            label = new Label(labelString);
+                                            setGraphic(label);
+                                        } else {
+                                            String addressString = item.getAddress();
+                                            field = new AddressWithIconAndDirection(item.getDirection(), addressString,
+                                                    AwesomeIcon.EXTERNAL_LINK, item.isReceived());
+                                            field.setOnAction(event -> openAddressInBlockExplorer(item));
+                                            field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
+                                            setGraphic(field);
+                                        }
                                     } else {
-                                        field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                AwesomeIcon.EXTERNAL_LINK, item.isReceived());
-                                        field.setOnAction(event -> openAddressInBlockExplorer(item));
-                                        field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
-                                        setGraphic(field);
+                                        label = new Label(labelString);
+                                        setGraphic(label);
                                     }
                                 } else {
                                     setGraphic(null);
@@ -357,7 +386,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     private void addAmountColumn() {
         TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
-        column.setMinWidth(100);
+        column.setMinWidth(120);
+        column.setMaxWidth(column.getMinWidth());
+
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
                 TableCell<BsqTxListItem, BsqTxListItem>>() {
@@ -370,12 +401,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
                         super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            setText(bsqFormatter.formatCoin(item.getAmount()));
-                        } else {
+                        if (item != null && !empty)
+                            setText(item.getConfirmations() > 0 && item.getTxType().ordinal() > TxType.INVALID.ordinal() ?
+                                    bsqFormatter.formatCoin(item.getAmount()) :
+                                    Res.get("shared.na"));
+                        else
                             setText("");
-                        }
                     }
                 };
             }
@@ -386,7 +417,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private void addConfidenceColumn() {
         TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.confirmations"));
         column.setMinWidth(130);
-        column.setMaxWidth(130);
+        column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
@@ -433,13 +464,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                 if (item != null && !empty) {
                                     String style;
                                     AwesomeIcon awesomeIcon;
-                                    TxType txType;
-                                    if (item.getTxType().isPresent())
-                                        txType = item.getTxType().get();
-                                    else
-                                        txType = item.getConfirmations() == 0 ? TxType.UNVERIFIED : TxType.INVALID;
+                                    TxType txType = item.getTxType();
                                     String toolTipText = Res.get("dao.tx.type.enum." + txType.name());
                                     switch (txType) {
+                                        case UNDEFINED_TX_TYPE:
                                         case UNVERIFIED:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;
                                             style = "dao-tx-type-unverified-icon";
@@ -453,26 +481,31 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             style = "dao-tx-type-genesis-icon";
                                             break;
                                         case TRANSFER_BSQ:
-                                            awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
-                                            style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
-                                            toolTipText = item.isReceived() ?
-                                                    Res.get("dao.tx.type.enum.received." + txType.name()) :
-                                                    Res.get("dao.tx.type.enum.sent." + txType.name());
+                                            if (item.getAmount().isZero()) {
+                                                awesomeIcon = AwesomeIcon.EXCHANGE;
+                                                style = "dao-tx-type-default-icon";
+                                            } else {
+                                                awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
+                                                style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
+                                                toolTipText = item.isReceived() ?
+                                                        Res.get("dao.tx.type.enum.received." + txType.name()) :
+                                                        Res.get("dao.tx.type.enum.sent." + txType.name());
+                                            }
                                             break;
                                         case PAY_TRADE_FEE:
                                             awesomeIcon = AwesomeIcon.TICKET;
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.UMBRELLA;
-                                            style = "dao-tx-type-default-icon";
+                                            awesomeIcon = AwesomeIcon.TINT;
+                                            style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case ISSUANCE:
-                                            awesomeIcon = AwesomeIcon.TINT;
+                                            awesomeIcon = AwesomeIcon.UMBRELLA;
                                             style = "dao-tx-type-issuance-icon";
                                             break;
                                         default:

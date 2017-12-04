@@ -35,6 +35,8 @@ public class TxOutput implements PersistablePayload {
     private final int index;
     private final long value;
     private final String txId;
+
+    // Only set if dumpBlockchainData is true
     @Nullable
     private final PubKeyScript pubKeyScript;
     @Nullable

@@ -126,6 +126,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             if (selectedItem != null) {
                 if (!CompensationViewItem.contains(selectedItem)) {
                     CompensationViewItem.attach(selectedItem,
+                            bsqWalletService,
                             compensationRequestsVBox,
                             compensationRequestsLabelWidth,
                             bsqFormatter,

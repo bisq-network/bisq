@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.CompensationRequestVoteItem;
@@ -52,11 +53,12 @@ public class CompensationViewItem {
 
     @SuppressWarnings("UnusedParameters")
     public static void attach(CompensationRequestVoteItem compensationRequestVoteItem,
+                              BsqWalletService bsqWalletService,
                               VBox vBox,
                               DoubleProperty labelWidth,
                               BsqFormatter bsqFormatter,
                               Runnable removeHandler) {
-        instances.add(new CompensationViewItem(compensationRequestVoteItem, vBox, bsqFormatter, removeHandler));
+        instances.add(new CompensationViewItem(compensationRequestVoteItem,bsqWalletService, vBox, bsqFormatter, removeHandler));
     }
 
     public static void cleanupAllInstances() {
@@ -77,6 +79,7 @@ public class CompensationViewItem {
     }
 
     private CompensationViewItem(CompensationRequestVoteItem compensationRequestVoteItem,
+                                 BsqWalletService bsqWalletService,
                                  VBox vBox,
                                  BsqFormatter bsqFormatter,
                                  Runnable removeHandler) {
@@ -113,7 +116,7 @@ public class CompensationViewItem {
             AnchorPane.setLeftAnchor(gridPane, 25d);
             AnchorPane.setTopAnchor(gridPane, -20d);
 
-            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter);
+            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService);
             compensationRequestDisplay.createAllFields(Res.get("dao.voting.item.title"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
             compensationRequestDisplay.fillWithData(compensationRequestPayload);

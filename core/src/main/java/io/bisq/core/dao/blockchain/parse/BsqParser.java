@@ -20,7 +20,6 @@ package io.bisq.core.dao.blockchain.parse;
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.app.DevEnv;
-import io.bisq.core.dao.blockchain.btcd.ScriptType;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -303,10 +302,9 @@ public class BsqParser {
             for (int index = 0; index < outputs.size(); index++) {
                 TxOutput txOutput = outputs.get(index);
                 final long txOutputValue = txOutput.getValue();
-                boolean isOpReturn = txOutput.getOpReturnData() != null &&
-                        txOutput.getPubKeyScript() != null &&
-                        txOutput.getPubKeyScript().getScriptType().getName().equals(ScriptType.NULL_DATA.getName());
-                if (!isOpReturn) {
+
+                // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+                if (txOutput.getOpReturnData() ==null) {
                     if (availableBsq >= txOutputValue && txOutputValue != 0) {
                         // We are spending available tokens
                         txOutput.setVerified(true);

@@ -18,6 +18,8 @@
 package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Tuple3;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
@@ -25,29 +27,30 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BsqAddressValidator;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class CompensationRequestDisplay {
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestDisplay.class);
-
     private final GridPane gridPane;
     private BsqFormatter bsqFormatter;
+    private BsqWalletService bsqWalletService;
     public InputTextField uidTextField, nameTextField, titleTextField, linkInputTextField,
             requestedBsqTextField, bsqAddressTextField;
     private int gridRow = 0;
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
+    private Button createAddressButton;
 
-    public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter) {
+    public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
+        this.bsqWalletService = bsqWalletService;
     }
 
     public void createAllFields(String title, double top) {
@@ -65,7 +68,13 @@ public class CompensationRequestDisplay {
         requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBsq")).second;
 
         // TODO validator, addressTF
-        bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.bsqAddress")).second;
+        final Tuple3<Label, InputTextField, Button> tuple3 = addLabelInputTextFieldButton(gridPane, ++gridRow,
+                Res.get("dao.compensation.display.bsqAddress"), Res.get("dao.compensation.display.createBsqAddressButton"));
+        bsqAddressTextField = tuple3.second;
+        createAddressButton = tuple3.third;
+        createAddressButton.setOnAction(e -> {
+            bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+        });
         bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
     }
 
@@ -102,7 +111,6 @@ public class CompensationRequestDisplay {
         descriptionTextArea.setText("Development work");
         linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
         requestedBsqTextField.setText("14000");
-        bsqAddressTextField.setText("BmzpRh4PsASanmBk7wiWs6ZZyaaDG3wBqD3");
     }
 
     public void setAllFieldsEditable(boolean isEditable) {

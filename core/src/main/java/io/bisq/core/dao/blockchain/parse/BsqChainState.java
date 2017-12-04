@@ -28,6 +28,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
@@ -113,6 +114,7 @@ public class BsqChainState implements PersistableEnvelope {
     private final int genesisBlockHeight;
     private int chainHeadHeight = 0;
     @Nullable
+    @Getter
     private Tx genesisTx;
 
     // not impl in PB yet
@@ -411,6 +413,7 @@ public class BsqChainState implements PersistableEnvelope {
     public Set<Tx> getTransactions() {
         return lock.read(() -> getTxMap().entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toSet()));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope read access

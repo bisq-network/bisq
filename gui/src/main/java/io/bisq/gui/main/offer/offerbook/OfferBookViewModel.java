@@ -417,16 +417,22 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilterPredicate() {
-        filteredItems.setPredicate(offerBookListItem -> {
-            Offer offer = offerBookListItem.getOffer();
-            boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
-                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
-            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
-            return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
-        });
+        try {
+            filteredItems.setPredicate(offerBookListItem -> {
+                Offer offer = offerBookListItem.getOffer();
+                boolean directionResult = offer.getDirection() != direction;
+                boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
+                        offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
+                boolean paymentMethodResult = showAllPaymentMethods ||
+                        offer.getPaymentMethod().equals(selectedPaymentMethod);
+                boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
+                return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
+            });
+        } catch (Throwable t) {
+            log.error("applyFilterPredicate " + Thread.currentThread().toString());
+            log.error(t.toString());
+            t.printStackTrace();
+        }
     }
 
     boolean hasMatchingArbitrator(Offer offer) {

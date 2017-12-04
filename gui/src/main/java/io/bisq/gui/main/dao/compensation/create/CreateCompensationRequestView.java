@@ -97,7 +97,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Override
     public void initialize() {
-        compensationRequestDisplay = new CompensationRequestDisplay(root, bsqFormatter);
+        compensationRequestDisplay = new CompensationRequestDisplay(root, bsqFormatter, bsqWalletService);
         compensationRequestDisplay.createAllFields(Res.get("dao.compensation.create.createNew"), 0);
         createButton = addButtonAfterGroup(root, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.create.create.button"));
     }
@@ -105,7 +105,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     @Override
     protected void activate() {
         compensationRequestDisplay.fillWithMock();
-        
+
         createButton.setOnAction(event -> {
             if (p2PService.isBootstrapped()) {
                 NodeAddress nodeAddress = p2PService.getAddress();

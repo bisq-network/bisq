@@ -18,6 +18,7 @@
 package io.bisq.gui.main.dao.compensation.active;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
@@ -56,6 +57,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     TableView<CompensationRequest> tableView;
     private final CompensationRequestManager compensationRequestManger;
     private final DaoPeriodService daoPeriodService;
+    private final BsqWalletService bsqWalletService;
     private final Navigation navigation;
     private final BsqFormatter bsqFormatter;
     private SortedList<CompensationRequest> sortedList;
@@ -78,10 +80,12 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
                                           DaoPeriodService daoPeriodService,
+                                          BsqWalletService bsqWalletService,
                                           Navigation navigation,
                                           BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
         this.daoPeriodService = daoPeriodService;
+        this.bsqWalletService = bsqWalletService;
         this.navigation = navigation;
         this.bsqFormatter = bsqFormatter;
     }
@@ -180,7 +184,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane.setTopAnchor(detailsGridPane, -20d);
                 bottomAnchorPane.getChildren().add(detailsGridPane);
 
-                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter);
+                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter, bsqWalletService);
             }
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
