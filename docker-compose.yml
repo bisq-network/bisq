@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+    bisq-api:
+        build:
+            context: .
+        image: bisq:api
+        container_name: bisq-api
+        ports:
+          - 8080:8080
+
