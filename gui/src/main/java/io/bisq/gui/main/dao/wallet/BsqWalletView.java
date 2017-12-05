@@ -161,8 +161,13 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
+        if (viewClass == BsqReceiveView.class) {
+            icon.setRotate(180);
+            icon.setPadding(new Insets(0, 0, 0, 5));
+        } else {
+            icon.setPadding(new Insets(0, 5, 0, 0));
+        }
         icon.setTextFill(Paint.valueOf("#333"));
-        icon.setPadding(new Insets(0, 5, 0, 0));
         icon.setAlignment(Pos.CENTER);
         icon.setMinWidth(25);
         icon.setMaxWidth(25);

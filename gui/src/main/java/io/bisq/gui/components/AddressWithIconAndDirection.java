@@ -24,6 +24,8 @@ public class AddressWithIconAndDirection extends AnchorPane {
         directionIcon.setLayoutY(3);
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
         AwesomeDude.setIcon(directionIcon, received ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT);
+        if (received)
+            directionIcon.setRotate(180);
         directionIcon.setMouseTransparent(true);
 
         HBox hBox = new HBox();

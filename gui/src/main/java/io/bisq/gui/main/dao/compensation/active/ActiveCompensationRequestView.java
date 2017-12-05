@@ -18,13 +18,16 @@
 package io.bisq.gui.main.dao.compensation.active;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
@@ -44,10 +47,13 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
@@ -58,34 +64,37 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private final CompensationRequestManager compensationRequestManger;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
+    private BsqChainState bsqChainState;
     private final Navigation navigation;
     private final BsqFormatter bsqFormatter;
     private SortedList<CompensationRequest> sortedList;
     private Subscription selectedCompensationRequestSubscription, phaseSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
     private int gridRow = 0;
-    private Label phaseInfoLabel;
-    private GridPane detailsGridPane;
-    private GridPane gridPane;
+    private GridPane detailsGridPane, gridPane;
     private DaoPeriodService.Phase currentPhase;
     private CompensationRequest selectedCompensationRequest;
-    private Button removeButton;
-    private Button voteButton;
-
+    private Button removeButton, voteButton;
+    private NewBestBlockListener bestBlockListener;
+    private TextField cycleTextField;
+    private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
                                           DaoPeriodService daoPeriodService,
                                           BsqWalletService bsqWalletService,
+                                          BsqChainState bsqChainState,
                                           Navigation navigation,
                                           BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
+        this.bsqChainState = bsqChainState;
         this.navigation = navigation;
         this.bsqFormatter = bsqFormatter;
     }
@@ -106,8 +115,26 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
-        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.compensation.active.phase.header"));
-        phaseInfoLabel = addLabel(gridPane, gridRow, "", Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(gridPane, gridRow, 2, Res.get("dao.compensation.active.phase.header"));
+        addLabel(gridPane, gridRow, Res.get("dao.compensation.active.phase"), -20);
+        Label blockLabel = addLabel(gridPane, gridRow, Res.get("dao.compensation.active.block"), 50);
+        GridPane.setHalignment(blockLabel, HPos.RIGHT);
+        phaseBarsItems = Arrays.asList(
+                makeItem(DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS),
+                makeItem(DaoPeriodService.Phase.BREAK1),
+                makeItem(DaoPeriodService.Phase.OPEN_FOR_VOTING),
+                makeItem(DaoPeriodService.Phase.BREAK2),
+                makeItem(DaoPeriodService.Phase.VOTE_CONFIRMATION),
+                makeItem(DaoPeriodService.Phase.BREAK3));
+        SeparatedPhaseBars separatedPhaseBars = new SeparatedPhaseBars(phaseBarsItems);
+        GridPane.setRowIndex(separatedPhaseBars, gridRow);
+        GridPane.setColumnIndex(separatedPhaseBars, 1);
+        GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
+        gridPane.getChildren().add(separatedPhaseBars);
+
+        final Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.compensation.active.cycle"));
+        GridPane.setHalignment(tuple2.first, HPos.RIGHT);
+        cycleTextField = tuple2.second;
 
         TableGroupHeadline header = new TableGroupHeadline(Res.get("dao.compensation.active.header"));
         GridPane.setRowIndex(header, ++gridRow);
@@ -121,6 +148,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         tableView.setMinHeight(70);
         GridPane.setRowIndex(tableView, ++gridRow);
+        GridPane.setColumnSpan(tableView, 2);
         GridPane.setMargin(tableView, new Insets(5, -15, -10, -10));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
@@ -131,6 +159,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         sortedList = new SortedList<>(compensationRequestManger.getObservableList());
         tableView.setItems(sortedList);
 
+        bestBlockListener = block -> {
+            onChainHeightChanged(block.getHeight());
+        };
     }
 
     @Override
@@ -139,12 +170,22 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
 
         phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
-            phaseInfoLabel.setText(Res.get("dao.compensation.active.phase.info", Res.get("dao.phase." + phase)));
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
                 onSelectCompensationRequest(selectedCompensationRequest);
             }
+
+            phaseBarsItems.stream().forEach(item -> {
+                if (item.getPhase() == phase) {
+                    item.setActive();
+                } else {
+                    item.setInActive();
+                }
+            });
         });
+
+        bsqWalletService.addNewBestBlockListener(bestBlockListener);
+        onChainHeightChanged(bsqWalletService.getBestChainHeight());
     }
 
     @Override
@@ -152,6 +193,32 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         sortedList.comparatorProperty().unbind();
         selectedCompensationRequestSubscription.unsubscribe();
         phaseSubscription.unsubscribe();
+        bsqWalletService.removeNewBestBlockListener(bestBlockListener);
+    }
+
+    private void onChainHeightChanged(int height) {
+        cycleTextField.setText(String.valueOf(daoPeriodService.getNumCycles(height)));
+
+        phaseBarsItems.stream().forEach(item -> {
+            int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
+            int endBlock = daoPeriodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
+            item.getStartValueProperty().set(startBlock);
+            item.getEndValueProperty().set(endBlock);
+
+            double progress = 0;
+            if (height >= startBlock && height <= endBlock) {
+                progress = (double) (height - startBlock + 1) / (double) (endBlock - startBlock);
+            } else if (height < startBlock) {
+                progress = 0;
+            } else if (height > endBlock) {
+                progress = 1;
+            }
+            item.getProgressProperty().set(progress);
+        });
+    }
+
+    private SeparatedPhaseBars.SeparatedPhaseBarsItem makeItem(DaoPeriodService.Phase phase) {
+        return new SeparatedPhaseBars.SeparatedPhaseBarsItem(phase);
     }
 
     private void onSelectCompensationRequest(CompensationRequest compensationRequest) {

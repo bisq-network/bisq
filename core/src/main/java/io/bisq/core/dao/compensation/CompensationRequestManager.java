@@ -20,6 +20,7 @@ package io.bisq.core.dao.compensation;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -110,9 +111,16 @@ public class CompensationRequestManager implements PersistedDataHost {
                 public void onRemoved(ProtectedStorageEntry data) {
                     final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
                     if (protectedStoragePayload instanceof CompensationRequestPayload) {
-                        model.findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(e -> {
-                            model.removeCompensationRequest(e);
-                            compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                        model.findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
+                            if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
+                                model.removeCompensationRequest(compensationRequest);
+                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                            } else {
+                                final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
+                                log.warn(msg);
+                                if (DevEnv.DEV_MODE)
+                                    throw new RuntimeException(msg);
+                            }
                         });
                     }
                 }
@@ -151,12 +159,25 @@ public class CompensationRequestManager implements PersistedDataHost {
     }
 
     public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
-        model.removeCompensationRequest(compensationRequest);
-        compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
-        boolean result = false;
-        if (isMyCompensationRequest(compensationRequest))
-            result = p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
-        return result;
+        if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
+            if (isMyCompensationRequest(compensationRequest)) {
+                model.removeCompensationRequest(compensationRequest);
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                return p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
+            } else {
+                final String msg = "removeCompensationRequest called for a CompensationRequest which is not ours.";
+                log.warn(msg);
+                if (DevEnv.DEV_MODE)
+                    throw new RuntimeException(msg);
+                return false;
+            }
+        } else {
+            final String msg = "removeCompensationRequest called with a CompensationRequest which is outside of the CompensationRequest phase.";
+            log.warn(msg);
+            if (DevEnv.DEV_MODE)
+                throw new RuntimeException(msg);
+            return false;
+        }
     }
 
     public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {

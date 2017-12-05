@@ -466,6 +466,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                     AwesomeIcon awesomeIcon;
                                     TxType txType = item.getTxType();
                                     String toolTipText = Res.get("dao.tx.type.enum." + txType.name());
+                                    boolean doRotate = false;
                                     switch (txType) {
                                         case UNDEFINED_TX_TYPE:
                                         case UNVERIFIED:
@@ -486,6 +487,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                                 style = "dao-tx-type-default-icon";
                                             } else {
                                                 awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
+                                                doRotate = item.isReceived();
                                                 style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
                                                 toolTipText = item.isReceived() ?
                                                         Res.get("dao.tx.type.enum.received." + txType.name()) :
@@ -516,6 +518,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
                                     label.getStyleClass().add(style);
                                     label.setTooltip(new Tooltip(toolTipText));
+                                    if(doRotate)
+                                        label.setRotate(180);
                                     setGraphic(label);
                                 } else {
                                     setGraphic(null);
