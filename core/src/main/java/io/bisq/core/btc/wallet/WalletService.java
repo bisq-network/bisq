@@ -29,6 +29,9 @@ import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import lombok.Getter;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -75,6 +78,8 @@ public abstract class WalletService {
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
     protected Wallet wallet;
     protected KeyParameter aesKey;
+    @Getter
+    protected IntegerProperty chainHeightProperty = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

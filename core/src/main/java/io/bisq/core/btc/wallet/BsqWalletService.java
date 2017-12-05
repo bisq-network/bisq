@@ -122,6 +122,9 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
 
                     });
                 }
+
+                walletsSetup.getChain().addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
+                chainHeightProperty.set(walletsSetup.getChain().getBestChainHeight());
             });
         }
     }

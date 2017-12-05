@@ -29,8 +29,7 @@ import io.bisq.core.dao.vote.VotingService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Provide utilities about the phase and cycle of the request/voting cycle.
@@ -39,9 +38,8 @@ import org.slf4j.LoggerFactory;
  * The index of first cycle is 1 not 0! The index of first block in first phase is 0 (genesis height).
  * The length of blocks of each phase is number of blocks starting with index 0.
  */
+@Slf4j
 public class DaoPeriodService {
-    private static final Logger log = LoggerFactory.getLogger(DaoPeriodService.class);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -88,6 +86,8 @@ public class DaoPeriodService {
     private final VotingService votingService;
     @Getter
     private ObjectProperty<Phase> phaseProperty = new SimpleObjectProperty<>(Phase.UNDEFINED);
+    private int chainHeight;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -99,6 +99,10 @@ public class DaoPeriodService {
         this.bsqChainState = bsqChainState;
         this.votingDefaultValues = votingDefaultValues;
         this.votingService = votingService;
+
+        btcWalletService.getChainHeightProperty().addListener((observable, oldValue, newValue) -> {
+            onChainHeightChanged((int) newValue);
+        });
     }
 
     public void onAllServicesInitialized() {
@@ -107,11 +111,7 @@ public class DaoPeriodService {
 
         applyVotingResults(votingDefaultValues, bestChainHeight, GENESIS_BLOCK_HEIGHT);*/
 
-        btcWalletService.addNewBestBlockListener(block -> {
-            phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), block.getHeight(), getNumBlocksOfCycle())));
-        });
-
-        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), btcWalletService.getBestChainHeight(), getNumBlocksOfCycle())));
+        onChainHeightChanged(btcWalletService.getBestChainHeight());
     }
 
 
@@ -123,7 +123,7 @@ public class DaoPeriodService {
     public boolean isInCompensationRequestPhase(CompensationRequest compensationRequest) {
         Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
         return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
-                btcWalletService.getBestChainHeight(),
+                chainHeight,
                 BsqChainState.getGenesisHeight(),
                 Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks(),
                 getNumBlocksOfCycle());
@@ -132,7 +132,7 @@ public class DaoPeriodService {
     public boolean isInCurrentCycle(CompensationRequest compensationRequest) {
         Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
         return tx != null && isInCurrentCycle(tx.getBlockHeight(),
-                btcWalletService.getBestChainHeight(),
+                chainHeight,
                 BsqChainState.getGenesisHeight(),
                 getNumBlocksOfCycle());
     }
@@ -184,6 +184,10 @@ public class DaoPeriodService {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void onChainHeightChanged(int chainHeight) {
+        this.chainHeight = chainHeight;
+        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle())));
+    }
 
     @VisibleForTesting
     int getRelativeBlocksInCycle(int genesisHeight, int bestChainHeight, int numBlocksOfCycle) {
