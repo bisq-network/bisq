@@ -42,10 +42,10 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// Represents mutable state of BSQ chain data
+// Represents mutable state of BSQ blocks
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqBlockChain implements PersistableEnvelope, BsqTxProvider {
+public class BsqBlockChain implements PersistableEnvelope {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -366,12 +366,10 @@ public class BsqBlockChain implements PersistableEnvelope, BsqTxProvider {
         return lock.read(() -> getTx(txId).map(Tx::getTxType));
     }
 
-    @Override
     public boolean containsTx(String txId) {
         return lock.read(() -> getTx(txId).isPresent());
     }
 
-    @Override
     public Optional<Tx> findTx(String txId) {
         Tx tx = getTxMap().get(txId);
         if (tx == null)

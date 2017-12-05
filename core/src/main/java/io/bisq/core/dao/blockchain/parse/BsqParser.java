@@ -33,7 +33,12 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// We are in threaded context. Don't mix up with UserThread.
+
+/**
+ * Parses blocks and transactions for finding BSQ relevant transactions.
+ *
+ * We are in threaded context. Don't mix up with UserThread.
+ */
 @Slf4j
 @Immutable
 public class BsqParser {
