@@ -22,6 +22,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoOptionKeys;
+import io.bisq.core.dao.compensation.CompensationRequestManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Named;
@@ -38,10 +39,12 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(BsqLiteNode bsqLiteNode,
                                 BsqFullNode bsqFullNode,
                                 BsqWalletService bsqWalletService,
+                                CompensationRequestManager compensationRequestManager,
                                 @Named(DaoOptionKeys.RPC_USER) String rpcUser) {
         bsqNode = rpcUser != null && !rpcUser.isEmpty() ? bsqFullNode : bsqLiteNode;
 
         bsqNode.addBsqChainStateListener(bsqWalletService);
+        bsqNode.addBsqChainStateListener(compensationRequestManager);
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {

@@ -25,6 +25,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqChainStateListener;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqTxProvider;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
@@ -40,10 +41,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +52,7 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 @Slf4j
 public class BsqWalletService extends WalletService implements BsqChainStateListener {
     private final BsqCoinSelector bsqCoinSelector;
-    private final BsqChainState bsqChainState;
+    private final BsqTxProvider bsqTxProvider;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -68,7 +66,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
     @Inject
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqCoinSelector bsqCoinSelector,
-                            BsqChainState bsqChainState,
+                            BsqTxProvider bsqTxProvider,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -76,7 +74,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
                 feeService);
 
         this.bsqCoinSelector = bsqCoinSelector;
-        this.bsqChainState = bsqChainState;
+        this.bsqTxProvider = bsqTxProvider;
 
         if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             walletsSetup.addSetupCompletedHandler(() -> {
@@ -131,8 +129,10 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
 
     @Override
     public void onBsqChainStateChanged() {
-        updateBsqWalletTransactions();
-        updateBsqBalance();
+        if (isWalletReady()) {
+            updateBsqWalletTransactions();
+            updateBsqBalance();
+        }
     }
 
 
@@ -204,7 +204,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
     private Set<Transaction> getBsqWalletTransactions() {
         return getTransactions(false).stream()
                 .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
-                        bsqChainState.containsTx(transaction.getHashAsString()))
+                        bsqTxProvider.containsTx(transaction.getHashAsString()))
                 .collect(Collectors.toSet());
     }
 
@@ -242,14 +242,11 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
                 if (isConfirmed) {
                     final Transaction parentTransaction = connectedOutput.getParentTransaction();
                     if (parentTransaction != null) {
-                        Tx tx = bsqChainState.getTxMap().get(parentTransaction.getHash().toString());
-                        if (tx == null)
-                            tx = bsqChainState.getGenesisTx(); //todo put gen in txmap
-                        if (tx != null) {
-                            TxOutput txOutput = tx.getOutputs().get(connectedOutput.getIndex());
-                            if (txOutput.isVerified()) {
+                        Optional<Tx> txOptional = bsqTxProvider.findTx(parentTransaction.getHash().toString());
+                        if (txOptional.isPresent()) {
+                            TxOutput txOutput = txOptional.get().getOutputs().get(connectedOutput.getIndex());
+                            if (txOutput.isVerified())
                                 result = result.add(connectedOutput.getValue());
-                            }
                         }
                     }
                 } else {
@@ -268,11 +265,9 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
             final boolean isConfirmed = output.getParentTransaction() != null && output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
             if (output.isMineOrWatched(wallet)) {
                 if (isConfirmed) {
-                    Tx tx = bsqChainState.getTxMap().get(txId);
-                    if (tx == null)
-                        tx = bsqChainState.getGenesisTx(); //todo put gen in txmap
-                    if (tx != null) {
-                        TxOutput txOutput = tx.getOutputs().get(i);
+                    Optional<Tx> txOptional = bsqTxProvider.findTx(txId);
+                    if (txOptional.isPresent()) {
+                        TxOutput txOutput = txOptional.get().getOutputs().get(i);
                         if (txOutput.isVerified()) {
                             result = result.add(output.getValue());
                         }

@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Represents mutable state of BSQ chain data
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqChainState implements PersistableEnvelope {
+public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -366,8 +366,20 @@ public class BsqChainState implements PersistableEnvelope {
         return lock.read(() -> getTx(txId).map(Tx::getTxType));
     }
 
+    @Override
     public boolean containsTx(String txId) {
         return lock.read(() -> getTx(txId).isPresent());
+    }
+
+    @Override
+    public Optional<Tx> findTx(String txId) {
+        Tx tx = getTxMap().get(txId);
+        if (tx == null)
+            tx = getGenesisTx(); //todo put gen in txmap
+        if (tx != null)
+            return Optional.of(tx);
+        else
+            return Optional.<Tx>empty();
     }
 
     public int getChainHeadHeight() {

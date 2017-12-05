@@ -47,6 +47,7 @@ public class DaoModule extends AppModule {
         bind(BsqLiteNode.class).in(Singleton.class);
         bind(BsqFullNode.class).in(Singleton.class);
         bind(BsqChainState.class).in(Singleton.class);
+        bind(BsqTxProvider.class).to(BsqChainState.class).in(Singleton.class);
         bind(BsqFullNodeExecutor.class).in(Singleton.class);
         bind(BsqLiteNodeExecutor.class).in(Singleton.class);
         bind(BsqParser.class).in(Singleton.class);
