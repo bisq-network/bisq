@@ -25,7 +25,6 @@ import io.bisq.core.dao.blockchain.BsqLiteNode;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.blockchain.parse.*;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
-import io.bisq.core.dao.compensation.CompensationRequestModel;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.dao.vote.VotingService;
@@ -63,7 +62,6 @@ public class DaoModule extends AppModule {
         bind(VotingService.class).in(Singleton.class);
 
         bind(CompensationRequestManager.class).in(Singleton.class);
-        bind(CompensationRequestModel.class).in(Singleton.class);
         bind(VotingManager.class).in(Singleton.class);
         bind(VotingDefaultValues.class).in(Singleton.class);
 

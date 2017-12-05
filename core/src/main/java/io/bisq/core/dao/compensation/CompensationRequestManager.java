@@ -29,13 +29,17 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqChainStateListener;
+import io.bisq.core.dao.blockchain.parse.PeriodVerification;
+import io.bisq.core.dao.blockchain.parse.VotingVerification;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import lombok.Getter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -43,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Optional;
 
 public class CompensationRequestManager implements PersistedDataHost, BsqChainStateListener {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
@@ -53,13 +58,20 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
     private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final CompensationRequestModel model;
     private final VotingDefaultValues votingDefaultValues;
+    private final PeriodVerification periodVerification;
+    private final VotingVerification votingVerification;
+
     private final KeyRing keyRing;
     private final Storage<CompensationRequestList> compensationRequestsStorage;
 
     private CompensationRequest selectedCompensationRequest;
-
+    @Getter
+    private final ObservableList<CompensationRequest> allRequests = FXCollections.observableArrayList();
+    @Getter
+    private final FilteredList<CompensationRequest> activeRequests = new FilteredList<>(allRequests);
+    @Getter
+    private final FilteredList<CompensationRequest> pastRequests = new FilteredList<>(allRequests);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,16 +82,18 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
                                       BtcWalletService btcWalletService,
                                       BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
-                                      CompensationRequestModel model,
                                       VotingDefaultValues votingDefaultValues,
+                                      PeriodVerification periodVerification,
+                                      VotingVerification votingVerification,
                                       KeyRing keyRing,
                                       Storage<CompensationRequestList> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.model = model;
         this.votingDefaultValues = votingDefaultValues;
+        this.periodVerification = periodVerification;
+        this.votingVerification = votingVerification;
         this.keyRing = keyRing;
         this.compensationRequestsStorage = compensationRequestsStorage;
     }
@@ -89,7 +103,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             CompensationRequestList persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequestList", 100);
             if (persisted != null)
-                model.setPersistedCompensationRequest(persisted.getList());
+                setPersistedCompensationRequest(persisted.getList());
         }
     }
 
@@ -112,10 +126,10 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
                 public void onRemoved(ProtectedStorageEntry data) {
                     final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
                     if (protectedStoragePayload instanceof CompensationRequestPayload) {
-                        model.findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
+                        findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
                             if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
-                                model.removeCompensationRequest(compensationRequest);
-                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
+                                removeCompensationRequestFromList(compensationRequest);
+                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
                             } else {
                                 final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
                                 log.warn(msg);
@@ -127,7 +141,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
                 }
             });
 
-            // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+            // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
             p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                 if (protectedStoragePayload instanceof CompensationRequestPayload)
@@ -139,7 +153,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
         // Republish
         PublicKey signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
         UserThread.runAfter(() -> {
-            model.getActiveRequests().stream()
+            activeRequests.stream()
                     .filter(e -> e.getCompensationRequestPayload().getOwnerPubKey().equals(signaturePubKey))
                     .forEach(e -> addToP2PNetwork(e.getCompensationRequestPayload()));
         }, 1); // TODO increase delay to about 30 sec.
@@ -152,22 +166,22 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
 
     @Override
     public void onBsqChainStateChanged() {
-        model.updateFilteredLists();
+        updateFilteredLists();
     }
 
     private void onChainHeightChanged() {
-        model.updateFilteredLists();
+        updateFilteredLists();
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
         p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
     }
 
-    public void addCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
+    private void addCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
         if (!contains(compensationRequestPayload)) {
-            model.addCompensationRequest(new CompensationRequest(compensationRequestPayload));
+            addCompensationRequest(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }
@@ -176,8 +190,8 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
     public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
         if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
             if (isMyCompensationRequest(compensationRequest)) {
-                model.removeCompensationRequest(compensationRequest);
-                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
+                removeCompensationRequestFromList(compensationRequest);
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
                 return p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
             } else {
                 final String msg = "removeCompensationRequest called for a CompensationRequest which is not ours.";
@@ -195,16 +209,21 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
         }
     }
 
+    private void removeCompensationRequestFromList(CompensationRequest compensationRequest) {
+        allRequests.remove(compensationRequest);
+        updateFilteredLists();
+    }
+
     public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {
         return keyRing.getPubKeyRing().getSignaturePubKey().equals(compensationRequest.getCompensationRequestPayload().getOwnerPubKey());
     }
 
     private boolean contains(CompensationRequestPayload compensationRequestPayload) {
-        return model.getAllRequests().stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
+        return allRequests.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
     }
 
     public List<CompensationRequest> getCompensationRequestsList() {
-        return model.getAllRequests();
+        return allRequests;
     }
 
     public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
@@ -219,15 +238,31 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
         return selectedCompensationRequest;
     }
 
-    public ObservableList<CompensationRequest> getAllRequests() {
-        return model.getAllRequests();
+    private void updateFilteredLists() {
+        activeRequests.setPredicate(daoPeriodService::isInCurrentCycle);
+        pastRequests.setPredicate(compensationRequest -> {
+            return !daoPeriodService.isInCurrentCycle(compensationRequest);
+        });
     }
 
-    public FilteredList<CompensationRequest> getActiveRequests() {
-        return model.getActiveRequests();
+    private void setPersistedCompensationRequest(List<CompensationRequest> list) {
+        this.allRequests.clear();
+        this.allRequests.addAll(list);
+        updateFilteredLists();
     }
 
-    public FilteredList<CompensationRequest> getPastRequests() {
-        return model.getPastRequests();
+    public Optional<CompensationRequest> findByAddress(String address) {
+        return allRequests.stream()
+                .filter(e -> e.getCompensationRequestPayload().getBsqAddress().equals(address))
+                .findAny();
+    }
+
+    private void addCompensationRequest(CompensationRequest compensationRequest) {
+        allRequests.add(compensationRequest);
+        updateFilteredLists();
+    }
+
+    private Optional<CompensationRequest> findCompensationRequest(CompensationRequestPayload compensationRequestPayload) {
+        return allRequests.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny();
     }
 }

@@ -21,7 +21,7 @@ import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestModel;
+import io.bisq.core.dao.compensation.CompensationRequestManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -37,17 +37,17 @@ public class IssuanceVerification {
     private final BsqChainState bsqChainState;
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
-    private final CompensationRequestModel compensationRequestModel;
+    private CompensationRequestManager compensationRequestManager;
 
     @Inject
     public IssuanceVerification(BsqChainState bsqChainState,
                                 PeriodVerification periodVerification,
                                 VotingVerification votingVerification,
-                                CompensationRequestModel compensationRequestModel) {
+                                CompensationRequestManager compensationRequestManager) {
         this.bsqChainState = bsqChainState;
         this.periodVerification = periodVerification;
         this.votingVerification = votingVerification;
-        this.compensationRequestModel = compensationRequestModel;
+        this.compensationRequestManager = compensationRequestManager;
     }
 
     boolean maybeProcessData(Tx tx) {
@@ -57,7 +57,7 @@ public class IssuanceVerification {
             TxOutput btcTxOutput = outputs.get(1);
             final String btcAddress = btcTxOutput.getAddress();
             // TODO find address by block range/cycle
-            final Optional<CompensationRequest> compensationRequest = compensationRequestModel.findByAddress(btcAddress);
+            final Optional<CompensationRequest> compensationRequest = compensationRequestManager.findByAddress(btcAddress);
             if (compensationRequest.isPresent()) {
                 final CompensationRequest compensationRequest1 = compensationRequest.get();
                 final long bsqAmount = bsqTxOutput.getValue();
