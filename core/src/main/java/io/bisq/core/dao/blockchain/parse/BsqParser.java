@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Immutable
 public class BsqParser {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final OpReturnVerification opReturnVerification;
     private final IssuanceVerification issuanceVerification;
     private final RpcService rpcService;
@@ -50,11 +50,11 @@ public class BsqParser {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqParser(RpcService rpcService,
-                     BsqChainState bsqChainState,
+                     BsqBlockChain bsqBlockChain,
                      OpReturnVerification opReturnVerification,
                      IssuanceVerification issuanceVerification) {
         this.rpcService = rpcService;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.opReturnVerification = opReturnVerification;
         this.issuanceVerification = issuanceVerification;
     }
@@ -73,7 +73,7 @@ public class BsqParser {
             parseBsqBlock(bsqBlock,
                     genesisBlockHeight,
                     genesisTxId);
-            bsqChainState.addBlock(bsqBlock);
+            bsqBlockChain.addBlock(bsqBlock);
             newBlockHandler.accept(bsqBlock);
         }
     }
@@ -113,7 +113,7 @@ public class BsqParser {
                         btcdBlock.getPreviousBlockHash(),
                         ImmutableList.copyOf(bsqTxsInBlock));
 
-                bsqChainState.addBlock(bsqBlock);
+                bsqBlockChain.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
                 log.info("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
                         System.currentTimeMillis() - startTs, blockHeight, bsqTxsInBlock.size());
@@ -176,7 +176,7 @@ public class BsqParser {
                 btcdBlock.getHash(),
                 btcdBlock.getPreviousBlockHash(),
                 ImmutableList.copyOf(bsqTxsInBlock));
-        bsqChainState.addBlock(bsqBlock);
+        bsqBlockChain.addBlock(bsqBlock);
         return bsqBlock;
     }
 
@@ -194,12 +194,12 @@ public class BsqParser {
             tx.getOutputs().stream().forEach(txOutput -> {
                 txOutput.setUnspent(true);
                 txOutput.setVerified(true);
-                bsqChainState.addUnspentTxOutput(txOutput);
+                bsqBlockChain.addUnspentTxOutput(txOutput);
             });
             tx.setTxType(TxType.GENESIS);
 
-            bsqChainState.setGenesisTx(tx);
-            bsqChainState.addTxToMap(tx);
+            bsqBlockChain.setGenesisTx(tx);
+            bsqBlockChain.addTxToMap(tx);
             bsqTxsInBlock.add(tx);
         }
     }
@@ -280,11 +280,11 @@ public class BsqParser {
         long availableBsq = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
             TxInput input = tx.getInputs().get(inputIndex);
-            Optional<TxOutput> spendableTxOutput = bsqChainState.getSpendableTxOutput(input.getTxIdIndexTuple());
+            Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
             if (spendableTxOutput.isPresent()) {
                 final TxOutput spentTxOutput = spendableTxOutput.get();
                 spentTxOutput.setUnspent(false);
-                bsqChainState.removeUnspentTxOutput(spentTxOutput);
+                bsqBlockChain.removeUnspentTxOutput(spentTxOutput);
                 spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
                 input.setConnectedTxOutput(spentTxOutput);
                 availableBsq = availableBsq + spentTxOutput.getValue();
@@ -292,7 +292,7 @@ public class BsqParser {
         }
         // If we have an input with BSQ we iterate the outputs
         if (availableBsq > 0) {
-            bsqChainState.addTxToMap(tx);
+            bsqBlockChain.addTxToMap(tx);
             isBsqTx = true;
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
@@ -309,7 +309,7 @@ public class BsqParser {
                         // We are spending available tokens
                         txOutput.setVerified(true);
                         txOutput.setUnspent(true);
-                        bsqChainState.addUnspentTxOutput(txOutput);
+                        bsqBlockChain.addUnspentTxOutput(txOutput);
                         tx.setTxType(TxType.TRANSFER_BSQ);
                         txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
                         bsqOutput = txOutput;

@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.DevEnv;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.vote.VotingDefaultValues;
@@ -81,7 +81,7 @@ public class DaoPeriodService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final BtcWalletService btcWalletService;
-    private BsqChainState bsqChainState;
+    private BsqBlockChain bsqBlockChain;
     private final VotingDefaultValues votingDefaultValues;
     private final VotingService votingService;
     @Getter
@@ -94,9 +94,9 @@ public class DaoPeriodService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoPeriodService(BtcWalletService btcWalletService, BsqChainState bsqChainState, VotingDefaultValues votingDefaultValues, VotingService votingService) {
+    public DaoPeriodService(BtcWalletService btcWalletService, BsqBlockChain bsqBlockChain, VotingDefaultValues votingDefaultValues, VotingService votingService) {
         this.btcWalletService = btcWalletService;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.votingDefaultValues = votingDefaultValues;
         this.votingService = votingService;
 
@@ -121,19 +121,19 @@ public class DaoPeriodService {
 
 
     public boolean isInCompensationRequestPhase(CompensationRequest compensationRequest) {
-        Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
+        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
         return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
                 chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks(),
                 getNumBlocksOfCycle());
     }
 
     public boolean isInCurrentCycle(CompensationRequest compensationRequest) {
-        Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
+        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
         return tx != null && isInCurrentCycle(tx.getBlockHeight(),
                 chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 getNumBlocksOfCycle());
     }
 
@@ -154,19 +154,19 @@ public class DaoPeriodService {
 
     public int getNumOfStartedCycles(int chainHeight) {
         return getNumOfStartedCycles(chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 getNumBlocksOfCycle());
     }
 
     public int getNumOfCompletedCycles(int chainHeight) {
         return getNumOfCompletedCycles(chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 getNumBlocksOfCycle());
     }
 
     public int getAbsoluteStartBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteStartBlockOfPhase(chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 phase,
                 getNumBlocksOfCycle());
     }
@@ -174,7 +174,7 @@ public class DaoPeriodService {
 
     public int getAbsoluteEndBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteEndBlockOfPhase(chainHeight,
-                BsqChainState.getGenesisHeight(),
+                BsqBlockChain.getGenesisHeight(),
                 phase,
                 getNumBlocksOfCycle());
     }
@@ -186,7 +186,7 @@ public class DaoPeriodService {
 
     private void onChainHeightChanged(int chainHeight) {
         this.chainHeight = chainHeight;
-        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle())));
+        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqBlockChain.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle())));
     }
 
     @VisibleForTesting

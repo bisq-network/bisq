@@ -9,7 +9,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
@@ -55,7 +55,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Broadcaster broadcaster;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final Collection<NodeAddress> seedNodeAddresses;
     private final Listener listener;
 
@@ -73,12 +73,12 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                           PeerManager peerManager,
                           Broadcaster broadcaster,
                           Set<NodeAddress> seedNodeAddresses,
-                          BsqChainState bsqChainState,
+                          BsqBlockChain bsqBlockChain,
                           Listener listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         this.listener = listener;
@@ -201,7 +201,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                 final String uid = connection.getUid();
                 if (!getBlocksRequestHandlers.containsKey(uid)) {
                     GetBlocksRequestHandler getDataRequestHandler = new GetBlocksRequestHandler(networkNode,
-                            bsqChainState,
+                            bsqBlockChain,
                             new GetBlocksRequestHandler.Listener() {
                                 @Override
                                 public void onComplete() {

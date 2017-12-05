@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Represents mutable state of BSQ chain data
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
+public class BsqBlockChain implements PersistableEnvelope, BsqTxProvider {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -123,9 +123,9 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
 
     // transient
     @Nullable
-    transient private Storage<BsqChainState> storage;
+    transient private Storage<BsqBlockChain> storage;
     @Nullable
-    transient private BsqChainState snapshotCandidate;
+    transient private BsqBlockChain snapshotCandidate;
     transient private final FunctionalReadWriteLock lock;
 
 
@@ -135,7 +135,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqChainState(PersistenceProtoResolver persistenceProtoResolver,
+    public BsqBlockChain(PersistenceProtoResolver persistenceProtoResolver,
                          @Named(Storage.STORAGE_DIR) File storageDir) {
 
         bsqBlocks = new LinkedList<>();
@@ -169,7 +169,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BsqChainState(LinkedList<BsqBlock> bsqBlocks,
+    private BsqBlockChain(LinkedList<BsqBlock> bsqBlocks,
                           Map<String, Tx> txMap,
                           Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap,
                           String genesisTxId,
@@ -193,11 +193,11 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBsqChainState(getBsqChainStateBuilder()).build();
+        return PB.PersistableEnvelope.newBuilder().setBsqBlockChain(getBsqBlockChainBuilder()).build();
     }
 
-    private PB.BsqChainState.Builder getBsqChainStateBuilder() {
-        final PB.BsqChainState.Builder builder = PB.BsqChainState.newBuilder()
+    private PB.BsqBlockChain.Builder getBsqBlockChainBuilder() {
+        final PB.BsqBlockChain.Builder builder = PB.BsqBlockChain.newBuilder()
                 .addAllBsqBlocks(bsqBlocks.stream()
                         .map(BsqBlock::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -216,8 +216,8 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
         return builder;
     }
 
-    public static PersistableEnvelope fromProto(PB.BsqChainState proto) {
-        return new BsqChainState(new LinkedList<>(proto.getBsqBlocksList().stream()
+    public static PersistableEnvelope fromProto(PB.BsqBlockChain proto) {
+        return new BsqBlockChain(new LinkedList<>(proto.getBsqBlocksList().stream()
                 .map(BsqBlock::fromProto)
                 .collect(Collectors.toList())),
                 new HashMap<>(proto.getTxMapMap().entrySet().stream()
@@ -238,7 +238,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
     public void applySnapshot() {
         lock.write(() -> {
             checkNotNull(storage, "storage must not be null");
-            BsqChainState snapshot = storage.initAndGetPersistedWithFileName("BsqChainState", 100);
+            BsqBlockChain snapshot = storage.initAndGetPersistedWithFileName("BsqBlockChain", 100);
             bsqBlocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
@@ -280,7 +280,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
                     if (bsqBlocks.isEmpty() || (bsqBlocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
                             bsqBlocks.getLast().getHeight() + 1 == block.getHeight())) {
                         bsqBlocks.add(block);
-                        block.getTxs().stream().forEach(BsqChainState.this::addTxToMap);
+                        block.getTxs().stream().forEach(BsqBlockChain.this::addTxToMap);
                         chainHeadHeight = block.getHeight();
                         maybeMakeSnapshot();
                         printDetails();
@@ -336,12 +336,12 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
         return lock.read(() -> genesisBlockHeight);
     }
 
-    public BsqChainState getClone() {
+    public BsqBlockChain getClone() {
         return getClone(this);
     }
 
-    public BsqChainState getClone(BsqChainState bsqChainState) {
-        return lock.read(() -> (BsqChainState) BsqChainState.fromProto(bsqChainState.getBsqChainStateBuilder().build()));
+    public BsqBlockChain getClone(BsqBlockChain bsqBlockChain) {
+        return lock.read(() -> (BsqBlockChain) BsqBlockChain.fromProto(bsqBlockChain.getBsqBlockChainBuilder().build()));
     }
 
     public boolean containsBlock(BsqBlock bsqBlock) {
@@ -393,7 +393,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
 
     public List<BsqBlock> getResettedBlocksFrom(int fromBlockHeight) {
         return lock.read(() -> {
-            BsqChainState clone = getClone();
+            BsqBlockChain clone = getClone();
             List<BsqBlock> filtered = clone.bsqBlocks.stream()
                     .filter(block -> block.getHeight() >= fromBlockHeight)
                     .collect(Collectors.toList());
@@ -411,7 +411,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
     }
 
     public Coin getIssuedAmount() {
-        return lock.read(() -> BsqChainState.GENESIS_TOTAL_SUPPLY);
+        return lock.read(() -> BsqBlockChain.GENESIS_TOTAL_SUPPLY);
     }
 
     public Set<TxOutput> getUnspentTxOutputs() {
@@ -517,7 +517,7 @@ public class BsqChainState implements PersistableEnvelope, BsqTxProvider {
                 // At trigger event we store the latest snapshotCandidate to disc
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
-                    final BsqChainState cloned = getClone(snapshotCandidate);
+                    final BsqBlockChain cloned = getClone(snapshotCandidate);
                     checkNotNull(storage, "storage must nto be null");
                     storage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!

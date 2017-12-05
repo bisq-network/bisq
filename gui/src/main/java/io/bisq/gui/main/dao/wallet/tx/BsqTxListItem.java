@@ -22,7 +22,7 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
@@ -80,7 +80,7 @@ class BsqTxListItem {
                          BtcWalletService btcWalletService,
                          Optional<TxType> txTypeOptional,
                          boolean isBurnedBsqTx,
-                         BsqChainState bsqChainState,
+                         BsqBlockChain bsqBlockChain,
                          BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
@@ -97,8 +97,8 @@ class BsqTxListItem {
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
 
-        Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction, bsqChainState);
-        Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction, bsqChainState);
+        Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction, bsqBlockChain);
+        Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction, bsqBlockChain);
         amount = valueSentToMe.subtract(valueSentFromMe);
         if (amount.isPositive()) {
             direction = Res.get("funds.tx.direction.receivedWith");

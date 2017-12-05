@@ -10,7 +10,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.DisputeList;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.compensation.CompensationRequestList;
 import io.bisq.core.dao.vote.VoteItemsList;
 import io.bisq.core.payment.PaymentAccountList;
@@ -81,8 +81,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     throw new ProtobufferException("COMPENSATION_REQUEST_PAYLOAD is not used anymore");
                 case VOTE_ITEMS_LIST:
                     return VoteItemsList.fromProto(proto.getVoteItemsList());
-                case BSQ_CHAIN_STATE:
-                    return BsqChainState.fromProto(proto.getBsqChainState());
+                case BSQ_BLOCK_CHAIN:
+                    return BsqBlockChain.fromProto(proto.getBsqBlockChain());
                 case PERSISTABLE_NETWORK_PAYLOAD_LIST:
                     return PersistableNetworkPayloadCollection.fromProto(proto.getPersistableNetworkPayloadList(), this);
                 case COMPENSATION_REQUEST_LIST:

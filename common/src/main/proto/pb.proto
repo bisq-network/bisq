@@ -954,7 +954,7 @@ message PersistableEnvelope {
 
         CompensationRequestPayload compensation_request_payload = 12; // deprecated. Not used anymore.
         VoteItemsList vote_items_list = 13;
-        BsqChainState bsq_chain_state = 14;
+        BsqBlockChain bsq_block_chain = 14;
 
         PersistableNetworkPayloadList persistable_network_payload_list = 15;
         CompensationRequestList compensation_request_list = 16;
@@ -1309,7 +1309,7 @@ message UserPayload {
 // DAO
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message BsqChainState {
+message BsqBlockChain {
     repeated BsqBlock bsq_blocks = 1;
     map<string, Tx> tx_map = 2;
     map<string, TxOutput> unspent_tx_outputs_map = 3;

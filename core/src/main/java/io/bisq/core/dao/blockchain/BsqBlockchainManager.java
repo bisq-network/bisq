@@ -43,17 +43,17 @@ public class BsqBlockchainManager {
                                 @Named(DaoOptionKeys.RPC_USER) String rpcUser) {
         bsqNode = rpcUser != null && !rpcUser.isEmpty() ? bsqFullNode : bsqLiteNode;
 
-        bsqNode.addBsqChainStateListener(bsqWalletService);
-        bsqNode.addBsqChainStateListener(compensationRequestManager);
+        bsqNode.addBsqBlockChainListener(bsqWalletService);
+        bsqNode.addBsqBlockChainListener(compensationRequestManager);
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         bsqNode.onAllServicesInitialized(errorMessageHandler);
     }
 
-    public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
+    public void addBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            bsqNode.addBsqChainStateListener(bsqChainStateListener);
+            bsqNode.addBsqBlockChainListener(bsqBlockChainListener);
         }
     }
 
@@ -61,8 +61,8 @@ public class BsqBlockchainManager {
         return bsqNode.isParseBlockchainComplete();
     }
 
-    public void removeBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
+    public void removeBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
-            bsqNode.removeBsqChainStateListener(bsqChainStateListener);
+            bsqNode.removeBsqBlockChainListener(bsqBlockChainListener);
     }
 }

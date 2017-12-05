@@ -27,7 +27,7 @@ import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.DaoOptionKeys;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
@@ -44,19 +44,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class JsonChainStateExporter {
+public class JsonBlockChainExporter {
     private final boolean dumpBlockchainData;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
 
     private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
-    private File txDir, txOutputDir, bsqChainStateDir;
-    private JsonFileManager txFileManager, txOutputFileManager, bsqChainStateFileManager;
+    private File txDir, txOutputDir, bsqBlockChainDir;
+    private JsonFileManager txFileManager, txOutputFileManager, bsqBlockChainFileManager;
 
     @Inject
-    public JsonChainStateExporter(BsqChainState bsqChainState,
+    public JsonBlockChainExporter(BsqBlockChain bsqBlockChain,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.dumpBlockchainData = dumpBlockchainData;
 
         init(storageDir, dumpBlockchainData);
@@ -66,14 +66,14 @@ public class JsonChainStateExporter {
         if (dumpBlockchainData) {
             txDir = new File(Paths.get(storageDir.getAbsolutePath(), "tx").toString());
             txOutputDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
-            bsqChainStateDir = new File(Paths.get(storageDir.getAbsolutePath(), "all").toString());
+            bsqBlockChainDir = new File(Paths.get(storageDir.getAbsolutePath(), "all").toString());
             try {
                 if (txDir.exists())
                     FileUtil.deleteDirectory(txDir);
                 if (txOutputDir.exists())
                     FileUtil.deleteDirectory(txOutputDir);
-                if (bsqChainStateDir.exists())
-                    FileUtil.deleteDirectory(bsqChainStateDir);
+                if (bsqBlockChainDir.exists())
+                    FileUtil.deleteDirectory(bsqBlockChainDir);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -84,12 +84,12 @@ public class JsonChainStateExporter {
             if (!txOutputDir.mkdir())
                 log.warn("make txOutputDir failed.\ntxOutputDir=" + txOutputDir.getAbsolutePath());
 
-            if (!bsqChainStateDir.mkdir())
-                log.warn("make bsqChainStateDir failed.\nbsqChainStateDir=" + bsqChainStateDir.getAbsolutePath());
+            if (!bsqBlockChainDir.mkdir())
+                log.warn("make bsqBsqBlockChainDir failed.\nbsqBsqBlockChainDir=" + bsqBlockChainDir.getAbsolutePath());
 
             txFileManager = new JsonFileManager(txDir);
             txOutputFileManager = new JsonFileManager(txOutputDir);
-            bsqChainStateFileManager = new JsonFileManager(bsqChainStateDir);
+            bsqBlockChainFileManager = new JsonFileManager(bsqBlockChainDir);
         }
     }
 
@@ -97,15 +97,15 @@ public class JsonChainStateExporter {
         if (dumpBlockchainData) {
             txFileManager.shutDown();
             txOutputFileManager.shutDown();
-            bsqChainStateFileManager.shutDown();
+            bsqBlockChainFileManager.shutDown();
         }
     }
 
     public void maybeExport() {
         if (dumpBlockchainData) {
             ListenableFuture<Void> future = executor.submit(() -> {
-                final BsqChainState bsqChainStateClone = bsqChainState.getClone();
-                for (Tx tx : bsqChainStateClone.getTxMap().values()) {
+                final BsqBlockChain bsqBlockChainClone = bsqBlockChain.getClone();
+                for (Tx tx : bsqBlockChainClone.getTxMap().values()) {
                     String txId = tx.getId();
                     JsonTxType txType = tx.getTxType() != TxType.UNDEFINED_TX_TYPE ? JsonTxType.valueOf(tx.getTxType().name()) : null;
                     List<JsonTxOutput> outputs = new ArrayList<>();
@@ -156,7 +156,7 @@ public class JsonChainStateExporter {
                     txFileManager.writeToDisc(Utilities.objectToJson(jsonTx), txId);
                 }
 
-                bsqChainStateFileManager.writeToDisc(Utilities.objectToJson(bsqChainStateClone), "bsqChainState");
+                bsqBlockChainFileManager.writeToDisc(Utilities.objectToJson(bsqBlockChainClone), "BsqBlockChain");
                 return null;
             });
 

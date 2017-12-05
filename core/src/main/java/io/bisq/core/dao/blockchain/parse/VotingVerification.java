@@ -29,13 +29,13 @@ import javax.inject.Inject;
 
 @Slf4j
 public class VotingVerification {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final PeriodVerification periodVerification;
 
     @Inject
-    public VotingVerification(BsqChainState bsqChainState,
+    public VotingVerification(BsqBlockChain bsqBlockChain,
                               PeriodVerification periodVerification) {
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.periodVerification = periodVerification;
     }
 
@@ -54,8 +54,8 @@ public class VotingVerification {
                     sizeOfCompRequestsVotes % 2 == 0 &&
                     opReturnData.length % 2 == 1 &&
                     opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
-                    bsqFee == bsqChainState.getVotingFee(blockHeight) &&
-                    bsqChainState.isVotingPeriodValid(blockHeight)) {
+                    bsqFee == bsqBlockChain.getVotingFee(blockHeight) &&
+                    bsqBlockChain.isVotingPeriodValid(blockHeight)) {
                 txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
                 tx.setTxType(TxType.VOTE);
                 // TODO use bsqOutput as weight

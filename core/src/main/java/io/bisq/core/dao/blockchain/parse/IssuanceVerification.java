@@ -34,17 +34,17 @@ public class IssuanceVerification {
     public static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
     public static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
 
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
     private CompensationRequestManager compensationRequestManager;
 
     @Inject
-    public IssuanceVerification(BsqChainState bsqChainState,
+    public IssuanceVerification(BsqBlockChain bsqBlockChain,
                                 PeriodVerification periodVerification,
                                 VotingVerification votingVerification,
                                 CompensationRequestManager compensationRequestManager) {
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.periodVerification = periodVerification;
         this.votingVerification = votingVerification;
         this.compensationRequestManager = compensationRequestManager;
@@ -64,7 +64,7 @@ public class IssuanceVerification {
                 final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBsq().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
-                Set<TxOutput> issuanceTxs = bsqChainState.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
+                Set<TxOutput> issuanceTxs = bsqBlockChain.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
                 // Sorting rule: the txs are sorted by inter-block dependency and
                 // at each recursive iteration we add another sorted list which can be parsed, so we have a reproducible
                 // sorting.
@@ -77,7 +77,7 @@ public class IssuanceVerification {
                 }
                 final long btcAmount = btcTxOutput.getValue();
                 if (periodVerification.isInSponsorPeriod(height) &&
-                        bsqChainState.existsCompensationRequestBtcAddress(btcAddress) &&
+                        bsqBlockChain.existsCompensationRequestBtcAddress(btcAddress) &&
                         votingVerification.isCompensationRequestAccepted(compensationRequest1) &&
                         alreadyFundedBtc + btcAmount <= requestedBtc &&
                         bsqAmount >= MIN_BSQ_ISSUANCE_AMOUNT && bsqAmount <= MAX_BSQ_ISSUANCE_AMOUNT &&

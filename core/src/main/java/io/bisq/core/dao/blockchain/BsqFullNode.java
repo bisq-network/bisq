@@ -21,11 +21,11 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
-import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
+import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
@@ -42,7 +42,7 @@ import org.jetbrains.annotations.Nullable;
 public class BsqFullNode extends BsqNode {
 
     private final BsqFullNodeExecutor bsqFullNodeExecutor;
-    private final JsonChainStateExporter jsonChainStateExporter;
+    private final JsonBlockChainExporter jsonBlockChainExporter;
 
     @Getter
     private boolean parseBlockchainComplete;
@@ -57,17 +57,17 @@ public class BsqFullNode extends BsqNode {
     public BsqFullNode(P2PService p2PService,
                        BsqParser bsqParser,
                        BsqFullNodeExecutor bsqFullNodeExecutor,
-                       BsqChainState bsqChainState,
-                       JsonChainStateExporter jsonChainStateExporter,
+                       BsqBlockChain bsqBlockChain,
+                       JsonBlockChainExporter jsonBlockChainExporter,
                        FeeService feeService,
                        SeedNodesRepository seedNodesRepository) {
         super(p2PService,
                 bsqParser,
-                bsqChainState,
+                bsqBlockChain,
                 feeService,
                 seedNodesRepository);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
-        this.jsonChainStateExporter = jsonChainStateExporter;
+        this.jsonBlockChainExporter = jsonBlockChainExporter;
     }
 
 
@@ -162,7 +162,7 @@ public class BsqFullNode extends BsqNode {
                 p2PService.getPeerManager(),
                 p2PService.getBroadcaster(),
                 seedNodesRepository.getSeedNodeAddresses(),
-                bsqChainState,
+                bsqBlockChain,
                 new RequestManager.Listener() {
                     @Override
                     public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
@@ -205,7 +205,7 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
         super.onNewBsqBlock(bsqBlock);
-        jsonChainStateExporter.maybeExport();
+        jsonBlockChainExporter.maybeExport();
         if (parseBlockchainComplete && p2pNetworkReady && requestManager != null)
             requestManager.publishNewBlock(bsqBlock);
     }

@@ -26,8 +26,8 @@ import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqChainStateListener;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -72,7 +72,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final BsqBlockchainManager bsqBlockchainManager;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -84,7 +84,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
-    private BsqChainStateListener bsqChainStateListener;
+    private BsqBlockChainListener bsqBlockChainListener;
     private BsqBalanceListener bsqBalanceListener;
     private ProgressBar chainSyncIndicator;
     private NewBestBlockListener newBestBlockListener;
@@ -98,13 +98,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                       BsqBlockchainManager bsqBlockchainManager,
                       Preferences preferences,
-                      BsqChainState bsqChainState,
+                      BsqBlockChain bsqBlockChain,
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.preferences = preferences;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -150,7 +150,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         walletBsqTransactionsListener = change -> updateList();
         bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
-        bsqChainStateListener = this::onChainHeightChanged;
+        bsqBlockChainListener = this::onChainHeightChanged;
         newBestBlockListener = block -> onChainHeightChanged();
     }
 
@@ -165,7 +165,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        bsqBlockchainManager.addBsqChainStateListener(bsqChainStateListener);
+        bsqBlockchainManager.addBsqBlockChainListener(bsqBlockChainListener);
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
             rootParent.heightProperty().addListener(parentHeightListener);
@@ -185,7 +185,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         btcWalletService.removeNewBestBlockListener(newBestBlockListener);
 
         observableList.forEach(BsqTxListItem::cleanup);
-        bsqBlockchainManager.removeBsqChainStateListener(bsqChainStateListener);
+        bsqBlockchainManager.removeBsqBlockChainListener(bsqBlockChainListener);
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
@@ -194,23 +194,23 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private void onChainHeightChanged() {
         UserThread.runAfter(() -> {
             if (bsqWalletService.getBestChainHeight() > 0) {
-                final boolean synced = bsqWalletService.getBestChainHeight() == bsqChainState.getChainHeadHeight();
+                final boolean synced = bsqWalletService.getBestChainHeight() == bsqBlockChain.getChainHeadHeight();
                 chainSyncIndicator.setVisible(!synced);
                 chainSyncIndicator.setManaged(!synced);
-                if (bsqChainState.getChainHeadHeight() > 0)
-                    chainSyncIndicator.setProgress((double) bsqChainState.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
+                if (bsqBlockChain.getChainHeadHeight() > 0)
+                    chainSyncIndicator.setProgress((double) bsqBlockChain.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
 
                 if (synced)
                     chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                            bsqChainState.getChainHeadHeight(),
+                            bsqBlockChain.getChainHeadHeight(),
                             bsqWalletService.getBestChainHeight()));
                 else
                     chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                            bsqChainState.getChainHeadHeight(),
+                            bsqBlockChain.getChainHeadHeight(),
                             bsqWalletService.getBestChainHeight()));
             } else {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                        bsqChainState.getChainHeadHeight(),
+                        bsqBlockChain.getChainHeadHeight(),
                         bsqWalletService.getBestChainHeight()));
             }
         }, 300, TimeUnit.MILLISECONDS);
@@ -225,9 +225,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                 .map(transaction -> new BsqTxListItem(transaction,
                                 bsqWalletService,
                                 btcWalletService,
-                                bsqChainState.getTxType(transaction.getHashAsString()),
-                                bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
-                                bsqChainState,
+                                bsqBlockChain.getTxType(transaction.getHashAsString()),
+                                bsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqBlockChain,
                                 bsqFormatter)
                 )
                 .collect(Collectors.toSet());

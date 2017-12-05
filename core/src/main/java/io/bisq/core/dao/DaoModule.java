@@ -22,7 +22,7 @@ import io.bisq.common.app.AppModule;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqFullNode;
 import io.bisq.core.dao.blockchain.BsqLiteNode;
-import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
+import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.parse.*;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingDefaultValues;
@@ -45,8 +45,8 @@ public class DaoModule extends AppModule {
         bind(BsqBlockchainManager.class).in(Singleton.class);
         bind(BsqLiteNode.class).in(Singleton.class);
         bind(BsqFullNode.class).in(Singleton.class);
-        bind(BsqChainState.class).in(Singleton.class);
-        bind(BsqTxProvider.class).to(BsqChainState.class).in(Singleton.class);
+        bind(BsqBlockChain.class).in(Singleton.class);
+        bind(BsqTxProvider.class).to(BsqBlockChain.class).in(Singleton.class);
         bind(BsqFullNodeExecutor.class).in(Singleton.class);
         bind(BsqLiteNodeExecutor.class).in(Singleton.class);
         bind(BsqParser.class).in(Singleton.class);
@@ -57,7 +57,7 @@ public class DaoModule extends AppModule {
         bind(VotingVerification.class).in(Singleton.class);
         bind(IssuanceVerification.class).in(Singleton.class);
 
-        bind(JsonChainStateExporter.class).in(Singleton.class);
+        bind(JsonBlockChainExporter.class).in(Singleton.class);
         bind(DaoPeriodService.class).in(Singleton.class);
         bind(VotingService.class).in(Singleton.class);
 

@@ -23,8 +23,8 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.dao.blockchain.BsqChainStateListener;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.parse.BsqTxProvider;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
-public class BsqWalletService extends WalletService implements BsqChainStateListener {
+public class BsqWalletService extends WalletService implements BsqBlockChainListener {
     private final BsqCoinSelector bsqCoinSelector;
     private final BsqTxProvider bsqTxProvider;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
@@ -131,7 +131,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
 
 
     @Override
-    public void onBsqChainStateChanged() {
+    public void onBsqBlockChainChanged() {
         if (isWalletReady()) {
             updateBsqWalletTransactions();
             updateBsqBalance();
@@ -235,7 +235,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
         }
     }
 
-    public Coin getValueSentFromMeForTransaction(Transaction transaction, BsqChainState bsqChainState) throws ScriptException {
+    public Coin getValueSentFromMeForTransaction(Transaction transaction, BsqBlockChain bsqBlockChain) throws ScriptException {
         Coin result = Coin.ZERO;
         for (int i = 0; i < transaction.getInputs().size(); i++) {
             TransactionInput input = transaction.getInputs().get(i);
@@ -260,7 +260,7 @@ public class BsqWalletService extends WalletService implements BsqChainStateList
         return result;
     }
 
-    public Coin getValueSentToMeForTransaction(Transaction transaction, BsqChainState bsqChainState) throws ScriptException {
+    public Coin getValueSentToMeForTransaction(Transaction transaction, BsqBlockChain bsqBlockChain) throws ScriptException {
         Coin result = Coin.ZERO;
         final String txId = transaction.getHashAsString();
         for (int i = 0; i < transaction.getOutputs().size(); i++) {

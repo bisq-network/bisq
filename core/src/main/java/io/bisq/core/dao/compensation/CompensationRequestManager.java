@@ -28,7 +28,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
-import io.bisq.core.dao.blockchain.BsqChainStateListener;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.PeriodVerification;
 import io.bisq.core.dao.blockchain.parse.VotingVerification;
 import io.bisq.core.dao.vote.VotingDefaultValues;
@@ -49,7 +49,7 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 
-public class CompensationRequestManager implements PersistedDataHost, BsqChainStateListener {
+public class CompensationRequestManager implements PersistedDataHost, BsqBlockChainListener {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
@@ -165,7 +165,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqChainSt
     }
 
     @Override
-    public void onBsqChainStateChanged() {
+    public void onBsqBlockChainChanged() {
         updateFilteredLists();
     }
 

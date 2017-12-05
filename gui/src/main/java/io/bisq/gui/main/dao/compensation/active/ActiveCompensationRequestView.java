@@ -21,7 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
@@ -64,7 +64,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private final CompensationRequestManager compensationRequestManger;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
-    private BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final Navigation navigation;
     private final BsqFormatter bsqFormatter;
     private SortedList<CompensationRequest> sortedList;
@@ -88,13 +88,13 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
                                           DaoPeriodService daoPeriodService,
                                           BsqWalletService bsqWalletService,
-                                          BsqChainState bsqChainState,
+                                          BsqBlockChain bsqBlockChain,
                                           Navigation navigation,
                                           BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.navigation = navigation;
         this.bsqFormatter = bsqFormatter;
     }

@@ -24,6 +24,9 @@ import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 
+/**
+ * High level entry point for Dao domain
+ */
 public class DaoManager {
     private final BsqBlockchainManager bsqBlockchainManager;
     private final DaoPeriodService daoPeriodService;
