@@ -156,7 +156,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
         createColumns();
 
-        sortedList = new SortedList<>(compensationRequestManger.getObservableList());
+        sortedList = new SortedList<>(compensationRequestManger.getActiveRequests());
         tableView.setItems(sortedList);
 
         bestBlockListener = block -> {
@@ -197,7 +197,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     }
 
     private void onChainHeightChanged(int height) {
-        cycleTextField.setText(String.valueOf(daoPeriodService.getNumCycles(height)));
+        cycleTextField.setText(String.valueOf(daoPeriodService.getNumOfStartedCycles(height)));
 
         phaseBarsItems.stream().forEach(item -> {
             int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());

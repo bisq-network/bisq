@@ -23,7 +23,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqChainStateListener;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
-public class BsqWalletService extends WalletService {
+public class BsqWalletService extends WalletService implements BsqChainStateListener {
     private final BsqCoinSelector bsqCoinSelector;
     private final BsqChainState bsqChainState;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
@@ -69,7 +69,6 @@ public class BsqWalletService extends WalletService {
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqCoinSelector bsqCoinSelector,
                             BsqChainState bsqChainState,
-                            BsqBlockchainManager bsqBlockchainManager,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -126,12 +125,14 @@ public class BsqWalletService extends WalletService {
                     });
                 }
             });
-
-            bsqBlockchainManager.addBsqChainStateListener(() -> {
-                updateBsqWalletTransactions();
-                updateBsqBalance();
-            });
         }
+    }
+
+
+    @Override
+    public void onBsqChainStateChanged() {
+        updateBsqWalletTransactions();
+        updateBsqBalance();
     }
 
 

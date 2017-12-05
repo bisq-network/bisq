@@ -18,7 +18,6 @@
 package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple3;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -27,8 +26,6 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BsqAddressValidator;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
@@ -45,7 +42,6 @@ public class CompensationRequestDisplay {
     private int gridRow = 0;
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
-    private Button createAddressButton;
 
     public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService) {
         this.gridPane = gridPane;
@@ -68,13 +64,9 @@ public class CompensationRequestDisplay {
         requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBsq")).second;
 
         // TODO validator, addressTF
-        final Tuple3<Label, InputTextField, Button> tuple3 = addLabelInputTextFieldButton(gridPane, ++gridRow,
-                Res.get("dao.compensation.display.bsqAddress"), Res.get("dao.compensation.display.createBsqAddressButton"));
-        bsqAddressTextField = tuple3.second;
-        createAddressButton = tuple3.third;
-        createAddressButton.setOnAction(e -> {
-            bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
-        });
+        bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.get("dao.compensation.display.bsqAddress")).second;
+        bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
         bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
     }
 

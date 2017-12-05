@@ -28,12 +28,14 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
+import io.bisq.core.dao.blockchain.BsqChainStateListener;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 import java.util.List;
 
-public class CompensationRequestManager implements PersistedDataHost {
+public class CompensationRequestManager implements PersistedDataHost, BsqChainStateListener {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
@@ -57,7 +59,6 @@ public class CompensationRequestManager implements PersistedDataHost {
     private final Storage<CompensationRequestList> compensationRequestsStorage;
 
     private CompensationRequest selectedCompensationRequest;
-    private int bestChainHeight = -1;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +115,7 @@ public class CompensationRequestManager implements PersistedDataHost {
                         model.findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
                             if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
                                 model.removeCompensationRequest(compensationRequest);
-                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
                             } else {
                                 final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
                                 log.warn(msg);
@@ -138,10 +139,24 @@ public class CompensationRequestManager implements PersistedDataHost {
         // Republish
         PublicKey signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
         UserThread.runAfter(() -> {
-            model.getObservableList().stream()
+            model.getActiveRequests().stream()
                     .filter(e -> e.getCompensationRequestPayload().getOwnerPubKey().equals(signaturePubKey))
                     .forEach(e -> addToP2PNetwork(e.getCompensationRequestPayload()));
         }, 1); // TODO increase delay to about 30 sec.
+
+        bsqWalletService.addNewBestBlockListener(block -> {
+            onChainHeightChanged();
+        });
+        onChainHeightChanged();
+    }
+
+    @Override
+    public void onBsqChainStateChanged() {
+        model.updateFilteredLists();
+    }
+
+    private void onChainHeightChanged() {
+        model.updateFilteredLists();
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
@@ -152,7 +167,7 @@ public class CompensationRequestManager implements PersistedDataHost {
         if (!contains(compensationRequestPayload)) {
             model.addCompensationRequest(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }
@@ -162,7 +177,7 @@ public class CompensationRequestManager implements PersistedDataHost {
         if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
             if (isMyCompensationRequest(compensationRequest)) {
                 model.removeCompensationRequest(compensationRequest);
-                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getObservableList()), 500);
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(model.getAllRequests()), 500);
                 return p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
             } else {
                 final String msg = "removeCompensationRequest called for a CompensationRequest which is not ours.";
@@ -185,11 +200,11 @@ public class CompensationRequestManager implements PersistedDataHost {
     }
 
     private boolean contains(CompensationRequestPayload compensationRequestPayload) {
-        return model.getObservableList().stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
+        return model.getAllRequests().stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
     }
 
     public List<CompensationRequest> getCompensationRequestsList() {
-        return model.getObservableList();
+        return model.getAllRequests();
     }
 
     public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
@@ -204,7 +219,15 @@ public class CompensationRequestManager implements PersistedDataHost {
         return selectedCompensationRequest;
     }
 
-    public ObservableList<CompensationRequest> getObservableList() {
-        return model.getObservableList();
+    public ObservableList<CompensationRequest> getAllRequests() {
+        return model.getAllRequests();
+    }
+
+    public FilteredList<CompensationRequest> getActiveRequests() {
+        return model.getActiveRequests();
+    }
+
+    public FilteredList<CompensationRequest> getPastRequests() {
+        return model.getPastRequests();
     }
 }

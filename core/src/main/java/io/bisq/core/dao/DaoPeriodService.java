@@ -32,6 +32,13 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Provide utilities about the phase and cycle of the request/voting cycle.
+ * A cycle is the sequence of distinct phases. The first cycle and phase starts with the genesis block height.
+ * All time events are measured in blocks.
+ * The index of first cycle is 1 not 0! The index of first block in first phase is 0 (genesis height).
+ * The length of blocks of each phase is number of blocks starting with index 0.
+ */
 public class DaoPeriodService {
     private static final Logger log = LoggerFactory.getLogger(DaoPeriodService.class);
 
@@ -101,10 +108,10 @@ public class DaoPeriodService {
         applyVotingResults(votingDefaultValues, bestChainHeight, GENESIS_BLOCK_HEIGHT);*/
 
         btcWalletService.addNewBestBlockListener(block -> {
-            phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), block.getHeight())));
+            phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), block.getHeight(), getNumBlocksOfCycle())));
         });
 
-        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), btcWalletService.getBestChainHeight())));
+        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqChainState.getGenesisHeight(), btcWalletService.getBestChainHeight(), getNumBlocksOfCycle())));
     }
 
 
@@ -115,11 +122,19 @@ public class DaoPeriodService {
 
     public boolean isInCompensationRequestPhase(CompensationRequest compensationRequest) {
         Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
-        return tx != null && isInCompensationRequestPhase(tx.getBlockHeight(),
+        return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
                 btcWalletService.getBestChainHeight(),
                 BsqChainState.getGenesisHeight(),
                 Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks(),
-                getTotalPeriodInBlocks());
+                getNumBlocksOfCycle());
+    }
+
+    public boolean isInCurrentCycle(CompensationRequest compensationRequest) {
+        Tx tx = bsqChainState.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
+        return tx != null && isInCurrentCycle(tx.getBlockHeight(),
+                btcWalletService.getBestChainHeight(),
+                BsqChainState.getGenesisHeight(),
+                getNumBlocksOfCycle());
     }
 
     public long getVotingResultPeriod() {
@@ -136,32 +151,32 @@ public class DaoPeriodService {
                 3 * votingDefaultValues.getBreakBetweenPeriodsInBlocks();
     }*/
 
-    public int getTotalPeriodInBlocks() {
-        int blocks = 0;
-        for (int i = 0; i < Phase.values().length; i++) {
-            blocks += Phase.values()[i].getBlocks();
-        }
-        return blocks;
+
+    public int getNumOfStartedCycles(int chainHeight) {
+        return getNumOfStartedCycles(chainHeight,
+                BsqChainState.getGenesisHeight(),
+                getNumBlocksOfCycle());
+    }
+
+    public int getNumOfCompletedCycles(int chainHeight) {
+        return getNumOfCompletedCycles(chainHeight,
+                BsqChainState.getGenesisHeight(),
+                getNumBlocksOfCycle());
     }
 
     public int getAbsoluteStartBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteStartBlockOfPhase(chainHeight,
                 BsqChainState.getGenesisHeight(),
-                getTotalPeriodInBlocks(),
-                phase);
+                phase,
+                getNumBlocksOfCycle());
     }
 
-    public int getNumCycles(int chainHeight) {
-        return getNumCycles(chainHeight,
-                BsqChainState.getGenesisHeight(),
-                getTotalPeriodInBlocks());
-    }
 
     public int getAbsoluteEndBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteEndBlockOfPhase(chainHeight,
                 BsqChainState.getGenesisHeight(),
-                getTotalPeriodInBlocks(),
-                phase);
+                phase,
+                getNumBlocksOfCycle());
     }
 
 
@@ -171,10 +186,8 @@ public class DaoPeriodService {
 
 
     @VisibleForTesting
-    int getRelativeBlocksInCycle(int genesisHeight, int bestChainHeight) {
-        int totalPhaseBlocks = getTotalPeriodInBlocks();
-        log.info("bestChainHeight={}", bestChainHeight);
-        return (bestChainHeight - genesisHeight) % totalPhaseBlocks;
+    int getRelativeBlocksInCycle(int genesisHeight, int bestChainHeight, int numBlocksOfCycle) {
+        return (bestChainHeight - genesisHeight) % numBlocksOfCycle;
     }
 
     @VisibleForTesting
@@ -217,41 +230,56 @@ public class DaoPeriodService {
     }
 
     @VisibleForTesting
-    boolean isInCompensationRequestPhase(int height, int chainHeight, int genesisHeight, int requestPhaseInBlocks, int totalPeriodInBlocks) {
-        if (height >= genesisHeight && chainHeight >= genesisHeight && chainHeight >= height) {
-            height -= genesisHeight;
-            chainHeight -= genesisHeight;
-            height = height % totalPeriodInBlocks;
-            chainHeight = chainHeight % totalPeriodInBlocks;
-            return height <= requestPhaseInBlocks && chainHeight <= requestPhaseInBlocks;
+    boolean isTxHeightInPhase(int txHeight, int chainHeight, int genesisHeight, int requestPhaseInBlocks, int numBlocksOfCycle) {
+        if (txHeight >= genesisHeight && chainHeight >= genesisHeight && chainHeight >= txHeight) {
+            int numBlocksOfTxHeightSinceGenesis = txHeight - genesisHeight;
+            int numBlocksOfChainHeightSinceGenesis = chainHeight - genesisHeight;
+            int numBlocksOfTxHeightInCycle = numBlocksOfTxHeightSinceGenesis % numBlocksOfCycle;
+            int numBlocksOfChainHeightInCycle = numBlocksOfChainHeightSinceGenesis % numBlocksOfCycle;
+            return numBlocksOfTxHeightInCycle <= requestPhaseInBlocks && numBlocksOfChainHeightInCycle <= requestPhaseInBlocks;
         } else {
             return false;
         }
     }
 
     @VisibleForTesting
-    int getAbsoluteStartBlockOfPhase(int chainHeight, int genesisHeight, int totalPeriodInBlocks, Phase phase) {
-        if (chainHeight >= genesisHeight)
-            return genesisHeight + (getNumCycles(chainHeight, genesisHeight, totalPeriodInBlocks) - 1) * totalPeriodInBlocks + getStartBlockOfPhase(phase);
-        else
-            return genesisHeight + getStartBlockOfPhase(phase);
+    boolean isInCurrentCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
+        final int numOfCompletedCycles = getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle);
+        final int blockAtCycleStart = genesisHeight + numOfCompletedCycles * numBlocksOfCycle;
+        final int blockAtCycleEnd = blockAtCycleStart + numBlocksOfCycle - 1;
+        return txHeight <= chainHeight &&
+                chainHeight >= genesisHeight &&
+                txHeight >= blockAtCycleStart &&
+                txHeight <= blockAtCycleEnd;
     }
 
     @VisibleForTesting
-    int getAbsoluteEndBlockOfPhase(int chainHeight, int genesisHeight, int totalPeriodInBlocks, Phase phase) {
-        return getAbsoluteStartBlockOfPhase(chainHeight, genesisHeight, totalPeriodInBlocks, phase) + phase.getBlocks();
+    int getAbsoluteStartBlockOfPhase(int chainHeight, int genesisHeight, Phase phase, int numBlocksOfCycle) {
+        return genesisHeight + getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle) * getNumBlocksOfCycle() + getNumBlocksOfPhaseStart(phase);
     }
 
     @VisibleForTesting
-    int getNumCycles(int chainHeight, int genesisHeight, int totalPeriodInBlocks) {
+    int getAbsoluteEndBlockOfPhase(int chainHeight, int genesisHeight, Phase phase, int numBlocksOfCycle) {
+        return getAbsoluteStartBlockOfPhase(chainHeight, genesisHeight, phase, numBlocksOfCycle) + phase.getBlocks() - 1;
+    }
+
+    @VisibleForTesting
+    int getNumOfStartedCycles(int chainHeight, int genesisHeight, int numBlocksOfCycle) {
         if (chainHeight >= genesisHeight)
-            return (chainHeight - genesisHeight) / totalPeriodInBlocks + 1; // We start with 1 (first cycle starts with genesis)
+            return getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle) + 1;
         else
             return 0;
-    } //TODO test
+    }
+
+    int getNumOfCompletedCycles(int chainHeight, int genesisHeight, int numBlocksOfCycle) {
+        if (chainHeight >= genesisHeight && numBlocksOfCycle > 0)
+            return (chainHeight - genesisHeight) / numBlocksOfCycle;
+        else
+            return 0;
+    }
 
     @VisibleForTesting
-    int getStartBlockOfPhase(Phase phase) {
+    int getNumBlocksOfPhaseStart(Phase phase) {
         int blocks = 0;
         for (int i = 0; i < Phase.values().length; i++) {
             final Phase currentPhase = Phase.values()[i];
@@ -263,12 +291,21 @@ public class DaoPeriodService {
         return blocks;
     }
 
+    @VisibleForTesting
+    int getNumBlocksOfCycle() {
+        int blocks = 0;
+        for (int i = 0; i < Phase.values().length; i++) {
+            blocks += Phase.values()[i].getBlocks();
+        }
+        return blocks;
+    }
+
     private void applyVotingResults(VotingDefaultValues votingDefaultValues, int bestChainHeight, int genesisBlockHeight) {
         int pastBlocks = bestChainHeight - genesisBlockHeight;
         int from = genesisBlockHeight;
         boolean hasVotingPeriods = pastBlocks > from + getVotingResultPeriod();
         while (hasVotingPeriods) {
-            long currentRoundPeriod = getTotalPeriodInBlocks();
+            long currentRoundPeriod = getNumBlocksOfCycle();
             votingService.applyVotingResultsForRound(votingDefaultValues, from);
             // Don't take getTotalPeriodInBlocks() as voting might have changed periods
             from += currentRoundPeriod;

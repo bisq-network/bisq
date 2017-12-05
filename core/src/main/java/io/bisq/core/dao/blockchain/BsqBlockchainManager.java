@@ -20,11 +20,15 @@ package io.bisq.core.dao.blockchain;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoOptionKeys;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Named;
 
+/**
+ * Basic wiring of blockchain related services
+ */
 @Slf4j
 public class BsqBlockchainManager {
     private final BsqNode bsqNode;
@@ -33,9 +37,11 @@ public class BsqBlockchainManager {
     @Inject
     public BsqBlockchainManager(BsqLiteNode bsqLiteNode,
                                 BsqFullNode bsqFullNode,
+                                BsqWalletService bsqWalletService,
                                 @Named(DaoOptionKeys.RPC_USER) String rpcUser) {
-
         bsqNode = rpcUser != null && !rpcUser.isEmpty() ? bsqFullNode : bsqLiteNode;
+
+        bsqNode.addBsqChainStateListener(bsqWalletService);
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
@@ -43,8 +49,9 @@ public class BsqBlockchainManager {
     }
 
     public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             bsqNode.addBsqChainStateListener(bsqChainStateListener);
+        }
     }
 
     public boolean isParseBlockchainComplete() {

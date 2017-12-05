@@ -64,7 +64,6 @@ public class DaoModule extends AppModule {
         bind(CompensationRequestManager.class).in(Singleton.class);
         bind(CompensationRequestModel.class).in(Singleton.class);
         bind(VotingManager.class).in(Singleton.class);
-        bind(DaoService.class).in(Singleton.class);
         bind(VotingDefaultValues.class).in(Singleton.class);
 
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));

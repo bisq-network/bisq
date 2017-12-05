@@ -276,7 +276,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             compensationRequestsComboBox.setItems(compensationRequestVoteItems);
 
             //TODO move to voteManager.getCurrentVoteItemsList()?
-            compensationRequestManager.getObservableList().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
+            compensationRequestManager.getActiveRequests().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
 
             parametersComboBox.setItems(FXCollections.observableArrayList(voteItemsList.getVoteItemList()));
         } else {
