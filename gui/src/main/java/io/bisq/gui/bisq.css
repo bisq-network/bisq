@@ -222,8 +222,7 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
-
-.dao-tx-type-unverified-icon, 
+.dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
     -fx-cursor: hand;
@@ -246,7 +245,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -fx-accent;
     -fx-cursor: hand;
 }
-
 
 .dao-tx-type-received-funds-icon,
 .dao-tx-type-received-funds-icon:hover {
@@ -271,7 +269,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-green;
     -fx-cursor: hand;
 }
-
 
 /*******************************************************************************
  *                                                                             *
