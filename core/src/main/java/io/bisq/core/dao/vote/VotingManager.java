@@ -112,9 +112,9 @@ public class VotingManager implements PersistedDataHost {
     }
 
     public byte[] getCompensationRequestsCollection() {
-        List<CompensationRequestPayload> list = compensationRequestManager.getCompensationRequestsList().stream()
+        List<CompensationRequestPayload> list = compensationRequestManager.getActiveRequests().stream()
                 .filter(CompensationRequest::isInVotePeriod)
-                .map(CompensationRequest::getCompensationRequestPayload)
+                .map(CompensationRequest::getPayload)
                 .collect(Collectors.toList());
         CompensationRequestPayload[] array = new CompensationRequestPayload[list.size()];
         list.toArray(array);

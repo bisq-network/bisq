@@ -30,12 +30,13 @@ import java.util.Map;
 import java.util.Optional;
 
 // Represents the state of the CompensationRequest data
+// TODO cleanup
 @Getter
 @EqualsAndHashCode
 @Slf4j
 public final class CompensationRequest implements PersistablePayload {
 
-    private final CompensationRequestPayload compensationRequestPayload;
+    private final CompensationRequestPayload payload;
 
     @Setter //TODO
     private boolean accepted;
@@ -54,8 +55,8 @@ public final class CompensationRequest implements PersistablePayload {
     @Nullable
     private Map<String, String> extraDataMap;
 
-    public CompensationRequest(CompensationRequestPayload compensationRequestPayload) {
-        this.compensationRequestPayload = compensationRequestPayload;
+    public CompensationRequest(CompensationRequestPayload payload) {
+        this.payload = payload;
     }
 
 
@@ -63,7 +64,7 @@ public final class CompensationRequest implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompensationRequest(CompensationRequestPayload compensationRequestPayload,
+    private CompensationRequest(CompensationRequestPayload payload,
                                 boolean accepted,
                                 long fundsReceived,
                                 boolean inVotePeriod,
@@ -71,7 +72,7 @@ public final class CompensationRequest implements PersistablePayload {
                                 boolean closed,
                                 boolean waitingForVotingPeriod,
                                 @Nullable Map<String, String> extraDataMap) {
-        this.compensationRequestPayload = compensationRequestPayload;
+        this.payload = payload;
         this.accepted = accepted;
         this.fundsReceived = fundsReceived;
         this.inVotePeriod = inVotePeriod;
@@ -84,7 +85,7 @@ public final class CompensationRequest implements PersistablePayload {
     @Override
     public PB.CompensationRequest toProtoMessage() {
         final PB.CompensationRequest.Builder builder = PB.CompensationRequest.newBuilder()
-                .setCompensationRequestPayload(compensationRequestPayload.getCompensationRequestPayloadBuilder())
+                .setCompensationRequestPayload(payload.getCompensationRequestPayloadBuilder())
                 .setAccepted(accepted)
                 .setFundsReceived(fundsReceived)
                 .setInVotePeriod(isInVotePeriod())

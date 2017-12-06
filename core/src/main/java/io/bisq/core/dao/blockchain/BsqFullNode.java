@@ -33,7 +33,6 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,9 +42,6 @@ public class BsqFullNode extends BsqNode {
 
     private final BsqFullNodeExecutor bsqFullNodeExecutor;
     private final JsonBlockChainExporter jsonBlockChainExporter;
-
-    @Getter
-    private boolean parseBlockchainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +141,6 @@ public class BsqFullNode extends BsqNode {
             addBlockHandler();
         }
     }
-
     @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         log.info("onParseBlockchainComplete");
@@ -155,6 +150,8 @@ public class BsqFullNode extends BsqNode {
             createRequestBlocksManager();
             addBlockHandler();
         }
+
+        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 
     private void createRequestBlocksManager() {

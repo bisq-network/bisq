@@ -61,7 +61,7 @@ public class IssuanceVerification {
             if (compensationRequest.isPresent()) {
                 final CompensationRequest compensationRequest1 = compensationRequest.get();
                 final long bsqAmount = bsqTxOutput.getValue();
-                final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBsq().value;
+                final long requestedBtc = compensationRequest1.getPayload().getRequestedBsq().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
                 Set<TxOutput> issuanceTxs = bsqBlockChain.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);

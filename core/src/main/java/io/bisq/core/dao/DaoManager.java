@@ -49,7 +49,7 @@ public class DaoManager {
         this.compensationRequestManager = compensationRequestManager;
 
         bsqNode = bsqNodeProvider.getBsqNode();
-
+        bsqNode.addBsqBlockChainListener(compensationRequestManager);
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {

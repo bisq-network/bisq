@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.compensation;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -26,12 +25,8 @@ import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.parse.PeriodVerification;
-import io.bisq.core.dao.blockchain.parse.VotingVerification;
-import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -40,32 +35,21 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
-import java.util.List;
 import java.util.Optional;
 
-public class CompensationRequestManager implements PersistedDataHost, BsqBlockChainListener {
+public class CompensationRequestManager implements PersistedDataHost, BsqBlockChainListener, HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
-
-    private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
 
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
-    private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final VotingDefaultValues votingDefaultValues;
-    private final PeriodVerification periodVerification;
-    private final VotingVerification votingVerification;
-
-    private final KeyRing keyRing;
     private final Storage<CompensationRequestList> compensationRequestsStorage;
+    private final PublicKey signaturePubKey;
 
-    private CompensationRequest selectedCompensationRequest;
     @Getter
     private final ObservableList<CompensationRequest> allRequests = FXCollections.observableArrayList();
     @Getter
@@ -73,126 +57,63 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     @Getter
     private final FilteredList<CompensationRequest> pastRequests = new FilteredList<>(allRequests);
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public CompensationRequestManager(P2PService p2PService,
-                                      BtcWalletService btcWalletService,
                                       BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
-                                      VotingDefaultValues votingDefaultValues,
-                                      PeriodVerification periodVerification,
-                                      VotingVerification votingVerification,
                                       KeyRing keyRing,
                                       Storage<CompensationRequestList> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
-        this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.votingDefaultValues = votingDefaultValues;
-        this.periodVerification = periodVerification;
-        this.votingVerification = votingVerification;
-        this.keyRing = keyRing;
         this.compensationRequestsStorage = compensationRequestsStorage;
+
+        signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }
 
-    @Override
-    public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            CompensationRequestList persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequestList", 100);
-            if (persisted != null)
-                setPersistedCompensationRequest(persisted.getList());
-        }
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        /*if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
+        p2PService.addHashSetChangedListener(this);
 
-        }*/
+        // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
+        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload instanceof CompensationRequestPayload)
+                createCompensationRequest((CompensationRequestPayload) protectedStoragePayload, false);
+        });
 
-
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-                @Override
-                public void onAdded(ProtectedStorageEntry data) {
-                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
-                    if (protectedStoragePayload instanceof CompensationRequestPayload)
-                        addCompensationRequestPayload((CompensationRequestPayload) protectedStoragePayload, true);
-                }
-
-                @Override
-                public void onRemoved(ProtectedStorageEntry data) {
-                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
-                    if (protectedStoragePayload instanceof CompensationRequestPayload) {
-                        findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
-                            if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
-                                removeCompensationRequestFromList(compensationRequest);
-                                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
-                            } else {
-                                final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
-                                log.warn(msg);
-                                if (DevEnv.DEV_MODE)
-                                    throw new RuntimeException(msg);
-                            }
-                        });
-                    }
-                }
-            });
-
-            // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
-            p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
-                final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                if (protectedStoragePayload instanceof CompensationRequestPayload)
-                    addCompensationRequestPayload((CompensationRequestPayload) protectedStoragePayload, false);
-            });
-        }
-
-        // TODO optimize (only own?)
-        // Republish
-        PublicKey signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
+        // Republish own active compensationRequests
         UserThread.runAfter(() -> {
             activeRequests.stream()
-                    .filter(e -> e.getCompensationRequestPayload().getOwnerPubKey().equals(signaturePubKey))
-                    .forEach(e -> addToP2PNetwork(e.getCompensationRequestPayload()));
-        }, 1); // TODO increase delay to about 30 sec.
+                    .filter(this::isMyCompensationRequest)
+                    .forEach(e -> addToP2PNetwork(e.getPayload()));
+        }, 30);
 
-        bsqWalletService.addNewBestBlockListener(block -> {
+        bsqWalletService.getChainHeightProperty().addListener((observable, oldValue, newValue) -> {
             onChainHeightChanged();
         });
         onChainHeightChanged();
-    }
-
-    @Override
-    public void onBsqBlockChainChanged() {
-        updateFilteredLists();
-    }
-
-    private void onChainHeightChanged() {
-        updateFilteredLists();
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
         p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
     }
 
-    private void addCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
-        if (!contains(compensationRequestPayload)) {
-            addCompensationRequest(new CompensationRequest(compensationRequestPayload));
-            if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
-        } else {
-            log.warn("We have already an item with the same CompensationRequest.");
-        }
-    }
-
     public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
-        if (daoPeriodService.isInCompensationRequestPhase(compensationRequest)) {
+        final CompensationRequestPayload payload = compensationRequest.getPayload();
+        if (daoPeriodService.isInPhase(payload, DaoPeriodService.Phase.COMPENSATION_REQUESTS)) {
             if (isMyCompensationRequest(compensationRequest)) {
-                removeCompensationRequestFromList(compensationRequest);
+                removeFromList(compensationRequest);
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
-                return p2PService.removeData(compensationRequest.getCompensationRequestPayload(), true);
+                return p2PService.removeData(payload, true);
             } else {
                 final String msg = "removeCompensationRequest called for a CompensationRequest which is not ours.";
                 log.warn(msg);
@@ -209,60 +130,113 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         }
     }
 
-    private void removeCompensationRequestFromList(CompensationRequest compensationRequest) {
-        allRequests.remove(compensationRequest);
+    public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {
+        return isMyCompensationRequestPayload(compensationRequest.getPayload());
+    }
+
+    public boolean isMyCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload) {
+        return signaturePubKey.equals(compensationRequestPayload.getOwnerPubKey());
+    }
+
+    //TODO prob not needed anymore
+    public Optional<CompensationRequest> findByAddress(String address) {
+        return allRequests.stream()
+                .filter(e -> e.getPayload().getBsqAddress().equals(address))
+                .findAny();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void readPersisted() {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+            CompensationRequestList persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequestList", 100);
+            if (persisted != null) {
+                this.allRequests.clear();
+                this.allRequests.addAll(persisted.getList());
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // HashMapChangedListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAdded(ProtectedStorageEntry data) {
+        final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+        if (protectedStoragePayload instanceof CompensationRequestPayload)
+            createCompensationRequest((CompensationRequestPayload) protectedStoragePayload, true);
+    }
+
+    @Override
+    public void onRemoved(ProtectedStorageEntry data) {
+        final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
+        if (protectedStoragePayload instanceof CompensationRequestPayload) {
+            findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
+                if (daoPeriodService.isInPhase(compensationRequest.getPayload(), DaoPeriodService.Phase.COMPENSATION_REQUESTS)) {
+                    removeFromList(compensationRequest);
+                    compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
+                } else {
+                    final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
+                    log.warn(msg);
+                    if (DevEnv.DEV_MODE)
+                        throw new RuntimeException(msg);
+                }
+            });
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBlockChainListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBsqBlockChainChanged() {
         updateFilteredLists();
     }
 
-    public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {
-        return keyRing.getPubKeyRing().getSignaturePubKey().equals(compensationRequest.getCompensationRequestPayload().getOwnerPubKey());
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onChainHeightChanged() {
+        updateFilteredLists();
     }
 
-    private boolean contains(CompensationRequestPayload compensationRequestPayload) {
-        return allRequests.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
-    }
-
-    public List<CompensationRequest> getCompensationRequestsList() {
-        return allRequests;
-    }
-
-    public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
-        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().getBsqAddress(), bsqWalletService.getUnusedAddress(), callback);
-    }
-
-    public void setSelectedCompensationRequest(CompensationRequest selectedCompensationRequest) {
-        this.selectedCompensationRequest = selectedCompensationRequest;
-    }
-
-    public CompensationRequest getSelectedCompensationRequest() {
-        return selectedCompensationRequest;
+    private void createCompensationRequest(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
+        if (!contains(compensationRequestPayload)) {
+            allRequests.add(new CompensationRequest(compensationRequestPayload));
+            updateFilteredLists();
+            if (storeLocally)
+                compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
+        } else {
+            log.warn("We have already an item with the same CompensationRequest.");
+        }
     }
 
     private void updateFilteredLists() {
         activeRequests.setPredicate(daoPeriodService::isInCurrentCycle);
-        pastRequests.setPredicate(compensationRequest -> {
-            return !daoPeriodService.isInCurrentCycle(compensationRequest);
-        });
+        pastRequests.setPredicate(daoPeriodService::isInPastCycle);
+        //log.error("updateFilteredLists activeRequests={}, pastRequests={}", activeRequests.size(), pastRequests.size());
     }
 
-    private void setPersistedCompensationRequest(List<CompensationRequest> list) {
-        this.allRequests.clear();
-        this.allRequests.addAll(list);
-        updateFilteredLists();
-    }
-
-    public Optional<CompensationRequest> findByAddress(String address) {
-        return allRequests.stream()
-                .filter(e -> e.getCompensationRequestPayload().getBsqAddress().equals(address))
-                .findAny();
-    }
-
-    private void addCompensationRequest(CompensationRequest compensationRequest) {
-        allRequests.add(compensationRequest);
-        updateFilteredLists();
+    private boolean contains(CompensationRequestPayload compensationRequestPayload) {
+        return findCompensationRequest(compensationRequestPayload).isPresent();
     }
 
     private Optional<CompensationRequest> findCompensationRequest(CompensationRequestPayload compensationRequestPayload) {
-        return allRequests.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny();
+        return allRequests.stream().filter(e -> e.getPayload().equals(compensationRequestPayload)).findAny();
+    }
+
+    private void removeFromList(CompensationRequest compensationRequest) {
+        allRequests.remove(compensationRequest);
+        updateFilteredLists();
     }
 }

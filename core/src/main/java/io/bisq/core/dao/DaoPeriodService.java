@@ -24,6 +24,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.compensation.CompensationRequest;
+import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingService;
 import javafx.beans.property.ObjectProperty;
@@ -32,11 +33,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Provide utilities about the phase and cycle of the request/voting cycle.
+ * Provide information about the phase and cycle of the request/voting cycle.
  * A cycle is the sequence of distinct phases. The first cycle and phase starts with the genesis block height.
  * All time events are measured in blocks.
  * The index of first cycle is 1 not 0! The index of first block in first phase is 0 (genesis height).
- * The length of blocks of each phase is number of blocks starting with index 0.
  */
 @Slf4j
 public class DaoPeriodService {
@@ -49,7 +49,7 @@ public class DaoPeriodService {
     public enum Phase {
         // TODO for testing
         UNDEFINED(0),
-        OPEN_FOR_COMPENSATION_REQUESTS(10),
+        COMPENSATION_REQUESTS(10),
         BREAK1(2),
         OPEN_FOR_VOTING(2),
         BREAK2(2),
@@ -57,7 +57,7 @@ public class DaoPeriodService {
         BREAK3(2);
 
       /* UNDEFINED(0),
-        OPEN_FOR_COMPENSATION_REQUESTS(144 * 23),
+        COMPENSATION_REQUESTS(144 * 23),
         BREAK1(10),
         OPEN_FOR_VOTING(144 * 4),
         BREAK2(10),
@@ -68,10 +68,10 @@ public class DaoPeriodService {
          * 144 blocks is 1 day if a block is found each 10 min.
          */
         @Getter
-        private int blocks;
+        private int durationInBlocks;
 
-        Phase(int blocks) {
-            this.blocks = blocks;
+        Phase(int durationInBlocks) {
+            this.durationInBlocks = durationInBlocks;
         }
     }
 
@@ -94,63 +94,54 @@ public class DaoPeriodService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoPeriodService(BtcWalletService btcWalletService, BsqBlockChain bsqBlockChain, VotingDefaultValues votingDefaultValues, VotingService votingService) {
+    public DaoPeriodService(BtcWalletService btcWalletService,
+                            BsqBlockChain bsqBlockChain,
+                            VotingDefaultValues votingDefaultValues,
+                            VotingService votingService) {
         this.btcWalletService = btcWalletService;
         this.bsqBlockChain = bsqBlockChain;
         this.votingDefaultValues = votingDefaultValues;
         this.votingService = votingService;
 
+
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAllServicesInitialized() {
         btcWalletService.getChainHeightProperty().addListener((observable, oldValue, newValue) -> {
             onChainHeightChanged((int) newValue);
         });
+        onChainHeightChanged(btcWalletService.getChainHeightProperty().get());
     }
 
-    public void onAllServicesInitialized() {
-       /* bestChainHeight = btcWalletService.getBestChainHeight();
-        checkArgument(bestChainHeight >= GENESIS_BLOCK_HEIGHT, "GENESIS_BLOCK_HEIGHT must be in the past");
-
-        applyVotingResults(votingDefaultValues, bestChainHeight, GENESIS_BLOCK_HEIGHT);*/
-
-        onChainHeightChanged(btcWalletService.getBestChainHeight());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public boolean isInCompensationRequestPhase(CompensationRequest compensationRequest) {
-        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
+    public boolean isInPhase(CompensationRequestPayload compensationRequestPayload, Phase phase) {
+        Tx tx = bsqBlockChain.getTxMap().get(compensationRequestPayload.getTxId());
         return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
                 chainHeight,
                 BsqBlockChain.getGenesisHeight(),
-                Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks(),
+                phase.getDurationInBlocks(),
                 getNumBlocksOfCycle());
     }
 
     public boolean isInCurrentCycle(CompensationRequest compensationRequest) {
-        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getCompensationRequestPayload().getTxId());
+        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
         return tx != null && isInCurrentCycle(tx.getBlockHeight(),
                 chainHeight,
                 BsqBlockChain.getGenesisHeight(),
                 getNumBlocksOfCycle());
     }
 
-    public long getVotingResultPeriod() {
-        return votingDefaultValues.getCompensationRequestPeriodInBlocks() +
-                votingDefaultValues.getBreakBetweenPeriodsInBlocks() +
-                votingDefaultValues.getVotingPeriodInBlocks() +
-                votingDefaultValues.getBreakBetweenPeriodsInBlocks();
+    public boolean isInPastCycle(CompensationRequest compensationRequest) {
+        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
+        return tx != null && isInPastCycle(tx.getBlockHeight(),
+                chainHeight,
+                BsqBlockChain.getGenesisHeight(),
+                getNumBlocksOfCycle());
     }
-/*
-    public int getTotalPeriodInBlocks() {
-        return votingDefaultValues.getCompensationRequestPeriodInBlocks() +
-                votingDefaultValues.getVotingPeriodInBlocks() +
-                votingDefaultValues.getFundingPeriodInBlocks() +
-                3 * votingDefaultValues.getBreakBetweenPeriodsInBlocks();
-    }*/
-
 
     public int getNumOfStartedCycles(int chainHeight) {
         return getNumOfStartedCycles(chainHeight,
@@ -158,6 +149,7 @@ public class DaoPeriodService {
                 getNumBlocksOfCycle());
     }
 
+    // Not used yet be leave it
     public int getNumOfCompletedCycles(int chainHeight) {
         return getNumOfCompletedCycles(chainHeight,
                 BsqBlockChain.getGenesisHeight(),
@@ -171,12 +163,19 @@ public class DaoPeriodService {
                 getNumBlocksOfCycle());
     }
 
-
     public int getAbsoluteEndBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteEndBlockOfPhase(chainHeight,
                 BsqBlockChain.getGenesisHeight(),
                 phase,
                 getNumBlocksOfCycle());
+    }
+
+    //TODO
+    public long getVotingResultPeriod() {
+        return votingDefaultValues.getCompensationRequestPeriodInBlocks() +
+                votingDefaultValues.getBreakBetweenPeriodsInBlocks() +
+                votingDefaultValues.getVotingPeriodInBlocks() +
+                votingDefaultValues.getBreakBetweenPeriodsInBlocks();
     }
 
 
@@ -186,7 +185,8 @@ public class DaoPeriodService {
 
     private void onChainHeightChanged(int chainHeight) {
         this.chainHeight = chainHeight;
-        phaseProperty.set(calculatePhase(getRelativeBlocksInCycle(BsqBlockChain.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle())));
+        final int relativeBlocksInCycle = getRelativeBlocksInCycle(BsqBlockChain.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle());
+        phaseProperty.set(calculatePhase(relativeBlocksInCycle));
     }
 
     @VisibleForTesting
@@ -197,32 +197,32 @@ public class DaoPeriodService {
     @VisibleForTesting
     Phase calculatePhase(int blocksInNewPhase) {
         log.info("blocksInNewPhase={}", blocksInNewPhase);
-        if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks())
-            return Phase.OPEN_FOR_COMPENSATION_REQUESTS;
-        else if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks() +
-                Phase.BREAK1.getBlocks())
+        if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks())
+            return Phase.COMPENSATION_REQUESTS;
+        else if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks() +
+                Phase.BREAK1.getDurationInBlocks())
             return Phase.BREAK1;
-        else if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks() +
-                Phase.BREAK1.getBlocks() +
-                Phase.OPEN_FOR_VOTING.getBlocks())
+        else if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks() +
+                Phase.BREAK1.getDurationInBlocks() +
+                Phase.OPEN_FOR_VOTING.getDurationInBlocks())
             return Phase.OPEN_FOR_VOTING;
-        else if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks() +
-                Phase.BREAK1.getBlocks() +
-                Phase.OPEN_FOR_VOTING.getBlocks() +
-                Phase.BREAK2.getBlocks())
+        else if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks() +
+                Phase.BREAK1.getDurationInBlocks() +
+                Phase.OPEN_FOR_VOTING.getDurationInBlocks() +
+                Phase.BREAK2.getDurationInBlocks())
             return Phase.BREAK2;
-        else if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks() +
-                Phase.BREAK1.getBlocks() +
-                Phase.OPEN_FOR_VOTING.getBlocks() +
-                Phase.BREAK2.getBlocks() +
-                Phase.VOTE_CONFIRMATION.getBlocks())
+        else if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks() +
+                Phase.BREAK1.getDurationInBlocks() +
+                Phase.OPEN_FOR_VOTING.getDurationInBlocks() +
+                Phase.BREAK2.getDurationInBlocks() +
+                Phase.VOTE_CONFIRMATION.getDurationInBlocks())
             return Phase.VOTE_CONFIRMATION;
-        else if (blocksInNewPhase < Phase.OPEN_FOR_COMPENSATION_REQUESTS.getBlocks() +
-                Phase.BREAK1.getBlocks() +
-                Phase.OPEN_FOR_VOTING.getBlocks() +
-                Phase.BREAK2.getBlocks() +
-                Phase.VOTE_CONFIRMATION.getBlocks() +
-                Phase.BREAK3.getBlocks())
+        else if (blocksInNewPhase < Phase.COMPENSATION_REQUESTS.getDurationInBlocks() +
+                Phase.BREAK1.getDurationInBlocks() +
+                Phase.OPEN_FOR_VOTING.getDurationInBlocks() +
+                Phase.BREAK2.getDurationInBlocks() +
+                Phase.VOTE_CONFIRMATION.getDurationInBlocks() +
+                Phase.BREAK3.getDurationInBlocks())
             return Phase.BREAK3;
         else {
             log.error("blocksInNewPhase is not covered by phase checks. blocksInNewPhase={}", blocksInNewPhase);
@@ -258,13 +258,22 @@ public class DaoPeriodService {
     }
 
     @VisibleForTesting
+    boolean isInPastCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
+        final int numOfCompletedCycles = getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle);
+        final int blockAtCycleStart = genesisHeight + numOfCompletedCycles * numBlocksOfCycle;
+        return txHeight <= chainHeight &&
+                chainHeight >= genesisHeight &&
+                txHeight <= blockAtCycleStart;
+    }
+
+    @VisibleForTesting
     int getAbsoluteStartBlockOfPhase(int chainHeight, int genesisHeight, Phase phase, int numBlocksOfCycle) {
         return genesisHeight + getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle) * getNumBlocksOfCycle() + getNumBlocksOfPhaseStart(phase);
     }
 
     @VisibleForTesting
     int getAbsoluteEndBlockOfPhase(int chainHeight, int genesisHeight, Phase phase, int numBlocksOfCycle) {
-        return getAbsoluteStartBlockOfPhase(chainHeight, genesisHeight, phase, numBlocksOfCycle) + phase.getBlocks() - 1;
+        return getAbsoluteStartBlockOfPhase(chainHeight, genesisHeight, phase, numBlocksOfCycle) + phase.getDurationInBlocks() - 1;
     }
 
     @VisibleForTesting
@@ -290,7 +299,7 @@ public class DaoPeriodService {
             if (currentPhase == phase)
                 break;
 
-            blocks += currentPhase.getBlocks();
+            blocks += currentPhase.getDurationInBlocks();
         }
         return blocks;
     }
@@ -299,11 +308,12 @@ public class DaoPeriodService {
     int getNumBlocksOfCycle() {
         int blocks = 0;
         for (int i = 0; i < Phase.values().length; i++) {
-            blocks += Phase.values()[i].getBlocks();
+            blocks += Phase.values()[i].getDurationInBlocks();
         }
         return blocks;
     }
 
+    //TODO
     private void applyVotingResults(VotingDefaultValues votingDefaultValues, int bestChainHeight, int genesisBlockHeight) {
         int pastBlocks = bestChainHeight - genesisBlockHeight;
         int from = genesisBlockHeight;

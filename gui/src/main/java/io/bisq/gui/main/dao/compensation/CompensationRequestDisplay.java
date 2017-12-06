@@ -103,6 +103,7 @@ public class CompensationRequestDisplay {
         descriptionTextArea.setText("Development work");
         linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
         requestedBsqTextField.setText("14000");
+        bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
     }
 
     public void setAllFieldsEditable(boolean isEditable) {

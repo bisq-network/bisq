@@ -112,7 +112,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
             @Override
             public String toString(CompensationRequestVoteItem item) {
-                return item.compensationRequest.getCompensationRequestPayload().getUid();
+                return item.compensationRequest.getPayload().getUid();
             }
 
             @Override

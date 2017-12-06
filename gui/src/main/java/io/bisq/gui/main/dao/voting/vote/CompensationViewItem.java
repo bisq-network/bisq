@@ -67,8 +67,8 @@ public class CompensationViewItem {
 
     public static boolean contains(CompensationRequestVoteItem selectedItem) {
         return instances.stream()
-                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getCompensationRequestPayload().getUid().equals(
-                        selectedItem.compensationRequest.getCompensationRequestPayload().getUid()))
+                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
+                        selectedItem.compensationRequest.getPayload().getUid()))
                 .findAny()
                 .isPresent();
     }
@@ -85,7 +85,7 @@ public class CompensationViewItem {
                                  Runnable removeHandler) {
         this.compensationRequestVoteItem = compensationRequestVoteItem;
         CompensationRequest compensationRequest = compensationRequestVoteItem.compensationRequest;
-        CompensationRequestPayload compensationRequestPayload = compensationRequest.getCompensationRequestPayload();
+        CompensationRequestPayload compensationRequestPayload = compensationRequest.getPayload();
 
         HBox hBox = new HBox();
         hBox.setSpacing(5);

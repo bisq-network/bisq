@@ -18,7 +18,6 @@
 package io.bisq.gui.main.dao.compensation.active;
 
 import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
@@ -38,6 +37,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -47,7 +47,6 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
-import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -55,7 +54,8 @@ import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.bisq.gui.util.FormBuilder.*;
+import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
+import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> {
@@ -75,14 +75,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private DaoPeriodService.Phase currentPhase;
     private CompensationRequest selectedCompensationRequest;
     private Button removeButton, voteButton;
-    private NewBestBlockListener bestBlockListener;
     private TextField cycleTextField;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
+    private ChangeListener<Number> chainHeightChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
@@ -115,26 +115,25 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
-        addTitledGroupBg(gridPane, gridRow, 2, Res.get("dao.compensation.active.phase.header"));
-        addLabel(gridPane, gridRow, Res.get("dao.compensation.active.phase"), -20);
-        Label blockLabel = addLabel(gridPane, gridRow, Res.get("dao.compensation.active.block"), 50);
-        GridPane.setHalignment(blockLabel, HPos.RIGHT);
+        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.compensation.active.phase.header"));
         phaseBarsItems = Arrays.asList(
-                makeItem(DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS),
-                makeItem(DaoPeriodService.Phase.BREAK1),
-                makeItem(DaoPeriodService.Phase.OPEN_FOR_VOTING),
-                makeItem(DaoPeriodService.Phase.BREAK2),
-                makeItem(DaoPeriodService.Phase.VOTE_CONFIRMATION),
-                makeItem(DaoPeriodService.Phase.BREAK3));
+                makeItem(DaoPeriodService.Phase.COMPENSATION_REQUESTS, true),
+                makeItem(DaoPeriodService.Phase.BREAK1, false),
+                makeItem(DaoPeriodService.Phase.OPEN_FOR_VOTING, true),
+                makeItem(DaoPeriodService.Phase.BREAK2, false),
+                makeItem(DaoPeriodService.Phase.VOTE_CONFIRMATION, true),
+                makeItem(DaoPeriodService.Phase.BREAK3, false));
         SeparatedPhaseBars separatedPhaseBars = new SeparatedPhaseBars(phaseBarsItems);
         GridPane.setRowIndex(separatedPhaseBars, gridRow);
-        GridPane.setColumnIndex(separatedPhaseBars, 1);
+        GridPane.setColumnSpan(separatedPhaseBars, 2);
+        GridPane.setColumnIndex(separatedPhaseBars, 0);
         GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
         gridPane.getChildren().add(separatedPhaseBars);
 
-        final Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.compensation.active.cycle"));
-        GridPane.setHalignment(tuple2.first, HPos.RIGHT);
-        cycleTextField = tuple2.second;
+     /*   final Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.compensation.active.cycle"));
+        final Label label = tuple2.first;
+        GridPane.setHalignment(label, HPos.RIGHT);
+        cycleTextField = tuple2.second;*/
 
         TableGroupHeadline header = new TableGroupHeadline(Res.get("dao.compensation.active.header"));
         GridPane.setRowIndex(header, ++gridRow);
@@ -159,8 +158,8 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         sortedList = new SortedList<>(compensationRequestManger.getActiveRequests());
         tableView.setItems(sortedList);
 
-        bestBlockListener = block -> {
-            onChainHeightChanged(block.getHeight());
+        chainHeightChangeListener = (observable, oldValue, newValue) -> {
+            onChainHeightChanged((int) newValue);
         };
     }
 
@@ -184,8 +183,8 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
             });
         });
 
-        bsqWalletService.addNewBestBlockListener(bestBlockListener);
-        onChainHeightChanged(bsqWalletService.getBestChainHeight());
+        bsqWalletService.getChainHeightProperty().addListener(chainHeightChangeListener);
+        onChainHeightChanged(bsqWalletService.getChainHeightProperty().get());
     }
 
     @Override
@@ -193,21 +192,28 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         sortedList.comparatorProperty().unbind();
         selectedCompensationRequestSubscription.unsubscribe();
         phaseSubscription.unsubscribe();
-        bsqWalletService.removeNewBestBlockListener(bestBlockListener);
+        bsqWalletService.getChainHeightProperty().removeListener(chainHeightChangeListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SeparatedPhaseBars.SeparatedPhaseBarsItem makeItem(DaoPeriodService.Phase phase, boolean showBlocks) {
+        return new SeparatedPhaseBars.SeparatedPhaseBarsItem(phase, showBlocks);
     }
 
     private void onChainHeightChanged(int height) {
-        cycleTextField.setText(String.valueOf(daoPeriodService.getNumOfStartedCycles(height)));
+        //cycleTextField.setText(String.valueOf(daoPeriodService.getNumOfStartedCycles(height)));
 
         phaseBarsItems.stream().forEach(item -> {
             int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
             int endBlock = daoPeriodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
-            item.getStartValueProperty().set(startBlock);
-            item.getEndValueProperty().set(endBlock);
-
+            item.setStartAndEnd(startBlock, endBlock);
             double progress = 0;
             if (height >= startBlock && height <= endBlock) {
-                progress = (double) (height - startBlock + 1) / (double) (endBlock - startBlock);
+                progress = (double) (height - startBlock + 1) / (double) item.getPhase().getDurationInBlocks();
             } else if (height < startBlock) {
                 progress = 0;
             } else if (height > endBlock) {
@@ -217,13 +223,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         });
     }
 
-    private SeparatedPhaseBars.SeparatedPhaseBarsItem makeItem(DaoPeriodService.Phase phase) {
-        return new SeparatedPhaseBars.SeparatedPhaseBarsItem(phase);
-    }
-
     private void onSelectCompensationRequest(CompensationRequest compensationRequest) {
         selectedCompensationRequest = compensationRequest;
-        if (compensationRequest != null) {
+        if (selectedCompensationRequest != null) {
             if (compensationRequestDisplay == null) {
                 ScrollPane scrollPane = new ScrollPane();
                 scrollPane.setFitToWidth(true);
@@ -256,7 +258,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
-            compensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
+            compensationRequestDisplay.fillWithData(compensationRequest.getPayload());
 
             if (removeButton != null) {
                 removeButton.setManaged(false);
@@ -270,7 +272,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
             }
 
             switch (daoPeriodService.getPhaseProperty().get()) {
-                case OPEN_FOR_COMPENSATION_REQUESTS:
+                case COMPENSATION_REQUESTS:
                     if (compensationRequestManger.isMyCompensationRequest(compensationRequest)) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.remove"));
@@ -290,7 +292,6 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                     if (voteButton == null) {
                         voteButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
                         voteButton.setOnAction(event -> {
-                            compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
                             //noinspection unchecked
                             navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                         });
@@ -315,6 +316,11 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Table
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void createColumns() {
         TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
             {
@@ -334,14 +340,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getCompensationRequestPayload().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getPayload().getCreationDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getCreationDate().compareTo(o2.getCompensationRequestPayload().getCreationDate()));
+        dateColumn.setComparator((o1, o2) -> o1.getPayload().getCreationDate().compareTo(o2.getPayload().getCreationDate()));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
@@ -359,14 +365,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().getName());
+                                    setText(item.getPayload().getName());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getName().compareTo(o2.getCompensationRequestPayload().getName()));
+        nameColumn.setComparator((o1, o2) -> o1.getPayload().getName().compareTo(o2.getPayload().getName()));
         tableView.getColumns().add(nameColumn);
 
         TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>(Res.get("shared.id"));
@@ -382,14 +388,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().getUid());
+                                    setText(item.getPayload().getUid());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getUid().compareTo(o2.getCompensationRequestPayload().getUid()));
+        uidColumn.setComparator((o1, o2) -> o1.getPayload().getUid().compareTo(o2.getPayload().getUid()));
         tableView.getColumns().add(uidColumn);
     }
 }
