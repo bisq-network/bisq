@@ -350,7 +350,7 @@ public class WalletsSetup {
             } else if (useTorForBitcoinJ) {
                 if (params == MainNetParams.get())
                     log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
-                        "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
+                            "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
                 // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
                 walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
             } else {
@@ -430,8 +430,9 @@ public class WalletsSetup {
         return params;
     }
 
+    @Nullable
     public BlockChain getChain() {
-        return walletConfig.chain();
+        return walletConfig != null ? walletConfig.chain() : null;
     }
 
     public PeerGroup getPeerGroup() {

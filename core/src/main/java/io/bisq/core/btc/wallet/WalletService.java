@@ -466,7 +466,8 @@ public abstract class WalletService {
     }
 
     public int getBestChainHeight() {
-        return walletsSetup.getChain().getBestChainHeight();
+        final BlockChain chain = walletsSetup.getChain();
+        return isWalletReady() && chain != null ? chain.getBestChainHeight() : 0;
     }
 
 
@@ -489,13 +490,17 @@ public abstract class WalletService {
     @SuppressWarnings("deprecation")
     public void addNewBestBlockListener(NewBestBlockListener listener) {
         //noinspection deprecation
-        walletsSetup.getChain().addNewBestBlockListener(listener);
+        final BlockChain chain = walletsSetup.getChain();
+        if (isWalletReady() && chain != null)
+            chain.addNewBestBlockListener(listener);
     }
 
     @SuppressWarnings("deprecation")
     public void removeNewBestBlockListener(NewBestBlockListener listener) {
         //noinspection deprecation
-        walletsSetup.getChain().removeNewBestBlockListener(listener);
+        final BlockChain chain = walletsSetup.getChain();
+        if (isWalletReady() && chain != null)
+            chain.removeNewBestBlockListener(listener);
     }
 
     public boolean isWalletReady() {

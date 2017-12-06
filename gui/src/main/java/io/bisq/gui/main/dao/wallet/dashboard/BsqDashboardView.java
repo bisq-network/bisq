@@ -22,8 +22,9 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.util.MathUtils;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.BsqNode;
+import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -52,7 +53,7 @@ import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BsqBlockChainListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final BsqBlockchainManager bsqBlockchainManager;
+    private final BsqNode bsqNode;
     private final BsqBlockChain bsqBlockChain;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
@@ -71,11 +72,14 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil, BsqBlockchainManager bsqBlockchainManager,
-                             BsqBlockChain bsqBlockChain, PriceFeedService priceFeedService,
-                             Preferences preferences, BsqFormatter bsqFormatter) {
+    private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
+                             BsqNodeProvider bsqNodeProvider,
+                             BsqBlockChain bsqBlockChain,
+                             PriceFeedService priceFeedService,
+                             Preferences preferences,
+                             BsqFormatter bsqFormatter) {
         this.bsqBalanceUtil = bsqBalanceUtil;
-        this.bsqBlockchainManager = bsqBlockchainManager;
+        this.bsqNode = bsqNodeProvider.getBsqNode();
         this.bsqBlockChain = bsqBlockChain;
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
@@ -120,7 +124,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        bsqBlockchainManager.addBsqBlockChainListener(this);
+        bsqNode.addBsqBlockChainListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
         hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + bsqBlockChain.getGenesisTxId()));
@@ -132,7 +136,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        bsqBlockchainManager.removeBsqBlockChainListener(this);
+        bsqNode.removeBsqBlockChainListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
         hyperlinkWithIcon.setOnAction(null);
     }

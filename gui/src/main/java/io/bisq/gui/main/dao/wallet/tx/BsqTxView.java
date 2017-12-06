@@ -19,14 +19,14 @@ package io.bisq.gui.main.dao.wallet.tx;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.BsqNode;
+import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.user.Preferences;
@@ -54,13 +54,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -71,10 +69,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final BsqBlockchainManager bsqBlockchainManager;
     private final BsqBlockChain bsqBlockChain;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
+    private final BsqNode bsqNode;
     private final Preferences preferences;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
@@ -87,7 +85,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private BsqBlockChainListener bsqBlockChainListener;
     private BsqBalanceListener bsqBalanceListener;
     private ProgressBar chainSyncIndicator;
-    private NewBestBlockListener newBestBlockListener;
+    private ChangeListener<Number> chainHeightChangedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,13 +94,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
-                      BsqBlockchainManager bsqBlockchainManager,
+                      BsqNodeProvider bsqNodeProvider,
                       Preferences preferences,
                       BsqBlockChain bsqBlockChain,
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.bsqBlockchainManager = bsqBlockchainManager;
+        this.bsqNode = bsqNodeProvider.getBsqNode();
         this.preferences = preferences;
         this.bsqBlockChain = bsqBlockChain;
         this.btcWalletService = btcWalletService;
@@ -151,7 +149,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqBlockChainListener = this::onChainHeightChanged;
-        newBestBlockListener = block -> onChainHeightChanged();
+        chainHeightChangedListener = (observable, oldValue, newValue) -> onChainHeightChanged();
     }
 
     @Override
@@ -159,13 +157,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
         bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
-
-        btcWalletService.addNewBestBlockListener(newBestBlockListener);
+        btcWalletService.getChainHeightProperty().addListener(chainHeightChangedListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        bsqBlockchainManager.addBsqBlockChainListener(bsqBlockChainListener);
+        bsqNode.addBsqBlockChainListener(bsqBlockChainListener);
+
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
             rootParent.heightProperty().addListener(parentHeightListener);
@@ -182,38 +180,39 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
-        btcWalletService.removeNewBestBlockListener(newBestBlockListener);
+        btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
+        bsqNode.removeBsqBlockChainListener(bsqBlockChainListener);
 
         observableList.forEach(BsqTxListItem::cleanup);
-        bsqBlockchainManager.removeBsqBlockChainListener(bsqBlockChainListener);
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
     private void onChainHeightChanged() {
-        UserThread.runAfter(() -> {
-            if (bsqWalletService.getBestChainHeight() > 0) {
-                final boolean synced = bsqWalletService.getBestChainHeight() == bsqBlockChain.getChainHeadHeight();
-                chainSyncIndicator.setVisible(!synced);
-                chainSyncIndicator.setManaged(!synced);
-                if (bsqBlockChain.getChainHeadHeight() > 0)
-                    chainSyncIndicator.setProgress((double) bsqBlockChain.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
+        final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
+        final int bsqBlockChainHeight = bsqBlockChain.getChainHeadHeight();
+        if (bsqWalletChainHeight > 0) {
+            final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
+            chainSyncIndicator.setVisible(!synced);
+            chainSyncIndicator.setManaged(!synced);
+            if (bsqBlockChainHeight > 0)
+                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletService.getBestChainHeight());
 
-                if (synced)
-                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                            bsqBlockChain.getChainHeadHeight(),
-                            bsqWalletService.getBestChainHeight()));
-                else
-                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                            bsqBlockChain.getChainHeadHeight(),
-                            bsqWalletService.getBestChainHeight()));
-            } else {
-                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                        bsqBlockChain.getChainHeadHeight(),
+            if (synced)
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
+                        bsqBlockChainHeight,
                         bsqWalletService.getBestChainHeight()));
-            }
-        }, 300, TimeUnit.MILLISECONDS);
+            else
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                        bsqBlockChainHeight,
+                        bsqWalletService.getBestChainHeight()));
+        } else {
+            chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                    bsqBlockChainHeight,
+                    bsqWalletService.getBestChainHeight()));
+        }
+        updateList();
     }
 
     private void updateList() {
@@ -518,7 +517,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
                                     label.getStyleClass().add(style);
                                     label.setTooltip(new Tooltip(toolTipText));
-                                    if(doRotate)
+                                    if (doRotate)
                                         label.setRotate(180);
                                     setGraphic(label);
                                 } else {
