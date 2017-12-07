@@ -899,7 +899,7 @@ textfield */
  *
  ********************************************************************************************************************/
 
-.text-field.validation_error, .text-area.validation_error .content, .date-picker.validation_error > .text-field {
+.text-field.validation-error, .text-area.validation-error .content, .date-picker.validation-error > .text-field {
     -fx-background-color: red,
     linear-gradient(
             to bottom,

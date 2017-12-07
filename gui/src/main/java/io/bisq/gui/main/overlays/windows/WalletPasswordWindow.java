@@ -137,8 +137,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             restoreButton.setOnAction(null);
             seedWordsTextArea.setText("");
             datePicker.setValue(null);
-            seedWordsTextArea.getStyleClass().remove("validation_error");
-            datePicker.getStyleClass().remove("validation_error");
+            seedWordsTextArea.getStyleClass().remove("validation-error");
+            datePicker.getStyleClass().remove("validation-error");
         }
     }
 
@@ -285,9 +285,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                seedWordsTextArea.getStyleClass().remove("validation_error");
+                seedWordsTextArea.getStyleClass().remove("validation-error");
             } else {
-                seedWordsTextArea.getStyleClass().add("validation_error");
+                seedWordsTextArea.getStyleClass().add("validation-error");
             }
         };
 
@@ -309,8 +309,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         restoreButton.setOnAction(e -> onRestore());
 
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        datePicker.getStyleClass().remove("validation_error");
+        seedWordsTextArea.getStyleClass().remove("validation-error");
+        datePicker.getStyleClass().remove("validation-error");
 
         layout();
     }
