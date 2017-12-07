@@ -223,7 +223,7 @@ public class AccountAgeWitnessService {
             }
 
             final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            log.info("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
+            log.debug("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
                     accountAgeCategory,
                     accountAge / TimeUnit.DAYS.toMillis(1) + " days",
                     Coin.valueOf(limit).toFriendlyString(),
