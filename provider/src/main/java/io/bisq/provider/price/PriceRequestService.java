@@ -84,10 +84,7 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestBtcAverageLocalPrices();
-                } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-                    log.error(e.toString());
-                    e.printStackTrace();
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
