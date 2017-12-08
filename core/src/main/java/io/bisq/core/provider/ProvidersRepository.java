@@ -37,6 +37,8 @@ public class ProvidersRepository {
             "http://ceaanhbvluug4we6.onion/, " +// @mrosseel
             "http://rb2l2qale2pqzjyo.onion/";  // @sqrrm
 
+    // Old nodes before v 0.6.0: "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/"; @ManfredKarrer
+
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
 

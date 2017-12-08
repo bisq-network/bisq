@@ -25,23 +25,23 @@ public class BtcFeesProviderTest {
 
     @Test
     public void testGetAverage() {
-        BtcFeesProvider btcFeesProvider = new BtcFeesProvider();
+        BtcFeesProvider btcFeesProvider = new BtcFeesProvider(BtcFeesProvider.CAPACITY, BtcFeesProvider.MAX_BLOCKS);
 
         assertEquals(0, btcFeesProvider.getAverage(0));
 
-        btcFeesProvider = new BtcFeesProvider();
+        btcFeesProvider = new BtcFeesProvider(BtcFeesProvider.CAPACITY, BtcFeesProvider.MAX_BLOCKS);
         assertEquals(1, btcFeesProvider.getAverage(1));
 
-        btcFeesProvider = new BtcFeesProvider();
+        btcFeesProvider = new BtcFeesProvider(BtcFeesProvider.CAPACITY, BtcFeesProvider.MAX_BLOCKS);
         assertEquals(0, btcFeesProvider.getAverage(0));
         assertEquals(0, btcFeesProvider.getAverage(1));
 
-        btcFeesProvider = new BtcFeesProvider();
+        btcFeesProvider = new BtcFeesProvider(BtcFeesProvider.CAPACITY, BtcFeesProvider.MAX_BLOCKS);
         assertEquals(0, btcFeesProvider.getAverage(0));
         assertEquals(1, btcFeesProvider.getAverage(2));
 
         BtcFeesProvider.CAPACITY = 5;
-        btcFeesProvider = new BtcFeesProvider();
+        btcFeesProvider = new BtcFeesProvider(BtcFeesProvider.CAPACITY, BtcFeesProvider.MAX_BLOCKS);
         assertEquals(10, btcFeesProvider.getAverage(10));
         assertEquals(15, btcFeesProvider.getAverage(20));
         assertEquals(20, btcFeesProvider.getAverage(30));
