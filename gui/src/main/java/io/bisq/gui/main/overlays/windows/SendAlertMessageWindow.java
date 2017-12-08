@@ -123,15 +123,28 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
 
         Button sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
         sendButton.setOnAction(e -> {
-            if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
-                if (sendAlertMessageHandler.handle(
-                        new Alert(alertMessageTextArea.getText(),
-                                isUpdateCheckBox.isSelected(),
-                                versionInputTextField.getText()),
-                        keyInputTextField.getText()))
-                    hide();
-                else
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+            final String version = versionInputTextField.getText();
+            boolean versionOK = false;
+            final boolean isUpdate = isUpdateCheckBox.isSelected();
+            if (isUpdate) {
+                final String[] split = version.split("\\.");
+                versionOK = split.length == 3;
+                if (!versionOK) // Do not translate as only used by devs
+                    new Popup<>().warning("Version number must be in semantic version format (contain 2 '.'). version=" + version)
+                            .onClose(this::blurAgain)
+                            .show();
+            }
+            if (!isUpdate || versionOK) {
+                if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
+                    if (sendAlertMessageHandler.handle(
+                            new Alert(alertMessageTextArea.getText(),
+                                    isUpdate,
+                                    version),
+                            keyInputTextField.getText()))
+                        hide();
+                    else
+                        new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                }
             }
         });
 

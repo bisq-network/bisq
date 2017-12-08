@@ -30,10 +30,12 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
@@ -45,11 +47,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.gui.util.FormBuilder.*;
+import static io.bisq.gui.util.FormBuilder.addLabel;
+import static io.bisq.gui.util.FormBuilder.addMultilineLabel;
 
 @Slf4j
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {
-    private Alert alert;
+    private final Alert alert;
     private Optional<DownloadTask> downloadTaskOptional;
     private VerifyTask verifyTask;
     private ProgressBar progressBar;
@@ -73,6 +76,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         addHeadLine();
         addSeparator();
         addContent();
+        addCloseButton();
         applyStyles();
         display();
     }
@@ -162,25 +166,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         GridPane.setMargin(separator2, new Insets(20, 0, 20, 0));
         gridPane.getChildren().add(separator2);
 
-
-        closeButton = addButton(gridPane, ++rowIndex, Res.get("shared.close"));
-        closeButton.setDefaultButton(false);
-        GridPane.setColumnIndex(closeButton, 0);
-        GridPane.setHalignment(closeButton, HPos.LEFT);
-        GridPane.setColumnSpan(closeButton, 2);
-        closeButton.setOnAction(e -> {
-            if (verifyTask != null && verifyTask.isRunning())
-                verifyTask.cancel();
-            if (downloadTaskOptional != null && downloadTaskOptional.isPresent() && downloadTaskOptional.get().isRunning())
-                downloadTaskOptional.get().cancel();
-
-            stopAnimations();
-
-            hide();
-            closeHandlerOptional.ifPresent(Runnable::run);
-        });
-
-
         BisqInstaller installer = new BisqInstaller();
         String downloadFailedString = Res.get("displayUpdateDownloadWindow.download.failed");
         downloadButton.setOnAction(e -> {
@@ -201,8 +186,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                     final ChangeListener<String> downloadedFilesListener = (observable, oldValue, newValue) -> {
                         if (!newValue.endsWith("-local")) {
                             downloadingFileLabel.setText(Res.get("displayUpdateDownloadWindow.downloadingFile", newValue));
-                            if (downloadedFiles.size() == 1)
-                                downloadedFilesLabel.setStyle("-fx-text-fill: -bs-green;");
                             downloadedFilesLabel.setText(downloadedFilesLabelTitle + " " + Joiner.on(", ").join(downloadedFiles));
                             downloadedFiles.add(newValue);
                         }
@@ -217,7 +200,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                         progressBar.setVisible(false);
                         downloadingFileLabel.setText("");
                         downloadingFileLabel.setOpacity(0.2);
-                        //-bs-green
                         statusLabel.setText(Res.get("displayUpdateDownloadWindow.status.verifying"));
 
                         List<BisqInstaller.FileDescriptor> downloadResults = downloadTask.getValue();
@@ -225,8 +207,10 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus())).findFirst();
                         if (downloadResults == null || downloadResults.isEmpty() || downloadFailed.isPresent()) {
                             showErrorMessage(downloadButton, statusLabel, downloadFailedString);
+                            downloadedFilesLabel.setStyle("-fx-text-fill: -bs-error-red;");
                         } else {
                             log.debug("Download completed successfully.");
+                            downloadedFilesLabel.setStyle("-fx-text-fill: -bs-green;");
 
                             verifyTask = installer.verify(downloadResults);
                             verifiedSigLabel.setOpacity(1);
@@ -255,11 +239,13 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                             .onAction(() -> {
                                                 try {
                                                     Utilities.openFile(new File(Utilities.getDownloadOfHomeDir()));
+                                                    doClose();
                                                 } catch (IOException e2) {
                                                     log.error(e2.getMessage());
                                                     e2.printStackTrace();
                                                 }
                                             })
+                                            .onClose(this::doClose)
                                             .show();
                                     log.info("Download & verification succeeded.");
                                 }
@@ -275,11 +261,73 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         });
     }
 
+    @Override
+    protected void addCloseButton() {
+        closeButton = new Button(Res.get("displayUpdateDownloadWindow.button.ignoreDownload"));
+        closeButton.setOnAction(event -> doClose());
+        actionButton = new Button(Res.get("displayUpdateDownloadWindow.button.downloadLater"));
+        actionButton.setDefaultButton(false);
+        actionButton.setOnAction(event -> {
+            cleanup();
+            hide();
+            actionHandlerOptional.ifPresent(Runnable::run);
+        });
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(closeButton, actionButton);
+
+        GridPane.setHalignment(hBox, HPos.LEFT);
+        GridPane.setRowIndex(hBox, ++rowIndex);
+        GridPane.setColumnSpan(hBox, 2);
+        GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+    }
+
+    @Override
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
+                    e.consume();
+                    cleanup();
+                    hide();
+                    actionHandlerOptional.ifPresent(Runnable::run);
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void doClose() {
+        super.doClose();
+
+        cleanup();
+        stopAnimations();
+
+        hide();
+        closeHandlerOptional.ifPresent(Runnable::run);
+    }
+
+    @Override
+    protected void cleanup() {
+        super.cleanup();
+
+        if (verifyTask != null && verifyTask.isRunning())
+            verifyTask.cancel();
+        if (downloadTaskOptional != null && downloadTaskOptional.isPresent() && downloadTaskOptional.get().isRunning())
+            downloadTaskOptional.get().cancel();
+    }
+
     private void showErrorMessage(Button downloadButton, Label statusLabel, String errorMsg) {
         statusLabel.setText("");
         stopAnimations();
         downloadButton.setDisable(false);
-        new Popup<>().warning(errorMsg).show();
+        new Popup<>()
+                .headLine(Res.get("displayUpdateDownloadWindow.download.failed.headline"))
+                .feedback(errorMsg)
+                .onClose(this::doClose)
+                .show();
     }
 
     private void stopAnimations() {
