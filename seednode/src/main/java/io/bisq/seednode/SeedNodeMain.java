@@ -138,23 +138,21 @@ public class SeedNodeMain extends BisqExecutable {
 
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
-            long usedMemoryInMB = Profiler.getUsedMemoryInMB();
             if (!stopped) {
-                if (usedMemoryInMB > (maxMemory - 100)) {
+                long usedMemoryInMB = Profiler.getUsedMemoryInMB();
+                if (usedMemoryInMB > (maxMemory * 0.8)) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             usedMemoryInMB);
                     System.gc();
-                    usedMemoryInMB = Profiler.getUsedMemoryInMB();
                     Profiler.printSystemLoad(log);
                 }
 
-                final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
-                    if (finalUsedMemoryInMB > maxMemory)
+                    if (Profiler.getUsedMemoryInMB() > maxMemory)
                         restart(bisqEnvironment);
-                }, 1);
+                }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
 

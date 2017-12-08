@@ -14,8 +14,8 @@ import java.util.LinkedList;
 //TODO consider alternative https://www.bitgo.com/api/v1/tx/fee?numBlocks=3
 @Slf4j
 public class BtcFeesProvider {
-    static int CAPACITY = 12; // we request each 5 min. so we take average of last hour
-    static int MAX_BLOCKS = 20;
+    static int CAPACITY = 6; // we request each 5 min. so we take average of last 30 min.
+    static int MAX_BLOCKS = 15;
 
     private final HttpClient httpClient;
     LinkedList<Long> fees = new LinkedList<>();

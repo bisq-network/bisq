@@ -88,9 +88,7 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
         return fileDescriptors.stream()
                 .map(fileDescriptor -> {
                     fileDescriptor.setSaveFile(new File(partialSaveFilePath + fileDescriptor.getFileName()));
-                    return fileDescriptor;
-                })
-                .map(fileDescriptor -> {
+
                     log.info("Downloading {}", fileDescriptor.getLoadUrl());
                     try {
                         updateMessage(fileDescriptor.getFileName());

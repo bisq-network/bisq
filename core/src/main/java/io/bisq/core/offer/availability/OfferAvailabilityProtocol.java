@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT_SEC = 90;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
