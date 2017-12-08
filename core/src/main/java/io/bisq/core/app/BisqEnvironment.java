@@ -175,9 +175,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Setter
     private boolean isBitcoinLocalhostNodeRunning;
     @Getter
-    private List<String> bannedPriceRelayNodes;
-    @Getter
-    private List<String> bannedSeedNodes;
+    private List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
@@ -281,6 +279,9 @@ public class BisqEnvironment extends StandardEnvironment {
             final String bannedSeedNodesAsString = getProperty(FilterManager.BANNED_SEED_NODES, "");
             bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : null;
 
+            final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
+            bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
+
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
                     getDefaultBaseCurrencyNetwork().name()).toUpperCase());
 
@@ -304,6 +305,10 @@ public class BisqEnvironment extends StandardEnvironment {
 
     public void saveBannedSeedNodes(@Nullable List<String> bannedNodes) {
         setProperty(FilterManager.BANNED_SEED_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
+    }
+
+    public void saveBannedBtcNodes(@Nullable List<String> bannedNodes) {
+        setProperty(FilterManager.BANNED_BTC_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
     }
 
     public void saveBannedPriceRelayNodes(@Nullable List<String> bannedNodes) {

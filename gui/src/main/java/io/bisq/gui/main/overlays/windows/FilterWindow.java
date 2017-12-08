@@ -127,6 +127,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField arbitratorsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators")).second;
         InputTextField seedNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode")).second;
         InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
+        InputTextField btcNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode")).second;
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
         // TODO add BTC full nodes
 
@@ -164,6 +165,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (filter.getPriceRelayNodes() != null)
                 priceRelayNodesInputTextField.setText(filter.getPriceRelayNodes().stream().collect(Collectors.joining(", ")));
 
+            if (filter.getBtcNodes() != null)
+                btcNodesInputTextField.setText(filter.getBtcNodes().stream().collect(Collectors.joining(", ")));
+
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
 
         }
@@ -177,6 +181,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             List<String> arbitrators = new ArrayList<>();
             List<String> seedNodes = new ArrayList<>();
             List<String> priceRelayNodes = new ArrayList<>();
+            List<String> btcNodes = new ArrayList<>();
 
             if (!offerIdsInputTextField.getText().isEmpty()) {
                 offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
@@ -235,6 +240,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         .split(",")));
             }
 
+            if (!btcNodesInputTextField.getText().isEmpty()) {
+                btcNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(btcNodesInputTextField.getText())
+                        .split(",")));
+            }
+
             if (sendFilterMessageHandler.handle(new Filter(offerIds,
                             nodes,
                             paymentAccountFilters,
@@ -243,7 +253,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             arbitrators,
                             seedNodes,
                             priceRelayNodes,
-                            preventPublicBtcNetworkCheckBox.isSelected()),
+                            preventPublicBtcNetworkCheckBox.isSelected(),
+                            btcNodes),
                     keyInputTextField.getText()))
                 hide();
             else

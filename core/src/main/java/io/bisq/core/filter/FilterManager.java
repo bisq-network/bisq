@@ -58,6 +58,7 @@ public class FilterManager {
 
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     public static final String BANNED_SEED_NODES = "bannedSeedNodes";
+    public static final String BANNED_BTC_NODES = "bannedBtcNodes";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +132,7 @@ public class FilterManager {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
                         if (verifySignature(filter)) {
                             bisqEnvironment.saveBannedSeedNodes(null);
-
+                            bisqEnvironment.saveBannedBtcNodes(null);
                             bisqEnvironment.saveBannedPriceRelayNodes(null);
                             providersRepository.applyBannedNodes(null);
                             providersRepository.selectNewRandomBaseUrl();
@@ -150,6 +151,7 @@ public class FilterManager {
             // nodes at the next startup and don't update the list in the P2P network domain.
             // We persist it to the property file which is read before any other initialisation.
             bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
+            bisqEnvironment.saveBannedBtcNodes(filter.getBtcNodes());
 
             // Banned price relay nodes we can apply at runtime
             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
