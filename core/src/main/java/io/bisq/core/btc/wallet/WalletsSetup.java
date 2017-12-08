@@ -57,10 +57,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -269,17 +266,17 @@ public class WalletsSetup {
                 walletConfig.connectToLocalHost();
             }
         } else {
-            List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
+            Set<BitcoinNodes.BtcNode> btcNodes = new HashSet<>();
             switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
                 case CUSTOM:
                     String bitcoinNodesString = preferences.getBitcoinNodes();
                     if (bitcoinNodesString != null) {
-                        btcNodeList = Splitter.on(",")
+                        btcNodes = Splitter.on(",")
                                 .splitToList(StringUtils.deleteWhitespace(bitcoinNodesString))
                                 .stream()
                                 .filter(e -> !e.isEmpty())
                                 .map(BitcoinNodes.BtcNode::fromFullAddress)
-                                .collect(Collectors.toList());
+                                .collect(Collectors.toSet());
                     }
                     break;
                 case PUBLIC:
@@ -287,13 +284,13 @@ public class WalletsSetup {
                     break;
                 default:
                 case PROVIDED:
-                    btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+                    btcNodes = bitcoinNodes.getProvidedBtcNodes();
                     break;
             }
 
             final boolean useTorForBitcoinJ = socks5Proxy != null;
             List<PeerAddress> peerAddressList = new ArrayList<>();
-            btcNodeList.forEach(btcNode -> {
+            btcNodes.forEach(btcNode -> {
                         if (useTorForBitcoinJ) {
                             if (btcNode.isHiddenService()) {
                                 // no DNS lookup for onion addresses

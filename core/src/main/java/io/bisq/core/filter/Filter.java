@@ -53,7 +53,7 @@ public final class Filter implements ProtectedStoragePayload {
     @Nullable
     private final List<String> bannedPaymentMethods;
 
-    // added in v0.6
+    // added in v0.6.0
     @Nullable
     private final List<String> arbitrators;
     @Nullable
@@ -61,6 +61,11 @@ public final class Filter implements ProtectedStoragePayload {
     @Nullable
     private final List<String> priceRelayNodes;
     private final boolean preventPublicBtcNetwork;
+
+    // added in v0.6.2
+    @Nullable
+    private final List<String> btcNodes;
+
 
     private String signatureAsBase64;
     private byte[] ownerPubKeyBytes;
@@ -79,7 +84,8 @@ public final class Filter implements ProtectedStoragePayload {
                   @Nullable List<String> arbitrators,
                   @Nullable List<String> seedNodes,
                   @Nullable List<String> priceRelayNodes,
-                  boolean preventPublicBtcNetwork) {
+                  boolean preventPublicBtcNetwork,
+                  @Nullable List<String> btcNodes) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -89,6 +95,7 @@ public final class Filter implements ProtectedStoragePayload {
         this.seedNodes = seedNodes;
         this.priceRelayNodes = priceRelayNodes;
         this.preventPublicBtcNetwork = preventPublicBtcNetwork;
+        this.btcNodes = btcNodes;
     }
 
 
@@ -106,6 +113,7 @@ public final class Filter implements ProtectedStoragePayload {
                   @Nullable List<String> seedNodes,
                   @Nullable List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
+                  @Nullable List<String> btcNodes,
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
@@ -117,7 +125,8 @@ public final class Filter implements ProtectedStoragePayload {
                 arbitrators,
                 seedNodes,
                 priceRelayNodes,
-                preventPublicBtcNetwork);
+                preventPublicBtcNetwork,
+                btcNodes);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -145,6 +154,7 @@ public final class Filter implements ProtectedStoragePayload {
         Optional.ofNullable(arbitrators).ifPresent(builder::addAllArbitrators);
         Optional.ofNullable(seedNodes).ifPresent(builder::addAllSeedNodes);
         Optional.ofNullable(priceRelayNodes).ifPresent(builder::addAllPriceRelayNodes);
+        Optional.ofNullable(btcNodes).ifPresent(builder::addAllBtcNodes);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return PB.StoragePayload.newBuilder().setFilter(builder).build();
@@ -162,6 +172,7 @@ public final class Filter implements ProtectedStoragePayload {
                 CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : proto.getSeedNodesList().stream().collect(Collectors.toList()),
                 CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : proto.getPriceRelayNodesList().stream().collect(Collectors.toList()),
                 proto.getPreventPublicBtcNetwork(),
+                CollectionUtils.isEmpty(proto.getBtcNodesList()) ? null : proto.getBtcNodesList().stream().collect(Collectors.toList()),
                 proto.getSignatureAsBase64(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
