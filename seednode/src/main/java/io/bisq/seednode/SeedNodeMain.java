@@ -31,8 +31,6 @@ import joptsimple.OptionSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -44,7 +42,6 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 @Slf4j
 public class SeedNodeMain extends BisqExecutable {
-    private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
     private SeedNode seedNode;
@@ -141,23 +138,21 @@ public class SeedNodeMain extends BisqExecutable {
 
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
-            long usedMemoryInMB = Profiler.getUsedMemoryInMB();
             if (!stopped) {
-                if (usedMemoryInMB > (maxMemory - 100)) {
+                long usedMemoryInMB = Profiler.getUsedMemoryInMB();
+                if (usedMemoryInMB > (maxMemory * 0.8)) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             usedMemoryInMB);
                     System.gc();
-                    usedMemoryInMB = Profiler.getUsedMemoryInMB();
                     Profiler.printSystemLoad(log);
                 }
 
-                final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
-                    if (finalUsedMemoryInMB > maxMemory)
+                    if (Profiler.getUsedMemoryInMB() > maxMemory)
                         restart(bisqEnvironment);
-                }, 1);
+                }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
 
