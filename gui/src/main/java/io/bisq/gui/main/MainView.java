@@ -54,8 +54,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -63,8 +62,10 @@ import java.util.List;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
+@Slf4j
 public class MainView extends InitializableView<StackPane, MainViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(MainView.class);
+    // If after 20 sec we have not got connected we show "open network settings" button
+    private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 30;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -485,11 +486,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkIcon.setManaged(false);
         HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
 
-        // If after 20 sec we have not got connected we show "open network settings" button
         Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
             showTorNetworkSettingsButton.setVisible(true);
             showTorNetworkSettingsButton.setManaged(true);
-        }, 20);
+        }, SHOW_TOR_SETTINGS_DELAY_SEC);
 
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkIcon.setId(newValue);

@@ -133,20 +133,19 @@ public class StatisticsMain extends BisqExecutable {
 
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
-            long usedMemoryInMB = Profiler.getUsedMemoryInMB();
             if (!stopped) {
-                if (usedMemoryInMB > (maxMemory - 100)) {
+                long usedMemoryInMB = Profiler.getUsedMemoryInMB();
+                if (usedMemoryInMB > (maxMemory * 0.8)) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             usedMemoryInMB);
                     System.gc();
-                    usedMemoryInMB = Profiler.getUsedMemoryInMB();
                     Profiler.printSystemLoad(log);
                 }
 
-                final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
+                    final long finalUsedMemoryInMB = Profiler.getUsedMemoryInMB();
                     if (finalUsedMemoryInMB > maxMemory) {
                         log.error("\n\n############################################################\n" +
                                         "We shut down as we are over our memory limit. usedMemoryInMB: {}" +
@@ -154,7 +153,7 @@ public class StatisticsMain extends BisqExecutable {
                                 finalUsedMemoryInMB);
                         System.exit(EXIT_FAILURE);
                     }
-                }, 1);
+                }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
 

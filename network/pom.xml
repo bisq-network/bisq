@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
-            <version>e7195748</version>
+            <version>1c9d80e</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

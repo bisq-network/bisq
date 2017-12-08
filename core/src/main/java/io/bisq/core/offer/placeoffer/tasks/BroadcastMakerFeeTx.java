@@ -45,18 +45,20 @@ public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
             final Transaction transaction = model.getTransaction();
+
+            // TODO Try to republish tx?
             Timer timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                 model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
                 complete();
-            }, 5);
+            }, 20);
 
             model.getTradeWalletService().broadcastTx(model.getTransaction(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction tx) {
+                            timeoutTimer.stop();
                             if (!completed) {
-                                timeoutTimer.stop();
                                 log.debug("Broadcast of offer fee payment succeeded: transaction = " + tx.toString());
 
                                 if (transaction.getHashAsString().equals(tx.getHashAsString())) {
