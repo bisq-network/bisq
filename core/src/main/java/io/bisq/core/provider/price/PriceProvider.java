@@ -67,9 +67,4 @@ public class PriceProvider extends HttpClientProvider {
         });
         return new Tuple2<>(tsMap, marketPriceMap);
     }
-
-    @Override
-    public String toString() {
-        return "PriceProvider";
-    }
 }

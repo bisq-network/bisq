@@ -239,7 +239,7 @@ public class PriceFeedService {
                 }
 
             } else {
-                String errorMessage = "We don't have a price for " + currencyCode;
+                String errorMessage = "We don't have a price for " + currencyCode + ". priceProvider=" + priceProvider;
                 log.debug(errorMessage);
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
@@ -307,6 +307,7 @@ public class PriceFeedService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
+                log.error("Could not load marketPrices. Error: " + throwable.toString());
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
         });
