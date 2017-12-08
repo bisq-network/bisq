@@ -64,8 +64,9 @@ import static javafx.scene.layout.AnchorPane.*;
 @FxmlView
 @Slf4j
 public class MainView extends InitializableView<StackPane, MainViewModel> {
-    // If after 20 sec we have not got connected we show "open network settings" button
+    // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 30;
+    private Label versionLabel;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -579,7 +580,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(blockchainSyncBox, 7d);
 
         // version
-        Label versionLabel = new Label();
+        versionLabel = new Label();
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
@@ -588,7 +589,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
         });
         setBottomAnchor(versionLabel, 7d);
-
+        model.newVersionAvailableProperty.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                versionLabel.setStyle("-fx-text-fill: -bs-error-red; -fx-underline: true; -fx-cursor: hand;");
+                versionLabel.setOnMouseClicked(e -> model.openDownloadWindow());
+                versionLabel.setText("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
+            } else {
+                versionLabel.setStyle("-fx-text-fill: black; -fx-underline: false; -fx-cursor: null;");
+                versionLabel.setOnMouseClicked(null);
+                versionLabel.setText("v" + Version.VERSION);
+            }
+        });
 
         // P2P Network
         Label p2PNetworkLabel = new Label();

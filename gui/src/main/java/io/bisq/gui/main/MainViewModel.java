@@ -158,6 +158,7 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
     final BooleanProperty isExternallyProvidedPrice = new SimpleBooleanProperty(true);
     final BooleanProperty isPriceAvailable = new SimpleBooleanProperty(false);
+    final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
     final IntegerProperty marketPriceUpdated = new SimpleIntegerProperty(0);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
@@ -633,9 +634,9 @@ public class MainViewModel implements ViewModel {
         removeOffersWithoutAccountAgeWitness();
 
         arbitratorManager.onAllServicesInitialized();
-        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
+        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue, false));
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
-        displayAlertIfPresent(alertManager.alertMessageProperty().get());
+        displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
 
         p2PService.onAllServicesInitialized();
 
@@ -1048,15 +1049,34 @@ public class MainViewModel implements ViewModel {
         priceFeedComboBoxItems.setAll(currencyItems);
     }
 
-    private void displayAlertIfPresent(Alert alert) {
-        boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
-        user.setDisplayedAlert(alert);
-        if (alert != null && !alreadyDisplayed) {
+    private void displayAlertIfPresent(Alert alert, boolean openNewVersionPopup) {
+        if (alert != null) {
             if (alert.isUpdateInfo()) {
-                if (alert.isNewVersion())
-                    new DisplayUpdateDownloadWindow(alert).show();
+                user.setDisplayedAlert(alert);
+                final boolean isNewVersion = alert.isNewVersion();
+                newVersionAvailableProperty.set(isNewVersion);
+                String key = "Update_" + alert.getVersion();
+                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup)) {
+                    new DisplayUpdateDownloadWindow(alert)
+                            .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
+                            .onAction(() -> {
+                                preferences.dontShowAgain(key, false); // update later
+                            })
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .onClose(() -> {
+                                preferences.dontShowAgain(key, true); // ignore update
+                            })
+                            .show();
+                }
             } else {
-                new DisplayAlertMessageWindow().alertMessage(alert).show();
+                final Alert displayedAlert = user.getDisplayedAlert();
+                if (displayedAlert == null || !displayedAlert.equals(alert))
+                    new DisplayAlertMessageWindow()
+                            .alertMessage(alert)
+                            .onClose(() -> {
+                                user.setDisplayedAlert(alert);
+                            })
+                            .show();
             }
         }
     }
@@ -1254,5 +1274,9 @@ public class MainViewModel implements ViewModel {
 
     String getAppDateDir() {
         return bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY);
+    }
+
+    void openDownloadWindow() {
+        displayAlertIfPresent(user.getDisplayedAlert(), true);
     }
 }
