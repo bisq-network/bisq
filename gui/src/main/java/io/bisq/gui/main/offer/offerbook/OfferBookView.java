@@ -581,6 +581,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         priceChangedListener = (observable, oldValue, newValue) -> {
                                             if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
                                                 setText(model.getPrice(offerBookListItem));
+                                                tableView.sort();
                                             }
                                         };
                                         model.priceFeedService.updateCounterProperty().addListener(priceChangedListener);
@@ -626,6 +627,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
                                         setText(model.getVolume(offerBookListItem));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
+                                        tableView.sort();
                                     }
                                 }
                             };
