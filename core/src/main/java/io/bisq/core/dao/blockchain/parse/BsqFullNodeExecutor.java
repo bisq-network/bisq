@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import java.util.function.Consumer;
 
-// Used for non blocking access to BTC blockchain data and parsing. Encapsulate thread context, so caller 
+// Used for non blocking access to BTC blockchain data and parsing. Encapsulate thread context, so caller
 // gets always called on UserThread
 @Slf4j
 public class BsqFullNodeExecutor {
@@ -78,11 +78,11 @@ public class BsqFullNodeExecutor {
 
         Futures.addCallback(future, new FutureCallback<Integer>() {
             public void onSuccess(Integer chainHeadHeight) {
-                resultHandler.accept(chainHeadHeight);
+                UserThread.execute(() -> resultHandler.accept(chainHeadHeight));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                errorHandler.accept(throwable);
+                UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
     }
@@ -108,7 +108,7 @@ public class BsqFullNodeExecutor {
         Futures.addCallback(future, new FutureCallback<Void>() {
             @Override
             public void onSuccess(Void ignore) {
-                UserThread.execute(() -> UserThread.execute(resultHandler::handleResult));
+                UserThread.execute(resultHandler::handleResult);
             }
 
             @Override
