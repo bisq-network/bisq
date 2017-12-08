@@ -17,12 +17,32 @@
 
 package io.bisq.core.dao.blockchain;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
-public class BsqBlockChainChangeDispatcher {
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Passing the BsqNode directly to the classes interested in onBsqBlockChainChanged events cause Guice dependency issues,
+ * so we use that object to isolate that concern.
+ */
+@Slf4j
+public class BsqBlockChainChangeDispatcher implements BsqBlockChainListener {
+    private final List<BsqBlockChainListener> bsqBlockChainListeners = new ArrayList<>();
 
     public BsqBlockChainChangeDispatcher() {
+    }
+
+    @Override
+    public void onBsqBlockChainChanged() {
+        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
+    }
+
+    public void addBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
+        bsqBlockChainListeners.add(bsqBlockChainListener);
+    }
+
+    public void removeBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
+        bsqBlockChainListeners.remove(bsqBlockChainListener);
     }
 }

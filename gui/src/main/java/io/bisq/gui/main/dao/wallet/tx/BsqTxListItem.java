@@ -146,8 +146,7 @@ class BsqTxListItem {
         txConfidenceIndicator.setId("funds-confidence");
         Tooltip tooltip = new Tooltip();
         txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefHeight(30);
-        txConfidenceIndicator.setPrefWidth(30);
+        txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
         txConfidenceListener = new TxConfidenceListener(txId) {

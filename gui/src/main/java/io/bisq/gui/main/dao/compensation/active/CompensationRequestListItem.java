@@ -20,162 +20,149 @@ package io.bisq.gui.main.dao.compensation.active;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
-import io.bisq.core.dao.blockchain.vo.TxType;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
-import io.bisq.gui.util.GUIUtil;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Tooltip;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
 
-import java.util.Date;
 import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @ToString
 @Slf4j
 @EqualsAndHashCode
-class CompensationRequestListItem {
+class CompensationRequestListItem implements BsqBlockChainListener {
     @Getter
-    private final Transaction transaction;
-    private BsqWalletService bsqWalletService;
-    private BtcWalletService btcWalletService;
-    @Getter
-    private final Date date;
-    @Getter
-    private final String txId;
-    @Getter
-    private int confirmations = 0;
-    @Getter
-    private final String address;
-    @Getter
-    private final String direction;
-    @Getter
-    private final Coin amount;
-    @Getter
-    private boolean received;
-    @Getter
-    private Optional<TxType> txTypeOptional;
-    @Getter
-    private boolean isBurnedBsqTx;
-    private BsqFormatter bsqFormatter;
+    private final CompensationRequest compensationRequest;
+    private final BsqWalletService bsqWalletService;
+    private final BsqBlockChain bsqBlockChain;
+    private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
+    private final BsqFormatter bsqFormatter;
+    private final ChangeListener<Number> chainHeightListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
+    @Getter
+    private Integer confirmations = 0;
 
     private TxConfidenceListener txConfidenceListener;
+    private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
+    private Transaction walletTransaction;
 
-    public CompensationRequestListItem(Transaction transaction,
+    public CompensationRequestListItem(CompensationRequest compensationRequest,
                                        BsqWalletService bsqWalletService,
-                                       BtcWalletService btcWalletService,
-                                       Optional<TxType> txTypeOptional,
-                                       boolean isBurnedBsqTx,
                                        BsqBlockChain bsqBlockChain,
+                                       BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                        BsqFormatter bsqFormatter) {
-        this.transaction = transaction;
+        this.compensationRequest = compensationRequest;
         this.bsqWalletService = bsqWalletService;
-        this.btcWalletService = btcWalletService;
-        this.txTypeOptional = txTypeOptional;
-        this.isBurnedBsqTx = isBurnedBsqTx;
+        this.bsqBlockChain = bsqBlockChain;
+        this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.bsqFormatter = bsqFormatter;
 
-        txId = transaction.getHashAsString();
-        date = transaction.getUpdateTime();
 
-        setupConfidence(bsqWalletService);
-
-        checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
-                "which are available in the wallet");
-
-        Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction, bsqBlockChain);
-        Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction, bsqBlockChain);
-        amount = valueSentToMe.subtract(valueSentFromMe);
-        if (amount.isPositive()) {
-            direction = Res.get("funds.tx.direction.receivedWith");
-            received = true;
-        } else if (amount.isNegative()) {
-            direction = Res.get("funds.tx.direction.sentTo");
-            received = false;
-        } else {
-            // Self send
-            direction = "";
-        }
-
-        String sendToAddress = null;
-        for (TransactionOutput output : transaction.getOutputs()) {
-            if (!bsqWalletService.isTransactionOutputMine(output) &&
-                    !btcWalletService.isTransactionOutputMine(output) &&
-                    WalletService.isOutputScriptConvertibleToAddress(output)) {
-                // We don't support send txs with multiple outputs to multiple receivers, so we can
-                // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
-                break;
-            }
-        }
-
-        // In the case we sent to ourselves (either to BSQ or BTC wallet) we show the first as the other is
-        // usually the change output.
-        String receivedWithAddress = Res.get("shared.na");
-        if (sendToAddress != null) {
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
-                    break;
-                }
-            }
-        }
-
-        if (!isBurnedBsqTx)
-            address = received ? receivedWithAddress : sendToAddress;
-        else
-            address = "";
-    }
-
-    private void setupConfidence(BsqWalletService bsqWalletService) {
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setId("funds-confidence");
-        Tooltip tooltip = new Tooltip();
-        txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefHeight(30);
-        txConfidenceIndicator.setPrefWidth(30);
+
+        txConfidenceIndicator.setProgress(-1);
+        txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
-        txConfidenceListener = new TxConfidenceListener(txId) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence, tooltip);
-            }
-        };
-        bsqWalletService.addTxConfidenceListener(txConfidenceListener);
-        updateConfidence(bsqWalletService.getConfidenceForTxId(txId), tooltip);
+        chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
+        bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
+        setupConfidence();
+
+        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
     }
 
-    private void updateConfidence(TransactionConfidence confidence, Tooltip tooltip) {
+    @Override
+    public void onBsqBlockChainChanged() {
+        setupConfidence();
+    }
+
+    private void setupConfidence() {
+        final Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
+        if (tx != null) {
+            final String txId = tx.getId();
+
+            // We cache the walletTransaction once found
+            if (walletTransaction == null) {
+                final Optional<Transaction> transactionOptional = bsqWalletService.isWalletTransaction(txId);
+                if (transactionOptional.isPresent())
+                    walletTransaction = transactionOptional.get();
+            }
+
+            if (walletTransaction != null) {
+                // It is our tx so we get confidence updates
+                if (txConfidenceListener == null) {
+                    txConfidenceListener = new TxConfidenceListener(txId) {
+                        @Override
+                        public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                            updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
+                        }
+                    };
+                    bsqWalletService.addTxConfidenceListener(txConfidenceListener);
+                }
+            } else {
+                // tx from other users, we dont get confidence updates but as we have the bsq tx we can calculate it
+                // we get setupConfidence called at each new block from above listener so no need to register a new listener
+                int depth = bsqWalletService.getChainHeightProperty().get() - tx.getBlockHeight() + 1;
+                if (depth > 0)
+                    updateConfidence(TransactionConfidence.ConfidenceType.BUILDING, depth, -1);
+                log.error("name={}, id ={}, depth={}", compensationRequest.getPayload().getName(), compensationRequest.getPayload().getUid(), depth);
+            }
+
+            final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
+            if (confidence != null)
+                updateConfidence(confidence, confidence.getDepthInBlocks());
+        }
+    }
+
+    private void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
         if (confidence != null) {
-            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-            confirmations = confidence.getDepthInBlocks();
+            updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
+            confirmations = depthInBlocks;
         }
     }
 
     public void cleanup() {
-        bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
+        bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
+        bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
+        if (txConfidenceListener != null)
+            bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
-    public TxType getTxType() {
-        if (txTypeOptional.isPresent())
-            return txTypeOptional.get();
-        else
-            return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
+    public void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
+        switch (confidenceType) {
+            case UNKNOWN:
+                tooltip.setText(Res.get("confidence.unknown"));
+                txConfidenceIndicator.setProgress(0);
+                break;
+            case PENDING:
+                tooltip.setText(Res.get("confidence.seen", numBroadcastPeers > -1 ? numBroadcastPeers : Res.get("shared.na")));
+                txConfidenceIndicator.setProgress(-1.0);
+                break;
+            case BUILDING:
+                tooltip.setText(Res.get("confidence.confirmed", depthInBlocks));
+                txConfidenceIndicator.setProgress(Math.min(1, (double) depthInBlocks / 6.0));
+                break;
+            case DEAD:
+                tooltip.setText(Res.get("confidence.invalid"));
+                txConfidenceIndicator.setProgress(0);
+                break;
+        }
+
+        txConfidenceIndicator.setPrefSize(24, 24);
     }
 }
 

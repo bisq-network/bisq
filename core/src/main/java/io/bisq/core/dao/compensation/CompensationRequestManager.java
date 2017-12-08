@@ -26,7 +26,9 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -47,6 +49,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
+    private final BsqBlockChain bsqBlockChain;
     private final Storage<CompensationRequestList> compensationRequestsStorage;
     private final PublicKey signaturePubKey;
 
@@ -66,14 +69,18 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     public CompensationRequestManager(P2PService p2PService,
                                       BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
+                                      BsqBlockChain bsqBlockChain,
+                                      BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                       KeyRing keyRing,
                                       Storage<CompensationRequestList> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
+        this.bsqBlockChain = bsqBlockChain;
         this.compensationRequestsStorage = compensationRequestsStorage;
 
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
+        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +100,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         // Republish own active compensationRequests
         UserThread.runAfter(() -> {
             activeRequests.stream()
-                    .filter(this::isMyCompensationRequest)
+                    .filter(this::isMine)
                     .forEach(e -> addToP2PNetwork(e.getPayload()));
         }, 30);
 
@@ -109,8 +116,9 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
 
     public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
         final CompensationRequestPayload payload = compensationRequest.getPayload();
-        if (daoPeriodService.isInPhase(payload, DaoPeriodService.Phase.COMPENSATION_REQUESTS)) {
-            if (isMyCompensationRequest(compensationRequest)) {
+        // We allow removal which are not confirmed yet or if it we are in the right phase
+        if (isInPhaseOrUnconfirmed(payload)) {
+            if (isMine(compensationRequest)) {
                 removeFromList(compensationRequest);
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
                 return p2PService.removeData(payload, true);
@@ -130,11 +138,15 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         }
     }
 
-    public boolean isMyCompensationRequest(CompensationRequest compensationRequest) {
-        return isMyCompensationRequestPayload(compensationRequest.getPayload());
+    private boolean isInPhaseOrUnconfirmed(CompensationRequestPayload payload) {
+        return bsqBlockChain.getTxMap().get(payload.getTxId()) == null || daoPeriodService.isInPhase(payload, DaoPeriodService.Phase.COMPENSATION_REQUESTS);
     }
 
-    public boolean isMyCompensationRequestPayload(CompensationRequestPayload compensationRequestPayload) {
+    public boolean isMine(CompensationRequest compensationRequest) {
+        return isMine(compensationRequest.getPayload());
+    }
+
+    public boolean isMine(CompensationRequestPayload compensationRequestPayload) {
         return signaturePubKey.equals(compensationRequestPayload.getOwnerPubKey());
     }
 
@@ -178,7 +190,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof CompensationRequestPayload) {
             findCompensationRequest((CompensationRequestPayload) protectedStoragePayload).ifPresent(compensationRequest -> {
-                if (daoPeriodService.isInPhase(compensationRequest.getPayload(), DaoPeriodService.Phase.COMPENSATION_REQUESTS)) {
+                if (isInPhaseOrUnconfirmed(compensationRequest.getPayload())) {
                     removeFromList(compensationRequest);
                     compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
                 } else {
@@ -214,6 +226,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         if (!contains(compensationRequestPayload)) {
             allRequests.add(new CompensationRequest(compensationRequestPayload));
             updateFilteredLists();
+
             if (storeLocally)
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
         } else {
@@ -222,9 +235,12 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     private void updateFilteredLists() {
-        activeRequests.setPredicate(daoPeriodService::isInCurrentCycle);
         pastRequests.setPredicate(daoPeriodService::isInPastCycle);
-        //log.error("updateFilteredLists activeRequests={}, pastRequests={}", activeRequests.size(), pastRequests.size());
+        activeRequests.setPredicate(compensationRequest -> {
+            return daoPeriodService.isInCurrentCycle(compensationRequest) ||
+                    (bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId()) == null &&
+                            isMine(compensationRequest));
+        });
     }
 
     private boolean contains(CompensationRequestPayload compensationRequestPayload) {

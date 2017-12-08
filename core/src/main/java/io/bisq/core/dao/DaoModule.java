@@ -19,6 +19,7 @@ package io.bisq.core.dao;
 
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqFullNode;
 import io.bisq.core.dao.blockchain.BsqLiteNode;
 import io.bisq.core.dao.blockchain.BsqNodeProvider;
@@ -48,6 +49,7 @@ public class DaoModule extends AppModule {
         bind(BsqBlockChain.class).in(Singleton.class);
         bind(BsqFullNodeExecutor.class).in(Singleton.class);
         bind(BsqLiteNodeExecutor.class).in(Singleton.class);
+        bind(BsqBlockChainChangeDispatcher.class).in(Singleton.class);
         bind(BsqParser.class).in(Singleton.class);
         bind(RpcService.class).in(Singleton.class);
 

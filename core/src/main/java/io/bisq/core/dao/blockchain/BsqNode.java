@@ -173,6 +173,8 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
+        //TODO called at each block at startup parsing. cause a lot of cpu waste at listeners...
+        // -> make more fine grained callbacks so UI only listens on final results when parsing is complete
         bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 

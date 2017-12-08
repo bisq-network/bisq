@@ -23,6 +23,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -66,6 +67,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqCoinSelector bsqCoinSelector,
                             BsqBlockChain bsqBlockChain,
+                            BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -86,12 +88,12 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
                     wallet.addEventListener(new AbstractWalletEventListener() {
                         @Override
                         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            //TODO do we need updateWalletBsqTransactions(); here?
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
                         public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            //TODO do we need updateWalletBsqTransactions(); here?
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
@@ -102,6 +104,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
 
                         @Override
                         public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
@@ -130,6 +133,8 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
                 }
             });
         }
+
+        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
     }
 
 
@@ -284,6 +289,10 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
             }
         }
         return result;
+    }
+
+    public Optional<Transaction> isWalletTransaction(String txId) {
+        return getWalletTransactions().stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
     }
 
 

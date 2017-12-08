@@ -35,7 +35,9 @@ public class BsqNodeProvider {
     @Inject
     public BsqNodeProvider(BsqLiteNode bsqLiteNode,
                            BsqFullNode bsqFullNode,
+                           BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) boolean fullDaoNode) {
         bsqNode = fullDaoNode ? bsqFullNode : bsqLiteNode;
+        bsqNode.addBsqBlockChainListener(bsqBlockChainChangeDispatcher);
     }
 }

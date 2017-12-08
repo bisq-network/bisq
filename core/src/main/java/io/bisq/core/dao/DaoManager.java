@@ -47,9 +47,7 @@ public class DaoManager {
         this.daoPeriodService = daoPeriodService;
         this.voteManager = voteManager;
         this.compensationRequestManager = compensationRequestManager;
-
         bsqNode = bsqNodeProvider.getBsqNode();
-        bsqNode.addBsqBlockChainListener(compensationRequestManager);
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
