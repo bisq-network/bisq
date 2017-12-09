@@ -63,7 +63,7 @@ public class BitcoinNodes {
                         BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"),
                         BtcNode.fromHostNameAddressAndPort("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", BtcNode.DEFAULT_PORT, "https://github.com/tbocek"),
                         BtcNode.fromHostNameAddressAndPort("bcwat.ch", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
-                        BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),  //
+                        BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "88.198.39.205", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),  //
                         BtcNode.fromHostNameAddressAndPort("btc.vante.me", "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
                         BtcNode.fromHostName("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
                         BtcNode.fromAddressAndPort("62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
