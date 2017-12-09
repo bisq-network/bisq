@@ -213,7 +213,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
 
-        // Incorrect ordering of Available offers:
+        // Fixes incorrect ordering of Available offers:
         // https://github.com/bisq-network/exchange/issues/588
         priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> {
             tableView.sort();
