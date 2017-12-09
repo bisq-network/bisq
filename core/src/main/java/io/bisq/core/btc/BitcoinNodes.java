@@ -167,10 +167,10 @@ public class BitcoinNodes {
         }
 
         public String getHostAddressOrHostName() {
-            if (address != null)
-                return address;
-            else
+            if (hostName != null)
                 return hostName;
+            else
+                return address;
         }
 
         public String getAddressOrHostWithPort() {
