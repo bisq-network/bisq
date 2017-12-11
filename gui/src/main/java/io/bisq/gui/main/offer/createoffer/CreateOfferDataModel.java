@@ -721,7 +721,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        log.error("swapTradeToSavings, offerId={}", offerId);
         btcWalletService.resetAddressEntriesForOpenOffer(offerId);
     }
 

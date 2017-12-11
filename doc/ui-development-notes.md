@@ -11,17 +11,17 @@ That interpretation is also confirmed by the Java FX reference: "A controller is
  
 
 The described pattern is only applied yet to that package:  
-io.bisq.gui.trade.createoffer;  
+io.bisq.gui.main.offer.createoffer;  
 For prototyping the UI we stick first with a more rapid development style approach.  
 
 
-###Elements
+### Elements
 * View
 * CodeBehind (CB)
 * Presentation Model (PM)
 * Model
 
-#####Overview: 
+##### Overview: 
 * View/CB is responsible for the visual representation. No logic. No state.
 * Presentation model holds the view/CB state.
 * Presentation model handles view specific logic.
@@ -29,12 +29,12 @@ For prototyping the UI we stick first with a more rapid development style approa
 * Model is the domain specific representation of the view. It holds domain data and handles domain logic.
 
 
-###View
+### View
 Typically FXML is used.    
  
 It knows the CodeBehind (fx:controller)  
 
-#####Responsibility:  
+##### Responsibility:  
 * Defines visible parts of the UI  
 * Define UI element properties  
 * Layout  
@@ -42,7 +42,7 @@ It knows the CodeBehind (fx:controller)
 * Event handler definition  
 
 
-###CodeBehind (CB)
+### CodeBehind (CB)
 It is conceptually part of the view layer. It adds functionality which cannot be expressed in the declarative FXML 
 format.    
 It is the JavaFX controller associated with the FXML view, but we don't use the term controller as it has too much 
@@ -51,7 +51,7 @@ setup with the FXML view is done by the framework.
 
 It knows the presentation model (via Guice injection) but not the model. 
 
-#####Responsibility:  
+##### Responsibility:  
 * Setup binding for updates from PM to view elements (also bidirectional for used for input data). 
 * Those binding are only simple bindings to plain presenter properties, no logical bindings.
 * Listens to UI events (Actions) from UI controls and calls method in presentation model.
@@ -62,13 +62,13 @@ It knows the presentation model (via Guice injection) but not the model.
 * Has **no logic** and **no state**!
 
 
-###Presentation model (PM)
+### Presentation model (PM)
 It is the abstraction/presentation of the view.      
 Can be used for unit testing.  
 
 It knows the model (via Guice injection) but it does not know the CodeBehind (View)
 
-#####Responsibility:
+##### Responsibility:
 * Holds the state of the view/CB
 * Formats domain data to the needed representation for the view/CB.
 * Receive user input via method calls from CodeBehind.
@@ -76,7 +76,7 @@ It knows the model (via Guice injection) but it does not know the CodeBehind (Vi
 * Listen to updates from model via bindings.
 
  
-###Data model
+### Data model
 Represents the domain scope which is handled by the view.  
 Is interface to application domain objects.  
 We use Guice for dependency injection of the application domain objects.  
@@ -84,7 +84,7 @@ Can be used for unit testing.
 
 Does not know the PM and View/CB
 
-#####Responsibility:
+##### Responsibility:
 * Holds domain data for that view
 * Apply domain business logic
 * Interacts with application domain objects

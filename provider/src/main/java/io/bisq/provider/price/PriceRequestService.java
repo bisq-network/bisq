@@ -39,12 +39,12 @@ public class PriceRequestService {
     private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
 
     // We adjust request time to fit into BitcoinAverage developer plan (45k request per month).
-    // We get 42514 request be below numbers.
-    private static final long INTERVAL_BTC_AV_LOCAL_MS = 90_000;      // 90 sec
-    private static final long INTERVAL_BTC_AV_GLOBAL_MS = 210_000;    // 3.5 min
+    // We get 42514 (29760+12754) request with below numbers.
+    private static final long INTERVAL_BTC_AV_LOCAL_MS = 90_000;      // 90 sec; 29760 requests for 31 days
+    private static final long INTERVAL_BTC_AV_GLOBAL_MS = 210_000;    // 3.5 min; 12754 requests for 31 days
 
     private static final long INTERVAL_POLONIEX_MS = 60_000;          // 1 min
-    private static final long INTERVAL_COIN_MARKET_CAP_MS = 300_000;  // 5 min
+    private static final long INTERVAL_COIN_MARKET_CAP_MS = 300_000;  // 5 min that data structure is quite heavy so we don't request too often.
     private static final long MARKET_PRICE_TTL_SEC = 1800;            // 30 min
 
     private final Timer timerBtcAverageLocal = new Timer();
@@ -84,10 +84,7 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestBtcAverageLocalPrices();
-                } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-                    log.error(e.toString());
-                    e.printStackTrace();
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }

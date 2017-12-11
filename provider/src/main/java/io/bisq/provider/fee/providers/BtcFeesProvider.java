@@ -14,14 +14,18 @@ import java.util.LinkedList;
 //TODO consider alternative https://www.bitgo.com/api/v1/tx/fee?numBlocks=3
 @Slf4j
 public class BtcFeesProvider {
-    static int CAPACITY = 12; // we request each 5 min. so we take average of last hour
-    static int MAX_BLOCKS = 20;
+    public static int CAPACITY = 4; // if we request each 5 min. we take average of last 20 min.
+    public static int MAX_BLOCKS = 10;
 
     private final HttpClient httpClient;
     LinkedList<Long> fees = new LinkedList<>();
+    private final int capacity;
+    private final int maxBlocks;
 
     // other: https://estimatefee.com/n/2
-    public BtcFeesProvider() {
+    public BtcFeesProvider(int capacity, int maxBlocks) {
+        this.capacity = capacity;
+        this.maxBlocks = maxBlocks;
         this.httpClient = new HttpClient("https://bitcoinfees.earn.com/api/v1/fees/");
     }
 
@@ -41,7 +45,7 @@ public class BtcFeesProvider {
                 .flatMap(e -> e.getValue().stream())
                 .forEach(e -> {
                     Double maxDelay = e.get("maxDelay");
-                    if (maxDelay <= MAX_BLOCKS && fee[0] == 0)
+                    if (maxDelay <= maxBlocks && fee[0] == 0)
                         fee[0] = MathUtils.roundDoubleToLong(e.get("maxFee"));
                 });
         fee[0] = Math.min(Math.max(fee[0], FeeRequestService.BTC_MIN_TX_FEE), FeeRequestService.BTC_MAX_TX_FEE);
@@ -56,7 +60,7 @@ public class BtcFeesProvider {
         fees.add(newFee);
         long average = ((Double) fees.stream().mapToDouble(e -> e).average().getAsDouble()).longValue();
         log.info("average of last {} calls: {}", fees.size(), average);
-        if (fees.size() == CAPACITY)
+        if (fees.size() == capacity)
             fees.removeFirst();
 
         return average;
