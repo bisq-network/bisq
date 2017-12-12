@@ -39,9 +39,7 @@ public class CoinmarketcapProvider {
             String code = (String) treeMap.get("symbol");
             if (supportedAltcoins.contains(code)) {
                 double price_btc = parseDouble((String) treeMap.get("price_btc"));
-                marketPriceMap.put(code, new PriceData(code,
-                        price_btc,
-                        ts));
+                marketPriceMap.put(code, new PriceData(code, price_btc, ts, PriceData.COINMKTC_PROVIDER));
             }
         });
         return marketPriceMap;

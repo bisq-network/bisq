@@ -22,13 +22,13 @@ import lombok.Value;
 @SuppressWarnings("FieldCanBeLocal")
 @Value
 public class PriceData {
+    public static final String POLO_PROVIDER = "POLO";
+    public static final String COINMKTC_PROVIDER = "CMC";
+    public static final String BTCAVERAGE_LOCAL_PROVIDER = "BTCA_L";
+    public static final String BTCAVERAGE_GLOBAL_PROVIDER = "BTCA_G";
+
     private final String currencyCode;
     private final double price;
     private final long timestampSec;
-
-    public PriceData(String currencyCode, double price, long timestampSec) {
-        this.currencyCode = currencyCode;
-        this.price = price;
-        this.timestampSec = timestampSec;
-    }
+    private final String provider;
 }

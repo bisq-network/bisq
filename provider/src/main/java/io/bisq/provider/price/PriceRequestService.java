@@ -28,10 +28,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -63,6 +60,10 @@ public class PriceRequestService {
     private long btcAverageTs;
     private long poloniexTs;
     private long coinmarketcapTs;
+    private long btcAverageLCount;
+    private long btcAverageGCount;
+    private long poloniexCount;
+    private long coinmarketcapCount;
 
     private String json;
 
@@ -149,6 +150,7 @@ public class PriceRequestService {
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         coinmarketcapTs = Instant.now().getEpochSecond();
+        coinmarketcapCount = map.size();
 
         if (map.get("LTC") != null)
             log.info("Coinmarketcap LTC (last): " + map.get("LTC").getPrice());
@@ -164,6 +166,7 @@ public class PriceRequestService {
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
+        poloniexCount = poloniexMap.size();
 
         if (poloniexMap.get("LTC") != null)
             log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").getPrice());
@@ -182,6 +185,7 @@ public class PriceRequestService {
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
+        btcAverageLCount = btcAverageLocalMap.size();
         writeToJson();
     }
 
@@ -201,14 +205,19 @@ public class PriceRequestService {
                 .filter(e -> btcAverageLocalMap == null || !btcAverageLocalMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         btcAverageTs = Instant.now().getEpochSecond();
+        btcAverageGCount = map.size();
         writeToJson();
     }
 
     private void writeToJson() {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("btcAverageTs", btcAverageTs);
         map.put("poloniexTs", poloniexTs);
         map.put("coinmarketcapTs", coinmarketcapTs);
+        map.put("btcAverageLCount", btcAverageLCount);
+        map.put("btcAverageGCount", btcAverageGCount);
+        map.put("poloniexCount", poloniexCount);
+        map.put("coinmarketcapCount", coinmarketcapCount);
         map.put("data", allPricesMap.values().toArray());
         json = Utilities.objectToJson(map);
     }
