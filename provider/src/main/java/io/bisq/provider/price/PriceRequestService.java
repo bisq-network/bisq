@@ -21,22 +21,25 @@ import io.bisq.common.util.Utilities;
 import io.bisq.provider.price.providers.BtcAverageProvider;
 import io.bisq.provider.price.providers.CoinmarketcapProvider;
 import io.bisq.provider.price.providers.PoloniexProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PriceRequestService {
-    private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
+    public static final String POLO_PROVIDER = "POLO";
+    public static final String COINMKTC_PROVIDER = "CMC";
+    public static final String BTCAVERAGE_LOCAL_PROVIDER = "BTCA_L";
+    public static final String BTCAVERAGE_GLOBAL_PROVIDER = "BTCA_G";
 
     // We adjust request time to fit into BitcoinAverage developer plan (45k request per month).
     // We get 42514 (29760+12754) request with below numbers.
@@ -63,6 +66,10 @@ public class PriceRequestService {
     private long btcAverageTs;
     private long poloniexTs;
     private long coinmarketcapTs;
+    private long btcAverageLCount;
+    private long btcAverageGCount;
+    private long poloniexCount;
+    private long coinmarketcapCount;
 
     private String json;
 
@@ -149,6 +156,7 @@ public class PriceRequestService {
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         coinmarketcapTs = Instant.now().getEpochSecond();
+        coinmarketcapCount = map.size();
 
         if (map.get("LTC") != null)
             log.info("Coinmarketcap LTC (last): " + map.get("LTC").getPrice());
@@ -164,6 +172,7 @@ public class PriceRequestService {
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
+        poloniexCount = poloniexMap.size();
 
         if (poloniexMap.get("LTC") != null)
             log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").getPrice());
@@ -182,6 +191,7 @@ public class PriceRequestService {
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
+        btcAverageLCount = btcAverageLocalMap.size();
         writeToJson();
     }
 
@@ -201,14 +211,19 @@ public class PriceRequestService {
                 .filter(e -> btcAverageLocalMap == null || !btcAverageLocalMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         btcAverageTs = Instant.now().getEpochSecond();
+        btcAverageGCount = map.size();
         writeToJson();
     }
 
     private void writeToJson() {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("btcAverageTs", btcAverageTs);
         map.put("poloniexTs", poloniexTs);
         map.put("coinmarketcapTs", coinmarketcapTs);
+        map.put("btcAverageLCount", btcAverageLCount);
+        map.put("btcAverageGCount", btcAverageGCount);
+        map.put("poloniexCount", poloniexCount);
+        map.put("coinmarketcapCount", coinmarketcapCount);
         map.put("data", allPricesMap.values().toArray());
         json = Utilities.objectToJson(map);
     }

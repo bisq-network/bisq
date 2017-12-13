@@ -25,10 +25,5 @@ public class PriceData {
     private final String currencyCode;
     private final double price;
     private final long timestampSec;
-
-    public PriceData(String currencyCode, double price, long timestampSec) {
-        this.currencyCode = currencyCode;
-        this.price = price;
-        this.timestampSec = timestampSec;
-    }
+    private final String provider;
 }
