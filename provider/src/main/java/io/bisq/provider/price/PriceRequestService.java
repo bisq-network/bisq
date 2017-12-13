@@ -21,19 +21,25 @@ import io.bisq.common.util.Utilities;
 import io.bisq.provider.price.providers.BtcAverageProvider;
 import io.bisq.provider.price.providers.CoinmarketcapProvider;
 import io.bisq.provider.price.providers.PoloniexProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PriceRequestService {
-    private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
+    public static final String POLO_PROVIDER = "POLO";
+    public static final String COINMKTC_PROVIDER = "CMC";
+    public static final String BTCAVERAGE_LOCAL_PROVIDER = "BTCA_L";
+    public static final String BTCAVERAGE_GLOBAL_PROVIDER = "BTCA_G";
 
     // We adjust request time to fit into BitcoinAverage developer plan (45k request per month).
     // We get 42514 (29760+12754) request with below numbers.
