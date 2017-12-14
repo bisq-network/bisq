@@ -602,6 +602,22 @@ textfield */
     -fx-background-color: -bs-content-bg-grey;
 }
 
+.toggle-button-active {
+    -fx-background-color: -bs-blue-transparent;
+}
+
+.toggle-button-inactive {
+    -fx-background-color: -bs-very-light-grey;
+}
+
+.percentage-label {
+    -fx-alignment: center;
+}
+
+.offer-separator {
+    -fx-background: -bs-grey;
+}
+
 /* Account setup */
 #wizard-title-deactivated {
     -fx-font-weight: bold;
