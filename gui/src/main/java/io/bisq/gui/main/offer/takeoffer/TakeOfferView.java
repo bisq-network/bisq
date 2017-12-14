@@ -959,8 +959,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageLabel.setText("%");
-        priceAsPercentageLabel.setStyle("-fx-alignment: center;");
-
+        priceAsPercentageLabel.getStyleClass().add("percentage-label");
 
         Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueCurrencyBox();
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
@@ -1029,7 +1028,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #666;");
+        separator.getStyleClass().add("offer-separator");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"),
