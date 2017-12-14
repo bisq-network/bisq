@@ -74,7 +74,7 @@ public class BsqAddressTextField extends AnchorPane {
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
-        copyIcon.getStyleClass().add("copy-icon");
+        copyIcon.getStyleClass().addAll("icon", "copy-icon");
         copyIcon.setTooltip(new Tooltip(Res.get("addressTextField.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {

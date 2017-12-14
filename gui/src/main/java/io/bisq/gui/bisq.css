@@ -192,6 +192,11 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-bg-light;
 }
 
+.display-text-field {
+    -fx-alignment: center;
+    -fx-background-color: -bs-white;
+}
+
 .text-area:readonly .content {
     -fx-background-color: -bs-bg-light;
 }
@@ -206,6 +211,10 @@ bg color of non edit textFields: fafafa
     -fx-underline: true;
 }
 
+.icon, icon:hover {
+    -fx-cursor: hand;
+}
+
 #icon-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
@@ -213,12 +222,10 @@ bg color of non edit textFields: fafafa
 
 .copy-icon {
     -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
 }
 
 .copy-icon-disputes {
     -fx-text-fill: -bs-white;
-    -fx-cursor: hand;
 }
 
 .copy-icon:hover {
@@ -227,82 +234,61 @@ bg color of non edit textFields: fafafa
 
 .external-link-icon {
     -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
 }
 
 .received-funds-icon {
     -fx-text-fill: -bs-green-soft;
-    -fx-cursor: hand;
-}
-
-.received-funds-icon:hover {
-    -fx-text-fill: -bs-black;
-    -fx-cursor: hand;
 }
 
 .sent-funds-icon {
     -fx-text-fill: -bs-red-soft;
-    -fx-cursor: hand;
 }
 
-.sent-funds-icon:hover {
-    -fx-text-fill: -bs-black;
-    -fx-cursor: hand;
-}
-
+/* TODO: not used at the moment*/
 .internal-funds-icon {
     -fx-text-fill: -bs-dark-grey;
     -fx-cursor: hand;
 }
 
-
 .dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-invalid-icon,
 .dao-tx-type-invalid-icon:hover {
     -fx-text-fill: -bs-error-red;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-default-icon,
 .dao-tx-type-default-icon:hover {
     -fx-text-fill: -bs-grey;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-genesis-icon,
 .dao-tx-type-genesis-icon:hover {
     -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
 }
 
 
 .dao-tx-type-received-funds-icon,
 .dao-tx-type-received-funds-icon:hover {
     -fx-text-fill: -bs-green-soft;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-sent-funds-icon,
 .dao-tx-type-sent-funds-icon:hover {
     -fx-text-fill: -bs-red-soft;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-default-icon,
 .dao-tx-type-default-icon:hover {
     -fx-text-fill: -bs-grey;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-issuance-icon,
 .dao-tx-type-issuance-icon:hover {
     -fx-text-fill: -bs-green;
-    -fx-cursor: hand;
 }
 
 

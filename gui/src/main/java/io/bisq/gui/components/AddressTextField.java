@@ -72,14 +72,14 @@ public class AddressTextField extends AnchorPane {
 
         Label extWalletIcon = new Label();
         extWalletIcon.setLayoutY(3);
-        extWalletIcon.getStyleClass().add("copy-icon");
+        extWalletIcon.getStyleClass().addAll("icon", "copy-icon");
         extWalletIcon.setTooltip(new Tooltip(tooltipText));
         AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
         extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
-        copyIcon.getStyleClass().add("copy-icon");
+        copyIcon.getStyleClass().addAll("icon", "copy-icon");
         Tooltip.install(copyIcon, new Tooltip(Res.get("addressTextField.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {

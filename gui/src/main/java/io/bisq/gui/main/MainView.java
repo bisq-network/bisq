@@ -284,7 +284,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         textField.setPrefWidth(115); //140
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
-        textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
+        textField.getStyleClass().add("display-text-field");
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
