@@ -21,8 +21,8 @@ bg color of non edit textFields: fafafa
 */
 
 .root {
+    -bs-very-dark-grey3: #444;
     -bs-grey: #666666;
-    -bs-black-transparent: #80000000;
     -bs-medium-grey: #AAAAAA;
     -bs-bg-grey: #dddddd;
     -bs-bg-grey2: #bbb;
@@ -35,7 +35,7 @@ bg color of non edit textFields: fafafa
     -bs-very-light-grey:#F0F0F0; /* derive(-bs-white, -6%) */
     -bs-very-dark-grey: #3c3c3c;
     -bs-very-dark-grey2: #111;
-    -bs-very-dark-grey3: #444;
+    -bs-black-transparent: #80000000;
     -bs-light-grey2: #cfcfcf;
     -bs-light-grey3: #b5b5b5;
     -bs-bg-grey4: #f6f6f6;
@@ -48,6 +48,7 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey11: #f1f1f1;
     -bs-dark-grey: #555;
     -bs-dim-grey: dimgrey;
+    -bs-very-dark-grey3: #333000;
 
     -bs-red: red;
     -bs-error-red: #dd0000;
@@ -553,7 +554,7 @@ textfield */
 
 #info-icon-label {
     -fx-font-size: 16;
-    -fx-text-fill: #333000;
+    -fx-text-fill: -bs-very-dark-grey3;
 }
 
 /* OfferPayload book */
@@ -635,25 +636,25 @@ textfield */
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #333333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #wizard-title-completed {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #333333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #wizard-sub-title-deactivated {
-    -fx-text-fill: #-bs-dark-grey;
+    -fx-text-fill: -bs-dark-grey;
 }
 
 #wizard-sub-title-active {
-    -fx-text-fill: #333333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #wizard-sub-title-completed {
-    -fx-text-fill: #333333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #wizard-item-background-deactivated {
@@ -699,7 +700,7 @@ textfield */
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #333333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #wizard-title-selected {
@@ -761,8 +762,6 @@ textfield */
     -fx-font-size: 14;
     -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
     -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
-    /* -fx-body-color: -bs-bg-grey6;
-     -fx-outer-border:  #6aa4b6;*/
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -774,8 +773,6 @@ textfield */
 #trade-wizard-item-background-completed {
     -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-bg-grey8);
     -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
-    /* -fx-body-color: #def6df;
-     -fx-outer-border: #7db581;*/
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -1079,12 +1076,12 @@ textfield */
 
 #popup-headline {
     -fx-font-size: 16;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #popup-bg {
     -fx-font-size: 14;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
     -fx-background-color: -bs-white;
     -fx-background-radius: 10 10 10 10;
     -fx-background-insets: 10;
@@ -1093,7 +1090,7 @@ textfield */
 
 #popup-bg-top {
     -fx-font-size: 14;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
     -fx-background-color: -bs-white;
     -fx-background-radius: 0 0 10 10;
     -fx-background-insets: 10;
@@ -1103,7 +1100,7 @@ textfield */
 #notification-popup-headline {
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #notification-popup-bg {
@@ -1127,7 +1124,7 @@ textfield */
 #peer-info-popup-headline {
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 .popup-icon-information {
