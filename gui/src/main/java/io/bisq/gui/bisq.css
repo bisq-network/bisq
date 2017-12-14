@@ -201,6 +201,10 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.hidden-icon-button {
+    -fx-background-color: transparent;
+}
+
 #icon-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
@@ -269,6 +273,18 @@ bg color of non edit textFields: fafafa
 .dao-tx-type-issuance-icon,
 .dao-tx-type-issuance-icon:hover {
     -fx-text-fill: -bs-green;
+}
+
+.version {
+    -fx-text-fill: black;
+    -fx-underline: false;
+    -fx-cursor: null;
+}
+
+.version-new {
+    -fx-text-fill: -bs-error-red;
+    -fx-underline: true;
+    -fx-cursor: hand;
 }
 
 
@@ -346,6 +362,10 @@ textfield */
 .hyperlink:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
+}
+
+.market-price-tooltip {
+    -fx-font-size: 12;
 }
 
 /*******************************************************************************
