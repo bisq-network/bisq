@@ -28,11 +28,11 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey2: #bbb;
     -bs-bg-grey3: #d3d3d3;
     -bs-dark-grey:#999;
-    -bs-light-grey: #cccccc;
+    -bs-light-grey: #cccccc; /* derive(-bs-white, -20%); */
     -bs-content-bg-grey: #f4f4f4;
     -bs-very-light-grey: #f8f8f8;
-    -bs-bg-light: #FAFAFA;
-    -bs-very-light-grey:#F0F0F0;
+    -bs-bg-light: #FAFAFA; /* derive(-bs-white, -2%) */
+    -bs-very-light-grey:#F0F0F0; /* derive(-bs-white, -6%) */
     -bs-very-dark-grey: #3c3c3c;
     -bs-very-dark-grey2: #111;
     -bs-very-dark-grey3: #444;
