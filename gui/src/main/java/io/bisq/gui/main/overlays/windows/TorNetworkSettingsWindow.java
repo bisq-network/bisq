@@ -175,7 +175,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void addContent() {
-        gridPane.setStyle("-fx-background-color: #f8f8f8;");
+        gridPane.getStyleClass().add("grid-pane");
 
         Label label = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.info"));
         label.setWrapText(true);

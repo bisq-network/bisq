@@ -935,6 +935,19 @@ textfield */
     -fx-cursor: hand;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.grid-pane {
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+    -fx-background-insets: 10;
+}
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * Text validation                                                                                                  *
@@ -1194,4 +1207,27 @@ textfield */
     -fx-border-insets: 0 0 0 -2;
     -fx-background-insets: 0 0 0 -2;
     -fx-background-radius: 0 4 4 0;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Overlay                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.separator {
+    -fx-background: -bs-light-grey;
+}
+
+.headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 22;
+}
+
+.info-headline-label {
+    -fx-text-fill: -fx-accent;
+}
+
+.alert-headline-label {
+    -fx-text-fill: -bs-error-red;
 }

@@ -84,11 +84,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     protected void createGridPane() {
         super.createGridPane();
         gridPane.setPadding(new Insets(35, 40, 30, 40));
-        gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
-        );
+        gridPane.getStyleClass().add("grid-pane");
     }
 
     private void addContent() {

@@ -69,14 +69,14 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
         if (alert.isUpdateInfo()) {
             headLine = Res.get("displayAlertMessageWindow.update.headline");
-            headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.getStyleClass().addAll("headline-label","info-headline-label");
             String url = "https://bisq.network/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     Res.get("displayAlertMessageWindow.update.download"), url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
         } else {
             headLine = Res.get("displayAlertMessageWindow.headline");
-            headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
+            headLineLabel.getStyleClass().addAll("headline-label", "alert-headline-label");
         }
         closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
