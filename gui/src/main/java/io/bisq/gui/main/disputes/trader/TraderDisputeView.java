@@ -740,15 +740,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("system-message-header");
                                     bg.setId("message-bubble-green");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                 } else if (isMyMsg) {
-                                    headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("my-message-header");
                                     bg.setId("message-bubble-blue");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_blue_left");
                                     else
@@ -775,10 +775,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     /*else if (sendMsgProgressIndicator.getProgress() == 0)
                                         showNotArrivedIcon();*/
                                 } else {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("message-header");
                                     bg.setId("message-bubble-grey");
-                                    messageLabel.setStyle("-fx-text-fill: black;");
-                                    copyIcon.setStyle("-fx-text-fill: black;");
+                                    messageLabel.getStyleClass().add("message");
+                                    copyIcon.getStyleClass().add("message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_grey_right");
                                     else
@@ -828,9 +828,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
-                                            setStyle("-fx-text-fill: white;");
+                                            getStyleClass().add("my-message");
                                         else
-                                            setStyle("-fx-text-fill: black;");
+                                            getStyleClass().add("message");
                                     }});
                                     item.getAttachments().stream().forEach(attachment -> {
                                         final Label icon = new Label();

@@ -1197,3 +1197,33 @@ textfield */
 .alert-headline-label {
     -fx-text-fill: -bs-error-red;
 }
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Arbitration                                                                                                      *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.message {
+    -fx-text-fill: -bs-black;
+}
+
+.my-message {
+    -fx-text-fill: -bs-white;
+}
+
+.message-header {
+     -fx-text-fill: -bs-light-grey;
+     -fx-font-size: 11;
+}
+
+.system-message-header {
+    -fx-text-fill: -bs-green;
+    -fx-font-size: 11;
+}
+
+.my-message-header {
+    -fx-text-fill: -fx-accent;
+    -fx-font-size: 11;
+}
+
