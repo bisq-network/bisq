@@ -66,40 +66,47 @@ public class ProviderMain {
                 '}');
         Utilities.printSysInfo();
 
-        port(8080);
-
-        handleGetAllMarketPrices(args);
-        handleGetFees(args);
-        handleGetVersion();
-    }
-
-    private static void handleGetAllMarketPrices(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-        if (args.length >= 2) {
-            String bitcoinAveragePrivKey = args[0];
-            String bitcoinAveragePubKey = args[1];
-
-            PriceRequestService priceRequestService = new PriceRequestService(bitcoinAveragePrivKey, bitcoinAveragePubKey);
-            get("/getAllMarketPrices", (req, res) -> {
-                log.info("Incoming getAllMarketPrices request from: " + req.userAgent());
-                return priceRequestService.getJson();
-            });
-        } else {
-            throw new IllegalArgumentException("You need to provide the BitcoinAverage API keys. Private key as first argument, public key as second argument.");
-        }
-    }
-
-    private static void handleGetFees(String[] args) throws IOException {
+        String bitcoinAveragePrivKey = null;
+        String bitcoinAveragePubKey = null;
         int capacity = BtcFeesProvider.CAPACITY;
         int maxBlocks = BtcFeesProvider.MAX_BLOCKS;
+        long requestIntervalInMs = TimeUnit.MINUTES.toMillis(FeeRequestService.REQUEST_INTERVAL_MIN);
+
+        // extract command line arguments
+        if (args.length < 2) {
+            log.error("You need to provide the BitcoinAverage API keys. Private key as first argument, public key as second argument.");
+            System.exit(1);
+        }
+        if (args.length >= 2) {
+            bitcoinAveragePrivKey = args[0];
+            bitcoinAveragePubKey = args[1];
+        }
         if (args.length >= 4) {
             capacity = Integer.valueOf(args[2]);
             maxBlocks = Integer.valueOf(args[3]);
         }
-
-        long requestIntervalInMs = TimeUnit.MINUTES.toMillis(FeeRequestService.REQUEST_INTERVAL_MIN);
-        if (args.length >= 5)
+        if (args.length >= 5) {
             requestIntervalInMs = TimeUnit.MINUTES.toMillis(Long.valueOf(args[4]));
+        }
 
+        port(8080);
+
+        handleGetAllMarketPrices(bitcoinAveragePrivKey, bitcoinAveragePubKey);
+        handleGetFees(capacity, maxBlocks, requestIntervalInMs);
+        handleGetVersion();
+        handleGetParams(capacity, maxBlocks, requestIntervalInMs);
+    }
+
+    private static void handleGetAllMarketPrices(String bitcoinAveragePrivKey, String bitcoinAveragePubKey)
+            throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        PriceRequestService priceRequestService = new PriceRequestService(bitcoinAveragePrivKey, bitcoinAveragePubKey);
+        get("/getAllMarketPrices", (req, res) -> {
+            log.info("Incoming getAllMarketPrices request from: " + req.userAgent());
+            return priceRequestService.getJson();
+        });
+    }
+
+    private static void handleGetFees(int capacity, int maxBlocks, long requestIntervalInMs) throws IOException {
         FeeRequestService feeRequestService = new FeeRequestService(capacity, maxBlocks, requestIntervalInMs);
         get("/getFees", (req, res) -> {
             log.info("Incoming getFees request from: " + req.userAgent());
@@ -111,6 +118,13 @@ public class ProviderMain {
         get("/getVersion", (req, res) -> {
             log.info("Incoming getVersion request from: " + req.userAgent());
             return ProviderVersion.VERSION;
+        });
+    }
+
+    private static void handleGetParams(int capacity, int maxBlocks, long requestIntervalInMs) throws IOException {
+        get("/getParams", (req, res) -> {
+            log.info("Incoming getParams request from: " + req.userAgent());
+            return capacity + ";" + maxBlocks + ";" + requestIntervalInMs;
         });
     }
 }
