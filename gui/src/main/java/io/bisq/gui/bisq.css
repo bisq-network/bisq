@@ -244,12 +244,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-red-soft;
 }
 
-/* TODO: not used at the moment*/
-.internal-funds-icon {
-    -fx-text-fill: -bs-dark-grey;
-    -fx-cursor: hand;
-}
-
 .dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
