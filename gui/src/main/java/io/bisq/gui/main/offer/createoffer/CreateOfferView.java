@@ -930,7 +930,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
