@@ -285,6 +285,7 @@ public class BsqParser {
         long availableBsq = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
             TxInput input = tx.getInputs().get(inputIndex);
+            //TODO check if Tuple indexes of inputs outputs are not messed up...
             Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
             if (spendableTxOutput.isPresent()) {
                 final TxOutput spentTxOutput = spendableTxOutput.get();
@@ -309,7 +310,7 @@ public class BsqParser {
                 final long txOutputValue = txOutput.getValue();
 
                 // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
-                if (txOutput.getOpReturnData() ==null) {
+                if (txOutput.getOpReturnData() == null) {
                     if (availableBsq >= txOutputValue && txOutputValue != 0) {
                         // We are spending available tokens
                         txOutput.setVerified(true);
@@ -320,7 +321,6 @@ public class BsqParser {
                         bsqOutput = txOutput;
 
                         availableBsq -= txOutputValue;
-                        checkArgument(availableBsq >= 0, "availableBsq must not be negative");
                         if (availableBsq == 0)
                             log.debug("We don't have anymore BSQ to spend");
                     } else if (availableBsq > 0 && compRequestIssuanceOutputCandidate == null) {
@@ -331,7 +331,8 @@ public class BsqParser {
                         txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
                         // The other outputs cannot not BSQ outputs so we ignore them.
                         // We set the index directly to the last output as that might be an OP_RETURN with DAO data
-                        index = Math.max(index, outputs.size() - 2);
+                        //TODO remove because its premature optimisation....
+                        // index = Math.max(index, outputs.size() - 2);
                     } else {
                         log.debug("We got another BTC output. We ignore it.");
                     }

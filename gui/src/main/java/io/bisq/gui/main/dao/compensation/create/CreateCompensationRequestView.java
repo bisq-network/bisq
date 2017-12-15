@@ -125,6 +125,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                 boolean walletExceptionMightBeCausedByBtCWallet = false;
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    // TODO move to domain
                     final Coin compensationRequestFee = feeService.getCreateCompensationRequestFee();
                     final Transaction feeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequestFee);
                     String bsqAddress = compensationRequestPayload.getBsqAddress();
@@ -175,10 +176,12 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                     (txSize / 1000d)))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                bsqWalletService.commitTx(txWithBtcFee);
                                 // We need to create another instance, otherwise the tx would trigger an invalid state exception
                                 // if it gets committed 2 times
-                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                                // We clone before commit to avoid unwanted side effects
+                                final Transaction clonedTransaction = btcWalletService.getClonedTransaction(txWithBtcFee);
+                                bsqWalletService.commitTx(txWithBtcFee);
+                                btcWalletService.commitTx(clonedTransaction);
                                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                     @Override
                                     public void onSuccess(@Nullable Transaction transaction) {

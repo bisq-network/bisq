@@ -39,6 +39,7 @@ public class OpReturnVerification {
         this.votingVerification = votingVerification;
     }
 
+    // FIXME bsqOutput can be null in case there is no BSQ change output at comp requests tx
     boolean processDaoOpReturnData(Tx tx, int index, long bsqFee,
                                    int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
         List<TxOutput> txOutputs = tx.getOutputs();
