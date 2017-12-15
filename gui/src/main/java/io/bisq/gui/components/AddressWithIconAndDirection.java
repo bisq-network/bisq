@@ -46,7 +46,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
 
         openLinkIcon = new Label();
         openLinkIcon.setLayoutY(3);
-        openLinkIcon.getStyleClass().addAll("icon", "external-link-icon");
+        openLinkIcon.getStyleClass().addAll("icon", "highlight");
         openLinkIcon.setOpacity(0.7);
         AwesomeDude.setIcon(openLinkIcon, awesomeIcon);
 

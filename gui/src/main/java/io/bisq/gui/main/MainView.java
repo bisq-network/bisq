@@ -424,7 +424,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // createBitcoinInfoBox
         btcSplashInfo = new Label();
         btcSplashInfo.textProperty().bind(model.btcInfo);
-        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> btcSplashInfo.setId("splash-error-state-msg");
+        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
+            btcSplashInfo.setId("splash-error-state-msg");
+            btcSplashInfo.getStyleClass().add("error-text");
+        };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
@@ -466,6 +469,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
+                splashP2PNetworkLabel.getStyleClass().add("error-text");
                 splashP2PNetworkBusyAnimation.stop();
             } else if (model.splashP2PNetworkAnimationVisible.get()) {
                 splashP2PNetworkBusyAnimation.play();
@@ -554,6 +558,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
+                btcInfoLabel.getStyleClass().add("error-text");
                 if (btcNetworkWarnMsgPopup == null) {
                     btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
                     btcNetworkWarnMsgPopup.show();

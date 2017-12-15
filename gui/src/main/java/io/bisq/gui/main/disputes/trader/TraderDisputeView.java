@@ -740,12 +740,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.getStyleClass().add("system-message-header");
+                                    headerLabel.getStyleClass().addAll("message-header","success-text");
                                     bg.setId("message-bubble-green");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
                                 } else if (isMyMsg) {
-                                    headerLabel.getStyleClass().add("my-message-header");
+                                    headerLabel.getStyleClass().add("highlight");
                                     bg.setId("message-bubble-blue");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");

@@ -1199,6 +1199,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void setupTotalToPayInfoIconLabel() {
         totalToPayInfoIconLabel.setId("clickable-icon");
+        totalToPayInfoIconLabel.getStyleClass().addAll("highlight", "show-hand");
         AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
 
         totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());

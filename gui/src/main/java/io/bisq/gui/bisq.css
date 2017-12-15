@@ -98,19 +98,42 @@ bg color of non edit textFields: fafafa
     -fx-font-size: 13;
     -fx-font-family: "Verdana";
 }
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * General                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.error-text {
+    -fx-text-fill: -bs-error-red;
+}
+
+.error {
+    -fx-accent: -bs-error-red;
+}
+
+.success-text {
+    -fx-text-fill: -bs-green;
+}
+
+.highlight {
+    -fx-text-fill: -fx-accent;
+}
+
+.headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 22;
+}
+
+.show-hand {
+    -fx-cursor: hand;
+}
+
 /* Splash */
 
 #splash {
     -fx-background-color: -bs-white;
-}
-
-#splash-error-state-msg {
-    -fx-text-fill: -bs-error-red;
-}
-
-#splash-bitcoin-network-label {
-    -fx-text-fill: -fx-accent;
-    -fx-font-weight: bold;
 }
 
 /* Main UI */
@@ -210,20 +233,12 @@ bg color of non edit textFields: fafafa
     -fx-background-color: transparent;
 }
 
-.copy-icon {
-    -fx-text-fill: -fx-accent;
-}
-
 .copy-icon-disputes {
     -fx-text-fill: -bs-white;
 }
 
 .copy-icon:hover {
     -fx-text-fill: -bs-black;
-}
-
-.external-link-icon {
-    -fx-text-fill: -fx-accent;
 }
 
 .received-funds-icon {
@@ -311,11 +326,6 @@ textfield */
     -fx-background-color: -bs-bg-light;
     -fx-border-radius: 4;
     -fx-padding: 4 4 4 4;
-}
-
-#address-text-field {
-    -fx-cursor: hand;
-    -fx-text-fill: -fx-accent;
 }
 
 #address-text-field:hover {
@@ -467,11 +477,6 @@ textfield */
 
 #non-clickable-icon {
     -fx-text-fill: -bs-medium-grey;
-}
-
-#clickable-icon {
-    -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
 }
 
 #clickable-icon:hover {
@@ -649,36 +654,6 @@ textfield */
 }
 
 /* Account setup */
-#wizard-title-deactivated {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -bs-dark-grey;
-}
-
-#wizard-title-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -bs-font-dark;
-}
-
-#wizard-title-completed {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -bs-font-dark;
-}
-
-#wizard-sub-title-deactivated {
-    -fx-text-fill: -bs-dark-grey;
-}
-
-#wizard-sub-title-active {
-    -fx-text-fill: -bs-font-dark;
-}
-
-#wizard-sub-title-completed {
-    -fx-text-fill: -bs-font-dark;
-}
-
 #wizard-item-background-deactivated {
     -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
     -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
@@ -713,23 +688,6 @@ textfield */
 }
 
 /* Account settings */
-#wizard-title-disabled {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -bs-dark-grey;
-}
-
-#wizard-title-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -bs-font-dark;
-}
-
-#wizard-title-selected {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -fx-accent;
-}
 
 #account-settings-item-background-disabled {
     -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
@@ -826,7 +784,6 @@ textfield */
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill: -fx-accent;
     -fx-background-color: -bs-content-bg-grey;
 }
 
@@ -1231,19 +1188,6 @@ textfield */
     -fx-background: -bs-light-grey;
 }
 
-.headline-label {
-    -fx-font-weight: bold;
-    -fx-font-size: 22;
-}
-
-.info-headline-label {
-    -fx-text-fill: -fx-accent;
-}
-
-.alert-headline-label {
-    -fx-text-fill: -bs-error-red;
-}
-
 /********************************************************************************************************************
  *                                                                                                                  *
  * Arbitration                                                                                                      *
@@ -1261,16 +1205,6 @@ textfield */
 .message-header {
      -fx-text-fill: -bs-light-grey;
      -fx-font-size: 11;
-}
-
-.system-message-header {
-    -fx-text-fill: -bs-green;
-    -fx-font-size: 11;
-}
-
-.my-message-header {
-    -fx-text-fill: -fx-accent;
-    -fx-font-size: 11;
 }
 
 /********************************************************************************************************************

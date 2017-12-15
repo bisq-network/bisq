@@ -1003,6 +1003,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void setupTotalToPayInfoIconLabel() {
         totalToPayInfoIconLabel.setId("clickable-icon");
+        totalToPayInfoIconLabel.getStyleClass().addAll("highlight", "show-hand");
         AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
 
         totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
