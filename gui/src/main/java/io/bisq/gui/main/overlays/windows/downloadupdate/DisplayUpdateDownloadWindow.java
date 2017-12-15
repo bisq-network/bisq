@@ -95,7 +95,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Separator separator = new Separator();
         separator.setMouseTransparent(true);
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #ccc;");
+        separator.getStyleClass().add("separator");
         GridPane.setHalignment(separator, HPos.CENTER);
         GridPane.setRowIndex(separator, ++rowIndex);
         GridPane.setColumnSpan(separator, 2);
@@ -159,7 +159,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Separator separator2 = new Separator();
         separator2.setMouseTransparent(true);
         separator2.setOrientation(Orientation.HORIZONTAL);
-        separator2.setStyle("-fx-background: #ccc;");
+        separator2.getStyleClass().add("separator");
         GridPane.setHalignment(separator2, HPos.CENTER);
         GridPane.setRowIndex(separator2, ++rowIndex);
         GridPane.setColumnSpan(separator2, 2);
