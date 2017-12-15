@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import io.bisq.common.app.Version;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.ProxySocketFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,8 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
+    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
+    private static final int DEFAULT_CONNECTIONS = 10;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -194,6 +197,7 @@ public class WalletConfig extends AbstractIdleService {
 
             blockingClientManager.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
             peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
+            peerGroup.setUserAgent("Bisq", Version.VERSION);
 
             return peerGroup;
         }
@@ -415,8 +419,7 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
-                vPeerGroup.setMaxConnections(Math.min(10, peerAddresses.length));
+                vPeerGroup.setMaxConnections(Math.min(DEFAULT_CONNECTIONS, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));

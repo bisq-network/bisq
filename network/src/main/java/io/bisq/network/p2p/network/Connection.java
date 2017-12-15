@@ -77,7 +77,7 @@ public class Connection implements MessageListener {
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(120);
 
     public static int getPermittedMessageSize() {
         return PERMITTED_MESSAGE_SIZE;
@@ -306,7 +306,7 @@ public class Connection implements MessageListener {
         boolean violated = false;
         //TODO remove message storage after network is tested stable
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
-            // check if we got more than 70 (MSG_THROTTLE_PER_SEC) msg per sec.
+            // check if we got more than 200 (MSG_THROTTLE_PER_SEC) msg per sec.
             long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
             // if duration < 1 sec we received too much network_messages
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
@@ -334,7 +334,7 @@ public class Connection implements MessageListener {
                             .collect(Collectors.toList()).toString());
                 }
             }
-            // we limit to max 50 (MSG_THROTTLE_PER_10SEC) entries
+            // we limit to max 1000 (MSG_THROTTLE_PER_10SEC) entries
             messageTimeStamps.remove(0);
         }
 
@@ -804,7 +804,7 @@ public class Connection implements MessageListener {
                         // We want to track the network_messages also before the checks, so do it early...
                         connection.statistic.addReceivedMessage(networkEnvelope);
 
-                        // First we check thel size
+                        // First we check the size
                         boolean exceeds;
                         if (networkEnvelope instanceof ExtendedDataSizePermission) {
                             exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
