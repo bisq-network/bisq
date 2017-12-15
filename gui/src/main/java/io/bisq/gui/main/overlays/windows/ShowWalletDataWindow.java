@@ -85,7 +85,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         Label label = labelTextAreaTuple2.first;
         label.setMinWidth(150);
         textArea.setPrefHeight(500);
-        textArea.setStyle("-fx-font-size: 10;");
+        textArea.getStyleClass().add("small-text");
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("showWalletDataWindow.includePrivKeys"), "").second;
         isUpdateCheckBox.setSelected(false);

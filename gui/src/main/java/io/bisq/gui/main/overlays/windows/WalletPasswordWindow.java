@@ -266,7 +266,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
         seedWordsTextArea.setPrefHeight(60);
-        seedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+        seedWordsTextArea.getStyleClass().add("text-area");
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("seed.creationDate"));

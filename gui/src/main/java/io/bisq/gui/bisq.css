@@ -105,6 +105,7 @@ bg color of non edit textFields: fafafa
  *                                                                                                                  *
  ********************************************************************************************************************/
 
+/* Text */
 .error-text {
     -fx-text-fill: -bs-error-red;
 }
@@ -130,13 +131,36 @@ bg color of non edit textFields: fafafa
     -fx-font-size: 22;
 }
 
-.show-hand {
-    -fx-cursor: hand;
-}
+/* Other UI Elements */
 
 .separator {
     -fx-background: -bs-light-grey;
 }
+
+/* Behavior */
+
+.show-hand {
+    -fx-cursor: hand;
+}
+
+.hide-focus {
+    -fx-focus-color: transparent;
+}
+
+/* Font */
+
+.very-small-text {
+    -fx-font-size: 9;
+}
+
+.small-text {
+    -fx-font-size: 10;
+}
+
+.normal-text {
+    -fx-font-size: 12;
+}
+
 
 /* Splash */
 
@@ -184,10 +208,6 @@ bg color of non edit textFields: fafafa
     -fx-fill: -fx-accent;
 }
 
-#nav-button-label {
-    -fx-font-size: 10;
-}
-
 #nav-balance-label {
     -fx-font-size: 10;
     -fx-alignment: center;
@@ -216,10 +236,6 @@ bg color of non edit textFields: fafafa
 
 .text-area:readonly .content {
     -fx-background-color: -bs-bg-light;
-}
-
-#feedback-text {
-    -fx-font-size: 10;
 }
 
 #label-url {
@@ -499,6 +515,16 @@ textfield */
 
 .qr-code {
     -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Textarea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-border-color: -bs-bg-grey;
 }
 
 /*******************************************************************************

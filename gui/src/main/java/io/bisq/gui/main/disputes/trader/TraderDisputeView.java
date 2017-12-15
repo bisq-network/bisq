@@ -707,7 +707,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             messageLabel.setWrapText(true);
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
-                            statusIcon.setStyle("-fx-font-size: 10;");
+                            statusIcon.getStyleClass().add("small-text");
                             copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
