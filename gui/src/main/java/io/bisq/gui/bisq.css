@@ -630,6 +630,14 @@ textfield */
     -fx-background-color: -bs-very-light-grey;
 }
 
+/* OfferBook */
+
+.table-title {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-alignment: center;
+}
+
 /* Offer */
 
 .percentage-label {
