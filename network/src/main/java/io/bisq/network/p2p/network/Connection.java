@@ -245,7 +245,7 @@ public class Connection implements MessageListener {
                         protoOutputStreamLock.unlock();
                 }
             } else {
-                log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
+                log.debug("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -636,7 +636,7 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.info("Shut down caused by exception {} on connection={}", e.toString(), connection);
+                log.debug("Shut down caused by exception {} on connection={}", e.toString(), connection);
             } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
                 log.warn("Shut down caused by exception {} on connection={}", e.toString(), connection);
