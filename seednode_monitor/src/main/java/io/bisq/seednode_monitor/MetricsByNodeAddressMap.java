@@ -126,12 +126,13 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     .append("\nLast data: ").append(lastReceivedDataString);
 
             String colorNumErrors = numErrors == 0 ? "black" : "red";
+            String colorDurationAverage = durationAverage < 30 ? "black" : "red";
             html.append("<tr>")
-                    .append("<td>").append(operator).append("</td>")
-                    .append("<td>").append(nodeAddress).append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + operator + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + nodeAddress + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numErrors + "</font> ").append("</td>")
-                    .append("<td>").append(lastErrorMsg).append("</td>")
-                    .append("<td>").append(durationAverage).append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + lastErrorMsg + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorDurationAverage + "\">" + durationAverage + "</font> ").append("</td>")
                     .append("<td>").append(lastReceivedDataString).append("</td><td>");
 
             if (!allReceivedData.isEmpty()) {
