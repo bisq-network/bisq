@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIMEOUT_SEC = 60;
     private static final int DELAY_MS = 1000;
 
 
@@ -98,7 +98,7 @@ class PeerExchangeHandler implements MessageListener {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
                                 }
                             },
-                            TIME_OUT_SEC, TimeUnit.SECONDS);
+                            TIMEOUT_SEC, TimeUnit.SECONDS);
                 }
 
                 SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);

@@ -73,7 +73,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
-    private static final long STARTUP_TIMEOUT_SEC = 60;
+    private static final long STARTUP_TIMEOUT_SEC = 120;
     private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";

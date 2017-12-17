@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 class RequestDataHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataHandler.class);
 
-    private static final long TIME_OUT_SEC = 60;
+    private static final long TIMEOUT_SEC = 60;
     private NodeAddress peersNodeAddress;
 
 
@@ -120,7 +120,7 @@ class RequestDataHandler implements MessageListener {
                                         "Might be caused by an previous networkNode.sendMessage.onFailure.");
                             }
                         },
-                        TIME_OUT_SEC);
+                        TIMEOUT_SEC);
             }
 
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);

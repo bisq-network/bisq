@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 class MonitorRequestHandler implements MessageListener {
-    private static final long TIME_OUT_SEC = 120;
+    private static final long TIMEOUT_SEC = 120;
     private NodeAddress peersNodeAddress;
     private long requestTs;
 
@@ -109,7 +109,7 @@ class MonitorRequestHandler implements MessageListener {
                                     "Might be caused by an previous networkNode.sendMessage.onFailure.");
                         }
                     },
-                    TIME_OUT_SEC);
+                    TIMEOUT_SEC);
 
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             networkNode.addMessageListener(this);
