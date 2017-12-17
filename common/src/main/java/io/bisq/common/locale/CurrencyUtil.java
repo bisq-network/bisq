@@ -144,7 +144,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-
+        result.add(new CryptoCurrency("CRED", "Verify"));
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
