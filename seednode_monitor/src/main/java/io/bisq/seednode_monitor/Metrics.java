@@ -15,8 +15,17 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.provider;
+package io.bisq.seednode_monitor;
 
-public class ProviderVersion {
-    public static final String VERSION = "0.6.3";
+import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+public class Metrics {
+    List<Long> requestDurations = new ArrayList<>();
+    List<String> errorMessages = new ArrayList<>();
+    List<Map<String, Integer>> receivedObjectsList = new ArrayList<>();
 }

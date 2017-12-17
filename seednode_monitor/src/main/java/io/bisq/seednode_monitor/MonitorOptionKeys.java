@@ -15,8 +15,10 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.provider;
+package io.bisq.seednode_monitor;
 
-public class ProviderVersion {
-    public static final String VERSION = "0.6.3";
+public class MonitorOptionKeys {
+
+    public static final String SLACK_URL_SEED_CHANNEL = "slackUrlSeedChannel";
+
 }

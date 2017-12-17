@@ -29,4 +29,8 @@ public interface SeedNodesRepository {
     boolean isSeedNode(NodeAddress nodeAddress);
 
     Set<NodeAddress> getSeedNodeAddresses();
+
+    Set<NodeAddress> getSeedNodeAddressesOldVersions();
+
+    String getOperator(NodeAddress nodeAddress);
 }

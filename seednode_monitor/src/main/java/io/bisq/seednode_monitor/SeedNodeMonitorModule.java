@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.gui.app;
+package io.bisq.seednode_monitor;
 
 import com.google.inject.Singleton;
 import io.bisq.common.Clock;
@@ -38,38 +38,31 @@ import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.gui.GuiModule;
-import io.bisq.gui.common.view.CachingViewLoader;
-import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
-import io.bisq.network.p2p.P2PModule;
 import io.bisq.network.p2p.network.BridgeAddressProvider;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-public class BisqAppModule extends AppModule {
+class SeedNodeMonitorModule extends AppModule {
 
-    private final Stage primaryStage;
-
-    public BisqAppModule(Environment environment, Stage primaryStage) {
+    public SeedNodeMonitorModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+        bind(BisqEnvironment.class).toInstance((SeedNodeMonitorEnvironment) environment);
+        bindConstant().annotatedWith(named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL)).to(environment.getRequiredProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL));
 
-        bind(CachingViewLoader.class).in(Singleton.class);
+        // bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(NotificationCenter.class).in(Singleton.class);
+        // bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
@@ -93,7 +86,7 @@ public class BisqAppModule extends AppModule {
         install(p2pModule());
         install(bitcoinModule());
         install(daoModule());
-        install(guiModule());
+        // install(guiModule());
         install(alertModule());
         install(filterModule());
     }
@@ -122,8 +115,8 @@ public class BisqAppModule extends AppModule {
         return new OfferModule(environment);
     }
 
-    private P2PModule p2pModule() {
-        return new P2PModule(environment);
+    private MonitorP2PModule p2pModule() {
+        return new MonitorP2PModule(environment);
     }
 
     private BitcoinModule bitcoinModule() {
@@ -134,7 +127,4 @@ public class BisqAppModule extends AppModule {
         return new DaoModule(environment);
     }
 
-    private GuiModule guiModule() {
-        return new GuiModule(environment, primaryStage);
-    }
 }
