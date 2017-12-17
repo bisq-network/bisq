@@ -145,7 +145,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("funds.deposit.fundWallet"));
 
         qrCodeImageView = new ImageView();
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(

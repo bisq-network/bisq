@@ -29,7 +29,7 @@ public class HyperlinkWithIcon extends HBox {
         hyperlink = new Hyperlink(text);
 
         icon = new Label();
-        icon.getStyleClass().add("external-link-icon");
+        icon.getStyleClass().addAll("icon", "highlight");
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);

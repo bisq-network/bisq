@@ -481,7 +481,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             break;
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
-                                    label.getStyleClass().add(style);
+                                    label.getStyleClass().addAll("icon", style);
                                     label.setTooltip(new Tooltip(toolTipText));
                                     setGraphic(label);
                                 } else {

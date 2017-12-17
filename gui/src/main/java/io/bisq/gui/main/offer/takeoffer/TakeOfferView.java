@@ -804,7 +804,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
@@ -959,8 +959,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageLabel.setText("%");
-        priceAsPercentageLabel.setStyle("-fx-alignment: center;");
-
+        priceAsPercentageLabel.getStyleClass().add("percentage-label");
 
         Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueCurrencyBox();
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
@@ -1004,6 +1003,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void setupTotalToPayInfoIconLabel() {
         totalToPayInfoIconLabel.setId("clickable-icon");
+        totalToPayInfoIconLabel.getStyleClass().addAll("highlight", "show-hand");
         AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
 
         totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
@@ -1029,7 +1029,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #666;");
+        separator.getStyleClass().add("offer-separator");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"),
