@@ -93,6 +93,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                         "<tr>" +
                         "<th align=\"left\">Operator</th>" +
                         "<th align=\"left\">Node address</th>" +
+                        "<th align=\"left\">Num requests</th>" +
                         "<th align=\"left\">Num errors</th>" +
                         "<th align=\"left\">Last error message</th>" +
                         "<th align=\"left\">Duration average</th>" +
@@ -117,9 +118,11 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             Map<String, Integer> lastReceivedData = !allReceivedData.isEmpty() ? allReceivedData.get(allReceivedData.size() - 1) : new HashMap<>();
             final String lastReceivedDataString = lastReceivedData.entrySet().stream().map(Object::toString).collect(Collectors.joining("<br/>"));
             final String allReceivedDataString = allReceivedData.stream().map(Object::toString).collect(Collectors.joining("<br/>"));
+            int numRequests = allDurations.size();
 
             sb.append("\nOperator: ").append(operator)
                     .append("\nNode address: ").append(nodeAddress)
+                    .append("\nNum requests: ").append(numRequests)
                     .append("\nNum errors: ").append(numErrors)
                     .append("\nLast error message: ").append(lastErrorMsg)
                     .append("\nDuration average: ").append(durationAverage)
@@ -130,6 +133,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             html.append("<tr>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + operator + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + nodeAddress + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numRequests + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numErrors + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + lastErrorMsg + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorDurationAverage + "\">" + durationAverage + "</font> ").append("</td>")
@@ -143,16 +147,17 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     String str = dataItem + ": " + deviation + "%";
                     sb.append(str).append("\n");
                     String color;
-                    if (Math.abs(deviation - 100) == 0)
+                    final double devAbs = Math.abs(deviation - 100);
+                    if (devAbs < 5)
                         color = "black";
-                    else if (Math.abs(deviation - 100) < 10)
+                    else if (devAbs < 10)
                         color = "blue";
                     else
                         color = "red";
 
                     html.append("<font color=\"" + color + "\">" + str + "</font> ").append("<br/>");
 
-                    if (deviation > 120 || deviation < 80) {
+                    if (devAbs >= 20) {
                         if (slackApi != null)
                             slackApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
                                     "<" + operator + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
