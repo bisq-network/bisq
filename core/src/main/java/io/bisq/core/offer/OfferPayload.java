@@ -345,7 +345,7 @@ public final class OfferPayload implements ProtectedStoragePayload, RequiresOwne
 
     @Override
     public long getTTL() {
-        return TimeUnit.MINUTES.toMillis(6);
+        return TimeUnit.MINUTES.toMillis(7);
     }
 
     @Override
