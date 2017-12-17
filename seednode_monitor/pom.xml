@@ -128,7 +128,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>SeedNode</finalName>
+                            <finalName>SeedNodeMonitor</finalName>
                         </configuration>
                     </execution>
                 </executions>
