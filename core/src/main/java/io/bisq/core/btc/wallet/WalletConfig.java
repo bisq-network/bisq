@@ -57,8 +57,8 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
-    private static final int DEFAULT_CONNECTIONS = 10;
+    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 8 nodes
+    private static final int DEFAULT_CONNECTIONS = 8;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
