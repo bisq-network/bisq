@@ -37,16 +37,21 @@ import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import static spark.Spark.get;
+import static spark.Spark.port;
 
 @Slf4j
 public class SeedNodeMonitorMain extends BisqExecutable {
-    private static final long MAX_MEMORY_MB_DEFAULT = 500;
+    private static final long MAX_MEMORY_MB_DEFAULT = 1024;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
-    private SeedNode seedNode;
+    private static SeedNodeMonitor seedNodeMonitor;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
+
+    public static String monitorResult = "No data available yet";
 
     static {
         // Need to set default locale initially otherwise we get problems at non-english OS
@@ -57,14 +62,14 @@ public class SeedNodeMonitorMain extends BisqExecutable {
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("SeedNodeMain")
+                .setNameFormat("SeedNodeMonitorMain")
                 .setDaemon(true)
                 .build();
         UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
 
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        BisqEnvironment.setDefaultAppName("bisq_seednode");
+        BisqEnvironment.setDefaultAppName("bisq_seednode_monitor");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -82,27 +87,46 @@ public class SeedNodeMonitorMain extends BisqExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
+        SeedNodeMonitorEnvironment environment = getEnvironment(options);
 
         // need to call that before BisqAppMain().execute(args)
-        BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        BisqExecutable.initAppDir(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(SeedNodeMonitorMain.class.getClassLoader());
 
+        port(8080);
+        get("/", (req, res) -> {
+            log.info("Incoming request from: " + req.userAgent());
+            return seedNodeMonitor.getMetricsByNodeAddressMap().getResultAsHtml();
+        });
+
         new SeedNodeMonitorMain().execute(args);
+    }
+
+    public static SeedNodeMonitorEnvironment getEnvironment(OptionSet options) {
+        return new SeedNodeMonitorEnvironment(checkNotNull(options));
+    }
+
+    @Override
+    protected void customizeOptionParsing(OptionParser parser) {
+        super.customizeOptionParsing(parser);
+
+        parser.accepts(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL,
+                description("Set slack secret for seed node monitor", ""))
+                .withRequiredArg();
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
-        final BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
-        SeedNode.setEnvironment(bisqEnvironment);
+        final SeedNodeMonitorEnvironment environment = getEnvironment(options);
+        SeedNodeMonitor.setEnvironment(environment);
 
         UserThread.execute(() -> {
             try {
-                seedNode = new SeedNode();
+                seedNodeMonitor = new SeedNodeMonitor();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -127,7 +151,7 @@ public class SeedNodeMonitorMain extends BisqExecutable {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        String maxMemoryOption = bisqEnvironment.getProperty(AppOptionKeys.MAX_MEMORY);
+        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
             try {
                 maxMemory = Integer.parseInt(maxMemoryOption);
@@ -151,7 +175,7 @@ public class SeedNodeMonitorMain extends BisqExecutable {
 
                 UserThread.runAfter(() -> {
                     if (Profiler.getUsedMemoryInMB() > maxMemory)
-                        restart(bisqEnvironment);
+                        restart(environment);
                 }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
@@ -166,7 +190,7 @@ public class SeedNodeMonitorMain extends BisqExecutable {
 
     private void restart(BisqEnvironment bisqEnvironment) {
         stopped = true;
-        seedNode.gracefulShutDown(() -> {
+        seedNodeMonitor.gracefulShutDown(() -> {
             //noinspection finally
             try {
                 final String[] tokens = bisqEnvironment.getAppDataDir().split("_");

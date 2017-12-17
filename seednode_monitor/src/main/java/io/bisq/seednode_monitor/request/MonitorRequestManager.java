@@ -3,8 +3,6 @@ package io.bisq.seednode_monitor.request;
 import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.Log;
-import io.bisq.common.util.MathUtils;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -13,10 +11,14 @@ import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.seednode_monitor.Metrics;
-import io.bisq.seednode_monitor.SeedNodeMonitorMain;
+import io.bisq.seednode_monitor.MetricsByNodeAddressMap;
+import io.bisq.seednode_monitor.MonitorOptionKeys;
 import lombok.extern.slf4j.Slf4j;
+import net.gpedro.integrations.slack.SlackApi;
+import net.gpedro.integrations.slack.SlackMessage;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -24,17 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class MonitorRequestManager implements ConnectionListener {
     private static final long RETRY_DELAY_SEC = 30;
     private static final long CLEANUP_TIMER = 60;
-    private static final long REQUEST_PERIOD_SEC = 60 * 10;
-    private static final long REQUEST_PERIOD_MIN = 30;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public interface Listener {
-        void onDataReceived();
-    }
+    private static final long REQUEST_PERIOD_MIN = 10;
+    private static final int MAX_RETRIES = 4;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -42,22 +35,18 @@ public class MonitorRequestManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
+    private SlackApi slackApi;
     private P2PDataStorage dataStorage;
     private SeedNodesRepository seedNodesRepository;
+    private MetricsByNodeAddressMap metricsByNodeAddressMap;
     private Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    //TODO
-    private Listener listener = new Listener() {
-        @Override
-        public void onDataReceived() {
-
-        }
-    };
 
     private final Map<NodeAddress, MonitorRequestHandler> handlerMap = new HashMap<>();
-    private final Map<NodeAddress, Metrics> metricsMap = new HashMap<>();
     private Map<NodeAddress, Timer> retryTimerMap = new HashMap<>();
+    private Map<NodeAddress, Integer> retryCounterMap = new HashMap<>();
     private boolean stopped;
+    private Set<NodeAddress> nodesInError = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,22 +57,25 @@ public class MonitorRequestManager implements ConnectionListener {
     public MonitorRequestManager(NetworkNode networkNode,
                                  P2PDataStorage dataStorage,
                                  SeedNodesRepository seedNodesRepository,
-                                 Clock clock) {
+                                 MetricsByNodeAddressMap metricsByNodeAddressMap,
+                                 Clock clock,
+                                 @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.seedNodesRepository = seedNodesRepository;
+        this.metricsByNodeAddressMap = metricsByNodeAddressMap;
         this.clock = clock;
 
+        if (!slackUrlSeedChannel.isEmpty())
+            slackApi = new SlackApi(slackUrlSeedChannel);
         this.networkNode.addConnectionListener(this);
 
         seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
         seedNodeAddresses.addAll(seedNodesRepository.getSeedNodeAddressesOldVersions());
-
-        seedNodeAddresses.stream().forEach(nodeAddress -> metricsMap.put(nodeAddress, new Metrics()));
+        seedNodeAddresses.stream().forEach(nodeAddress -> metricsByNodeAddressMap.put(nodeAddress, new Metrics()));
     }
 
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         stopAllRetryTimers();
         networkNode.removeConnectionListener(this);
@@ -95,23 +87,17 @@ public class MonitorRequestManager implements ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(Listener listener) {
-        this.listener = listener;
-    }
-
     public void start() {
         // We want get the logs each 10 minutes
         clock.start();
         clock.addListener(new Clock.Listener() {
             @Override
             public void onSecondTick() {
-                //TODO test
-                processOnMinuteTick();
             }
 
             @Override
             public void onMinuteTick() {
-                // processOnMinuteTick();
+                 processOnMinuteTick();
             }
 
             @Override
@@ -121,14 +107,15 @@ public class MonitorRequestManager implements ConnectionListener {
     }
 
     private void processOnMinuteTick() {
-       // long minutes = System.currentTimeMillis() / 1000 / 60;
-        long minutes = System.currentTimeMillis() / 1000 ;
+        long minutes = System.currentTimeMillis() / 1000 / 60;
+        final long currentTimeMillis = System.currentTimeMillis();
         if (minutes % REQUEST_PERIOD_MIN == 0) {
             stopAllRetryTimers();
             closeAllConnections();
 
             // we give 1 sec. for all connection shutdown
             final int[] delay = {1000};
+            metricsByNodeAddressMap.setLastCheckTs(currentTimeMillis);
             seedNodeAddresses.stream().forEach(nodeAddress -> {
                 UserThread.runAfter(() -> requestData(nodeAddress), delay[0], TimeUnit.MILLISECONDS);
                 delay[0] += 100;
@@ -143,12 +130,10 @@ public class MonitorRequestManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
         closeHandler(connection);
     }
 
@@ -166,28 +151,51 @@ public class MonitorRequestManager implements ConnectionListener {
             if (!handlerMap.containsKey(nodeAddress)) {
                 MonitorRequestHandler requestDataHandler = new MonitorRequestHandler(networkNode,
                         dataStorage,
-                        metricsMap.get(nodeAddress),
+                        metricsByNodeAddressMap.get(nodeAddress),
                         new MonitorRequestHandler.Listener() {
                             @Override
                             public void onComplete() {
                                 log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
                                         nodeAddress);
                                 stopRetryTimer(nodeAddress);
+                                retryCounterMap.remove(nodeAddress);
 
                                 // need to remove before listeners are notified as they cause the update call
                                 handlerMap.remove(nodeAddress);
-                                listener.onDataReceived();
 
-                                onMetricsUpdated();
+                                metricsByNodeAddressMap.updateReport();
+                                metricsByNodeAddressMap.log();
+
+                                if (nodesInError.contains(nodeAddress)) {
+                                    nodesInError.remove(nodeAddress);
+                                    if (slackApi != null)
+                                        slackApi.call(new SlackMessage("Fixed: " + nodeAddress.getFullAddress(),
+                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
+                                }
                             }
 
                             @Override
-                            public void onFault(String errorMessage) {
+                            public void onFault(String errorMessage, NodeAddress nodeAddress) {
                                 handlerMap.remove(nodeAddress);
-                                onMetricsUpdated();
+                                metricsByNodeAddressMap.updateReport();
+                                metricsByNodeAddressMap.log();
 
-                                final Timer timer = UserThread.runAfter(() -> requestData(nodeAddress), RETRY_DELAY_SEC);
-                                retryTimerMap.put(nodeAddress, timer);
+                                int retryCounter;
+                                if (retryCounterMap.containsKey(nodeAddress))
+                                    retryCounter = retryCounterMap.get(nodeAddress);
+                                else
+                                    retryCounter = 0;
+
+                                if (retryCounter < MAX_RETRIES) {
+                                    final Timer timer = UserThread.runAfter(() -> requestData(nodeAddress), RETRY_DELAY_SEC);
+                                    retryTimerMap.put(nodeAddress, timer);
+                                    retryCounterMap.put(nodeAddress, ++retryCounter);
+                                } else {
+                                    nodesInError.add(nodeAddress);
+                                    if (slackApi != null)
+                                        slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),
+                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
+                                }
                             }
                         });
                 handlerMap.put(nodeAddress, requestDataHandler);
@@ -209,71 +217,6 @@ public class MonitorRequestManager implements ConnectionListener {
         }
     }
 
-    private void onMetricsUpdated() {
-        Map<String, Double> accumulatedValues = new HashMap<>();
-        final double[] items = {0};
-        metricsMap.entrySet().stream().forEach(e -> {
-            final List<Map<String, Integer>> receivedObjectsList = e.getValue().getReceivedObjectsList();
-            if (!receivedObjectsList.isEmpty()) {
-                items[0] += 1;
-                Map<String, Integer> last = receivedObjectsList.get(receivedObjectsList.size() - 1);
-                last.entrySet().stream().forEach(e2 -> {
-                    int accuValue = e2.getValue();
-                    if (accumulatedValues.containsKey(e2.getKey()))
-                        accuValue += accumulatedValues.get(e2.getKey());
-
-                    accumulatedValues.put(e2.getKey(), (double) accuValue);
-                });
-            }
-        });
-
-        Map<String, Double> averageValues = new HashMap<>();
-        accumulatedValues.entrySet().stream().forEach(e -> {
-            averageValues.put(e.getKey(), e.getValue() / items[0]);
-        });
-
-        StringBuilder sb = new StringBuilder("\n#################################################################\n");
-
-        metricsMap.entrySet().stream().forEach(e -> {
-            final OptionalDouble averageOptional = e.getValue().getRequestDurations().stream().mapToLong(value -> value).average();
-            int average = 0;
-            if (averageOptional.isPresent())
-                average = (int) averageOptional.getAsDouble();
-            sb.append("\nNode: ")
-                    .append(e.getKey())
-                    .append(" (")
-                    .append(seedNodesRepository.getOperator(e.getKey()))
-                    .append(")\n")
-                    .append("Durations: ")
-                    .append(e.getValue().getRequestDurations())
-                    .append("\n")
-                    .append("Duration average: ")
-                    .append(average)
-                    .append("\n")
-                    .append("Errors: ")
-                    .append(e.getValue().getErrorMessages())
-                    .append("\n")
-                    .append("All data: ")
-                    .append(e.getValue().getReceivedObjectsList())
-                    .append("\n");
-
-            final List<Map<String, Integer>> receivedObjectsList = e.getValue().getReceivedObjectsList();
-            if (!receivedObjectsList.isEmpty()) {
-                Map<String, Integer> last = receivedObjectsList.get(receivedObjectsList.size() - 1);
-                sb.append("Last data: ").append(last).append("\nAverage of last:\n");
-                last.entrySet().stream().forEach(e2 -> {
-                    double deviation = MathUtils.roundDouble((double) e2.getValue() / averageValues.get(e2.getKey()) * 100, 2);
-                    sb.append(e2.getKey()).append(": ")
-                            .append(deviation).append(" % compared to average")
-                            .append("\n");
-                });
-            }
-        });
-        sb.append("\n#################################################################\n\n");
-        log.info(sb.toString());
-        SeedNodeMonitorMain.metricsLog = sb.toString();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -286,6 +229,8 @@ public class MonitorRequestManager implements ConnectionListener {
     private void stopAllRetryTimers() {
         retryTimerMap.values().stream().forEach(Timer::stop);
         retryTimerMap.clear();
+
+        retryCounterMap.clear();
     }
 
     private void stopRetryTimer(NodeAddress nodeAddress) {

@@ -90,7 +90,7 @@ public class BisqAppModule extends AppModule {
         install(encryptionServiceModule());
         install(arbitratorModule());
         install(offerModule());
-        install(torModule());
+        install(p2pModule());
         install(bitcoinModule());
         install(daoModule());
         install(guiModule());
@@ -122,7 +122,7 @@ public class BisqAppModule extends AppModule {
         return new OfferModule(environment);
     }
 
-    private P2PModule torModule() {
+    private P2PModule p2pModule() {
         return new P2PModule(environment);
     }
 

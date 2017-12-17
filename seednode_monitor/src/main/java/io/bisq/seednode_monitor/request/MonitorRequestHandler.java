@@ -43,7 +43,7 @@ class MonitorRequestHandler implements MessageListener {
         void onComplete();
 
         @SuppressWarnings("UnusedParameters")
-        void onFault(String errorMessage);
+        void onFault(String errorMessage, NodeAddress nodeAddress);
     }
 
 
@@ -246,7 +246,7 @@ class MonitorRequestHandler implements MessageListener {
                 .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress))
                 .forEach(c -> c.shutDown(closeConnectionReason));
 
-        listener.onFault(errorMessage);
+        listener.onFault(errorMessage,  nodeAddress);
     }
 
     private void cleanup() {

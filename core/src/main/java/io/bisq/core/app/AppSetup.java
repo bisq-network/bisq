@@ -19,7 +19,6 @@ package io.bisq.core.app;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,16 +28,13 @@ import javax.inject.Inject;
 public abstract class AppSetup {
     protected final EncryptionService encryptionService;
     protected final KeyRing keyRing;
-    protected final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
     public AppSetup(EncryptionService encryptionService,
-                    KeyRing keyRing,
-                    TradeStatisticsManager tradeStatisticsManager) {
+                    KeyRing keyRing) {
         // we need to reference it so the seed node stores tradeStatistics
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
-        this.tradeStatisticsManager = tradeStatisticsManager;
 
         Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();

@@ -17,12 +17,8 @@
 
 package io.bisq.seednode_monitor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.google.inject.Inject;
-
 public class MonitorOptionKeys {
 
-    public MonitorOptionKeys() {
-    }
+    public static final String SLACK_URL_SEED_CHANNEL = "slackUrlSeedChannel";
+
 }

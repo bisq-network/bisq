@@ -17,10 +17,85 @@
 
 package io.bisq.seednode_monitor;
 
+import io.bisq.common.CommonOptionKeys;
+import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.storage.Storage;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BtcOptionKeys;
+import io.bisq.core.btc.UserAgent;
+import io.bisq.core.dao.DaoOptionKeys;
+import io.bisq.network.NetworkOptionKeys;
+import joptsimple.OptionSet;
+import org.springframework.core.env.JOptCommandLinePropertySource;
+import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.PropertySource;
+
+import java.nio.file.Paths;
+import java.util.Properties;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SeedNodeMonitorEnvironment extends BisqEnvironment {
 
-    public SeedNodeMonitorEnvironment() {
+    private String slackUrlSeedChannel = "";
+
+    public SeedNodeMonitorEnvironment(OptionSet options) {
+        this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+    }
+
+    public SeedNodeMonitorEnvironment(PropertySource commandLineProperties) {
+        super(commandLineProperties);
+
+        slackUrlSeedChannel = commandLineProperties.containsProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) ?
+                (String) commandLineProperties.getProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) :
+                "";
+
+        // hack because defaultProperties() is called from constructor and slackUrlSeedChannel would be null there
+        getPropertySources().remove("bisqDefaultProperties");
+        getPropertySources().addLast(defaultPropertiesMonitor());
+    }
+
+    protected PropertySource<?> defaultPropertiesMonitor() {
+        return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
+            {
+                setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
+                setProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL, slackUrlSeedChannel);
+
+                setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
+                setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
+                setProperty(NetworkOptionKeys.BAN_LIST, banList);
+                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
+                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
+                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
+
+                setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
+                setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
+                setProperty(AppOptionKeys.APP_NAME_KEY, appName);
+                setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
+                setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
+                setProperty(AppOptionKeys.PROVIDERS, providers);
+
+                setProperty(DaoOptionKeys.RPC_USER, rpcUser);
+                setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);
+                setProperty(DaoOptionKeys.RPC_PORT, rpcPort);
+                setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
+                setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
+                setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
+
+                setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
+                setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
+
+                setProperty(UserAgent.NAME_KEY, appName);
+                setProperty(UserAgent.VERSION_KEY, Version.VERSION);
+
+                setProperty(Storage.STORAGE_DIR, Paths.get(btcNetworkDir, "db").toString());
+                setProperty(KeyStorage.KEY_STORAGE_DIR, Paths.get(btcNetworkDir, "keys").toString());
+            }
+        });
     }
 }

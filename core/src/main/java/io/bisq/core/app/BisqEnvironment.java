@@ -89,7 +89,7 @@ public class BisqEnvironment extends StandardEnvironment {
         return BaseCurrencyNetwork.BTC_MAINNET;
     }
 
-    private static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
+    protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
 
     public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
         //noinspection ConstantConditions,PointlessBooleanExpression
@@ -163,22 +163,22 @@ public class BisqEnvironment extends StandardEnvironment {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final ResourceLoader resourceLoader = new DefaultResourceLoader();
+    protected final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-    private final String appName;
-    private final String userDataDir;
-    private final String appDataDir;
-    private final String btcNetworkDir;
-    private final String logLevel, providers;
+    protected final String appName;
+    protected final String userDataDir;
+    protected final String appDataDir;
+    protected final String btcNetworkDir;
+    protected final String logLevel, providers;
     @Getter
     @Setter
-    private boolean isBitcoinLocalhostNodeRunning;
+    protected boolean isBitcoinLocalhostNodeRunning;
     @Getter
-    private List<String> bannedPriceRelayNodes;
+    protected List<String> bannedPriceRelayNodes;
     @Getter
-    private List<String> bannedSeedNodes;
+    protected List<String> bannedSeedNodes;
 
-    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
@@ -309,7 +309,7 @@ public class BisqEnvironment extends StandardEnvironment {
         setProperty(FilterManager.BANNED_PRICE_RELAY_NODES, bannedNodes == null ? "" : String.join(",", bannedNodes));
     }
 
-    private void setProperty(String key, String value) {
+    protected void setProperty(String key, String value) {
         try {
             Resource resource = getAppDirPropertiesResource();
             File file = resource.getFile();

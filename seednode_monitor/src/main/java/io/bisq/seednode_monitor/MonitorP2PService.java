@@ -75,6 +75,9 @@ public class MonitorP2PService implements SetupListener, PersistedDataHost {
         if (!shutDownInProgress) {
             shutDownInProgress = true;
 
+            if (requestDataManager != null) {
+                requestDataManager.shutDown();
+            }
 
             if (networkNode != null) {
                 networkNode.shutDown(() -> {

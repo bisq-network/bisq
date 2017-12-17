@@ -47,7 +47,9 @@ public class MonitorP2PModule extends AppModule {
 
     @Override
     protected void configure() {
+        bind(MetricsByNodeAddressMap.class).in(Singleton.class);
         bind(MonitorP2PService.class).in(Singleton.class);
+
         bind(PeerManager.class).in(Singleton.class);
         bind(P2PDataStorage.class).in(Singleton.class);
         bind(RequestDataManager.class).in(Singleton.class);
