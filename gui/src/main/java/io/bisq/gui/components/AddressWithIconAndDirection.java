@@ -22,6 +22,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
     public AddressWithIconAndDirection(String text, String address, AwesomeIcon awesomeIcon, boolean received) {
         Label directionIcon = new Label();
         directionIcon.setLayoutY(3);
+        directionIcon.getStyleClass().add("icon");
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
         AwesomeDude.setIcon(directionIcon, received ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT);
         directionIcon.setMouseTransparent(true);
@@ -45,7 +46,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
 
         openLinkIcon = new Label();
         openLinkIcon.setLayoutY(3);
-        openLinkIcon.getStyleClass().add("external-link-icon");
+        openLinkIcon.getStyleClass().addAll("icon", "highlight");
         openLinkIcon.setOpacity(0.7);
         AwesomeDude.setIcon(openLinkIcon, awesomeIcon);
 
