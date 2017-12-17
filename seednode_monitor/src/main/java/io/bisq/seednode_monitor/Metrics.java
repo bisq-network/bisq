@@ -15,22 +15,17 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.network.p2p.seed;
+package io.bisq.seednode_monitor;
 
-import io.bisq.network.p2p.NodeAddress;
+import lombok.Getter;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-public interface SeedNodesRepository {
-    void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses);
-
-    void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses);
-
-    boolean isSeedNode(NodeAddress nodeAddress);
-
-    Set<NodeAddress> getSeedNodeAddresses();
-
-    Set<NodeAddress> getSeedNodeAddressesOldVersions();
-
-    String getOperator(NodeAddress nodeAddress);
+@Getter
+public class Metrics {
+    List<Long> requestDurations = new ArrayList<>();
+    List<String> errorMessages = new ArrayList<>();
+    List<Map<String, Integer>> receivedObjectsList = new ArrayList<>();
 }

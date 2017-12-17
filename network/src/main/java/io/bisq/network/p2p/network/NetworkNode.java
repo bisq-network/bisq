@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Run in UserThread
 public abstract class NetworkNode implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
-    private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
+    private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 120000;
 
     final int servicePort;
     private final NetworkProtoResolver networkProtoResolver;

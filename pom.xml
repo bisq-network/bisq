@@ -47,6 +47,7 @@
         <module>statistics</module>
         <module>provider</module>
         <module>consensus</module>
+        <module>seednode_monitor</module>
     </modules>
 
     <build>

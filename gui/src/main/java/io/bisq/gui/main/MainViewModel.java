@@ -282,7 +282,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void readMapsFromResources() {
-        SetupUtils.readFromResources(p2PService).addListener((observable, oldValue, newValue) -> {
+        SetupUtils.readFromResources(p2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 startBasicServices();
         });

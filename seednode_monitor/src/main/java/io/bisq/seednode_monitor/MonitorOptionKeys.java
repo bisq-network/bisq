@@ -15,22 +15,10 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.network.p2p.seed;
+package io.bisq.seednode_monitor;
 
-import io.bisq.network.p2p.NodeAddress;
+public class MonitorOptionKeys {
 
-import java.util.Set;
+    public static final String SLACK_URL_SEED_CHANNEL = "slackUrlSeedChannel";
 
-public interface SeedNodesRepository {
-    void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses);
-
-    void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses);
-
-    boolean isSeedNode(NodeAddress nodeAddress);
-
-    Set<NodeAddress> getSeedNodeAddresses();
-
-    Set<NodeAddress> getSeedNodeAddressesOldVersions();
-
-    String getOperator(NodeAddress nodeAddress);
 }
