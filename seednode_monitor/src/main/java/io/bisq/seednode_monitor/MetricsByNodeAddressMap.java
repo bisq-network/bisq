@@ -153,11 +153,10 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     html.append("<font color=\"" + color + "\">" + str + "</font> ").append("<br/>");
 
                     if (deviation > 120 || deviation < 80) {
-                        //TODO URL
                         if (slackApi != null)
                             slackApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
                                     "<" + operator + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
-                                            "Please check the monitoring status page at http://localhost:8080/"));
+                                            "Please check the monitoring status page at http://178.62.249.232:8080/"));
                     }
                 });
                 sb.append("\nDuration all requests: ").append(allDurationsString)
