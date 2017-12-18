@@ -84,6 +84,7 @@ public class WalletConfig extends AbstractIdleService {
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
     private final BisqEnvironment bisqEnvironment;
+    private final String userAgent;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -116,10 +117,12 @@ public class WalletConfig extends AbstractIdleService {
                         Socks5Proxy socks5Proxy,
                         File directory,
                         BisqEnvironment bisqEnvironment,
+                        String userAgent,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.bisqEnvironment = bisqEnvironment;
+        this.userAgent = userAgent;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -197,7 +200,6 @@ public class WalletConfig extends AbstractIdleService {
 
             blockingClientManager.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
             peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
-            peerGroup.setUserAgent("Bisq", Version.VERSION);
 
             return peerGroup;
         }
@@ -411,9 +413,7 @@ public class WalletConfig extends AbstractIdleService {
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
 
-            // protect privacy and don't send agent info
-            /*if (this.userAgent != null)
-                vPeerGroup.setUserAgent(userAgent, version);*/
+            vPeerGroup.setUserAgent(userAgent, Version.VERSION);
 
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.

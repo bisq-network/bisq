@@ -89,6 +89,7 @@ public class SeedNodeMonitorEnvironment extends BisqEnvironment {
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
                 setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
+                setProperty(BtcOptionKeys.USER_AGENT, userAgent);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

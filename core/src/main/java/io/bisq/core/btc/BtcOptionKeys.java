@@ -6,5 +6,6 @@ public class BtcOptionKeys {
     public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String WALLET_DIR = "walletDir";
+    public static final String USER_AGENT = "userAgent";
     public static final String REG_TEST_HOST = "bitcoinRegtestHost";
 }
