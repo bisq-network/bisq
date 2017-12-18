@@ -19,6 +19,7 @@ package io.bisq.core.filter;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
@@ -31,6 +32,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -128,19 +130,60 @@ public class FilterManager {
                 public void onRemoved(ProtectedStorageEntry data) {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
-                        if (verifySignature(filter)) {
-                            bisqEnvironment.saveBannedSeedNodes(null);
-
-                            bisqEnvironment.saveBannedPriceRelayNodes(null);
-                            providersRepository.applyBannedNodes(null);
-                            providersRepository.selectNewRandomBaseUrl();
-
-                            filterProperty.set(null);
-                        }
+                        if (verifySignature(filter))
+                            resetFilters();
                     }
                 }
             });
         }
+
+        p2PService.addP2PServiceListener(new P2PServiceListener() {
+            @Override
+            public void onRequestingDataCompleted() {
+                // We should have received all data at that point and if the filers was not set we
+                // clean up as it might be that we missed the filter remove message if we have not been online.
+                UserThread.runAfter(() -> {
+                    if (filterProperty.get() == null)
+                        resetFilters();
+                }, 30);
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+            }
+
+            @Override
+            public void onBootstrapComplete() {
+            }
+
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+            }
+        });
+    }
+
+    private void resetFilters() {
+        bisqEnvironment.saveBannedSeedNodes(null);
+        bisqEnvironment.saveBannedPriceRelayNodes(null);
+        providersRepository.applyBannedNodes(null);
+        providersRepository.selectNewRandomBaseUrl();
+        filterProperty.set(null);
     }
 
     private void addFilter(Filter filter) {
