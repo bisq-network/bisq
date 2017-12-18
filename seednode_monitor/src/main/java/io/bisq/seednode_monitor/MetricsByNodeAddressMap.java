@@ -102,12 +102,15 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                         "<th align=\"left\">Num requests</th>" +
                         "<th align=\"left\">Num errors</th>" +
                         "<th align=\"left\">Last error message</th>" +
-                        "<th align=\"left\">Duration average</th>" +
+                        "<th align=\"left\">RRT average</th>" +
                         "<th align=\"left\">Last data</th>" +
                         "<th align=\"left\">Data deviation last request</th>" +
                         "</tr>");
 
         StringBuilder sb = new StringBuilder();
+        sb.append("Seed nodes in error:" + totalErrors);
+        sb.append("\nLast check started at: " + time);
+
         entryList.stream().forEach(e -> {
             final List<Long> allDurations = e.getValue().getRequestDurations();
             final String allDurationsString = allDurations.stream().map(Object::toString).collect(Collectors.joining("<br/>"));
@@ -120,7 +123,16 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             final List<String> errorMessages = e.getValue().getErrorMessages();
             final int numErrors = (int) errorMessages.stream().filter(s -> !s.isEmpty()).count();
             int numRequests = allDurations.size();
-            final String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "";
+            String lastErrorMsg = "";
+            int lastIndexOfError = -1;
+            for (int i = 0; i < errorMessages.size(); i++) {
+                final String msg = errorMessages.get(i);
+                if (!msg.isEmpty()) {
+                    lastIndexOfError = i;
+                    lastErrorMsg = "Error at request " + lastIndexOfError + ":" + msg;
+                }
+            }
+            //  String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "";
             final List<Map<String, Integer>> allReceivedData = e.getValue().getReceivedObjectsList();
             Map<String, Integer> lastReceivedData = !allReceivedData.isEmpty() ? allReceivedData.get(allReceivedData.size() - 1) : new HashMap<>();
             final String lastReceivedDataString = lastReceivedData.entrySet().stream().map(Object::toString).collect(Collectors.joining("<br/>"));
@@ -131,10 +143,10 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     .append("\nNum requests: ").append(numRequests)
                     .append("\nNum errors: ").append(numErrors)
                     .append("\nLast error message: ").append(lastErrorMsg)
-                    .append("\nDuration average: ").append(durationAverage)
+                    .append("\nRRT average: ").append(durationAverage)
                     .append("\nLast data: ").append(lastReceivedDataString);
 
-            String colorNumErrors = lastErrorMsg.isEmpty() ? "black" : "red";
+            String colorNumErrors = lastIndexOfError == numErrors ? "black" : "red";
             String colorDurationAverage = durationAverage < 30 ? "black" : "red";
             html.append("<tr>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + operator + "</font> ").append("</td>")
@@ -167,7 +179,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                         if (slackApi != null)
                             slackApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
                                     "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
-                                            "Please check the monitoring status page at http://178.62.249.232:8080/"));
+                                            "Please check the monitoring status page at http://seedmonitor.0-2-1.net:8080/"));
                     }
                 });
                 sb.append("\nDuration all requests: ").append(allDurationsString)

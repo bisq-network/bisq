@@ -32,10 +32,10 @@ import io.bisq.common.storage.FileUtil;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
-import io.bisq.network.DnsLookupTor;
 import io.bisq.network.Socks5MultiDiscovery;
 import io.bisq.network.Socks5ProxyProvider;
 import javafx.beans.property.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
@@ -46,8 +46,6 @@ import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -70,9 +68,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Setup wallets and use WalletConfig for BitcoinJ wiring.
 // Other like WalletConfig we are here always on the user thread. That is one reason why we do not
 // merge WalletsSetup with WalletConfig to one class.
+@Slf4j
 public class WalletsSetup {
-    private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
-
     private static final long STARTUP_TIMEOUT_SEC = 120;
     private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
@@ -301,55 +298,41 @@ public class WalletsSetup {
 
             final boolean useTorForBitcoinJ = socks5Proxy != null;
             List<PeerAddress> peerAddressList = new ArrayList<>();
-            btcNodeList.forEach(btcNode -> {
-                        if (useTorForBitcoinJ) {
-                            if (btcNode.isHiddenService()) {
-                                // no DNS lookup for onion addresses
-                                log.info("We add a onion node with btcNode={}", btcNode);
-                                final String hostName = btcNode.getHostName();
-                                if (hostName != null) {
-                                    try {
-                                        // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
-                                        final InetAddress inetAddress = OnionCat.onionHostToInetAddress(hostName);
-                                        final PeerAddress peerAddress = new PeerAddress(hostName, btcNode.getPort());
-                                        // inetAddress is not used but required for wallet persistence. Throws nullpointer if not set.
-                                        peerAddress.setAddr(inetAddress);
-                                        peerAddressList.add(peerAddress);
-                                    } catch (UnknownHostException e) {
-                                        log.error("OnionCat.onionHostToInetAddress() failed with btcNode={}, error={}", btcNode.toString(), e.toString());
-                                        e.printStackTrace();
-                                    }
-                                } else {
-                                    log.error("hostName is null for btcNode={}", btcNode.toString());
-                                }
-                            } else {
-                                try {
-                                    // We use DnsLookupTor to not leak with DNS lookup
-                                    // Blocking call. takes about 600 ms ;-(
-                                    InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getHostNameOrAddress()), btcNode.getPort());
-                                    log.info("We add a clear net node (tor is used)  with InetAddress={}, btcNode={}", address.getAddress(), btcNode);
-                                    peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                                } catch (Exception e) {
-                                    log.warn("Dns lookup failed for btcNode: {}", btcNode);
-                                }
-                            }
-                        } else {
-                            // We don't use Tor for BitcoinJ
-                            // onion addresses are not supported
+
+            // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
+            // exit nodes with bloom filters.
+            if (useTorForBitcoinJ) {
+                btcNodeList.stream()
+                        .filter(BitcoinNodes.BtcNode::hasOnionAddress)
+                        .forEach(btcNode -> {
+                            // no DNS lookup for onion addresses
+                            log.info("We add a onion node. btcNode={}", btcNode);
+                            final String onionAddress = btcNode.getOnionAddress();
                             try {
-                                if (!btcNode.isHiddenService()) {
-                                    InetSocketAddress address = new InetSocketAddress(btcNode.getHostNameOrAddress(), btcNode.getPort());
-                                    log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
-                                    peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                                } else {
-                                    log.warn("Onion addresses are only supported when using Tor with BitcoinJ. Ignore btcNode {}", btcNode);
-                                }
+                                // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
+                                // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
+                                final InetAddress inetAddress = OnionCat.onionHostToInetAddress(onionAddress);
+                                final PeerAddress peerAddress = new PeerAddress(onionAddress, btcNode.getPort());
+                                peerAddress.setAddr(inetAddress);
+                                peerAddressList.add(peerAddress);
+                            } catch (UnknownHostException e) {
+                                log.error("OnionCat.onionHostToInetAddress() failed with btcNode={}, error={}", btcNode.toString(), e.toString());
+                                e.printStackTrace();
+                            }
+                        });
+            } else {
+                btcNodeList.stream()
+                        .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
+                        .forEach(btcNode -> {
+                            try {
+                                InetSocketAddress address = new InetSocketAddress(btcNode.getHostNameOrAddress(), btcNode.getPort());
+                                log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
+                                peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
                             } catch (Throwable t) {
                                 log.warn("Failed to create InetSocketAddress from btcNode {}", btcNode);
                             }
-                        }
-                    }
-            );
+                        });
+            }
 
             if (!peerAddressList.isEmpty()) {
                 final PeerAddress[] peerAddresses = peerAddressList.toArray(new PeerAddress[peerAddressList.size()]);

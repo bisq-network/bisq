@@ -71,7 +71,6 @@ public class MonitorRequestManager implements ConnectionListener {
         this.networkNode.addConnectionListener(this);
 
         seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
-        seedNodeAddresses.addAll(seedNodesRepository.getSeedNodeAddressesOldVersions());
         seedNodeAddresses.stream().forEach(nodeAddress -> metricsByNodeAddressMap.put(nodeAddress, new Metrics()));
     }
 

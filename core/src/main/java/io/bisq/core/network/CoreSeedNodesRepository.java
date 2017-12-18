@@ -13,7 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,8 +23,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
     @Getter
     private final Set<NodeAddress> seedNodeAddresses;
-    @Getter
-    private final Set<NodeAddress> seedNodeAddressesOldVersions;
 
     @Inject
     public CoreSeedNodesRepository(BisqEnvironment bisqEnvironment,
@@ -35,27 +32,17 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
                                    @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
         List<String> bannedNodes = bisqEnvironment.getBannedSeedNodes();
         Set<NodeAddress> nodeAddresses;
-        Set<NodeAddress> nodeAddressesOldVersions;
         if (seedNodes != null && !seedNodes.isEmpty()) {
             nodeAddresses = Arrays.asList(StringUtils.deleteWhitespace(seedNodes).split(","))
                     .stream()
                     .map(NodeAddress::new)
                     .collect(Collectors.toSet());
 
-            nodeAddressesOldVersions = new HashSet<>();
         } else {
             nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
             nodeAddresses = nodeAddresses.stream()
                     .filter(e -> String.valueOf(e.getPort()).endsWith("0" + String.valueOf(networkId)))
                     .collect(Collectors.toSet());
-
-            if (!useLocalhostForP2P) {
-                nodeAddressesOldVersions = torSeedNodeAddressesOldVersions.stream()
-                        .filter(e -> String.valueOf(e.getPort()).endsWith("0" + String.valueOf(networkId)))
-                        .collect(Collectors.toSet());
-            } else {
-                nodeAddressesOldVersions = new HashSet<>();
-            }
         }
 
         seedNodeAddresses = nodeAddresses.stream()
@@ -67,11 +54,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             log.info("seedNodeAddresses={}", seedNodeAddresses);
         else
             log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
-
-        seedNodeAddressesOldVersions = nodeAddressesOldVersions.stream()
-                .filter(e -> myAddress == null || myAddress.isEmpty() || !e.getFullAddress().equals(myAddress))
-                .filter(e -> bannedNodes == null || !bannedNodes.contains(e.getHostName()))
-                .collect(Collectors.toSet());
     }
 
     public String getOperator(NodeAddress nodeAddress) {
@@ -83,7 +65,7 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             case "s67qglwhkgkyvr74.onion:8000":
                 return "@emzy";
             case "jhgcy2won7xnslrb.onion:8000":
-                return "@sqrrm";
+                return "@ManfredKarrer";
             case "3f3cu2yw7u457ztq.onion:8000":
                 return "@ManfredKarrer";
             case "723ljisnynbtdohi.onion:8000":
@@ -106,7 +88,7 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             case "s67qglwhkgkyvr74.onion:8000":
                 return "@emzy";
             case "jhgcy2won7xnslrb.onion:8000":
-                return "@sqrrm";
+                return "@ManfredKarrer";
             case "3f3cu2yw7u457ztq.onion:8000":
                 return "@manfredkarrer";
             case "723ljisnynbtdohi.onion:8000":
@@ -120,15 +102,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
         }
     }
 
-    /* old nodes pre 0.6.0 (still running for 0.5.* versions */
-    private Set<NodeAddress> torSeedNodeAddressesOldVersions =
-            Sets.newHashSet(
-                    new NodeAddress("3f3cu2yw7u457ztq.onion:8000"), // @ManfredKarrer
-                    new NodeAddress("723ljisnynbtdohi.onion:8000"), // @ManfredKarrer
-                    new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @ManfredKarrer
-                    new NodeAddress("fl3mmribyxgrv63c.onion:8000")  // @ManfredKarrer
-            );
-
     // Addresses are used if their port match the network id:
     // - mainnet uses port 8000
     // - testnet uses port 8001
@@ -137,9 +110,13 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // BTC mainnet
             new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @mrosseel
-            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @ManfredKarrer
             new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy
-            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @sqrrm
+            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @ManfredKarrer
+            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @ManfredKarrer
+            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"), // @ManfredKarrer
+            new NodeAddress("723ljisnynbtdohi.onion:8000"), // @ManfredKarrer
+            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @ManfredKarrer
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"), // @ManfredKarrer
 
             //TODO dev
             // local dev

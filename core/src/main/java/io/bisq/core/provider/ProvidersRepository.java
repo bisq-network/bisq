@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 public class ProvidersRepository {
     private static final String NODES = "http://xc3nh4juf2hshy7e.onion/, " + // @emzy
             "http://ceaanhbvluug4we6.onion/, " +// @mrosseel
+            "http://44mgyoe2b6oqiytt.onion/, " +// @ManfredKarrer
+            "http://5bmpx76qllutpcyp.onion/, " +// @ManfredKarrer
             "http://rb2l2qale2pqzjyo.onion/";  // @sqrrm
-
-    // Old nodes before v 0.6.0: "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/"; @ManfredKarrer
 
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;

@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 // Managed here: https://github.com/bisq-network/roles/issues/39
 @Slf4j
@@ -44,23 +43,33 @@ public class BitcoinNodes {
     public List<BtcNode> getProvidedBtcNodes() {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
-                        BtcNode.fromHostNameAddressAndPort("kirsche.emzy.de", "78.47.61.83", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
-                        BtcNode.fromAddressAndPort("62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // used also for r3dsojfhwcm7x7p6, not used: c6ac4jdfyeiakex2
-                        BtcNode.fromAddressAndPort("163.172.171.119", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // not used: sjyzmwwu6diiit3r
+                        // ManfredKarrer
+                        new BtcNode("btc1.0-2-1.net", "r3dsojfhwcm7x7p6.onion", "159.89.16.222", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
+                        new BtcNode("btc2.0-2-1.net", "vlf5i3grro3wux24.onion", "165.227.34.56", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
+                        new BtcNode("btc3.0-2-1.net", "i3a5xtzfm4xwtybd.onion", "165.227.44.202", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
 
-                        BtcNode.fromHostNameAddressAndPort("bitcoin.christophatteneder.com", "174.138.35.229", BtcNode.DEFAULT_PORT, "https://github.com/ripcurlx"),
-                        BtcNode.fromHostNameAddressAndPort("btc.vante.me", "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
+                        // emzy
+                        new BtcNode("kirsche.emzy.de", null, "78.47.61.83", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
+                        new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
+                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "163.172.171.119", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
+                        new BtcNode(null, "poyvpdt762gllauu.onion", null, BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
 
-                        BtcNode.fromHostNameAddressAndPort("bitcoin4-fullnode.csg.uzh.ch", "192.41.136.217", BtcNode.DEFAULT_PORT, "https://github.com/tbocek"),
-                        BtcNode.fromHostNameAddressAndPort("bcwat.ch", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
-                        BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),
+                        // ripcurlx
+                        new BtcNode("bitcoin.christophatteneder.com", "lgkvbvro67jomosw.onion", "174.138.35.229", BtcNode.DEFAULT_PORT, "https://github.com/ripcurlx"),
 
-                        BtcNode.fromHostName("poyvpdt762gllauu.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // onion only
-                        BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // 62.75.210.81
-                        BtcNode.fromHostName("vlf5i3grro3wux24.onion", BtcNode.DEFAULT_PORT, "https://github.com/alexej996"), // onion only
-                        BtcNode.fromHostName("3r44ddzjitznyahw.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 185.25.48.184
-                        BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 80.233.134.60
-                        BtcNode.fromHostName("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel") // onion only*/
+                        // mrosseel
+                        new BtcNode("btc.vante.me", null, "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
+                        new BtcNode(null, "mxdtrjhe2yfsx3pg.onion", null, BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
+
+                        // sqrrm
+                        new BtcNode("btc4.0-2-1.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), //TODO change dns
+
+                        // sgeisler
+                        new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
+
+                        // others
+                        new BtcNode("btc.jochen-hoenicke.de", null, "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),
+                        new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "https://github.com/tbocek")
                 ) :
                 new ArrayList<>();
     }
@@ -75,6 +84,8 @@ public class BitcoinNodes {
         private static final int DEFAULT_PORT = BisqEnvironment.getParameters().getPort(); //8333
 
         @Nullable
+        private final String onionAddress;
+        @Nullable
         private final String hostName;
         @Nullable
         private final String operator; // null in case the user provides a list of custom btc nodes
@@ -83,69 +94,30 @@ public class BitcoinNodes {
         private int port = DEFAULT_PORT;
 
         /**
-         * @param fullAddress [hostName:port | IPv4 address:port]
+         * @param fullAddress [IPv4 address:port or onion:port]
          * @return BtcNode instance
          */
         public static BtcNode fromFullAddress(String fullAddress) {
             String[] parts = fullAddress.split(":");
             checkArgument(parts.length > 0);
-            if (parts.length == 1) {
-                return BtcNode.fromHostName(parts[0], DEFAULT_PORT, null);
-            } else {
-                checkArgument(parts.length == 2);
-                return BtcNode.fromHostNameAndPort(parts[0], Integer.valueOf(parts[1]), null);
-            }
+            final String host = parts[0];
+            int port = DEFAULT_PORT;
+            if (parts.length == 2)
+                port = Integer.valueOf(parts[1]);
+
+            return host.contains(".onion") ? new BtcNode(null, host, null, port, null) : new BtcNode(null, null, host, port, null);
         }
 
-        public static BtcNode fromHostName(String hostName, int port, @Nullable String operator) {
-            return new BtcNode(hostName, null, port, operator);
-        }
-
-        public static BtcNode fromAddress(String address, @Nullable String operator) {
-            return new BtcNode(null, address, operator);
-        }
-
-        public static BtcNode fromHostNameAndPort(String hostName, int port, @Nullable String operator) {
-            return new BtcNode(hostName, null, port, operator);
-        }
-
-        public static BtcNode fromHostNameAndAddress(String hostName, String address, @Nullable String operator) {
-            return new BtcNode(hostName, address, operator);
-        }
-
-        public static BtcNode fromHostNameAddressAndPort(String hostName, String address, int port, @Nullable String operator) {
-            return new BtcNode(hostName, address, port, operator);
-        }
-
-        public static BtcNode fromAddressAndPort(String address, int port, @Nullable String operator) {
-            return new BtcNode(null, address, port, operator);
-        }
-
-        private BtcNode(@Nullable String hostName, @Nullable String address, int port, @Nullable String operator) {
+        public BtcNode(@Nullable String hostName, @Nullable String onionAddress, @Nullable String address, int port, @Nullable String operator) {
             this.hostName = hostName;
+            this.onionAddress = onionAddress;
             this.address = address;
             this.port = port;
             this.operator = operator;
-
-            if (address == null)
-                checkNotNull(hostName, "hostName must not be null if address is null");
-            else if (hostName == null)
-                checkNotNull(address, "address must not be null if hostName is null");
         }
 
-        private BtcNode(@Nullable String hostName, @Nullable String address, @Nullable String operator) {
-            this.hostName = hostName;
-            this.address = address;
-            this.operator = operator;
-
-            if (address == null)
-                checkNotNull(hostName, "hostName must not be null if address is null");
-            else if (hostName == null)
-                checkNotNull(address, "address must not be null if hostName is null");
-        }
-
-        public boolean isHiddenService() {
-            return hostName != null && hostName.endsWith("onion");
+        public boolean hasOnionAddress() {
+            return onionAddress != null;
         }
 
         public String getHostNameOrAddress() {
@@ -155,9 +127,8 @@ public class BitcoinNodes {
                 return address;
         }
 
-        public String getHostNameOrAddressWithPort() {
-            log.error(getHostNameOrAddress() + ":" + port);
-            return getHostNameOrAddress() + ":" + port;
+        public boolean hasClearNetAddress() {
+            return hostName != null || address != null;
         }
     }
 }
