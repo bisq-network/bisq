@@ -1,4 +1,4 @@
-package io.bisq.seednode_monitor.request;
+package io.bisq.seednode_monitor.metrics;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -21,7 +21,6 @@ import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
-import io.bisq.seednode_monitor.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -111,14 +110,14 @@ class MonitorRequestHandler implements MessageListener {
                     },
                     TIMEOUT_SEC);
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            log.info("We send a PreliminaryGetDataRequest to peer {}. ", nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Send " + getDataRequest + " to " + nodeAddress + " has succeeded.");
+                        log.info("Send PreliminaryGetDataRequest to " + nodeAddress + " has succeeded.");
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");

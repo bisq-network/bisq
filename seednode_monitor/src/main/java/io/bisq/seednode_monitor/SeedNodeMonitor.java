@@ -20,6 +20,7 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.seednode_monitor.metrics.MetricsModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -36,7 +37,7 @@ public class SeedNodeMonitor {
 
     private static SeedNodeMonitorEnvironment environment;
     @Getter
-    private final MetricsByNodeAddressMap metricsByNodeAddressMap;
+    private final MetricsModel metricsService;
 
     public static void setEnvironment(SeedNodeMonitorEnvironment environment) {
         SeedNodeMonitor.environment = environment;
@@ -96,7 +97,7 @@ public class SeedNodeMonitor {
         seedNodeModule = new SeedNodeMonitorModule(environment);
         injector = Guice.createInjector(seedNodeModule);
 
-        metricsByNodeAddressMap = injector.getInstance(MetricsByNodeAddressMap.class);
+        metricsService = injector.getInstance(MetricsModel.class);
 
         MonitorAppSetup appSetup = injector.getInstance(MonitorAppSetup.class);
         appSetup.start();

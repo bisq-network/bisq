@@ -1,6 +1,5 @@
-package io.bisq.seednode_monitor.request;
+package io.bisq.seednode_monitor.metrics;
 
-import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.network.p2p.NodeAddress;
@@ -10,8 +9,6 @@ import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.seednode_monitor.Metrics;
-import io.bisq.seednode_monitor.MetricsByNodeAddressMap;
 import io.bisq.seednode_monitor.MonitorOptionKeys;
 import lombok.extern.slf4j.Slf4j;
 import net.gpedro.integrations.slack.SlackApi;
@@ -24,10 +21,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MonitorRequestManager implements ConnectionListener {
-    private static final long RETRY_DELAY_SEC = 30;
+    private static final long RETRY_DELAY_SEC = 20;
     private static final long CLEANUP_TIMER = 60;
     private static final long REQUEST_PERIOD_MIN = 10;
-    private static final int MAX_RETRIES = 4;
+    private static final int MAX_RETRIES = 6;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -35,11 +32,12 @@ public class MonitorRequestManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
+    private final int numNodes;
+
     private SlackApi slackApi;
     private P2PDataStorage dataStorage;
     private SeedNodesRepository seedNodesRepository;
-    private MetricsByNodeAddressMap metricsByNodeAddressMap;
-    private Clock clock;
+    private MetricsModel metricsModel;
     private final Set<NodeAddress> seedNodeAddresses;
 
     private final Map<NodeAddress, MonitorRequestHandler> handlerMap = new HashMap<>();
@@ -47,7 +45,7 @@ public class MonitorRequestManager implements ConnectionListener {
     private Map<NodeAddress, Integer> retryCounterMap = new HashMap<>();
     private boolean stopped;
     private Set<NodeAddress> nodesInError = new HashSet<>();
-
+    private int completedRequestIndex;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -57,21 +55,20 @@ public class MonitorRequestManager implements ConnectionListener {
     public MonitorRequestManager(NetworkNode networkNode,
                                  P2PDataStorage dataStorage,
                                  SeedNodesRepository seedNodesRepository,
-                                 MetricsByNodeAddressMap metricsByNodeAddressMap,
-                                 Clock clock,
+                                 MetricsModel metricsModel,
                                  @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.seedNodesRepository = seedNodesRepository;
-        this.metricsByNodeAddressMap = metricsByNodeAddressMap;
-        this.clock = clock;
+        this.metricsModel = metricsModel;
 
         if (!slackUrlSeedChannel.isEmpty())
             slackApi = new SlackApi(slackUrlSeedChannel);
         this.networkNode.addConnectionListener(this);
 
         seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
-        seedNodeAddresses.stream().forEach(nodeAddress -> metricsByNodeAddressMap.put(nodeAddress, new Metrics()));
+        seedNodeAddresses.stream().forEach(nodeAddress -> metricsModel.addToMap(nodeAddress, new Metrics()));
+        numNodes = seedNodeAddresses.size();
     }
 
     public void shutDown() {
@@ -87,39 +84,21 @@ public class MonitorRequestManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        // We want get the logs each 10 minutes
-        clock.start();
-        clock.addListener(new Clock.Listener() {
-            @Override
-            public void onSecondTick() {
-            }
-
-            @Override
-            public void onMinuteTick() {
-                 processOnMinuteTick();
-            }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
-        });
+        requestAllNodes();
+        UserThread.runPeriodically(this::requestAllNodes, REQUEST_PERIOD_MIN, TimeUnit.MINUTES);
     }
 
-    private void processOnMinuteTick() {
-        long minutes = System.currentTimeMillis() / 1000 / 60;
-        final long currentTimeMillis = System.currentTimeMillis();
-        if (minutes % REQUEST_PERIOD_MIN == 0) {
-            stopAllRetryTimers();
-            closeAllConnections();
+    private void requestAllNodes() {
+        stopAllRetryTimers();
+        closeAllConnections();
+        // we give 1 sec. for all connection shutdown
+        final int[] delay = {1000};
+        metricsModel.setLastCheckTs(System.currentTimeMillis());
 
-            // we give 1 sec. for all connection shutdown
-            final int[] delay = {1000};
-            metricsByNodeAddressMap.setLastCheckTs(currentTimeMillis);
-            seedNodeAddresses.stream().forEach(nodeAddress -> {
-                UserThread.runAfter(() -> requestData(nodeAddress), delay[0], TimeUnit.MILLISECONDS);
-                delay[0] += 100;
-            });
-        }
+        seedNodeAddresses.stream().forEach(nodeAddress -> {
+            UserThread.runAfter(() -> requestFromNode(nodeAddress), delay[0], TimeUnit.MILLISECONDS);
+            delay[0] += 100;
+        });
     }
 
 
@@ -145,12 +124,12 @@ public class MonitorRequestManager implements ConnectionListener {
     // RequestData
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestData(NodeAddress nodeAddress) {
+    private void requestFromNode(NodeAddress nodeAddress) {
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 MonitorRequestHandler requestDataHandler = new MonitorRequestHandler(networkNode,
                         dataStorage,
-                        metricsByNodeAddressMap.get(nodeAddress),
+                        metricsModel.getMetrics(nodeAddress),
                         new MonitorRequestHandler.Listener() {
                             @Override
                             public void onComplete() {
@@ -162,8 +141,10 @@ public class MonitorRequestManager implements ConnectionListener {
                                 // need to remove before listeners are notified as they cause the update call
                                 handlerMap.remove(nodeAddress);
 
-                                metricsByNodeAddressMap.updateReport();
-                                metricsByNodeAddressMap.log();
+                                metricsModel.updateReport();
+                                completedRequestIndex++;
+                                if (completedRequestIndex == numNodes)
+                                    metricsModel.log();
 
                                 if (nodesInError.contains(nodeAddress)) {
                                     nodesInError.remove(nodeAddress);
@@ -176,9 +157,6 @@ public class MonitorRequestManager implements ConnectionListener {
                             @Override
                             public void onFault(String errorMessage, NodeAddress nodeAddress) {
                                 handlerMap.remove(nodeAddress);
-                                metricsByNodeAddressMap.updateReport();
-                                metricsByNodeAddressMap.log();
-
                                 int retryCounter;
                                 if (retryCounterMap.containsKey(nodeAddress))
                                     retryCounter = retryCounterMap.get(nodeAddress);
@@ -186,10 +164,14 @@ public class MonitorRequestManager implements ConnectionListener {
                                     retryCounter = 0;
 
                                 if (retryCounter < MAX_RETRIES) {
-                                    final Timer timer = UserThread.runAfter(() -> requestData(nodeAddress), RETRY_DELAY_SEC);
+                                    final Timer timer = UserThread.runAfter(() -> requestFromNode(nodeAddress), RETRY_DELAY_SEC);
                                     retryTimerMap.put(nodeAddress, timer);
                                     retryCounterMap.put(nodeAddress, ++retryCounter);
                                 } else {
+                                    metricsModel.updateReport();
+                                    completedRequestIndex++;
+                                    if (completedRequestIndex == numNodes)
+                                        metricsModel.log();
                                     nodesInError.add(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),

@@ -99,7 +99,7 @@ public class SeedNodeMonitorMain extends BisqExecutable {
         port(8080);
         get("/", (req, res) -> {
             log.info("Incoming request from: " + req.userAgent());
-            return seedNodeMonitor.getMetricsByNodeAddressMap().getResultAsHtml();
+            return seedNodeMonitor.getMetricsService().getResultAsHtml();
         });
 
         new SeedNodeMonitorMain().execute(args);

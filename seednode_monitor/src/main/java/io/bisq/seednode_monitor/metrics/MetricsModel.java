@@ -15,11 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.seednode_monitor.metrics;
 
 import io.bisq.common.util.MathUtils;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.seednode_monitor.MonitorOptionKeys;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
+public class MetricsModel {
     private SlackApi slackApi;
     @Getter
     private String resultAsString;
@@ -42,26 +43,34 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
     @Setter
     private long lastCheckTs;
     private int totalErrors = 0;
+    private HashMap<NodeAddress, Metrics> map = new HashMap<>();
 
     @Inject
-    public MetricsByNodeAddressMap(SeedNodesRepository seedNodesRepository,
-                                   @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
+    public MetricsModel(SeedNodesRepository seedNodesRepository,
+                        @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
         this.seedNodesRepository = seedNodesRepository;
         if (!slackUrlSeedChannel.isEmpty())
             slackApi = new SlackApi(slackUrlSeedChannel);
     }
 
+    public void addToMap(NodeAddress nodeAddress, Metrics metrics) {
+        map.put(nodeAddress, metrics);
+    }
+
+    public Metrics getMetrics(NodeAddress nodeAddress) {
+        return map.get(nodeAddress);
+    }
 
     public void updateReport() {
         Map<String, Double> accumulatedValues = new HashMap<>();
         final double[] items = {0};
-        List<Entry<NodeAddress, Metrics>> entryList = entrySet().stream()
+        List<Map.Entry<NodeAddress, Metrics>> entryList = map.entrySet().stream()
                 .sorted(Comparator.comparing(entrySet -> seedNodesRepository.getOperator(entrySet.getKey())))
                 .collect(Collectors.toList());
 
         totalErrors = 0;
         entryList.stream().forEach(e -> {
-            totalErrors += e.getValue().errorMessages.size();
+            totalErrors += e.getValue().errorMessages.stream().filter(s -> !s.isEmpty()).count();
             final List<Map<String, Integer>> receivedObjectsList = e.getValue().getReceivedObjectsList();
             if (!receivedObjectsList.isEmpty()) {
                 items[0] += 1;
@@ -109,7 +118,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
 
         StringBuilder sb = new StringBuilder();
         sb.append("Seed nodes in error:" + totalErrors);
-        sb.append("\nLast check started at: " + time);
+        sb.append("\nLast check started at: " + time + "\n");
 
         entryList.stream().forEach(e -> {
             final List<Long> allDurations = e.getValue().getRequestDurations();
@@ -182,8 +191,8 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                                             "Please check the monitoring status page at http://seedmonitor.0-2-1.net:8080/"));
                     }
                 });
-                sb.append("\nDuration all requests: ").append(allDurationsString)
-                        .append("\nAll data: ").append(allReceivedDataString);
+                sb.append("Duration all requests: ").append(allDurationsString)
+                        .append("\nAll data: ").append(allReceivedDataString).append("\n");
 
                 html.append("</td></tr>");
             }
@@ -191,12 +200,11 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
         html.append("</table></body></html>");
         resultAsString = sb.toString();
         resultAsHtml = html.toString();
-        log();
     }
 
     public void log() {
-        log.info("\n#################################################################\n" +
+        log.info("\n\n#################################################################\n" +
                 resultAsString +
-                "\n#################################################################\n\n");
+                "#################################################################\n\n");
     }
 }

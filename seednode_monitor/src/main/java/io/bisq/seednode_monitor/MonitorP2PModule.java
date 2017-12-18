@@ -32,6 +32,7 @@ import io.bisq.network.p2p.peers.getdata.RequestDataManager;
 import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bisq.network.p2p.storage.P2PDataStorage;
+import io.bisq.seednode_monitor.metrics.MetricsModel;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
@@ -47,7 +48,7 @@ public class MonitorP2PModule extends AppModule {
 
     @Override
     protected void configure() {
-        bind(MetricsByNodeAddressMap.class).in(Singleton.class);
+        bind(MetricsModel.class).in(Singleton.class);
         bind(MonitorP2PService.class).in(Singleton.class);
 
         bind(PeerManager.class).in(Singleton.class);
