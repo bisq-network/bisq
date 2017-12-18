@@ -81,6 +81,11 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             averageValues.put(e.getKey(), e.getValue() / items[0]);
         });
 
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTimeZone(TimeZone.getTimeZone("CET"));
+        calendar.setTimeInMillis(lastCheckTs);
+        final String time = calendar.getTime().toString();
+
         StringBuilder html = new StringBuilder();
         html.append("<html>" +
                 "<head>" +
@@ -89,7 +94,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                 "<body>" +
                 "<h1>")
                 .append("Seed nodes in error: <b>" + totalErrors + "</b><br/>" +
-                        "Last check started at: " + new Date(lastCheckTs).toString() + "<br/>" +
+                        "Last check started at: " + time + "<br/>" +
                         "<table style=\"width:100%\">" +
                         "<tr>" +
                         "<th align=\"left\">Operator</th>" +
@@ -113,7 +118,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             final NodeAddress nodeAddress = e.getKey();
             final String operator = seedNodesRepository.getOperator(nodeAddress);
             final List<String> errorMessages = e.getValue().getErrorMessages();
-            final int numErrors = errorMessages.size();
+            final int numErrors = (int) errorMessages.stream().filter(s -> !s.isEmpty()).count();
             int numRequests = allDurations.size();
             final String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "";
             final List<Map<String, Integer>> allReceivedData = e.getValue().getReceivedObjectsList();
