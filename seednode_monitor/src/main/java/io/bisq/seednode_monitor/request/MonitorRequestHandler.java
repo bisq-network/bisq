@@ -199,12 +199,18 @@ class MonitorRequestHandler implements MessageListener {
                             (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
                     sb.append("Received ").append(items).append(" instances\n");
                     Map<String, Integer> receivedObjects = new HashMap<>();
+                    final boolean[] arbitratorReceived = new boolean[1];
                     payloadByClassName.entrySet().stream().forEach(e -> {
-                        sb.append(e.getKey())
+                        final String dataItemName = e.getKey();
+                        // We expect always at least an Arbitrator
+                        if (!arbitratorReceived[0] && dataItemName.equals("Arbitrator"))
+                            arbitratorReceived[0] = true;
+
+                        sb.append(dataItemName)
                                 .append(": ")
                                 .append(e.getValue().size())
                                 .append("\n");
-                        receivedObjects.put(e.getKey(), e.getValue().size());
+                        receivedObjects.put(dataItemName, e.getValue().size());
                     });
                     sb.append("#################################################################");
                     log.info(sb.toString());
@@ -213,6 +219,8 @@ class MonitorRequestHandler implements MessageListener {
                     final long duration = new Date().getTime() - requestTs;
                     log.info("Requesting data took {} ms", duration);
                     metric.getRequestDurations().add(duration);
+                    metric.getErrorMessages().add(arbitratorReceived[0] ? "" : "No Arbitrator objects received! Seed node need to be restarted!");
+
                     cleanup();
                     connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, listener::onComplete);
                 } else {
@@ -246,7 +254,7 @@ class MonitorRequestHandler implements MessageListener {
                 .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress))
                 .forEach(c -> c.shutDown(closeConnectionReason));
 
-        listener.onFault(errorMessage,  nodeAddress);
+        listener.onFault(errorMessage, nodeAddress);
     }
 
     private void cleanup() {

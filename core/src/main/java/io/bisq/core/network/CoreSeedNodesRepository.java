@@ -97,6 +97,29 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
         }
     }
 
+    public String getSlackUser(NodeAddress nodeAddress) {
+        switch (nodeAddress.getFullAddress()) {
+            case "5quyxpxheyvzmb2d.onion:8000":
+                return "@miker";
+            case "ef5qnzx6znifo3df.onion:8000":
+                return "@manfredkarrer";
+            case "s67qglwhkgkyvr74.onion:8000":
+                return "@emzy";
+            case "jhgcy2won7xnslrb.onion:8000":
+                return "@sqrrm";
+            case "3f3cu2yw7u457ztq.onion:8000":
+                return "@manfredkarrer";
+            case "723ljisnynbtdohi.onion:8000":
+                return "@manfredkarrer";
+            case "rm7b56wbrcczpjvl.onion:8000":
+                return "@manfredkarrer";
+            case "fl3mmribyxgrv63c.onion:8000":
+                return "@manfredkarrer";
+            default:
+                return "Undefined";
+        }
+    }
+
     /* old nodes pre 0.6.0 (still running for 0.5.* versions */
     private Set<NodeAddress> torSeedNodeAddressesOldVersions =
             Sets.newHashSet(

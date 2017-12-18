@@ -59,6 +59,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                 .sorted(Comparator.comparing(entrySet -> seedNodesRepository.getOperator(entrySet.getKey())))
                 .collect(Collectors.toList());
 
+        totalErrors = 0;
         entryList.stream().forEach(e -> {
             totalErrors += e.getValue().errorMessages.size();
             final List<Map<String, Integer>> receivedObjectsList = e.getValue().getReceivedObjectsList();
@@ -113,12 +114,12 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
             final String operator = seedNodesRepository.getOperator(nodeAddress);
             final List<String> errorMessages = e.getValue().getErrorMessages();
             final int numErrors = errorMessages.size();
-            final String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "-";
+            int numRequests = allDurations.size();
+            final String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "";
             final List<Map<String, Integer>> allReceivedData = e.getValue().getReceivedObjectsList();
             Map<String, Integer> lastReceivedData = !allReceivedData.isEmpty() ? allReceivedData.get(allReceivedData.size() - 1) : new HashMap<>();
             final String lastReceivedDataString = lastReceivedData.entrySet().stream().map(Object::toString).collect(Collectors.joining("<br/>"));
             final String allReceivedDataString = allReceivedData.stream().map(Object::toString).collect(Collectors.joining("<br/>"));
-            int numRequests = allDurations.size();
 
             sb.append("\nOperator: ").append(operator)
                     .append("\nNode address: ").append(nodeAddress)
@@ -128,7 +129,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     .append("\nDuration average: ").append(durationAverage)
                     .append("\nLast data: ").append(lastReceivedDataString);
 
-            String colorNumErrors = numErrors == 0 ? "black" : "red";
+            String colorNumErrors = lastErrorMsg.isEmpty() ? "black" : "red";
             String colorDurationAverage = durationAverage < 30 ? "black" : "red";
             html.append("<tr>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + operator + "</font> ").append("</td>")
@@ -160,7 +161,7 @@ public class MetricsByNodeAddressMap extends HashMap<NodeAddress, Metrics> {
                     if (devAbs >= 20) {
                         if (slackApi != null)
                             slackApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
-                                    "<" + operator + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
+                                    "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
                                             "Please check the monitoring status page at http://178.62.249.232:8080/"));
                     }
                 });

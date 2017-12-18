@@ -20,6 +20,7 @@ package io.bisq.core.btc;
 import io.bisq.core.app.BisqEnvironment;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Managed here: https://github.com/bisq-network/roles/issues/39
+@Slf4j
 public class BitcoinNodes {
 
     public enum BitcoinNodesOption {
@@ -53,12 +55,12 @@ public class BitcoinNodes {
                         BtcNode.fromHostNameAddressAndPort("bcwat.ch", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
                         BtcNode.fromHostNameAddressAndPort("btc.jochen-hoenicke.de", "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),
 
-                        BtcNode.fromOnion("poyvpdt762gllauu.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // onion only
-                        BtcNode.fromOnion("r3dsojfhwcm7x7p6.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // 62.75.210.81
-                        BtcNode.fromOnion("vlf5i3grro3wux24.onion", BtcNode.DEFAULT_PORT, "https://github.com/alexej996"), // onion only
-                        BtcNode.fromOnion("3r44ddzjitznyahw.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 185.25.48.184
-                        BtcNode.fromOnion("i3a5xtzfm4xwtybd.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 80.233.134.60
-                        BtcNode.fromOnion("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel") // onion only
+                        BtcNode.fromHostName("poyvpdt762gllauu.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // onion only
+                        BtcNode.fromHostName("r3dsojfhwcm7x7p6.onion", BtcNode.DEFAULT_PORT, "https://github.com/emzy"), // 62.75.210.81
+                        BtcNode.fromHostName("vlf5i3grro3wux24.onion", BtcNode.DEFAULT_PORT, "https://github.com/alexej996"), // onion only
+                        BtcNode.fromHostName("3r44ddzjitznyahw.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 185.25.48.184
+                        BtcNode.fromHostName("i3a5xtzfm4xwtybd.onion", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), // not used: 80.233.134.60
+                        BtcNode.fromHostName("mxdtrjhe2yfsx3pg.onion", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel") // onion only*/
                 ) :
                 new ArrayList<>();
     }
@@ -88,14 +90,14 @@ public class BitcoinNodes {
             String[] parts = fullAddress.split(":");
             checkArgument(parts.length > 0);
             if (parts.length == 1) {
-                return BtcNode.fromOnion(parts[0], DEFAULT_PORT, null);
+                return BtcNode.fromHostName(parts[0], DEFAULT_PORT, null);
             } else {
                 checkArgument(parts.length == 2);
                 return BtcNode.fromHostNameAndPort(parts[0], Integer.valueOf(parts[1]), null);
             }
         }
 
-        public static BtcNode fromOnion(String hostName, int port, @Nullable String operator) {
+        public static BtcNode fromHostName(String hostName, int port, @Nullable String operator) {
             return new BtcNode(hostName, null, port, operator);
         }
 
@@ -146,11 +148,16 @@ public class BitcoinNodes {
             return hostName != null && hostName.endsWith("onion");
         }
 
-        public String getHostAddressOrHostName() {
-            if (address != null)
-                return address;
-            else
+        public String getHostNameOrAddress() {
+            if (hostName != null)
                 return hostName;
+            else
+                return address;
+        }
+
+        public String getHostNameOrAddressWithPort() {
+            log.error(getHostNameOrAddress() + ":" + port);
+            return getHostNameOrAddress() + ":" + port;
         }
     }
 }

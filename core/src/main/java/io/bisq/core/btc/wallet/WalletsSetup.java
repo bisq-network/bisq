@@ -318,7 +318,7 @@ public class WalletsSetup {
                                 try {
                                     // We use DnsLookupTor to not leak with DNS lookup
                                     // Blocking call. takes about 600 ms ;-(
-                                    InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getHostAddressOrHostName()), btcNode.getPort());
+                                    InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getHostNameOrAddress()), btcNode.getPort());
                                     log.info("We add a clear net node (tor is used)  with InetAddress={}, btcNode={}", address.getAddress(), btcNode);
                                     peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
                                 } catch (Exception e) {
@@ -330,8 +330,8 @@ public class WalletsSetup {
                             // onion addresses are not supported
                             try {
                                 if (!btcNode.isHiddenService()) {
-                                    InetSocketAddress address = new InetSocketAddress(btcNode.getHostAddressOrHostName(), btcNode.getPort());
-                                    log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostAddressOrHostName(), btcNode.getPort());
+                                    InetSocketAddress address = new InetSocketAddress(btcNode.getHostNameOrAddress(), btcNode.getPort());
+                                    log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
                                     peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
                                 } else {
                                     log.warn("Onion addresses are only supported when using Tor with BitcoinJ. Ignore btcNode {}", btcNode);

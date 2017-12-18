@@ -170,7 +170,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                     nodesInError.remove(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Fixed: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
+                                                "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node is recovered."));
                                 }
                             }
 
@@ -194,7 +194,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                     nodesInError.add(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
+                                                "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
                                 }
                             }
                         });
