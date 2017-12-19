@@ -249,6 +249,7 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("BTG");
         // v0.6.2
         coinsWithValidator.add("CAGE");
+        coinsWithValidator.add("CRED");
 
 
         Set<String> newlyAdded = new HashSet<>();
@@ -269,6 +270,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("BTG");
         // v0.6.2
         newlyAdded.add("CAGE");
+        newlyAdded.add("CRED");
 
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()

@@ -412,7 +412,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("1HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSH#").isValid);
         assertFalse(validator.validate("").isValid);
     }
-	
+
 	@Test
     public void testCAGE() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -426,6 +426,20 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq").isValid);
         assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d1641353982266").isValid);
 		assertFalse(validator.validate("DNkkfdUvkCDiywYE98MTVp9nQJTgeZAiFr").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
+
+    @Test
+    public void testCRED() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("CRED");
+
+        assertTrue(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a21").isValid);
+        assertTrue(validator.validate("65767ec6d4d3d18a200842352485cdc37cbf3a21").isValid);
+
+        assertFalse(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a216").isValid);
+        assertFalse(validator.validate("0x65767ec6d4d3d18a200842352485cdc37cbf3a2g").isValid);
+        assertFalse(validator.validate("65767ec6d4d3d18a200842352485cdc37cbf3a2g").isValid);
         assertFalse(validator.validate("").isValid);
     }
 }

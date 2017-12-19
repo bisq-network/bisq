@@ -379,6 +379,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
+                case "CRED":
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
                     // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
