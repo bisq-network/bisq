@@ -20,7 +20,6 @@ package io.bisq.core.offer.placeoffer;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
-import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
@@ -76,8 +75,7 @@ public class PlaceOfferProtocol {
         taskRunner.addTasks(
                 ValidateOffer.class,
                 CreateMakerFeeTx.class,
-                AddOfferToRemoteOfferBook.class,
-                BroadcastMakerFeeTx.class
+                AddOfferToRemoteOfferBook.class
         );
 
         taskRunner.run();
