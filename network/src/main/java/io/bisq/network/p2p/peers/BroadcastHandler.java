@@ -26,7 +26,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static final Logger log = LoggerFactory.getLogger(BroadcastHandler.class);
-    private static final long TIMEOUT_PER_PEER_SEC = 30;
+    private static final long TIMEOUT_PER_PEER_SEC = 60;
 
     interface ResultHandler {
         void onCompleted(BroadcastHandler broadcastHandler);

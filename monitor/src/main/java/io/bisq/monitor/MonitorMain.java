@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bisq.common.UserThread;
@@ -44,10 +44,10 @@ import static spark.Spark.get;
 import static spark.Spark.port;
 
 @Slf4j
-public class SeedNodeMonitorMain extends BisqExecutable {
+public class MonitorMain extends BisqExecutable {
     private static final long MAX_MEMORY_MB_DEFAULT = 1024;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
-    private static SeedNodeMonitor seedNodeMonitor;
+    private static Monitor seedNodeMonitor;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
@@ -87,26 +87,26 @@ public class SeedNodeMonitorMain extends BisqExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        SeedNodeMonitorEnvironment environment = getEnvironment(options);
+        MonitorEnvironment environment = getEnvironment(options);
 
         // need to call that before BisqAppMain().execute(args)
         BisqExecutable.initAppDir(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-        Thread.currentThread().setContextClassLoader(SeedNodeMonitorMain.class.getClassLoader());
+        Thread.currentThread().setContextClassLoader(MonitorMain.class.getClassLoader());
 
         port(8080);
         get("/", (req, res) -> {
             log.info("Incoming request from: " + req.userAgent());
-            return seedNodeMonitor.getMetricsByNodeAddressMap().getResultAsHtml();
+            return seedNodeMonitor.getMetricsModel().getResultAsHtml();
         });
 
-        new SeedNodeMonitorMain().execute(args);
+        new MonitorMain().execute(args);
     }
 
-    public static SeedNodeMonitorEnvironment getEnvironment(OptionSet options) {
-        return new SeedNodeMonitorEnvironment(checkNotNull(options));
+    public static MonitorEnvironment getEnvironment(OptionSet options) {
+        return new MonitorEnvironment(checkNotNull(options));
     }
 
     @Override
@@ -116,17 +116,23 @@ public class SeedNodeMonitorMain extends BisqExecutable {
         parser.accepts(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL,
                 description("Set slack secret for seed node monitor", ""))
                 .withRequiredArg();
+        parser.accepts(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL,
+                description("Set slack secret for Btc node monitor", ""))
+                .withRequiredArg();
+        parser.accepts(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL,
+                description("Set slack secret for provider node monitor", ""))
+                .withRequiredArg();
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
-        final SeedNodeMonitorEnvironment environment = getEnvironment(options);
-        SeedNodeMonitor.setEnvironment(environment);
+        final MonitorEnvironment environment = getEnvironment(options);
+        Monitor.setEnvironment(environment);
 
         UserThread.execute(() -> {
             try {
-                seedNodeMonitor = new SeedNodeMonitor();
+                seedNodeMonitor = new Monitor();
             } catch (Exception e) {
                 e.printStackTrace();
             }

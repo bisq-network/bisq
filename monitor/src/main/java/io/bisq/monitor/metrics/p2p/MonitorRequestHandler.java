@@ -1,4 +1,4 @@
-package io.bisq.seednode_monitor.request;
+package io.bisq.monitor.metrics.p2p;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -9,6 +9,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.monitor.metrics.Metrics;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -21,7 +22,6 @@ import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
-import io.bisq.seednode_monitor.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 class MonitorRequestHandler implements MessageListener {
-    private static final long TIME_OUT_SEC = 120;
+    private static final long TIMEOUT_SEC = 120;
     private NodeAddress peersNodeAddress;
     private long requestTs;
 
@@ -109,16 +109,16 @@ class MonitorRequestHandler implements MessageListener {
                                     "Might be caused by an previous networkNode.sendMessage.onFailure.");
                         }
                     },
-                    TIME_OUT_SEC);
+                    TIMEOUT_SEC);
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            log.info("We send a PreliminaryGetDataRequest to peer {}. ", nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Send " + getDataRequest + " to " + nodeAddress + " has succeeded.");
+                        log.info("Send PreliminaryGetDataRequest to " + nodeAddress + " has succeeded.");
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -199,12 +199,18 @@ class MonitorRequestHandler implements MessageListener {
                             (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
                     sb.append("Received ").append(items).append(" instances\n");
                     Map<String, Integer> receivedObjects = new HashMap<>();
+                    final boolean[] arbitratorReceived = new boolean[1];
                     payloadByClassName.entrySet().stream().forEach(e -> {
-                        sb.append(e.getKey())
+                        final String dataItemName = e.getKey();
+                        // We expect always at least an Arbitrator
+                        if (!arbitratorReceived[0] && dataItemName.equals("Arbitrator"))
+                            arbitratorReceived[0] = true;
+
+                        sb.append(dataItemName)
                                 .append(": ")
                                 .append(e.getValue().size())
                                 .append("\n");
-                        receivedObjects.put(e.getKey(), e.getValue().size());
+                        receivedObjects.put(dataItemName, e.getValue().size());
                     });
                     sb.append("#################################################################");
                     log.info(sb.toString());
@@ -213,6 +219,8 @@ class MonitorRequestHandler implements MessageListener {
                     final long duration = new Date().getTime() - requestTs;
                     log.info("Requesting data took {} ms", duration);
                     metric.getRequestDurations().add(duration);
+                    metric.getErrorMessages().add(arbitratorReceived[0] ? "" : "No Arbitrator objects received! Seed node need to be restarted!");
+
                     cleanup();
                     connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, listener::onComplete);
                 } else {
@@ -246,7 +254,7 @@ class MonitorRequestHandler implements MessageListener {
                 .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress))
                 .forEach(c -> c.shutDown(closeConnectionReason));
 
-        listener.onFault(errorMessage,  nodeAddress);
+        listener.onFault(errorMessage, nodeAddress);
     }
 
     private void cleanup() {

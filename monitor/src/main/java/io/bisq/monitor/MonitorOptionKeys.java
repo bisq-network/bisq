@@ -15,10 +15,11 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 public class MonitorOptionKeys {
 
     public static final String SLACK_URL_SEED_CHANNEL = "slackUrlSeedChannel";
-
+    public static final String SLACK_BTC_SEED_CHANNEL = "slackUrlBtcChannel";
+    public static final String SLACK_PROVIDER_SEED_CHANNEL = "slackUrlProviderChannel";
 }

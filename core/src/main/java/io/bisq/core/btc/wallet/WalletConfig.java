@@ -57,8 +57,6 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 10 nodes
-    private static final int DEFAULT_CONNECTIONS = 10;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -84,6 +82,8 @@ public class WalletConfig extends AbstractIdleService {
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
     private final BisqEnvironment bisqEnvironment;
+    private final String userAgent;
+    private int numConnectionForBtc;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -116,10 +116,14 @@ public class WalletConfig extends AbstractIdleService {
                         Socks5Proxy socks5Proxy,
                         File directory,
                         BisqEnvironment bisqEnvironment,
+                        String userAgent,
+                        int numConnectionForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.bisqEnvironment = bisqEnvironment;
+        this.userAgent = userAgent;
+        this.numConnectionForBtc = numConnectionForBtc;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -186,7 +190,7 @@ public class WalletConfig extends AbstractIdleService {
                     new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
                             socks5Proxy.getPort()));
 
-            int CONNECT_TIMEOUT_MSEC = 60 * 1000;  // same value used in bitcoinj.
+            int CONNECT_TIMEOUT_MSEC = 120 * 1000;  // 60 used in bitcoinj, but for Tor we allow more.
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // we dont use tor mode if we have a local node running
             BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
@@ -197,7 +201,6 @@ public class WalletConfig extends AbstractIdleService {
 
             blockingClientManager.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
             peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
-            peerGroup.setUserAgent("Bisq", Version.VERSION);
 
             return peerGroup;
         }
@@ -411,15 +414,14 @@ public class WalletConfig extends AbstractIdleService {
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
 
-            // protect privacy and don't send agent info
-            /*if (this.userAgent != null)
-                vPeerGroup.setUserAgent(userAgent, version);*/
+            vPeerGroup.setUserAgent(userAgent, Version.VERSION);
 
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                vPeerGroup.setMaxConnections(Math.min(DEFAULT_CONNECTIONS, peerAddresses.length));
+                log.info("We try to connect to {} btc nodes", numConnectionForBtc);
+                vPeerGroup.setMaxConnections(Math.min(numConnectionForBtc, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));

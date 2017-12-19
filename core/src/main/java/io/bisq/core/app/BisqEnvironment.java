@@ -169,7 +169,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String appName;
     protected final String userDataDir;
     protected final String appDataDir;
-    protected final String btcNetworkDir;
+    protected final String btcNetworkDir, userAgent;
     protected final String logLevel, providers;
     @Getter
     @Setter
@@ -180,7 +180,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            socks5ProxyHttpAddress;
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc;
 
 
     public BisqEnvironment(OptionSet options) {
@@ -267,6 +267,15 @@ public class BisqEnvironment extends StandardEnvironment {
         useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
+        userAgent = commandLineProperties.containsProperty(BtcOptionKeys.USER_AGENT) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USER_AGENT) :
+                "Bisq";
+        useAllProvidedNodes = commandLineProperties.containsProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES) :
+                "";
+        numConnectionForBtc = commandLineProperties.containsProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) :
+                "8";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -407,6 +416,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
                 setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
+                setProperty(BtcOptionKeys.USER_AGENT, userAgent);
+                setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
+                setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

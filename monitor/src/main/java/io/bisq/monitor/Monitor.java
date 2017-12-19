@@ -1,4 +1,4 @@
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
@@ -20,6 +20,8 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.monitor.metrics.MetricsModel;
+import io.bisq.monitor.metrics.p2p.MonitorP2PService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -31,27 +33,27 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
 @Slf4j
-public class SeedNodeMonitor {
+public class Monitor {
     public static final String VERSION = "1.0.0";
 
-    private static SeedNodeMonitorEnvironment environment;
+    private static MonitorEnvironment environment;
     @Getter
-    private final MetricsByNodeAddressMap metricsByNodeAddressMap;
+    private final MetricsModel metricsModel;
 
-    public static void setEnvironment(SeedNodeMonitorEnvironment environment) {
-        SeedNodeMonitor.environment = environment;
+    public static void setEnvironment(MonitorEnvironment environment) {
+        Monitor.environment = environment;
     }
 
     private final Injector injector;
-    private final SeedNodeMonitorModule seedNodeModule;
+    private final MonitorModule seedNodeModule;
 
-    public SeedNodeMonitor() {
+    public Monitor() {
         String logPath = Paths.get(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         Log.setLevel(Level.toLevel(environment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         log.info("Log files under: " + logPath);
-        log.info("SeedNodeMonitor.VERSION: " + SeedNodeMonitor.VERSION);
+        log.info("SeedNodeMonitor.VERSION: " + Monitor.VERSION);
         log.info("Bisq exchange Version{" +
                 "VERSION=" + Version.VERSION +
                 ", P2P_NETWORK_VERSION=" + Version.P2P_NETWORK_VERSION +
@@ -93,10 +95,10 @@ public class SeedNodeMonitor {
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
-        seedNodeModule = new SeedNodeMonitorModule(environment);
+        seedNodeModule = new MonitorModule(environment);
         injector = Guice.createInjector(seedNodeModule);
 
-        metricsByNodeAddressMap = injector.getInstance(MetricsByNodeAddressMap.class);
+        metricsModel = injector.getInstance(MetricsModel.class);
 
         MonitorAppSetup appSetup = injector.getInstance(MonitorAppSetup.class);
         appSetup.start();

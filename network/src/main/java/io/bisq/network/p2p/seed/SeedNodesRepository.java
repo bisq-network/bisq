@@ -30,7 +30,5 @@ public interface SeedNodesRepository {
 
     Set<NodeAddress> getSeedNodeAddresses();
 
-    Set<NodeAddress> getSeedNodeAddressesOldVersions();
-
     String getOperator(NodeAddress nodeAddress);
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 import com.google.inject.Singleton;
 import io.bisq.common.Clock;
@@ -38,6 +38,7 @@ import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.monitor.metrics.p2p.MonitorP2PModule;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.network.BridgeAddressProvider;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
@@ -47,16 +48,18 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class SeedNodeMonitorModule extends AppModule {
+class MonitorModule extends AppModule {
 
-    public SeedNodeMonitorModule(Environment environment) {
+    public MonitorModule(Environment environment) {
         super(environment);
     }
 
     @Override
     protected void configure() {
-        bind(BisqEnvironment.class).toInstance((SeedNodeMonitorEnvironment) environment);
+        bind(BisqEnvironment.class).toInstance((MonitorEnvironment) environment);
         bindConstant().annotatedWith(named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL)).to(environment.getRequiredProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL));
+        bindConstant().annotatedWith(named(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL)).to(environment.getRequiredProperty(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL));
+        bindConstant().annotatedWith(named(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL)).to(environment.getRequiredProperty(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL));
 
         // bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);

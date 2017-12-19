@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 class GetPeersRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetPeersRequestHandler.class);
 
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIMEOUT_SEC = 60;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ class GetPeersRequestHandler {
                         log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
                     }
                 },
-                TIME_OUT_SEC, TimeUnit.SECONDS);
+                TIMEOUT_SEC, TimeUnit.SECONDS);
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection,
                 getPeersResponse);
