@@ -142,11 +142,11 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("TRC", "Terracoin"));
 
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
+        result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-        result.add(new CryptoCurrency("CRED", "Verify", true));
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page

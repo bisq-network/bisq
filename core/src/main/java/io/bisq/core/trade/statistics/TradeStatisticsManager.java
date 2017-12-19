@@ -247,6 +247,9 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("BCH");
         coinsWithValidator.add("BCHC");
         coinsWithValidator.add("BTG");
+        // v0.6.2
+        coinsWithValidator.add("CRED");
+
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -264,6 +267,8 @@ public class TradeStatisticsManager {
         newlyAdded.add("BCH");
         newlyAdded.add("BCHC");
         newlyAdded.add("BTG");
+        // v0.6.2
+        newlyAdded.add("CRED");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
