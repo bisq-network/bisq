@@ -367,6 +367,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "DGB":
+                    if (input.matches("^L[a-zA-Z0-9]{34,40}$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
                     // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);

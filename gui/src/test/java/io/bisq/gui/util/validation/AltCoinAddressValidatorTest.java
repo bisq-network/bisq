@@ -412,4 +412,17 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("1HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSH#").isValid);
         assertFalse(validator.validate("").isValid);
     }
+
+    @Test
+        public void testDGB() {
+            AltCoinAddressValidator validator = new AltCoinAddressValidator();
+            validator.setCurrencyCode("DGB");
+
+            assertTrue(validator.validate("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU").isValid);
+            assertTrue(validator.validate("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHC").isValid);
+
+            assertFalse(validator.validate("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc").isValid);
+            assertFalse(validator.validate("4a22c3c4cbb31e4d03b15550636762bda0baf85a").isValid);
+            assertFalse(validator.validate("").isValid);
+        }
 }
