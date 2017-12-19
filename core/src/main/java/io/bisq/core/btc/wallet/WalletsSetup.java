@@ -72,9 +72,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class WalletsSetup {
     // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 8 nodes
-    private static final int DEFAULT_CONNECTIONS = 10;
+    private static final int DEFAULT_CONNECTIONS = 8;
 
-    private static final long STARTUP_TIMEOUT_SEC = 120;
+    private static final long STARTUP_TIMEOUT = 180;
     private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
@@ -149,7 +149,7 @@ public class WalletsSetup {
 
         Timer timeoutTimer = UserThread.runAfter(() ->
                 exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " +
-                        STARTUP_TIMEOUT_SEC + " seconds.")), STARTUP_TIMEOUT_SEC);
+                        STARTUP_TIMEOUT + " seconds.")), STARTUP_TIMEOUT);
 
         backupWallets();
 

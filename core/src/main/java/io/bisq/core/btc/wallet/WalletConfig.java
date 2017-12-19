@@ -190,7 +190,7 @@ public class WalletConfig extends AbstractIdleService {
                     new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
                             socks5Proxy.getPort()));
 
-            int CONNECT_TIMEOUT_MSEC = 120 * 1000;  // 60 used in bitcoinj, but for Tor we allow more.
+            int TIMEOUT = 120 * 1000;  // 60 used in bitcoinj, but for Tor we allow more.
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // we dont use tor mode if we have a local node running
             BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
@@ -199,8 +199,8 @@ public class WalletConfig extends AbstractIdleService {
 
             PeerGroup peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
-            blockingClientManager.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
-            peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
+            blockingClientManager.setConnectTimeoutMillis(TIMEOUT);
+            peerGroup.setConnectTimeoutMillis(TIMEOUT);
 
             return peerGroup;
         }

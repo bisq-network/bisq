@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT_SEC = 120;
+    private static final long TIMEOUT = 120;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
@@ -137,7 +137,7 @@ public class OfferAvailabilityProtocol {
                 log.debug("Timeout reached at " + this);
                 model.offer.setState(Offer.State.MAKER_OFFLINE);
                 errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-            }, TIMEOUT_SEC);
+            }, TIMEOUT);
         } else {
             log.warn("timeoutTimer already created. That must not happen.");
         }

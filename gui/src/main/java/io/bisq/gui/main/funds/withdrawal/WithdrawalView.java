@@ -312,8 +312,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                 }
             }
-        } catch (InsufficientFundsException ignore) {
-            new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
+        } catch (InsufficientFundsException e) {
+            new Popup<>().warning(Res.get("funds.withdrawal.warn.amountExceeds")+ "\n\nError message:\n" + e.getMessage()).show();
         } catch (Throwable e) {
             e.printStackTrace();
             log.error(e.toString());
@@ -407,7 +407,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             new Popup<>().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
-            new Popup<>().warning(Res.get("funds.withdrawal.notEnoughFunds")).show();
+            new Popup<>().warning(Res.get("funds.withdrawal.notEnoughFunds") + "\n\nError message:\n" + e.getMessage()).show();
         } catch (Throwable e) {
             log.warn(e.toString());
             new Popup<>().warning(e.toString()).show();

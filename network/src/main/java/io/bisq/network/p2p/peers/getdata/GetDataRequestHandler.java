@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
 
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT = 120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +87,7 @@ public class GetDataRequestHandler {
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
-                    TIMEOUT_SEC, TimeUnit.SECONDS);
+                    TIMEOUT, TimeUnit.SECONDS);
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);

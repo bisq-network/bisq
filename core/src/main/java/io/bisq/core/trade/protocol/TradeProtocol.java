@@ -37,7 +37,7 @@ import static io.bisq.core.util.Validator.nonEmptyStringOf;
 
 @Slf4j
 public abstract class TradeProtocol {
-    private static final long TIMEOUT_SEC = 120;
+    private static final long TIMEOUT = 120;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
@@ -114,7 +114,7 @@ public abstract class TradeProtocol {
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradableOnFault();
             cleanup();
-        }, TIMEOUT_SEC);
+        }, TIMEOUT);
     }
 
     protected void stopTimeout() {

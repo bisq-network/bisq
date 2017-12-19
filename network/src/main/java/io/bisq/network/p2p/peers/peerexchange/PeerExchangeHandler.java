@@ -15,18 +15,15 @@ import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 class PeerExchangeHandler implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
-
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT = 120;
     private static final int DELAY_MS = 1000;
 
 
@@ -98,7 +95,7 @@ class PeerExchangeHandler implements MessageListener {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
                                 }
                             },
-                            TIMEOUT_SEC, TimeUnit.SECONDS);
+                            TIMEOUT, TimeUnit.SECONDS);
                 }
 
                 SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);

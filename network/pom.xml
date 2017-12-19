@@ -20,8 +20,8 @@
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
-            <!-- older version e7195748-->
-            <!-- newer version 1c9d80e-->
+            <!-- older version e7195748 -->
+            <!-- newer version 1c9d80e -> deactivate as there might be some issues TODO check with dev -->
             <version>e7195748</version>
             <exclusions>
                 <exclusion>

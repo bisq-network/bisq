@@ -37,7 +37,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
                     .stream()
                     .map(NodeAddress::new)
                     .collect(Collectors.toSet());
-
         } else {
             nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
             nodeAddresses = nodeAddresses.stream()

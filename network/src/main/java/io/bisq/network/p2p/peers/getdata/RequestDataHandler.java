@@ -23,10 +23,9 @@ import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -34,10 +33,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(RequestDataHandler.class);
-
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT = 120;
     private NodeAddress peersNodeAddress;
 
 
@@ -120,7 +118,7 @@ class RequestDataHandler implements MessageListener {
                                         "Might be caused by an previous networkNode.sendMessage.onFailure.");
                             }
                         },
-                        TIMEOUT_SEC);
+                        TIMEOUT);
             }
 
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
@@ -202,7 +200,7 @@ class RequestDataHandler implements MessageListener {
                     // Log different data types
                     StringBuilder sb = new StringBuilder();
                     sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: "+peersNodeAddress.getFullAddress()+"\n");
+                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
                     final int items = dataSet.size() +
                             (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
                     sb.append("Received ").append(items).append(" instances\n");

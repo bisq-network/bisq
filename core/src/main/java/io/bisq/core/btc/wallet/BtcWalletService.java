@@ -757,11 +757,16 @@ public class BtcWalletService extends WalletService {
                                                            Coin fee,
                                                            @Nullable String changeAddress,
                                                            @Nullable KeyParameter aesKey) throws
-            AddressFormatException, AddressEntryException {
+            AddressFormatException, AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(amount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(amount.subtract(fee), Address.fromBase58(params, toAddress));
+
+        final Coin netValue = amount.subtract(fee);
+        if(netValue.isNegative())
+            throw new InsufficientMoneyException(netValue.multiply(-1), "The mining fee for that transaction exceed the available amount.");
+
+        tx.addOutput(netValue, Address.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;

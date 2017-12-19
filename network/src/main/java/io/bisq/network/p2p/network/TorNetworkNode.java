@@ -40,7 +40,7 @@ public class TorNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
-    private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
+    private static final long SHUT_DOWN_TIMEOUT = 5;
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
@@ -167,7 +167,7 @@ public class TorNetworkNode extends NetworkNode {
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
             done.set(true);
-        }, SHUT_DOWN_TIMEOUT_SEC);
+        }, SHUT_DOWN_TIMEOUT);
         return done;
     }
 

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -70,10 +71,7 @@ public class FeeService {
     private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 2000; // about 2 USD at BTC price 10000 USD for 1 BTC if 1 BSQ = 1 USD -> 10% of BTC fee
     private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 2000;
 
-
-    // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
-
-    public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 10;
+    public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
     private final FeeProvider feeProvider;
     private final String baseCurrencyCode;
@@ -101,9 +99,9 @@ public class FeeService {
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 3 USD at BTC price 15000 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 4 USD at BTC price 20000 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 7.5 USD at BTC price 15000 USD for 0.25 BTC (maxTradeAmount for most fiat trades)
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 20000 USD for 0.25 BTC (maxTradeAmount for most fiat trades)
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
@@ -135,10 +133,14 @@ public class FeeService {
 
     public void onAllServicesInitialized() {
         requestFees(null, null);
+
+        // We update all 5 min.
+        UserThread.runPeriodically(() -> requestFees(null, null), 5, TimeUnit.MINUTES);
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
         long now = Instant.now().getEpochSecond();
+        // We all requests only each 2 minutes
         if (now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
             lastRequest = now;
             FeeRequest feeRequest = new FeeRequest();

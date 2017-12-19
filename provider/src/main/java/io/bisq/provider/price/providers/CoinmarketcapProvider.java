@@ -7,8 +7,6 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.price.PriceData;
 import io.bisq.provider.price.PriceRequestService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -18,7 +16,6 @@ import java.util.stream.Collectors;
 import static java.lang.Double.parseDouble;
 
 public class CoinmarketcapProvider {
-    private static final Logger log = LoggerFactory.getLogger(CoinmarketcapProvider.class);
     private final Set<String> supportedAltcoins;
 
     private final HttpClient httpClient;

@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class GetBlocksRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetBlocksRequestHandler.class);
 
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT = 120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ public class GetBlocksRequestHandler {
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
-                    TIMEOUT_SEC, TimeUnit.SECONDS);
+                    TIMEOUT, TimeUnit.SECONDS);
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, bsqBlocksResponse);
