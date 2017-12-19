@@ -97,6 +97,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
+        result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
