@@ -5,7 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-version="0.6.1"
+version="0.6.2"
 
 mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
@@ -30,6 +30,8 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/Bisq-$version.jar" \
+    -srcfiles "gui/target/lib/bcpg-jdk15on.jar" \
+    -srcfiles "gui/target/lib/bcprov-jdk15on.jar" \
     -appclass io.bisq.gui.app.BisqAppMain \
     -outfile Bisq
 
