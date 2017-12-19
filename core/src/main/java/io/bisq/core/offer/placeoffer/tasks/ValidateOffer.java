@@ -19,10 +19,8 @@ package io.bisq.core.offer.placeoffer.tasks;
 
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
-import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.trade.messages.TradeMessage;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -51,28 +49,27 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");
             checkCoinNotNullOrZero(offer.getMinAmount(), "MinAmount");
             checkCoinNotNullOrZero(offer.getMakerFee(), "MakerFee");
-
-            checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()).value,
-                "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
-                    "MakerFee=" + offer.getMakerFee().toFriendlyString());
-
             checkCoinNotNullOrZero(offer.getBuyerSecurityDeposit(), "buyerSecurityDeposit");
             checkCoinNotNullOrZero(offer.getSellerSecurityDeposit(), "sellerSecurityDeposit");
-            checkArgument(offer.getBuyerSecurityDeposit().value >= Restrictions.getMinBuyerSecurityDeposit().value,
+            checkCoinNotNullOrZero(offer.getTxFee(), "txFee");
+            checkCoinNotNullOrZero(offer.getMaxTradeLimit(), "MaxTradeLimit");
+
+            // We remove those checks to be more flexible with future changes.
+            /*checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()).value,
+                "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
+                    "MakerFee=" + offer.getMakerFee().toFriendlyString());*/
+            /*checkArgument(offer.getBuyerSecurityDeposit().value >= Restrictions.getMinBuyerSecurityDeposit().value,
                 "buyerSecurityDeposit must not be less than Restrictions.MIN_BUYER_SECURITY_DEPOSIT. " +
                     "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
             checkArgument(offer.getBuyerSecurityDeposit().value <= Restrictions.getMaxBuyerSecurityDeposit().value,
                 "buyerSecurityDeposit must not be larger than Restrictions.MAX_BUYER_SECURITY_DEPOSIT. " +
                     "buyerSecurityDeposit=" + offer.getBuyerSecurityDeposit().toFriendlyString());
-
             checkArgument(offer.getSellerSecurityDeposit().value == Restrictions.getSellerSecurityDeposit().value,
                 "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
-                    "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());
-            checkCoinNotNullOrZero(offer.getTxFee(), "txFee");
-            checkCoinNotNullOrZero(offer.getMaxTradeLimit(), "MaxTradeLimit");
+                    "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());*/
+            /*checkArgument(offer.getMinAmount().compareTo(Restrictions.getMinTradeAmount()) >= 0,
+                "MinAmount is less then " + Restrictions.getMinTradeAmount().toFriendlyString());*/
 
-            checkArgument(offer.getMinAmount().compareTo(Restrictions.getMinTradeAmount()) >= 0,
-                "MinAmount is less then " + Restrictions.getMinTradeAmount().toFriendlyString());
             checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode())) <= 0,
                 "Amount is larger then " + offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()).toFriendlyString());
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
