@@ -17,6 +17,7 @@
 
 package io.bisq.gui.app;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
@@ -48,6 +49,12 @@ public class BisqAppMain extends BisqExecutable {
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
+        parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
+                description("Dev mode, all the privileged features which require a private key to enable it " +
+                        "are overridden by a dev key pair. Features: Arbitration registration" +
+                        " (alt+R at account), Alert/Update (alt+m), private message to a peer " +
+                        "(click user icon and alt+r), filter/block offers by various data like" +
+                        " offer ID (cmd + f)", false));
 
         OptionSet options;
         try {
@@ -67,6 +74,10 @@ public class BisqAppMain extends BisqExecutable {
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
+
+        if(options.has(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)) {
+            DevEnv.USE_DEV_PRIVILEGE_KEYS = true;
+        }
 
         new BisqAppMain().execute(args);
     }

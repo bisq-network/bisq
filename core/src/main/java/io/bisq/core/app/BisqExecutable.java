@@ -131,6 +131,12 @@ public abstract class BisqExecutable {
         parser.accepts(AppOptionKeys.PROVIDERS,
                 description("Custom providers (comma separated)", false))
                 .withRequiredArg();
+        parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
+                description("Dev mode, all the privileged features which require a private key to enable it " +
+                        "are overridden by a dev key pair. Features: Arbitration registration" +
+                        " (alt+R at account), Alert/Update (alt+m), private message to a peer " +
+                        "(click user icon and alt+r), filter/block offers by various data like" +
+                        " offer ID (cmd + f)", false));
 
         //BtcOptionKeys
         parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
