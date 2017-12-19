@@ -91,7 +91,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerSelectArbitrator.class,
                 TakerSelectMediator.class,
                 CreateTakerFeeTx.class,
-                TakerPublishTakerFeeTx.class,
                 SellerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class
         );

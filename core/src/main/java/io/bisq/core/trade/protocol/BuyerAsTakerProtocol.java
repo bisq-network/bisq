@@ -100,7 +100,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
-                TakerPublishTakerFeeTx.class,
                 BuyerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class
         );

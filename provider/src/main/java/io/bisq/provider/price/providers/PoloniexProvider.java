@@ -54,7 +54,8 @@ public class PoloniexProvider {
                             marketPriceMap.put(altcoinCurrency,
                                     new PriceData(altcoinCurrency,
                                             parseDouble((String) data.get("last")),
-                                            ts, PriceRequestService.POLO_PROVIDER)
+                                            ts,
+                                            PriceRequestService.POLO_PROVIDER)
                             );
                         }
                     }

@@ -38,7 +38,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -91,12 +90,10 @@ public class CreateTakerFeeTx extends TradeTask {
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
-                                        if (tradeFeeTx != null && !tradeFeeTx.getHashAsString().equals(transaction.getHashAsString()))
-                                            log.warn("The trade fee tx received from the network had another tx ID than the one we publish");
-
                                         processModel.setTakeOfferFeeTx(tradeFeeTx);
                                         trade.setTakerFeeTxId(tradeFeeTx.getHashAsString());
                                         walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                        trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
 
                                         complete();
                                     } else {
@@ -140,10 +137,10 @@ public class CreateTakerFeeTx extends TradeTask {
                         if (!completed) {
                             if (transaction != null) {
                                 log.debug("Successfully sent tx with id " + transaction.getHashAsString());
-                                checkArgument(transaction.equals(signedTx));
                                 trade.setTakerFeeTxId(transaction.getHashAsString());
                                 processModel.setTakeOfferFeeTx(transaction);
                                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
 
                                 complete();
                             }

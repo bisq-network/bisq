@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
@@ -92,12 +91,12 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
-                                        if (tradeFeeTx != null && !tradeFeeTx.getHashAsString().equals(transaction.getHashAsString()))
-                                            log.warn("The trade fee tx received from the network had another tx ID than the one we publish");
-
                                         offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                                         model.setTransaction(transaction);
                                         walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
+                                        model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
+
                                         complete();
                                     } else {
                                         log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
@@ -138,14 +137,15 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         if (transaction != null) {
-                            checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
                             log.debug("onSuccess, offerId={}, OFFER_FUNDING", id);
                             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
-                            complete();
                             log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+                            model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
+
+                            complete();
                         }
                     }
 

@@ -19,7 +19,6 @@ package io.bisq.provider.price;
 
 import lombok.Value;
 
-@SuppressWarnings("FieldCanBeLocal")
 @Value
 public class PriceData {
     private final String currencyCode;

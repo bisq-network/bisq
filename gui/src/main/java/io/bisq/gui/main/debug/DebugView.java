@@ -20,8 +20,7 @@ package io.bisq.gui.main.debug;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
-import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
-import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
+import io.bisq.core.offer.placeoffer.tasks.AddOfferOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
@@ -79,8 +78,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         ValidateOffer.class,
                         CreateMakerFeeTx.class,
-                        AddOfferToRemoteOfferBook.class,
-                        BroadcastMakerFeeTx.class)
+                        AddOfferOfferBook.class)
                 ));
 
         addGroup("BuyerAsMakerProtocol: ",
@@ -115,7 +113,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         TakerSelectArbitrator.class,
                         TakerSelectMediator.class,
                         CreateTakerFeeTx.class,
-                        TakerPublishTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
                         TakerSendPayDepositRequest.class,
 
@@ -145,7 +142,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
-                        TakerPublishTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendPayDepositRequest.class,
 
