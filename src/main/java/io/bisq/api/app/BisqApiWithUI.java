@@ -343,7 +343,7 @@ public class BisqApiWithUI extends Application {
 
     private void showEmptyWalletPopup(WalletService walletService) {
         EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setwalletService(walletService);
+        emptyWalletWindow.setWalletService(walletService);
         emptyWalletWindow.show();
     }
 

@@ -54,12 +54,12 @@ Bitcoin mainnet (meaning you can lose real BTC):
 
 When testing it's advisable to run Bisq in REGTEST mode.
 See below on how to pass Bisq arguments to enable REGTEST mode.
-All regular Bisq arguments can be used.
+All regular Bisq arguments can be used. 
 
 ```
 mvn exec:java
 -Dexec.mainClass="io.bisq.api.app.BisqApiWithUIMain"
--Dexec.args="--baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
+-Dexec.args="--useDevPrivilegeKey --baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
 ```
 
 ## Exploring the HTTP API

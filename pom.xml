@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>bisq-api</artifactId>
     <packaging>jar</packaging>
-    <version>v0.6.1</version>
+    <version>v0.6.1-dev</version>
     <description>API for Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -82,10 +82,18 @@
     </build>
 
     <dependencies>
+        <!-- waiting for merge of
         <dependency>
             <groupId>com.github.bisq-network.bisq-exchange</groupId>
             <artifactId>gui</artifactId>
             <version>v0.6.1</version>
+        </dependency>
+        -->
+
+        <dependency>
+            <groupId>com.github.mrosseel</groupId>
+            <artifactId>bisq-exchange</artifactId>
+            <version>addDevKeyParserOption-SNAPSHOT</version>
         </dependency>
 
         <!-- dependencies from bisq root pom -->
