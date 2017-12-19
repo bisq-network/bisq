@@ -40,6 +40,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SeedNodeMonitorEnvironment extends BisqEnvironment {
 
     private String slackUrlSeedChannel = "";
+    private String slackUrlBtcChannel = "";
+    private String slackUrlProviderChannel = "";
 
     public SeedNodeMonitorEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
@@ -52,6 +54,14 @@ public class SeedNodeMonitorEnvironment extends BisqEnvironment {
                 (String) commandLineProperties.getProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) :
                 "";
 
+        slackUrlBtcChannel = commandLineProperties.containsProperty(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL) ?
+                (String) commandLineProperties.getProperty(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL) :
+                "";
+
+        slackUrlProviderChannel = commandLineProperties.containsProperty(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL) ?
+                (String) commandLineProperties.getProperty(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL) :
+                "";
+
         // hack because defaultProperties() is called from constructor and slackUrlSeedChannel would be null there
         getPropertySources().remove("bisqDefaultProperties");
         getPropertySources().addLast(defaultPropertiesMonitor());
@@ -62,6 +72,8 @@ public class SeedNodeMonitorEnvironment extends BisqEnvironment {
             {
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
                 setProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL, slackUrlSeedChannel);
+                setProperty(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL, slackUrlBtcChannel);
+                setProperty(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL, slackUrlProviderChannel);
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
@@ -90,6 +102,8 @@ public class SeedNodeMonitorEnvironment extends BisqEnvironment {
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
                 setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
+                setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
+                setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

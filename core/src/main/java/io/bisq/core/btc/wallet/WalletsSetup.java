@@ -32,6 +32,7 @@ import io.bisq.common.storage.FileUtil;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
+import io.bisq.network.DnsLookupTor;
 import io.bisq.network.Socks5MultiDiscovery;
 import io.bisq.network.Socks5ProxyProvider;
 import javafx.beans.property.*;
@@ -70,6 +71,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // merge WalletsSetup with WalletConfig to one class.
 @Slf4j
 public class WalletsSetup {
+    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 8 nodes
+    private static final int DEFAULT_CONNECTIONS = 10;
+
     private static final long STARTUP_TIMEOUT_SEC = 120;
     private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
@@ -81,6 +85,8 @@ public class WalletsSetup {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final BisqEnvironment bisqEnvironment;
     private final BitcoinNodes bitcoinNodes;
+    private final int numConnectionForBtc;
+    private final boolean useAllProvidedNodes;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -105,6 +111,8 @@ public class WalletsSetup {
                         BitcoinNodes bitcoinNodes,
                         @Named(BtcOptionKeys.USER_AGENT) String userAgent,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
+                        @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
+                        @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
@@ -112,6 +120,8 @@ public class WalletsSetup {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.bisqEnvironment = bisqEnvironment;
         this.bitcoinNodes = bitcoinNodes;
+        this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
+        this.useAllProvidedNodes = "true".equals(useAllProvidedNodes);
         this.userAgent = userAgent;
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
@@ -151,6 +161,7 @@ public class WalletsSetup {
                 walletDir,
                 bisqEnvironment,
                 userAgent,
+                numConnectionForBtc,
                 btcWalletFileName,
                 BSQ_WALLET_FILE_NAME,
                 SPV_CHAIN_FILE_NAME) {
@@ -307,7 +318,7 @@ public class WalletsSetup {
                         .forEach(btcNode -> {
                             // no DNS lookup for onion addresses
                             log.info("We add a onion node. btcNode={}", btcNode);
-                            final String onionAddress = btcNode.getOnionAddress();
+                            final String onionAddress = checkNotNull(btcNode.getOnionAddress());
                             try {
                                 // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
                                 // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
@@ -320,6 +331,33 @@ public class WalletsSetup {
                                 e.printStackTrace();
                             }
                         });
+                if (useAllProvidedNodes) {
+                    // We also use the clear net nodes (used for monitor)
+                    btcNodeList.stream()
+                            .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
+                            .forEach(btcNode -> {
+                                try {
+                                    // We use DnsLookupTor to not leak with DNS lookup
+                                    // Blocking call. takes about 600 ms ;-(
+                                    InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getHostNameOrAddress()), btcNode.getPort());
+                                    log.info("We add a clear net node (tor is used)  with InetAddress={}, btcNode={}", address.getAddress(), btcNode);
+                                    peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
+                                } catch (Exception e) {
+                                    if (btcNode.getAddress() != null) {
+                                        log.warn("Dns lookup failed. We try with provided IP address. BtcNode: {}", btcNode);
+                                        try {
+                                            InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getAddress()), btcNode.getPort());
+                                            log.info("We add a clear net node (tor is used)  with InetAddress={}, BtcNode={}", address.getAddress(), btcNode);
+                                            peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
+                                        } catch (Exception e2) {
+                                            log.warn("Dns lookup failed for BtcNode: {}", btcNode);
+                                        }
+                                    } else {
+                                        log.warn("Dns lookup failed. No IP address is provided. BtcNode: {}", btcNode);
+                                    }
+                                }
+                            });
+                }
             } else {
                 btcNodeList.stream()
                         .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
@@ -329,7 +367,18 @@ public class WalletsSetup {
                                 log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
                                 peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
                             } catch (Throwable t) {
-                                log.warn("Failed to create InetSocketAddress from btcNode {}", btcNode);
+                                if (btcNode.getAddress() != null) {
+                                    log.warn("Dns lookup failed. We try with provided IP address. BtcNode: {}", btcNode);
+                                    try {
+                                        InetSocketAddress address = new InetSocketAddress(btcNode.getAddress(), btcNode.getPort());
+                                        log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
+                                        peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
+                                    } catch (Throwable t2) {
+                                        log.warn("Failed to create InetSocketAddress from btcNode {}", btcNode);
+                                    }
+                                } else {
+                                    log.warn("Dns lookup failed. No IP address is provided. BtcNode: {}", btcNode);
+                                }
                             }
                         });
             }

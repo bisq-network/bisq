@@ -37,7 +37,7 @@ public class SeedNodeMonitor {
 
     private static SeedNodeMonitorEnvironment environment;
     @Getter
-    private final MetricsModel metricsService;
+    private final MetricsModel metricsModel;
 
     public static void setEnvironment(SeedNodeMonitorEnvironment environment) {
         SeedNodeMonitor.environment = environment;
@@ -97,7 +97,7 @@ public class SeedNodeMonitor {
         seedNodeModule = new SeedNodeMonitorModule(environment);
         injector = Guice.createInjector(seedNodeModule);
 
-        metricsService = injector.getInstance(MetricsModel.class);
+        metricsModel = injector.getInstance(MetricsModel.class);
 
         MonitorAppSetup appSetup = injector.getInstance(MonitorAppSetup.class);
         appSetup.start();

@@ -86,6 +86,9 @@ public class MonitorRequestManager implements ConnectionListener {
     public void start() {
         requestAllNodes();
         UserThread.runPeriodically(this::requestAllNodes, REQUEST_PERIOD_MIN, TimeUnit.MINUTES);
+
+        // We want to update the data for the btc nodes more frequently
+        UserThread.runPeriodically(metricsModel::updateReport, 10);
     }
 
     private void requestAllNodes() {
@@ -150,7 +153,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                     nodesInError.remove(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Fixed: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node is recovered."));
+                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
                                 }
                             }
 
@@ -175,7 +178,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                     nodesInError.add(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
+                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
                                 }
                             }
                         });

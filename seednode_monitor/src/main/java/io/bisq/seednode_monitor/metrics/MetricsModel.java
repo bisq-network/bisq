@@ -17,7 +17,11 @@
 
 package io.bisq.seednode_monitor.metrics;
 
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.MathUtils;
+import io.bisq.common.util.Tuple2;
+import io.bisq.core.btc.BitcoinNodes;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.seednode_monitor.MonitorOptionKeys;
@@ -26,31 +30,53 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.bitcoinj.core.Peer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.net.InetAddress;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class MetricsModel {
-    private SlackApi slackApi;
     @Getter
     private String resultAsString;
     @Getter
     private String resultAsHtml;
     private SeedNodesRepository seedNodesRepository;
+    private SlackApi slackSeedApi, slackBtcApi, slackProviderApi;
+    private BitcoinNodes bitcoinNodes;
     @Setter
     private long lastCheckTs;
+    private long btcNodeUptimeTs;
     private int totalErrors = 0;
     private HashMap<NodeAddress, Metrics> map = new HashMap<>();
+    private List<Peer> connectedPeers;
+    private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeDownTimeMap = new HashMap<>();
+    private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeUpTimeMap = new HashMap<>();
 
     @Inject
     public MetricsModel(SeedNodesRepository seedNodesRepository,
-                        @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
+                        BitcoinNodes bitcoinNodes,
+                        WalletsSetup walletsSetup,
+                        @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel,
+                        @Named(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL) String slackUrlBtcChannel,
+                        @Named(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL) String slackUrlProviderChannel) {
         this.seedNodesRepository = seedNodesRepository;
+        this.bitcoinNodes = bitcoinNodes;
         if (!slackUrlSeedChannel.isEmpty())
-            slackApi = new SlackApi(slackUrlSeedChannel);
+            slackSeedApi = new SlackApi(slackUrlSeedChannel);
+        if (!slackUrlBtcChannel.isEmpty())
+            slackBtcApi = new SlackApi(slackUrlBtcChannel);
+        if (!slackUrlProviderChannel.isEmpty())
+            slackProviderApi = new SlackApi(slackUrlProviderChannel);
+
+        walletsSetup.connectedPeersProperty().addListener((observable, oldValue, newValue) -> {
+            connectedPeers = newValue;
+        });
     }
 
     public void addToMap(NodeAddress nodeAddress, Metrics metrics) {
@@ -62,6 +88,9 @@ public class MetricsModel {
     }
 
     public void updateReport() {
+        if (btcNodeUptimeTs == 0)
+            btcNodeUptimeTs = new Date().getTime();
+
         Map<String, Double> accumulatedValues = new HashMap<>();
         final double[] items = {0};
         List<Map.Entry<NodeAddress, Metrics>> entryList = map.entrySet().stream()
@@ -101,9 +130,9 @@ public class MetricsModel {
                 "<style>table, th, td {border: 1px solid black;}</style>" +
                 "</head>" +
                 "<body>" +
-                "<h1>")
+                "<h3>")
                 .append("Seed nodes in error: <b>" + totalErrors + "</b><br/>" +
-                        "Last check started at: " + time + "<br/>" +
+                        "Last check started at: " + time + "<br/></h3>" +
                         "<table style=\"width:100%\">" +
                         "<tr>" +
                         "<th align=\"left\">Operator</th>" +
@@ -133,7 +162,7 @@ public class MetricsModel {
             final int numErrors = (int) errorMessages.stream().filter(s -> !s.isEmpty()).count();
             int numRequests = allDurations.size();
             String lastErrorMsg = "";
-            int lastIndexOfError = -1;
+            int lastIndexOfError = 0;
             for (int i = 0; i < errorMessages.size(); i++) {
                 final String msg = errorMessages.get(i);
                 if (!msg.isEmpty()) {
@@ -182,12 +211,12 @@ public class MetricsModel {
                     else
                         color = "red";
 
-                    html.append("<font color=\"" + color + "\">" + str + "</font> ").append("<br/>");
+                    html.append("<font color=\"" + color + "\">" + str + "</font>").append("<br/>");
 
                     if (devAbs >= 20) {
-                        if (slackApi != null)
-                            slackApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
-                                    "<" + seedNodesRepository.getSlackUser(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
+                        if (slackSeedApi != null)
+                            slackSeedApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
+                                    "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
                                             "Please check the monitoring status page at http://seedmonitor.0-2-1.net:8080/"));
                     }
                 });
@@ -197,14 +226,181 @@ public class MetricsModel {
                 html.append("</td></tr>");
             }
         });
-        html.append("</table></body></html>");
+        html.append("</table>");
+
+        // btc nodes
+        sb.append("\n\n####################################\n\nBitcoin nodes\n");
+        final long elapsed = new Date().getTime() - btcNodeUptimeTs;
+        Set<String> connectedBtcPeers = connectedPeers.stream()
+                .map(e -> {
+                    String hostname = e.getAddress().getHostname();
+                    InetAddress inetAddress = e.getAddress().getAddr();
+                    int port = e.getAddress().getPort();
+                    if (hostname != null)
+                        return hostname + ":" + port;
+                    else if (inetAddress != null)
+                        return inetAddress.getHostAddress() + ":" + port;
+                    else
+                        return "";
+                })
+                .collect(Collectors.toSet());
+
+        List<BitcoinNodes.BtcNode> onionBtcNodes = new ArrayList<>(bitcoinNodes.getProvidedBtcNodes().stream()
+                .filter(BitcoinNodes.BtcNode::hasOnionAddress)
+                .collect(Collectors.toSet()));
+        onionBtcNodes.sort((o1, o2) -> o1.getOperator() != null && o2.getOperator() != null ?
+                o1.getOperator().compareTo(o2.getOperator()) : 0);
+
+        printTableHeader(html, "Onion");
+        printTable(html, sb, onionBtcNodes, connectedBtcPeers, elapsed, true);
+        html.append("</tr></table>");
+
+        List<BitcoinNodes.BtcNode> clearNetNodes = new ArrayList<>(bitcoinNodes.getProvidedBtcNodes().stream()
+                .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
+                .collect(Collectors.toSet()));
+        clearNetNodes.sort((o1, o2) -> o1.getOperator() != null && o2.getOperator() != null ?
+                o1.getOperator().compareTo(o2.getOperator()) : 0);
+
+        printTableHeader(html, "Clear net");
+        printTable(html, sb, clearNetNodes, connectedBtcPeers, elapsed, false);
+        sb.append("\nConnected Bitcoin nodes: " + connectedBtcPeers + "\n");
+        html.append("</tr></table>");
+        html.append("<br>Connected Bitcoin nodes: " + connectedBtcPeers + "<br>");
+        btcNodeUptimeTs = new Date().getTime();
+
+        html.append("</body></html>");
+
         resultAsString = sb.toString();
         resultAsHtml = html.toString();
+    }
+
+    private void printTableHeader(StringBuilder html, String type) {
+        html.append("<br><h3>Bitcoin " + type + " nodes<h3><table style=\"width:100%\">" +
+                "<tr>" +
+                "<th align=\"left\">Operator</th>" +
+                "<th align=\"left\">Domain name</th>" +
+                "<th align=\"left\">IP address</th>" +
+                "<th align=\"left\">Btc node onion address</th>" +
+                "<th align=\"left\">UpTime</th>" +
+                "<th align=\"left\">DownTime</th>" +
+                "</tr>");
+    }
+
+    private void printTable(StringBuilder html, StringBuilder sb, List<BitcoinNodes.BtcNode> allBtcNodes, Set<String> connectedBtcPeers, long elapsed, boolean isOnion) {
+        allBtcNodes.stream().forEach(node -> {
+            int upTime = 0;
+            int downTime = 0;
+            Tuple2<BitcoinNodes.BtcNode, Boolean> key = new Tuple2<>(node, isOnion);
+            if (btcNodeUpTimeMap.containsKey(key))
+                upTime = btcNodeUpTimeMap.get(key);
+
+            key = new Tuple2<>(node, isOnion);
+            if (btcNodeDownTimeMap.containsKey(key))
+                downTime = btcNodeDownTimeMap.get(key);
+
+            boolean isConnected = false;
+            // return !connectedBtcPeers.contains(host);
+            if (node.hasOnionAddress() && connectedBtcPeers.contains(node.getOnionAddress() + ":" + node.getPort()))
+                isConnected = true;
+
+            final String clearNetHost = node.getAddress() != null ? node.getAddress() + ":" + node.getPort() : node.getHostName() + ":" + node.getPort();
+            if (node.hasClearNetAddress() && connectedBtcPeers.contains(clearNetHost))
+                isConnected = true;
+
+            if (isConnected) {
+                upTime += elapsed;
+                btcNodeUpTimeMap.put(key, upTime);
+            } else {
+                downTime += elapsed;
+                btcNodeDownTimeMap.put(key, downTime);
+            }
+
+            String upTimeString = formatDurationAsWords(upTime, true);
+            String downTimeString = formatDurationAsWords(downTime, true);
+            String colorNumErrors = isConnected ? "black" : "red";
+            html.append("<tr>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + node.getOperator() + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + node.getHostName() + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + node.getAddress() + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + node.getOnionAddress() + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + upTimeString + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + downTimeString + "</font> ").append("</td>");
+
+            sb.append("\nOperator: ").append(node.getOperator()).append("\n");
+            sb.append("Domain name: ").append(node.getHostName()).append("\n");
+            sb.append("IP address: ").append(node.getAddress()).append("\n");
+            sb.append("Btc node onion address: ").append(node.getOnionAddress()).append("\n");
+            sb.append("UpTime: ").append(upTimeString).append("\n");
+            sb.append("DownTime: ").append(downTimeString).append("\n");
+        });
     }
 
     public void log() {
         log.info("\n\n#################################################################\n" +
                 resultAsString +
                 "#################################################################\n\n");
+    }
+
+    public static String formatDurationAsWords(long durationMillis, boolean showSeconds) {
+        String format;
+        String second = Res.get("time.second");
+        String minute = Res.get("time.minute");
+        String hour = Res.get("time.hour").toLowerCase();
+        String day = Res.get("time.day").toLowerCase();
+        String days = Res.get("time.days");
+        String hours = Res.get("time.hours");
+        String minutes = Res.get("time.minutes");
+        String seconds = Res.get("time.seconds");
+        if (showSeconds) {
+            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
+        } else
+            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + "\'";
+        String duration = DurationFormatUtils.formatDuration(durationMillis, format);
+        String tmp;
+        duration = " " + duration;
+        tmp = StringUtils.replaceOnce(duration, " 0 " + days, "");
+        if (tmp.length() != duration.length()) {
+            duration = tmp;
+            tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
+            if (tmp.length() != duration.length()) {
+                tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
+                duration = tmp;
+                if (tmp.length() != tmp.length()) {
+                    duration = StringUtils.replaceOnce(tmp, " 0 " + seconds, "");
+                }
+            }
+        }
+
+        if (duration.length() != 0) {
+            duration = duration.substring(1);
+        }
+
+        tmp = StringUtils.replaceOnce(duration, " 0 " + seconds, "");
+
+        if (tmp.length() != duration.length()) {
+            duration = tmp;
+            tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
+            if (tmp.length() != duration.length()) {
+                duration = tmp;
+                tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
+                if (tmp.length() != duration.length()) {
+                    duration = StringUtils.replaceOnce(tmp, " 0 " + days, "");
+                }
+            }
+        }
+
+        duration = " " + duration;
+        duration = StringUtils.replaceOnce(duration, " 1 " + seconds, " 1 " + second);
+        duration = StringUtils.replaceOnce(duration, " 1 " + minutes, " 1 " + minute);
+        duration = StringUtils.replaceOnce(duration, " 1 " + hours, " 1 " + hour);
+        duration = StringUtils.replaceOnce(duration, " 1 " + days, " 1 " + day);
+        duration = duration.trim();
+        if (duration.equals(","))
+            duration = duration.replace(",", "");
+        if (duration.startsWith(" ,"))
+            duration = duration.replace(" ,", "");
+        else if (duration.startsWith(", "))
+            duration = duration.replace(", ", "");
+        return duration;
     }
 }

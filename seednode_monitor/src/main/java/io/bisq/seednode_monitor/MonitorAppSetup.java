@@ -22,7 +22,10 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.SetupUtils;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.network.SetupListener;
+import io.bisq.network.p2p.peers.PeerManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -31,12 +34,20 @@ import java.util.ArrayList;
 @Slf4j
 public class MonitorAppSetup {
     private MonitorP2PService seedNodeMonitorP2PService;
+    private final WalletsSetup walletsSetup;
+    private PeerManager peerManager;
     private final KeyRing keyRing;
     private final EncryptionService encryptionService;
 
     @Inject
-    public MonitorAppSetup(MonitorP2PService seedNodeMonitorP2PService, KeyRing keyRing, EncryptionService encryptionService) {
+    public MonitorAppSetup(MonitorP2PService seedNodeMonitorP2PService,
+                           WalletsSetup walletsSetup,
+                           PeerManager peerManager,
+                           KeyRing keyRing,
+                           EncryptionService encryptionService) {
         this.seedNodeMonitorP2PService = seedNodeMonitorP2PService;
+        this.walletsSetup = walletsSetup;
+        this.peerManager = peerManager;
         this.keyRing = keyRing;
         this.encryptionService = encryptionService;
         Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
@@ -57,6 +68,7 @@ public class MonitorAppSetup {
     public void initPersistedDataHosts() {
         ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
         persistedDataHosts.add(seedNodeMonitorP2PService);
+        persistedDataHosts.add(peerManager);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.stream().forEach(e -> {
@@ -71,12 +83,31 @@ public class MonitorAppSetup {
 
     protected void initBasicServices() {
         SetupUtils.readFromResources(seedNodeMonitorP2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                startInitP2PNetwork();
-        });
-    }
+            if (newValue) {
+                seedNodeMonitorP2PService.start(new SetupListener() {
 
-    private void startInitP2PNetwork() {
-        seedNodeMonitorP2PService.start();
+
+                    @Override
+                    public void onTorNodeReady() {
+                        walletsSetup.initialize(null,
+                                () -> log.info("walletsSetup completed"),
+                                throwable -> log.error(throwable.toString()));
+                    }
+
+                    @Override
+                    public void onHiddenServicePublished() {
+                    }
+
+                    @Override
+                    public void onSetupFailed(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges() {
+                    }
+                });
+
+            }
+        });
     }
 }

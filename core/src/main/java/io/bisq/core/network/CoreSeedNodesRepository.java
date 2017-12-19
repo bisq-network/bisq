@@ -59,36 +59,13 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
     public String getOperator(NodeAddress nodeAddress) {
         switch (nodeAddress.getFullAddress()) {
             case "5quyxpxheyvzmb2d.onion:8000":
-                return "@mrosseel";
-            case "ef5qnzx6znifo3df.onion:8000":
-                return "@ManfredKarrer";
-            case "s67qglwhkgkyvr74.onion:8000":
-                return "@emzy";
-            case "jhgcy2won7xnslrb.onion:8000":
-                return "@ManfredKarrer";
-            case "3f3cu2yw7u457ztq.onion:8000":
-                return "@ManfredKarrer";
-            case "723ljisnynbtdohi.onion:8000":
-                return "@ManfredKarrer";
-            case "rm7b56wbrcczpjvl.onion:8000":
-                return "@ManfredKarrer";
-            case "fl3mmribyxgrv63c.onion:8000":
-                return "@ManfredKarrer";
-            default:
-                return "Undefined";
-        }
-    }
-
-    public String getSlackUser(NodeAddress nodeAddress) {
-        switch (nodeAddress.getFullAddress()) {
-            case "5quyxpxheyvzmb2d.onion:8000":
                 return "@miker";
             case "ef5qnzx6znifo3df.onion:8000":
                 return "@manfredkarrer";
             case "s67qglwhkgkyvr74.onion:8000":
                 return "@emzy";
             case "jhgcy2won7xnslrb.onion:8000":
-                return "@ManfredKarrer";
+                return "@manfredkarrer";
             case "3f3cu2yw7u457ztq.onion:8000":
                 return "@manfredkarrer";
             case "723ljisnynbtdohi.onion:8000":
@@ -109,14 +86,14 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // BTC mainnet
-            new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @mrosseel
+            new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @miker
             new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy
-            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @ManfredKarrer
-            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @ManfredKarrer
-            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"), // @ManfredKarrer
-            new NodeAddress("723ljisnynbtdohi.onion:8000"), // @ManfredKarrer
-            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @ManfredKarrer
-            new NodeAddress("fl3mmribyxgrv63c.onion:8000"), // @ManfredKarrer
+            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @manfredkarrer
+            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @manfredkarrer
+            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"), // @manfredkarrer
+            new NodeAddress("723ljisnynbtdohi.onion:8000"), // @manfredkarrer
+            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @manfredkarrer
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"), // @manfredkarrer
 
             //TODO dev
             // local dev

@@ -99,7 +99,7 @@ public class SeedNodeMonitorMain extends BisqExecutable {
         port(8080);
         get("/", (req, res) -> {
             log.info("Incoming request from: " + req.userAgent());
-            return seedNodeMonitor.getMetricsService().getResultAsHtml();
+            return seedNodeMonitor.getMetricsModel().getResultAsHtml();
         });
 
         new SeedNodeMonitorMain().execute(args);
@@ -115,6 +115,12 @@ public class SeedNodeMonitorMain extends BisqExecutable {
 
         parser.accepts(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL,
                 description("Set slack secret for seed node monitor", ""))
+                .withRequiredArg();
+        parser.accepts(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL,
+                description("Set slack secret for Btc node monitor", ""))
+                .withRequiredArg();
+        parser.accepts(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL,
+                description("Set slack secret for provider node monitor", ""))
                 .withRequiredArg();
     }
 

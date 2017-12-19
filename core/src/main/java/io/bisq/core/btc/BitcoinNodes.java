@@ -18,8 +18,8 @@
 package io.bisq.core.btc;
 
 import io.bisq.core.app.BisqEnvironment;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -44,32 +44,33 @@ public class BitcoinNodes {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
                         // ManfredKarrer
-                        new BtcNode("btc1.0-2-1.net", "r3dsojfhwcm7x7p6.onion", "159.89.16.222", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
-                        new BtcNode("btc2.0-2-1.net", "vlf5i3grro3wux24.onion", "165.227.34.56", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
-                        new BtcNode("btc3.0-2-1.net", "i3a5xtzfm4xwtybd.onion", "165.227.44.202", BtcNode.DEFAULT_PORT, "https://github.com/ManfredKarrer"),
+                        // new BtcNode("btc1.0-2-1.net1", "xxxsojfhwcm7x7p6.onion", "3.3.16.3", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
+                        new BtcNode("btc1.0-2-1.net", "r3dsojfhwcm7x7p6.onion", "159.89.16.222", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
+                        new BtcNode("btc2.0-2-1.net", "vlf5i3grro3wux24.onion", "165.227.34.56", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
+                        new BtcNode("btc3.0-2-1.net", "i3a5xtzfm4xwtybd.onion", "165.227.44.202", BtcNode.DEFAULT_PORT, "@manfredkarrer"),
 
                         // emzy
-                        new BtcNode("kirsche.emzy.de", null, "78.47.61.83", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
-                        new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
-                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "163.172.171.119", BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
-                        new BtcNode(null, "poyvpdt762gllauu.onion", null, BtcNode.DEFAULT_PORT, "https://github.com/emzy"),
+                        new BtcNode("kirsche.emzy.de", "fz6nsij6jiyuwlsc.onion", "78.47.61.83", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "163.172.171.119", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode(null, "poyvpdt762gllauu.onion", null, BtcNode.DEFAULT_PORT, "@emzy"), // cannot provide IP because no static IP
 
                         // ripcurlx
-                        new BtcNode("bitcoin.christophatteneder.com", "lgkvbvro67jomosw.onion", "174.138.35.229", BtcNode.DEFAULT_PORT, "https://github.com/ripcurlx"),
+                        new BtcNode("bitcoin.christophatteneder.com", "lgkvbvro67jomosw.onion", "174.138.35.229", BtcNode.DEFAULT_PORT, "@Christoph"),
 
                         // mrosseel
-                        new BtcNode("btc.vante.me", null, "138.68.117.247", BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
-                        new BtcNode(null, "mxdtrjhe2yfsx3pg.onion", null, BtcNode.DEFAULT_PORT, "https://github.com/mrosseel"),
+                        new BtcNode("btc.vante.me", "4jyh6llqj264oggs.onion", "138.68.117.247", BtcNode.DEFAULT_PORT, "@miker"),
+                        new BtcNode("btc2.vante.me", "mxdtrjhe2yfsx3pg.onion", "67.207.75.7", BtcNode.DEFAULT_PORT, "@miker"),
 
                         // sqrrm
-                        new BtcNode("btc4.0-2-1.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "https://github.com/sqrrm"), //TODO change dns
+                        new BtcNode("btc4.0-2-1.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
 
                         // sgeisler
-                        new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "https://github.com/sgeisler"),
+                        new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
 
                         // others
-                        new BtcNode("btc.jochen-hoenicke.de", null, "37.221.198.57", BtcNode.DEFAULT_PORT, "https://github.com/jhoenicke"),
-                        new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "https://github.com/tbocek")
+                        new BtcNode("btc.jochen-hoenicke.de", null, "37.221.198.57", BtcNode.DEFAULT_PORT, "@jhoenicke"), // requested onion
+                        new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "@tbocek") // requested onion
                 ) :
                 new ArrayList<>();
     }
@@ -78,8 +79,8 @@ public class BitcoinNodes {
         return BisqEnvironment.getBaseCurrencyNetwork().isBitcoin() && BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
     }
 
+    @EqualsAndHashCode
     @Getter
-    @ToString
     public static class BtcNode {
         private static final int DEFAULT_PORT = BisqEnvironment.getParameters().getPort(); //8333
 
@@ -129,6 +130,15 @@ public class BitcoinNodes {
 
         public boolean hasClearNetAddress() {
             return hostName != null || address != null;
+        }
+
+        @Override
+        public String toString() {
+            return "onionAddress='" + onionAddress + '\'' +
+                    ", hostName='" + hostName + '\'' +
+                    ", address='" + address + '\'' +
+                    ", port='" + port + '\'' +
+                    ", operator='" + operator;
         }
     }
 }

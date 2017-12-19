@@ -37,6 +37,7 @@ public class MonitorP2PService implements SetupListener, PersistedDataHost {
     private final MonitorRequestManager requestDataManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
 
+    private SetupListener listener;
     private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
 
@@ -66,7 +67,8 @@ public class MonitorP2PService implements SetupListener, PersistedDataHost {
         p2PDataStorage.readPersisted();
     }
 
-    public void start() {
+    public void start(SetupListener listener) {
+        this.listener = listener;
         networkNode.start(this);
     }
 
@@ -102,19 +104,23 @@ public class MonitorP2PService implements SetupListener, PersistedDataHost {
     @Override
     public void onTorNodeReady() {
         socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
+        listener.onTorNodeReady();
     }
 
     @Override
     public void onHiddenServicePublished() {
         checkArgument(networkNode.getNodeAddress() != null, "Address must be set when we have the hidden service ready");
         requestDataManager.start();
+        listener.onHiddenServicePublished();
     }
 
     @Override
     public void onSetupFailed(Throwable throwable) {
+        listener.onSetupFailed(throwable);
     }
 
     @Override
     public void onRequestCustomBridges() {
+        listener.onRequestCustomBridges();
     }
 }

@@ -31,6 +31,4 @@ public interface SeedNodesRepository {
     Set<NodeAddress> getSeedNodeAddresses();
 
     String getOperator(NodeAddress nodeAddress);
-
-    String getSlackUser(NodeAddress nodeAddress);
 }

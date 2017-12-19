@@ -57,8 +57,6 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 8 nodes
-    private static final int DEFAULT_CONNECTIONS = 8;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -85,6 +83,7 @@ public class WalletConfig extends AbstractIdleService {
     private final BisqWalletFactory walletFactory;
     private final BisqEnvironment bisqEnvironment;
     private final String userAgent;
+    private int numConnectionForBtc;
 
     private volatile Wallet vBtcWallet;
     @Nullable
@@ -118,11 +117,13 @@ public class WalletConfig extends AbstractIdleService {
                         File directory,
                         BisqEnvironment bisqEnvironment,
                         String userAgent,
+                        int numConnectionForBtc,
                         @SuppressWarnings("SameParameterValue") String btcWalletFileName,
                         @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
                         @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.bisqEnvironment = bisqEnvironment;
         this.userAgent = userAgent;
+        this.numConnectionForBtc = numConnectionForBtc;
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -419,7 +420,8 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                vPeerGroup.setMaxConnections(Math.min(DEFAULT_CONNECTIONS, peerAddresses.length));
+                log.info("We try to connect to {} btc nodes", numConnectionForBtc);
+                vPeerGroup.setMaxConnections(Math.min(numConnectionForBtc, peerAddresses.length));
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
