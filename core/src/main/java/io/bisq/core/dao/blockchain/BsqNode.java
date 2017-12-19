@@ -24,8 +24,8 @@ import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +97,37 @@ public abstract class BsqNode {
             log.info("onAllServicesInitialized: isBootstrapped");
             onP2PNetworkReady();
         } else {
-            p2PService.addP2PServiceListener(new BootstrapListener() {
+            p2PService.addP2PServiceListener(new P2PServiceListener() {
+                @Override
+                public void onTorNodeReady() {
+                }
+
+                @Override
+                public void onHiddenServicePublished() {
+                }
+
+                @Override
+                public void onSetupFailed(Throwable throwable) {
+                }
+
+                @Override
+                public void onRequestCustomBridges() {
+                }
+
+                @Override
+                public void onRequestingDataCompleted() {
+                }
+
+                @Override
+                public void onNoSeedNodeAvailable() {
+                    log.info("onAllServicesInitialized: onNoPeersAvailable");
+                    onP2PNetworkReady();
+                }
+
+                @Override
+                public void onNoPeersAvailable() {
+                }
+
                 @Override
                 public void onBootstrapComplete() {
                     log.info("onAllServicesInitialized: onBootstrapComplete");

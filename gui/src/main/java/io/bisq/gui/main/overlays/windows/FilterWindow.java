@@ -117,13 +117,17 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
         InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
+        nodesInputTextField.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
         InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
+        paymentAccountFilterInputTextField.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
         InputTextField bannedCurrenciesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies")).second;
         InputTextField bannedPaymentMethodsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
+        bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
         InputTextField arbitratorsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators")).second;
         InputTextField seedNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode")).second;
         InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
+        InputTextField btcNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode")).second;
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
 
         final Filter filter = filterManager.getDevelopersFilter();
@@ -160,6 +164,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (filter.getPriceRelayNodes() != null)
                 priceRelayNodesInputTextField.setText(filter.getPriceRelayNodes().stream().collect(Collectors.joining(", ")));
 
+            if (filter.getBtcNodes() != null)
+                btcNodesInputTextField.setText(filter.getBtcNodes().stream().collect(Collectors.joining(", ")));
+
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
 
         }
@@ -173,6 +180,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             List<String> arbitrators = new ArrayList<>();
             List<String> seedNodes = new ArrayList<>();
             List<String> priceRelayNodes = new ArrayList<>();
+            List<String> btcNodes = new ArrayList<>();
 
             if (!offerIdsInputTextField.getText().isEmpty()) {
                 offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
@@ -231,6 +239,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         .split(",")));
             }
 
+            if (!btcNodesInputTextField.getText().isEmpty()) {
+                btcNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(btcNodesInputTextField.getText())
+                        .split(",")));
+            }
+
             if (sendFilterMessageHandler.handle(new Filter(offerIds,
                             nodes,
                             paymentAccountFilters,
@@ -239,7 +252,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             arbitrators,
                             seedNodes,
                             priceRelayNodes,
-                            preventPublicBtcNetworkCheckBox.isSelected()),
+                            preventPublicBtcNetworkCheckBox.isSelected(),
+                            btcNodes),
                     keyInputTextField.getText()))
                 hide();
             else

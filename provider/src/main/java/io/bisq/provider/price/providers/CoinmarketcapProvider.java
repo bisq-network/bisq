@@ -6,6 +6,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.price.PriceData;
+import io.bisq.provider.price.PriceRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +40,7 @@ public class CoinmarketcapProvider {
             String code = (String) treeMap.get("symbol");
             if (supportedAltcoins.contains(code)) {
                 double price_btc = parseDouble((String) treeMap.get("price_btc"));
-                marketPriceMap.put(code, new PriceData(code,
-                        price_btc,
-                        ts));
+                marketPriceMap.put(code, new PriceData(code, price_btc, ts, PriceRequestService.COINMKTC_PROVIDER));
             }
         });
         return marketPriceMap;

@@ -79,7 +79,7 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
 
     @Override
     public int compareTo(@NotNull TradeCurrency other) {
-        return this.code.compareTo(other.code);
+        return this.name.compareTo(other.name);
     }
 
 }

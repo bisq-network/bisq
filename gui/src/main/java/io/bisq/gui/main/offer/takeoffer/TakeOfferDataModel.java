@@ -285,7 +285,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
             new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (filterManager.isOfferIdBanned(offer.getId())) {
             new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix())) {
+        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),

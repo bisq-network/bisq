@@ -516,6 +516,38 @@ public class FormBuilder {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + RadioButton + RadioButton
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, RadioButton, RadioButton> addLabelRadioButtonRadioButton(GridPane gridPane,
+                                                                                         int rowIndex,
+                                                                                         ToggleGroup toggleGroup,
+                                                                                         String title,
+                                                                                         String radioButtonTitle1,
+                                                                                         String radioButtonTitle2) {
+        Label label = addLabel(gridPane, rowIndex, title, 0);
+
+        RadioButton radioButton1 = new RadioButton(radioButtonTitle1);
+        radioButton1.setToggleGroup(toggleGroup);
+        radioButton1.setPadding(new Insets(6, 0, 0, 0));
+
+        RadioButton radioButton2 = new RadioButton(radioButtonTitle2);
+        radioButton2.setToggleGroup(toggleGroup);
+        radioButton2.setPadding(new Insets(6, 0, 0, 0));
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(radioButton1, radioButton2);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(label, radioButton1, radioButton2);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + CheckBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 

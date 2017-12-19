@@ -86,6 +86,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         applyStyles();
         display();
     }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +186,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         });
     }
 
-    public void setwalletService(WalletService walletService) {
+    public void setWalletService(WalletService walletService) {
         this.walletService = walletService;
     }
 }

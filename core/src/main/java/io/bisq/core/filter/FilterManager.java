@@ -31,6 +31,7 @@ import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
@@ -59,6 +60,7 @@ public class FilterManager {
 
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     public static final String BANNED_SEED_NODES = "bannedSeedNodes";
+    public static final String BANNED_BTC_NODES = "bannedBtcNodes";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,6 +181,7 @@ public class FilterManager {
     }
 
     private void resetFilters() {
+        bisqEnvironment.saveBannedBtcNodes(null);
         bisqEnvironment.saveBannedSeedNodes(null);
         bisqEnvironment.saveBannedPriceRelayNodes(null);
         providersRepository.applyBannedNodes(null);
@@ -192,6 +195,7 @@ public class FilterManager {
             // nodes at the next startup and don't update the list in the P2P network domain.
             // We persist it to the property file which is read before any other initialisation.
             bisqEnvironment.saveBannedSeedNodes(filter.getSeedNodes());
+            bisqEnvironment.saveBannedBtcNodes(filter.getBtcNodes());
 
             // Banned price relay nodes we can apply at runtime
             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
@@ -330,10 +334,10 @@ public class FilterManager {
                         .isPresent();
     }
 
-    public boolean isNodeAddressBanned(String nodeAddress) {
+    public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress))
+                        .filter(e -> e.equals(nodeAddress.getFullAddress()))
                         .findAny()
                         .isPresent();
     }

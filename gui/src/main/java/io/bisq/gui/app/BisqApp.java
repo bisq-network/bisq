@@ -104,7 +104,7 @@ public class BisqApp extends Application {
     public static Runnable shutDownHandler;
     private static Stage primaryStage;
 
-    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
+    protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
@@ -224,12 +224,6 @@ public class BisqApp extends Application {
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
-           /* Storage.setDatabaseCorruptionHandler((String fileName) -> {
-                corruptedDatabaseFiles.add(fileName);
-                if (mainView != null)
-                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-            });*/
-
             scene = new Scene(mainView.getRoot(), 1200, 710); //740
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
@@ -308,9 +302,6 @@ public class BisqApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-            // Used only for migrating old trade statistic to new data structure
-            //injector.getInstance(TradeStatisticsMigrationTool.class);
-
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
@@ -346,7 +337,7 @@ public class BisqApp extends Application {
 
     private void showEmptyWalletPopup(WalletService walletService) {
         EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setwalletService(walletService);
+        emptyWalletWindow.setWalletService(walletService);
         emptyWalletWindow.show();
     }
 

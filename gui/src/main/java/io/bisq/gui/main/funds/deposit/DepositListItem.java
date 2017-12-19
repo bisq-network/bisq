@@ -60,7 +60,7 @@ class DepositListItem {
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setPrefHeight(30);
         txConfidenceIndicator.setPrefWidth(30);
-        Tooltip.install(txConfidenceIndicator, tooltip);
+        txConfidenceIndicator.setTooltip(tooltip);
 
         final Address address = addressEntry.getAddress();
         walletService.addBalanceListener(new BalanceListener(address) {

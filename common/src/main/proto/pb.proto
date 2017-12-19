@@ -567,6 +567,7 @@ message Filter {
     repeated string seed_nodes = 10;
     repeated string price_relay_nodes = 11;
     bool prevent_public_btc_network = 12;
+    repeated string btc_nodes = 13;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older

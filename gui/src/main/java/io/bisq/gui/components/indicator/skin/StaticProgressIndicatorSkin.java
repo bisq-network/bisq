@@ -32,7 +32,6 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.components.indicator.behavior.StaticProgressIndicatorBehavior;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -189,47 +188,41 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
         InvalidationListener indeterminateListener = valueModel -> initialize();
         control.indeterminateProperty().addListener(indeterminateListener);
 
-        InvalidationListener visibilityListener = new InvalidationListener() {
-            @Override
-            public void invalidated(Observable valueModel) {
-                if (getSkinnable().isIndeterminate() && timeLineNulled && spinner == null) {
-                    timeLineNulled = false;
-                    spinner = new IndeterminateSpinner(
-                            getSkinnable(), StaticProgressIndicatorSkin.this,
-                            spinEnabled.get(), progressColor.get());
-                    getChildren().add(spinner);
-                }
+        InvalidationListener visibilityListener = valueModel -> {
+            if (getSkinnable().isIndeterminate() && timeLineNulled && spinner == null) {
+                timeLineNulled = false;
+                spinner = new IndeterminateSpinner(
+                        getSkinnable(), StaticProgressIndicatorSkin.this,
+                        spinEnabled.get(), progressColor.get());
+                getChildren().add(spinner);
+            }
 
-                if (spinner != null) {
-                    if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
-                        getChildren().remove(spinner);
-                        spinner = null;
-                        timeLineNulled = true;
-                    }
+            if (spinner != null) {
+                if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
+                    getChildren().remove(spinner);
+                    spinner = null;
+                    timeLineNulled = true;
                 }
             }
         };
         control.visibleProperty().addListener(visibilityListener);
         control.parentProperty().addListener(visibilityListener);
 
-        InvalidationListener sceneListener = new InvalidationListener() {
-            @Override
-            public void invalidated(Observable valueModel) {
-                if (spinner != null) {
-                    if (getSkinnable().getScene() == null) {
-                        getChildren().remove(spinner);
-                        spinner = null;
-                        timeLineNulled = true;
-                    }
-                } else {
-                    if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
-                        timeLineNulled = false;
-                        spinner = new IndeterminateSpinner(
-                                getSkinnable(), StaticProgressIndicatorSkin.this,
-                                spinEnabled.get(), progressColor.get());
-                        getChildren().add(spinner);
-                        getSkinnable().requestLayout();
-                    }
+        InvalidationListener sceneListener = valueModel -> {
+            if (spinner != null) {
+                if (getSkinnable().getScene() == null) {
+                    getChildren().remove(spinner);
+                    spinner = null;
+                    timeLineNulled = true;
+                }
+            } else {
+                if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
+                    timeLineNulled = false;
+                    spinner = new IndeterminateSpinner(
+                            getSkinnable(), StaticProgressIndicatorSkin.this,
+                            spinEnabled.get(), progressColor.get());
+                    getChildren().add(spinner);
+                    getSkinnable().requestLayout();
                 }
             }
         };

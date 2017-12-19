@@ -85,8 +85,8 @@ public class BsqChainState implements PersistableEnvelope {
     private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT =  1227630;
 
     // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "321a2156d6cac631d3e574caf54a5a401e51971280c14b18b5f5877026a94d47";
-    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 111;
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "7523a226c2ea488f55fd01ba96c839905bd3606ea1d670952f2de7030fa740da";
+    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 514;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

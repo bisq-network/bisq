@@ -459,7 +459,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isNodeAddressBanned(Offer offer) {
-        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress().getHostNameWithoutPostFix());
+        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
     }
 
     boolean isInsufficientTradeLimit(Offer offer) {

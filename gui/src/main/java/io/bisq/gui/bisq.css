@@ -150,6 +150,10 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: white;
 }
 
+.text-field {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
 .text-field:readonly {
     -fx-text-fill: #000000;
     -fx-background-color: #FAFAFA;
@@ -219,7 +223,7 @@ bg color of non edit textFields: fafafa
 }
 
 
-.dao-tx-type-unverified-icon, 
+.dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
     -fx-cursor: hand;

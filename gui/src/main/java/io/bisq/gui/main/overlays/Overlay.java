@@ -459,6 +459,10 @@ public abstract class Overlay<T extends Overlay> {
                 Window window = rootScene.getWindow();
                 setModality();
                 stage.initStyle(StageStyle.TRANSPARENT);
+                stage.setOnCloseRequest(event -> {
+                    event.consume();
+                    doClose();
+                });
                 stage.show();
 
                 layout();

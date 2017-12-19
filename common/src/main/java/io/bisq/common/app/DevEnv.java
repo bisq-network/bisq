@@ -21,4 +21,5 @@ public class DevEnv {
     public static final boolean DEV_MODE = STRESS_TEST_MODE || false;
 
     public static final boolean DAO_PHASE2_ACTIVATED = false;
+    public static final boolean DAO_TRADING_ACTIVATED = false;
 }

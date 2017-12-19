@@ -93,6 +93,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private int gridRow = 0;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
+    private ChangeListener<Number> priceFeedUpdateCounterListener;
     private Subscription currencySelectionSubscriber;
 
 
@@ -211,6 +212,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
+
+        // Fixes incorrect ordering of Available offers:
+        // https://github.com/bisq-network/exchange/issues/588
+        priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> {
+            tableView.sort();
+        };
     }
 
     @Override
@@ -268,6 +275,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         model.getOfferList().addListener(offerListListener);
         nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
+
+        model.priceFeedService.updateCounterProperty().addListener(priceFeedUpdateCounterListener);
     }
 
     @Override
@@ -283,6 +292,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.getOfferList().comparatorProperty().unbind();
 
         model.getOfferList().removeListener(offerListListener);
+        model.priceFeedService.updateCounterProperty().removeListener(priceFeedUpdateCounterListener);
 
         currencySelectionSubscriber.unsubscribe();
     }

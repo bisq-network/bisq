@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.price.PriceData;
+import io.bisq.provider.price.PriceRequestService;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,14 +57,14 @@ public class BtcAverageProvider {
     }
 
     public Map<String, PriceData> getLocal() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-        return getMap(httpClient.requestWithGETNoProxy("indices/local/ticker/all?crypto=BTC", "X-signature", getHeader()));
+        return getMap(httpClient.requestWithGETNoProxy("indices/local/ticker/all?crypto=BTC", "X-signature", getHeader()), PriceRequestService.BTCAVERAGE_LOCAL_PROVIDER);
     }
 
     public Map<String, PriceData> getGlobal() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-        return getMap(httpClient.requestWithGETNoProxy("indices/global/ticker/all?crypto=BTC", "X-signature", getHeader()));
+        return getMap(httpClient.requestWithGETNoProxy("indices/global/ticker/all?crypto=BTC", "X-signature", getHeader()), PriceRequestService.BTCAVERAGE_GLOBAL_PROVIDER);
     }
 
-    private Map<String, PriceData> getMap(String json) {
+    private Map<String, PriceData> getMap(String json, String provider) {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         LinkedTreeMap<String, Object> treeMap = new Gson().<LinkedTreeMap<String, Object>>fromJson(json, LinkedTreeMap.class);
         long ts = Instant.now().getEpochSecond();
@@ -88,9 +89,7 @@ public class BtcAverageProvider {
                             log.warn("Unexpected data type: lastAsObject=" + lastAsObject);
 
                         marketPriceMap.put(currencyCode,
-                                new PriceData(currencyCode,
-                                        last,
-                                        ts));
+                                new PriceData(currencyCode, last, ts, provider));
                     } catch (Throwable exception) {
                         log.error("Error converting btcaverage data: " + currencyCode, exception);
                     }
