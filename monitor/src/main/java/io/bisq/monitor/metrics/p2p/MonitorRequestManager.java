@@ -1,7 +1,9 @@
-package io.bisq.seednode_monitor.metrics;
+package io.bisq.monitor.metrics.p2p;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.monitor.metrics.Metrics;
+import io.bisq.monitor.metrics.MetricsModel;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -9,7 +11,7 @@ import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.seednode_monitor.MonitorOptionKeys;
+import io.bisq.monitor.MonitorOptionKeys;
 import lombok.extern.slf4j.Slf4j;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;

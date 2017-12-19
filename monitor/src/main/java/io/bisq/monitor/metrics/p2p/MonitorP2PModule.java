@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor.metrics.p2p;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -32,7 +32,7 @@ import io.bisq.network.p2p.peers.getdata.RequestDataManager;
 import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.seednode_monitor.metrics.MetricsModel;
+import io.bisq.monitor.metrics.MetricsModel;
 import org.springframework.core.env.Environment;
 
 import java.io.File;

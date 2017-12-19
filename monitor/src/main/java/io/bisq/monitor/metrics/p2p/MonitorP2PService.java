@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor.metrics.p2p;
 
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.persistable.PersistedDataHost;
@@ -23,7 +23,6 @@ import io.bisq.network.Socks5ProxyProvider;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.network.SetupListener;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.seednode_monitor.metrics.MonitorRequestManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.app.Version;
@@ -37,17 +37,17 @@ import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SeedNodeMonitorEnvironment extends BisqEnvironment {
+public class MonitorEnvironment extends BisqEnvironment {
 
     private String slackUrlSeedChannel = "";
     private String slackUrlBtcChannel = "";
     private String slackUrlProviderChannel = "";
 
-    public SeedNodeMonitorEnvironment(OptionSet options) {
+    public MonitorEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
-    public SeedNodeMonitorEnvironment(PropertySource commandLineProperties) {
+    public MonitorEnvironment(PropertySource commandLineProperties) {
         super(commandLineProperties);
 
         slackUrlSeedChannel = commandLineProperties.containsProperty(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) ?

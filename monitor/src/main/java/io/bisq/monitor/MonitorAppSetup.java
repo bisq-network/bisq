@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor;
+package io.bisq.monitor;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
@@ -23,6 +23,7 @@ import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.SetupUtils;
 import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.monitor.metrics.p2p.MonitorP2PService;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.network.SetupListener;
 import io.bisq.network.p2p.peers.PeerManager;

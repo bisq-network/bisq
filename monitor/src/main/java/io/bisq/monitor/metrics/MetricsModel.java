@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.seednode_monitor.metrics;
+package io.bisq.monitor.metrics;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.MathUtils;
@@ -24,7 +24,7 @@ import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.seednode_monitor.MonitorOptionKeys;
+import io.bisq.monitor.MonitorOptionKeys;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

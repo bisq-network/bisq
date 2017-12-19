@@ -26,7 +26,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>seednode_monitor</artifactId>
+    <artifactId>monitor</artifactId>
 
     <build>
 
@@ -99,7 +99,7 @@
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
-                                <Main-Class>io.bisq.seednode_monitor.SeedNodeMonitorMain</Main-Class>
+                                <Main-Class>io.bisq.monitor.MonitorMain</Main-Class>
                                 <!-- the specified bouncy castle jar classes  -->
                                 <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
                             </manifestEntries>
@@ -128,7 +128,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>SeedNodeMonitor</finalName>
+                            <finalName>Monitor</finalName>
                         </configuration>
                     </execution>
                 </executions>
