@@ -87,7 +87,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
     private void addContent() {
         headLine = "Important update information!";
-        headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
+        headLineLabel.getStyleClass().addAll("headline-label", "highlight");
 
         checkNotNull(alert, "alertMessage must not be null");
         addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
@@ -95,7 +95,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Separator separator = new Separator();
         separator.setMouseTransparent(true);
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #ccc;");
+        separator.getStyleClass().add("separator");
         GridPane.setHalignment(separator, HPos.CENTER);
         GridPane.setRowIndex(separator, ++rowIndex);
         GridPane.setColumnSpan(separator, 2);
@@ -159,7 +159,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Separator separator2 = new Separator();
         separator2.setMouseTransparent(true);
         separator2.setOrientation(Orientation.HORIZONTAL);
-        separator2.setStyle("-fx-background: #ccc;");
+        separator2.getStyleClass().add("separator");
         GridPane.setHalignment(separator2, HPos.CENTER);
         GridPane.setRowIndex(separator2, ++rowIndex);
         GridPane.setColumnSpan(separator2, 2);
@@ -205,12 +205,13 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                         List<BisqInstaller.FileDescriptor> downloadResults = downloadTask.getValue();
                         Optional<BisqInstaller.FileDescriptor> downloadFailed = downloadResults.stream()
                                 .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus())).findFirst();
+                        downloadedFilesLabel.getStyleClass().removeAll("error-text","success-text");
                         if (downloadResults == null || downloadResults.isEmpty() || downloadFailed.isPresent()) {
                             showErrorMessage(downloadButton, statusLabel, downloadFailedString);
-                            downloadedFilesLabel.setStyle("-fx-text-fill: -bs-error-red;");
+                            downloadedFilesLabel.getStyleClass().add("error-text");
                         } else {
                             log.debug("Download completed successfully.");
-                            downloadedFilesLabel.setStyle("-fx-text-fill: -bs-green;");
+                            downloadedFilesLabel.getStyleClass().add("success-text");
 
                             verifyTask = installer.verify(downloadResults);
                             verifiedSigLabel.setOpacity(1);
@@ -233,7 +234,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));
                                 } else {
-                                    verifiedSigLabel.setStyle("-fx-text-fill: -bs-green;");
+                                    verifiedSigLabel.getStyleClass().add("success-text");
                                     new Popup<>().feedback(Res.get("displayUpdateDownloadWindow.success"))
                                             .actionButtonText(Res.get("displayUpdateDownloadWindow.download.openDir"))
                                             .onAction(() -> {
