@@ -30,10 +30,9 @@ import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+// TODO close connection if failing
 public class HttpClient {
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
-
 
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
