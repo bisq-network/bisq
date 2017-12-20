@@ -448,7 +448,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 result.append("\n------------------------------------------------------------\n");
                 log.debug(result.toString());
             }
-            log.debug("Number of collected reported peers: {}", reportedPeers.size());
+            log.info("Number of reported peers: {}", reportedPeers.size());
         }
     }
 

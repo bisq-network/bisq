@@ -81,15 +81,14 @@ class PeerExchangeHandler implements MessageListener {
 
     private void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
+        log.info("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
                 GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedNonSeedNodeReportedPeers(nodeAddress));
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
-                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                    log.debug(errorMessage + " / PeerExchangeHandler=" +
-                                            PeerExchangeHandler.this);
+                                    String errorMessage = "A timeout occurred at sending getPeersRequest. nodeAddress=" + nodeAddress;
                                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
                                 } else {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");

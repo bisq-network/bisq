@@ -10,8 +10,7 @@ import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -19,9 +18,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PeerExchangeManager implements MessageListener, ConnectionListener, PeerManager.Listener {
-    private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
-
     private static final long RETRY_DELAY_SEC = 10;
     private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = 3;
     private static final long REQUEST_PERIODICALLY_INTERVAL_MIN = 10;
