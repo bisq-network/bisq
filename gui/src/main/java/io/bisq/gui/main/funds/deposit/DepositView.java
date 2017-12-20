@@ -29,10 +29,7 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.AddressTextField;
-import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.util.BSFormatter;
@@ -122,7 +119,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.deposit.noAddresses")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.deposit.noAddresses")));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null)
                 fillForm(newValue.getAddressString());
@@ -316,7 +313,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setGraphic(new Label(item.getUsage()));
+                            setGraphic(new AutoTooltipLabel(item.getUsage()));
                         } else {
                             setGraphic(null);
                         }

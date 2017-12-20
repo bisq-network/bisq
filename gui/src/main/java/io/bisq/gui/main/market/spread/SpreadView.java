@@ -21,6 +21,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
@@ -65,7 +66,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
-        Label placeholder = new Label(Res.get("table.placeholder.noData"));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noData"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -285,7 +286,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    // TODO maybe show exra colums with item.priceSpread and use real amount diff 
+                                    // TODO maybe show exra colums with item.priceSpread and use real amount diff
                                     // not % based
                                     if (item.priceSpread != null)
                                         setText(item.percentage);

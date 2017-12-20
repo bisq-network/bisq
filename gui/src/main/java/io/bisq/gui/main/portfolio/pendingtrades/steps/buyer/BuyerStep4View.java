@@ -31,6 +31,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.util.CoinUtil;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.MainView;
@@ -142,7 +143,7 @@ public class BuyerStep4View extends TradeStepView {
         hBox.setSpacing(10);
         useSavingsWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
         useSavingsWalletButton.setDefaultButton(false);
-        Label label = new Label(Res.get("shared.OR"));
+        Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
         withdrawToExternalWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.withdrawExternal"));
         withdrawToExternalWalletButton.setDefaultButton(false);

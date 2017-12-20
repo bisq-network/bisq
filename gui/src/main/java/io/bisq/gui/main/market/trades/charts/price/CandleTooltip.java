@@ -32,6 +32,7 @@
 package io.bisq.gui.main.market.trades.charts.price;
 
 import io.bisq.common.locale.Res;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.util.Layout;
 import javafx.geometry.HPos;
@@ -46,12 +47,12 @@ import javafx.util.StringConverter;
  */
 public class CandleTooltip extends GridPane {
     private final StringConverter<Number> priceStringConverter;
-    private final Label openValue = new Label();
-    private final Label closeValue = new Label();
-    private final Label highValue = new Label();
-    private final Label lowValue = new Label();
-    private final Label averageValue = new Label();
-    private final Label dateValue = new Label();
+    private final Label openValue = new AutoTooltipLabel();
+    private final Label closeValue = new AutoTooltipLabel();
+    private final Label highValue = new AutoTooltipLabel();
+    private final Label lowValue = new AutoTooltipLabel();
+    private final Label averageValue = new AutoTooltipLabel();
+    private final Label dateValue = new AutoTooltipLabel();
 
     CandleTooltip(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
@@ -60,12 +61,12 @@ public class CandleTooltip extends GridPane {
 
         setVgap(2);
 
-        Label open = new Label(Res.get("market.trades.tooltip.candle.open"));
-        Label close = new Label(Res.get("market.trades.tooltip.candle.close"));
-        Label high = new Label(Res.get("market.trades.tooltip.candle.high"));
-        Label low = new Label(Res.get("market.trades.tooltip.candle.low"));
-        Label average = new Label(Res.get("market.trades.tooltip.candle.average"));
-        Label date = new Label(Res.get("market.trades.tooltip.candle.date"));
+        Label open = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.open"));
+        Label close = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.close"));
+        Label high = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.high"));
+        Label low = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.low"));
+        Label average = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.average"));
+        Label date = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.date"));
         setConstraints(open, 0, 0);
         setConstraints(openValue, 1, 0);
         setConstraints(close, 0, 1);

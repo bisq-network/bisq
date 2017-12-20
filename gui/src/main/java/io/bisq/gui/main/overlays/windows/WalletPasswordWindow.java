@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.main.overlays.Overlay;
@@ -160,7 +161,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        Label label = new Label(Res.get("password.enterPassword"));
+        Label label = new AutoTooltipLabel(Res.get("password.enterPassword"));
         label.setWrapText(true);
         GridPane.setMargin(label, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(label, ++rowIndex);
@@ -177,7 +178,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void addButtons() {
         BusyAnimation busyAnimation = new BusyAnimation(false);
-        Label deriveStatusLabel = new Label();
+        Label deriveStatusLabel = new AutoTooltipLabel();
 
         unlockButton = new Button(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
@@ -244,7 +245,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void showRestoreScreen() {
-        Label headLine2Label = new Label(Res.get("seed.restore.title"));
+        Label headLine2Label = new AutoTooltipLabel(Res.get("seed.restore.title"));
         headLine2Label.setId("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);

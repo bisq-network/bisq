@@ -30,6 +30,7 @@ import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -155,7 +156,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         tableView.setMinHeight(180);
         tableView.setPrefHeight(180);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
 

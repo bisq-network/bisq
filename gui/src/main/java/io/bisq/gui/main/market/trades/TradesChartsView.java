@@ -27,6 +27,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bisq.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bisq.gui.util.BSFormatter;
@@ -117,7 +118,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         createCharts();
         createTable();
 
-        nrOfTradeStatisticsLabel = new Label(" "); // set empty string for layout
+        nrOfTradeStatisticsLabel = new AutoTooltipLabel(" "); // set empty string for layout
         nrOfTradeStatisticsLabel.setId("num-offers");
         nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
         root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView, nrOfTradeStatisticsLabel);
@@ -408,7 +409,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private HBox getToolBox() {
-        Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
+        Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
         currencyLabel.setPadding(new Insets(0, 4, 0, 0));
 
         currencyComboBox = new ComboBox<>();
@@ -420,7 +421,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label label = new Label("Interval:");
+        Label label = new AutoTooltipLabel("Interval:");
         label.setPadding(new Insets(0, 4, 0, 0));
 
         toggleGroup = new ToggleGroup();
@@ -644,7 +645,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder.noData"));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noData"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);

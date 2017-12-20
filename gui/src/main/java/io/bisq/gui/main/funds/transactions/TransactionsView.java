@@ -37,6 +37,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
@@ -137,7 +138,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         revertTxColumn.setText(Res.get("shared.revert", Res.getBaseCurrencyCode()));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.tx.noTxAvailable")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -383,7 +384,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         setGraphic(field);
                                     } else {
-                                        setGraphic(new Label(item.getDetails()));
+                                        setGraphic(new AutoTooltipLabel(item.getDetails()));
                                     }
                                 } else {
                                     setGraphic(null);

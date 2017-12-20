@@ -810,7 +810,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
-        directionLabel = new Label();
+        directionLabel = new AutoTooltipLabel();
         directionLabel.setAlignment(Pos.CENTER);
         directionLabel.setPadding(new Insets(-5, 0, 0, 0));
         directionLabel.setId("direction-icon-label");
@@ -908,9 +908,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setColumnSpan(payFundsTitledGroupBg, 3);
         payFundsTitledGroupBg.setVisible(false);
 
-        totalToPayLabel = new Label(Res.get("shared.totalsNeeded"));
+        totalToPayLabel = new AutoTooltipLabel(Res.get("shared.totalsNeeded"));
         totalToPayLabel.setVisible(false);
-        totalToPayInfoIconLabel = new Label();
+        totalToPayInfoIconLabel = new AutoTooltipLabel();
         totalToPayInfoIconLabel.setVisible(false);
         HBox totalToPayBox = new HBox();
         totalToPayBox.setSpacing(4);
@@ -964,13 +964,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label(Res.get("shared.OR"));
+        Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
         Button fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation();
-        waitingForFundsLabel = new Label();
+        waitingForFundsLabel = new AutoTooltipLabel();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
 
         fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
@@ -1034,7 +1034,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
-        xLabel = new Label();
+        xLabel = new AutoTooltipLabel();
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setMinWidth(14);
@@ -1075,7 +1075,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         toggleButtonsHBox.getChildren().addAll(fixedPriceButton, useMarketBasedPriceButton);
 
         // =
-        Label resultLabel = new Label("=");
+        Label resultLabel = new AutoTooltipLabel("=");
         resultLabel.setFont(Font.font("Helvetica-Bold", 20));
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
@@ -1173,7 +1173,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox,
                 Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
-        Label xLabel = new Label("x");
+        Label xLabel = new AutoTooltipLabel("x");
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
@@ -1236,7 +1236,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
-        Label label = new Label(labelText);
+        Label label = new AutoTooltipLabel(labelText);
         TextField textField = new TextField(value);
         textField.setMinWidth(500);
         textField.setEditable(false);

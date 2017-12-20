@@ -26,6 +26,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
@@ -114,7 +115,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 Res.get("shared.offers"),
                 model.preferences));
 
-        Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
+        Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
@@ -448,11 +449,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         }
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        Label titleLabel = new Label();
+        Label titleLabel = new AutoTooltipLabel();
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 

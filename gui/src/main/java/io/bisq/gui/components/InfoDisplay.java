@@ -68,7 +68,7 @@ public class InfoDisplay extends Parent {
         GridPane.setMargin(icon, new Insets(-2, 0, 0, 0));
         GridPane.setRowSpan(icon, 2);
 
-        label = new Label();
+        label = new AutoTooltipLabel();
         label.textProperty().bind(text);
         label.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
         // width is set a frame later so we hide it first
@@ -79,7 +79,7 @@ public class InfoDisplay extends Parent {
 
         // We need that to know if we have a wrapping or not.
         // Did not find a way to get that from the API.
-        Label testLabel = new Label();
+        Label testLabel = new AutoTooltipLabel();
         testLabel.textProperty().bind(text);
 
         textFlow = new TextFlow();

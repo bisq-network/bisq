@@ -28,6 +28,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.account.AccountView;
 import io.bisq.gui.main.dao.DaoView;
@@ -286,7 +287,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
 
-        Label label = new Label(text);
+        Label label = new AutoTooltipLabel(text);
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 5));
         label.setPrefWidth(textField.getPrefWidth());
@@ -372,7 +373,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             );
         });
 
-        Label label = new Label(Res.get("mainView.marketPrice.provider"));
+        Label label = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
 
@@ -422,7 +423,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
 
         // createBitcoinInfoBox
-        btcSplashInfo = new Label();
+        btcSplashInfo = new AutoTooltipLabel();
         btcSplashInfo.textProperty().bind(model.btcInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> btcSplashInfo.setId("splash-error-state-msg");
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
@@ -455,7 +456,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
 
         // create P2PNetworkBox
-        splashP2PNetworkLabel = new Label();
+        splashP2PNetworkLabel = new AutoTooltipLabel();
         splashP2PNetworkLabel.setWrapText(true);
         splashP2PNetworkLabel.setMaxWidth(500);
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
@@ -542,7 +543,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setTopAnchor(separator, 0d);
 
         // BTC
-        Label btcInfoLabel = new Label();
+        Label btcInfoLabel = new AutoTooltipLabel();
         btcInfoLabel.setId("footer-pane");
         btcInfoLabel.textProperty().bind(model.btcInfo);
 
@@ -580,7 +581,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(blockchainSyncBox, 7d);
 
         // version
-        versionLabel = new Label();
+        versionLabel = new AutoTooltipLabel();
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
@@ -602,7 +603,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // P2P Network
-        Label p2PNetworkLabel = new Label();
+        Label p2PNetworkLabel = new AutoTooltipLabel();
         p2PNetworkLabel.setId("footer-pane");
         setRightAnchor(p2PNetworkLabel, 33d);
         setBottomAnchor(p2PNetworkLabel, 7d);
@@ -635,7 +636,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void setupNotificationIcon(Pane buttonHolder) {
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         label.textProperty().bind(model.numPendingTradesAsString);
         label.relocate(5, 1);
         label.setId("nav-alert-label");
@@ -654,7 +655,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void setupDisputesIcon(Pane buttonHolder) {
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         label.textProperty().bind(model.numOpenDisputesAsString);
         label.relocate(5, 1);
         label.setId("nav-alert-label");

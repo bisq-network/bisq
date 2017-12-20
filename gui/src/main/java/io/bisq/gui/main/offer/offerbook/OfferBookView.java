@@ -31,6 +31,7 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.MainView;
@@ -170,7 +171,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -193,7 +194,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getFullAddress().compareTo(o2.getOffer().getOwnerNodeAddress().getFullAddress()));
 
-        nrOfOffersLabel = new Label("");
+        nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
         GridPane.setHalignment(nrOfOffersLabel, HPos.LEFT);
         GridPane.setVgrow(nrOfOffersLabel, Priority.NEVER);

@@ -25,6 +25,7 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
@@ -124,7 +125,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
         // tableView.setMinHeight(100);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         sortedList = new SortedList<>(compensationRequestManger.getObservableList());
         tableView.setItems(sortedList);
         setColumns();

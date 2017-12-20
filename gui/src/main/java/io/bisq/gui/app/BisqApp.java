@@ -60,6 +60,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewLoader;
 import io.bisq.gui.common.view.guice.InjectorViewFactory;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -398,7 +399,7 @@ public class BisqApp extends Application {
     }
 
     private void showFPSWindow() {
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         EventStreams.animationTicks()
                 .latestN(100)
                 .map(ticks -> {

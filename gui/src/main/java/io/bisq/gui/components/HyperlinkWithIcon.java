@@ -28,7 +28,7 @@ public class HyperlinkWithIcon extends HBox {
         setSpacing(5);
         hyperlink = new Hyperlink(text);
 
-        icon = new Label();
+        icon = new AutoTooltipLabel();
         icon.getStyleClass().add("external-link-icon");
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);

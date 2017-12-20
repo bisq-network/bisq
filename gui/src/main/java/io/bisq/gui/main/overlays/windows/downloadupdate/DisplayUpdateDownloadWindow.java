@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.Alert;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -108,7 +109,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
         busyAnimation = new BusyAnimation(false);
 
-        Label statusLabel = new Label();
+        Label statusLabel = new AutoTooltipLabel();
         statusLabel.managedProperty().bind(statusLabel.visibleProperty());
 
         HBox hBox = new HBox();

@@ -36,6 +36,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
@@ -148,7 +149,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         selectColumn.setText(Res.get("shared.select"));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.withdrawal.noFundsAvailable")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.withdrawal.noFundsAvailable")));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         setAddressColumnCellFactory();

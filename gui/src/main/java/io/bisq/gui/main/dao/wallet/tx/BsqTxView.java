@@ -33,6 +33,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
@@ -332,7 +333,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                         if (field != null)
                                             field.setOnAction(null);
 
-                                        label = new Label(item.isBurnedBsqTx() ?
+                                        label = new AutoTooltipLabel(item.isBurnedBsqTx() ?
                                                 Res.get("dao.wallet.bsqFee") : Res.get("funds.tx.direction.self"));
                                         setGraphic(label);
                                     } else {
