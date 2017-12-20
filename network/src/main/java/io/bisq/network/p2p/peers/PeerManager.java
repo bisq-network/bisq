@@ -14,6 +14,7 @@ import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -33,7 +34,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     private static final long CHECK_MAX_CONN_DELAY_SEC = 10;
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
-    private static final long REMOVE_ANONYMOUS_PEER_SEC = 120;
+    private static final long REMOVE_ANONYMOUS_PEER_SEC = 240;
 
     private static final int MAX_REPORTED_PEERS = 1000;
     private static final int MAX_PERSISTED_PEERS = 500;
@@ -73,7 +74,9 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private boolean stopped;
     private boolean lostAllConnections;
 
+    @Getter
     private int minConnections;
+    private int disconnectFromSeedNode;
     private int maxConnectionsPeer;
     private int maxConnectionsNonDirect;
     private int maxConnectionsAbsolute;
@@ -154,12 +157,14 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     // Modify this to change the relationships between connection limits.
+    // maxConnections default 12
     private void setConnectionLimits(int maxConnections) {
-        this.maxConnections = maxConnections;
-        minConnections = Math.max(1, maxConnections - 4);
-        maxConnectionsPeer = maxConnections + 4;
-        maxConnectionsNonDirect = maxConnections + 8;
-        maxConnectionsAbsolute = maxConnections + 18;
+        this.maxConnections = maxConnections;                       // 12
+        disconnectFromSeedNode = Math.min(6, maxConnections + 1);   // 6
+        minConnections = Math.max(1, maxConnections - 4);           // 1-8
+        maxConnectionsPeer = maxConnections + 4;                    // 16
+        maxConnectionsNonDirect = maxConnections + 8;               // 20
+        maxConnectionsAbsolute = maxConnections + 18;               // 30 -> seedNode with maxConnections=30 -> 48
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +249,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     removeSuperfluousSeedNodes();
                     removeTooOldReportedPeers();
                     removeTooOldPersistedPeers();
-                    checkMaxConnections(maxConnections);
+                    checkMaxConnections();
                 } else {
                     log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
@@ -252,13 +257,13 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         }
     }
 
-    private boolean checkMaxConnections(int limit) {
-        Log.traceCall("limit=" + limit);
+    private boolean checkMaxConnections() {
+        Log.traceCall("maxConnections=" + maxConnections);
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
-        log.debug("We have {} connections open. Our limit is {}", size, limit);
+        log.debug("We have {} connections open. Our limit is {}", size, maxConnections);
 
-        if (size > limit) {
+        if (size > maxConnections) {
             log.debug("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");
             List<Connection> candidates = allConnections.stream()
@@ -266,7 +271,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
                     .collect(Collectors.toList());
 
-            if (candidates.size() == 0) {
+            if (candidates.isEmpty()) {
                 log.debug("No candidates found. We check if we exceed our " +
                         "maxConnectionsPeer limit of {}", maxConnectionsPeer);
                 if (size > maxConnectionsPeer) {
@@ -275,7 +280,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                             .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
                             .collect(Collectors.toList());
 
-                    if (candidates.size() == 0) {
+                    if (candidates.isEmpty()) {
                         log.debug("No candidates found. We check if we exceed our " +
                                 "maxConnectionsNonDirect limit of {}", maxConnectionsNonDirect);
                         if (size > maxConnectionsNonDirect) {
@@ -284,7 +289,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                                     .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER && e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
                                     .collect(Collectors.toList());
 
-                            if (candidates.size() == 0) {
+                            if (candidates.isEmpty()) {
                                 log.debug("No candidates found. We check if we exceed our " +
                                         "maxConnectionsAbsolute limit of {}", maxConnectionsAbsolute);
                                 if (size > maxConnectionsAbsolute) {
@@ -297,13 +302,13 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 }
             }
 
-            if (candidates.size() > 0) {
+            if (!candidates.isEmpty()) {
                 candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
                 log.debug("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.debug("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
                 if (!connection.isStopped())
-                    connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> checkMaxConnections(limit));
+                    connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
                 return true;
             } else {
                 log.warn("No candidates found to remove (That case should not be possible as we use in the " +
@@ -322,7 +327,9 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         networkNode.getAllConnections().stream()
                 .filter(connection -> !connection.hasPeersNodeAddress())
                 .forEach(connection -> UserThread.runAfter(() -> {
-                    // We give 30 seconds delay and check again if still no address is set
+                    // We give 240 seconds delay and check again if still no address is set
+                    // Keep the delay long as we don't want to disconnect a peer in case we are a seed node just
+                    // because he needs longer for the HS publishing
                     if (!connection.hasPeersNodeAddress() && !connection.isStopped()) {
                         log.debug("We close the connection as the peer address is still unknown.\n\t" +
                                 "connection=" + connection);
@@ -333,20 +340,18 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     private void removeSuperfluousSeedNodes() {
         Log.traceCall();
-        if (networkNode.getConfirmedConnections().size() > maxConnections) {
-            Set<Connection> connections = networkNode.getConfirmedConnections();
-            if (hasSufficientConnections()) {
-                List<Connection> candidates = connections.stream()
-                        .filter(this::isSeedNode)
-                        .collect(Collectors.toList());
+        if (networkNode.getConfirmedConnections().size() > disconnectFromSeedNode) {
+            List<Connection> seedNodes = networkNode.getConfirmedConnections().stream()
+                    .filter(this::isSeedNode)
+                    .collect(Collectors.toList());
 
-                if (candidates.size() > 1) {
-                    candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
-                    log.debug("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
-                    Connection connection = candidates.remove(0);
-                    log.debug("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
-                    connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED, this::removeSuperfluousSeedNodes);
-                }
+            if (!seedNodes.isEmpty()) {
+                seedNodes.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
+                log.debug("Number of seed node connections to disconnect. Current size=" + seedNodes.size());
+                Connection connection = seedNodes.get(0);
+                log.debug("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
+                connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED,
+                        () -> UserThread.runAfter(this::removeSuperfluousSeedNodes, 200, TimeUnit.MILLISECONDS));
             }
         }
     }

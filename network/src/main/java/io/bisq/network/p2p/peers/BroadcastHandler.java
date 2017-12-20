@@ -11,33 +11,28 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.storage.messages.BroadcastMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class BroadcastHandler implements PeerManager.Listener {
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private static final long TIMEOUT = 60;
 
-    private static final Logger log = LoggerFactory.getLogger(BroadcastHandler.class);
-    private static final long TIMEOUT = 120;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     interface ResultHandler {
         void onCompleted(BroadcastHandler broadcastHandler);
 
         void onFault(BroadcastHandler broadcastHandler);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
         @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
@@ -182,7 +177,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                         public void onFailure(@NotNull Throwable throwable) {
                             numOfFailedBroadcasts++;
                             if (!stopped) {
-                                log.debug("Broadcast to " + nodeAddress + " failed.\n\t" +
+                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
                                         "ErrorMessage=" + throwable.getMessage());
                                 if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numPeers)
                                     onFault("stopped at onFailure: " + errorMessage);

@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT = 60;
     private NodeAddress peersNodeAddress;
 
 
@@ -142,7 +142,6 @@ class RequestDataHandler implements MessageListener {
                                 " failed. That is expected if the peer is offline.\n\t" +
                                 "getDataRequest=" + getDataRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
-                        log.debug(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
@@ -299,6 +298,7 @@ class RequestDataHandler implements MessageListener {
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
+        log.info(errorMessage);
         //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
         peerManager.handleConnectionFault(nodeAddress);
         listener.onFault(errorMessage, null);

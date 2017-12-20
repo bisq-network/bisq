@@ -57,6 +57,7 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
+    private static int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -190,7 +191,6 @@ public class WalletConfig extends AbstractIdleService {
                     new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
                             socks5Proxy.getPort()));
 
-            int TIMEOUT = 120 * 1000;  // 60 used in bitcoinj, but for Tor we allow more.
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // we dont use tor mode if we have a local node running
             BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?

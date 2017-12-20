@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {
-
     private static final long TIMEOUT = 120;
 
 

@@ -19,9 +19,8 @@ import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,11 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class GetDataRequestHandler {
-    private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
-
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT = 60;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +192,7 @@ public class GetDataRequestHandler {
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         if (!stopped) {
-            log.debug(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
+            log.info(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
             cleanup();
             listener.onFault(errorMessage, connection);
         } else {
