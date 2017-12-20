@@ -202,8 +202,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("NXT-2222-2222-2222-22222").isValid);
     }
 
-    // Added at 0.6.1
-
+    // Added at 0.6.0
     @Test
     public void testDCT() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -413,6 +412,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("").isValid);
     }
 
+    // Added 0.6.2
 	@Test
     public void testCAGE() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();

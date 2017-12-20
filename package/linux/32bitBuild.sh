@@ -6,9 +6,9 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.6.1
+version=0.6.2
 
-jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bisq-$version.jar"
+dir="/media/sf_vm_shared_ubuntu14_32bit"
 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
@@ -25,7 +25,9 @@ $JAVA_HOME/bin/javapackager \
     -title Bisq \
     -vendor Bisq \
     -outdir gui/deploy \
-    -srcfiles $jarFile \
+    -srcfiles "$dir/Bisq-$version.jar" \
+    -srcfiles "$dir/bcpg-jdk15on.jar" \
+    -srcfiles "$dir/bcprov-jdk15on.jar" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.gui.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \

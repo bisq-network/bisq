@@ -9,12 +9,33 @@ version="0.6.2"
 
 mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
-# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
+linux32=/Users/dev/vm_shared_ubuntu14_32bit
+linux64=/Users/dev/vm_shared_ubuntu
+win32=/Users/dev/vm_shared_windows_32bit
+win64=/Users/dev/vm_shared_windows
+
 cp gui/target/shaded.jar "gui/deploy/Bisq-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bisq-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bisq.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu14_32bit/Bisq-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bisq.jar"
+
+# copy app jar to VM shared folders
+cp gui/target/shaded.jar "$linux32/Bisq-$version.jar"
+cp gui/target/shaded.jar "$linux64/Bisq-$version.jar"
+# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
+cp gui/target/shaded.jar "$win32/Bisq.jar"
+cp gui/target/shaded.jar "$win64/Bisq.jar"
+
+# copy bouncycastle jars to VM shared folders
+lib1=bcpg-jdk15on.jar
+cp gui/target/lib/$lib1 "$linux32/$lib1"
+cp gui/target/lib/$lib1 "$linux64/$lib1"
+cp gui/target/lib/$lib1 "$win32/$lib1"
+cp gui/target/lib/$lib1 "$win64/$lib1"
+
+lib2=bcprov-jdk15on.jar
+cp gui/target/lib/$lib2 "$linux32/$lib2"
+cp gui/target/lib/$lib2 "$linux64/$lib2"
+cp gui/target/lib/$lib2 "$win32/$lib2"
+cp gui/target/lib/$lib2 "$win64/$lib2"
+
 
 echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
