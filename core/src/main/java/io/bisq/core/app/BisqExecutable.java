@@ -160,7 +160,7 @@ public abstract class BisqExecutable {
                 description("User agent at btc node connections", ""))
                 .withRequiredArg();
         parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
-                description("Number of connections to the Bitcoin network", "8"))
+                description("Number of connections to the Bitcoin network", "9"))
                 .withRequiredArg();
 
 
