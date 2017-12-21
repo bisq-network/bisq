@@ -16,7 +16,7 @@ public class TooltipUtil {
                         labeled.setTooltip(null);
                     }
                 } else if (labeled.getText() != null){
-                    labeled.setTooltip(new Tooltip(labeled.getText());
+                    labeled.setTooltip(new Tooltip(labeled.getText()));
                 }
             }
         }
