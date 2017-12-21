@@ -961,7 +961,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
         Button fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
-        fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
