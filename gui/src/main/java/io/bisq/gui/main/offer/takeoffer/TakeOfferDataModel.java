@@ -372,8 +372,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void fundFromSavingsWallet() {
         useSavingsWallet = true;
         updateBalance();
-        if (!isWalletFunded.get())
+        if (!isWalletFunded.get()) {
             this.useSavingsWallet = false;
+            updateBalance();
+        }
     }
 
     void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
