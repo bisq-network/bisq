@@ -24,6 +24,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
 import io.bisq.gui.main.dao.wallet.dashboard.BsqDashboardView;
@@ -36,7 +37,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
@@ -142,7 +142,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
 }
 
 
-class MenuItem extends ToggleButton {
+class MenuItem extends AutoTooltipToggleButton {
 
     private final ChangeListener<Boolean> selectedPropertyChangeListener;
     private final ChangeListener<Boolean> disablePropertyChangeListener;

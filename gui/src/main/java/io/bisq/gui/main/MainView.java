@@ -29,6 +29,7 @@ import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.account.AccountView;
 import io.bisq.gui.main.dao.DaoView;
@@ -679,7 +680,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonHolder.getChildren().add(notification);
     }
 
-    private class NavButton extends ToggleButton {
+    private class NavButton extends AutoTooltipToggleButton {
 
         private final Class<? extends View> viewClass;
 

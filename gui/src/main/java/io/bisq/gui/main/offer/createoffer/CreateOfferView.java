@@ -1054,7 +1054,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         // Fixed/Percentage toggle
         ToggleGroup toggleGroup = new ToggleGroup();
-        fixedPriceButton = new ToggleButton(Res.get("createOffer.fixed"));
+        fixedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.fixed"));
         editOfferElements.add(fixedPriceButton);
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
@@ -1062,7 +1062,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             updatePriceToggleButtons(newValue);
         });
 
-        useMarketBasedPriceButton = new ToggleButton(Res.get("createOffer.percentage"));
+        useMarketBasedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.percentage"));
         editOfferElements.add(useMarketBasedPriceButton);
         useMarketBasedPriceButton.setId("toggle-price-right");
         useMarketBasedPriceButton.setToggleGroup(toggleGroup);

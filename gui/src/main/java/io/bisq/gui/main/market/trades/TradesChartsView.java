@@ -28,6 +28,7 @@ import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bisq.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bisq.gui.util.BSFormatter;
@@ -441,7 +442,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private ToggleButton getToggleButton(String label, TradesChartsViewModel.TickUnit tickUnit, ToggleGroup toggleGroup, String style) {
-        ToggleButton toggleButton = new ToggleButton(label);
+        ToggleButton toggleButton = new AutoTooltipToggleButton(label);
         toggleButton.setPadding(new Insets(0, 5, 0, 5));
         toggleButton.setUserData(tickUnit);
         toggleButton.setToggleGroup(toggleGroup);

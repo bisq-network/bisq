@@ -2,10 +2,10 @@ package io.bisq.gui.components;
 
 import com.sun.javafx.scene.control.skin.LabelSkin;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.Skin;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.text.Text;
+
+import static io.bisq.gui.components.TooltipUtil.showTooltipIfTruncated;
 
 public class AutoTooltipLabel extends Label {
 
@@ -23,26 +23,15 @@ public class AutoTooltipLabel extends Label {
     }
 
     private class AutoTooltipLabelSkin extends LabelSkin {
-        private final Label truncateToFitLabel;
 
         public AutoTooltipLabelSkin(Label label) {
             super(label);
-            this.truncateToFitLabel = label;
         }
 
         @Override
         protected void layoutChildren(double x, double y, double w, double h) {
             super.layoutChildren(x, y, w, h);
-            for (Node node : getChildren()) {
-                if (node instanceof Text) {
-                    String displayedText = ((Text) node).getText();
-                    if (displayedText.equals(truncateToFitLabel.getText())) {
-                        truncateToFitLabel.setTooltip(null);
-                    } else {
-                        truncateToFitLabel.setTooltip(new Tooltip(truncateToFitLabel.getText()));
-                    }
-                }
-            }
+            showTooltipIfTruncated(this, getSkinnable());
         }
     }
 }
