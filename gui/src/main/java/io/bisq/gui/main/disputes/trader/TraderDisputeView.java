@@ -38,10 +38,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.BusyAnimation;
-import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.components.TableGroupHeadline;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.ContractWindow;
@@ -165,7 +162,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        Label label = new Label(Res.get("support.filter"));
+        Label label = new AutoTooltipLabel(Res.get("support.filter"));
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
         filterTextField = new InputTextField();
         filterTextField.setText("open");
@@ -185,7 +182,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         root.getChildren().addAll(filterBox, tableView);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("support.noTickets"));
+        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         tableView.getSelectionModel().clearSelection();
@@ -644,7 +641,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             Button uploadButton = new Button(Res.get("support.addAttachments"));
             uploadButton.setOnAction(e -> onRequestUpload());
 
-            sendMsgInfoLabel = new Label();
+            sendMsgInfoLabel = new AutoTooltipLabel();
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
             sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
@@ -689,12 +686,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         public ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
-                        final Label headerLabel = new Label();
-                        final Label messageLabel = new Label();
-                        final Label copyIcon = new Label();
+                        final Label headerLabel = new AutoTooltipLabel();
+                        final Label messageLabel = new AutoTooltipLabel();
+                        final Label copyIcon = new AutoTooltipLabel();
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
-                        final Label statusIcon = new Label();
+                        final Label statusIcon = new AutoTooltipLabel();
                         final double arrowWidth = 15d;
                         final double attachmentsBoxHeight = 20d;
                         final double border = 10d;
@@ -825,7 +822,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments() != null && item.getAttachments().size() > 0) {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
-                                    attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
+                                    attachmentsBox.getChildren().add(new AutoTooltipLabel(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
                                             getStyleClass().add("my-message");
@@ -833,7 +830,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                             getStyleClass().add("message");
                                     }});
                                     item.getAttachments().stream().forEach(attachment -> {
-                                        final Label icon = new Label();
+                                        final Label icon = new AutoTooltipLabel();
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
                                             icon.getStyleClass().add("attachment-icon");

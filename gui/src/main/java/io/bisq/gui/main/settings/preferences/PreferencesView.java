@@ -362,7 +362,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             @Override
             public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
                 return new ListCell<CryptoCurrency>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new Button("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);

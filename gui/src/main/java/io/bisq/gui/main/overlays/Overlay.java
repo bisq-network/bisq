@@ -25,6 +25,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.GUIUtil;
@@ -687,7 +688,7 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
-            headLineLabel = new Label(headLine);
+            headLineLabel = new AutoTooltipLabel(headLine);
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
@@ -716,7 +717,7 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addMessage() {
         if (message != null) {
-            messageLabel = new Label(truncatedMessage);
+            messageLabel = new AutoTooltipLabel(truncatedMessage);
             messageLabel.setMouseTransparent(true);
             messageLabel.setWrapText(true);
             GridPane.setHalignment(messageLabel, HPos.LEFT);

@@ -96,7 +96,7 @@ public class FormBuilder {
     }
 
     public static Label addLabel(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = new Label(title);
+        Label label = new AutoTooltipLabel(title);
         GridPane.setRowIndex(label, rowIndex);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(label);
@@ -121,7 +121,7 @@ public class FormBuilder {
     }
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text, double top) {
-        Label label = new Label(text);
+        Label label = new AutoTooltipLabel(text);
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setRowIndex(label, rowIndex);
@@ -396,7 +396,7 @@ public class FormBuilder {
         Label label1 = addLabel(gridPane, rowIndex, title1, 0);
 
         InputTextField inputTextField1 = new InputTextField();
-        Label label2 = new Label(title2);
+        Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
         InputTextField inputTextField2 = new InputTextField();
 
@@ -422,7 +422,7 @@ public class FormBuilder {
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
-        Label label2 = new Label(title2);
+        Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
         TextField textField2 = new TextField();
         textField2.setEditable(false);
@@ -956,7 +956,7 @@ public class FormBuilder {
 
         BusyAnimation busyAnimation = new BusyAnimation(false);
 
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(button, busyAnimation, label);
 
@@ -980,7 +980,7 @@ public class FormBuilder {
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label");
 
         HBox box = new HBox();
@@ -997,7 +997,7 @@ public class FormBuilder {
         textField.setEditable(false);
         textField.setFocusTraversable(false);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label-disabled");
 
         HBox box = new HBox();
@@ -1012,7 +1012,7 @@ public class FormBuilder {
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label");
 
         HBox box = new HBox();
@@ -1029,7 +1029,7 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String descriptionText) {
-        Label descriptionLabel = new Label(descriptionText);
+        Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
         descriptionLabel.setPrefWidth(170);
 

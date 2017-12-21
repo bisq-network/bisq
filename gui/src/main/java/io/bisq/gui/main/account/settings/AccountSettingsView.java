@@ -22,6 +22,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.account.AccountView;
@@ -163,7 +164,7 @@ class MenuItem extends AutoTooltipToggleButton {
         setPrefWidth(240);
         setAlignment(Pos.CENTER_LEFT);
 
-        Label icon = new Label();
+        Label icon = new AutoTooltipLabel();
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setTextFill(Paint.valueOf("#333"));
         icon.setPadding(new Insets(0, 5, 0, 0));

@@ -17,6 +17,7 @@
 
 package io.bisq.gui;
 
+import io.bisq.gui.components.AutoTooltipLabel;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -41,7 +42,7 @@ public class BindingTest extends Application {
         VBox root = new VBox();
         root.setSpacing(20);
 
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         StringProperty txt = new SimpleStringProperty();
         txt.set("-");
         label.textProperty().bind(txt);

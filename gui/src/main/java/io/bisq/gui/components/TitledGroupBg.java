@@ -37,7 +37,7 @@ public class TitledGroupBg extends Pane {
         GridPane.setMargin(this, new Insets(-10, -10, -10, -10));
         GridPane.setColumnSpan(this, 2);
 
-        label = new Label();
+        label = new AutoTooltipLabel();
         label.textProperty().bind(text);
         label.setLayoutX(8);
         label.setLayoutY(-8);
