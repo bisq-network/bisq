@@ -37,6 +37,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -540,7 +541,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     if (confidence != null) {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
-                                                button = new Button(Res.get("funds.tx.revert"));
+                                                button = new AutoTooltipButton(Res.get("funds.tx.revert"));
                                                 setGraphic(button);
                                             }
                                             button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));

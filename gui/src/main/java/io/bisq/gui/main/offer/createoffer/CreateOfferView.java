@@ -960,13 +960,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        Button fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
+        Button fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        Button fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
+        Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation();

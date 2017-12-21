@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.Alert;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.overlays.Overlay;
@@ -104,7 +105,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         gridPane.getChildren().add(separator);
 
 
-        Button downloadButton = new Button(Res.get("displayUpdateDownloadWindow.button.label"));
+        Button downloadButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.label"));
         downloadButton.setDefaultButton(true);
 
         busyAnimation = new BusyAnimation(false);
@@ -265,9 +266,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
     @Override
     protected void addCloseButton() {
-        closeButton = new Button(Res.get("displayUpdateDownloadWindow.button.ignoreDownload"));
+        closeButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.ignoreDownload"));
         closeButton.setOnAction(event -> doClose());
-        actionButton = new Button(Res.get("displayUpdateDownloadWindow.button.downloadLater"));
+        actionButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.downloadLater"));
         actionButton.setDefaultButton(false);
         actionButton.setOnAction(event -> {
             cleanup();

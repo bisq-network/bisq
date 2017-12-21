@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.dao.vote.VoteItem;
 import io.bisq.core.dao.vote.VotingDefaultValues;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import javafx.beans.property.DoubleProperty;
@@ -145,10 +146,10 @@ public class ParameterViewItem {
         };
         slider.valueProperty().addListener(sliderListener);
 
-        resetButton = new Button(Res.get("shared.reset"));
+        resetButton = new AutoTooltipButton(Res.get("shared.reset"));
         resetButton.setOnAction(event -> inputTextField.setText(String.valueOf(originalValue)));
 
-        removeButton = new Button(Res.get("shared.remove"));
+        removeButton = new AutoTooltipButton(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

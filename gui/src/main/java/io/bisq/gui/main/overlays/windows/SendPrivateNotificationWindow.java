@@ -22,6 +22,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.PrivateNotificationPayload;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -119,7 +120,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(200);
 
-        Button sendButton = new Button(Res.get("sendPrivateNotificationWindow.send"));
+        Button sendButton = new AutoTooltipButton(Res.get("sendPrivateNotificationWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(
@@ -153,7 +154,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
             }
         });
 
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

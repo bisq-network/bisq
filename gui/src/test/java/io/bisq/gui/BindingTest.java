@@ -17,6 +17,7 @@
 
 package io.bisq.gui;
 
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
@@ -47,7 +48,7 @@ public class BindingTest extends Application {
         txt.set("-");
         label.textProperty().bind(txt);
 
-        Button button = new Button("count up");
+        Button button = new AutoTooltipButton("count up");
         button.setOnAction(e -> txt.set("counter " + counter++));
         root.getChildren().addAll(label, button);
 

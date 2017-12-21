@@ -28,6 +28,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.components.BusyAnimation;
@@ -328,7 +329,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
-        final Button btcAverageIconButton = new Button("", btcAverageIcon);
+        final Button btcAverageIconButton = new AutoTooltipButton("", btcAverageIcon);
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.getStyleClass().add("hidden-icon-button");
@@ -352,7 +353,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
-        final Button poloniexIconButton = new Button("", poloniexIcon);
+        final Button poloniexIconButton = new AutoTooltipButton("", poloniexIcon);
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.getStyleClass().add("hidden-icon-button");
@@ -480,7 +481,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
 
-        Button showTorNetworkSettingsButton = new Button(Res.get("settings.net.openTorSettingsButton"));
+        Button showTorNetworkSettingsButton = new AutoTooltipButton(Res.get("settings.net.openTorSettingsButton"));
         showTorNetworkSettingsButton.setVisible(false);
         showTorNetworkSettingsButton.setManaged(false);
         showTorNetworkSettingsButton.setOnAction(e -> {

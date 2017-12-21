@@ -26,6 +26,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
@@ -458,7 +459,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == OfferPayload.Direction.SELL;
-        Button button = new Button();
+        Button button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);

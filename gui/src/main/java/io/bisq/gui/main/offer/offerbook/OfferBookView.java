@@ -31,6 +31,7 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.PeerInfoIcon;
@@ -717,7 +718,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
-                            final Button button = new Button();
+                            final Button button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;

@@ -341,7 +341,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.select"));
+                                        button = new AutoTooltipButton(Res.get("shared.select"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));

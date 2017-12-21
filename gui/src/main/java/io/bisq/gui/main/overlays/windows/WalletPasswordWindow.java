@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
@@ -180,7 +181,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         BusyAnimation busyAnimation = new BusyAnimation(false);
         Label deriveStatusLabel = new AutoTooltipLabel();
 
-        unlockButton = new Button(Res.get("shared.unlock"));
+        unlockButton = new AutoTooltipButton(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
@@ -210,14 +211,14 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             }
         });
 
-        forgotPasswordButton = new Button(Res.get("password.forgotPassword"));
+        forgotPasswordButton = new AutoTooltipButton(Res.get("password.forgotPassword"));
         forgotPasswordButton.setOnAction(e -> {
             forgotPasswordButton.setDisable(true);
             unlockButton.setDefaultButton(false);
             showRestoreScreen();
         });
 
-        Button cancelButton = new Button(Res.get("shared.cancel"));
+        Button cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

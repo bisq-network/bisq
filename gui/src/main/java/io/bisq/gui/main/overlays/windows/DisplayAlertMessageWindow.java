@@ -19,11 +19,11 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.Alert;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
             headLine = Res.get("displayAlertMessageWindow.headline");
             headLineLabel.getStyleClass().addAll("headline-label", "error-text");
         }
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

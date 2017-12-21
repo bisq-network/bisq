@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -146,7 +147,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                 return new ListCell<String>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {

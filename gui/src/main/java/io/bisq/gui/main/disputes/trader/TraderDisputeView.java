@@ -622,7 +622,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (!(this instanceof ArbitratorDisputeView))
                 inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
-            sendButton = new Button(Res.get("support.send"));
+            sendButton = new AutoTooltipButton(Res.get("support.send"));
             sendButton.setDefaultButton(true);
             sendButton.setOnAction(e -> {
                 if (p2PService.isBootstrapped()) {
@@ -638,7 +638,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             });
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
-            Button uploadButton = new Button(Res.get("support.addAttachments"));
+            Button uploadButton = new AutoTooltipButton(Res.get("support.addAttachments"));
             uploadButton.setOnAction(e -> onRequestUpload());
 
             sendMsgInfoLabel = new AutoTooltipLabel();
@@ -654,7 +654,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
-                    Button closeDisputeButton = new Button(Res.get("support.closeTicket"));
+                    Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(selectedDispute));
                     closeDisputeButton.setDefaultButton(true);
                     Pane spacer = new Pane();
@@ -938,7 +938,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.select"));
+                                        button = new AutoTooltipButton(Res.get("shared.select"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));
@@ -978,7 +978,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.details"));
+                                        button = new AutoTooltipButton(Res.get("shared.details"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> onOpenContract(item));

@@ -25,6 +25,7 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
@@ -320,7 +321,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         iconView.setId("image-remove");
-                                        button = new Button(Res.get("shared.remove"));
+                                        button = new AutoTooltipButton(Res.get("shared.remove"));
                                         button.setMinWidth(70);
                                         button.setGraphic(iconView);
                                         setGraphic(button);
