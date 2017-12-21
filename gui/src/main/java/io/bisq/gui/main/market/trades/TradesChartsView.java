@@ -98,6 +98,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private HBox toolBox;
     private ChangeListener<Number> parentHeightListener;
     private Pane rootParent;
+    private ChangeListener<String> priceColumnLabelListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +144,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades",
                 model.tradeStatisticsByCurrency.size()));
         parentHeightListener = (observable, oldValue, newValue) -> layout();
+
+        priceColumnLabelListener = (o, oldVal, newVal) -> priceColumn.setGraphic(new AutoTooltipLabel(newVal));
     }
 
     @Override
@@ -177,7 +180,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
-        priceColumn.textProperty().bind(priceColumnLabel);
+        priceColumnLabel.addListener(priceColumnLabelListener);
 
         currencySelectionBinding = EasyBind.combine(
                 model.showAllTradeCurrenciesProperty, model.selectedTradeCurrencyProperty,
@@ -244,7 +247,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().unbind();
-        priceColumn.textProperty().unbind();
+        priceColumn.textProperty().removeListener(priceColumnLabelListener);
 
         currencySelectionSubscriber.unsubscribe();
 
