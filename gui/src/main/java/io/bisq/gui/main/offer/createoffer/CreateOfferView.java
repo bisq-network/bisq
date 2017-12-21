@@ -930,7 +930,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
@@ -1118,10 +1118,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        fixedPriceButton.setStyle(fixedPriceSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-        useMarketBasedPriceButton.setStyle(!fixedPriceSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        fixedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+
+        fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
+                "toggle-button-active" : "toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().add(!fixedPriceSelected ?
+                "toggle-button-active" : "toggle-button-inactive");
 
         if (fixedPriceSelected) {
             if (firstRowHBox.getChildren().contains(percentagePriceBox))
@@ -1160,7 +1163,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         marketBasedPriceTextField.setPromptText(Res.get("shared.enterPercentageValue"));
         marketBasedPriceLabel.setText("%");
-        marketBasedPriceLabel.setStyle("-fx-alignment: center;");
+        marketBasedPriceLabel.getStyleClass().add("percentage-label");
 
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueCurrencyBox(
                 Res.get("createOffer.amount.prompt"));
@@ -1196,6 +1199,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void setupTotalToPayInfoIconLabel() {
         totalToPayInfoIconLabel.setId("clickable-icon");
+        totalToPayInfoIconLabel.getStyleClass().addAll("highlight", "show-hand");
         AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
 
         totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
@@ -1221,7 +1225,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #666;");
+        separator.getStyleClass().add("offer-separator");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"), model.getTotalToPayInfo());

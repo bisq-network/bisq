@@ -114,7 +114,7 @@ public class InfoDisplay extends Parent {
                     label.prefWidthProperty().bind(textFlow.widthProperty());
                     link.setVisited(false);
                     // focus border is a bit confusing here so we remove it
-                    link.setStyle("-fx-focus-color: transparent;");
+                    link.getStyleClass().add("hide-focus");
                     link.setOnAction(onAction.get());
                     getParent().layout();
                 } else {

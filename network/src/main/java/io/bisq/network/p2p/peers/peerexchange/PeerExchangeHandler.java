@@ -21,10 +21,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
 @Slf4j
 class PeerExchangeHandler implements MessageListener {
-    private static final long TIMEOUT = 120;
-    private static final int DELAY_MS = 1000;
+    // We want to keep timeout short here
+    private static final long TIMEOUT = 40;
+    private static final int DELAY_MS = 500;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,17 +81,14 @@ class PeerExchangeHandler implements MessageListener {
 
     private void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
+        log.info("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
                 GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedNonSeedNodeReportedPeers(nodeAddress));
-
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
-                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                    log.debug(errorMessage + " / PeerExchangeHandler=" +
-                                            PeerExchangeHandler.this);
-                                    log.debug("timeoutTimer called on " + this);
+                                    String errorMessage = "A timeout occurred at sending getPeersRequest. nodeAddress=" + nodeAddress;
                                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
                                 } else {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
@@ -121,9 +120,7 @@ class PeerExchangeHandler implements MessageListener {
                     public void onFailure(@NotNull Throwable throwable) {
                         if (!stopped) {
                             String errorMessage = "Sending getPeersRequest to " + nodeAddress +
-                                    " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
-                                    ".\n\tException=" + throwable.getMessage();
-                            log.debug(errorMessage);
+                                    " failed. That is expected if the peer is offline. Exception=" + throwable.getMessage();
                             handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
                         } else {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");

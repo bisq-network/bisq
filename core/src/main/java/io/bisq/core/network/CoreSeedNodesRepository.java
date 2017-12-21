@@ -94,7 +94,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @manfredkarrer
             new NodeAddress("fl3mmribyxgrv63c.onion:8000"), // @manfredkarrer
 
-            //TODO dev
             // local dev
             // new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
             // new NodeAddress("uqxi3zrpobhtoes6.onion:8000"),

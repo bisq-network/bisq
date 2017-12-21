@@ -285,7 +285,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         textField.setPrefWidth(115); //140
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
-        textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
+        textField.getStyleClass().add("display-text-field");
 
         Label label = new AutoTooltipLabel(text);
         label.setId("nav-balance-label");
@@ -330,7 +330,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         final Button btcAverageIconButton = new Button("", btcAverageIcon);
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
-        btcAverageIconButton.setStyle("-fx-background-color: transparent;");
+        btcAverageIconButton.getStyleClass().add("hidden-icon-button");
         HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
@@ -354,7 +354,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         final Button poloniexIconButton = new Button("", poloniexIcon);
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
-        poloniexIconButton.setStyle("-fx-background-color: transparent;");
+        poloniexIconButton.getStyleClass().add("hidden-icon-button");
         HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
@@ -399,7 +399,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
-                tooltip.setStyle("-fx-font-size: 12");
+                tooltip.getStyleClass().add("market-price-tooltip");
                 label.setTooltip(tooltip);
             }
         } else {
@@ -425,7 +425,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // createBitcoinInfoBox
         btcSplashInfo = new AutoTooltipLabel();
         btcSplashInfo.textProperty().bind(model.btcInfo);
-        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> btcSplashInfo.setId("splash-error-state-msg");
+        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
+            btcSplashInfo.setId("splash-error-state-msg");
+            btcSplashInfo.getStyleClass().add("error-text");
+        };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
@@ -467,6 +470,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
+                splashP2PNetworkLabel.getStyleClass().add("error-text");
                 splashP2PNetworkBusyAnimation.stop();
             } else if (model.splashP2PNetworkAnimationVisible.get()) {
                 splashP2PNetworkBusyAnimation.play();
@@ -555,6 +559,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
+                btcInfoLabel.getStyleClass().add("error-text");
                 if (btcNetworkWarnMsgPopup == null) {
                     btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
                     btcNetworkWarnMsgPopup.show();
@@ -591,12 +596,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
         setBottomAnchor(versionLabel, 7d);
         model.newVersionAvailableProperty.addListener((observable, oldValue, newValue) -> {
+            versionLabel.getStyleClass().removeAll("version-new","version");
             if (newValue) {
-                versionLabel.setStyle("-fx-text-fill: -bs-error-red; -fx-underline: true; -fx-cursor: hand;");
+                versionLabel.getStyleClass().add("version-new");
                 versionLabel.setOnMouseClicked(e -> model.openDownloadWindow());
                 versionLabel.setText("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
             } else {
-                versionLabel.setStyle("-fx-text-fill: black; -fx-underline: false; -fx-cursor: null;");
+                versionLabel.getStyleClass().add("version");
                 versionLabel.setOnMouseClicked(null);
                 versionLabel.setText("v" + Version.VERSION);
             }

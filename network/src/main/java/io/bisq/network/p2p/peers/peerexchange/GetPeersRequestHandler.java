@@ -21,7 +21,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 class GetPeersRequestHandler {
-    private static final long TIMEOUT = 120;
+    // We want to keep timeout short here
+    private static final long TIMEOUT = 40;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +104,7 @@ class GetPeersRequestHandler {
                     String errorMessage = "Sending getPeersResponse to " + connection +
                             " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
                             "Exception: " + throwable.getMessage();
-                    log.debug(errorMessage);
+                    log.info(errorMessage);
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");

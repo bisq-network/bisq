@@ -707,7 +707,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             messageLabel.setWrapText(true);
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
-                            statusIcon.setStyle("-fx-font-size: 10;");
+                            statusIcon.getStyleClass().add("small-text");
                             copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
@@ -740,15 +740,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().addAll("message-header","success-text");
                                     bg.setId("message-bubble-green");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                 } else if (isMyMsg) {
-                                    headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("highlight");
                                     bg.setId("message-bubble-blue");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_blue_left");
                                     else
@@ -775,10 +775,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     /*else if (sendMsgProgressIndicator.getProgress() == 0)
                                         showNotArrivedIcon();*/
                                 } else {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("message-header");
                                     bg.setId("message-bubble-grey");
-                                    messageLabel.setStyle("-fx-text-fill: black;");
-                                    copyIcon.setStyle("-fx-text-fill: black;");
+                                    messageLabel.getStyleClass().add("message");
+                                    copyIcon.getStyleClass().add("message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_grey_right");
                                     else
@@ -828,9 +828,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
-                                            setStyle("-fx-text-fill: white;");
+                                            getStyleClass().add("my-message");
                                         else
-                                            setStyle("-fx-text-fill: black;");
+                                            getStyleClass().add("message");
                                     }});
                                     item.getAttachments().stream().forEach(attachment -> {
                                         final Label icon = new Label();
@@ -852,7 +852,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                                copyIcon.getStyleClass().add("copy-icon-disputes");
+                                copyIcon.getStyleClass().addAll("icon", "copy-icon-disputes");
 
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);

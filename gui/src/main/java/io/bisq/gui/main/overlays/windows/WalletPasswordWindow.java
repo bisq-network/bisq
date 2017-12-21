@@ -138,8 +138,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             restoreButton.setOnAction(null);
             seedWordsTextArea.setText("");
             datePicker.setValue(null);
-            seedWordsTextArea.getStyleClass().remove("validation_error");
-            datePicker.getStyleClass().remove("validation_error");
+            seedWordsTextArea.getStyleClass().remove("validation-error");
+            datePicker.getStyleClass().remove("validation-error");
         }
     }
 
@@ -257,7 +257,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Separator separator = new Separator();
         separator.setMouseTransparent(true);
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #ccc;");
+        separator.getStyleClass().add("separator");
         GridPane.setHalignment(separator, HPos.CENTER);
         GridPane.setRowIndex(separator, ++rowIndex);
         GridPane.setColumnSpan(separator, 2);
@@ -267,7 +267,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
         seedWordsTextArea.setPrefHeight(60);
-        seedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+        seedWordsTextArea.getStyleClass().add("text-area");
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("seed.creationDate"));
@@ -286,9 +286,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                seedWordsTextArea.getStyleClass().remove("validation_error");
+                seedWordsTextArea.getStyleClass().remove("validation-error");
             } else {
-                seedWordsTextArea.getStyleClass().add("validation_error");
+                seedWordsTextArea.getStyleClass().add("validation-error");
             }
         };
 
@@ -310,8 +310,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         restoreButton.setOnAction(e -> onRestore());
 
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        datePicker.getStyleClass().remove("validation_error");
+        seedWordsTextArea.getStyleClass().remove("validation-error");
+        datePicker.getStyleClass().remove("validation-error");
 
         layout();
     }

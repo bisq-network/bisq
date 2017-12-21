@@ -96,7 +96,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     @Override
     public void initialize() {
         root.setDividerPositions(0.3, 0.7);
-        root.setStyle("-fx-background-insets: 0, 0 0 0 0");
+        root.getStyleClass().add("compensation-root");
         AnchorPane topAnchorPane = new AnchorPane();
         root.getItems().add(topAnchorPane);
 

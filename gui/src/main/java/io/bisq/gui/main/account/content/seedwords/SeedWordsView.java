@@ -104,9 +104,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                seedWordsTextArea.getStyleClass().remove("validation_error");
+                seedWordsTextArea.getStyleClass().remove("validation-error");
             } else {
-                seedWordsTextArea.getStyleClass().add("validation_error");
+                seedWordsTextArea.getStyleClass().add("validation-error");
             }
         };
 
@@ -137,8 +137,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                     .show();
         });
 
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        restoreDatePicker.getStyleClass().remove("validation_error");
+        seedWordsTextArea.getStyleClass().remove("validation-error");
+        restoreDatePicker.getStyleClass().remove("validation-error");
 
 
         DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
@@ -178,8 +178,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         restoreDatePicker.setValue(null);
         datePicker.setValue(null);
 
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        restoreDatePicker.getStyleClass().remove("validation_error");
+        seedWordsTextArea.getStyleClass().remove("validation-error");
+        restoreDatePicker.getStyleClass().remove("validation-error");
     }
 
     private void askForPassword() {

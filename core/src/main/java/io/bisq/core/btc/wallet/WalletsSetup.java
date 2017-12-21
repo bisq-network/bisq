@@ -71,8 +71,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // merge WalletsSetup with WalletConfig to one class.
 @Slf4j
 public class WalletsSetup {
-    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 8 nodes
-    private static final int DEFAULT_CONNECTIONS = 8;
+    // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
+    private static final int DEFAULT_CONNECTIONS = 9;
 
     private static final long STARTUP_TIMEOUT = 180;
     private final String btcWalletFileName;
