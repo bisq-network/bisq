@@ -1,6 +1,10 @@
 [![Release](https://jitpack.io/v/mrosseel/bisq-api.svg)]
 (https://jitpack.io/#mrosseel/bisq-api)
 
+
+*WARNING: the current version of the API is configured to use Dev Privilege keys.
+If you want to use this on mainnet, you need to change the dependency to a release version of Bisq.*
+
 # Bisq API
 
 **Based on proposal: [Bisq-IP 1](https://github.com/mrosseel/bisq-proposals/blob/api-proposal/http-api.adoc)**
@@ -59,7 +63,7 @@ All regular Bisq arguments can be used.
 ```
 mvn exec:java
 -Dexec.mainClass="io.bisq.api.app.BisqApiWithUIMain"
--Dexec.args="--useDevPrivilegeKey --baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
+-Dexec.args="--baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
 ```
 
 ## Exploring the HTTP API
