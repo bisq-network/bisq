@@ -28,6 +28,7 @@ import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
@@ -393,7 +394,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // amount
-        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        TableColumn<OfferListItem, OfferListItem> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -416,7 +417,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // Lets remove that as it is not really relevant and seems to be confusing to some users
         // accumulated
-       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
+       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new AutoTooltipTableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
         accumulatedColumn.setMinWidth(100);
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

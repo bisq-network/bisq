@@ -90,14 +90,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        volumeColumn.setText(Res.get("shared.volume"));
-        marketColumn.setText(Res.get("shared.market"));
-        roleColumn.setText(Res.get("portfolio.pending.role"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        tradeIdColumn.setText(Res.get("shared.tradeId"));
-        paymentMethodColumn.setText(Res.get("shared.paymentMethod"));
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        roleColumn.setGraphic(new AutoTooltipLabel(Res.get("portfolio.pending.role")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
+        paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         avatarColumn.setText("");
 
         setTradeIdColumnCellFactory();

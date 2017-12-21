@@ -136,14 +136,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.setText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
-        onionAddressColumn.setText(Res.get("settings.net.onionAddressColumn"));
-        creationDateColumn.setText(Res.get("settings.net.creationDateColumn"));
-        connectionTypeColumn.setText(Res.get("settings.net.connectionTypeColumn"));
+        onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
+        creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
+        connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
         totalTrafficLabel.setText(Res.get("settings.net.totalTrafficLabel"));
-        roundTripTimeColumn.setText(Res.get("settings.net.roundTripTimeColumn"));
-        sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
-        receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
-        peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn"));
+        roundTripTimeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.roundTripTimeColumn")));
+        sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
+        receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
+        peerTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.peerTypeColumn")));
         openTorSettingsButton.setText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));

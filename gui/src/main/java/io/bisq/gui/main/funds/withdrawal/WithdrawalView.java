@@ -144,9 +144,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         toLabel.setText(Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
         withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
 
-        addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
-        selectColumn.setText(Res.get("shared.select"));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
+        selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.withdrawal.noFundsAvailable")));

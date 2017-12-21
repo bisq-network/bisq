@@ -109,11 +109,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
-        selectColumn.setText(Res.get("shared.select"));
-        addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
-        confirmationsColumn.setText(Res.get("shared.confirmations"));
-        usageColumn.setText(Res.get("shared.usage"));
+        selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
+        confirmationsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations")));
+        usageColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.usage")));
 
         // trigger creation of at least 1 savings address
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);

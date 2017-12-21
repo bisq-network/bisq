@@ -54,14 +54,14 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        volumeColumn.setText(Res.get("shared.volume"));
-        marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.offerType"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        tradeIdColumn.setText(Res.get("shared.tradeId"));
-        stateColumn.setText(Res.get("shared.state"));
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
+        stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));

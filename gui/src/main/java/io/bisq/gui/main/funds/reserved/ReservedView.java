@@ -91,10 +91,10 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        dateColumn.setText(Res.get("shared.dateTime"));
-        detailsColumn.setText(Res.get("shared.details"));
-        addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.reserved.noFunds")));

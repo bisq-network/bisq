@@ -28,6 +28,7 @@ import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bisq.gui.main.market.trades.charts.volume.VolumeChart;
@@ -186,7 +187,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceColumn.setSortable(!showAll);
 
                     if (showAll) {
-                        volumeColumn.setText(Res.get("shared.amount"));
+                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
                         priceColumnLabel.set(Res.get("shared.price"));
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(1, marketColumn);
@@ -196,7 +197,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         volumeChart.setPrefHeight(volumeChart.getMinHeight());
                         priceSeries.setName(selectedTradeCurrency.getName());
                         String code = selectedTradeCurrency.getCode();
-                        volumeColumn.setText(Res.get("shared.amountWithCur", code));
+                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", code)));
 
                         priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
 
@@ -462,7 +463,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
-        TableColumn<TradeStatistics2, TradeStatistics2> dateColumn = new TableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.dateTime")) {
+        TableColumn<TradeStatistics2, TradeStatistics2> dateColumn = new AutoTooltipTableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -491,7 +492,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(dateColumn);
 
         // market
-        marketColumn = new TableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.market")) {
+        marketColumn = new AutoTooltipTableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
                 setMaxWidth(130);
@@ -544,7 +545,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(priceColumn);
 
         // amount
-        TableColumn<TradeStatistics2, TradeStatistics2> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        TableColumn<TradeStatistics2, TradeStatistics2> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -598,7 +599,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(volumeColumn);
 
         // paymentMethod
-        TableColumn<TradeStatistics2, TradeStatistics2> paymentMethodColumn = new TableColumn<>(Res.get("shared.paymentMethod"));
+        TableColumn<TradeStatistics2, TradeStatistics2> paymentMethodColumn = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod"));
         paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         paymentMethodColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -622,7 +623,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(paymentMethodColumn);
 
         // direction
-        TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new TableColumn<>(Res.get("shared.offerType"));
+        TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new AutoTooltipTableColumn<>(Res.get("shared.offerType"));
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,

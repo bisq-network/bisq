@@ -26,6 +26,7 @@ import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
@@ -220,7 +221,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     }
 
     private void setColumns() {
-        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
+        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new AutoTooltipTableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -251,7 +252,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getSortOrder().add(dateColumn);
 
 
-        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>(Res.get("shared.name"));
+        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
@@ -275,7 +276,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getColumns().add(nameColumn);
 
 
-        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>(Res.get("shared.id"));
+        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         uidColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,

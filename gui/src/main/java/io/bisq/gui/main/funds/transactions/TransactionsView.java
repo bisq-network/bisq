@@ -130,13 +130,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        dateColumn.setText(Res.get("shared.dateTime"));
-        detailsColumn.setText(Res.get("shared.details"));
-        addressColumn.setText(Res.get("shared.address"));
-        transactionColumn.setText(Res.get("shared.txId", Res.getBaseCurrencyCode()));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        confidenceColumn.setText(Res.get("shared.confirmations", Res.getBaseCurrencyCode()));
-        revertTxColumn.setText(Res.get("shared.revert", Res.getBaseCurrencyCode()));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        transactionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txId", Res.getBaseCurrencyCode())));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        confidenceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations", Res.getBaseCurrencyCode())));
+        revertTxColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.revert", Res.getBaseCurrencyCode())));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));

@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
@@ -117,10 +118,10 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         int numberOfSellOffers = sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum();
         String total = formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum()));
 
-        numberOfOffersColumn.setText(Res.get("market.spread.numberOfOffersColumn", numberOfOffers));
-        numberOfBuyOffersColumn.setText(Res.get("market.spread.numberOfBuyOffersColumn", numberOfBuyOffers));
-        numberOfSellOffersColumn.setText(Res.get("market.spread.numberOfSellOffersColumn", numberOfSellOffers));
-        totalAmountColumn.setText(Res.get("market.spread.totalAmountColumn", total));
+        numberOfOffersColumn.setGraphic(new AutoTooltipLabel(Res.get("market.spread.numberOfOffersColumn", numberOfOffers)));
+        numberOfBuyOffersColumn.setGraphic(new AutoTooltipLabel(Res.get("market.spread.numberOfBuyOffersColumn", numberOfBuyOffers)));
+        numberOfSellOffersColumn.setGraphic(new AutoTooltipLabel((Res.get("market.spread.numberOfSellOffersColumn", numberOfSellOffers))));
+        totalAmountColumn.setGraphic(new AutoTooltipLabel(Res.get("market.spread.totalAmountColumn", total)));
     }
 
 
@@ -129,7 +130,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("shared.currency")) {
+        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<SpreadItem, SpreadItem>(Res.get("shared.currency")) {
             {
                 setMinWidth(160);
             }
@@ -157,7 +158,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total offers") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
                 setMinWidth(100);
             }
@@ -269,7 +270,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getSpreadColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("market.spread.spreadColumn")) {
+        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<SpreadItem, SpreadItem>(Res.get("market.spread.spreadColumn")) {
             {
                 setMinWidth(110);
             }

@@ -64,14 +64,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.BTCMinMax"));
-        volumeColumn.setText(Res.get("shared.amountMinMax"));
-        marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.offerType"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        offerIdColumn.setText(Res.get("shared.offerId"));
-        removeItemColumn.setText("");
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
+        removeItemColumn.setGraphic(new AutoTooltipLabel(""));
 
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();

@@ -912,13 +912,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.select")) {
-            {
-                setMinWidth(80);
-                setMaxWidth(80);
-                setSortable(false);
-            }
-        };
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute,Dispute>(Res.get("shared.select"));
+        column.setMinWidth(80);
+        column.setMaxWidth(80);
+        column.setSortable(false);
+
         column.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         column.setCellFactory(
@@ -957,7 +955,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.details")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.details")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -997,7 +995,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.date")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.date")) {
             {
                 setMinWidth(180);
             }
@@ -1023,7 +1021,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
             {
                 setMinWidth(110);
             }
@@ -1064,7 +1062,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1090,7 +1088,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1143,7 +1141,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getMarketColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.market")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
             }
@@ -1169,7 +1167,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getRoleColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.role")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.role")) {
             {
                 setMinWidth(130);
             }
@@ -1199,7 +1197,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getStateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.state")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.state")) {
             {
                 setMinWidth(50);
             }
