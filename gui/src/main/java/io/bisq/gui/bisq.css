@@ -35,7 +35,7 @@ bg color of non edit textFields: fafafa
     -bs-very-light-grey:#F0F0F0; /* derive(-bs-white, -6%) 10 usages */
     -bs-very-dark-grey: #3c3c3c; /* 8 usages */
     -bs-very-dark-grey2: #111; /* 1 usages */
-    -bs-black-transparent: #80000000; /* 1 usages */
+    -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
     -bs-light-grey2: #cfcfcf;/* 2 usages */
     -bs-light-grey3: #b5b5b5; /* 1 usages */
     -bs-bg-grey4: #f6f6f6; /* 1 usages */
