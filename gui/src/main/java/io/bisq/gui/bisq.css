@@ -360,34 +360,28 @@ textfield */
     -fx-progress-color: -bs-dim-grey;
 }
 
+.hyperlink,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused
+{
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
 .hyperlink {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-text-fill: -fx-accent;
 }
 
-.hyperlink .text {
-    -fx-fill: -fx-accent;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-}
-
-.hyperlink .text:hover {
-    -fx-fill: -bs-black;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
+.hyperlink:hover {
+    -fx-text-fill: -bs-black;
 }
 
 .hyperlink:hover,
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-underline: false;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-}
-
-.hyperlink:focused {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
 }
 
 .market-price-tooltip {
@@ -676,6 +670,15 @@ textfield */
 
 .offer-separator {
     -fx-background: -bs-grey;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: -bs-black;
 }
 
 /* Account setup */

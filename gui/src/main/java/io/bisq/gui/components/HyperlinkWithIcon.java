@@ -17,10 +17,10 @@ public class HyperlinkWithIcon extends Hyperlink {
         super(text);
 
         Label icon = new Label();
-        icon.getStyleClass().addAll("icon", "highlight");
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);
+        icon.getStyleClass().add("hyperlink");
 
         setGraphic(icon);
         setContentDisplay(ContentDisplay.RIGHT);
