@@ -129,7 +129,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

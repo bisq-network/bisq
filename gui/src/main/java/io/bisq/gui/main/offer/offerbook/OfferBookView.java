@@ -679,7 +679,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item), true);
+                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                     setPadding(new Insets(4, 0, 0, 0));

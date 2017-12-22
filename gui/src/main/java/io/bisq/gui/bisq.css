@@ -366,19 +366,11 @@ textfield */
 }
 
 .hyperlink .text {
-    -fx-fill: -bs-white;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-}
-
-.hyperlink .text {
     -fx-fill: -fx-accent;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
 
-.hyperlink .text:hover,
-.hyperlink .tooltip .text,
 .hyperlink .text:hover {
     -fx-fill: -bs-black;
     -fx-border-style: none;
@@ -473,7 +465,6 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text:hover,
-.table-view .table-row-cell:selected .hyperlink .tooltip .text,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
     -fx-fill: -bs-black;
     -fx-border-style: none;
