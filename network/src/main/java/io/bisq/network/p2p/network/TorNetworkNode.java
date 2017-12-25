@@ -83,6 +83,7 @@ public class TorNetworkNode extends NetworkNode {
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
+        // If streamId is null stream isolation gets deactivated.
         return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), UUID.randomUUID().toString()); // each socket uses a random Tor stream id
     }
 
