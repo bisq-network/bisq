@@ -38,7 +38,7 @@ Contact the team and keep up to date using any of the following:
  - The [Bisq Forum]( https://forum.bisq.network)
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare))
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
- - [@Bisq_Network](https://twitter.com/bisq_network) on Twitter
+ - [@bisq_network](https://twitter.com/bisq_network) on Twitter
 
 
 License
