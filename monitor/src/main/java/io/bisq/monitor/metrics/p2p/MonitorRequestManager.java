@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MonitorRequestManager implements ConnectionListener {
-    private static final long RETRY_DELAY_SEC = 20;
+    private static final long RETRY_DELAY_SEC = 30;
     private static final long CLEANUP_TIMER = 60;
     private static final long REQUEST_PERIOD_MIN = 10;
-    private static final int MAX_RETRIES = 6;
+    private static final int MAX_RETRIES = 8;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
