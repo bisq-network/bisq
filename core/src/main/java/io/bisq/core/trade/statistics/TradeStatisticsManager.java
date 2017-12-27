@@ -251,6 +251,7 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("CAGE");
         coinsWithValidator.add("CRED");
         coinsWithValidator.add("XSPEC");
+        coinsWithValidator.add("BOXY");
 
 
         Set<String> newlyAdded = new HashSet<>();
@@ -273,6 +274,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("CAGE");
         newlyAdded.add("CRED");
         newlyAdded.add("XSPEC");
+        newlyAdded.add("BOXY");
 
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
