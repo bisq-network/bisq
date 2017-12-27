@@ -391,6 +391,19 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                    }
+				case "BOXY":
+                    if (input.matches("^[X][a-zA-Z0-9]{26,34}$")) {
+                        //noinspection ConstantConditions
+                        try {
+                            Address.fromBase58(BoxyParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
                     // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
