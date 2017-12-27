@@ -29,7 +29,6 @@ import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -84,7 +83,9 @@ public class TorNetworkNode extends NetworkNode {
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
         // If streamId is null stream isolation gets deactivated.
-        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), UUID.randomUUID().toString()); // each socket uses a random Tor stream id
+        // Hidden services use stream isolation by default so we pass null.
+        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
+        // return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), UUID.randomUUID().toString()); // each socket uses a random Tor stream id
     }
 
     // TODO handle failure more cleanly
@@ -211,7 +212,10 @@ public class TorNetworkNode extends NetworkNode {
                 long ts1 = new Date().getTime();
                 log.info("Starting tor");
                 Tor.setDefault(new NativeTor(torDir, bridgeEntries));
-                log.info("Tor started after {} ms. Start publishing hidden service.", (new Date().getTime() - ts1)); // takes usually a few seconds
+                log.info("\n################################################################\n" +
+                                "Tor started after {} ms. Start publishing hidden service.\n" +
+                                "################################################################",
+                        (new Date().getTime() - ts1)); // takes usually a few seconds
 
                 UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
 
@@ -219,7 +223,10 @@ public class TorNetworkNode extends NetworkNode {
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
-                        log.info("Tor hidden service published after {} ms. Socked={}", (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
+                        log.info("\n################################################################\n" +
+                                        "Tor hidden service published after {} ms. Socked={}\n" +
+                                        "################################################################",
+                                (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
                         new Thread() {
                             @Override
                             public void run() {

@@ -765,8 +765,10 @@ public class Connection implements MessageListener {
                         PB.NetworkEnvelope proto = PB.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 
                         if (proto == null) {
-                            if (protoInputStream.read() != -1)
-                                log.error("proto is null. Should not happen...");
+                            if (protoInputStream.read() == -1)
+                                log.info("proto is null because protoInputStream.read()=-1 (EOF)");
+                            else
+                                log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
                             stopAndShutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
                             return;
                         }

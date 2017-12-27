@@ -570,7 +570,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
         Log.traceCall("nodeAddress=" + nodeAddress);
-        log.info("handleConnectionFault called: nodeAddress=" + nodeAddress);
+        log.debug("handleConnectionFault called: nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
         removeReportedPeer(nodeAddress);
         Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);

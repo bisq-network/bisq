@@ -303,7 +303,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 // 1. We get a response from requestPreliminaryData
                                 if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
                                     nodeAddressOfPreliminaryDataRequest = Optional.of(nodeAddress);
-                                    listener.onPreliminaryDataReceived();
+                                    // We delay because it can be that we get the HS published before we receive the
+                                    // preliminary data and the onPreliminaryDataReceived call triggers the
+                                    // dataUpdateRequested set to true, so we would also call the onUpdatedDataReceived.
+                                    UserThread.runAfter(listener::onPreliminaryDataReceived, 100 , TimeUnit.MILLISECONDS);
                                 }
 
                                 // 2. Later we get a response from requestUpdatesData
