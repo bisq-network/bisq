@@ -608,9 +608,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {
         change.next();
-        if (change.wasAdded() && change.getAddedSize() == 1)
+        if (change.wasAdded() && change.getAddedSize() == 1 && initialReadDone)
             tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
-        else if (change.wasRemoved() && change.getRemovedSize() == 1)
+        else if (change.wasRemoved() && change.getRemovedSize() == 1 && initialReadDone)
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
     }
 
