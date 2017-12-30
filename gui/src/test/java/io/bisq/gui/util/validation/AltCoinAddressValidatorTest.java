@@ -457,4 +457,26 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#").isValid);
         assertFalse(validator.validate("").isValid);
     }
+	
+	@Test
+    public void testXIN() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("XIN");
+
+        assertTrue(validator.validate("XIN-FXFA-LR6Y-QZAW-9V4SX").isValid);
+        assertTrue(validator.validate("XIN-JM2U-U4AE-G7WF-3NP9F").isValid);
+        assertTrue(validator.validate("XIN-2223-2222-KB8Y-22222").isValid);
+		
+		assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("abcde").isValid);
+        assertFalse(validator.validate("XIN-").isValid);
+		
+        assertFalse(validator.validate("XIN-FXFA-LR6Y-QZAW-9V4SXA").isValid);
+        assertFalse(validator.validate("NIX-FXFA-LR6Y-QZAW-9V4SX").isValid);
+        
+		assertFalse(validator.validate("XIN-FXF-LR6Y-QZAW-9V4SX").isValid);
+		assertFalse(validator.validate("XIN-FXFA-LR6-QZAW-9V4SX").isValid);
+		assertFalse(validator.validate("XIN-FXFA-LR6Y-QZA-9V4SX").isValid);
+		assertFalse(validator.validate("XIN-FXFA-LR6Y-QZAW-9V4S").isValid);
+    }
 }
