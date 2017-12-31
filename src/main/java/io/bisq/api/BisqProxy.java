@@ -709,6 +709,6 @@ public class BisqProxy {
     }
 
     private boolean checkValidMarket(String marketPair) {
-        return marketList.markets.contains(new Market(marketPair));
+        return marketList.markets.stream().filter(market -> market.getPair().equals("xmr_btc")).count() == 1;
     }
 }
