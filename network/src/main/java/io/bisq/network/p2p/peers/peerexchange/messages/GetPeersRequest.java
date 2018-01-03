@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -24,11 +25,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class GetPeersRequest extends NetworkEnvelope implements PeerExchangeMessage, SendersNodeAddressMessage, SupportedCapabilitiesMessage {
     private final NodeAddress senderNodeAddress;
     private final int nonce;
-    private final HashSet<Peer> reportedPeers;
+    private final Set<Peer> reportedPeers;
     @Nullable
     private final List<Integer> supportedCapabilities;
 
-    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
+    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, Set<Peer> reportedPeers) {
         this(senderNodeAddress, nonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
@@ -39,7 +40,7 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
 
     private GetPeersRequest(NodeAddress senderNodeAddress,
                             int nonce,
-                            HashSet<Peer> reportedPeers,
+                            Set<Peer> reportedPeers,
                             @Nullable List<Integer> supportedCapabilities,
                             int messageVersion) {
         super(messageVersion);

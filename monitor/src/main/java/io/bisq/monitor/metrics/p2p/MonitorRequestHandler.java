@@ -53,7 +53,7 @@ class MonitorRequestHandler implements MessageListener {
 
     private final NetworkNode networkNode;
     private P2PDataStorage dataStorage;
-    private Metrics metric;
+    private Metrics metrics;
     private final Listener listener;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
@@ -64,10 +64,10 @@ class MonitorRequestHandler implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MonitorRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Metrics metric, Listener listener) {
+    public MonitorRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Metrics metrics, Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
-        this.metric = metric;
+        this.metrics = metrics;
         this.listener = listener;
     }
 
@@ -214,12 +214,12 @@ class MonitorRequestHandler implements MessageListener {
                     });
                     sb.append("#################################################################");
                     log.info(sb.toString());
-                    metric.getReceivedObjectsList().add(receivedObjects);
+                    metrics.getReceivedObjectsList().add(receivedObjects);
 
                     final long duration = new Date().getTime() - requestTs;
                     log.info("Requesting data took {} ms", duration);
-                    metric.getRequestDurations().add(duration);
-                    metric.getErrorMessages().add(arbitratorReceived[0] ? "" : "No Arbitrator objects received! Seed node need to be restarted!");
+                    metrics.getRequestDurations().add(duration);
+                    metrics.getErrorMessages().add(arbitratorReceived[0] ? "" : "No Arbitrator objects received! Seed node need to be restarted!");
 
                     cleanup();
                     connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, listener::onComplete);
@@ -247,13 +247,11 @@ class MonitorRequestHandler implements MessageListener {
 
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
-        metric.getErrorMessages().add(errorMessage + " (" + new Date().toString() + ")");
+        // We do not log every error only if it fails several times in a row.
 
-        // In case we would have already a connection we close it
-        networkNode.getAllConnections().stream()
-                .filter(connection -> connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress))
-                .forEach(c -> c.shutDown(closeConnectionReason));
-
+        // We do not close the connection as it might be we have opened a new connection for that peer and
+        // we don't want to close that. We do not know the connection at fault as the fault handler does not contain that,
+        // so we could only search for connections for that nodeAddress but that would close an new connection attempt.
         listener.onFault(errorMessage, nodeAddress);
     }
 

@@ -14,17 +14,18 @@ import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class GetPeersResponse extends NetworkEnvelope implements PeerExchangeMessage, SupportedCapabilitiesMessage {
     private final int requestNonce;
-    private final HashSet<Peer> reportedPeers;
+    private final Set<Peer> reportedPeers;
     @Nullable
     private final List<Integer> supportedCapabilities;
 
-    public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
+    public GetPeersResponse(int requestNonce, Set<Peer> reportedPeers) {
         this(requestNonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
     }
 
@@ -34,7 +35,7 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private GetPeersResponse(int requestNonce,
-                             HashSet<Peer> reportedPeers,
+                             Set<Peer> reportedPeers,
                              @Nullable List<Integer> supportedCapabilities,
                              int messageVersion) {
         super(messageVersion);
