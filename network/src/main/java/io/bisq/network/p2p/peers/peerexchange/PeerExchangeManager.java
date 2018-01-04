@@ -104,7 +104,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        log.info("onDisconnect closeConnectionReason={}, nodeAddressOpt={}",closeConnectionReason, connection.getPeersNodeAddressOptional());
+        log.info("onDisconnect closeConnectionReason={}, nodeAddressOpt={}", closeConnectionReason, connection.getPeersNodeAddressOptional());
         closeHandler(connection);
 
         if (retryTimer == null) {

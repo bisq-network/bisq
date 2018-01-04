@@ -91,6 +91,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         // If we are a seed node we use more redundancy at startup to be sure we get all data.
         // We cannot use networkNode.getNodeAddress() as nodeAddress as that is null at this point, so we use
         // new NodeAddress(myAddress) for checking if we are a seed node.
+        // seedNodeAddresses do not contain my own address as that gets filtered out
         if (myAddress != null && !myAddress.isEmpty() && seedNodesRepository.isSeedNode(new NodeAddress(myAddress))) {
             NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
             NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
