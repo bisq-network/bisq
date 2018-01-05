@@ -96,7 +96,7 @@ public class MonitorMain extends BisqExecutable {
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(MonitorMain.class.getClassLoader());
 
-        port(8080);
+        port(80);
         get("/", (req, res) -> {
             log.info("Incoming request from: " + req.userAgent());
             return seedNodeMonitor.getMetricsModel().getResultAsHtml();

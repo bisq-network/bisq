@@ -43,7 +43,7 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 @Slf4j
 public class SeedNodeMain extends BisqExecutable {
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
-    private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
+    private static final long CHECK_MEMORY_PERIOD_SEC = 2 * 60;
     private SeedNode seedNode;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
@@ -140,7 +140,7 @@ public class SeedNodeMain extends BisqExecutable {
             Profiler.printSystemLoad(log);
             if (!stopped) {
                 long usedMemoryInMB = Profiler.getUsedMemoryInMB();
-                if (usedMemoryInMB > (maxMemory * 0.8)) {
+                if (usedMemoryInMB > (maxMemory * 0.7)) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",

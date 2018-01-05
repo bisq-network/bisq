@@ -1,9 +1,11 @@
 package io.bisq.network.p2p.peers.getdata;
 
+import com.google.inject.name.Named;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -24,6 +27,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class RequestDataManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
+    // How many seeds we request the PreliminaryGetDataRequest from
+    private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 2;
+    // how many seeds additional to the first responding PreliminaryGetDataRequest seed we request the GetUpdatedDataRequest from
+    private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 1;
     private boolean isPreliminaryDataRequest = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +76,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public RequestDataManager(NetworkNode networkNode,
                               SeedNodesRepository seedNodesRepository,
                               P2PDataStorage dataStorage,
-                              PeerManager peerManager) {
+                              PeerManager peerManager,
+                              @javax.annotation.Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
@@ -79,6 +87,15 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.peerManager.addListener(this);
 
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
+
+        // If we are a seed node we use more redundancy at startup to be sure we get all data.
+        // We cannot use networkNode.getNodeAddress() as nodeAddress as that is null at this point, so we use
+        // new NodeAddress(myAddress) for checking if we are a seed node.
+        // seedNodeAddresses do not contain my own address as that gets filtered out
+        if (myAddress != null && !myAddress.isEmpty() && seedNodesRepository.isSeedNode(new NodeAddress(myAddress))) {
+            NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
+            NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
+        }
     }
 
     public void shutDown() {
@@ -105,10 +122,15 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             Collections.shuffle(nodeAddresses);
-            NodeAddress nextCandidate = nodeAddresses.get(0);
-            nodeAddresses.remove(nextCandidate);
+            ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
+            final int size = Math.min(NUM_SEEDS_FOR_PRELIMINARY_REQUEST, finalNodeAddresses.size());
+            for (int i = 0; i < size; i++) {
+                NodeAddress nodeAddress = finalNodeAddresses.get(i);
+                nodeAddresses.remove(nodeAddress);
+                UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+            }
+
             isPreliminaryDataRequest = true;
-            requestData(nextCandidate, nodeAddresses);
             return true;
         } else {
             return false;
@@ -119,13 +141,28 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         Log.traceCall();
         checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "nodeAddressOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
-        List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
-        if (!remainingNodeAddresses.isEmpty()) {
-            Collections.shuffle(remainingNodeAddresses);
+        isPreliminaryDataRequest = false;
+        List<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
+        if (!nodeAddresses.isEmpty()) {
+            // We use the node we have already connected to to request again
             NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
-            remainingNodeAddresses.remove(candidate);
-            isPreliminaryDataRequest = false;
-            requestData(candidate, remainingNodeAddresses);
+            nodeAddresses.remove(candidate);
+            requestData(candidate, nodeAddresses);
+
+            // For more redundancy we request as well from other random nodes.
+            Collections.shuffle(nodeAddresses);
+            ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
+            int numRequests = 0;
+            for (int i = 0; i < finalNodeAddresses.size() && numRequests < NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST; i++) {
+                NodeAddress nodeAddress = finalNodeAddresses.get(i);
+                nodeAddresses.remove(nodeAddress);
+
+                // It might be that we have a prelim. request open for the same seed, if so we skip to the next.
+                if (!handlerMap.containsKey(nodeAddress)) {
+                    UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+                    numRequests++;
+                }
+            }
         }
     }
 
@@ -267,7 +304,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 // 1. We get a response from requestPreliminaryData
                                 if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
                                     nodeAddressOfPreliminaryDataRequest = Optional.of(nodeAddress);
-                                    listener.onPreliminaryDataReceived();
+                                    // We delay because it can be that we get the HS published before we receive the
+                                    // preliminary data and the onPreliminaryDataReceived call triggers the
+                                    // dataUpdateRequested set to true, so we would also call the onUpdatedDataReceived.
+                                    UserThread.runAfter(listener::onPreliminaryDataReceived, 100 , TimeUnit.MILLISECONDS);
                                 }
 
                                 // 2. Later we get a response from requestUpdatesData
