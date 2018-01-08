@@ -445,7 +445,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
-    
+
     private void onSendMessage(String inputText, Dispute dispute) {
         if (disputeCommunicationMessage != null) {
             disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
@@ -648,7 +648,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             sendButton = new Button(Res.get("support.send"));
             sendButton.setDefaultButton(true);
-            sendButton.setOnAction(e -> { onTrySendMessage(); });
+            sendButton.setOnAction(e -> onTrySendMessage());
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
             Button uploadButton = new Button(Res.get("support.addAttachments"));
