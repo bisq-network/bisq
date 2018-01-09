@@ -391,7 +391,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
-
                 case "ONION":
                     try {
                         Address.fromBase58(OnionParams.get(), input);
