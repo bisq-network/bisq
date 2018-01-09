@@ -367,7 +367,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
-				case "CAGE":
+                case "CAGE":
                     if (input.matches("^[D][a-zA-Z0-9]{26,34}$")) {
                         //noinspection ConstantConditions
                         try {
