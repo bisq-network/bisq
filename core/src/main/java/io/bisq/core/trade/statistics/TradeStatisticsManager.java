@@ -253,6 +253,7 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("XSPEC");
         // v0.6.3
         coinsWithValidator.add("WILD");
+        coinsWithValidator.add("ONION");
 
 
         Set<String> newlyAdded = new HashSet<>();
@@ -277,6 +278,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("XSPEC");
         // v0.6.3
         newlyAdded.add("WILD");
+        newlyAdded.add("ONION");
 
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
