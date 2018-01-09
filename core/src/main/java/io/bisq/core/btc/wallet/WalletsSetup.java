@@ -29,6 +29,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
@@ -110,7 +111,7 @@ public class WalletsSetup {
                         BisqEnvironment bisqEnvironment,
                         BitcoinNodes bitcoinNodes,
                         @Named(BtcOptionKeys.USER_AGENT) String userAgent,
-                        @Named(BtcOptionKeys.WALLET_DIR) File appDir,
+                        @Named(AppOptionKeys.APP_DATA_DIR_KEY) File appDir,
                         @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
                         @Named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) String numConnectionForBtc,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
