@@ -3,7 +3,6 @@ package io.bisq.api;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.bisq.api.model.*;
-import io.bisq.api.model.Currency;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -38,6 +37,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -126,7 +127,7 @@ public class BisqProxy {
         marketList.markets.addAll(btc);
         btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(toList());
         marketList.markets.addAll(btc);
-        Collections.sort(currencyList.currencies, (io.bisq.api.model.Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
+        Collections.sort(currencyList.currencies, Comparator.comparing(p -> p.name));
         return marketList;
     }
 
@@ -206,9 +207,12 @@ public class BisqProxy {
         } else if ((Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
             return BisqProxyError.getOptional("When choosing FIXED price, fill in fixed_price with a price > 0");
         }
-        // check that the currency pairs are valid
+        // fix marketpair if it's lowercase
+        marketPair = marketPair.toUpperCase();
+
+        // check that the market pair is valid
         if (!checkValidMarket(marketPair)) {
-            return BisqProxyError.getOptional("There is no valid market pair called: " + marketPair);
+            return BisqProxyError.getOptional("There is no valid market pair called: " + marketPair + ". Note that market pairs are uppercase and are separated by an underscore: XMR_BTC");
         }
 
         Market market = new Market(marketPair);
@@ -307,7 +311,7 @@ public class BisqProxy {
             Offer offer = new Offer(offerPayload);
             offer.setPriceFeedService(priceFeedService);
 
-            if (!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
                 return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
             }
 
@@ -423,7 +427,7 @@ public class BisqProxy {
             }
 
             // check the paymentAccountId is compatible with the offer
-            if (!PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
                 return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
             }
 
@@ -709,6 +713,14 @@ public class BisqProxy {
     }
 
     private boolean checkValidMarket(String marketPair) {
-        return marketList.markets.stream().filter(market -> market.getPair().equals("xmr_btc")).count() == 1;
+        boolean result = false;
+        if(StringUtils.isEmpty(marketPair)) {
+            log.error("marketPair cannot be empty:" + marketPair);
+        } else if(!marketPair.equals(marketPair.toUpperCase())) {
+            log.error("marketPair should be uppercase: " + marketPair);
+        } else {
+            result =  marketList.markets.stream().filter(market -> market.getPair().equals(marketPair)).count() == 1;
+        }
+        return result;
     }
 }

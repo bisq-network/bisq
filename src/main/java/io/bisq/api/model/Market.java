@@ -15,15 +15,12 @@ public class Market {
     String rsymbol;
 
     public Market(String lsymbol, String rsymbol) {
-        this.pair = lsymbol.toLowerCase() + "_" + rsymbol.toLowerCase();
-        this.lsymbol = lsymbol;
-        this.rsymbol = rsymbol;
+        this.lsymbol = lsymbol.toUpperCase();
+        this.rsymbol = rsymbol.toUpperCase();
+        this.pair = this.lsymbol + "_" + this.rsymbol;
     }
 
     public Market(String marketPair) {
-        this.pair = marketPair;
-        String[] pair = marketPair.split("_");
-        this.lsymbol = pair[0];
-        this.rsymbol = pair[1];
+        this(marketPair.split("_")[0], marketPair.split("_")[1]);
     }
 }
