@@ -25,7 +25,7 @@ public class MarketTest {
     @Test
     public void testCtor() {
         Market market = new Market("left", "right");
-        assertEquals("left_right", market.pair);
+        assertEquals("LEFT_RIGHT", market.pair);
         assertEquals(market, new Market(market.pair));
     }
 
