@@ -22,6 +22,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -39,6 +40,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -77,6 +80,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final BtcAddressValidator btcAddressValidator;
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
@@ -94,6 +98,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
+                                  WalletsSetup walletsSetup,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   Clock clock) {
@@ -103,6 +108,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.clock = clock;
@@ -163,7 +169,31 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     private long getTimeWhenDisputeOpens() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() : 0;
+        final Trade trade = dataModel.getTrade();
+        if (trade != null) {
+            long blockTime = 0;
+            final Transaction depositTx = trade.getDepositTx();
+            if (depositTx != null) {
+                if (depositTx.getConfidence().getDepthInBlocks() > 0) {
+                    try {
+                        // Date in Bitcoin blocks can be max. 2 hours off
+                        blockTime = walletsSetup.getWalletConfig().getBlockDateForTx(depositTx);
+                        log.error("block for tx {} was mined at date: {}", depositTx.getHashAsString(), new Date(blockTime));
+                    } catch (BlockStoreException e) {
+                        log.error(e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            final long tradeTime = trade.getDate().getTime();
+            final long startTime = blockTime == 0 ? System.currentTimeMillis() : blockTime;
+            log.error("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
+                    new Date(startTime), new Date(tradeTime), new Date(blockTime));
+            return startTime + getMaxTradePeriod();
+        } else {
+            return 0;
+        }
     }
 
     private long getTimeWhenHalfPeriodReached() {

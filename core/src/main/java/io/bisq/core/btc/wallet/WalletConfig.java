@@ -476,6 +476,19 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
+    public long getBlockDateForTx(Transaction tx) throws BlockStoreException {
+        // Date in Bitcoin blocks can be max. 2 hours off
+        final BlockStore blockStore = vChain.getBlockStore();
+        final StoredBlock storedBlock = blockStore.get(tx.getHash());
+        // TODO storedBlock is null
+        if (storedBlock != null) {
+            final Block header = storedBlock.getHeader();
+            return header.getTime().getTime();
+        } else {
+            return 0;
+        }
+    }
+
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
                                       BisqKeyChainGroup keyChainGroup, boolean isBsqWallet, DeterministicSeed restoreFromSeed)
             throws Exception {
