@@ -68,7 +68,17 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
+        final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
+        FileUtil.rollingBackup(hiddenservice, "private_key", 20);
+
+        // We remove all tor files except the hiddenservice dir as we got some issues with tor not connecting due
+        // to corrupted files
+        try {
+            FileUtil.deleteDirectory(torDir, hiddenservice);
+        } catch (IOException e) {
+            log.error("Deleting tor dir failed. error=" + e.toString());
+            e.printStackTrace();
+        }
 
         if (setupListener != null)
             addSetupListener(setupListener);
