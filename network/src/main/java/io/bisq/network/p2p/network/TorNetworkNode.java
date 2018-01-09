@@ -95,7 +95,6 @@ public class TorNetworkNode extends NetworkNode {
         // If streamId is null stream isolation gets deactivated.
         // Hidden services use stream isolation by default so we pass null.
         return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
-        // return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), UUID.randomUUID().toString()); // each socket uses a random Tor stream id
     }
 
     // TODO handle failure more cleanly
