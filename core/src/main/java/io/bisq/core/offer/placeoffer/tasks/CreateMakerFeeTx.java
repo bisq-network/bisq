@@ -72,8 +72,6 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
             final TradeWalletService tradeWalletService = model.getTradeWalletService();
 
-            // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
-
             if (offer.isCurrencyForMakerFeeBtc()) {
                 tradeFeeTx = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
@@ -130,8 +128,6 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
-
-                // We dont use a timeout here as we need to get the tradeFee tx callback called to be sure the addressEntry is funded
 
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override

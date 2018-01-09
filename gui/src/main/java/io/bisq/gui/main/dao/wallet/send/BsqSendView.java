@@ -134,6 +134,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                             // We need to create another instance, otherwise the tx would trigger an invalid state exception
                             // if it gets committed 2 times
                             btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+
                             bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                 @Override
                                 public void onSuccess(@Nullable Transaction transaction) {
@@ -147,7 +148,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                     log.error(t.toString());
                                     new Popup<>().warning(t.toString());
                                 }
-                            });
+                            }, 15);
 
                             receiversAddressInputTextField.setText("");
                             amountInputTextField.setText("");

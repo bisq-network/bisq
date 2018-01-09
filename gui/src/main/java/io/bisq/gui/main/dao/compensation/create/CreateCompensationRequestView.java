@@ -175,6 +175,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                             // We need to create another instance, otherwise the tx would trigger an invalid state exception
                             // if it gets committed 2 times
                             btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+
                             bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                 @Override
                                 public void onSuccess(@Nullable Transaction transaction) {
@@ -190,7 +191,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                     log.error(t.toString());
                                     new Popup<>().warning(t.toString()).show();
                                 }
-                            });
+                            }, 15);
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
