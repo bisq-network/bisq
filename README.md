@@ -33,12 +33,13 @@ Staying in Touch
 
 Contact the team and keep up to date using any of the following:
 
- - The [Bisq Website](https://bisq.network)
+ - The [Bisq website](https://bisq.network)
  - GitHub [Issues](https://github.com/bisq-network/exchange/issues)
- - The [Bisq Forum]( https://forum.bisq.network)
- - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare))
- - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
- - [@Bitsquare_](https://twitter.com/bitsquare_) on Twitter
+ - The [Bisq forum]( https://bisq.community)
+ - The [#bisq](https://webchat.freenode.net/?channels=bisq) IRC channel on Freenode
+ - Our [contributor mailing list](https://lists.bisq.network/listinfo/bisq-contrib)
+ - [@bisq_network](https://twitter.com/bisq_network) on Twitter
+ - The [Bisq newsletter](https://eepurl.com/5uQf9)
 
 
 License

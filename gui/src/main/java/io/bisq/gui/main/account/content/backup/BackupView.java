@@ -146,7 +146,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             String backupDirectory = preferences.getBackupDirectory();
             if (backupDirectory != null && backupDirectory.length() > 0) {
                 try {
-                    String dateString = new SimpleDateFormat("YYYY-MM-dd-HHmmss").format(new Date());
+                    String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                     String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
                     FileUtils.copyDirectory(dataDir,
                             new File(destination));
