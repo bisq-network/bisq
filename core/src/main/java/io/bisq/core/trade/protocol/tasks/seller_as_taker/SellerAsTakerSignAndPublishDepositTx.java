@@ -103,7 +103,6 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                             if (!completed) {
                                 timeoutTimer.stop();
                                 log.trace("takerSignAndPublishTx succeeded " + transaction);
-                                trade.setDepositTx(transaction);
                                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
                                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 

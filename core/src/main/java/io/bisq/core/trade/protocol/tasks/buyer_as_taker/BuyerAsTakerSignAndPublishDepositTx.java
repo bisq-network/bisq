@@ -78,7 +78,6 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-
             Timer timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast not completed after 5 sec. We go on with the trade protocol.");
                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
@@ -103,7 +102,6 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
                             if (!completed) {
                                 timeoutTimer.stop();
                                 log.trace("takerSignAndPublishTx succeeded " + transaction);
-                                trade.setDepositTx(transaction);
                                 trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
                                 walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
