@@ -109,6 +109,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                             }
                         }
                     });
+            // We set the deposit tx in case we get the onFailure called.
             trade.setDepositTx(depositTx);
         } catch (Throwable t) {
             final Contract contract = trade.getContract();

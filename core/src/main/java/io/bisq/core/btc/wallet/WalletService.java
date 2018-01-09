@@ -316,22 +316,28 @@ public abstract class WalletService {
         Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@Nullable Transaction result) {
-                if (broadcastTimers.containsKey(tx.getHashAsString())) {
-                    // If the timeout has not been called we call the callback.onSuccess
-                    timeoutTimer.stop();
-                    broadcastTimers.remove(tx.getHashAsString());
-                    callback.onSuccess(tx);
-                } else {
-                    // Timeout was triggered, nothing to do anymore.
-                    log.info("onSuccess for tx {} was already called from timeout handler. ", tx.getHashAsString());
-                }
+                // At regtest we get called immediately back but we want to make sure that the handler is not called
+                // before the caller is finished.
+                UserThread.execute(() -> {
+                    if (broadcastTimers.containsKey(tx.getHashAsString())) {
+                        // If the timeout has not been called we call the callback.onSuccess
+                        timeoutTimer.stop();
+                        broadcastTimers.remove(tx.getHashAsString());
+                        callback.onSuccess(tx);
+                    } else {
+                        // Timeout was triggered, nothing to do anymore.
+                        log.info("onSuccess for tx {} was already called from timeout handler. ", tx.getHashAsString());
+                    }
+                });
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                timeoutTimer.stop();
-                broadcastTimers.remove(tx.getHashAsString());
-                callback.onFailure(t);
+                UserThread.execute(() -> {
+                    timeoutTimer.stop();
+                    broadcastTimers.remove(tx.getHashAsString());
+                    callback.onFailure(t);
+                });
             }
         });
         printTx("BSQ broadcast Tx", tx);
