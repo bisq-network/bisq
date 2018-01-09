@@ -164,8 +164,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     // maxConnections default 12
     private void setConnectionLimits(int maxConnections) {
         this.maxConnections = maxConnections;                                                     // app node 12; seedNode 30
-        disconnectFromSeedNode = Math.min(6, maxConnections + 1);                                 // 6
         minConnections = Math.max(1, (int) Math.round(maxConnections * 0.7));                     // app node 1-8; seedNode 21
+        disconnectFromSeedNode = maxConnections;                                                  // app node 12; seedNode 30
         maxConnectionsPeer = Math.max(4, (int) Math.round(maxConnections * 1.3));                 // app node 16; seedNode 39
         maxConnectionsNonDirect = Math.max(8, (int) Math.round(maxConnections * 1.7));            // app node 20; seedNode 51
         maxConnectionsAbsolute = Math.max(12, (int) Math.round(maxConnections * 2.5));            // app node 30; seedNode 66
