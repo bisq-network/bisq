@@ -304,6 +304,10 @@ public class WalletsSetup {
                 default:
                 case PROVIDED:
                     btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+
+                    // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
+                    // are more reliable than random public nodes.
+                    walletConfig.setMinBroadcastConnections(4);
                     break;
             }
 
