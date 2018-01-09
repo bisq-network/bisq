@@ -342,7 +342,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     }
                 case "MDC":
-                    if (input.matches("^L[a-zA-Z0-9]{26,33}$"))
+                    if (input.matches("^m[a-zA-Z0-9]{26,33}$"))
                         return new ValidationResult(true);
                     else
                         return regexTestFailed;
