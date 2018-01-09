@@ -196,7 +196,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        log.info("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}" , nodeAddress,remainingNodeAddresses.size());
+        log.debug("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}" , nodeAddress,remainingNodeAddresses.size());
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,

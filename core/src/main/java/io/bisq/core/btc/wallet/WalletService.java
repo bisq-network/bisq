@@ -340,7 +340,7 @@ public abstract class WalletService {
                 });
             }
         });
-        printTx("BSQ broadcast Tx", tx);
+        printTx("Broadcast Tx", tx);
     }
 
 
