@@ -46,8 +46,8 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(environment.getRequiredProperty(UserAgent.VERSION_KEY));
         bind(UserAgent.class).in(Singleton.class);
 
-        File walletDir = new File(environment.getRequiredProperty(AppOptionKeys.APP_DATA_DIR_KEY));
-        bind(File.class).annotatedWith(named(AppOptionKeys.APP_DATA_DIR_KEY)).toInstance(walletDir);
+        File walletDir = new File(environment.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
+        bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USER_AGENT)).to(environment.getRequiredProperty(BtcOptionKeys.USER_AGENT));
