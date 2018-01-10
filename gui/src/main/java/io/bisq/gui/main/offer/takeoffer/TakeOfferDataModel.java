@@ -103,7 +103,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
     Price tradePrice;
-    private int feeTxSize = 320; // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
+    // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
+    private int feeTxSize = 320;
     private int feeTxSizeEstimationRecursionCounter;
 
 
@@ -349,10 +350,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
                         txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
             }
         } catch (InsufficientMoneyException e) {
-            // If we need to fund from an external wallet we can assume we only have 1 input (260 bytes).
+            // If we need to fund from an external wallet we can assume we only have 1 input (320 bytes).
             log.warn("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
-                    "if the user pays from an external wallet. In that case we use an estimated tx size of 260 bytes.");
-            feeTxSize = 260;
+                    "if the user pays from an external wallet. In that case we use an estimated tx size of 320 bytes.");
+            feeTxSize = 320;
             txFeeFromFeeService = feeService.getTxFee(feeTxSize);
             log.info("feeTxSize {} bytes", feeTxSize);
             log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
