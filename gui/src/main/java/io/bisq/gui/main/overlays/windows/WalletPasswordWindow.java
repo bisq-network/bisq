@@ -340,7 +340,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void doRestore() {
-        long date = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        final LocalDate value = datePicker.getValue();
+        //TODO Is ZoneOffset correct?
+        long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
         walletsManager.restoreSeedWords(
                 seed,

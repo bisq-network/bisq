@@ -105,6 +105,7 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("ONION", "DeepOnion"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
@@ -147,6 +148,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
+        result.add(new CryptoCurrency("WILD", "WILD Token", true));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));

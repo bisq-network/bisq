@@ -676,7 +676,7 @@ public class DisputeManager implements PersistedDataHost {
                                     public void onFailure(@NotNull Throwable t) {
                                         log.error(t.getMessage());
                                     }
-                                });
+                                }, 15);
                             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                                 e.printStackTrace();
                                 log.error("Error at traderSignAndFinalizeDisputedPayoutTx " + e.getMessage());

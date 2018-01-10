@@ -19,8 +19,6 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
@@ -194,9 +192,7 @@ public class TradeWalletService {
         wallet.completeTx(sendRequest);
         WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
-        checkNotNull(walletConfig, "walletConfig must not be null");
-        ListenableFuture<Transaction> broadcastComplete = walletConfig.peerGroup().broadcastTransaction(tradingFeeTx).future();
-        Futures.addCallback(broadcastComplete, callback);
+        broadcastTx(tradingFeeTx, callback);
 
         return tradingFeeTx;
     }
@@ -651,10 +647,7 @@ public class TradeWalletService {
         WalletService.verifyTransaction(depositTx);
         WalletService.checkWalletConsistency(wallet);
 
-        // Broadcast depositTx
-        checkNotNull(walletConfig);
-        ListenableFuture<Transaction> broadcastComplete = walletConfig.peerGroup().broadcastTransaction(depositTx).future();
-        Futures.addCallback(broadcastComplete, callback);
+        broadcastTx(depositTx, callback);
 
         return depositTx;
     }
@@ -1035,10 +1028,7 @@ public class TradeWalletService {
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
 
-        if (walletConfig != null) {
-            ListenableFuture<Transaction> future = walletConfig.peerGroup().broadcastTransaction(payoutTx).future();
-            Futures.addCallback(future, callback);
-        }
+        broadcastTx(payoutTx, callback, 20);
 
         return payoutTx;
     }
@@ -1052,10 +1042,14 @@ public class TradeWalletService {
      * @param tx
      * @param callback
      */
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
+        checkNotNull(walletConfig);
+        WalletService.staticBroadcastTx(walletConfig.peerGroup(), tx, callback, timeoutInSec);
+    }
+
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
         checkNotNull(walletConfig);
-        ListenableFuture<Transaction> future = walletConfig.peerGroup().broadcastTransaction(tx).future();
-        Futures.addCallback(future, callback);
+        WalletService.staticBroadcastTx(walletConfig.peerGroup(), tx, callback);
     }
 
     /**

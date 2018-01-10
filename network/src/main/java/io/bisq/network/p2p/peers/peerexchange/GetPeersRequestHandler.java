@@ -68,7 +68,7 @@ class GetPeersRequestHandler {
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.getNonce(),
-                peerManager.getConnectedNonSeedNodeReportedPeers(connection.getPeersNodeAddressOptional().get()));
+                peerManager.getLivePeers(connection.getPeersNodeAddressOptional().get()));
 
         checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

@@ -57,6 +57,8 @@ public class MetricsModel {
     private List<Peer> connectedPeers;
     private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeDownTimeMap = new HashMap<>();
     private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeUpTimeMap = new HashMap<>();
+    @Getter
+    private Set<NodeAddress> nodesInError = new HashSet<>();
 
     @Inject
     public MetricsModel(SeedNodesRepository seedNodesRepository,
@@ -402,5 +404,12 @@ public class MetricsModel {
         else if (duration.startsWith(", "))
             duration = duration.replace(", ", "");
         return duration;
+    }
+
+    public void addNodesInError(NodeAddress nodeAddress) {
+        nodesInError.add(nodeAddress);
+    }
+    public void removeNodesInError(NodeAddress nodeAddress) {
+        nodesInError.remove(nodeAddress);
     }
 }

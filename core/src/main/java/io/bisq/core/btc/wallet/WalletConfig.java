@@ -104,6 +104,7 @@ public class WalletConfig extends AbstractIdleService {
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
+    private int minBroadcastConnections;
 
     @Nullable
     private PeerDiscovery discovery;
@@ -179,6 +180,10 @@ public class WalletConfig extends AbstractIdleService {
                 log.error(e.toString());
             }
         }
+    }
+
+    public void setMinBroadcastConnections(int minBroadcastConnections) {
+        this.minBroadcastConnections = minBroadcastConnections;
     }
 
     private PeerGroup createPeerGroup() {
@@ -413,6 +418,10 @@ public class WalletConfig extends AbstractIdleService {
             }
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
+
+            vPeerGroup.setBroadcastToAllPeers(true);
+            if (minBroadcastConnections > 0)
+                vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
 
             vPeerGroup.setUserAgent(userAgent, Version.VERSION);
 

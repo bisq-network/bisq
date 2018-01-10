@@ -125,6 +125,7 @@ public class CreateTakerFeeTx extends TradeTask {
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
+
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
