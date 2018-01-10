@@ -1035,22 +1035,23 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Misc
+    // Broadcast tx
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @param tx
-     * @param callback
-     */
-    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
-        checkNotNull(walletConfig);
-        WalletService.staticBroadcastTx(walletConfig.peerGroup(), tx, callback, timeoutInSec);
-    }
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
         checkNotNull(walletConfig);
-        WalletService.staticBroadcastTx(walletConfig.peerGroup(), tx, callback);
+        Broadcaster.broadcastTx(wallet, walletConfig.peerGroup(), tx, callback);
     }
+
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
+        checkNotNull(walletConfig);
+        Broadcaster.broadcastTx(wallet, walletConfig.peerGroup(), tx, callback, timeoutInSec);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Misc
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * @param transaction The transaction to be added to the wallet

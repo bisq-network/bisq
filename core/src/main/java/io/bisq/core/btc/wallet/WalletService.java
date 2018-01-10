@@ -19,8 +19,6 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.app.BisqEnvironment;
@@ -50,7 +48,9 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -62,8 +62,6 @@ import static com.google.common.base.Preconditions.checkState;
  */
 @Slf4j
 public abstract class WalletService {
-    private static Map<String, Timer> broadcastTimers = new HashMap<>();
-
     protected final WalletsSetup walletsSetup;
     protected final Preferences preferences;
     protected final FeeService feeService;
@@ -293,54 +291,11 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
-        staticBroadcastTx(walletsSetup.getPeerGroup(), tx, callback);
+        Broadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback);
     }
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
-        staticBroadcastTx(walletsSetup.getPeerGroup(), tx, callback, timeoutInSec);
-    }
-
-    public static void staticBroadcastTx(PeerGroup peerGroup, Transaction tx, FutureCallback<Transaction> callback) {
-        staticBroadcastTx(peerGroup, tx, callback, 8);
-    }
-
-    public static void staticBroadcastTx(PeerGroup peerGroup, Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
-        Timer timeoutTimer = UserThread.runAfter(() -> {
-            log.warn("Broadcast of tx {} not completed after {} sec. We optimistically assume that the tx broadcast succeeded and " +
-                    "call onSuccess on the callback handler.", tx.getHashAsString());
-            callback.onSuccess(tx);
-            broadcastTimers.remove(tx.getHashAsString());
-        }, timeoutInSec);
-        broadcastTimers.put(tx.getHashAsString(), timeoutTimer);
-
-        Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<Transaction>() {
-            @Override
-            public void onSuccess(@Nullable Transaction result) {
-                // At regtest we get called immediately back but we want to make sure that the handler is not called
-                // before the caller is finished.
-                UserThread.execute(() -> {
-                    if (broadcastTimers.containsKey(tx.getHashAsString())) {
-                        // If the timeout has not been called we call the callback.onSuccess
-                        timeoutTimer.stop();
-                        broadcastTimers.remove(tx.getHashAsString());
-                        callback.onSuccess(tx);
-                    } else {
-                        // Timeout was triggered, nothing to do anymore.
-                        log.info("onSuccess for tx {} was already called from timeout handler. ", tx.getHashAsString());
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                UserThread.execute(() -> {
-                    timeoutTimer.stop();
-                    broadcastTimers.remove(tx.getHashAsString());
-                    callback.onFailure(t);
-                });
-            }
-        });
-        printTx("Broadcast Tx", tx);
+        Broadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback, timeoutInSec);
     }
 
 
