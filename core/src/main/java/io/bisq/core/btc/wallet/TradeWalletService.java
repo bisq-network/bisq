@@ -1205,9 +1205,10 @@ public class TradeWalletService {
     }
 
     private void addAvailableInputsAndChangeOutputs(Transaction transaction, Address address, Address changeAddress, Coin txFee) throws WalletException {
+        SendRequest sendRequest = null;
         try {
             // Lets let the framework do the work to find the right inputs
-            SendRequest sendRequest = SendRequest.forTx(transaction);
+            sendRequest = SendRequest.forTx(transaction);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
             // We use a fixed fee
@@ -1222,10 +1223,11 @@ public class TradeWalletService {
             // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
             // So it will not change the wallet balance.
             checkNotNull(wallet, "wallet must not be null");
-            // TODO we got here exceptions with missing funds. Not reproducable but leave log for better debugging.
-            log.info("print tx before wallet.completeTx: " + sendRequest.tx.toString());
             wallet.completeTx(sendRequest);
         } catch (Throwable t) {
+            if (sendRequest != null && sendRequest.tx != null)
+                log.warn("addAvailableInputsAndChangeOutputs: sendRequest.tx={}, sendRequest.tx.getOutputs()={}", sendRequest.tx, sendRequest.tx.getOutputs());
+
             throw new WalletException(t);
         }
     }
