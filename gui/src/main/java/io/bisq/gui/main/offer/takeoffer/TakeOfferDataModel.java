@@ -55,6 +55,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.wallet.Wallet;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -327,10 +328,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // changed total required amount is not updated. That will cause a InsufficientMoneyException and the user need to
     // start over again. To reproduce keep adding 0.002 BTC amounts while in the funding screen.
     // It would require a listener on changed balance and a new fee estimation with a correct recalculation of the required funds.
+    // Another edge case not handled correctly is: If there are many small inputs and user add a large input later the
+    // fee estimation is based on the large tx with many inputs but the actual tx will get created with the large input, thus
+    // leading to a smaller tx and too high fees. Simply updating the fee estimation would lead to changed required funds
+    // and if funds get higher (if tx get larger) the user would get confused (adding small inputs would increase total required funds).
+    // So that would require more thoughts how to deal with all those cases.
     public void estimateTxSize() {
         Address fundingAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
         int txSize = 0;
-        if (btcWalletService.getBalanceForAddress(fundingAddress).isPositive()) {
+        if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
             txFeeFromFeeService = getTxFeeBySize(feeTxSize);
 
             Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
@@ -626,13 +632,17 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean wouldCreateDustForMaker() {
         //noinspection SimplifiableIfStatement
+        boolean result;
         if (amount.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amount.get());
-            Coin dustAndFee = getTotalTxFee().add(Restrictions.getMinNonDustOutput());
-            return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
+            result = customAmount.isPositive() && customAmount.isLessThan(Restrictions.getMinNonDustOutput());
+
+            if (result)
+                log.info("would create dust for maker, customAmount={},  Restrictions.getMinNonDustOutput()={}", customAmount, Restrictions.getMinNonDustOutput());
         } else {
-            return true;
+            result = true;
         }
+        return result;
     }
 
     ReadOnlyObjectProperty<Coin> getAmount() {
