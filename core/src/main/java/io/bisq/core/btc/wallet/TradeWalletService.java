@@ -197,7 +197,7 @@ public class TradeWalletService {
 
             return tradingFeeTx;
         } catch (Throwable t) {
-            if (wallet!=null && sendRequest != null && sendRequest.coinSelector != null)
+            if (wallet != null && sendRequest != null && sendRequest.coinSelector != null)
                 log.warn("Balance = {}; CoinSelector = {}",
                         wallet.getBalance(sendRequest.coinSelector),
                         sendRequest.coinSelector);

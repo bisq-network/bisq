@@ -104,8 +104,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
     Price tradePrice;
-    private int feeTxSize = 320; // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout)
-    // are larger so we adjust to 320
+    // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
+    private int feeTxSize = 320;
     private int feeTxSizeEstimationRecursionCounter;
     private boolean freezeFee;
     private Coin txFeePerByteFromFeeService;
@@ -602,7 +602,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // We use the sum of the size of the trade fee and the deposit tx to get an average.
     // Miners will take the trade fee tx if the total fee of both dependent txs are good enough.
     // With that we avoid that we overpay in case that the trade fee has many inputs and we would apply that fee for the
-    // other 2 txs as well.
+    // other 2 txs as well. We still might overpay a bit for the payout tx.
     private int getAverageSize(int txSize) {
         return (txSize + 320) / 2;
     }
