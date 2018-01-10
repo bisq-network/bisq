@@ -210,7 +210,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
                             @Override
                             public void onFault(String errorMessage, @Nullable Connection connection) {
-                                log.info("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
+                                log.debug("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                         "nodeAddress={}", errorMessage, nodeAddress);
 
                                 peerManager.handleConnectionFault(nodeAddress);

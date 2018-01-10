@@ -103,8 +103,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
     Price tradePrice;
-    private int feeTxSize = 320; // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
+    private int feeTxSize = 320; // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout)
+    // are larger so we adjust to 320
     private int feeTxSizeEstimationRecursionCounter;
+    private boolean freezeFee;
+    private Coin txFeePerByteFromFeeService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,12 +190,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
-        // We request to get the actual estimated fee
-        requestTxFee();
-
-
-        // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
-        // and reserved his funds, so that would not work well with dynamic fees.
+        // Taker pays 3 times the tx fee (taker fee, deposit, payout) because the mining fee might be different when maker created the offer
+        // and reserved his funds. Taker creates at least taker fee and deposit tx at nearly the same moment. Just the payout will
+        // be later and still could lead to issues if the required fee changed a lot in the meantime. using RBF and/or
+        // multiple batch-signed payout tx with different fees might be an option but RBF is not supported yet in BitcoinJ
+        // and batched txs would add more complexity to the trade protocol.
 
         // A typical trade fee tx has about 260 bytes (if one input). The trade txs has about 336-414 bytes.
         // We use 320 as a average value.
@@ -204,7 +206,22 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+        txFeePerByteFromFeeService = feeService.getTxFeePerByte();
+        txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+
+        // We request to get the actual estimated fee
+        log.info("Start requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
+        feeService.requestFees(() -> {
+            if (!freezeFee) {
+                txFeePerByteFromFeeService = feeService.getTxFeePerByte();
+                txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+                calculateTotalToPay();
+                log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
+            } else {
+                log.warn("We received the tx fee respnse after we have shown the funding screen and ignore that " +
+                        "to avoid that the total funds to pay changes due cahnged tx fees.");
+            }
+        }, null);
 
         calculateVolume();
         calculateTotalToPay();
@@ -246,11 +263,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
         priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
-    void requestTxFee() {
-        feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-            calculateTotalToPay();
-        }, null);
+    // We don't want that the fee gets updated anymore after we show the funding screen.
+    void onShowPayFundsScreen() {
+        estimateTxSize();
+        freezeFee = true;
+        calculateTotalToPay();
     }
 
     void onTabSelected(boolean isSelected) {
@@ -307,20 +324,20 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     // This works only if have already funds in the wallet
     public void estimateTxSize() {
-        txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+        txFeeFromFeeService = getTxFeeBySize(feeTxSize);
         Address fundingAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
         Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
         Address changeAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
-        Coin reservedFundsForOffer = getSecurityDeposit();
-        if (!isBuyOffer())
+        Coin reservedFundsForOffer = getSecurityDeposit().add(txFeeFromFeeService).add(txFeeFromFeeService);
+        if (isBuyOffer())
             reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
 
         checkNotNull(user.getAcceptedArbitrators(), "user.getAcceptedArbitrators() must not be null");
         checkArgument(!user.getAcceptedArbitrators().isEmpty(), "user.getAcceptedArbitrators() must not be empty");
         String dummyArbitratorAddress = user.getAcceptedArbitrators().get(0).getBtcAddress();
         try {
-            log.info("We create a dummy tx to see if our estimated size is in the accepted range. feeTxSize={}," +
+            log.debug("We create a dummy tx to see if our estimated size is in the accepted range. feeTxSize={}," +
                             " txFee based on feeTxSize: {}, recommended txFee is {} sat/byte",
                     feeTxSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
             Transaction tradeFeeTx = tradeWalletService.estimateBtcTradingFeeTxSize(
@@ -335,28 +352,41 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
             final int txSize = tradeFeeTx.bitcoinSerialize().length;
             // use feeTxSizeEstimationRecursionCounter to avoid risk for endless loop
+            // We use the tx size for the trade fee tx as target for the fees.
+            // The deposit and payout txs are determined +/- 1 output but the trade fee tx can have either 1 or many inputs
+            // so we need to make sure the trade fee tx gets the correct fee to not get stuck.
+            // We use a 20% tolerance frm out default 320 byte size (typical for deposit and payout) and only if we get a
+            // larger size we increase the fee. Worst case is that we overpay for the other follow up txs, but better than
+            // use a too low fee and get stuck.
             if (txSize > feeTxSize * 1.2 && feeTxSizeEstimationRecursionCounter < 10) {
                 feeTxSizeEstimationRecursionCounter++;
                 log.info("txSize is {} bytes but feeTxSize used for txFee calculation was {} bytes. We try again with an " +
                         "adjusted txFee to reach the target tx fee.", txSize, feeTxSize);
                 feeTxSize = txSize;
-                txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+                txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+
                 // lets try again with the adjusted txSize and fee.
                 estimateTxSize();
             } else {
-                log.info("feeTxSize {} bytes", feeTxSize);
-                log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                        txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+                // We are done with estimation iterations
+                if (feeTxSizeEstimationRecursionCounter < 10)
+                    log.info("txFee based on estimated size of {} bytes. Actual tx size = {} bytes. " +
+                                    "TxFee is {} BTC ({} sat/byte)",
+                            feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+                else
+                    log.warn("We could not estimate the fee as the feeTxSizeEstimationRecursionCounter exceeded our limit of 10 recursions. txFee based on estimated size of {} bytes. Actual tx size = {} bytes. " +
+                                    "TxFee is {} BTC ({} sat/byte)",
+                            feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
             }
         } catch (InsufficientMoneyException e) {
             // If we need to fund from an external wallet we can assume we only have 1 input (260 bytes).
-            log.warn("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
-                    "if the user pays from an external wallet. In that case we use an estimated tx size of 260 bytes.");
-            feeTxSize = 260;
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-            log.info("feeTxSize {} bytes", feeTxSize);
-            log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                    txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+            log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
+                    "if the user has not sufficient funds yet and need to fund from an external wallet. " +
+                    "In that case we use an estimated tx size of 320 bytes.");
+            feeTxSize = 320;
+            txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+            log.info("txFee based on estimated size of {} bytes. TxFee is {} BTC ({} sat/byte)",
+                    feeTxSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
         }
     }
 
@@ -546,6 +576,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
     public void swapTradeToSavings() {
         log.debug("swapTradeToSavings, offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+    }
+
+    private Coin getTxFeeBySize(int sizeInBytes) {
+        return txFeePerByteFromFeeService.multiply(sizeInBytes);
     }
 
   /*  private void setFeeFromFundingTx(Coin fee) {

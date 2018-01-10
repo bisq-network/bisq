@@ -158,43 +158,53 @@ public class TradeWalletService {
         log.debug("fundingAddress " + fundingAddress.toString());
         log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
         log.debug("changeAddress " + changeAddress.toString());
-        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
+        log.info("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
         log.debug("useSavingsWallet " + useSavingsWallet);
-        log.debug("tradingFee " + tradingFee.toPlainString());
-        log.debug("txFee " + txFee.toPlainString());
+        log.info("tradingFee " + tradingFee.toPlainString());
+        log.info("txFee " + txFee.toPlainString());
         log.debug("feeReceiverAddresses " + feeReceiverAddresses);
-
         Transaction tradingFeeTx = new Transaction(params);
-        tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
-        // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
-        tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
+        SendRequest sendRequest = null;
+        try {
+            tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
+            // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
+            tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
-        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
-        // wait for 1 confirmation)
-        // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
-        SendRequest sendRequest = SendRequest.forTx(tradingFeeTx);
-        sendRequest.shuffleOutputs = false;
-        sendRequest.aesKey = aesKey;
-        if (useSavingsWallet)
-            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        else
-            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
-        // We use a fixed fee
+            // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
+            // wait for 1 confirmation)
+            // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
+            sendRequest = SendRequest.forTx(tradingFeeTx);
+            sendRequest.shuffleOutputs = false;
+            sendRequest.aesKey = aesKey;
+            if (useSavingsWallet)
+                sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+            else
+                sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
+            // We use a fixed fee
 
-        sendRequest.fee = txFee;
-        sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.ensureMinRequiredFee = false;
+            sendRequest.fee = txFee;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
 
-        // Change is optional in case of overpay or use of funds from savings wallet
-        sendRequest.changeAddress = changeAddress;
+            // Change is optional in case of overpay or use of funds from savings wallet
+            sendRequest.changeAddress = changeAddress;
 
-        checkNotNull(wallet, "Wallet must not be null");
-        wallet.completeTx(sendRequest);
-        WalletService.printTx("tradingFeeTx", tradingFeeTx);
+            checkNotNull(wallet, "Wallet must not be null");
+            wallet.completeTx(sendRequest);
+            WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
-        broadcastTx(tradingFeeTx, callback);
+            broadcastTx(tradingFeeTx, callback);
 
-        return tradingFeeTx;
+            return tradingFeeTx;
+        } catch (Throwable t) {
+            if (wallet!=null && sendRequest != null && sendRequest.coinSelector != null)
+                log.warn("Balance = {}; CoinSelector = {}",
+                        wallet.getBalance(sendRequest.coinSelector),
+                        sendRequest.coinSelector);
+
+            log.warn("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(), tradingFeeTx.getOutputs());
+            throw t;
+        }
     }
 
     public Transaction estimateBtcTradingFeeTxSize(Address fundingAddress,
@@ -223,6 +233,7 @@ public class TradeWalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.changeAddress = changeAddress;
         checkNotNull(wallet, "Wallet must not be null");
+        log.info("estimateBtcTradingFeeTxSize");
         wallet.completeTx(sendRequest);
         return tradingFeeTx;
     }
