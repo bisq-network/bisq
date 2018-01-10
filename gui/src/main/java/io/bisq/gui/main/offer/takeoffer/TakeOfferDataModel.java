@@ -400,15 +400,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
                                 "txFee based on estimated size of {} bytes. Average tx size = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
                         feeTxSize, getAverageSize(feeTxSize), txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
             }
-        } catch (InsufficientMoneyException e) {
-            // If we need to fund from an external wallet we can assume we only have 1 input (260 bytes).
-            log.warn("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
-                    "if the user pays from an external wallet. In that case we use an estimated tx size of 260 bytes.");
-            feeTxSize = 260;
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-            log.info("feeTxSize {} bytes", feeTxSize);
-            log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                    txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+        } else {
+            feeTxSize = 320;
+            txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+            log.info("We cannot do the fee estimation because there are no funds in the wallet.\nThis is expected " +
+                            "if the user has not funded his wallet yet.\n" +
+                            "In that case we use an estimated tx size of 320 bytes.\n" +
+                            "txFee based on estimated size of {} bytes. Average tx size = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
+                    feeTxSize, getAverageSize(feeTxSize), txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
         }
     }
 
