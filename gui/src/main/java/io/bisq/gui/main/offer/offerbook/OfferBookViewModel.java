@@ -259,7 +259,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean hasSufficientPeersForBroadcast() {
-        return  walletsSetup.hasSufficientPeersForBroadcast();
+        return walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     TradeCurrency getSelectedTradeCurrency() {

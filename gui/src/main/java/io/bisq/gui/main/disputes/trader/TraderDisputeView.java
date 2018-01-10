@@ -323,11 +323,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             .show();
                 }
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (selectedDispute != null) {
-                    if (messagesInputBox.isVisible() && inputTextArea.isFocused()) {
-                        onTrySendMessage();
-                    }
-                }
+                if (selectedDispute != null && messagesInputBox.isVisible() && inputTextArea.isFocused())
+                    onTrySendMessage();
             }
         };
     }
