@@ -100,6 +100,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
+        result.add(new CryptoCurrency("CREA", "Creativecoin"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
