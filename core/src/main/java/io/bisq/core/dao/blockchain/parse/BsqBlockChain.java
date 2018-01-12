@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -165,6 +166,7 @@ public class BsqBlockChain implements PersistableEnvelope {
         lock = new FunctionalReadWriteLock(true);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +230,15 @@ public class BsqBlockChain implements PersistableEnvelope {
                 proto.getGenesisBlockHeight(),
                 proto.getChainHeadHeight(),
                 proto.hasGenesisTx() ? Tx.fromProto(proto.getGenesisTx()) : null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Atomic access
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public <T> T callFunctionWithReadWriteLock(Supplier<T> supplier) {
+        return lock.readWrite(supplier::get);
     }
 
 

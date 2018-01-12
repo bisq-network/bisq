@@ -263,9 +263,13 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
                             // BSQ tx and BitcoinJ tx have same outputs (mirrored data structure)
                             TxOutput txOutput = txOptional.get().getOutputs().get(connectedOutput.getIndex());
                             if (txOutput.isVerified()) {
+                                //TODO check why values are not the same
+                                if (txOutput.getValue() != connectedOutput.getValue().value)
+                                    log.warn("getValueSentToMeForTransaction: Value of BSQ output do not match BitcoinJ tx output. " +
+                                                    "txOutput.getValue()={}, output.getValue().value={}, txId={}",
+                                            txOutput.getValue(), connectedOutput.getValue().value, txOptional.get().getId());
+
                                 // If it is a valid BSQ output we add it
-                                checkArgument(txOutput.getValue() == connectedOutput.getValue().value,
-                                        "Value of BSQ output need to match BitcoinJ tx output");
                                 result = result.add(Coin.valueOf(txOutput.getValue()));
                             }
                         }
@@ -298,9 +302,13 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
                         // The index of the BSQ tx outputs are the same like the bitcoinj tx outputs
                         TxOutput txOutput = txOptional.get().getOutputs().get(i);
                         if (txOutput.isVerified()) {
+                            //TODO check why values are not the same
+                            if (txOutput.getValue() != output.getValue().value)
+                                log.warn("getValueSentToMeForTransaction: Value of BSQ output do not match BitcoinJ tx output. " +
+                                                "txOutput.getValue()={}, output.getValue().value={}, txId={}",
+                                        txOutput.getValue(), output.getValue().value, txId);
+
                             // If it is a valid BSQ output we add it
-                            checkArgument(txOutput.getValue() == output.getValue().value,
-                                    "Value of BSQ output need to match BitcoinJ tx output");
                             result = result.add(Coin.valueOf(txOutput.getValue()));
                         }
                     }

@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Parses blocks and transactions for finding BSQ relevant transactions.
- *
+ * <p/>
  * We are in threaded context. Don't mix up with UserThread.
  */
 @Slf4j
@@ -281,82 +281,89 @@ public class BsqParser {
         }
     }
 
+    // We want to make that method atomic to avoid that other clients are reading the state of the tx while we are
+    // parsing the inputs or outputs
     private boolean isBsqTx(int blockHeight, Tx tx) {
-        boolean isBsqTx = false;
-        long availableBsq = 0;
-        for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
-            TxInput input = tx.getInputs().get(inputIndex);
-            //TODO check if Tuple indexes of inputs outputs are not messed up...
-            Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
-            if (spendableTxOutput.isPresent()) {
-                final TxOutput spentTxOutput = spendableTxOutput.get();
-                spentTxOutput.setUnspent(false);
-                bsqBlockChain.removeUnspentTxOutput(spentTxOutput);
-                spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
-                input.setConnectedTxOutput(spentTxOutput);
-                availableBsq = availableBsq + spentTxOutput.getValue();
-            }
-        }
-        // If we have an input with BSQ we iterate the outputs
-        if (availableBsq > 0) {
-            bsqBlockChain.addTxToMap(tx);
-            isBsqTx = true;
+        // TODO if we call the callFunctionWithReadWriteLock we get stuck with read locks.
+        // Seems that there are deadlocks triggered...
 
-            // We use order of output index. An output is a BSQ utxo as long there is enough input value
-            final List<TxOutput> outputs = tx.getOutputs();
-            TxOutput compRequestIssuanceOutputCandidate = null;
-            TxOutput bsqOutput = null;
-            for (int index = 0; index < outputs.size(); index++) {
-                TxOutput txOutput = outputs.get(index);
-                final long txOutputValue = txOutput.getValue();
-
-                // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
-                if (txOutput.getOpReturnData() == null) {
-                    if (availableBsq >= txOutputValue && txOutputValue != 0) {
-                        // We are spending available tokens
-                        txOutput.setVerified(true);
-                        txOutput.setUnspent(true);
-                        bsqBlockChain.addUnspentTxOutput(txOutput);
-                        tx.setTxType(TxType.TRANSFER_BSQ);
-                        txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
-                        bsqOutput = txOutput;
-
-                        availableBsq -= txOutputValue;
-                        if (availableBsq == 0)
-                            log.debug("We don't have anymore BSQ to spend");
-                    } else if (availableBsq > 0 && compRequestIssuanceOutputCandidate == null) {
-                        // availableBsq must be > 0 as we expect a bsqFee for an compRequestIssuanceOutput
-                        // We store the btc output as it might be the issuance output from a compensation request which might become BSQ after voting.
-                        compRequestIssuanceOutputCandidate = txOutput;
-                        // As we have not verified the OP_RETURN yet we set it temporary to BTC_OUTPUT
-                        txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-                        // The other outputs cannot not BSQ outputs so we ignore them.
-                        // We set the index directly to the last output as that might be an OP_RETURN with DAO data
-                        //TODO remove because its premature optimisation....
-                        // index = Math.max(index, outputs.size() - 2);
-                    } else {
-                        log.debug("We got another BTC output. We ignore it.");
-                    }
-                } else {
-                    // availableBsq is used as bsqFee paid to miners (burnt) if OP-RETURN is used
-                    opReturnVerification.processDaoOpReturnData(tx, index, availableBsq, blockHeight, compRequestIssuanceOutputCandidate, bsqOutput);
+        //return bsqBlockChain.<Boolean>callFunctionWithReadWriteLock(() -> {
+            boolean isBsqTx = false;
+            long availableBsq = 0;
+            for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
+                TxInput input = tx.getInputs().get(inputIndex);
+                //TODO check if Tuple indexes of inputs outputs are not messed up...
+                Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
+                if (spendableTxOutput.isPresent()) {
+                    final TxOutput spentTxOutput = spendableTxOutput.get();
+                    spentTxOutput.setUnspent(false);
+                    bsqBlockChain.removeUnspentTxOutput(spentTxOutput);
+                    spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
+                    input.setConnectedTxOutput(spentTxOutput);
+                    availableBsq = availableBsq + spentTxOutput.getValue();
                 }
             }
-
+            // If we have an input with BSQ we iterate the outputs
             if (availableBsq > 0) {
-                log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                        availableBsq,
-                        tx.toString());
-                tx.setBurntFee(availableBsq);
-                if (tx.getTxType() == null)
-                    tx.setTxType(TxType.PAY_TRADE_FEE);
-            }
-        } else if (issuanceVerification.maybeProcessData(tx)) {
-            // We don't have any BSQ input, so we test if it is a sponsor/issuance tx
-            log.debug("We got a issuance tx and process the data");
-        }
+                bsqBlockChain.addTxToMap(tx);
+                isBsqTx = true;
 
-        return isBsqTx;
+                // We use order of output index. An output is a BSQ utxo as long there is enough input value
+                final List<TxOutput> outputs = tx.getOutputs();
+                TxOutput compRequestIssuanceOutputCandidate = null;
+                TxOutput bsqOutput = null;
+                for (int index = 0; index < outputs.size(); index++) {
+                    TxOutput txOutput = outputs.get(index);
+                    final long txOutputValue = txOutput.getValue();
+
+                    // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+                    if (txOutput.getOpReturnData() == null) {
+                        if (availableBsq >= txOutputValue && txOutputValue != 0) {
+                            // We are spending available tokens
+                            txOutput.setVerified(true);
+                            txOutput.setUnspent(true);
+                            bsqBlockChain.addUnspentTxOutput(txOutput);
+                            tx.setTxType(TxType.TRANSFER_BSQ);
+                            txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
+                            bsqOutput = txOutput;
+
+                            availableBsq -= txOutputValue;
+                            if (availableBsq == 0)
+                                log.debug("We don't have anymore BSQ to spend");
+                        } else if (availableBsq > 0 && compRequestIssuanceOutputCandidate == null) {
+                            // availableBsq must be > 0 as we expect a bsqFee for an compRequestIssuanceOutput
+                            // We store the btc output as it might be the issuance output from a compensation request which might become BSQ after voting.
+                            compRequestIssuanceOutputCandidate = txOutput;
+                            // As we have not verified the OP_RETURN yet we set it temporary to BTC_OUTPUT
+                            txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+                            // The other outputs cannot not BSQ outputs so we ignore them.
+                            // We set the index directly to the last output as that might be an OP_RETURN with DAO data
+                            //TODO remove because its premature optimisation....
+                            // index = Math.max(index, outputs.size() - 2);
+                        } else {
+                            log.debug("We got another BTC output. We ignore it.");
+                        }
+                    } else {
+                        // availableBsq is used as bsqFee paid to miners (burnt) if OP-RETURN is used
+                        opReturnVerification.processDaoOpReturnData(tx, index, availableBsq, blockHeight, compRequestIssuanceOutputCandidate, bsqOutput);
+                    }
+                }
+
+                if (availableBsq > 0) {
+                    log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
+                            availableBsq,
+                            tx.toString());
+                    tx.setBurntFee(availableBsq);
+                    if (tx.getTxType() == null)
+                        tx.setTxType(TxType.PAY_TRADE_FEE);
+                }
+            } else if (issuanceVerification.maybeProcessData(tx)) {
+                // We don't have any BSQ input, so we test if it is a sponsor/issuance tx
+                log.debug("We got a issuance tx and process the data");
+            }
+
+            return isBsqTx;
+        //});
     }
 
     private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> txs) {

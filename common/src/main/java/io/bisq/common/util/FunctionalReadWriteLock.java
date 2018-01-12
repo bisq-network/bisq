@@ -67,4 +67,16 @@ public class FunctionalReadWriteLock {
             writeLock.unlock();
         }
     }
+
+    // TODO triggers deadlocks with reads
+    public <T> T readWrite(Supplier<T> block) {
+        readLock.lock();
+        writeLock.lock();
+        try {
+            return block.get();
+        } finally {
+            readLock.unlock();
+            writeLock.unlock();
+        }
+    }
 }
