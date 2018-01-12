@@ -430,7 +430,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (model.isBootstrapped())
+        if (model.isBootstrapped() && model.hasSufficientPeersForBroadcast())
             offerActionHandler.onTakeOffer(offer);
         else
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();

@@ -26,7 +26,7 @@ public class MonitorRequestManager implements ConnectionListener {
     private static final long RETRY_DELAY_SEC = 30;
     private static final long CLEANUP_TIMER = 60;
     private static final long REQUEST_PERIOD_MIN = 10;
-    private static final int MAX_RETRIES = 3;
+    private static final int MAX_RETRIES = 5;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

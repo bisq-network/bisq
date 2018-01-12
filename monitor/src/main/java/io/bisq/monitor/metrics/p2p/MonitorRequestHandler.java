@@ -52,8 +52,8 @@ class MonitorRequestHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private P2PDataStorage dataStorage;
-    private Metrics metrics;
+    private final P2PDataStorage dataStorage;
+    private final Metrics metrics;
     private final Listener listener;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
