@@ -140,10 +140,8 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
 
     @Override
     public void onBsqBlockChainChanged() {
-        if (isWalletReady()) {
+        if (isWalletReady())
             updateBsqWalletTransactions();
-            updateBsqBalance();
-        }
     }
 
 
