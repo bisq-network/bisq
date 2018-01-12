@@ -373,7 +373,7 @@ public class BsqBlockChain implements PersistableEnvelope {
     public Optional<Tx> findTx(String txId) {
         Tx tx = getTxMap().get(txId);
         if (tx == null)
-            tx = getGenesisTx(); //todo put gen in txmap
+            tx = getGenesisTx(); //todo have to be in txmap already -> remove after check
         if (tx != null)
             return Optional.of(tx);
         else
