@@ -27,6 +27,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -192,64 +193,25 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                         new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
                                     }
 
-                // We get the JSON of the object excluding signature and feeTxId
-                String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
-                log.error(payloadAsJson);
-                // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
-                // encoded string.
-                String signature = bsqKeyPair.signMessage(payloadAsJson);
-                compensationRequestPayload.setSignature(signature);
-
-                String dataAndSig = payloadAsJson + signature;
-                byte[] dataAndSigAsBytes = dataAndSig.getBytes();
-                outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
-                outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
-                outputStream.write(Utils.sha256hash160(dataAndSigAsBytes));
-                byte hash[] = outputStream.toByteArray();
-                //TODO should we store the hash in the compensationRequestPayload object?
-
-
-                //TODO 1 Btc output (small payment to own compensation receiving address)
-                Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedSendTx, false, hash);
-                Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                Coin miningFee = signedTx.getFee();
-                int txSize = signedTx.bitcoinSerialize().length;
-                new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
-                        .confirmation(Res.get("dao.compensation.create.confirm.info",
-                                btcFormatter.formatCoinWithCode(createCompensationRequestFee),
-                                btcFormatter.formatCoinWithCode(miningFee),
-                                CoinUtil.getFeePerByte(miningFee, txSize),
-                                (txSize / 1000d)))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            bsqWalletService.commitTx(txWithBtcFee);
-                            // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                            // if it gets committed 2 times
-                            btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                            bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                @Override
-                                public void onSuccess(@Nullable Transaction transaction) {
-                                    checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
-                                    compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
-                                    compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
-                                    compensationRequestDisplay.clearForm();
-                                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                }
-
-                                @Override
-                                public void onFailure(@NotNull Throwable t) {
-                                    log.error(t.toString());
-                                    new Popup<>().warning(t.toString()).show();
-                                }
-                            });
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } catch (IOException | TransactionVerificationException | WalletException |
-                    InsufficientMoneyException | ChangeBelowDustException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                new Popup<>().warning(e.toString()).show();
+                                    @Override
+                                    public void onFailure(@NotNull Throwable t) {
+                                        log.error(t.toString());
+                                        new Popup<>().warning(t.toString()).show();
+                                    }
+                                });
+                            })
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } catch (InsufficientMoneyException e) {
+                    BSFormatter formatter = walletExceptionMightBeCausedByBtCWallet ? btcFormatter : bsqFormatter;
+                    new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
+                } catch (IOException | TransactionVerificationException | WalletException | ChangeBelowDustException e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    new Popup<>().warning(e.toString()).show();
+                }
+            } else {
+                new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
             }
         });
     }
