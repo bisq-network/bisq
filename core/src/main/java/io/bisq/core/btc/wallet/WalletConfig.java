@@ -48,6 +48,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.nio.channels.FileLock;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -478,6 +479,12 @@ public class WalletConfig extends AbstractIdleService {
 
     public long getBlockDateForTx(Transaction tx) throws BlockStoreException {
         // Date in Bitcoin blocks can be max. 2 hours off
+        final Date updateTime = tx.getUpdateTime();
+        if (updateTime != null)
+            return updateTime.getTime();
+        else
+            return 0;
+        /*
         final BlockStore blockStore = vChain.getBlockStore();
         final StoredBlock storedBlock = blockStore.get(tx.getHash());
         // TODO storedBlock is null
@@ -486,7 +493,7 @@ public class WalletConfig extends AbstractIdleService {
             return header.getTime().getTime();
         } else {
             return 0;
-        }
+        }*/
     }
 
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
