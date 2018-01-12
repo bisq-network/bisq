@@ -34,10 +34,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProvidersRepository {
     private static final String NODES = "http://xc3nh4juf2hshy7e.onion/, " + // @emzy
-            "http://ceaanhbvluug4we6.onion/, " +// @mrosseel
-            "http://rb2l2qale2pqzjyo.onion/";  // @sqrrm
-
-    // Old nodes before v 0.6.0: "http://44mgyoe2b6oqiytt.onion/, http://5bmpx76qllutpcyp.onion/"; @ManfredKarrer
+            "http://ceaanhbvluug4we6.onion/, " +// @miker
+            "http://44mgyoe2b6oqiytt.onion/, " +// @manfredkarrer
+            "http://5bmpx76qllutpcyp.onion/, " +// @manfredkarrer
+            "http://rb2l2qale2pqzjyo.onion/";  // @manfredkarrer
 
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
@@ -69,7 +69,7 @@ public class ProvidersRepository {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
                 // providerAsString = "http://localhost:8080/";
-                providerAsString = "http://174.138.104.137:8080/"; // @mrosseel
+                providerAsString = "http://174.138.104.137:8080/"; // @miker
             } else {
                 providerAsString = NODES;
             }

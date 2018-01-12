@@ -2,6 +2,7 @@ package io.bisq.common.storage;
 
 import com.google.common.io.Files;
 import io.bisq.common.util.Utilities;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +78,23 @@ public class FileUtil {
         deleteFileIfExists(file);
     }
 
+    public static void deleteDirectory(File file, File exclude) throws IOException {
+        boolean excludeFileFound = false;
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null)
+                for (File f : files) {
+                    if (!excludeFileFound)
+                        excludeFileFound = f.equals(exclude);
+                    if (!f.equals(exclude))
+                        deleteDirectory(f);
+                }
+        }
+        // Finally delete main file/dir if exclude file was not found in directory
+        if (!excludeFileFound && !file.equals(exclude))
+            deleteFileIfExists(file);
+    }
+
     public static void deleteFileIfExists(File file) throws IOException {
         if (file.exists() && !file.delete())
             throw new FileNotFoundException("Failed to delete file: " + file);
@@ -109,5 +127,9 @@ public class FileUtil {
         } else if (!oldFile.renameTo(newFile)) {
             throw new IOException("Failed to rename " + oldFile + " to " + newFile);
         }
+    }
+
+    public static void copyDirectory(File source, File destination) throws IOException {
+        FileUtils.copyDirectory(source, destination);
     }
 }

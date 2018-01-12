@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Run in UserThread
 public abstract class NetworkNode implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
-    private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
+    private static final int CREATE_SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(120);
 
     final int servicePort;
     private final NetworkProtoResolver networkProtoResolver;
@@ -94,7 +95,7 @@ public abstract class NetworkNode implements MessageListener {
                     log.debug("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
                             duration);
 
-                    if (duration > CREATE_SOCKET_TIMEOUT_MILLIS)
+                    if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
 
                     // Tor needs sometimes quite long to create a connection. To avoid that we get too many double

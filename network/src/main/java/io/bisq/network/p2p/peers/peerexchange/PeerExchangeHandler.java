@@ -15,19 +15,18 @@ import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 class PeerExchangeHandler implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
-
-    private static final long TIME_OUT_SEC = 40;
-    private static final int DELAY_MS = 1000;
+    // We want to keep timeout short here
+    private static final long TIMEOUT = 40;
+    private static final int DELAY_MS = 500;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,23 +81,20 @@ class PeerExchangeHandler implements MessageListener {
 
     private void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
+        log.debug("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
-                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedNonSeedNodeReportedPeers(nodeAddress));
-
+                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getLivePeers(nodeAddress));
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
-                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                    log.debug(errorMessage + " / PeerExchangeHandler=" +
-                                            PeerExchangeHandler.this);
-                                    log.debug("timeoutTimer called on " + this);
+                                    String errorMessage = "A timeout occurred at sending getPeersRequest. nodeAddress=" + nodeAddress;
                                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
                                 } else {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
                                 }
                             },
-                            TIME_OUT_SEC, TimeUnit.SECONDS);
+                            TIMEOUT, TimeUnit.SECONDS);
                 }
 
                 SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);
@@ -124,9 +120,7 @@ class PeerExchangeHandler implements MessageListener {
                     public void onFailure(@NotNull Throwable throwable) {
                         if (!stopped) {
                             String errorMessage = "Sending getPeersRequest to " + nodeAddress +
-                                    " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
-                                    ".\n\tException=" + throwable.getMessage();
-                            log.debug(errorMessage);
+                                    " failed. That is expected if the peer is offline. Exception=" + throwable.getMessage();
                             handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
                         } else {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");

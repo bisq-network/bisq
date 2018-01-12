@@ -6,6 +6,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.network.http.HttpClient;
 import io.bisq.provider.price.PriceData;
+import io.bisq.provider.price.PriceRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,8 @@ public class PoloniexProvider {
                             marketPriceMap.put(altcoinCurrency,
                                     new PriceData(altcoinCurrency,
                                             parseDouble((String) data.get("last")),
-                                            ts)
+                                            ts,
+                                            PriceRequestService.POLO_PROVIDER)
                             );
                         }
                     }

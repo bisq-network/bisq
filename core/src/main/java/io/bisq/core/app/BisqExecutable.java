@@ -153,6 +153,15 @@ public abstract class BisqExecutable {
                 description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
                         " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
                 .withRequiredArg();
+        parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
+                description("Set to true if connection of bitcoin nodes should include clear net nodes", ""))
+                .withRequiredArg();
+        parser.accepts(BtcOptionKeys.USER_AGENT,
+                description("User agent at btc node connections", ""))
+                .withRequiredArg();
+        parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
+                description("Number of connections to the Bitcoin network", "9"))
+                .withRequiredArg();
 
 
         //RpcOptionKeys

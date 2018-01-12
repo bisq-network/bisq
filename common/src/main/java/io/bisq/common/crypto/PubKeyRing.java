@@ -17,6 +17,7 @@
 
 package io.bisq.common.crypto;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.Utilities;
@@ -43,10 +44,10 @@ public final class PubKeyRing implements NetworkPayload, RestrictedByContractJso
     @Nullable
     private final String pgpPubKeyAsPem;
 
-    private PublicKey signaturePubKey;
-    private PublicKey encryptionPubKey;
+    private transient PublicKey signaturePubKey;
+    private transient PublicKey encryptionPubKey;
     @Nullable
-    private PGPPublicKey pgpPubKey;
+    private transient PGPPublicKey pgpPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
         this.signaturePubKeyBytes = Sig.getPublicKeyBytes(signaturePubKey);
@@ -63,6 +64,7 @@ public final class PubKeyRing implements NetworkPayload, RestrictedByContractJso
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
     public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @Nullable String pgpPubKeyAsPem) {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;

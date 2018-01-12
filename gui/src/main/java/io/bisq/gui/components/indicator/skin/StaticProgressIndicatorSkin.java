@@ -32,7 +32,6 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.components.indicator.behavior.StaticProgressIndicatorBehavior;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;

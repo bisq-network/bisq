@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -279,7 +280,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
+
+        // If we start up first time we don't have any peers so we need to request from seed node.
+        // As well it can be that the persisted peer list is outdated with dead peers.
+        UserThread.runAfter(() -> {
+            peerExchangeManager.requestReportedPeersFromSeedNodes(seedNodeOfPreliminaryDataRequest.get());
+        }, 100, TimeUnit.MILLISECONDS);
+
+        // If we have reported or persisted peers we try to connect to those
+        UserThread.runAfter(peerExchangeManager::initialRequestPeersFromReportedOrPersistedPeers, 300, TimeUnit.MILLISECONDS);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // RequestDataManager.Listener implementation
@@ -294,11 +305,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onUpdatedDataReceived() {
-        Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeAddressOfPreliminaryDataRequest();
-        checkArgument(seedNodeOfPreliminaryDataRequest.isPresent(),
-                "seedNodeOfPreliminaryDataRequest must be present");
-        peerExchangeManager.requestReportedPeersFromSeedNodes(seedNodeOfPreliminaryDataRequest.get());
-
         if (!isBootstrapped) {
             isBootstrapped = true;
             p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
@@ -440,6 +446,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
+                    log.error(throwable.toString());
                     throwable.printStackTrace();
                     sendDirectMessageListener.onFault();
                 }
@@ -526,10 +533,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
-                            log.trace("SendEncryptedMailboxMessage onFailure");
-                            log.debug(throwable.toString());
-                            log.debug("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
-                            log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
+                            log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox. peersNodeAddress=" + peersNodeAddress);
                             PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
                             addMailboxData(new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                                             keyRing.getSignatureKeyPair().getPublic(),

@@ -37,8 +37,7 @@ import java.util.Arrays;
 
 @Slf4j
 public class SeedNode {
-    // Bisq v0.6.1 did not change anything relevant for that project so we stick with 0.6.0
-    public static final String VERSION = "0.6.0";
+    public static final String VERSION = "0.6.3";
 
     private static BisqEnvironment bisqEnvironment;
     public static void setEnvironment(BisqEnvironment bisqEnvironment) {

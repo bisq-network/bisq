@@ -26,6 +26,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.*;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -72,6 +73,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     final PriceFeedService priceFeedService;
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
+    private final WalletsSetup walletsSetup;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     final BSFormatter formatter;
@@ -103,10 +105,18 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
-                              Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
-                              ClosedTradableManager closedTradableManager, FilterManager filterManager,
-                              AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
+    public OfferBookViewModel(User user,
+                              OpenOfferManager openOfferManager,
+                              OfferBook offerBook,
+                              Preferences preferences,
+                              P2PService p2PService,
+                              PriceFeedService priceFeedService,
+                              ClosedTradableManager closedTradableManager,
+                              FilterManager filterManager,
+                              WalletsSetup walletsSetup,
+                              AccountAgeWitnessService accountAgeWitnessService,
+                              Navigation navigation,
+                              BSFormatter formatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -117,6 +127,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
+        this.walletsSetup = walletsSetup;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -245,6 +256,10 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
+    }
+
+    boolean hasSufficientPeersForBroadcast() {
+        return walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     TradeCurrency getSelectedTradeCurrency() {
@@ -417,22 +432,20 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilterPredicate() {
-        try {
-            filteredItems.setPredicate(offerBookListItem -> {
-                Offer offer = offerBookListItem.getOffer();
-                boolean directionResult = offer.getDirection() != direction;
-                boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
-                        offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
-                boolean paymentMethodResult = showAllPaymentMethods ||
-                        offer.getPaymentMethod().equals(selectedPaymentMethod);
-                boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
-                return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
-            });
-        } catch (Throwable t) {
-            log.error("applyFilterPredicate " + Thread.currentThread().toString());
-            log.error(t.toString());
-            t.printStackTrace();
-        }
+        filteredItems.setPredicate(offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            boolean directionResult = offer.getDirection() != direction;
+            boolean isPreferredCurrency = getTradeCurrencies().stream()
+                    .filter(c -> c.getCode().equals(offer.getCurrencyCode()))
+                    .findAny()
+                    .isPresent();
+            boolean currencyResult = (showAllTradeCurrenciesProperty.get() && isPreferredCurrency) ||
+                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
+            boolean paymentMethodResult = showAllPaymentMethods ||
+                    offer.getPaymentMethod().equals(selectedPaymentMethod);
+            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
+            return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
+        });
     }
 
     boolean hasMatchingArbitrator(Offer offer) {

@@ -95,9 +95,9 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                     public void onFailure(@NotNull Throwable throwable) {
                         if (!stopped) {
                             String errorMessage = "Sending pong to " + connection +
-                                " failed. That is expected if the peer is offline. pong=" + pong + "." +
+                                " failed. That is expected if the peer is offline. "+
                                 "Exception: " + throwable.getMessage();
-                            log.debug(errorMessage);
+                            log.info(errorMessage);
                             peerManager.handleConnectionFault(connection);
                         } else {
                             log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");

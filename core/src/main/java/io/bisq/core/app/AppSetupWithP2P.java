@@ -41,6 +41,7 @@ public class AppSetupWithP2P extends AppSetup {
     protected final AccountAgeWitnessService accountAgeWitnessService;
     protected final FilterManager filterManager;
     protected BooleanProperty p2pNetWorkReady;
+    protected final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
     public AppSetupWithP2P(EncryptionService encryptionService,
@@ -49,10 +50,9 @@ public class AppSetupWithP2P extends AppSetup {
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            FilterManager filterManager) {
-        super(encryptionService,
-                keyRing,
-                tradeStatisticsManager);
+        super(encryptionService,keyRing);
         this.p2PService = p2PService;
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.filterManager = filterManager;
     }
@@ -75,7 +75,7 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        SetupUtils.readFromResources(p2PService).addListener((observable, oldValue, newValue) -> {
+        SetupUtils.readFromResources(p2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 startInitP2PNetwork();
         });

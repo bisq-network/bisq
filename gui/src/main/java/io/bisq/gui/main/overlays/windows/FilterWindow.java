@@ -129,7 +129,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
         InputTextField btcNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode")).second;
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
-        // TODO add BTC full nodes
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {

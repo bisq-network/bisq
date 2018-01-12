@@ -33,7 +33,7 @@ import java.util.Date;
 @Slf4j
 public final class OpenOffer implements Tradable {
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
-    private static final long TIMEOUT_SEC = 30;
+    private static final long TIMEOUT = 60;
     transient private Timer timeoutTimer;
 
     public enum State {
@@ -125,7 +125,7 @@ public final class OpenOffer implements Tradable {
             log.debug("Timeout for resettin State.RESERVED reached");
             if (state == State.RESERVED)
                 setState(State.AVAILABLE);
-        }, TIMEOUT_SEC);
+        }, TIMEOUT);
     }
 
     private void stopTimeout() {

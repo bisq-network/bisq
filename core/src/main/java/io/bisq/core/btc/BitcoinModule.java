@@ -50,6 +50,9 @@ public class BitcoinModule extends AppModule {
         bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.BTC_NODES));
+        bindConstant().annotatedWith(named(BtcOptionKeys.USER_AGENT)).to(environment.getRequiredProperty(BtcOptionKeys.USER_AGENT));
+        bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
+        bindConstant().annotatedWith(named(BtcOptionKeys.USE_ALL_PROVIDED_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
         String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
         bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);

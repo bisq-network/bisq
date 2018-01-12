@@ -360,16 +360,6 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Broadcast tx
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
-        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
-        printTx("BSQ broadcast Tx", tx);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Send BSQ with BTC fee
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -398,12 +388,13 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         return tx;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws
-            InsufficientMoneyException {
+            InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
@@ -417,7 +408,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
-        printTx("getPreparedBurnFeeTx", tx);
+        //printTx("getPreparedBurnFeeTx", tx);
         return tx;
     }
 

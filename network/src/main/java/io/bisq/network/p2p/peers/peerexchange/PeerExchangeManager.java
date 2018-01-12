@@ -10,8 +10,7 @@ import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -19,12 +18,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class PeerExchangeManager implements MessageListener, ConnectionListener, PeerManager.Listener {
-    private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
-
     private static final long RETRY_DELAY_SEC = 10;
     private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = 3;
-    private static final long REQUEST_PERIODICALLY_INTERVAL_SEC = 10 * 60;
+    private static final long REQUEST_PERIODICALLY_INTERVAL_MIN = 10;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -81,6 +79,19 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         startPeriodicTimer();
     }
 
+    public void initialRequestPeersFromReportedOrPersistedPeers() {
+        if (!peerManager.getReportedPeers().isEmpty() || !peerManager.getPersistedPeers().isEmpty()) {
+            // We will likely get more connections as the GetPeersResponse onComplete handler triggers a new request if the confirmed
+            // connections have not reached the min connection target.
+            // So we potentially request 2 times 8 but we prefer to get fast connected
+            // and disconnect afterwards when we exceed max connections rather to delay connection in case many of our peers from the list are dead.
+            for (int i = 0; i < Math.min(8, peerManager.getMaxConnections()); i++)
+                requestWithAvailablePeers();
+        } else {
+            log.info("We don't have any reported or persisted peers, so we need to wait until we receive from the seed node the initial peer list.");
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -93,7 +104,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
+        log.info("onDisconnect closeConnectionReason={}, nodeAddressOpt={}", closeConnectionReason, connection.getPeersNodeAddressOptional());
         closeHandler(connection);
 
         if (retryTimer == null) {
@@ -158,20 +169,20 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
                 GetPeersRequestHandler getPeersRequestHandler = new GetPeersRequestHandler(networkNode,
-                    peerManager,
-                    new GetPeersRequestHandler.Listener() {
-                        @Override
-                        public void onComplete() {
-                            log.trace("PeerExchangeHandshake completed.\n\tConnection={}", connection);
-                        }
+                        peerManager,
+                        new GetPeersRequestHandler.Listener() {
+                            @Override
+                            public void onComplete() {
+                                log.trace("PeerExchangeHandshake completed.\n\tConnection={}", connection);
+                            }
 
-                        @Override
-                        public void onFault(String errorMessage, Connection connection) {
-                            log.trace("PeerExchangeHandshake failed.\n\terrorMessage={}\n\t" +
-                                "connection={}", errorMessage, connection);
-                            peerManager.handleConnectionFault(connection);
-                        }
-                    });
+                            @Override
+                            public void onFault(String errorMessage, Connection connection) {
+                                log.trace("PeerExchangeHandshake failed.\n\terrorMessage={}\n\t" +
+                                        "connection={}", errorMessage, connection);
+                                peerManager.handleConnectionFault(connection);
+                            }
+                        });
                 getPeersRequestHandler.handle((GetPeersRequest) networkEnvelop, connection);
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
@@ -185,60 +196,59 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
+        log.debug("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}" , nodeAddress,remainingNodeAddresses.size());
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,
-                    peerManager,
-                    new PeerExchangeHandler.Listener() {
-                        @Override
-                        public void onComplete() {
-                            log.trace("PeerExchangeHandshake of outbound connection complete. nodeAddress={}", nodeAddress);
-                            handlerMap.remove(nodeAddress);
-                            requestWithAvailablePeers();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage, @Nullable Connection connection) {
-                            log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
-                                "nodeAddress={}", errorMessage, nodeAddress);
-
-                            peerManager.handleConnectionFault(nodeAddress);
-                            handlerMap.remove(nodeAddress);
-                            if (!remainingNodeAddresses.isEmpty()) {
-                                if (!peerManager.hasSufficientConnections()) {
-                                    log.debug("There are remaining nodes available for requesting peers. " +
-                                        "We will try getReportedPeers again.");
-                                    NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-                                    remainingNodeAddresses.remove(nextCandidate);
-                                    requestReportedPeers(nextCandidate, remainingNodeAddresses);
-                                } else {
-                                    // That path will rarely be reached
-                                    log.debug("We have already sufficient connections.");
-                                }
-                            } else {
-                                log.debug("There is no remaining node available for requesting peers. " +
-                                    "That is expected if no other node is online.\n\t" +
-                                    "We will try again after a pause.");
-                                if (retryTimer == null)
-                                    retryTimer = UserThread.runAfter(() -> {
-                                        if (!stopped) {
-                                            log.trace("retryTimer called from requestReportedPeers code path");
-                                            stopRetryTimer();
-                                            requestWithAvailablePeers();
-                                        } else {
-                                            stopRetryTimer();
-                                            log.warn("We have stopped already. We ignore that retryTimer.run call.");
-                                        }
-                                    }, RETRY_DELAY_SEC);
+                        peerManager,
+                        new PeerExchangeHandler.Listener() {
+                            @Override
+                            public void onComplete() {
+                                handlerMap.remove(nodeAddress);
+                                requestWithAvailablePeers();
                             }
-                        }
-                    });
+
+                            @Override
+                            public void onFault(String errorMessage, @Nullable Connection connection) {
+                                log.debug("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
+                                        "nodeAddress={}", errorMessage, nodeAddress);
+
+                                peerManager.handleConnectionFault(nodeAddress);
+                                handlerMap.remove(nodeAddress);
+                                if (!remainingNodeAddresses.isEmpty()) {
+                                    if (!peerManager.hasSufficientConnections()) {
+                                        log.debug("There are remaining nodes available for requesting peers. " +
+                                                "We will try getReportedPeers again.");
+                                        NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
+                                        remainingNodeAddresses.remove(nextCandidate);
+                                        requestReportedPeers(nextCandidate, remainingNodeAddresses);
+                                    } else {
+                                        // That path will rarely be reached
+                                        log.debug("We have already sufficient connections.");
+                                    }
+                                } else {
+                                    log.debug("There is no remaining node available for requesting peers. " +
+                                            "That is expected if no other node is online.\n\t" +
+                                            "We will try again after a pause.");
+                                    if (retryTimer == null)
+                                        retryTimer = UserThread.runAfter(() -> {
+                                            if (!stopped) {
+                                                log.trace("retryTimer called from requestReportedPeers code path");
+                                                stopRetryTimer();
+                                                requestWithAvailablePeers();
+                                            } else {
+                                                stopRetryTimer();
+                                                log.warn("We have stopped already. We ignore that retryTimer.run call.");
+                                            }
+                                        }, RETRY_DELAY_SEC);
+                                }
+                            }
+                        });
                 handlerMap.put(nodeAddress, peerExchangeHandler);
                 peerExchangeHandler.sendGetPeersRequestAfterRandomDelay(nodeAddress);
             } else {
                 log.trace("We have started already a peerExchangeHandler. " +
-                    "We ignore that call. nodeAddress=" + nodeAddress);
+                        "We ignore that call. nodeAddress=" + nodeAddress);
             }
         } else {
             log.trace("We have stopped already. We ignore that requestReportedPeers call.");
@@ -302,7 +312,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         stopped = false;
         if (periodicTimer == null)
             periodicTimer = UserThread.runPeriodically(this::requestWithAvailablePeers,
-                REQUEST_PERIODICALLY_INTERVAL_SEC, TimeUnit.SECONDS);
+                    REQUEST_PERIODICALLY_INTERVAL_MIN, TimeUnit.MINUTES);
     }
 
     private void restart() {
@@ -322,22 +332,22 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     private List<NodeAddress> getNodeAddresses(Collection<Peer> collection) {
         return collection.stream()
-            .map(Peer::getNodeAddress)
-            .collect(Collectors.toList());
+                .map(Peer::getNodeAddress)
+                .collect(Collectors.toList());
     }
 
     private List<NodeAddress> getFilteredList(Collection<NodeAddress> collection, List<NodeAddress> list) {
         return collection.stream()
-            .filter(e -> !list.contains(e) &&
-                !peerManager.isSelf(e) &&
-                !peerManager.isConfirmed(e))
-            .collect(Collectors.toList());
+                .filter(e -> !list.contains(e) &&
+                        !peerManager.isSelf(e) &&
+                        !peerManager.isConfirmed(e))
+                .collect(Collectors.toList());
     }
 
     private List<NodeAddress> getFilteredNonSeedNodeList(Collection<NodeAddress> collection, List<NodeAddress> list) {
         return getFilteredList(collection, list).stream()
-            .filter(e -> !peerManager.isSeedNode(e))
-            .collect(Collectors.toList());
+                .filter(e -> !peerManager.isSeedNode(e))
+                .collect(Collectors.toList());
     }
 
     private void stopPeriodicTimer() {

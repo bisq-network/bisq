@@ -55,6 +55,29 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
     }
 
+    public String getOperator(NodeAddress nodeAddress) {
+        switch (nodeAddress.getFullAddress()) {
+            case "5quyxpxheyvzmb2d.onion:8000":
+                return "@miker";
+            case "ef5qnzx6znifo3df.onion:8000":
+                return "@manfredkarrer";
+            case "s67qglwhkgkyvr74.onion:8000":
+                return "@emzy";
+            case "jhgcy2won7xnslrb.onion:8000":
+                return "@manfredkarrer";
+            case "3f3cu2yw7u457ztq.onion:8000":
+                return "@manfredkarrer";
+            case "723ljisnynbtdohi.onion:8000":
+                return "@manfredkarrer";
+            case "rm7b56wbrcczpjvl.onion:8000":
+                return "@manfredkarrer";
+            case "fl3mmribyxgrv63c.onion:8000":
+                return "@manfredkarrer";
+            default:
+                return "Undefined";
+        }
+    }
+
     // Addresses are used if their port match the network id:
     // - mainnet uses port 8000
     // - testnet uses port 8001
@@ -62,22 +85,18 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
     @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // BTC mainnet
-            new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @mrosseel
-            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @alexej996
+            new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @miker
             new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy
-            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @sqrrm
+            new NodeAddress("ef5qnzx6znifo3df.onion:8000"), // @manfredkarrer
+            new NodeAddress("jhgcy2won7xnslrb.onion:8000"), // @manfredkarrer
+            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"), // @manfredkarrer
+            new NodeAddress("723ljisnynbtdohi.onion:8000"), // @manfredkarrer
+            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"), // @manfredkarrer
+            new NodeAddress("fl3mmribyxgrv63c.onion:8000"), // @manfredkarrer
 
-            /* old nodes pre 0.6.0 (still running for 0.5.* versions
-            new NodeAddress("3f3cu2yw7u457ztq.onion:8000"),
-            new NodeAddress("723ljisnynbtdohi.onion:8000"),
-            new NodeAddress("rm7b56wbrcczpjvl.onion:8000"),
-            new NodeAddress("fl3mmribyxgrv63c.onion:8000"),
-            */
-
-
-            //TODO dev
             // local dev
             // new NodeAddress("joehwtpe7ijnz4df.onion:8000"),
+            // new NodeAddress("uqxi3zrpobhtoes6.onion:8000"),
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),

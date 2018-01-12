@@ -17,19 +17,17 @@
 
 package io.bisq.common.app;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class Version {
-    private static final Logger log = LoggerFactory.getLogger(Version.class);
-
     // The application versions
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "0.6.1";
+    public static final String VERSION = "0.6.3";
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);

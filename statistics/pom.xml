@@ -22,7 +22,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.6.1</version>
+        <version>0.6.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -85,7 +85,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
+                <version>3.1.0</version>
                 <configuration>
                     <artifactSet>
                         <excludes>
@@ -95,8 +95,7 @@
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
                                 <Main-Class>io.bisq.statistics.StatisticsMain</Main-Class>
                                 <!-- the specified bouncy castle jar classes  -->

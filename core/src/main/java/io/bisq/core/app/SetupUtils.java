@@ -25,8 +25,8 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +80,7 @@ public class SetupUtils {
         checkCryptoThread.start();
     }
 
-    public static BooleanProperty readFromResources(P2PService p2PService) {
+    public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage) {
         BooleanProperty result = new SimpleBooleanProperty();
         Thread thread = new Thread() {
             @Override
@@ -88,15 +88,12 @@ public class SetupUtils {
                 Thread.currentThread().setName("readFromResourcesThread");
                 // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
                 final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-                final String persistableNetworkPayloadMapFileName = "PersistableNetworkPayloadMap_"
-                        + baseCurrencyNetwork.getCurrencyCode() + "_"
-                        + baseCurrencyNetwork.getNetwork();
-                final String persistedEntryMapFileName = "PersistedEntryMap_"
+                final String storageFileName = "PersistableNetworkPayloadMap_"
                         + baseCurrencyNetwork.getCurrencyCode() + "_"
                         + baseCurrencyNetwork.getNetwork();
                 long ts = new Date().getTime();
-                p2PService.getP2PDataStorage().readFromResources(persistableNetworkPayloadMapFileName, persistedEntryMapFileName);
-                log.info("readFromResources took {} ms", (new Date().getTime() - ts));
+                p2PDataStorage.readFromResources(storageFileName);
+                log.info("readPersistableNetworkPayloadMapFromResources took {} ms", (new Date().getTime() - ts));
                 UserThread.execute(() -> result.set(true));
             }
         };

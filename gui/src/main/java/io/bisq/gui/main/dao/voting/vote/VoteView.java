@@ -233,6 +233,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                     // We need to create another instance, otherwise the tx would trigger an invalid state exception
                                     // if it gets committed 2 times
                                     btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+
                                     bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                         @Override
                                         public void onSuccess(@Nullable Transaction transaction) {
@@ -248,7 +249,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                         public void onFailure(@NotNull Throwable t) {
                                             new Popup<>().warning(t.toString()).show();
                                         }
-                                    });
+                                    }, 15);
                                 })
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();

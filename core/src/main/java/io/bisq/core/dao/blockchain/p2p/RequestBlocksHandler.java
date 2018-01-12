@@ -25,8 +25,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {
-
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIMEOUT = 120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +94,7 @@ public class RequestBlocksHandler implements MessageListener {
                                         "Might be caused by an previous networkNode.sendMessage.onFailure.");
                             }
                         },
-                        TIME_OUT_SEC);
+                        TIMEOUT);
             }
 
             log.debug("We send a {} to peer {}. ", getBsqBlocksRequest.getClass().getSimpleName(), peersNodeAddress);

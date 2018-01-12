@@ -97,6 +97,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
+        result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
@@ -104,6 +105,7 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("ONION", "DeepOnion"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
@@ -138,15 +140,17 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
+        result.add(new CryptoCurrency("XSPEC", "Spectrecoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("TRC", "Terracoin"));
 
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
+        result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
+        result.add(new CryptoCurrency("WILD", "WILD Token", true));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page

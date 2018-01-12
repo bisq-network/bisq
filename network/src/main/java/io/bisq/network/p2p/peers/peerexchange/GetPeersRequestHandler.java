@@ -12,18 +12,17 @@ import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 class GetPeersRequestHandler {
-    private static final Logger log = LoggerFactory.getLogger(GetPeersRequestHandler.class);
-
-    private static final long TIME_OUT_SEC = 40;
+    // We want to keep timeout short here
+    private static final long TIMEOUT = 40;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +68,7 @@ class GetPeersRequestHandler {
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.getNonce(),
-                peerManager.getConnectedNonSeedNodeReportedPeers(connection.getPeersNodeAddressOptional().get()));
+                peerManager.getLivePeers(connection.getPeersNodeAddressOptional().get()));
 
         checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -83,7 +82,7 @@ class GetPeersRequestHandler {
                         log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
                     }
                 },
-                TIME_OUT_SEC, TimeUnit.SECONDS);
+                TIMEOUT, TimeUnit.SECONDS);
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection,
                 getPeersResponse);
@@ -105,7 +104,7 @@ class GetPeersRequestHandler {
                     String errorMessage = "Sending getPeersResponse to " + connection +
                             " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
                             "Exception: " + throwable.getMessage();
-                    log.debug(errorMessage);
+                    log.info(errorMessage);
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");

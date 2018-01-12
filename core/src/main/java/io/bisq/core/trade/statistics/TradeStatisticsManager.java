@@ -247,6 +247,14 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("BCH");
         coinsWithValidator.add("BCHC");
         coinsWithValidator.add("BTG");
+        // v0.6.2
+        coinsWithValidator.add("CAGE");
+        coinsWithValidator.add("CRED");
+        coinsWithValidator.add("XSPEC");
+        // v0.6.3
+        coinsWithValidator.add("WILD");
+        coinsWithValidator.add("ONION");
+
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -264,6 +272,14 @@ public class TradeStatisticsManager {
         newlyAdded.add("BCH");
         newlyAdded.add("BCHC");
         newlyAdded.add("BTG");
+        // v0.6.2
+        newlyAdded.add("CAGE");
+        newlyAdded.add("CRED");
+        newlyAdded.add("XSPEC");
+        // v0.6.3
+        newlyAdded.add("WILD");
+        newlyAdded.add("ONION");
+
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));

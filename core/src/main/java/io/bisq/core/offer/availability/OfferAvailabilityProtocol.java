@@ -30,13 +30,10 @@ import io.bisq.core.offer.messages.OfferAvailabilityResponse;
 import io.bisq.core.offer.messages.OfferMessage;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 public class OfferAvailabilityProtocol {
-    private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
-
-    private static final long TIMEOUT_SEC = 90;
+    private static final long TIMEOUT = 90;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
@@ -137,7 +134,7 @@ public class OfferAvailabilityProtocol {
                 log.debug("Timeout reached at " + this);
                 model.offer.setState(Offer.State.MAKER_OFFLINE);
                 errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
-            }, TIMEOUT_SEC);
+            }, TIMEOUT);
         } else {
             log.warn("timeoutTimer already created. That must not happen.");
         }

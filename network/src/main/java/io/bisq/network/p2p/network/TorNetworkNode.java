@@ -29,7 +29,6 @@ import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -40,7 +39,7 @@ public class TorNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
-    private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
+    private static final long SHUT_DOWN_TIMEOUT = 5;
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
@@ -69,7 +68,8 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
+        final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
+        FileUtil.rollingBackup(hiddenservice, "private_key", 20);
 
         if (setupListener != null)
             addSetupListener(setupListener);
@@ -83,7 +83,9 @@ public class TorNetworkNode extends NetworkNode {
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
-        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), UUID.randomUUID().toString()); // each socket uses a random Tor stream id
+        // If streamId is null stream isolation gets deactivated.
+        // Hidden services use stream isolation by default so we pass null.
+        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
     }
 
     // TODO handle failure more cleanly
@@ -167,7 +169,7 @@ public class TorNetworkNode extends NetworkNode {
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
             done.set(true);
-        }, SHUT_DOWN_TIMEOUT_SEC);
+        }, SHUT_DOWN_TIMEOUT);
         return done;
     }
 
@@ -210,7 +212,10 @@ public class TorNetworkNode extends NetworkNode {
                 long ts1 = new Date().getTime();
                 log.info("Starting tor");
                 Tor.setDefault(new NativeTor(torDir, bridgeEntries));
-                log.info("Tor started after {} ms. Start publishing hidden service.", (new Date().getTime() - ts1)); // takes usually a few seconds
+                log.info("\n################################################################\n" +
+                                "Tor started after {} ms. Start publishing hidden service.\n" +
+                                "################################################################",
+                        (new Date().getTime() - ts1)); // takes usually a few seconds
 
                 UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
 
@@ -218,7 +223,10 @@ public class TorNetworkNode extends NetworkNode {
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
-                        log.info("Tor hidden service published after {} ms. Socked={}", (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
+                        log.info("\n################################################################\n" +
+                                        "Tor hidden service published after {} ms. Socked={}\n" +
+                                        "################################################################",
+                                (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
                         new Thread() {
                             @Override
                             public void run() {
@@ -254,7 +262,7 @@ public class TorNetworkNode extends NetworkNode {
 
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
-                    log.error("Hidden service creation failed", throwable);
+                    log.error("Hidden service creation failed" + throwable);
                     restartTor(throwable.getMessage());
                 });
             }

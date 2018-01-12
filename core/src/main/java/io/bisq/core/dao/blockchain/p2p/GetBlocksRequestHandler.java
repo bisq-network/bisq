@@ -13,17 +13,14 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.NetworkNode;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class GetBlocksRequestHandler {
-    private static final Logger log = LoggerFactory.getLogger(GetBlocksRequestHandler.class);
-
-    private static final long TIME_OUT_SEC = 40;
+    private static final long TIMEOUT = 120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +72,7 @@ public class GetBlocksRequestHandler {
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
-                    TIME_OUT_SEC, TimeUnit.SECONDS);
+                    TIMEOUT, TimeUnit.SECONDS);
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, bsqBlocksResponse);

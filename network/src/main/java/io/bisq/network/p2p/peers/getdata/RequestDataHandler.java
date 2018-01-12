@@ -19,11 +19,12 @@ import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.network.p2p.storage.payload.*;
+import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
+import io.bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -31,10 +32,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(RequestDataHandler.class);
-
-    private static final long TIME_OUT_SEC = 60;
+    private static final long TIMEOUT = 60;
     private NodeAddress peersNodeAddress;
 
 
@@ -100,9 +100,6 @@ class RequestDataHandler implements MessageListener {
                     .map(e -> e.getKey().bytes)
                     .collect(Collectors.toSet());
 
-            // We add the keys from PersistedEntryMap. We don't expect hash collusion between the 2 different data containers.
-            dataStorage.getPersistedEntryMap().getMap().keySet().stream().forEach(e->excludedKeys.add(e.bytes));
-
             if (isPreliminaryDataRequest)
                 getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
             else
@@ -120,10 +117,10 @@ class RequestDataHandler implements MessageListener {
                                         "Might be caused by an previous networkNode.sendMessage.onFailure.");
                             }
                         },
-                        TIME_OUT_SEC);
+                        TIMEOUT);
             }
 
-            log.debug("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -144,7 +141,6 @@ class RequestDataHandler implements MessageListener {
                                 " failed. That is expected if the peer is offline.\n\t" +
                                 "getDataRequest=" + getDataRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
-                        log.debug(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
@@ -202,7 +198,7 @@ class RequestDataHandler implements MessageListener {
                     // Log different data types
                     StringBuilder sb = new StringBuilder();
                     sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: "+peersNodeAddress.getFullAddress()+"\n");
+                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
                     final int items = dataSet.size() +
                             (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
                     sb.append("Received ").append(items).append(" instances\n");
@@ -284,7 +280,7 @@ class RequestDataHandler implements MessageListener {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
             } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
+                log.debug("We got the message from another connection and ignore it on that handler. That is expected if we have several requests open.");
             }
         }
     }
@@ -301,6 +297,7 @@ class RequestDataHandler implements MessageListener {
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
+        log.info(errorMessage);
         //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
         peerManager.handleConnectionFault(nodeAddress);
         listener.onFault(errorMessage, null);
