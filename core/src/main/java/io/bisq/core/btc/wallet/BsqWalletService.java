@@ -241,49 +241,75 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         }
     }
 
-    public Coin getValueSentFromMeForTransaction(Transaction transaction, BsqBlockChain bsqBlockChain) throws ScriptException {
+    @Override
+    public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
         Coin result = Coin.ZERO;
+        // We check all our inputs and get the connected outputs.
         for (int i = 0; i < transaction.getInputs().size(); i++) {
             TransactionInput input = transaction.getInputs().get(i);
+            // We grab the connected output for that input
             TransactionOutput connectedOutput = input.getConnectedOutput();
-            final boolean isConfirmed = connectedOutput != null && connectedOutput.getParentTransaction() != null && connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
-            if (connectedOutput != null && connectedOutput.isMineOrWatched(wallet)) {
-                if (isConfirmed) {
-                    final Transaction parentTransaction = connectedOutput.getParentTransaction();
-                    if (parentTransaction != null) {
-                        Optional<Tx> txOptional = this.bsqBlockChain.findTx(parentTransaction.getHash().toString());
+            if (connectedOutput != null) {
+                // We grab the parent tx of the connected output
+                final Transaction parentTransaction = connectedOutput.getParentTransaction();
+                final boolean isConfirmed = parentTransaction != null &&
+                        parentTransaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+                if (connectedOutput.isMineOrWatched(wallet)) {
+                    if (isConfirmed) {
+                        // We lookup if we have a BSQ tx matching the parent tx
+                        // We cannot make that findTx call outside of the loop as the parent tx can change at each iteration
+                        Optional<Tx> txOptional = bsqBlockChain.findTx(parentTransaction.getHash().toString());
                         if (txOptional.isPresent()) {
+                            // BSQ tx and BitcoinJ tx have same outputs (mirrored data structure)
                             TxOutput txOutput = txOptional.get().getOutputs().get(connectedOutput.getIndex());
-                            if (txOutput.isVerified())
-                                result = result.add(connectedOutput.getValue());
+                            if (txOutput.isVerified()) {
+                                // If it is a valid BSQ output we add it
+                                checkArgument(txOutput.getValue() == connectedOutput.getValue().value,
+                                        "Value of BSQ output need to match BitcoinJ tx output");
+                                result = result.add(Coin.valueOf(txOutput.getValue()));
+                            }
                         }
-                    }
-                } else {
-                    result = result.add(connectedOutput.getValue());
+                    } /*else {
+                        // TODO atm we don't display amounts of unconfirmed txs but that might change so we leave that code
+                        // if it will be required
+                        // If the tx is not confirmed yet we add the value and assume it is a valid BSQ output.
+                        result = result.add(connectedOutput.getValue());
+                    }*/
                 }
             }
         }
         return result;
     }
 
-    public Coin getValueSentToMeForTransaction(Transaction transaction, BsqBlockChain bsqBlockChain) throws ScriptException {
+    @Override
+    public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
         Coin result = Coin.ZERO;
         final String txId = transaction.getHashAsString();
+        // We check if we have a matching BSQ tx. We do that call here to avoid repeated calls in the loop.
+        Optional<Tx> txOptional = bsqBlockChain.findTx(txId);
+        // We check all the outputs of our tx
         for (int i = 0; i < transaction.getOutputs().size(); i++) {
             TransactionOutput output = transaction.getOutputs().get(i);
-            final boolean isConfirmed = output.getParentTransaction() != null && output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            final boolean isConfirmed = output.getParentTransaction() != null &&
+                    output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
             if (output.isMineOrWatched(wallet)) {
                 if (isConfirmed) {
-                    Optional<Tx> txOptional = this.bsqBlockChain.findTx(txId);
                     if (txOptional.isPresent()) {
+                        // The index of the BSQ tx outputs are the same like the bitcoinj tx outputs
                         TxOutput txOutput = txOptional.get().getOutputs().get(i);
                         if (txOutput.isVerified()) {
-                            result = result.add(output.getValue());
+                            // If it is a valid BSQ output we add it
+                            checkArgument(txOutput.getValue() == output.getValue().value,
+                                    "Value of BSQ output need to match BitcoinJ tx output");
+                            result = result.add(Coin.valueOf(txOutput.getValue()));
                         }
                     }
-                } else {
+                } /*else {
+                    // TODO atm we don't display amounts of unconfirmed txs but that might change so we leave that code
+                    // if it will be required
+                    // If the tx is not confirmed yet we add the value and assume it is a valid BSQ output.
                     result = result.add(output.getValue());
-                }
+                }*/
             }
         }
         return result;

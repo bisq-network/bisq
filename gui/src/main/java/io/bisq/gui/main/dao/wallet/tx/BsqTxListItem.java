@@ -97,8 +97,8 @@ class BsqTxListItem {
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
 
-        Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction, bsqBlockChain);
-        Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction, bsqBlockChain);
+        Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction);
+        Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction);
         amount = valueSentToMe.subtract(valueSentFromMe);
         if (amount.isPositive()) {
             direction = Res.get("funds.tx.direction.receivedWith");
