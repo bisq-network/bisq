@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+//TODO outdated, ignore
 @Slf4j
 public class IssuanceVerification {
     public static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;

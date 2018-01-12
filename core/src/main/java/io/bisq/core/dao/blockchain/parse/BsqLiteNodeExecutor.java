@@ -82,6 +82,7 @@ public class BsqLiteNodeExecutor {
         });
     }
 
+    // TODO check why it's not handled in the parser
     public void parseBsqBlockForLiteNode(BsqBlock bsqBlock,
                                          int genesisBlockHeight,
                                          String genesisTxId,

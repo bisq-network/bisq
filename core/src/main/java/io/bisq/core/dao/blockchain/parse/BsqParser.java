@@ -69,6 +69,7 @@ public class BsqParser {
     // Parsing with data delivered with BsqBlock list
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO check with similar code at BsqLiteNodeExecutor
     void parseBsqBlocks(List<BsqBlock> bsqBlocks,
                         int genesisBlockHeight,
                         String genesisTxId,
