@@ -484,16 +484,6 @@ public class WalletConfig extends AbstractIdleService {
             return updateTime.getTime();
         else
             return 0;
-        /*
-        final BlockStore blockStore = vChain.getBlockStore();
-        final StoredBlock storedBlock = blockStore.get(tx.getHash());
-        // TODO storedBlock is null
-        if (storedBlock != null) {
-            final Block header = storedBlock.getHeader();
-            return header.getTime().getTime();
-        } else {
-            return 0;
-        }*/
     }
 
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
