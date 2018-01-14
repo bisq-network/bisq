@@ -68,7 +68,7 @@ public class BitcoinNodes {
                         new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
 
                         // others
-                        new BtcNode("btc.jochen-hoenicke.de", null, "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"), // requested onion
+                        new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"),
                         new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "@tbocek") // requested onion
                 ) :
                 new ArrayList<>();
