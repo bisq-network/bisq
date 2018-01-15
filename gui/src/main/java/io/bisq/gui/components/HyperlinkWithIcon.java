@@ -24,5 +24,7 @@ public class HyperlinkWithIcon extends Hyperlink {
 
         setGraphic(icon);
         setContentDisplay(ContentDisplay.RIGHT);
+
+        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: -bs-black"));
     }
 }
