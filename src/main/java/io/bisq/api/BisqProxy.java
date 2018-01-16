@@ -312,7 +312,7 @@ public class BisqProxy {
             offer.setPriceFeedService(priceFeedService);
 
             if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-                return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
+                return BisqProxyError.getOptional("PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode());
             }
 
             // use countdownlatch to block this method until there's a success/error callback call
@@ -428,7 +428,7 @@ public class BisqProxy {
 
             // check the paymentAccountId is compatible with the offer
             if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-                return BisqProxyError.getOptional("PaymentAccount is not valid for offer");
+                return BisqProxyError.getOptional("PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode());
             }
 
             // check the amount is within the range
@@ -451,12 +451,21 @@ public class BisqProxy {
                     offer.getBuyerSecurityDeposit() :
                     offer.getSellerSecurityDeposit();
             Coin txFeeFromFeeService = feeService.getTxFee(600);
-            Coin fundsNeededForTrade = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
+            Coin fundsNeededForTradeTemp = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
+            final Coin fundsNeededForTrade;
+            if (offer.isBuyOffer())
+                fundsNeededForTrade = fundsNeededForTradeTemp.add(coinAmount);
+            else
+                fundsNeededForTrade = fundsNeededForTradeTemp;
+
+            Coin takerFee = getTakerFee(coinAmount);
+            checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
+            checkNotNull(takerFee, "takerFee must not be null");
 
             Platform.runLater(() -> {
                 tradeManager.onTakeOffer(coinAmount,
                         txFeeFromFeeService,
-                        getTakerFee(coinAmount),
+                        takerFee,
                         isCurrencyForTakerFeeBtc(coinAmount),
                         offer.getPrice().getValue(),
                         fundsNeededForTrade,
