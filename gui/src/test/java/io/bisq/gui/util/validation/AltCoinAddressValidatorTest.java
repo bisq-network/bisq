@@ -487,4 +487,21 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("1HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSH#").isValid);
         assertFalse(validator.validate("").isValid);
     }
+	
+	@Test
+    public void testFRE() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("FRE");
+
+        assertTrue(validator.validate("F79FVEJaFXyUGBz85LtV5f3dT2BxdJPe7P").isValid);
+        assertTrue(validator.validate("F61BSwBSQsU7m7zD53gVCQcWBxUGDbcc9r").isValid);
+        assertTrue(validator.validate("F6DVGRCEiQaqmPuJjFGBaFXEktq9Ex7bE2").isValid);
+
+        assertFalse(validator.validate("FE9t6pcY2KTAg7APWcAMUeLyhLMy3PiRpS").isValid);
+        assertFalse(validator.validate("FEgba8jrAWkiG2zfR4Gh93sdHdFxAFRW9G").isValid);
+        assertFalse(validator.validate("FHqGPufnqjs8u5Btc8N9pcfzTh1AWQHvyB").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
+	
+	
 }

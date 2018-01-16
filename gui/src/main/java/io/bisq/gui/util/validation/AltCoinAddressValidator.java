@@ -405,6 +405,14 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+					
+					case "FRE":
+ +                    try {
+ +                        Address.fromBase58(FreParams.get(), input);
+ +                        return new ValidationResult(true);
+ +                    } catch (AddressFormatException e) {
+ +                        return new ValidationResult(false, getErrorMessage(e));
+ +                    }
 
                 // Add new coins at the end...
                 default:
