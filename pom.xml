@@ -35,7 +35,7 @@
 
 
     <properties>
-        <dropwizard.version>1.1.4</dropwizard.version>
+        <dropwizard.version>1.2.2</dropwizard.version>
         <bisq.version>${project.version}</bisq.version>
     </properties>
 
@@ -170,10 +170,6 @@
                     <groupId>joda-time</groupId>
                     <artifactId>joda-time</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -181,10 +177,7 @@
             <artifactId>dropwizard-jackson</artifactId>
             <version>${dropwizard.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
+
                 <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
@@ -208,10 +201,7 @@
             <artifactId>dropwizard-jersey</artifactId>
             <version>${dropwizard.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
+
                 <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
@@ -247,10 +237,7 @@
             <artifactId>dropwizard-util</artifactId>
             <version>${dropwizard.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
+
                 <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
@@ -280,15 +267,11 @@
         <dependency>
             <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
-            <version>1.1.2-1</version>
+            <version>1.2.2-2</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>io.dropwizard</groupId>
