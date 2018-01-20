@@ -25,6 +25,8 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.app.Version;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.ProxySocketFactory;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
@@ -104,6 +106,8 @@ public class WalletConfig extends AbstractIdleService {
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
+    @Getter
+    @Setter
     private int minBroadcastConnections;
 
     @Nullable
@@ -180,10 +184,6 @@ public class WalletConfig extends AbstractIdleService {
                 log.error(e.toString());
             }
         }
-    }
-
-    public void setMinBroadcastConnections(int minBroadcastConnections) {
-        this.minBroadcastConnections = minBroadcastConnections;
     }
 
     private PeerGroup createPeerGroup() {
