@@ -26,6 +26,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.Tradable;
@@ -43,6 +44,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -86,6 +88,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -106,14 +110,24 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsView(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                             TradeManager tradeManager, OpenOfferManager openOfferManager,
-                             ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
-                             BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
-                             DisputeManager disputeManager, Stage stage,
+    private TransactionsView(BtcWalletService btcWalletService,
+                             BsqWalletService bsqWalletService,
+                             P2PService p2PService,
+                             WalletsSetup walletsSetup,
+                             TradeManager tradeManager,
+                             OpenOfferManager openOfferManager,
+                             ClosedTradableManager closedTradableManager,
+                             FailedTradesManager failedTradesManager,
+                             BSFormatter formatter,
+                             Preferences preferences,
+                             TradeDetailsWindow tradeDetailsWindow,
+                             DisputeManager disputeManager,
+                             Stage stage,
                              OfferDetailsWindow offerDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
@@ -565,15 +579,19 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
-        try {
-            btcWalletService.doubleSpendTransaction(txId, () -> {
-                if (tradable != null)
-                    btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            try {
+                btcWalletService.doubleSpendTransaction(txId, () -> {
+                    if (tradable != null)
+                        btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                new Popup<>().information(Res.get("funds.tx.txSent")).show();
-            }, errorMessage -> new Popup<>().warning(errorMessage).show());
-        } catch (Throwable e) {
-            new Popup<>().warning(e.getMessage()).show();
+                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+            } catch (Throwable e) {
+                new Popup<>().warning(e.getMessage()).show();
+            }
+        } else {
+            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
