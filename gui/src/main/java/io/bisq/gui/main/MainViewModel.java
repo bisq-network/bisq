@@ -182,7 +182,6 @@ public class MainViewModel implements ViewModel {
     final StringProperty numOpenDisputesAsString = new SimpleStringProperty();
     final BooleanProperty showOpenDisputesNotification = new SimpleBooleanProperty();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
-    private final String btcNetworkAsString;
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -249,9 +248,6 @@ public class MainViewModel implements ViewModel {
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
-
-        btcNetworkAsString = Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) +
-                (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
 
@@ -505,7 +501,7 @@ public class MainViewModel implements ViewModel {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    btcNetworkAsString);
+                                    getBtcNetworkAsString());
                             btcSplashSyncIconId.set("image-connection-synced");
 
                             if (allBasicServicesInitialized)
@@ -514,18 +510,18 @@ public class MainViewModel implements ViewModel {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + formatter.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
-                                    btcNetworkAsString);
+                                    getBtcNetworkAsString());
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
                                 numBtcPeers,
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
-                                btcNetworkAsString);
+                                getBtcNetworkAsString());
                         log.error(exception.getMessage());
                         if (exception instanceof TimeoutException) {
                             walletServiceErrorMsg.set(Res.get("mainView.walletServiceErrorMsg.timeout"));
@@ -933,7 +929,10 @@ public class MainViewModel implements ViewModel {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        walletServiceErrorMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));
+                        if (bisqEnvironment.isBitcoinLocalhostNodeRunning())
+                            walletServiceErrorMsg.set(Res.get("mainView.networkWarning.localhostBitcoinLost", Res.getBaseCurrencyName().toLowerCase()));
+                        else
+                            walletServiceErrorMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", Res.getBaseCurrencyName().toLowerCase()));
                     } else {
                         walletServiceErrorMsg.set(null);
                     }
@@ -1278,5 +1277,16 @@ public class MainViewModel implements ViewModel {
 
     void openDownloadWindow() {
         displayAlertIfPresent(user.getDisplayedAlert(), true);
+    }
+
+    public String getBtcNetworkAsString() {
+        String postFix;
+        if (bisqEnvironment.isBitcoinLocalhostNodeRunning())
+            postFix = " " + Res.get("mainView.footer.localhostBitcoinNode");
+        else if (preferences.getUseTorForBitcoinJ())
+            postFix = " " + Res.get("mainView.footer.usingTor");
+        else
+            postFix = "";
+        return Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + postFix;
     }
 }
