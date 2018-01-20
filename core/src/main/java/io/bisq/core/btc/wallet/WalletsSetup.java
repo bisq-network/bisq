@@ -514,7 +514,7 @@ public class WalletsSetup {
     }
 
     public boolean hasSufficientPeersForBroadcast() {
-        return bisqEnvironment.isBitcoinLocalhostNodeRunning() ? true : numPeers.get() >=  walletConfig.getMinBroadcastConnections();
+        return bisqEnvironment.isBitcoinLocalhostNodeRunning() || numPeers.get() >= walletConfig.getMinBroadcastConnections();
     }
 
 
