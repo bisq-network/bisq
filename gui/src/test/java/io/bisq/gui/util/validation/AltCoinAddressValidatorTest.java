@@ -491,7 +491,7 @@ public class AltCoinAddressValidatorTest {
     @Test
     public void testAXE() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
-        validator.setCurrencyCode("ONION");
+        validator.setCurrencyCode("AXE");
 
         assertTrue(validator.validate("XQZAWrECjc8jBN87TbqDvoDmcvWiftsmpq").isValid);
         assertTrue(validator.validate("XYdqovfSUQvDEfmCzUCgc1FXtgxQsfCRWZ").isValid);
