@@ -145,12 +145,12 @@ public class DisputeManager implements PersistedDataHost {
         });
 
         walletsSetup.downloadPercentageProperty().addListener((observable, oldValue, newValue) -> {
-            if(walletsSetup.isDownloadComplete())
+            if (walletsSetup.isDownloadComplete())
                 tryApplyMessages();
         });
 
         walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
-            if(walletsSetup.hasSufficientPeersForBroadcast())
+            if (walletsSetup.hasSufficientPeersForBroadcast())
                 tryApplyMessages();
         });
 
@@ -190,10 +190,9 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     private boolean isReadyForTxBroadcast() {
-        boolean btcReady = walletsSetup.isBitcoinLocalhostNodeRunning() ?
-                walletsSetup.isDownloadComplete() :
+        return p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
                 walletsSetup.hasSufficientPeersForBroadcast();
-        return p2PService.isBootstrapped() && btcReady;
     }
 
     private void applyMessages() {

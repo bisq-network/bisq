@@ -430,24 +430,17 @@ public class GUIUtil {
     }
 
     public static boolean isReadyForTxBroadcast(P2PService p2PService, WalletsSetup walletsSetup) {
-        boolean btcReady = walletsSetup.isBitcoinLocalhostNodeRunning() ?
-                walletsSetup.isDownloadComplete() :
+        return p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
                 walletsSetup.hasSufficientPeersForBroadcast();
-        return p2PService.isBootstrapped() && btcReady;
     }
 
     public static void showNotReadyForTxBroadcastPopups(P2PService p2PService, WalletsSetup walletsSetup) {
-        if (!p2PService.isBootstrapped()) {
+        if (!p2PService.isBootstrapped())
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
-        } else {
-            if (walletsSetup.isBitcoinLocalhostNodeRunning()) {
-                if (!walletsSetup.isDownloadComplete())
-                    new Popup<>().information(Res.get("popup.warning.localBtcNodeNotSynced")).show();
-            } else {
-                if (!walletsSetup.hasSufficientPeersForBroadcast())
-                    new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork",
-                            walletsSetup.getMinBroadcastConnections())).show();
-            }
-        }
+        else if (!walletsSetup.hasSufficientPeersForBroadcast())
+            new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork")).show();
+        else if (!walletsSetup.isDownloadComplete())
+            new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
     }
 }
