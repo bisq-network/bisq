@@ -29,6 +29,7 @@ import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeAlreadyOpenException;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -45,6 +46,7 @@ import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.SelectDepositTxWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -72,6 +74,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
     private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -93,10 +96,15 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService,
-                                  KeyRing keyRing, DisputeManager disputeManager,
-                                  Preferences preferences, P2PService p2PService,
-                                  Navigation navigation, WalletPasswordWindow walletPasswordWindow,
+    public PendingTradesDataModel(TradeManager tradeManager,
+                                  BtcWalletService btcWalletService,
+                                  KeyRing keyRing,
+                                  DisputeManager disputeManager,
+                                  Preferences preferences,
+                                  P2PService p2PService,
+                                  WalletsSetup walletsSetup,
+                                  Navigation navigation,
+                                  WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
@@ -104,6 +112,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
@@ -309,6 +318,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public String getReference() {
         return getOffer() != null ? getOffer().getShortId() : "";
+    }
+
+    public boolean isReadyForTxBroadcast() {
+        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
+    }
+
+    public void showNotReadyForTxBroadcastPopups() {
+        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
     }
 
 
