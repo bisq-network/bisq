@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 
@@ -53,6 +54,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Inject
     public ManualPayoutTxWindow(TradeWalletService tradeWalletService, P2PService p2PService, WalletsSetup walletsSetup) {
         this.tradeWalletService = tradeWalletService;
         this.p2PService = p2PService;
