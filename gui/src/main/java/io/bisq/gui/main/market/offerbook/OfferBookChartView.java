@@ -456,7 +456,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tableView.setPlaceholder(placeholder);
 
         Label titleLabel = new AutoTooltipLabel();
-        titleLabel.getStyleClass().add("table-title ");
+        titleLabel.getStyleClass().add("table-title");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == OfferPayload.Direction.SELL;
