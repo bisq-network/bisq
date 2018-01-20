@@ -512,6 +512,14 @@ public class WalletsSetup {
         return downloadListener.percentageProperty();
     }
 
+    public boolean isDownloadComplete() {
+        return downloadPercentageProperty().get() == 1d;
+    }
+
+    public boolean isBitcoinLocalhostNodeRunning() {
+        return bisqEnvironment.isBitcoinLocalhostNodeRunning();
+    }
+
     public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return ImmutableList.copyOf(addressEntryList.getList()).stream()
                 .filter(addressEntry -> addressEntry.getContext() == context)
@@ -526,7 +534,11 @@ public class WalletsSetup {
     }
 
     public boolean hasSufficientPeersForBroadcast() {
-        return bisqEnvironment.isBitcoinLocalhostNodeRunning() || numPeers.get() >= walletConfig.getMinBroadcastConnections();
+        return numPeers.get() >= getMinBroadcastConnections();
+    }
+
+    public int getMinBroadcastConnections() {
+        return walletConfig.getMinBroadcastConnections();
     }
 
 

@@ -32,6 +32,7 @@ import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.provider.fee.FeeService;
@@ -40,6 +41,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -425,5 +427,27 @@ public class GUIUtil {
                 BitcoinURI.convertToBitcoinURI(Address.fromBase58(BisqEnvironment.getParameters(),
                         address), amount, label, null) :
                 "";
+    }
+
+    public static boolean isReadyForTxBroadcast(P2PService p2PService, WalletsSetup walletsSetup) {
+        boolean btcReady = walletsSetup.isBitcoinLocalhostNodeRunning() ?
+                walletsSetup.isDownloadComplete() :
+                walletsSetup.hasSufficientPeersForBroadcast();
+        return p2PService.isBootstrapped() && btcReady;
+    }
+
+    public static void showNotReadyForTxBroadcastPopups(P2PService p2PService, WalletsSetup walletsSetup) {
+        if (!p2PService.isBootstrapped()) {
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        } else {
+            if (walletsSetup.isBitcoinLocalhostNodeRunning()) {
+                if (!walletsSetup.isDownloadComplete())
+                    new Popup<>().information(Res.get("popup.warning.localBtcNodeNotSynced")).show();
+            } else {
+                if (!walletsSetup.hasSufficientPeersForBroadcast())
+                    new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork",
+                            walletsSetup.getMinBroadcastConnections())).show();
+            }
+        }
     }
 }
