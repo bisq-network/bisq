@@ -45,10 +45,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.*;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.UnknownHostException;
 import java.nio.channels.FileLock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -218,18 +216,6 @@ public class WalletConfig extends AbstractIdleService {
         checkState(state() == State.NEW, "Cannot call after startup");
         this.peerAddresses = addresses;
         return this;
-    }
-
-    /**
-     * Will only connect to localhost. Cannot be called after startup.
-     */
-    public WalletConfig connectToLocalHost() {
-        try {
-            return setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
-        } catch (UnknownHostException e) {
-            // Borked machine with no loopback adapter configured properly.
-            throw new RuntimeException(e);
-        }
     }
 
     /**
