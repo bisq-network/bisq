@@ -97,7 +97,6 @@ public class WalletsSetup {
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
     public final BooleanProperty shutDownComplete = new SimpleBooleanProperty();
     private WalletConfig walletConfig;
-    private int minBroadcastConnections;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -274,7 +273,7 @@ public class WalletsSetup {
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
         if (params == RegTestParams.get()) {
-            minBroadcastConnections = 1;
+            walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
                     walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
@@ -288,7 +287,7 @@ public class WalletsSetup {
             }
         } else {
             List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
-            minBroadcastConnections = (int) Math.floor(DEFAULT_CONNECTIONS * 0.8);
+            walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
             switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
                 case CUSTOM:
                     String bitcoinNodesString = preferences.getBitcoinNodes();
@@ -310,8 +309,7 @@ public class WalletsSetup {
 
                     // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
                     // are more reliable than random public nodes.
-                    minBroadcastConnections = 4;
-                    walletConfig.setMinBroadcastConnections(minBroadcastConnections);
+                    walletConfig.setMinBroadcastConnections(4);
                     break;
             }
 
@@ -516,7 +514,7 @@ public class WalletsSetup {
     }
 
     public boolean hasSufficientPeersForBroadcast() {
-        return bisqEnvironment.isBitcoinLocalhostNodeRunning() ? true : numPeers.get() >= minBroadcastConnections;
+        return bisqEnvironment.isBitcoinLocalhostNodeRunning() ? true : numPeers.get() >=  walletConfig.getMinBroadcastConnections();
     }
 
 
