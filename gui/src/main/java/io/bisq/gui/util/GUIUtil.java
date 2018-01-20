@@ -439,7 +439,7 @@ public class GUIUtil {
         if (!p2PService.isBootstrapped())
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         else if (!walletsSetup.hasSufficientPeersForBroadcast())
-            new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork")).show();
+            new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
         else if (!walletsSetup.isDownloadComplete())
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
     }
