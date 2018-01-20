@@ -201,6 +201,8 @@ public class WalletsSetup {
 
         if (params == RegTestParams.get()) {
             configPeerNodesForRegTest();
+        } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
+            configPeerNodesForLocalHostBitcoinNode();
         } else {
             configPeerNodes(socks5Proxy);
         }
@@ -287,15 +289,13 @@ public class WalletsSetup {
                 throw new RuntimeException(e);
             }
         } else if (regTestHost == RegTestHost.LOCALHOST) {
-            try {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
-            } catch (UnknownHostException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                // Borked machine with no loopback adapter configured properly.
-                throw new RuntimeException(e);
-            }
+            walletConfig.setPeerNodesForLocalHost();
         }
+    }
+
+    private void configPeerNodesForLocalHostBitcoinNode() {
+        walletConfig.setMinBroadcastConnections(1);
+        walletConfig.setPeerNodesForLocalHost();
     }
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
