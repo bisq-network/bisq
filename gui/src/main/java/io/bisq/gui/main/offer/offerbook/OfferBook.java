@@ -54,10 +54,19 @@ public class OfferBook {
             @Override
             public void onAdded(Offer offer) {
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                if (!isOfferWithIdInList(offer)) {
-                    offerBookListItems.add(offerBookListItem);
-                    Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
+                // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+                // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
+                Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
+                        .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                        .findAny();
+                if (candidateToRemove.isPresent()) {
+                    log.info("We had an old offer in the list with the same Offer ID. Might be that the state or errorMessage was different. " +
+                            "old offerBookListItem={}, new offerBookListItem={}", candidateToRemove.get(), offerBookListItem);
+                    offerBookListItems.remove(candidateToRemove.get());
                 }
+
+                offerBookListItems.add(offerBookListItem);
+                Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
             }
 
             @Override
@@ -65,17 +74,15 @@ public class OfferBook {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
                 offer.setState(Offer.State.REMOVED);
 
-                // clean up possible references in openOfferManager 
+                // clean up possible references in openOfferManager
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-                Optional<OfferBookListItem> candidate = offerBookListItems.stream()
+                // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+                Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
                         .filter(item -> item.getOffer().getId().equals(offer.getId()))
                         .findAny();
-                if (candidate.isPresent()) {
-                    OfferBookListItem item = candidate.get();
-                    if (offerBookListItems.contains(item)) {
-                        offerBookListItems.remove(item);
-                        Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
-                    }
+                if (candidateToRemove.isPresent()) {
+                    offerBookListItems.remove(candidateToRemove.get());
+                    Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
                 }
             }
         });
@@ -91,8 +98,6 @@ public class OfferBook {
     }
 
     public void fillOfferBookListItems() {
-        log.debug("fillOfferBookListItems");
-
         try {
             // setAll causes sometimes an UnsupportedOperationException
             // Investigate why....
