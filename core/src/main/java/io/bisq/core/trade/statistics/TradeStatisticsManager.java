@@ -256,6 +256,7 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("ONION");
         // v0.6.4
         coinsWithValidator.add("CREA");
+        coinsWithValidator.add("XIN");
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -282,6 +283,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("ONION");
         // v0.6.4
         newlyAdded.add("CREA");
+        newlyAdded.add("XIN");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
