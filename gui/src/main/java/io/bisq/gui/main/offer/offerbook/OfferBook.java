@@ -53,20 +53,31 @@ public class OfferBook {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
             public void onAdded(Offer offer) {
-                OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
-                // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
-                Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
-                        .filter(item -> item.getOffer().getId().equals(offer.getId()))
-                        .findAny();
-                if (candidateToRemove.isPresent()) {
-                    log.info("We had an old offer in the list with the same Offer ID. Might be that the state or errorMessage was different. " +
-                            "old offerBookListItem={}, new offerBookListItem={}", candidateToRemove.get(), offerBookListItem);
-                    offerBookListItems.remove(candidateToRemove.get());
-                }
+                // We get onAdded called every time a new ProtectedStorageEntry is received.
+                // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
+                // We filter here to only add new offers if the same offer (using equals) was not already added.
+                boolean hasSameOffer = offerBookListItems.stream()
+                        .filter(item -> item.getOffer().equals(offer))
+                        .findAny()
+                        .isPresent();
+                if (!hasSameOffer) {
+                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
+                    // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+                    // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
+                    Optional<OfferBookListItem> candidateWithSameId = offerBookListItems.stream()
+                            .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                            .findAny();
+                    if (candidateWithSameId.isPresent()) {
+                        log.warn("We had an old offer in the list with the same Offer ID. Might be that the state or errorMessage was different. " +
+                                "old offerBookListItem={}, new offerBookListItem={}", candidateWithSameId.get(), offerBookListItem);
+                        offerBookListItems.remove(candidateWithSameId.get());
+                    }
 
-                offerBookListItems.add(offerBookListItem);
-                Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
+                    offerBookListItems.add(offerBookListItem);
+                    Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
+                }else{
+                    log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
+                }
             }
 
             @Override
