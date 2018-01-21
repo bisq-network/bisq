@@ -86,6 +86,7 @@ public class FilterManager {
             DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     private ECKey filterSigningKey;
+    private boolean providersRepositoryFiltered;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +186,8 @@ public class FilterManager {
         bisqEnvironment.saveBannedSeedNodes(null);
         bisqEnvironment.saveBannedPriceRelayNodes(null);
         providersRepository.applyBannedNodes(null);
-        providersRepository.selectNewRandomBaseUrl();
+        if (providersRepositoryFiltered)
+            providersRepository.selectNewRandomBaseUrl();
         filterProperty.set(null);
     }
 
@@ -202,6 +204,7 @@ public class FilterManager {
             bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
             providersRepository.applyBannedNodes(priceRelayNodes);
             providersRepository.selectNewRandomBaseUrl();
+            providersRepositoryFiltered = true;
 
             filterProperty.set(filter);
             listeners.stream().forEach(e -> e.onFilterAdded(filter));
