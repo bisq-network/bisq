@@ -405,17 +405,8 @@ public class MainViewModel implements ViewModel {
                     initWalletService();
 
                 // We want to get early connected to the price relay so we call it already now
-                long ts = new Date().getTime();
-                final boolean[] logged = {false};
                 priceFeedService.setCurrencyCodeOnInit();
-                priceFeedService.requestPriceFeed(price -> {
-                            if (!logged[0]) {
-                                log.info("We received data from the price relay after {} ms.",
-                                        (new Date().getTime() - ts));
-                                logged[0] = true;
-                            }
-                        },
-                        (errorMessage, throwable) -> log.error("requestPriceFeed failed:" + errorMessage));
+                priceFeedService.initialRequestPriceFeed();
             }
 
             @Override

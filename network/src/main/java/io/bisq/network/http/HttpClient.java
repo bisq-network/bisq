@@ -4,6 +4,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.app.Version;
 import io.bisq.network.Socks5ProxyProvider;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -14,8 +15,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -31,9 +30,8 @@ import java.util.UUID;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO close connection if failing
+@Slf4j
 public class HttpClient {
-    private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
-
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
     @Getter
@@ -142,19 +140,19 @@ public class HttpClient {
                 new PoolingHttpClientConnectionManager(reg) :
                 new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         try (CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build()) {
-            InetSocketAddress socksaddr = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
+            InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
 
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
-            // InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 9050);
+            // InetSocketAddress socksAddress = new InetSocketAddress("127.0.0.1", 9050);
 
             HttpClientContext context = HttpClientContext.create();
-            context.setAttribute("socks.address", socksaddr);
+            context.setAttribute("socks.address", socksAddress);
 
             HttpGet request = new HttpGet(baseUrl + param);
             if (headerKey != null && headerValue != null)
                 request.setHeader(headerKey, headerValue);
 
-            log.debug("Executing request " + request + " proxy: " + socksaddr);
+            log.debug("Executing request " + request + " proxy: " + socksAddress);
             try (CloseableHttpResponse response = httpclient.execute(request, context)) {
                 return convertInputStreamToString(response.getEntity().getContent());
             }
