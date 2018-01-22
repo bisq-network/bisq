@@ -416,6 +416,13 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "WFR":
+                    try {
+                        Address.fromBase58(WFRParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
 
                     // Add new coins at the end...
                 default:
