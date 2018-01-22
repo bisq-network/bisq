@@ -534,13 +534,15 @@ public class AltCoinAddressValidatorTest {
         assertTrue(validator.validate("WUL36TDsMsvNBT7xH1Csr9nezpfe9DAkog").isValid);
         assertTrue(validator.validate("Wk8epZPyyLSTdYHqu71cqDxshn44FAGaGd").isValid);
         assertTrue(validator.validate("WYPnqubHPmbZtDUoY7UkQDvv3P7RJy31cf").isValid);
-        
         assertTrue(validator.validate("WRK12D9zUJMgEx3MidGpMjBWV5BXPx6tcU").isValid);
         assertTrue(validator.validate("Wj8gBqevvFSzYPNVLrEoyN77Y5huViqMsQ").isValid);
         assertTrue(validator.validate("WQAX159pKTP8h8zLgKuzHxYBVQsz1grf3b").isValid);
         assertTrue(validator.validate("WhGZPKjxHwygVV9kxHJtPUguX1GDPpnGyd").isValid);
         assertTrue(validator.validate("WVtfAFnkf4fLkf1gvm441Fenm1JXmfKdyJ").isValid);
         
-        assertTrue(validator.validate("").isValid);
+        assertFalse(validator.validate("C7VZNX1SN5NtKa8UQFxwQbFeSN5Fc3iqRYhemqq").isValid);
+        assertFalse(validator.validate("F7VZNX1SN5NtKa8UQFxwQbFeFc3iq").isValid);
+        assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#").isValid);
+        assertFalse(validator.validate("").isValid);
     }
 }
