@@ -525,4 +525,14 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("XIN-FXFA-LR6Y-QZA-9V4SX").isValid);
         assertFalse(validator.validate("XIN-FXFA-LR6Y-QZAW-9V4S").isValid);
     }
+    
+    @Test
+    public void testWFR() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("WFR");
+
+        assertTrue(validator.validate("WUL36TDsMsvNBT7xH1Csr9ngzpfe9DAkog").isValid);
+        assertTrue(validator.validate("Wk8epZPyyLSTdZHqu71cqDxshn44FAGaGd").isValid);
+        assertTrue(validator.validate("WYPnqubHPmbZtDUoY7UkQDvv2P7RJy31cf").isValid);
+    }
 }
