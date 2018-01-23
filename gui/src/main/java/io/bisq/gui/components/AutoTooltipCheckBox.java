@@ -1,30 +1,29 @@
 package io.bisq.gui.components;
 
-import com.sun.javafx.scene.control.skin.LabelSkin;
-import javafx.scene.control.Label;
+import com.sun.javafx.scene.control.skin.CheckBoxSkin;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Skin;
 
 import static io.bisq.gui.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipLabel extends Label {
+public class AutoTooltipCheckBox extends CheckBox {
 
-    public AutoTooltipLabel() {
+    public AutoTooltipCheckBox() {
         super();
     }
 
-    public AutoTooltipLabel(String text) {
+    public AutoTooltipCheckBox(String text) {
         super(text);
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutoTooltipLabelSkin(this);
+        return new AutoTooltipCheckBoxSkin(this);
     }
 
-    private class AutoTooltipLabelSkin extends LabelSkin {
-
-        public AutoTooltipLabelSkin(Label label) {
-            super(label);
+    private class AutoTooltipCheckBoxSkin extends CheckBoxSkin {
+        public AutoTooltipCheckBoxSkin(CheckBox checkBox) {
+            super(checkBox);
         }
 
         @Override

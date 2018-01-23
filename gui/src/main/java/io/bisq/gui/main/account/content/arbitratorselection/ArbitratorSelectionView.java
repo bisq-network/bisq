@@ -23,10 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.AutoTooltipButton;
-import io.bisq.gui.components.AutoTooltipLabel;
-import io.bisq.gui.components.AutoTooltipTableColumn;
-import io.bisq.gui.components.TableGroupHeadline;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
@@ -240,7 +237,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     @Override
                     public TableCell<ArbitratorListItem, ArbitratorListItem> call(TableColumn<ArbitratorListItem, ArbitratorListItem> column) {
                         return new TableCell<ArbitratorListItem, ArbitratorListItem>() {
-                            private final CheckBox checkBox = new CheckBox();
+                            private final CheckBox checkBox = new AutoTooltipCheckBox();
                             private TableRow tableRow;
                             private BooleanProperty selectedProperty;
 

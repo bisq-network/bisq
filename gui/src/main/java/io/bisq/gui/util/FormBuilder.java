@@ -321,7 +321,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title, 0);
 
         InputTextField inputTextField = new InputTextField();
-        CheckBox checkBox = new CheckBox(checkBoxTitle);
+        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         HBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
 
         HBox hBox = new HBox();
@@ -452,7 +452,7 @@ public class FormBuilder {
     public static Tuple2<Button, CheckBox> addButtonCheckBox(GridPane gridPane, int rowIndex, String buttonTitle, String checkBoxTitle, double top) {
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
-        CheckBox checkBox = new CheckBox(checkBoxTitle);
+        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         HBox.setMargin(checkBox, new Insets(6, 0, 0, 0));
 
         HBox hBox = new HBox();
@@ -475,7 +475,7 @@ public class FormBuilder {
     }
 
     public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, String checkBoxTitle, double top) {
-        CheckBox checkBox = new CheckBox(checkBoxTitle);
+        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 1);
@@ -564,7 +564,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title, -3);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
 
-        CheckBox checkBox = new CheckBox(checkBoxTitle);
+        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 1);
         GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));

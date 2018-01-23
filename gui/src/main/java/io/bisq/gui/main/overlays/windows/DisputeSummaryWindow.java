@@ -29,6 +29,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Contract;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -252,9 +253,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addCheckboxes() {
         Label evidenceLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.evidence"), 10);
         GridPane.setValignment(evidenceLabel, VPos.TOP);
-        CheckBox tamperProofCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.tamperProof"));
-        CheckBox idVerificationCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.id"));
-        CheckBox screenCastCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.video"));
+        CheckBox tamperProofCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.tamperProof"));
+        CheckBox idVerificationCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.id"));
+        CheckBox screenCastCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.video"));
 
         tamperProofCheckBox.selectedProperty().bindBidirectional(disputeResult.tamperProofEvidenceProperty());
         idVerificationCheckBox.selectedProperty().bindBidirectional(disputeResult.idVerificationProperty());
