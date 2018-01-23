@@ -48,6 +48,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
+import sun.security.krb5.internal.rcache.AuthList;
 
 import javax.inject.Inject;
 
@@ -250,9 +251,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getDate(item));
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -271,7 +272,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
@@ -291,9 +292,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getState(item));
+                                    setGraphic(new AutoTooltipLabel(model.getState(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -352,7 +353,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getAmount(item));
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
                         };
                     }
@@ -371,7 +372,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getPrice(item));
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
                         };
                     }
@@ -391,9 +392,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getVolume(item));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -412,7 +413,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getDirectionLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
                         };
                     }

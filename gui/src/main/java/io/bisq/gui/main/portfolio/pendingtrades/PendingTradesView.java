@@ -311,9 +311,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(formatter.formatDateTime(item.getTrade().getDate()));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatDateTime(item.getTrade().getDate())));
                                 } else {
-                                    setText(null);
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -334,9 +334,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatCoinWithCode(item.getTrade().getTradeAmount()));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatCoinWithCode(item.getTrade().getTradeAmount())));
                                 else
-                                    setText(null);
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -356,9 +356,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatPrice(item.getPrice()));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatPrice(item.getPrice())));
                                 else
-                                    setText(null);
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -378,9 +378,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatVolumeWithCode(item.getTrade().getTradeVolume()));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatVolumeWithCode(item.getTrade().getTradeVolume())));
                                 else
-                                    setText(null);
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -400,9 +400,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(model.getPaymentMethod(item));
+                                    setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                 else
-                                    setText(null);
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -421,7 +421,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
@@ -441,9 +441,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(model.getMyRole(item));
+                                    setGraphic(new AutoTooltipLabel(model.getMyRole(item)));
                                 else
-                                    setText(null);
+                                    setGraphic(null);
                             }
                         };
                     }

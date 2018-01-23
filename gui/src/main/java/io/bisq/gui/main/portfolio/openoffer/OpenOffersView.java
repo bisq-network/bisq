@@ -197,9 +197,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getDate(item));
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -218,7 +218,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getAmount(item));
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
                         };
                     }
@@ -237,7 +237,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getPrice(item));
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
                         };
                     }
@@ -257,9 +257,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getVolume(item));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -278,7 +278,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getDirectionLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
                         };
                     }
@@ -297,7 +297,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
