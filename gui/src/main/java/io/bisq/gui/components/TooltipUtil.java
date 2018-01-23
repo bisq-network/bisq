@@ -11,12 +11,13 @@ public class TooltipUtil {
         for (Object node : skinBase.getChildren()) {
             if (node instanceof Text) {
                 String displayedText = ((Text) node).getText();
-                if (displayedText.equals(labeled.getText())) {
+                String untruncatedText = labeled.getText();
+                if (displayedText.equals(untruncatedText)) {
                     if (labeled.getTooltip() != null) {
                         labeled.setTooltip(null);
                     }
-                } else if (labeled.getText() != null){
-                    labeled.setTooltip(new Tooltip(labeled.getText()));
+                } else if (untruncatedText != null && !untruncatedText.trim().isEmpty()){
+                    labeled.setTooltip(new Tooltip(untruncatedText));
                 }
             }
         }

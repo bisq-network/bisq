@@ -216,7 +216,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
                                         Tradable tradable = item.getTradable();
                                         if (tradable instanceof Trade)

@@ -169,7 +169,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

@@ -283,7 +283,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getTrade().getShortId(), true);
+                                    field = new HyperlinkWithIcon(item.getTrade().getShortId());
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
