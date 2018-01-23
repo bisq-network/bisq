@@ -17,14 +17,22 @@
 
 package io.bisq.api;
 
-import lombok.Value;
+import lombok.Data;
+import lombok.Getter;
 
 import java.util.Optional;
 
-@Value
+@Data
 public class BisqProxyError {
+    @Getter
     String errorMessage;
+    @Getter
     Optional<Throwable> optionalThrowable;
+
+    public BisqProxyError() {
+        this.errorMessage = "";
+        this.optionalThrowable = Optional.empty();
+    }
 
     public BisqProxyError(String errorMessage, Throwable throwable) {
         this.errorMessage = errorMessage;

@@ -30,6 +30,7 @@ import io.bisq.core.alert.AlertModule;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.network.CoreSeedNodesRepository;
@@ -50,6 +51,9 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
+/**
+ * Copy of BisqAppModule with GUI specific entries removed and one API call added.
+ */
 @Slf4j
 public class ApiModule extends AppModule {
 
@@ -68,26 +72,29 @@ public class ApiModule extends AppModule {
         // bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
+
+        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
+        bind(BtcWalletService.class).in(Singleton.class);
 
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
-        bind(BisqApiApplication.class).in(Singleton.class);
-        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
-        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 
+        // added for API usage
+        bind(BisqApiApplication.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());
         install(encryptionServiceModule());
         install(arbitratorModule());
         install(offerModule());
-        install(torModule());
+        install(p2pModule());
         install(bitcoinModule());
         install(daoModule());
         install(alertModule());
@@ -118,7 +125,7 @@ public class ApiModule extends AppModule {
         return new OfferModule(environment);
     }
 
-    private P2PModule torModule() {
+    private P2PModule p2pModule() {
         return new P2PModule(environment);
     }
 

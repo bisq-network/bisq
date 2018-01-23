@@ -5,6 +5,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.BisqProxyError;
+import io.bisq.api.BisqProxyResult;
 import io.bisq.api.model.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.offer.OfferPayload;
@@ -293,7 +294,11 @@ public class ApiResourceV1 {
     @Timed
     @Path("/wallet_detail")
     public WalletDetails walletDetail() {
-        return bisqProxy.getWalletDetails();
+        BisqProxyResult<WalletDetails> walletDetails = bisqProxy.getWalletDetails();
+        if(walletDetails.isInError()) {
+            handleBisqProxyError(Optional.of(walletDetails));
+        }
+        return walletDetails.getResult();
     }
 
     /**
