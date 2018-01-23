@@ -21,6 +21,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import io.bisq.gui.components.AutoTooltipLabel?>
+<?import io.bisq.gui.components.AutoTooltipRadioButton?>
 <VBox fx:id="root" fx:controller="io.bisq.gui.main.funds.withdrawal.WithdrawalView"
       spacing="10" xmlns:fx="http://javafx.com/fxml">
     <padding>
@@ -41,22 +42,22 @@
         </padding>
 
         <AutoTooltipLabel fx:id="inputsLabel" GridPane.rowIndex="0"/>
-        <RadioButton fx:id="useAllInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="1">
+        <AutoTooltipRadioButton fx:id="useAllInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="1">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="5.0" top="0.0"/>
             </padding>
-        </RadioButton>
-        <RadioButton fx:id="useCustomInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        </AutoTooltipRadioButton>
+        <AutoTooltipRadioButton fx:id="useCustomInputsRadioButton" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
 
         <AutoTooltipLabel fx:id="amountLabel" GridPane.rowIndex="1"/>
         <TextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="120"/>
-        <RadioButton fx:id="feeExcludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="2">
+        <AutoTooltipRadioButton fx:id="feeExcludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="2">
             <padding>
                 <Insets bottom="0.0" left="5.0" right="5.0" top="0.0"/>
             </padding>
-        </RadioButton>
-        <RadioButton fx:id="feeIncludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+        </AutoTooltipRadioButton>
+        <AutoTooltipRadioButton fx:id="feeIncludedRadioButton" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
 
         <AutoTooltipLabel fx:id="fromLabel" GridPane.rowIndex="2"/>
         <TextField fx:id="withdrawFromTextField" editable="false" focusTraversable="false"

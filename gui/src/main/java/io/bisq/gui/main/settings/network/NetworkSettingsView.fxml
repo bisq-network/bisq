@@ -45,9 +45,9 @@
 
     <AutoTooltipLabel fx:id="bitcoinNodesLabel" GridPane.rowIndex="2"/>
     <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" spacing="10">
-        <RadioButton fx:id="useProvidedNodesRadio"/>
-        <RadioButton fx:id="useCustomNodesRadio"/>
-        <RadioButton fx:id="usePublicNodesRadio"/>
+        <AutoTooltipRadioButton fx:id="useProvidedNodesRadio"/>
+        <AutoTooltipRadioButton fx:id="useCustomNodesRadio"/>
+        <AutoTooltipRadioButton fx:id="usePublicNodesRadio"/>
     </HBox>
 
     <AutoTooltipLabel fx:id="btcNodesLabel" GridPane.rowIndex="3"/>

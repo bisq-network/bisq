@@ -489,7 +489,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static RadioButton addRadioButton(GridPane gridPane, int rowIndex, ToggleGroup toggleGroup, String title) {
-        RadioButton radioButton = new RadioButton(title);
+        RadioButton radioButton = new AutoTooltipRadioButton(title);
         radioButton.setToggleGroup(toggleGroup);
         GridPane.setRowIndex(radioButton, rowIndex);
         GridPane.setColumnIndex(radioButton, 1);
@@ -505,7 +505,7 @@ public class FormBuilder {
             radioButtonTitle) {
         Label label = addLabel(gridPane, rowIndex, title, 0);
 
-        RadioButton radioButton = new RadioButton(radioButtonTitle);
+        RadioButton radioButton = new AutoTooltipRadioButton(radioButtonTitle);
         radioButton.setToggleGroup(toggleGroup);
         radioButton.setPadding(new Insets(6, 0, 0, 0));
         GridPane.setRowIndex(radioButton, rowIndex);
@@ -528,11 +528,11 @@ public class FormBuilder {
                                                                                          String radioButtonTitle2) {
         Label label = addLabel(gridPane, rowIndex, title, 0);
 
-        RadioButton radioButton1 = new RadioButton(radioButtonTitle1);
+        RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
         radioButton1.setToggleGroup(toggleGroup);
         radioButton1.setPadding(new Insets(6, 0, 0, 0));
 
-        RadioButton radioButton2 = new RadioButton(radioButtonTitle2);
+        RadioButton radioButton2 = new AutoTooltipRadioButton(radioButtonTitle2);
         radioButton2.setToggleGroup(toggleGroup);
         radioButton2.setPadding(new Insets(6, 0, 0, 0));
 

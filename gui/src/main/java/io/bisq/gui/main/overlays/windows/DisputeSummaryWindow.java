@@ -30,6 +30,7 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Contract;
 import io.bisq.gui.components.AutoTooltipCheckBox;
+import io.bisq.gui.components.AutoTooltipRadioButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -275,16 +276,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), 10);
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
-        buyerGetsTradeAmountRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
+        buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.buyer")));
-        buyerGetsAllRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+        buyerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
                 Res.get("shared.buyer")));
-        sellerGetsTradeAmountRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
+        sellerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.seller")));
-        sellerGetsAllRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+        sellerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
                 Res.get("shared.seller")));
 
-        customRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.custom"));
+        customRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.custom"));
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
         radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsAllRadioButton,
@@ -392,13 +393,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addReasonControls() {
         Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.reason"), 10);
         GridPane.setValignment(label, VPos.TOP);
-        reasonWasBugRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bug"));
-        reasonWasUsabilityIssueRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.usability"));
-        reasonProtocolViolationRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
-        reasonNoReplyRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
-        reasonWasScamRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.scam"));
-        reasonWasBankRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bank"));
-        reasonWasOtherRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.other"));
+        reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bug"));
+        reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.usability"));
+        reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
+        reasonNoReplyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
+        reasonWasScamRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.scam"));
+        reasonWasBankRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bank"));
+        reasonWasOtherRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.other"));
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
