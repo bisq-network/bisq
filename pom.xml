@@ -96,6 +96,14 @@
             <version>0.6.3-dev-SNAPSHOT</version>
         </dependency>
 
+        <!-- Java 9 compatibility fix -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <!-- END -->
+
         <!-- dependencies from bisq root pom -->
         <dependency>
             <groupId>org.projectlombok</groupId>
