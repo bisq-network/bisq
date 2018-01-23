@@ -416,7 +416,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
-                    }
+
                 case "AXE":
                         try {
                         Address.fromBase58(AxeParams.get(), input);
