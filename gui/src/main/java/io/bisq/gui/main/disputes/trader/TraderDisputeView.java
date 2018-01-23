@@ -1039,7 +1039,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getShortTradeId(), true);
+                                    field = new HyperlinkWithIcon(item.getShortTradeId());
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
                                     if (tradeOptional.isPresent()) {
                                         field.setMouseTransparent(false);

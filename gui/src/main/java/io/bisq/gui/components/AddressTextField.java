@@ -53,7 +53,6 @@ public class AddressTextField extends AnchorPane {
     public AddressTextField() {
         TextField textField = new TextField();
         textField.setId("address-text-field");
-        textField.getStyleClass().addAll("highlight","show-hand");
         textField.setEditable(false);
         textField.textProperty().bind(address);
         String tooltipText = Res.get("addressTextField.openWallet");

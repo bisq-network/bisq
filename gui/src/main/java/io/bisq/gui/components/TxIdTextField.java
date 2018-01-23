@@ -92,7 +92,6 @@ public class TxIdTextField extends AnchorPane {
 
         textField = new TextField();
         textField.setId("address-text-field");
-        textField.getStyleClass().addAll("highlight","show-hand");
         textField.setEditable(false);
         textField.setTooltip(tooltip);
         AnchorPane.setRightAnchor(textField, 80.0);
