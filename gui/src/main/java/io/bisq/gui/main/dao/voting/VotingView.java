@@ -144,7 +144,7 @@ class MenuItem extends AutoTooltipToggleButton {
         setPrefWidth(240);
         setAlignment(Pos.CENTER_LEFT);
 
-        Label icon = new AutoTooltipLabel();
+        Label icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setTextFill(Paint.valueOf("#333"));
         icon.setPadding(new Insets(0, 5, 0, 0));

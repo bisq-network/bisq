@@ -40,7 +40,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TextFieldWithCopyIcon() {
-        Label copyIcon = new AutoTooltipLabel();
+        Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
         copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
