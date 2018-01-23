@@ -63,7 +63,7 @@ public class PriceFeedService {
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
     private int retryCounter = 0;
-    private int retryDelay = 1;
+    private long requestTs;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,25 +97,34 @@ public class PriceFeedService {
         }
     }
 
+    public void initialRequestPriceFeed() {
+        request(false);
+    }
+
     public void requestPriceFeed(Consumer<Double> resultHandler, FaultHandler faultHandler) {
         this.priceConsumer = resultHandler;
         this.faultHandler = faultHandler;
 
-        request();
+        request(true);
     }
 
     public String getProviderNodeAddress() {
         return httpClient.getBaseUrl();
     }
 
-    private void request() {
+    private void request(boolean repeatRequests) {
+        requestTs = System.currentTimeMillis();
         requestAllPrices(priceProvider, () -> {
             applyPriceToConsumer();
-            // after first response we know the providers timestamp and want to request quickly after next expected update
-            long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
-            UserThread.runAfter(this::request, delay);
-            retryDelay = 1;
+
+            if (repeatRequests) {
+                // After first response we know the providers timestamp and want to request quickly after next expected update
+                // We limit request interval to 40-90 sec.
+                long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
+                UserThread.runAfter(() -> request(true), delay);
+            }
         }, (errorMessage, throwable) -> {
+            log.warn("request from priceProvider failed: errorMessage={}", errorMessage);
             // Try other provider if more then 1 is available
             if (providersRepository.hasMoreProviders()) {
                 providersRepository.selectNewRandomBaseUrl();
@@ -123,9 +132,8 @@ public class PriceFeedService {
             }
             UserThread.runAfter(() -> {
                 retryCounter++;
-                retryDelay *= retryCounter;
-                request();
-            }, retryDelay);
+                request(true);
+            }, retryCounter);
 
             this.faultHandler.handleFault(errorMessage, throwable);
         });
@@ -232,6 +240,7 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
+                    log.info("Received new marketPrice={} {} sec. after request", marketPrice, (System.currentTimeMillis() - requestTs) / 1000);
                     if (marketPrice.isRecentExternalPriceAvailable())
                         priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {

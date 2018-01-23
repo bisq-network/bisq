@@ -18,6 +18,7 @@
 package io.bisq.gui.main.account.content.backup;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
@@ -36,7 +37,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -146,10 +146,9 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             String backupDirectory = preferences.getBackupDirectory();
             if (backupDirectory != null && backupDirectory.length() > 0) {
                 try {
-                    String dateString = new SimpleDateFormat("YYYY-MM-dd-HHmmss").format(new Date());
+                    String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                     String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                    FileUtils.copyDirectory(dataDir,
-                            new File(destination));
+                    FileUtil.copyDirectory(dataDir, new File(destination));
                     new Popup<>().feedback(Res.get("account.backup.success", destination)).show();
                 } catch (IOException e) {
                     e.printStackTrace();

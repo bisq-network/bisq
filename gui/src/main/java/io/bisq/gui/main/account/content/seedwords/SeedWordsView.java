@@ -226,7 +226,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void doRestore() {
-        long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        final LocalDate value = restoreDatePicker.getValue();
+        //TODO Is ZoneOffset correct?
+        long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
         walletsManager.restoreSeedWords(
                 seed,

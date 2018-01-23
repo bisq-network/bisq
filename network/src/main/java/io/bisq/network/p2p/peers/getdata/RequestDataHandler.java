@@ -281,7 +281,7 @@ class RequestDataHandler implements MessageListener {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
             } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
+                log.debug("We got the message from another connection and ignore it on that handler. That is expected if we have several requests open.");
             }
         }
     }

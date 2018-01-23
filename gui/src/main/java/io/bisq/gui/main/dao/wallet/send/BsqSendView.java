@@ -23,6 +23,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
@@ -35,9 +36,11 @@ import io.bisq.gui.main.funds.deposit.DepositView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BsqAddressValidator;
 import io.bisq.gui.util.validation.BsqValidator;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -55,6 +58,8 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class BsqSendView extends ActivatableView<GridPane, Void> {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
+    private final WalletsSetup walletsSetup;
+    private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final Navigation navigation;
@@ -75,12 +80,20 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
-                        BsqFormatter bsqFormatter, BSFormatter btcFormatter, Navigation navigation,
-                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator,
+    private BsqSendView(BsqWalletService bsqWalletService,
+                        BtcWalletService btcWalletService,
+                        WalletsSetup walletsSetup,
+                        P2PService p2PService,
+                        BsqFormatter bsqFormatter,
+                        BSFormatter btcFormatter,
+                        Navigation navigation,
+                        BsqBalanceUtil bsqBalanceUtil,
+                        BsqValidator bsqValidator,
                         BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.walletsSetup = walletsSetup;
+        this.p2PService = p2PService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.navigation = navigation;
@@ -112,62 +125,68 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
 
         sendButton.setOnAction((event) -> {
-            String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
-            Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
-            try {
-                Transaction preparedSendTx = bsqWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
-                Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
-                Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                Coin miningFee = signedTx.getFee();
-                int txSize = signedTx.bitcoinSerialize().length;
-                new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
-                        .confirmation(Res.get("dao.wallet.send.sendFunds.details",
-                                bsqFormatter.formatCoinWithCode(receiverAmount),
-                                receiversAddressInputTextField.getText(),
-                                btcFormatter.formatCoinWithCode(miningFee),
-                                CoinUtil.getFeePerByte(miningFee, txSize),
-                                txSize / 1000d,
-                                bsqFormatter.formatCoinWithCode(receiverAmount)))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            bsqWalletService.commitTx(txWithBtcFee);
-                            // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                            // if it gets committed 2 times
-                            btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                            bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                @Override
-                                public void onSuccess(@Nullable Transaction transaction) {
-                                    if (transaction != null) {
-                                        log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+            // TODO break up in methods
+            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+                String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
+                Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+                try {
+                    Transaction preparedSendTx = bsqWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
+                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+                    Coin miningFee = signedTx.getFee();
+                    int txSize = signedTx.bitcoinSerialize().length;
+                    new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
+                            .confirmation(Res.get("dao.wallet.send.sendFunds.details",
+                                    bsqFormatter.formatCoinWithCode(receiverAmount),
+                                    receiversAddressInputTextField.getText(),
+                                    btcFormatter.formatCoinWithCode(miningFee),
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    txSize / 1000d,
+                                    bsqFormatter.formatCoinWithCode(receiverAmount)))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> {
+                                bsqWalletService.commitTx(txWithBtcFee);
+                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                // if it gets committed 2 times
+                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+
+                                bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                    @Override
+                                    public void onSuccess(@Nullable Transaction transaction) {
+                                        if (transaction != null) {
+                                            log.debug("Successfully sent tx with id " + transaction.getHashAsString());
+                                        }
                                     }
-                                }
 
-                                @Override
-                                public void onFailure(@NotNull Throwable t) {
-                                    log.error(t.toString());
-                                    new Popup<>().warning(t.toString());
-                                }
-                            });
+                                    @Override
+                                    public void onFailure(@NotNull Throwable t) {
+                                        log.error(t.toString());
+                                        new Popup<>().warning(t.toString());
+                                    }
+                                }, 15);
 
-                            receiversAddressInputTextField.setText("");
-                            amountInputTextField.setText("");
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } catch (Throwable t) {
-                if (t instanceof InsufficientMoneyException) {
-                    final Coin missingCoin = ((InsufficientMoneyException) t).missing;
-                    final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-                    //noinspection unchecked
-                    new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
-                            .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                                receiversAddressInputTextField.setText("");
+                                amountInputTextField.setText("");
+                            })
+                            .closeButtonText(Res.get("shared.cancel"))
                             .show();
-                } else {
-                    log.error(t.toString());
-                    t.printStackTrace();
-                    new Popup<>().warning(t.getMessage()).show();
+                } catch (Throwable t) {
+                    if (t instanceof InsufficientMoneyException) {
+                        final Coin missingCoin = ((InsufficientMoneyException) t).missing;
+                        final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
+                        //noinspection unchecked
+                        new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+                                .actionButtonTextWithGoTo("navigation.funds.depositFunds")
+                                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                                .show();
+                    } else {
+                        log.error(t.toString());
+                        t.printStackTrace();
+                        new Popup<>().warning(t.getMessage()).show();
+                    }
                 }
+            } else {
+                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
 

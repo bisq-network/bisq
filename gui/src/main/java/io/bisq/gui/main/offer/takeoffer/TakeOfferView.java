@@ -327,34 +327,38 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void onTakeOffer() {
-        if (model.dataModel.isTakerFeeValid()) {
-            if (model.hasAcceptedArbitrators()) {
-                if (!DevEnv.DEV_MODE) {
-                    offerDetailsWindow.onTakeOffer(() ->
-                                    model.onTakeOffer(() -> {
-                                        offerDetailsWindow.hide();
-                                        offerDetailsWindowDisplayed = false;
-                                    })
-                    ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
-                    offerDetailsWindowDisplayed = true;
+        if (model.isReadyForTxBroadcast()) {
+            if (model.dataModel.isTakerFeeValid()) {
+                if (model.hasAcceptedArbitrators()) {
+                    if (!DevEnv.DEV_MODE) {
+                        offerDetailsWindow.onTakeOffer(() ->
+                                        model.onTakeOffer(() -> {
+                                            offerDetailsWindow.hide();
+                                            offerDetailsWindowDisplayed = false;
+                                        })
+                        ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
+                        offerDetailsWindowDisplayed = true;
+                    } else {
+                        balanceSubscription.unsubscribe();
+                        model.onTakeOffer(() -> {
+                        });
+                    }
                 } else {
-                    balanceSubscription.unsubscribe();
-                    model.onTakeOffer(() -> {
-                    });
+                    new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                            .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
+                            .actionButtonTextWithGoTo("navigation.arbitratorSelection")
+                            .onAction(() -> {
+                                navigation.setReturnPath(navigation.getCurrentPath());
+                                //noinspection unchecked
+                                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
+                                        ArbitratorSelectionView.class);
+                            }).show();
                 }
             } else {
-                new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
-                        .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
-                        .actionButtonTextWithGoTo("navigation.arbitratorSelection")
-                        .onAction(() -> {
-                            navigation.setReturnPath(navigation.getCurrentPath());
-                            //noinspection unchecked
-                            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
-                                    ArbitratorSelectionView.class);
-                        }).show();
+                showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
         } else {
-            showInsufficientBsqFundsForBtcFeePaymentPopup();
+            model.showNotReadyForTxBroadcastPopups();
         }
     }
 

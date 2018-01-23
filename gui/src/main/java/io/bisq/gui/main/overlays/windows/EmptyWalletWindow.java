@@ -22,13 +22,16 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
+import io.bisq.network.p2p.P2PService;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -52,6 +55,8 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
     private final WalletPasswordWindow walletPasswordWindow;
+    private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final BSFormatter formatter;
     private final OpenOfferManager openOfferManager;
 
@@ -67,9 +72,14 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
     @Inject
     public EmptyWalletWindow(WalletPasswordWindow walletPasswordWindow,
-                             OpenOfferManager openOfferManager, BSFormatter formatter) {
+                             OpenOfferManager openOfferManager,
+                             P2PService p2PService,
+                             WalletsSetup walletsSetup,
+                             BSFormatter formatter) {
         this.walletPasswordWindow = walletPasswordWindow;
         this.openOfferManager = openOfferManager;
+        this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.formatter = formatter;
 
         type = Type.Instruction;
@@ -148,14 +158,18 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void doEmptyWallet(KeyParameter aesKey) {
-        if (!openOfferManager.getObservableList().isEmpty()) {
-            UserThread.runAfter(() ->
-                    new Popup<>().warning(Res.get("emptyWalletWindow.openOffers.warn"))
-                            .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))
-                            .onAction(() -> doEmptyWallet2(aesKey))
-                            .show(), 300, TimeUnit.MILLISECONDS);
+        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (!openOfferManager.getObservableList().isEmpty()) {
+                UserThread.runAfter(() ->
+                        new Popup<>().warning(Res.get("emptyWalletWindow.openOffers.warn"))
+                                .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))
+                                .onAction(() -> doEmptyWallet2(aesKey))
+                                .show(), 300, TimeUnit.MILLISECONDS);
+            } else {
+                doEmptyWallet2(aesKey);
+            }
         } else {
-            doEmptyWallet2(aesKey);
+            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 

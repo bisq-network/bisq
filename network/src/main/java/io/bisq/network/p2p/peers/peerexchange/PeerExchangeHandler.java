@@ -81,10 +81,10 @@ class PeerExchangeHandler implements MessageListener {
 
     private void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
-        log.info("sendGetPeersRequest to nodeAddress={}", nodeAddress);
+        log.debug("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
-                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedNonSeedNodeReportedPeers(nodeAddress));
+                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getLivePeers(nodeAddress));
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {

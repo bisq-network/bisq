@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MonitorRequestManager implements ConnectionListener {
-    private static final long RETRY_DELAY_SEC = 20;
+    private static final long RETRY_DELAY_SEC = 30;
     private static final long CLEANUP_TIMER = 60;
     private static final long REQUEST_PERIOD_MIN = 10;
-    private static final int MAX_RETRIES = 6;
+    private static final int MAX_RETRIES = 5;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,6 @@ public class MonitorRequestManager implements ConnectionListener {
     private Map<NodeAddress, Timer> retryTimerMap = new HashMap<>();
     private Map<NodeAddress, Integer> retryCounterMap = new HashMap<>();
     private boolean stopped;
-    private Set<NodeAddress> nodesInError = new HashSet<>();
     private int completedRequestIndex;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,9 +131,10 @@ public class MonitorRequestManager implements ConnectionListener {
     private void requestFromNode(NodeAddress nodeAddress) {
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
+                final Metrics metrics = metricsModel.getMetrics(nodeAddress);
                 MonitorRequestHandler requestDataHandler = new MonitorRequestHandler(networkNode,
                         dataStorage,
-                        metricsModel.getMetrics(nodeAddress),
+                        metrics,
                         new MonitorRequestHandler.Listener() {
                             @Override
                             public void onComplete() {
@@ -151,8 +151,8 @@ public class MonitorRequestManager implements ConnectionListener {
                                 if (completedRequestIndex == numNodes)
                                     metricsModel.log();
 
-                                if (nodesInError.contains(nodeAddress)) {
-                                    nodesInError.remove(nodeAddress);
+                                if (metricsModel.getNodesInError().contains(nodeAddress)) {
+                                    metricsModel.removeNodesInError(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Fixed: " + nodeAddress.getFullAddress(),
                                                 "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
@@ -162,6 +162,8 @@ public class MonitorRequestManager implements ConnectionListener {
                             @Override
                             public void onFault(String errorMessage, NodeAddress nodeAddress) {
                                 handlerMap.remove(nodeAddress);
+                                stopRetryTimer(nodeAddress);
+
                                 int retryCounter;
                                 if (retryCounterMap.containsKey(nodeAddress))
                                     retryCounter = retryCounterMap.get(nodeAddress);
@@ -169,15 +171,25 @@ public class MonitorRequestManager implements ConnectionListener {
                                     retryCounter = 0;
 
                                 if (retryCounter < MAX_RETRIES) {
+                                    log.info("We got an error at peer={}. We will try again after a delay of {} sec. error={} ",
+                                            nodeAddress, RETRY_DELAY_SEC, errorMessage);
                                     final Timer timer = UserThread.runAfter(() -> requestFromNode(nodeAddress), RETRY_DELAY_SEC);
                                     retryTimerMap.put(nodeAddress, timer);
                                     retryCounterMap.put(nodeAddress, ++retryCounter);
                                 } else {
+                                    log.warn("We got repeated errors at peer={}. error={} ",
+                                            nodeAddress, errorMessage);
+
+                                    metricsModel.addNodesInError(nodeAddress);
+                                    metrics.getErrorMessages().add(errorMessage + " (" + new Date().toString() + ")");
+
                                     metricsModel.updateReport();
                                     completedRequestIndex++;
                                     if (completedRequestIndex == numNodes)
                                         metricsModel.log();
-                                    nodesInError.add(nodeAddress);
+
+                                    retryCounterMap.remove(nodeAddress);
+
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),
                                                 "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));

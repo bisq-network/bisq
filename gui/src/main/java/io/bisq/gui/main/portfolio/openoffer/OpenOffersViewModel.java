@@ -36,7 +36,9 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
 
 
     @Inject
-    public OpenOffersViewModel(OpenOffersDataModel dataModel, P2PService p2PService, BSFormatter formatter) {
+    public OpenOffersViewModel(OpenOffersDataModel dataModel,
+                               P2PService p2PService,
+                               BSFormatter formatter) {
         super(dataModel);
 
         this.p2PService = p2PService;

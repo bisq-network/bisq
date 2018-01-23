@@ -359,7 +359,7 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setPeerType(PeerType peerType) {
-        Log.traceCall(peerType.toString());
+        log.debug("setPeerType: peerType={}, nodeAddressOpt={}", peerType.toString(), peersNodeAddressOptional);
         this.peerType = peerType;
     }
 
@@ -431,7 +431,7 @@ public class Connection implements MessageListener {
     }
 
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        Log.traceCall(this.toString());
+        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional, closeConnectionReason);
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -634,9 +634,11 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.SOCKET_CLOSED;
                 else
                     closeConnectionReason = CloseConnectionReason.RESET;
+
+                log.info("SocketException (expected if connection lost). closeConnectionReason={}; connection={}", closeConnectionReason, connection);
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.debug("Shut down caused by exception {} on connection={}", e.toString(), connection);
+                log.info("Shut down caused by exception {} on connection={}", e.toString(), connection);
             } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
                 log.warn("Shut down caused by exception {} on connection={}", e.toString(), connection);
@@ -646,9 +648,9 @@ public class Connection implements MessageListener {
             } else {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
-                log.warn("Unknown reason for exception at socket {}\n\t" +
+                log.warn("Unknown reason for exception at socket: {}\n\t" +
                                 "connection={}\n\t" +
-                                "Exception=",
+                                "Exception={}",
                         socket.toString(),
                         this,
                         e.toString());
@@ -744,6 +746,7 @@ public class Connection implements MessageListener {
                     try {
                         if (sharedModel.getSocket() != null &&
                                 sharedModel.getSocket().isClosed()) {
+                            log.warn("Socket is null or closed socket={}", sharedModel.getSocket());
                             stopAndShutDown(CloseConnectionReason.SOCKET_CLOSED);
                             return;
                         }
@@ -765,8 +768,10 @@ public class Connection implements MessageListener {
                         PB.NetworkEnvelope proto = PB.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 
                         if (proto == null) {
-                            if (protoInputStream.read() != -1)
-                                log.error("proto is null. Should not happen...");
+                            if (protoInputStream.read() == -1)
+                                log.info("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
+                            else
+                                log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
                             stopAndShutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
                             return;
                         }
@@ -848,7 +853,7 @@ public class Connection implements MessageListener {
 
                         if (networkEnvelope instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
-                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
+                            log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", proto.getCloseConnectionMessage().getReason(), connection);
                             if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                                 log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
@@ -880,10 +885,6 @@ public class Connection implements MessageListener {
                             // 4. DirectMessage (implements SendersNodeAddressMessage)
                             if (networkEnvelope instanceof SendersNodeAddressMessage) {
                                 NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                                // We must not shut down a banned peer at that moment as it would trigger a connection termination
-                                // and we could not send the CloseConnectionMessage.
-                                // We shut down a banned peer at the next step at setPeersNodeAddress().
-
                                 Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
                                 if (peersNodeAddressOptional.isPresent()) {
                                     // If we have already the peers address we check again if it matches our stored one
@@ -891,6 +892,9 @@ public class Connection implements MessageListener {
                                             "senderNodeAddress not matching connections peer address.\n\t" +
                                                     "message=" + networkEnvelope);
                                 } else {
+                                    // We must not shut down a banned peer at that moment as it would trigger a connection termination
+                                    // and we could not send the CloseConnectionMessage.
+                                    // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
                                     connection.setPeersNodeAddress(senderNodeAddress);
                                 }
                             }

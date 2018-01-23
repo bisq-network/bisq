@@ -68,7 +68,7 @@ import static javafx.scene.layout.AnchorPane.*;
 @Slf4j
 public class MainView extends InitializableView<StackPane, MainViewModel> {
     // If after 30 sec we have not got connected we show "open network settings" button
-    private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 30;
+    private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
     private Label versionLabel;
 
     public static StackPane getRootContainer() {

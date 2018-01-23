@@ -343,7 +343,7 @@ public class BisqEnvironment extends StandardEnvironment {
             else
                 properties.remove(key);
 
-            log.info("properties=" + properties);
+            log.debug("properties=" + properties);
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                 properties.store(fileOutputStream, null);

@@ -251,7 +251,12 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("CAGE");
         coinsWithValidator.add("CRED");
         coinsWithValidator.add("XSPEC");
-
+        // v0.6.3
+        coinsWithValidator.add("WILD");
+        coinsWithValidator.add("ONION");
+        // v0.6.4
+        coinsWithValidator.add("CREA");
+        coinsWithValidator.add("XIN");
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -273,7 +278,12 @@ public class TradeStatisticsManager {
         newlyAdded.add("CAGE");
         newlyAdded.add("CRED");
         newlyAdded.add("XSPEC");
-
+        // v0.6.3
+        newlyAdded.add("WILD");
+        newlyAdded.add("ONION");
+        // v0.6.4
+        newlyAdded.add("CREA");
+        newlyAdded.add("XIN");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));

@@ -319,6 +319,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
+                if (selectedDispute != null && messagesInputBox.isVisible() && inputTextArea.isFocused())
+                    onTrySendMessage();
             }
         };
     }
@@ -420,6 +423,21 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     private void onOpenContract(Dispute dispute) {
         contractWindow.show(dispute);
+    }
+
+    private void onTrySendMessage() {
+        if (p2PService.isBootstrapped()) {
+            String text = inputTextArea.getText();
+            if (!text.isEmpty()) {
+                if (text.length() < 5_000) {
+                    onSendMessage(text, selectedDispute);
+                } else {
+                    new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
+                }
+            }
+        } else {
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        }
     }
 
     private void onSendMessage(String inputText, Dispute dispute) {
@@ -624,18 +642,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             sendButton = new AutoTooltipButton(Res.get("support.send"));
             sendButton.setDefaultButton(true);
-            sendButton.setOnAction(e -> {
-                if (p2PService.isBootstrapped()) {
-                    String text = inputTextArea.getText();
-                    if (!text.isEmpty())
-                        if (text.length() < 5_000)
-                            onSendMessage(text, selectedDispute);
-                        else
-                            new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
-                } else {
-                    new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
-                }
-            });
+            sendButton.setOnAction(e -> onTrySendMessage());
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
             Button uploadButton = new AutoTooltipButton(Res.get("support.addAttachments"));

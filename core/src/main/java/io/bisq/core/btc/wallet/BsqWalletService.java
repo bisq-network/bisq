@@ -17,8 +17,6 @@
 
 package io.bisq.core.btc.wallet;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
@@ -231,7 +229,7 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Sign tx 
+    // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
@@ -252,22 +250,12 @@ public class BsqWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Commit tx 
+    // Commit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx) {
         wallet.commitTx(tx);
         //printTx("BSQ commit Tx", tx);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Broadcast tx 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
-        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
-        printTx("BSQ broadcast Tx", tx);
     }
 
 
@@ -310,7 +298,7 @@ public class BsqWalletService extends WalletService {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
-        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a 
+        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a
         // non dust BTC output.
 
         // TODO check dust output

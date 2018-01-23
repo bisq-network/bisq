@@ -90,7 +90,6 @@ public class ProvidersRepository {
         else
             log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
                     bannedNodes, baseUrl, providerList);
-
     }
 
     public void selectNewRandomBaseUrl() {

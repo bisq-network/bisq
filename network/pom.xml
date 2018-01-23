@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.6.2</version>
+        <version>0.6.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,9 +20,11 @@
         <dependency>
             <groupId>com.github.JesusMcCloud.netlayer</groupId>
             <artifactId>tor.native</artifactId>
-            <!-- older version e7195748 -->
-            <!-- newer version 1c9d80e -> deactivate as there might be some issues TODO check with dev -->
-            <version>e7195748</version>
+
+            <!-- v0.3.2: first integration e7195748 -->
+            <!-- v0.3.3: fixed shutdown exception 1c9d80e -->
+            <!-- v0.3.4: use latest tor version b3497f1d -->
+            <version>b3497f1d</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

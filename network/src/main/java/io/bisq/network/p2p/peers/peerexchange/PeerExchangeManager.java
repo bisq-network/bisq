@@ -104,7 +104,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
+        log.info("onDisconnect closeConnectionReason={}, nodeAddressOpt={}", closeConnectionReason, connection.getPeersNodeAddressOptional());
         closeHandler(connection);
 
         if (retryTimer == null) {
@@ -196,7 +196,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
+        log.debug("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}" , nodeAddress,remainingNodeAddresses.size());
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,
@@ -210,7 +210,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
                             @Override
                             public void onFault(String errorMessage, @Nullable Connection connection) {
-                                log.info("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
+                                log.debug("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                         "nodeAddress={}", errorMessage, nodeAddress);
 
                                 peerManager.handleConnectionFault(nodeAddress);

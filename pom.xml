@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.2</version>
+    <version>0.6.4</version>
     <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>com.github.bisq-network.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>bba4088c</version>
+            <version>a83809f3</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>

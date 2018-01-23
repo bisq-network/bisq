@@ -29,6 +29,7 @@ import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -43,8 +44,6 @@ import org.bitcoinj.wallet.*;
 import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 import org.bitcoinj.wallet.listeners.WalletEventListener;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
@@ -61,9 +60,8 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * Abstract base class for BTC and BSQ wallet. Provides all non-trade specific functionality.
  */
+@Slf4j
 public abstract class WalletService {
-    private static final Logger log = LoggerFactory.getLogger(WalletService.class);
-
     protected final WalletsSetup walletsSetup;
     protected final Preferences preferences;
     protected final FeeService feeService;
@@ -285,6 +283,19 @@ public abstract class WalletService {
         } else {
             log.error("Missing connected output, assuming already signed.");
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Broadcast tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
+        Broadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback);
+    }
+
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback, int timeoutInSec) {
+        Broadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback, timeoutInSec);
     }
 
 

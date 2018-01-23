@@ -10,24 +10,26 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-<!--
-    <logger name="com.neemre.btcdcli4j" level="WARN"/>
+    <logger name="org.berndpruenster" level="WARN"/>
 
-    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
+    <!--
+        <logger name="com.neemre.btcdcli4j" level="WARN"/>
 
-    <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
-    <logger name="org.bitcoinj.net.BlockingClient" level="WARN"/>
-    <logger name="org.bitcoinj.core.PeerGroup" level="WARN"/>
-    <logger name="org.bitcoinj.core.Peer" level="WARN"/>
-    <logger name="org.bitcoinj.core.Context" level="WARN"/>
-    <logger name="org.bitcoinj.wallet.WalletFiles" level="WARN"/>
-    <logger name="org.bitcoinj.core.listeners.DownloadProgressTracker" level="WARN"/>
-    <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
-    <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
+        <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 
-    &lt;!&ndash; We get too many errors logged from connection issues&ndash;&gt;
-    <logger name="org.bitcoinj.net.BlockingClient" level="OFF"/>
--->
+        <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
+        <logger name="org.bitcoinj.net.BlockingClient" level="WARN"/>
+        <logger name="org.bitcoinj.core.PeerGroup" level="WARN"/>
+        <logger name="org.bitcoinj.core.Peer" level="WARN"/>
+        <logger name="org.bitcoinj.core.Context" level="WARN"/>
+        <logger name="org.bitcoinj.wallet.WalletFiles" level="WARN"/>
+        <logger name="org.bitcoinj.core.listeners.DownloadProgressTracker" level="WARN"/>
+        <logger name="org.bitcoinj.core.PeerSocketHandler" level="WARN"/>
+        <logger name="org.bitcoinj.net.NioClientManager" level="WARN"/>
+
+        &lt;!&ndash; We get too many errors logged from connection issues&ndash;&gt;
+        <logger name="org.bitcoinj.net.BlockingClient" level="OFF"/>
+    -->
 
     <!--
      <logger name="org.bitcoinj.net.ConnectionHandler" level="WARN"/>

@@ -170,7 +170,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
                             toRemoveSet.add(protectedStorageEntry);
-                            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                            log.info("We found an expired data entry. We remove the protectedDataPayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
                             map.remove(hashOfPayload);
                         }
                     });
@@ -255,8 +255,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                     // TODO investigate what causes the disconnections.
                                     // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
                                     protectedData.backDate();
-                                    if (protectedData.isExpired())
+                                    if (protectedData.isExpired()) {
+                                        log.warn("We found an expired data entry which we have already back dated. " +
+                                                "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedData.getProtectedStoragePayload(), 100));
                                         doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+                                    }
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
                                 }

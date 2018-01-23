@@ -99,12 +99,14 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
+        result.add(new CryptoCurrency("CREA", "Creativecoin"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("ONION", "DeepOnion"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
@@ -112,6 +114,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
+        result.add(new CryptoCurrency("XIN", "Infinity Economics"));
         result.add(new CryptoCurrency("IOP", "Internet Of People"));
         result.add(new CryptoCurrency("INXT", "Internext", true));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
@@ -146,6 +149,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
+        result.add(new CryptoCurrency("WILD", "WILD Token", true));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));

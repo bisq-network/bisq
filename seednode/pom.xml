@@ -22,7 +22,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq</groupId>
-        <version>0.6.2</version>
+        <version>0.6.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -88,6 +88,11 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
+                    <artifactSet>
+                        <excludes>
+                            <exclude>org.bouncycastle:*:*:*</exclude>
+                        </excludes>
+                    </artifactSet>
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>

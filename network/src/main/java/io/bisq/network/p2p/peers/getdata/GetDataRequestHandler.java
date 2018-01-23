@@ -80,7 +80,7 @@ public class GetDataRequestHandler {
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                        String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
+                        String errorMessage = "A timeout occurred for getDataResponse " +
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
