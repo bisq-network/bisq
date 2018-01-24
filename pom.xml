@@ -57,10 +57,18 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>9</source>
+                    <target>9</target>
+                    <compilerArgs>
+                        <arg>--add-exports=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED</arg>
+                        <arg>--add-exports=javafx.graphics/com.sun.javafx.tk.quantum=ALL-UNNAMED</arg>
+                        <arg>--add-exports=javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED</arg>
+                        <arg>--add-exports=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED</arg>
+                        <arg>--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
+
             <!--
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
@@ -184,7 +192,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.16</version>
+            <version>1.16.20</version>
             <scope>provided</scope>
         </dependency>
 

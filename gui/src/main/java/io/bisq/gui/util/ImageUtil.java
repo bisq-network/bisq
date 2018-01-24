@@ -17,13 +17,14 @@
 
 package io.bisq.gui.util;
 
-import com.sun.javafx.tk.quantum.QuantumToolkit;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.lang.reflect.Field;
 import io.bisq.common.locale.Country;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
@@ -55,10 +56,21 @@ public class ImageUtil {
     }
 
     public static boolean isRetina() {
-        float maxRenderScale = ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxRenderScale();
-        @SuppressWarnings("UnnecessaryLocalVariable")
-        boolean isRetina = maxRenderScale > 1.9f;
-        //log.debug("isRetina=" + isRetina + " / maxRenderScale=" + maxRenderScale);
+        boolean isRetina = false;
+        GraphicsDevice graphicsDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+
+        try {
+            Field field = graphicsDevice.getClass().getDeclaredField("scale");
+            if (field != null) {
+                field.setAccessible(true);
+                Object scale = field.get(graphicsDevice);
+                if (scale instanceof Integer && (Integer) scale == 2) {
+                    isRetina = true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
         return isRetina;
     }
 }
