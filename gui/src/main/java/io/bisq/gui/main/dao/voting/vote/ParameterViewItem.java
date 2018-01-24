@@ -21,6 +21,8 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.dao.vote.VoteItem;
 import io.bisq.core.dao.vote.VotingDefaultValues;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -78,7 +80,7 @@ public class ParameterViewItem {
         hBox.setSpacing(5);
         vBox.getChildren().add(hBox);
 
-        label = new Label(voteItem.getName() + ":");
+        label = new AutoTooltipLabel(voteItem.getName() + ":");
         HBox.setMargin(label, new Insets(4, 0, 0, 0));
         numberChangeListener = (observable, oldValue, newValue) -> {
             if ((double) newValue > 0) {
@@ -144,10 +146,10 @@ public class ParameterViewItem {
         };
         slider.valueProperty().addListener(sliderListener);
 
-        resetButton = new Button(Res.get("shared.reset"));
+        resetButton = new AutoTooltipButton(Res.get("shared.reset"));
         resetButton.setOnAction(event -> inputTextField.setText(String.valueOf(originalValue)));
 
-        removeButton = new Button(Res.get("shared.remove"));
+        removeButton = new AutoTooltipButton(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

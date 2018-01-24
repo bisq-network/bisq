@@ -248,8 +248,9 @@ public class SellerStep3View extends TradeStepView {
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentReceived() {
-        log.debug("onPaymentReceived");
-        if (model.p2PService.isBootstrapped()) {
+        // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
+        // are well connected to the Bitcoin network before triggering the broadcast.
+        if (model.dataModel.isReadyForTxBroadcast()) {
             //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
             //noinspection ConstantConditions
@@ -278,10 +279,9 @@ public class SellerStep3View extends TradeStepView {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            model.dataModel.showNotReadyForTxBroadcastPopups();
         }
     }
-
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
@@ -352,7 +352,7 @@ public class SellerStep3View extends TradeStepView {
                 return Optional.of(((BankAccountPayload) paymentAccountPayload).getHolderName());
             else if (paymentAccountPayload instanceof SepaAccountPayload)
                 return Optional.of(((SepaAccountPayload) paymentAccountPayload).getHolderName());
-            else  if (paymentAccountPayload instanceof SepaInstantAccountPayload)
+            else if (paymentAccountPayload instanceof SepaInstantAccountPayload)
                 return Optional.of(((SepaInstantAccountPayload) paymentAccountPayload).getHolderName());
             else
                 return Optional.<String>empty();

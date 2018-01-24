@@ -21,6 +21,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.Alert;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -121,7 +122,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 Res.get("sendAlertMessageWindow.version")).second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
-        Button sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
+        Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));
         sendButton.setOnAction(e -> {
             final String version = versionInputTextField.getText();
             boolean versionOK = false;
@@ -148,7 +149,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        Button removeAlertMessageButton = new Button(Res.get("sendAlertMessageWindow.remove"));
+        Button removeAlertMessageButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.remove"));
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
@@ -158,7 +159,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

@@ -37,6 +37,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.Contract;
@@ -65,6 +66,7 @@ public class DisputeManager implements PersistedDataHost {
 
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
+    private final WalletsSetup walletsSetup;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
@@ -88,6 +90,7 @@ public class DisputeManager implements PersistedDataHost {
     public DisputeManager(P2PService p2PService,
                           TradeWalletService tradeWalletService,
                           BtcWalletService walletService,
+                          WalletsSetup walletsSetup,
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
@@ -97,6 +100,7 @@ public class DisputeManager implements PersistedDataHost {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
+        this.walletsSetup = walletsSetup;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
@@ -112,13 +116,11 @@ public class DisputeManager implements PersistedDataHost {
         // We get first the message handler called then the onBootstrapped
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isBootstrapped())
-                applyMessages();
+            tryApplyMessages();
         });
         p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            if (p2PService.isBootstrapped())
-                applyMessages();
+            tryApplyMessages();
         });
     }
 
@@ -135,15 +137,24 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        if (p2PService.isBootstrapped())
-            applyMessages();
-        else
-            p2PService.addP2PServiceListener(new BootstrapListener() {
-                @Override
-                public void onBootstrapComplete() {
-                    applyMessages();
-                }
-            });
+        p2PService.addP2PServiceListener(new BootstrapListener() {
+            @Override
+            public void onBootstrapComplete() {
+                tryApplyMessages();
+            }
+        });
+
+        walletsSetup.downloadPercentageProperty().addListener((observable, oldValue, newValue) -> {
+            if (walletsSetup.isDownloadComplete())
+                tryApplyMessages();
+        });
+
+        walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+            if (walletsSetup.hasSufficientPeersForBroadcast())
+                tryApplyMessages();
+        });
+
+        tryApplyMessages();
 
         cleanupDisputes();
     }
@@ -171,6 +182,17 @@ public class DisputeManager implements PersistedDataHost {
                 }
             }
         });
+    }
+
+    private void tryApplyMessages() {
+        if (isReadyForTxBroadcast())
+            applyMessages();
+    }
+
+    private boolean isReadyForTxBroadcast() {
+        return p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
+                walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     private void applyMessages() {

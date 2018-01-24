@@ -29,6 +29,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -64,6 +65,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final BsqValidator bsqValidator;
     private final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
@@ -159,6 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 BsqValidator bsqValidator,
                                 SecurityDepositValidator securityDepositValidator,
                                 P2PService p2PService,
+                                WalletsSetup walletsSetup,
                                 PriceFeedService priceFeedService,
                                 Navigation navigation,
                                 BSFormatter btcFormatter,
@@ -172,6 +175,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
@@ -193,8 +197,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("0.1");
-                        price.set("0.0001");
+                        amount.set("0.0001");
+                        price.set("14029");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -885,8 +889,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.hasAcceptedArbitrators();
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isReadyForTxBroadcast() {
+        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
+    }
+
+    void showNotReadyForTxBroadcastPopups() {
+        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
     }
 
 

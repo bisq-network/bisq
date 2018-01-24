@@ -26,6 +26,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.Tradable;
@@ -37,12 +38,15 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -86,6 +90,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -106,14 +112,24 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsView(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                             TradeManager tradeManager, OpenOfferManager openOfferManager,
-                             ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
-                             BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
-                             DisputeManager disputeManager, Stage stage,
+    private TransactionsView(BtcWalletService btcWalletService,
+                             BsqWalletService bsqWalletService,
+                             P2PService p2PService,
+                             WalletsSetup walletsSetup,
+                             TradeManager tradeManager,
+                             OpenOfferManager openOfferManager,
+                             ClosedTradableManager closedTradableManager,
+                             FailedTradesManager failedTradesManager,
+                             BSFormatter formatter,
+                             Preferences preferences,
+                             TradeDetailsWindow tradeDetailsWindow,
+                             DisputeManager disputeManager,
+                             Stage stage,
                              OfferDetailsWindow offerDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
@@ -128,16 +144,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        dateColumn.setText(Res.get("shared.dateTime"));
-        detailsColumn.setText(Res.get("shared.details"));
-        addressColumn.setText(Res.get("shared.address"));
-        transactionColumn.setText(Res.get("shared.txId", Res.getBaseCurrencyCode()));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        confidenceColumn.setText(Res.get("shared.confirmations", Res.getBaseCurrencyCode()));
-        revertTxColumn.setText(Res.get("shared.revert", Res.getBaseCurrencyCode()));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        transactionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txId", Res.getBaseCurrencyCode())));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        confidenceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations", Res.getBaseCurrencyCode())));
+        revertTxColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.revert", Res.getBaseCurrencyCode())));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.tx.noTxAvailable")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -383,7 +399,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         setGraphic(field);
                                     } else {
-                                        setGraphic(new Label(item.getDetails()));
+                                        setGraphic(new AutoTooltipLabel(item.getDetails()));
                                     }
                                 } else {
                                     setGraphic(null);
@@ -539,7 +555,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     if (confidence != null) {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
-                                                button = new Button(Res.get("funds.tx.revert"));
+                                                button = new AutoTooltipButton(Res.get("funds.tx.revert"));
                                                 setGraphic(button);
                                             }
                                             button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
@@ -565,15 +581,19 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
-        try {
-            btcWalletService.doubleSpendTransaction(txId, () -> {
-                if (tradable != null)
-                    btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            try {
+                btcWalletService.doubleSpendTransaction(txId, () -> {
+                    if (tradable != null)
+                        btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                new Popup<>().information(Res.get("funds.tx.txSent")).show();
-            }, errorMessage -> new Popup<>().warning(errorMessage).show());
-        } catch (Throwable e) {
-            new Popup<>().warning(e.getMessage()).show();
+                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+            } catch (Throwable e) {
+                new Popup<>().warning(e.getMessage()).show();
+            }
+        } else {
+            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 

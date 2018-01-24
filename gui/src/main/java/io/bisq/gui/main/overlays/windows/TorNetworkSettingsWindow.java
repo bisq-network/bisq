@@ -40,6 +40,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.network.p2p.network.DefaultPluggableTransports;
 import javafx.collections.FXCollections;
@@ -115,17 +116,17 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     protected void addCloseButton() {
-        closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+        closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());
 
         if (actionHandlerOptional.isPresent()) {
-            actionButton = new Button(Res.get("shared.shutDown"));
+            actionButton = new AutoTooltipButton(Res.get("shared.shutDown"));
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();
             actionButton.setOnAction(event -> saveAndShutDown());
 
-            Button urlButton = new Button(Res.get("torNetworkSettingWindow.openTorWebPage"));
+            Button urlButton = new AutoTooltipButton(Res.get("torNetworkSettingWindow.openTorWebPage"));
             urlButton.setOnAction(event -> {
                 try {
                     Utilities.openURI(URI.create("https://bridges.torproject.org/bridges"));
@@ -175,7 +176,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void addContent() {
-        gridPane.setStyle("-fx-background-color: #f8f8f8;");
+        gridPane.getStyleClass().add("grid-pane");
 
         Label label = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.info"));
         label.setWrapText(true);

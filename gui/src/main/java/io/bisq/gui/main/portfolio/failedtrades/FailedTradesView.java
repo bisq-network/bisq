@@ -20,12 +20,16 @@ package io.bisq.gui.main.portfolio.failedtrades;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
@@ -50,17 +54,17 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        volumeColumn.setText(Res.get("shared.volume"));
-        marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.offerType"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        tradeIdColumn.setText(Res.get("shared.tradeId"));
-        stateColumn.setText(Res.get("shared.state"));
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
+        stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -125,7 +129,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

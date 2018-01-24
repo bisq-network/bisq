@@ -23,6 +23,8 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.main.overlays.Overlay;
@@ -137,8 +139,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             restoreButton.setOnAction(null);
             seedWordsTextArea.setText("");
             datePicker.setValue(null);
-            seedWordsTextArea.getStyleClass().remove("validation_error");
-            datePicker.getStyleClass().remove("validation_error");
+            seedWordsTextArea.getStyleClass().remove("validation-error");
+            datePicker.getStyleClass().remove("validation-error");
         }
     }
 
@@ -160,7 +162,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        Label label = new Label(Res.get("password.enterPassword"));
+        Label label = new AutoTooltipLabel(Res.get("password.enterPassword"));
         label.setWrapText(true);
         GridPane.setMargin(label, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(label, ++rowIndex);
@@ -177,9 +179,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void addButtons() {
         BusyAnimation busyAnimation = new BusyAnimation(false);
-        Label deriveStatusLabel = new Label();
+        Label deriveStatusLabel = new AutoTooltipLabel();
 
-        unlockButton = new Button(Res.get("shared.unlock"));
+        unlockButton = new AutoTooltipButton(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
@@ -209,14 +211,14 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             }
         });
 
-        forgotPasswordButton = new Button(Res.get("password.forgotPassword"));
+        forgotPasswordButton = new AutoTooltipButton(Res.get("password.forgotPassword"));
         forgotPasswordButton.setOnAction(e -> {
             forgotPasswordButton.setDisable(true);
             unlockButton.setDefaultButton(false);
             showRestoreScreen();
         });
 
-        Button cancelButton = new Button(Res.get("shared.cancel"));
+        Button cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
@@ -244,7 +246,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void showRestoreScreen() {
-        Label headLine2Label = new Label(Res.get("seed.restore.title"));
+        Label headLine2Label = new AutoTooltipLabel(Res.get("seed.restore.title"));
         headLine2Label.setId("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);
@@ -256,7 +258,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Separator separator = new Separator();
         separator.setMouseTransparent(true);
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #ccc;");
+        separator.getStyleClass().add("separator");
         GridPane.setHalignment(separator, HPos.CENTER);
         GridPane.setRowIndex(separator, ++rowIndex);
         GridPane.setColumnSpan(separator, 2);
@@ -266,7 +268,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
         seedWordsTextArea.setPrefHeight(60);
-        seedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+        seedWordsTextArea.getStyleClass().add("text-area");
 
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("seed.creationDate"));
@@ -285,9 +287,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                seedWordsTextArea.getStyleClass().remove("validation_error");
+                seedWordsTextArea.getStyleClass().remove("validation-error");
             } else {
-                seedWordsTextArea.getStyleClass().add("validation_error");
+                seedWordsTextArea.getStyleClass().add("validation-error");
             }
         };
 
@@ -309,8 +311,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         restoreButton.setOnAction(e -> onRestore());
 
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        datePicker.getStyleClass().remove("validation_error");
+        seedWordsTextArea.getStyleClass().remove("validation-error");
+        datePicker.getStyleClass().remove("validation-error");
 
         layout();
     }

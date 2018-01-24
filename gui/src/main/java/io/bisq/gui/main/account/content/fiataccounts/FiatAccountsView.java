@@ -26,6 +26,8 @@ import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.components.paymentmethods.*;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -118,7 +120,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             if (newValue != null)
                 onSelectAccount(newValue);
         };
-        Label placeholder = new Label(Res.get("shared.noAccountsSetupYet"));
+        Label placeholder = new AutoTooltipLabel(Res.get("shared.noAccountsSetupYet"));
         placeholder.setWrapText(true);
         paymentAccountsListView.setPlaceholder(placeholder);
     }
@@ -221,9 +223,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
                 return new ListCell<PaymentAccount>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {

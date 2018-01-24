@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.CompensationRequestVoteItem;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
@@ -171,7 +172,7 @@ public class CompensationViewItem {
         });
         declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
 
-        removeButton = new Button(Res.get("shared.remove"));
+        removeButton = new AutoTooltipButton(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

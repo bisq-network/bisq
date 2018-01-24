@@ -96,7 +96,7 @@ public class FormBuilder {
     }
 
     public static Label addLabel(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = new Label(title);
+        Label label = new AutoTooltipLabel(title);
         GridPane.setRowIndex(label, rowIndex);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(label);
@@ -121,7 +121,7 @@ public class FormBuilder {
     }
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text, double top) {
-        Label label = new Label(text);
+        Label label = new AutoTooltipLabel(text);
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setRowIndex(label, rowIndex);
@@ -178,6 +178,7 @@ public class FormBuilder {
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        GridPane.setHalignment(hyperlinkWithIcon, HPos.LEFT);
         gridPane.getChildren().add(hyperlinkWithIcon);
         return hyperlinkWithIcon;
     }
@@ -342,7 +343,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title, 0);
 
         InputTextField inputTextField = new InputTextField();
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
         HBox hBox = new HBox();
@@ -372,7 +373,7 @@ public class FormBuilder {
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
         HBox hBox = new HBox();
@@ -396,7 +397,7 @@ public class FormBuilder {
         Label label1 = addLabel(gridPane, rowIndex, title1, 0);
 
         InputTextField inputTextField1 = new InputTextField();
-        Label label2 = new Label(title2);
+        Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
         InputTextField inputTextField2 = new InputTextField();
 
@@ -422,7 +423,7 @@ public class FormBuilder {
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
-        Label label2 = new Label(title2);
+        Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
         TextField textField2 = new TextField();
         textField2.setEditable(false);
@@ -449,7 +450,7 @@ public class FormBuilder {
     }
 
     public static Tuple2<Button, CheckBox> addButtonCheckBox(GridPane gridPane, int rowIndex, String buttonTitle, String checkBoxTitle, double top) {
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
         CheckBox checkBox = new CheckBox(checkBoxTitle);
         HBox.setMargin(checkBox, new Insets(6, 0, 0, 0));
@@ -660,7 +661,7 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
         ComboBox comboBox = new ComboBox();
@@ -825,7 +826,7 @@ public class FormBuilder {
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
         Label label = addLabel(gridPane, rowIndex, labelText, top);
 
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 1);
@@ -847,7 +848,7 @@ public class FormBuilder {
     }
 
     public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {
-        Button button = new Button(title);
+        Button button = new AutoTooltipButton(title);
         button.setDefaultButton(true);
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 1);
@@ -882,9 +883,9 @@ public class FormBuilder {
                                                      double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        Button button1 = new Button(title1);
+        Button button1 = new AutoTooltipButton(title1);
         button1.setDefaultButton(true);
-        Button button2 = new Button(title2);
+        Button button2 = new AutoTooltipButton(title2);
         hBox.getChildren().addAll(button1, button2);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
@@ -921,10 +922,10 @@ public class FormBuilder {
                                                              double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        Button button1 = new Button(title1);
+        Button button1 = new AutoTooltipButton(title1);
         button1.setDefaultButton(true);
-        Button button2 = new Button(title2);
-        Button button3 = new Button(title3);
+        Button button2 = new AutoTooltipButton(title2);
+        Button button3 = new AutoTooltipButton(title3);
         hBox.getChildren().addAll(button1, button2, button3);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
@@ -951,12 +952,12 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        Button button = new Button(buttonTitle);
+        Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
         BusyAnimation busyAnimation = new BusyAnimation(false);
 
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(button, busyAnimation, label);
 
@@ -980,7 +981,7 @@ public class FormBuilder {
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label");
 
         HBox box = new HBox();
@@ -997,7 +998,7 @@ public class FormBuilder {
         textField.setEditable(false);
         textField.setFocusTraversable(false);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label-disabled");
 
         HBox box = new HBox();
@@ -1012,7 +1013,7 @@ public class FormBuilder {
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new Label(Res.getBaseCurrencyCode());
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         currency.setId("currency-info-label");
 
         HBox box = new HBox();
@@ -1029,7 +1030,7 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String descriptionText) {
-        Label descriptionLabel = new Label(descriptionText);
+        Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
         descriptionLabel.setPrefWidth(170);
 
