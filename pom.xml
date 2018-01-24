@@ -45,7 +45,6 @@
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>
-        <module>provider</module>
         <module>consensus</module>
         <module>monitor</module>
     </modules>
