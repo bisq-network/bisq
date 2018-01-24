@@ -157,9 +157,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getDate(item));
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -178,7 +178,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
@@ -198,9 +198,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getState(item));
+                                    setGraphic(new AutoTooltipLabel(model.getState(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -220,7 +220,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getAmount(item));
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
                         };
                     }
@@ -239,7 +239,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getPrice(item));
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
                         };
                     }
@@ -259,9 +259,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getVolume(item));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -280,7 +280,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getDirectionLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
                         };
                     }

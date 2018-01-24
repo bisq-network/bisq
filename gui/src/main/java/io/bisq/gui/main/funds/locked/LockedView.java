@@ -217,11 +217,11 @@ public class LockedView extends ActivatableView<VBox, Void> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (getTradable(item).isPresent())
-                                setText(formatter.formatDateTime(getTradable(item).get().getDate()));
+                                setGraphic(new AutoTooltipLabel(formatter.formatDateTime(getTradable(item).get().getDate())));
                             else
-                                setText(Res.get("shared.noDateAvailable"));
+                                setGraphic(new AutoTooltipLabel(Res.get("shared.noDateAvailable")));
                         } else {
-                            setText("");
+                            setGraphic(null);
                         }
                     }
                 };

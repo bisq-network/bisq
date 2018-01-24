@@ -19,7 +19,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
     private final Hyperlink hyperlink;
 
     public AddressWithIconAndDirection(String text, String address, AwesomeIcon awesomeIcon, boolean received) {
-        Label directionIcon = new AutoTooltipLabel();
+        Label directionIcon = new Label();
         directionIcon.setLayoutY(3);
         directionIcon.getStyleClass().add("icon");
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");

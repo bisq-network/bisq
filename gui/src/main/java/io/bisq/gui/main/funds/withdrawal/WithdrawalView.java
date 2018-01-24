@@ -37,6 +37,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -551,7 +552,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             WithdrawalListItem> column) {
                         return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
-                            CheckBox checkBox = new CheckBox();
+                            CheckBox checkBox = new AutoTooltipCheckBox();
 
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {

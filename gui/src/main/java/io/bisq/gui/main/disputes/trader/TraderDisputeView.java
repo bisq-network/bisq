@@ -695,10 +695,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new AutoTooltipLabel();
                         final Label messageLabel = new AutoTooltipLabel();
-                        final Label copyIcon = new AutoTooltipLabel();
+                        final Label copyIcon = new Label();
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
-                        final Label statusIcon = new AutoTooltipLabel();
+                        final Label statusIcon = new Label();
                         final double arrowWidth = 15d;
                         final double attachmentsBoxHeight = 20d;
                         final double border = 10d;
@@ -837,7 +837,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                             getStyleClass().add("message");
                                     }});
                                     item.getAttachments().stream().forEach(attachment -> {
-                                        final Label icon = new AutoTooltipLabel();
+                                        final Label icon = new Label();
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
                                             icon.getStyleClass().add("attachment-icon");
