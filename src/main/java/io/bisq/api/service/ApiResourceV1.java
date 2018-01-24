@@ -125,7 +125,7 @@ public class ApiResourceV1 {
                                        @DefaultValue("all") @QueryParam("status") String status,
                                        @DefaultValue("all") @QueryParam("whose") String whose,
                                        @DefaultValue("0") @QueryParam("start") long start,
-                                       @Range(min = 0, max = 9223372036854775807L) @DefaultValue("9223372036854775807") @QueryParam("end") long end,
+                                       @Range(min = 0, max = 9223372036854775807L) @QueryParam("end") long end,
                                        @DefaultValue("100") @QueryParam("limit") int limit
     ) {
         return bisqProxy.getOfferList();
