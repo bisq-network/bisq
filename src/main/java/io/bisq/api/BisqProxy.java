@@ -341,7 +341,7 @@ public class BisqProxy {
             );
 
             // wait X seconds for a result or timeout
-            if (placeOfferLatch.await(5L, TimeUnit.SECONDS))
+            if (placeOfferLatch.await(10L, TimeUnit.SECONDS))
                 if (errorResult[0] == "")
                     return Optional.empty();
                 else

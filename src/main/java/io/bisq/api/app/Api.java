@@ -29,6 +29,7 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
@@ -49,6 +50,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Api {
     private static final Logger log = LoggerFactory.getLogger(Api.class);
@@ -61,6 +63,7 @@ public class Api {
     private final ApiModule apiModule;
     private final AppSetup appSetup;
     private final User user;
+    private PriceFeedService priceFeedService;
 
     public Api() {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
@@ -107,6 +110,7 @@ public class Api {
         openOfferManager = injector.getInstance(OpenOfferManager.class);
         walletsManager = injector.getInstance(WalletsManager.class);
         walletsSetup = injector.getInstance(WalletsSetup.class);
+        priceFeedService = injector.getInstance(PriceFeedService.class);
         appSetup = injector.getInstance(AppSetupWithP2P.class);
         appSetup.start();
 
@@ -153,6 +157,17 @@ public class Api {
                         }
                     },
                     throwable -> log.error(throwable.toString()));
+            long ts = new Date().getTime();
+            boolean logged[] = {false};
+            priceFeedService.setCurrencyCodeOnInit();
+            priceFeedService.requestPriceFeed(price -> {
+                        if (!logged[0]) {
+                            log.info("We received data from the price relay after {} ms.",
+                                    (new Date().getTime() - ts));
+                            logged[0] = true;
+                        }
+                    },
+                    (errorMessage, throwable) -> log.error("requestPriceFeed failed:" + errorMessage));
 
             Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
