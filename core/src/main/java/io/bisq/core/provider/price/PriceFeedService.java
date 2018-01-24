@@ -55,7 +55,9 @@ public class PriceFeedService {
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final String baseCurrencyCode;
     private PriceProvider priceProvider;
+    @Nullable
     private Consumer<Double> priceConsumer;
+    @Nullable
     private FaultHandler faultHandler;
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
@@ -134,8 +136,8 @@ public class PriceFeedService {
                 retryCounter++;
                 request(true);
             }, retryCounter);
-
-            this.faultHandler.handleFault(errorMessage, throwable);
+            if (faultHandler != null)
+                faultHandler.handleFault(errorMessage, throwable);
         });
     }
 
@@ -250,7 +252,8 @@ public class PriceFeedService {
             } else {
                 String errorMessage = "We don't have a price for " + currencyCode + ". priceProvider=" + priceProvider;
                 log.debug(errorMessage);
-                faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
+                if (faultHandler != null)
+                    faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
         }
         updateCounter.set(updateCounter.get() + 1);
