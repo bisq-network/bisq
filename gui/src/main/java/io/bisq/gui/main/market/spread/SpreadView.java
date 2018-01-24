@@ -36,6 +36,7 @@ import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import java.math.BigDecimal;
 
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
@@ -88,7 +89,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
-        spreadColumn.setComparator((o1, o2) -> o1.priceSpread != null && o2.priceSpread != null ? formatter.formatPriceWithCode(o1.priceSpread).compareTo(formatter.formatPriceWithCode(o2.priceSpread)) : 0);
+        spreadColumn.setComparator((o1, o2) -> {
+            BigDecimal spreadO1 = o1.priceSpread != null ? BigDecimal.valueOf(o1.priceSpread.getValue()) : new BigDecimal(0);
+            BigDecimal spreadO2 = o2.priceSpread != null ? BigDecimal.valueOf(o2.priceSpread.getValue()) : new BigDecimal(0);
+            return spreadO1.compareTo(spreadO2);
+        });
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
