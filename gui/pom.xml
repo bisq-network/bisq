@@ -76,7 +76,7 @@
                                     <artifactId>bcpg-jdk15on</artifactId>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                 </artifactItem>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -347,7 +347,7 @@
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>8.0.6_20</version>
+            <version>9.0.0</version>
         </dependency>
 
         <dependency>
