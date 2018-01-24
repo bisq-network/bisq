@@ -70,14 +70,14 @@ public class AddressTextField extends AnchorPane {
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
-        Label extWalletIcon = new AutoTooltipLabel();
+        Label extWalletIcon = new Label();
         extWalletIcon.setLayoutY(3);
         extWalletIcon.getStyleClass().addAll("icon", "highlight");
         extWalletIcon.setTooltip(new Tooltip(tooltipText));
         AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
         extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
-        Label copyIcon = new AutoTooltipLabel();
+        Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
         Tooltip.install(copyIcon, new Tooltip(Res.get("addressTextField.copyToClipboard")));

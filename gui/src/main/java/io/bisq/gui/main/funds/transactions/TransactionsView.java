@@ -365,9 +365,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(item.getDateString());
+                                    setGraphic(new AutoTooltipLabel(item.getDateString()));
                                 } else {
-                                    setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -497,9 +497,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(item.getAmount());
+                                    setGraphic(new AutoTooltipLabel(item.getAmount()));
                                 } else {
-                                    setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };

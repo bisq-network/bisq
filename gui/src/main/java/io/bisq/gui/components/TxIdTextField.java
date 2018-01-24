@@ -73,7 +73,7 @@ public class TxIdTextField extends AnchorPane {
         progressIndicatorTooltip = new Tooltip("-");
         txConfidenceIndicator.setTooltip(progressIndicatorTooltip);
 
-        copyIcon = new AutoTooltipLabel();
+        copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
         copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
@@ -82,7 +82,7 @@ public class TxIdTextField extends AnchorPane {
 
         Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
 
-        blockExplorerIcon = new AutoTooltipLabel();
+        blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().addAll("icon", "highlight");
         blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);

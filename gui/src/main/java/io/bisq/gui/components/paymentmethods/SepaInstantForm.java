@@ -24,6 +24,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.SepaInstantAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.SepaInstantAccountPayload;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
@@ -240,7 +241,7 @@ public class SepaInstantForm extends PaymentMethodForm {
         dataProvider.stream().forEach(country ->
         {
             final String countryCode = country.code;
-            CheckBox checkBox = new CheckBox(countryCode);
+            CheckBox checkBox = new AutoTooltipCheckBox(countryCode);
             checkBox.setUserData(countryCode);
             checkBoxList.add(checkBox);
             checkBox.setMouseTransparent(!isEditable);

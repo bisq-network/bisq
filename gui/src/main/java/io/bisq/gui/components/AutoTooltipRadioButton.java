@@ -1,30 +1,29 @@
 package io.bisq.gui.components;
 
-import com.sun.javafx.scene.control.skin.LabelSkin;
-import javafx.scene.control.Label;
+import com.sun.javafx.scene.control.skin.RadioButtonSkin;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Skin;
 
 import static io.bisq.gui.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipLabel extends Label {
+public class AutoTooltipRadioButton extends RadioButton {
 
-    public AutoTooltipLabel() {
+    public AutoTooltipRadioButton() {
         super();
     }
 
-    public AutoTooltipLabel(String text) {
+    public AutoTooltipRadioButton(String text) {
         super(text);
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutoTooltipLabelSkin(this);
+        return new AutoTooltipRadioButtonSkin(this);
     }
 
-    private class AutoTooltipLabelSkin extends LabelSkin {
-
-        public AutoTooltipLabelSkin(Label label) {
-            super(label);
+    private class AutoTooltipRadioButtonSkin extends RadioButtonSkin {
+        public AutoTooltipRadioButtonSkin(RadioButton radioButton) {
+            super(radioButton);
         }
 
         @Override

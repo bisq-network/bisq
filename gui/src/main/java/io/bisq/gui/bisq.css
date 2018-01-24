@@ -398,6 +398,10 @@ textfield */
     -fx-alignment: center;
 }
 
+#addressColumn {
+    -fx-alignment: left;
+}
+
 .table-view .column-header .label {
     -fx-alignment: center;
 }
