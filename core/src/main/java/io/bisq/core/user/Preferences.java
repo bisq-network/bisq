@@ -63,7 +63,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             "https://explorer.bisq.network/testnet/Address.html?addr=");
 
     private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx", "https://live.blockcypher.com/ltc/address"),
+            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx/", "https://live.blockcypher.com/ltc/address/"),
             new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
             new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
             new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
