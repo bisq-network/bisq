@@ -290,17 +290,17 @@ public class BsqParser {
     // Not thread safe wrt bsqBlockChain
     // Check if any of the inputs are BSQ inputs and update BsqBlockChain state accordingly
     private boolean isBsqTxUnsafe(int blockHeight, Tx tx) {
-        log.error("isbsqtx tx={}", tx.toString());
+        log.error("isBsqTxUnsafe tx={}", tx.toString());
 
         boolean isBsqTx = false;
-        long availableBsq = 0;
+        long availableBsqFromInputs = 0;
         // For each input in tx
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
-            availableBsq += getAvailableBsqUnsafe(blockHeight, tx, inputIndex);
+            availableBsqFromInputs += getBsqFromInput(blockHeight, tx, inputIndex);
         }
 
         // If we have an input with BSQ we iterate the outputs
-        if (availableBsq > 0) {
+        if (availableBsqFromInputs > 0) {
             bsqBlockChain.addTxToMap(tx);
             isBsqTx = true;
 
@@ -314,14 +314,14 @@ public class BsqParser {
 
                 // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
                 if (txOutput.getOpReturnData() == null) {
-                    if (availableBsq >= txOutputValue && txOutputValue != 0) {
+                    if (availableBsqFromInputs >= txOutputValue && txOutputValue != 0) {
                         // We are spending available tokens
-                        makeBsqUnsafe(txOutput, tx);
-                        availableBsq -= txOutputValue;
+                        markOutputAsBsq(txOutput, tx);
+                        availableBsqFromInputs -= txOutputValue;
                         bsqOutput = txOutput;
-                        if (availableBsq == 0)
+                        if (availableBsqFromInputs == 0)
                             log.debug("We don't have anymore BSQ to spend");
-                    } else if (availableBsq > 0 && compRequestIssuanceOutputCandidate == null) {
+                    } else if (availableBsqFromInputs > 0 && compRequestIssuanceOutputCandidate == null) {
                         // availableBsq must be > 0 as we expect a bsqFee for an compRequestIssuanceOutput
                         // We store the btc output as it might be the issuance output from a compensation request which might become BSQ after voting.
                         compRequestIssuanceOutputCandidate = txOutput;
@@ -337,15 +337,15 @@ public class BsqParser {
                     }
                 } else {
                     // availableBsq is used as bsqFee paid to miners (burnt) if OP-RETURN is used
-                    opReturnVerification.processDaoOpReturnData(tx, index, availableBsq, blockHeight, compRequestIssuanceOutputCandidate, bsqOutput);
+                    opReturnVerification.processDaoOpReturnData(tx, index, availableBsqFromInputs, blockHeight, compRequestIssuanceOutputCandidate, bsqOutput);
                 }
             }
 
-            if (availableBsq > 0) {
+            if (availableBsqFromInputs > 0) {
                 log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                        availableBsq,
+                        availableBsqFromInputs,
                         tx.toString());
-                tx.setBurntFee(availableBsq);
+                tx.setBurntFee(availableBsqFromInputs);
                 if (tx.getTxType() == null)
                     tx.setTxType(TxType.PAY_TRADE_FEE);
             }
@@ -357,8 +357,9 @@ public class BsqParser {
         return isBsqTx;
     }
 
-    private long getAvailableBsqUnsafe(int blockHeight, Tx tx, int inputIndex) {
-        long availableBsq = 0;
+    // Not thread safe wrt bsqBlockChain
+    private long getBsqFromInput(int blockHeight, Tx tx, int inputIndex) {
+        long bsqFromInput = 0;
         TxInput input = tx.getInputs().get(inputIndex);
         // TODO check if Tuple indexes of inputs outputs are not messed up...
         // Get spendable BSQ output for txidindextuple... (get output used as input in tx if it's spendable BSQ)
@@ -370,12 +371,13 @@ public class BsqParser {
             bsqBlockChain.removeUnspentTxOutput(spentTxOutput);
             spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
             input.setConnectedTxOutput(spentTxOutput);
-            availableBsq = spentTxOutput.getValue();
+            bsqFromInput = spentTxOutput.getValue();
         }
-        return availableBsq;
+        return bsqFromInput;
     }
 
-    private void makeBsqUnsafe(TxOutput txOutput, Tx tx) {
+    // Not thread safe wrt bsqBlockChain
+    private void markOutputAsBsq(TxOutput txOutput, Tx tx) {
         // We are spending available tokens
         txOutput.setVerified(true);
         txOutput.setUnspent(true);
