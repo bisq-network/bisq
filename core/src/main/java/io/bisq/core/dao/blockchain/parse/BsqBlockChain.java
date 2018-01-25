@@ -87,7 +87,7 @@ public class BsqBlockChain implements PersistableEnvelope {
     private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1227630;
 
     // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "5d946044ea547df121b49c07274dcf37f5a554f86c2ce65c8b43625acc01c93b";
+    private static final String BTC_REG_TEST_GENESIS_TX_ID = "5116d4f9107ce2b6bacacf750037f1b51fa302a9c96fe20c0d68b35728182a38";
     private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 200;
 
     public static int getGenesisHeight() {
@@ -237,8 +237,8 @@ public class BsqBlockChain implements PersistableEnvelope {
     // Atomic access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public <T> T callFunctionWithReadWriteLock(Supplier<T> supplier) {
-        return lock.readWrite(supplier::get);
+    public <T> T callFunctionWithWriteLock(Supplier<T> supplier) {
+        return lock.write(supplier::get);
     }
 
 
@@ -527,7 +527,7 @@ public class BsqBlockChain implements PersistableEnvelope {
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
                     final BsqBlockChain cloned = getClone(snapshotCandidate);
-                    checkNotNull(storage, "storage must nto be null");
+                    checkNotNull(storage, "storage must not be null");
                     storage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!
                     log.info("Saved snapshotCandidate to Disc at height " + cloned.chainHeadHeight);
