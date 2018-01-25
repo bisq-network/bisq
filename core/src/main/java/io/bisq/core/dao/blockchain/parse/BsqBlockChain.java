@@ -238,7 +238,7 @@ public class BsqBlockChain implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public <T> T callFunctionWithWriteLock(Supplier<T> supplier) {
-        return lock.write(supplier::get);
+        return lock.write(supplier);
     }
 
 

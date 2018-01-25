@@ -41,10 +41,10 @@ public class FunctionalReadWriteLock {
         }
     }
 
-    public <T> T write(Supplier<T> block) {
+    public <T> T write(Supplier<T> supplier) {
         writeLock.lock();
         try {
-            return block.get();
+            return supplier.get();
         } finally {
             writeLock.unlock();
         }
