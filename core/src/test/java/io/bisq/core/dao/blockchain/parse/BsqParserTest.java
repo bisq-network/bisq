@@ -28,6 +28,8 @@ public class BsqParserTest {
     PersistenceProtoResolver persistenceProtoResolver;
     @Injectable
     File storageDir;
+    @Injectable
+    String manualBsqGenesisId;
 
     @Injectable
     RpcService rpcService;
