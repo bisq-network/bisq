@@ -25,6 +25,8 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.app.Version;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.ProxySocketFactory;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
@@ -104,6 +106,8 @@ public class WalletConfig extends AbstractIdleService {
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
+    @Getter
+    @Setter
     private int minBroadcastConnections;
 
     @Nullable
@@ -182,10 +186,6 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    public void setMinBroadcastConnections(int minBroadcastConnections) {
-        this.minBroadcastConnections = minBroadcastConnections;
-    }
-
     private PeerGroup createPeerGroup() {
         // no proxy case.
         if (socks5Proxy == null) {
@@ -218,18 +218,6 @@ public class WalletConfig extends AbstractIdleService {
         checkState(state() == State.NEW, "Cannot call after startup");
         this.peerAddresses = addresses;
         return this;
-    }
-
-    /**
-     * Will only connect to localhost. Cannot be called after startup.
-     */
-    public WalletConfig connectToLocalHost() {
-        try {
-            return setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
-        } catch (UnknownHostException e) {
-            // Borked machine with no loopback adapter configured properly.
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -473,6 +461,17 @@ public class WalletConfig extends AbstractIdleService {
             }
         } catch (BlockStoreException e) {
             throw new IOException(e);
+        }
+    }
+
+    void setPeerNodesForLocalHost() {
+        try {
+            setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
+        } catch (UnknownHostException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            // Borked machine with no loopback adapter configured properly.
+            throw new RuntimeException(e);
         }
     }
 

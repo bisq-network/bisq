@@ -26,6 +26,9 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
@@ -114,7 +117,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 Res.get("shared.offers"),
                 model.preferences));
 
-        Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
+        Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
@@ -391,7 +394,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // amount
-        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        TableColumn<OfferListItem, OfferListItem> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -414,7 +417,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // Lets remove that as it is not really relevant and seems to be confusing to some users
         // accumulated
-       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
+       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new AutoTooltipTableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
         accumulatedColumn.setMinWidth(100);
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -448,16 +451,16 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         }
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        Label titleLabel = new Label();
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
+        Label titleLabel = new AutoTooltipLabel();
+        titleLabel.getStyleClass().add("table-title");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == OfferPayload.Direction.SELL;
-        Button button = new Button();
+        Button button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);

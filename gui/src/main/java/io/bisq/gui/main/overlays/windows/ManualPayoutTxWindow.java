@@ -22,9 +22,12 @@ import io.bisq.common.UserThread;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.TradeWalletService;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.util.GUIUtil;
+import io.bisq.network.p2p.P2PService;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import org.bitcoinj.core.AddressFormatException;
@@ -35,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 
@@ -42,14 +46,19 @@ import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(ManualPayoutTxWindow.class);
     private final TradeWalletService tradeWalletService;
+    private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ManualPayoutTxWindow(TradeWalletService tradeWalletService) {
+    @Inject
+    public ManualPayoutTxWindow(TradeWalletService tradeWalletService, P2PService p2PService, WalletsSetup walletsSetup) {
         this.tradeWalletService = tradeWalletService;
+        this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         type = Type.Attention;
     }
 
@@ -156,27 +165,31 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             }
         };
         onAction(() -> {
-            try {
-                tradeWalletService.emergencySignAndPublishPayoutTx(depositTxHex.getText(),
-                        Coin.parseCoin(buyerPayoutAmount.getText()),
-                        Coin.parseCoin(sellerPayoutAmount.getText()),
-                        Coin.parseCoin(arbitratorPayoutAmount.getText()),
-                        Coin.parseCoin(txFee.getText()),
-                        buyerAddressString.getText(),
-                        sellerAddressString.getText(),
-                        arbitratorAddressString.getText(),
-                        buyerPrivateKeyAsHex.getText(),
-                        sellerPrivateKeyAsHex.getText(),
-                        arbitratorPrivateKeyAsHex.getText(),
-                        buyerPubKeyAsHex.getText(),
-                        sellerPubKeyAsHex.getText(),
-                        arbitratorPubKeyAsHex.getText(),
-                        P2SHMultiSigOutputScript.getText(),
-                        callback);
-            } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
+            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+                try {
+                    tradeWalletService.emergencySignAndPublishPayoutTx(depositTxHex.getText(),
+                            Coin.parseCoin(buyerPayoutAmount.getText()),
+                            Coin.parseCoin(sellerPayoutAmount.getText()),
+                            Coin.parseCoin(arbitratorPayoutAmount.getText()),
+                            Coin.parseCoin(txFee.getText()),
+                            buyerAddressString.getText(),
+                            sellerAddressString.getText(),
+                            arbitratorAddressString.getText(),
+                            buyerPrivateKeyAsHex.getText(),
+                            sellerPrivateKeyAsHex.getText(),
+                            arbitratorPrivateKeyAsHex.getText(),
+                            buyerPubKeyAsHex.getText(),
+                            sellerPubKeyAsHex.getText(),
+                            arbitratorPubKeyAsHex.getText(),
+                            P2SHMultiSigOutputScript.getText(),
+                            callback);
+                } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
+                }
+            } else {
+                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

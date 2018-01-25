@@ -51,7 +51,7 @@ public class TableGroupHeadline extends Pane {
         bg.prefWidthProperty().bind(widthProperty());
         bg.prefHeightProperty().bind(heightProperty());
 
-        label = new Label();
+        label = new AutoTooltipLabel();
         label.textProperty().bind(text);
         label.setLayoutX(8);
         label.setPadding(new Insets(-8, 7, 0, 5));
@@ -67,6 +67,7 @@ public class TableGroupHeadline extends Pane {
     private void setActive() {
         setId("titled-group-bg-active");
         label.setId("titled-group-bg-label-active");
+        label.getStyleClass().add("highlight");
     }
 
     public String getText() {

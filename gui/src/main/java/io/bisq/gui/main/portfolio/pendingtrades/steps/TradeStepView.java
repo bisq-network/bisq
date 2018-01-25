@@ -215,13 +215,13 @@ public abstract class TradeStepView extends AnchorPane {
             if (remainingTime != null) {
                 timeLeftTextField.setText(remainingTime);
                 if (model.showWarning() || model.showDispute()) {
-                    timeLeftTextField.setStyle("-fx-text-fill: -bs-error-red");
-                    timeLeftProgressBar.setStyle("-fx-accent: -bs-error-red;");
+                    timeLeftTextField.getStyleClass().add("error-text");
+                    timeLeftProgressBar.getStyleClass().add("error");
                 }
             } else {
                 timeLeftTextField.setText("Trade not completed in time (" + model.getDateForOpenDispute() + ")");
-                timeLeftTextField.setStyle("-fx-text-fill: -bs-error-red");
-                timeLeftProgressBar.setStyle("-fx-accent: -bs-error-red;");
+                timeLeftTextField.getStyleClass().add("error-text");
+                timeLeftProgressBar.getStyleClass().add("error");
             }
         }
     }

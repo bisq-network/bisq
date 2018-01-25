@@ -28,6 +28,7 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.ChangeBelowDustException;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -38,6 +39,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -68,9 +70,10 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
+    private final WalletsSetup walletsSetup;
+    private final P2PService p2PService;
     private final FeeService feeService;
     private final CompensationRequestManager compensationRequestManager;
-    private final P2PService p2PService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final PublicKey p2pStorageSignaturePubKey;
@@ -81,14 +84,21 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
-                                          CompensationRequestManager compensationRequestManager, P2PService p2PService,
-                                          KeyRing keyRing, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    private CreateCompensationRequestView(BsqWalletService bsqWalletService,
+                                          BtcWalletService btcWalletService,
+                                          WalletsSetup walletsSetup,
+                                          P2PService p2PService,
+                                          FeeService feeService,
+                                          CompensationRequestManager compensationRequestManager,
+                                          KeyRing keyRing,
+                                          BSFormatter btcFormatter,
+                                          BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.walletsSetup = walletsSetup;
+        this.p2PService = p2PService;
         this.feeService = feeService;
         this.compensationRequestManager = compensationRequestManager;
-        this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -108,7 +118,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
         compensationRequestDisplay.fillWithMock();
 
         createButton.setOnAction(event -> {
-            if (p2PService.isBootstrapped()) {
+            // TODO break up in methods
+            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 NodeAddress nodeAddress = p2PService.getAddress();
                 checkNotNull(nodeAddress, "nodeAddress must not be null");
                 CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(
@@ -211,7 +222,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     new Popup<>().warning(e.toString()).show();
                 }
             } else {
-                new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

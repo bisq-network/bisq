@@ -33,6 +33,8 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
@@ -238,7 +240,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addDateColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.dateTime"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.dateTime"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
         column.setMaxWidth(column.getMinWidth() + 20);
@@ -272,7 +274,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addTxIdColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.txId"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.txId"));
+
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
@@ -308,7 +311,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addAddressColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.address"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.address"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
@@ -356,7 +359,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                                     break;
                                             }
 
-                                            label = new Label(labelString);
+                                            label = new AutoTooltipLabel(labelString);
                                             setGraphic(label);
                                         } else {
                                             String addressString = item.getAddress();
@@ -367,7 +370,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             setGraphic(field);
                                         }
                                     } else {
-                                        label = new Label(labelString);
+                                        label = new AutoTooltipLabel(labelString);
                                         setGraphic(label);
                                     }
                                 } else {
@@ -384,7 +387,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addAmountColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(120);
         column.setMaxWidth(column.getMinWidth());
 
@@ -414,7 +417,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addConfidenceColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.confirmations"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.confirmations"));
         column.setMinWidth(130);
         column.setMaxWidth(column.getMinWidth());
 
@@ -444,7 +447,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addTxTypeColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("dao.wallet.tx.type"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("dao.wallet.tx.type"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(70);
         column.setMaxWidth(column.getMinWidth());
@@ -515,7 +518,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             break;
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
-                                    label.getStyleClass().add(style);
+                                    label.getStyleClass().addAll("icon", style);
                                     label.setTooltip(new Tooltip(toolTipText));
                                     if (doRotate)
                                         label.setRotate(180);

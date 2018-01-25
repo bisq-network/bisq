@@ -258,10 +258,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         return p2PService.isBootstrapped();
     }
 
-    boolean hasSufficientPeersForBroadcast() {
-        return walletsSetup.hasSufficientPeersForBroadcast();
-    }
-
     TradeCurrency getSelectedTradeCurrency() {
         return selectedTradeCurrency;
     }

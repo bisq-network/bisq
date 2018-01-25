@@ -29,6 +29,9 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
+import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
@@ -116,7 +119,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     @Override
     public void initialize() {
         root.setDividerPositions(0.3, 0.7);
-        root.setStyle("-fx-background-insets: 0, 0 0 0 0");
+        root.getStyleClass().add("compensation-root");
         AnchorPane topAnchorPane = new AnchorPane();
         root.getItems().add(topAnchorPane);
 
@@ -158,7 +161,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setMinHeight(90);
         GridPane.setRowIndex(tableView, ++gridRow);
         GridPane.setColumnSpan(tableView, 2);
@@ -385,7 +388,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createColumns() {
-        TableColumn<CompensationRequestListItem, CompensationRequestListItem> dateColumn = new TableColumn<CompensationRequestListItem, CompensationRequestListItem>(Res.get("shared.dateTime")) {
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> dateColumn = new AutoTooltipTableColumn<CompensationRequestListItem, CompensationRequestListItem>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -415,7 +418,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
-        TableColumn<CompensationRequestListItem, CompensationRequestListItem> nameColumn = new TableColumn<>(Res.get("shared.name"));
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>, TableCell<CompensationRequestListItem,
@@ -438,7 +441,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         nameColumn.setComparator((o1, o2) -> o1.getCompensationRequest().getPayload().getName().compareTo(o2.getCompensationRequest().getPayload().getName()));
         tableView.getColumns().add(nameColumn);
 
-        TableColumn<CompensationRequestListItem, CompensationRequestListItem> uidColumn = new TableColumn<>(Res.get("shared.id"));
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         uidColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>, TableCell<CompensationRequestListItem,

@@ -53,10 +53,30 @@ public class OfferBook {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
             public void onAdded(Offer offer) {
-                OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                if (!isOfferWithIdInList(offer)) {
+                // We get onAdded called every time a new ProtectedStorageEntry is received.
+                // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
+                // We filter here to only add new offers if the same offer (using equals) was not already added.
+                boolean hasSameOffer = offerBookListItems.stream()
+                        .filter(item -> item.getOffer().equals(offer))
+                        .findAny()
+                        .isPresent();
+                if (!hasSameOffer) {
+                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
+                    // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+                    // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
+                    Optional<OfferBookListItem> candidateWithSameId = offerBookListItems.stream()
+                            .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                            .findAny();
+                    if (candidateWithSameId.isPresent()) {
+                        log.warn("We had an old offer in the list with the same Offer ID. Might be that the state or errorMessage was different. " +
+                                "old offerBookListItem={}, new offerBookListItem={}", candidateWithSameId.get(), offerBookListItem);
+                        offerBookListItems.remove(candidateWithSameId.get());
+                    }
+
                     offerBookListItems.add(offerBookListItem);
                     Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
+                }else{
+                    log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
                 }
             }
 
@@ -67,15 +87,13 @@ public class OfferBook {
 
                 // clean up possible references in openOfferManager
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-                Optional<OfferBookListItem> candidate = offerBookListItems.stream()
+                // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+                Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
                         .filter(item -> item.getOffer().getId().equals(offer.getId()))
                         .findAny();
-                if (candidate.isPresent()) {
-                    OfferBookListItem item = candidate.get();
-                    if (offerBookListItems.contains(item)) {
-                        offerBookListItems.remove(item);
-                        Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
-                    }
+                if (candidateToRemove.isPresent()) {
+                    offerBookListItems.remove(candidateToRemove.get());
+                    Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
                 }
             }
         });
@@ -91,8 +109,6 @@ public class OfferBook {
     }
 
     public void fillOfferBookListItems() {
-        log.debug("fillOfferBookListItems");
-
         try {
             // setAll causes sometimes an UnsupportedOperationException
             // Investigate why....

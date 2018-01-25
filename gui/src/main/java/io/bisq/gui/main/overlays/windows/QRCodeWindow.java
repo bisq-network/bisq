@@ -1,6 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -51,7 +52,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         gridPane.getChildren().add(qrCodeImageView);
 
         String request = bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
-        Label infoLabel = new Label(Res.get("qRCodeWindow.request", request));
+        Label infoLabel = new AutoTooltipLabel(Res.get("qRCodeWindow.request", request));
         infoLabel.setMouseTransparent(true);
         infoLabel.setWrapText(true);
         infoLabel.setId("popup-qr-code-info");

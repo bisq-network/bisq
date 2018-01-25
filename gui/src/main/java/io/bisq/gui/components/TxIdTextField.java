@@ -75,7 +75,7 @@ public class TxIdTextField extends AnchorPane {
 
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
-        copyIcon.getStyleClass().add("copy-icon");
+        copyIcon.getStyleClass().addAll("icon", "highlight");
         copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
@@ -83,7 +83,7 @@ public class TxIdTextField extends AnchorPane {
         Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
 
         blockExplorerIcon = new Label();
-        blockExplorerIcon.getStyleClass().add("external-link-icon");
+        blockExplorerIcon.getStyleClass().addAll("icon", "highlight");
         blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
         blockExplorerIcon.setMinWidth(20);

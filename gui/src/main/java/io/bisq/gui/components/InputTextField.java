@@ -172,7 +172,7 @@ public class InputTextField extends TextField {
 
 
     private static void createErrorPopOver(String errorMessage) {
-        Label errorLabel = new Label(errorMessage);
+        Label errorLabel = new AutoTooltipLabel(errorMessage);
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
         errorLabel.setOnMouseClicked(e -> hideErrorMessageDisplay());

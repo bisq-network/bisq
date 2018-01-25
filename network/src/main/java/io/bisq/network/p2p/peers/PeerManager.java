@@ -272,7 +272,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
 
         if (size > maxConnections) {
-            log.info("We have too many connections open.\n\t" +
+            log.info("We have too many connections open. " +
                     "Lets try first to remove the inbound connections of type PEER.");
             List<Connection> candidates = allConnections.stream()
                     .filter(e -> e instanceof InboundConnection)
@@ -321,7 +321,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             } else {
                 log.warn("No candidates found to remove (That case should not be possible as we use in the " +
                         "last case all connections).\n\t" +
-                        "allConnections=", allConnections);
+                        "allConnections={}", allConnections);
                 return false;
             }
         } else {
@@ -455,7 +455,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 result.append("\n------------------------------------------------------------\n");
                 log.debug(result.toString());
             }
-            log.info("Number of reported peers: {}", reportedPeers.size());
+            log.debug("Number of reported peers: {}", reportedPeers.size());
         }
     }
 

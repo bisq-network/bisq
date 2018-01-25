@@ -23,6 +23,8 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.CompensationRequestVoteItem;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
@@ -144,10 +146,10 @@ public class CompensationViewItem {
 
         });
 
-        acceptCheckBox = new CheckBox(Res.get("shared.accept"));
+        acceptCheckBox = new AutoTooltipCheckBox(Res.get("shared.accept"));
         HBox.setMargin(acceptCheckBox, new Insets(5, 0, 0, 0));
 
-        declineCheckBox = new CheckBox(Res.get("shared.decline"));
+        declineCheckBox = new AutoTooltipCheckBox(Res.get("shared.decline"));
         HBox.setMargin(declineCheckBox, new Insets(5, 0, 0, 0));
 
 
@@ -177,7 +179,7 @@ public class CompensationViewItem {
         });
         declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
 
-        removeButton = new Button(Res.get("shared.remove"));
+        removeButton = new AutoTooltipButton(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

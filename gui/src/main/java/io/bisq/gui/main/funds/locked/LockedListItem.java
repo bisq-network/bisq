@@ -23,6 +23,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.util.BSFormatter;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
@@ -58,7 +59,7 @@ class LockedListItem {
         }
 
         // balance
-        balanceLabel = new Label();
+        balanceLabel = new AutoTooltipLabel();
         balanceListener = new BalanceListener(getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {

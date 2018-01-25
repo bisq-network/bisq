@@ -60,6 +60,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewLoader;
 import io.bisq.gui.common.view.guice.InjectorViewFactory;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -266,10 +267,8 @@ public class BisqApp extends Application {
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
-                        TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                        BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
-                        if (walletService.isWalletReady())
-                            new ManualPayoutTxWindow(tradeWalletService).show();
+                        if (injector.getInstance(BtcWalletService.class).isWalletReady())
+                            injector.getInstance(ManualPayoutTxWindow.class).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (DevEnv.DEV_MODE) {
@@ -399,7 +398,7 @@ public class BisqApp extends Application {
     }
 
     private void showFPSWindow() {
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         EventStreams.animationTicks()
                 .latestN(100)
                 .map(ticks -> {
