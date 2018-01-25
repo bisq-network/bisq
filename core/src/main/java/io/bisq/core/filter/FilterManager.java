@@ -142,7 +142,7 @@ public class FilterManager {
 
         p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
-            public void onRequestingDataCompleted() {
+            public void onDataReceived() {
                 // We should have received all data at that point and if the filers was not set we
                 // clean up as it might be that we missed the filter remove message if we have not been online.
                 UserThread.runAfter(() -> {
@@ -160,7 +160,7 @@ public class FilterManager {
             }
 
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
             }
 
             @Override

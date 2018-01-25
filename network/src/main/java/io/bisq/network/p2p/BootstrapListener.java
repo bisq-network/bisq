@@ -23,11 +23,11 @@ public abstract class BootstrapListener implements P2PServiceListener {
     }
 
     @Override
-    public void onRequestingDataCompleted() {
+    public void onDataReceived() {
     }
 
     @Override
-    abstract public void onBootstrapComplete();
+    abstract public void onUpdatedDataReceived();
 
     @Override
     public void onRequestCustomBridges() {

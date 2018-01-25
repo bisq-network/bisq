@@ -311,7 +311,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onUpdatedDataReceived() {
         if (!isBootstrapped) {
             isBootstrapped = true;
-            p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
+            p2pServiceListeners.stream().forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
         }
     }
@@ -328,7 +328,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onDataReceived() {
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onRequestingDataCompleted);
+        p2pServiceListeners.stream().forEach(P2PServiceListener::onDataReceived);
     }
 
 

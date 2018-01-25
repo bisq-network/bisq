@@ -138,8 +138,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
-                public void onBootstrapComplete() {
-                    OpenOfferManager.this.onBootstrapComplete();
+                public void onUpdatedDataReceived() {
+                    onBootstrapComplete();
                 }
             });
         }

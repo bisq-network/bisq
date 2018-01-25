@@ -149,12 +149,12 @@ public class ArbitratorManager {
         if (user.getRegisteredArbitrator() != null) {
             P2PService p2PService = arbitratorService.getP2PService();
             if (p2PService.isBootstrapped())
-                isBootstrapped();
+                startRepublishArbitrator();
             else
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
-                    public void onBootstrapComplete() {
-                        isBootstrapped();
+                    public void onUpdatedDataReceived() {
+                        startRepublishArbitrator();
                     }
                 });
         }
@@ -164,7 +164,7 @@ public class ArbitratorManager {
         updateArbitratorMap();
     }
 
-    private void isBootstrapped() {
+    private void startRepublishArbitrator() {
         if (republishArbitratorTimer == null) {
             republishArbitratorTimer = UserThread.runPeriodically(this::republishArbitrator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
             UserThread.runAfter(this::republishArbitrator, REPEATED_REPUBLISH_AT_STARTUP_SEC);

@@ -429,7 +429,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onRequestingDataCompleted() {
+        public void onDataReceived() {
             // preliminary data not used in single seed node
         }
 
@@ -444,7 +444,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onBootstrapComplete() {
+        public void onUpdatedDataReceived() {
             // not used in single seed node
         }
     }
@@ -461,7 +461,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onRequestingDataCompleted() {
+        public void onDataReceived() {
             // preliminary data received
             countDownAndPrint(prelimDataLatch, 'p');
         }
@@ -477,7 +477,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onBootstrapComplete() {
+        public void onUpdatedDataReceived() {
             // peer bootstrapped
             countDownAndPrint(bootstrapLatch, 'b');
         }
@@ -780,7 +780,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onRequestingDataCompleted() {
+        public void onDataReceived() {
         }
 
         @Override
@@ -792,7 +792,7 @@ public class NetworkStressTest {
         }
 
         @Override
-        public void onBootstrapComplete() {
+        public void onUpdatedDataReceived() {
             startLatch.countDown();
         }
 

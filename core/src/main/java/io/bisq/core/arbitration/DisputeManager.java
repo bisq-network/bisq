@@ -139,7 +139,7 @@ public class DisputeManager implements PersistedDataHost {
     public void onAllServicesInitialized() {
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
                 tryApplyMessages();
             }
         });

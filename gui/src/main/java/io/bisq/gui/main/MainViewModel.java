@@ -417,7 +417,7 @@ public class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onRequestingDataCompleted() {
+            public void onDataReceived() {
                 log.debug("onRequestingDataCompleted");
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
@@ -453,7 +453,7 @@ public class MainViewModel implements ViewModel {
             }
 
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
                 log.debug("onBootstrapComplete");
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
@@ -1247,7 +1247,7 @@ public class MainViewModel implements ViewModel {
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
-                    public void onBootstrapComplete() {
+                    public void onUpdatedDataReceived() {
                         accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
                     }
                 });

@@ -91,7 +91,7 @@ public class PeerServiceTest {
 
             seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
                 @Override
-                public void onRequestingDataCompleted() {
+                public void onDataReceived() {
                 }
 
                 @Override
@@ -103,7 +103,7 @@ public class PeerServiceTest {
                 }
 
                 @Override
-                public void onBootstrapComplete() {
+                public void onUpdatedDataReceived() {
                 }
 
                 @Override
@@ -183,7 +183,7 @@ public class PeerServiceTest {
         seedNode1 = new DummySeedNode("test_dummy_dir");
         seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
-            public void onRequestingDataCompleted() {
+            public void onDataReceived() {
                 latch.countDown();
             }
 
@@ -200,7 +200,7 @@ public class PeerServiceTest {
             }
 
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
                 latch.countDown();
             }
 
@@ -225,7 +225,7 @@ public class PeerServiceTest {
         seedNode2 = new DummySeedNode("test_dummy_dir");
         seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
-            public void onRequestingDataCompleted() {
+            public void onDataReceived() {
                 latch.countDown();
             }
 
@@ -242,7 +242,7 @@ public class PeerServiceTest {
             }
 
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
                 latch.countDown();
             }
 
@@ -467,7 +467,7 @@ public class PeerServiceTest {
         seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS,
                 useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
                     @Override
-                    public void onRequestingDataCompleted() {
+                    public void onDataReceived() {
                         latch.countDown();
                     }
 
@@ -484,7 +484,7 @@ public class PeerServiceTest {
                     }
 
                     @Override
-                    public void onBootstrapComplete() {
+                    public void onUpdatedDataReceived() {
                     }
 
                     @Override

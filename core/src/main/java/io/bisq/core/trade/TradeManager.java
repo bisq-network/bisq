@@ -193,7 +193,7 @@ public class TradeManager implements PersistedDataHost {
         else
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
-                public void onBootstrapComplete() {
+                public void onUpdatedDataReceived() {
                     // Get called after onMailboxMessageAdded from initial data request
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     initPendingTrades();
