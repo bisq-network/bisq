@@ -42,10 +42,10 @@ public class BsqParserTest {
         int height = 200;
         String hash = "abc123";
         long time = new Date().getTime();
-        List<TxInput> inputs = new ArrayList<TxInput>();
+        List<TxInput> inputs = new ArrayList<>();
         inputs.add(new TxInput("tx1", 0));
         inputs.add(new TxInput("tx1", 1));
-        List<TxOutput> outputs = new ArrayList<TxOutput>();
+        List<TxOutput> outputs = new ArrayList<>();
         outputs.add(new TxOutput(0, 101, "tx1", null, null, null, height));
         TxVo txVo = new TxVo("vo", height, hash, time);
         Tx tx = new Tx(txVo, inputs, outputs);
