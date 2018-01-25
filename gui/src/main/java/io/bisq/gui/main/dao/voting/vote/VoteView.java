@@ -36,6 +36,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.network.p2p.P2PService;
@@ -101,7 +102,9 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                      WalletsSetup walletsSetup,
                      P2PService p2PService,
                      FeeService feeService,
-                     BSFormatter btcFormatter, VotingManager voteManager) {
+                     BsqFormatter bsqFormatter,
+                     BSFormatter btcFormatter,
+                     VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -258,22 +261,23 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                                 //TODO send to P2P network
                                             }
 
-                                        @Override
-                                        public void onFailure(@NotNull Throwable t) {
-                                            new Popup<>().warning(t.toString()).show();
-                                        }
-                                    }, 15);
-                                })
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .show();
-                    } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException e) {
-                        log.error(e.toString());
+                                            @Override
+                                            public void onFailure(@NotNull Throwable t) {
+                                                new Popup<>().warning(t.toString()).show();
+                                            }
+                                        }, 15);
+                                    })
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .show();
+                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException e) {
+                            log.error(e.toString());
+                            e.printStackTrace();
+                            new Popup<>().warning(e.toString()).show();
+                        }
+                    } catch (IOException e) {
                         e.printStackTrace();
-                        new Popup<>().warning(e.toString()).show();
+                        new Popup<>().error(e.toString()).show();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    new Popup<>().error(e.toString()).show();
                 }
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
@@ -309,4 +313,3 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         CompensationViewItem.cleanupAllInstances();
     }
 }
-

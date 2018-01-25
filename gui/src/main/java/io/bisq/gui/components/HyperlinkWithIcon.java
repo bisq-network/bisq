@@ -28,11 +28,8 @@ public class HyperlinkWithIcon extends Hyperlink {
         tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: -bs-black"));
     }
 
-    public void setText(String title) {
-        hyperlink.setText(title);
-    }
-
     public void clear() {
-        hyperlink.setText("");
+        setText("");
+        setGraphic(null);
     }
 }
