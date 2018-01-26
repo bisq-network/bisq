@@ -127,11 +127,9 @@ public class PriceFeedService {
             }
         }, (errorMessage, throwable) -> {
             log.warn("request from priceProvider failed: errorMessage={}", errorMessage);
-            // Try other provider if more then 1 is available
-            if (providersRepository.hasMoreProviders()) {
-                providersRepository.selectNewRandomBaseUrl();
+            providersRepository.setRandomBaseUrl();
+            if (!providersRepository.getBaseUrl().isEmpty())
                 priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-            }
             UserThread.runAfter(() -> {
                 retryCounter++;
                 request(true);
@@ -143,13 +141,10 @@ public class PriceFeedService {
 
     @Nullable
     public MarketPrice getMarketPrice(String currencyCode) {
-        if (cache.containsKey(currencyCode))
-            return cache.get(currencyCode);
-        else
-            return null;
+        return cache.getOrDefault(currencyCode, null);
     }
 
-    public void setBisqMarketPrice(String currencyCode, Price price) {
+    private void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,
                     MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
@@ -211,7 +206,7 @@ public class PriceFeedService {
     public void applyLatestBisqMarketPrice(HashSet<TradeStatistics2> tradeStatisticsSet) {
         // takes about 10 ms for 5000 items
         Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
-        tradeStatisticsSet.stream().forEach(e -> {
+        tradeStatisticsSet.forEach(e -> {
             final List<TradeStatistics2> list;
             final String currencyCode = e.getCurrencyCode();
             if (mapByCurrencyCode.containsKey(currencyCode)) {
@@ -283,18 +278,17 @@ public class PriceFeedService {
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
                             if (baseCurrencyPrice != null) {
                                 Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
-                                priceMap.entrySet().stream().forEach(e -> {
-                                    final MarketPrice marketPrice = e.getValue();
+                                priceMap.forEach((key, marketPrice) -> {
                                     if (marketPrice != null) {
                                         double convertedPrice;
                                         final double marketPriceAsDouble = marketPrice.getPrice();
                                         final double baseCurrencyPriceAsDouble = baseCurrencyPrice.getPrice();
                                         if (marketPriceAsDouble > 0 && baseCurrencyPriceAsDouble > 0) {
-                                            if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                            if (CurrencyUtil.isCryptoCurrency(key))
                                                 convertedPrice = marketPriceAsDouble / baseCurrencyPriceAsDouble;
                                             else
                                                 convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
-                                            convertedPriceMap.put(e.getKey(),
+                                            convertedPriceMap.put(key,
                                                     new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
                                         } else {
                                             log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +

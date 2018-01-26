@@ -45,6 +45,9 @@ public class ProvidersRepository {
     private List<String> providerList;
     @Getter
     private String baseUrl = "";
+    @Getter
+    @Nullable
+    private List<String> bannedNodes;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +66,36 @@ public class ProvidersRepository {
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
+        this.bannedNodes = bannedNodes;
+        fillProviderList();
+        setRandomBaseUrl();
+
+        if (bannedNodes == null)
+            log.error("ApplyBannedNodes: selected baseUrl={}, providerList={}", baseUrl, providerList);
+        else
+            log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
+                    bannedNodes, baseUrl, providerList);
+    }
+
+    public void setRandomBaseUrl() {
+        if (!providerList.isEmpty()) {
+            int counter = 0;
+            String newBaseUrl = "";
+            do {
+                newBaseUrl = providerList.get(new Random().nextInt(providerList.size()));
+                counter++;
+            }
+            while (counter < 100 && baseUrl.equals(newBaseUrl));
+            baseUrl = newBaseUrl;
+            log.info("Use new provider baseUrl: " + baseUrl);
+        } else {
+            baseUrl = "";
+            log.warn("We do not have any providers. That can be if all providers are filtered or providersFromProgramArgs is set but empty. " +
+                    "bannedNodes={}. providersFromProgramArgs={}", bannedNodes, providersFromProgramArgs);
+        }
+    }
+
+    private void fillProviderList() {
         String providerAsString;
         if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
@@ -77,35 +110,8 @@ public class ProvidersRepository {
             providerAsString = providersFromProgramArgs;
         }
 
-        providerList = Arrays.asList(StringUtils.deleteWhitespace(providerAsString).split(","))
-                .stream()
+        providerList = Arrays.stream(StringUtils.deleteWhitespace(providerAsString).split(","))
                 .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
                 .collect(Collectors.toList());
-
-        if (!providerList.isEmpty())
-            baseUrl = providerList.get(new Random().nextInt(providerList.size()));
-
-        if (bannedNodes == null)
-            log.info("selected baseUrl={}, providerList={}", baseUrl, providerList);
-        else
-            log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
-                    bannedNodes, baseUrl, providerList);
-    }
-
-    public void selectNewRandomBaseUrl() {
-        int counter = 0;
-        String newBaseUrl = "";
-        do {
-            if (!providerList.isEmpty())
-                newBaseUrl = providerList.get(new Random().nextInt(providerList.size()));
-            counter++;
-        }
-        while (counter < 100 && baseUrl.equals(newBaseUrl));
-        baseUrl = newBaseUrl;
-        log.info("Use new provider baseUrl: " + baseUrl);
-    }
-
-    public boolean hasMoreProviders() {
-        return !providerList.isEmpty();
     }
 }

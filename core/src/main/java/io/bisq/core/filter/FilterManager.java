@@ -86,7 +86,6 @@ public class FilterManager {
             DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     private ECKey filterSigningKey;
-    private boolean providersRepositoryFiltered;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +159,7 @@ public class FilterManager {
                 UserThread.runAfter(() -> {
                     if (filterProperty.get() == null)
                         resetFilters();
-                }, 30);
+                }, 1);
             }
 
             @Override
@@ -185,9 +184,10 @@ public class FilterManager {
         bisqEnvironment.saveBannedBtcNodes(null);
         bisqEnvironment.saveBannedSeedNodes(null);
         bisqEnvironment.saveBannedPriceRelayNodes(null);
-        providersRepository.applyBannedNodes(null);
-        if (providersRepositoryFiltered)
-            providersRepository.selectNewRandomBaseUrl();
+
+        if (providersRepository.getBannedNodes() != null)
+            providersRepository.applyBannedNodes(null);
+
         filterProperty.set(null);
     }
 
@@ -202,12 +202,11 @@ public class FilterManager {
             // Banned price relay nodes we can apply at runtime
             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
             bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+
             providersRepository.applyBannedNodes(priceRelayNodes);
-            providersRepository.selectNewRandomBaseUrl();
-            providersRepositoryFiltered = true;
 
             filterProperty.set(filter);
-            listeners.stream().forEach(e -> e.onFilterAdded(filter));
+            listeners.forEach(e -> e.onFilterAdded(filter));
 
             if (filter.isPreventPublicBtcNetwork() &&
                     preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.PUBLIC.ordinal())
@@ -315,41 +314,33 @@ public class FilterManager {
         return getFilter() != null &&
                 getFilter().getBannedCurrencies() != null &&
                 getFilter().getBannedCurrencies().stream()
-                        .filter(e -> e.equals(currencyCode))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(currencyCode));
     }
 
     public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentMethods() != null &&
                 getFilter().getBannedPaymentMethods().stream()
-                        .filter(e -> e.equals(paymentMethod.getId()))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(paymentMethod.getId()));
     }
 
     public boolean isOfferIdBanned(String offerId) {
         return getFilter() != null &&
                 getFilter().getBannedOfferIds().stream()
-                        .filter(e -> e.equals(offerId))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(offerId));
     }
 
     public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress.getFullAddress()))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> {
+                        .anyMatch(paymentAccountFilter -> {
                             final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
                                     paymentAccountPayload.getPaymentMethodId());
                             if (samePaymentMethodId) {
@@ -365,8 +356,6 @@ public class FilterManager {
                             } else {
                                 return false;
                             }
-                        })
-                        .findAny()
-                        .isPresent();
+                        });
     }
 }
