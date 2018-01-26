@@ -171,7 +171,7 @@
                                             ch.qos.logback:logback-core:1.1.10:jar:null:compile:ee683b13d3ca1cdc876cdf8a341c81d04976e1d6
                                         </urn>
                                         <urn>
-                                            com.google.code.findbugs:jsr305:3.0.1:jar:null:compile:f7be08ec23c21485b9b5a1cf1654c2ec8c58168d
+                                            com.google.code.findbugs:jsr305:3.0.2:jar:null:compile:25ea2e8b0c338a877313bd4672d3fe056ea78f0d
                                         </urn>
                                         <urn>
                                             com.google.code.gson:gson:2.2.4:jar:null:compile:a60a5e993c98c864010053cb901b7eab25306568
