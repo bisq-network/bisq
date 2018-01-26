@@ -99,7 +99,7 @@
         <dependency>
             <groupId>com.github.bisq-network.libdohj</groupId>
             <artifactId>libdohj-core</artifactId>
-            <version>a83809f3</version>
+            <version>01ae7770</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
