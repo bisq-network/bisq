@@ -50,7 +50,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.nio.channels.FileLock;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -60,7 +59,7 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    private static int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
+    private static final int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -466,16 +465,6 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    public long getBlockDateForTx(Transaction tx) {
-        // Date in Bitcoin blocks can be off by max. 2 hours
-        final Date updateTime = tx.getUpdateTime();
-        log.error("getBlockDateForTx: updateTime={}; txId={}", updateTime, tx.getHashAsString());
-        if (updateTime != null)
-            return updateTime.getTime();
-        else
-            return 0;
-    }
-
     void setPeerNodesForLocalHost() {
         try {
             setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
@@ -551,17 +540,14 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private void installShutdownHook() {
-        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("ShutdownHook");
-                try {
-                    WalletConfig.this.stopAsync();
-                    WalletConfig.this.awaitTerminated();
-                } catch (Throwable ignore) {
-                }
+        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("ShutdownHook");
+            try {
+                WalletConfig.this.stopAsync();
+                WalletConfig.this.awaitTerminated();
+            } catch (Throwable ignore) {
             }
-        });
+        }));
     }
 
     @Override

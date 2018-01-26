@@ -171,28 +171,34 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         final Trade trade = dataModel.getTrade();
         if (trade != null) {
             final long now = System.currentTimeMillis();
-            long blockTime = now;
+            long startTime;
             final Transaction depositTx = trade.getDepositTx();
             if (depositTx != null) {
                 if (depositTx.getConfidence().getDepthInBlocks() > 0) {
-                    blockTime = walletsSetup.getWalletConfig().getBlockDateForTx(depositTx);
-                    log.error("block for tx {} was mined at date: {}", depositTx.getHashAsString(), new Date(blockTime));
-                } else {
-                    log.error("tx {} not confirmed yet. depthInBlocks={}", depositTx.getHashAsString(), depositTx.getConfidence().getDepthInBlocks());
-                }
+                    final long tradeTime = trade.getDate().getTime();
+                    long blockTime = depositTx.getUpdateTime().getTime();
+                    // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
+                    // If block date is earlier than our trade date we use our trade date.
+                    if (blockTime > now)
+                        startTime = now;
+                    else if (blockTime < tradeTime)
+                        startTime = tradeTime;
+                    else
+                        startTime = blockTime;
 
-                final long tradeTime = trade.getDate().getTime();
-                // If block date is in future (Date in Bitcoin blocks can be off by max. 2 hours) we use our current date.
-                // If block date is before our trade date we ignore block data as well.
-                final long startTime = Math.max(Math.min(blockTime, now), trade.getDate().getTime());
-                log.error("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
-                        new Date(startTime), new Date(tradeTime), new Date(blockTime));
+                    log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
+                            new Date(startTime), new Date(tradeTime), new Date(blockTime));
+                } else {
+                    log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getHashAsString());
+                    startTime = now;
+                }
                 return startTime + getMaxTradePeriod();
             } else {
                 log.warn("depositTx is null");
                 return 0;
             }
         } else {
+            log.warn("trade is null");
             return 0;
         }
     }
