@@ -16,8 +16,19 @@
  */
 package io.bisq.core.provider.price;
 
+
+import javax.annotation.Nullable;
+
 public class PriceRequestException extends Exception {
-    public PriceRequestException(String message) {
-        super(message);
+    @Nullable
+    public String priceProviderBaseUrl;
+
+    public PriceRequestException(String errorMessage) {
+        super(errorMessage);
+    }
+
+    public PriceRequestException(Throwable throwable, String priceProviderBaseUrl) {
+        super(throwable);
+        this.priceProviderBaseUrl = priceProviderBaseUrl;
     }
 }

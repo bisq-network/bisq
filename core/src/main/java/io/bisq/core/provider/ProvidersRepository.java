@@ -71,9 +71,9 @@ public class ProvidersRepository {
         setRandomBaseUrl();
 
         if (bannedNodes == null)
-            log.error("ApplyBannedNodes: selected baseUrl={}, providerList={}", baseUrl, providerList);
+            log.info("Selected provider baseUrl={}, providerList={}", baseUrl, providerList);
         else
-            log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
+            log.warn("We have banned provider nodes: bannedNodes={}, selected provider baseUrl={}, providerList={}",
                     bannedNodes, baseUrl, providerList);
     }
 
@@ -86,6 +86,10 @@ public class ProvidersRepository {
                 counter++;
             }
             while (counter < 100 && baseUrl.equals(newBaseUrl));
+
+            if (baseUrl.equals(newBaseUrl))
+                log.warn("We could not find a new provider. newBaseUrl={}", newBaseUrl);
+
             baseUrl = newBaseUrl;
             log.info("Use new provider baseUrl: " + baseUrl);
         } else {

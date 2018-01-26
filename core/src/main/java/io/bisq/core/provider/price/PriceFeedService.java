@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
+import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
@@ -38,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -64,8 +64,12 @@ public class PriceFeedService {
     private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
-    private int retryCounter = 0;
+    private long retryDelay = 1;
     private long requestTs;
+    @Nullable
+    private String baseUrlOfRespondingProvider;
+    @Nullable
+    private Timer requestTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,28 +119,85 @@ public class PriceFeedService {
     }
 
     private void request(boolean repeatRequests) {
+        if (requestTs == 0)
+            log.info("request from provider {}",
+                    providersRepository.getBaseUrl());
+        else
+            log.info("request from provider {} {} sec. after last request",
+                    providersRepository.getBaseUrl(),
+                    (System.currentTimeMillis() - requestTs) / 1000d);
+
         requestTs = System.currentTimeMillis();
+
+        baseUrlOfRespondingProvider = null;
+
         requestAllPrices(priceProvider, () -> {
             applyPriceToConsumer();
-
-            if (repeatRequests) {
-                // After first response we know the providers timestamp and want to request quickly after next expected update
-                // We limit request interval to 40-90 sec.
-                long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
-                UserThread.runAfter(() -> request(true), delay);
-            }
+            baseUrlOfRespondingProvider = priceProvider.getBaseUrl();
+            log.info("Received {} from provider {} after {} sec.",
+                    cache.get(currencyCode),
+                    baseUrlOfRespondingProvider,
+                    (System.currentTimeMillis() - requestTs) / 1000d);
         }, (errorMessage, throwable) -> {
-            log.warn("request from priceProvider failed: errorMessage={}", errorMessage);
-            providersRepository.setRandomBaseUrl();
-            if (!providersRepository.getBaseUrl().isEmpty())
-                priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-            UserThread.runAfter(() -> {
-                retryCounter++;
-                request(true);
-            }, retryCounter);
+            if (throwable instanceof PriceRequestException) {
+                final String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
+                final String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
+                if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
+                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                    retryAfterPriceRequestException();
+                } else {
+                    log.info("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
+                                    "baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                }
+            } else {
+                log.warn("We received an error with throwable={}", throwable);
+                retryAfterPriceRequestException();
+            }
+
             if (faultHandler != null)
                 faultHandler.handleFault(errorMessage, throwable);
         });
+
+        if (repeatRequests) {
+            if (requestTimer != null)
+                requestTimer.stop();
+
+            long delay = PERIOD_SEC + new Random().nextInt(5);
+            requestTimer = UserThread.runAfter(() -> {
+                // If we have not received a result from the last request. We try a new provider.
+                if (baseUrlOfRespondingProvider == null) {
+                    final String oldBaseUrl = priceProvider.getBaseUrl();
+                    setNewPriceProvider();
+                    log.warn("We did not received a response from provider {}. " +
+                            "We select the new provider {} and use that for a new request.", oldBaseUrl, priceProvider.getBaseUrl());
+                }
+                request(true);
+            }, delay);
+        }
+    }
+
+    private void retryAfterPriceRequestException() {
+        // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
+        UserThread.runAfter(() -> {
+            retryDelay = Math.min(retryDelay + 5, PERIOD_SEC);
+
+            final String oldBaseUrl = priceProvider.getBaseUrl();
+            setNewPriceProvider();
+            log.warn("We received an error at the request from provider {}. " +
+                    "We select the new provider {} and use that for a new request. retryDelay was {} sec.", oldBaseUrl, priceProvider.getBaseUrl(), retryDelay);
+
+            request(true);
+        }, retryDelay);
+    }
+
+    private void setNewPriceProvider() {
+        providersRepository.setRandomBaseUrl();
+        if (!providersRepository.getBaseUrl().isEmpty())
+            priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+        else
+            log.warn("We cannot create a new priceProvider because new base url is empty.");
     }
 
     @Nullable
@@ -237,7 +298,6 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    log.info("Received new marketPrice={} {} sec. after request", marketPrice, (System.currentTimeMillis() - requestTs) / 1000);
                     if (marketPrice.isRecentExternalPriceAvailable())
                         priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
@@ -313,7 +373,6 @@ public class PriceFeedService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("Could not load marketPrices. Error: " + throwable.toString());
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
         });
