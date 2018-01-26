@@ -16,6 +16,7 @@
  */
 package io.bisq.core.provider.price;
 
+import lombok.Getter;
 import lombok.Value;
 
 import java.time.Instant;
@@ -27,7 +28,8 @@ public class MarketPrice {
     private final String currencyCode;
     private final double price;
     private final long timestampSec;
-    private final boolean isExternallyProvidedPrice; // if we get it from btc average or others.
+    @Getter
+    private final boolean isExternallyProvidedPrice;
 
     public MarketPrice(String currencyCode, double price, long timestampSec, boolean isExternallyProvidedPrice) {
         this.currencyCode = currencyCode;
@@ -40,8 +42,8 @@ public class MarketPrice {
         return price > 0;
     }
 
-    private boolean isRecentPriceAvailable() {
-        return timestampSec > (Instant.now().getEpochSecond() - MARKET_PRICE_MAX_AGE_SEC) && isPriceAvailable();
+    public boolean isRecentPriceAvailable() {
+        return isPriceAvailable() && timestampSec > (Instant.now().getEpochSecond() - MARKET_PRICE_MAX_AGE_SEC);
     }
 
     public boolean isRecentExternalPriceAvailable() {

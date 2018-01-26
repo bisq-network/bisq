@@ -132,12 +132,28 @@ public class PriceFeedService {
         baseUrlOfRespondingProvider = null;
 
         requestAllPrices(priceProvider, () -> {
-            applyPriceToConsumer();
             baseUrlOfRespondingProvider = priceProvider.getBaseUrl();
-            log.info("Received {} from provider {} after {} sec.",
-                    cache.get(currencyCode),
-                    baseUrlOfRespondingProvider,
-                    (System.currentTimeMillis() - requestTs) / 1000d);
+
+            // At applyPriceToConsumer we also check if price is not exceeding max. age for price data.
+            boolean success = applyPriceToConsumer();
+            if (success) {
+                final MarketPrice marketPrice = cache.get(currencyCode);
+                if (marketPrice != null)
+                    log.info("Received new {} from provider {} after {} sec.",
+                            marketPrice,
+                            baseUrlOfRespondingProvider,
+                            (System.currentTimeMillis() - requestTs) / 1000d);
+                else
+                    log.info("Received new data from provider {} after {} sec. " +
+                                    "Requested market price for currency {} was not provided. " +
+                                    "That is expected if currency is not listed at provider.",
+                            baseUrlOfRespondingProvider,
+                            (System.currentTimeMillis() - requestTs) / 1000d,
+                            currencyCode);
+            } else {
+                log.warn("applyPriceToConsumer was not successful. We retry with a new provider.");
+                retryWithNewProvider();
+            }
         }, (errorMessage, throwable) -> {
             if (throwable instanceof PriceRequestException) {
                 final String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
@@ -145,7 +161,7 @@ public class PriceFeedService {
                 if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
                     log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
-                    retryAfterPriceRequestException();
+                    retryWithNewProvider();
                 } else {
                     log.info("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
                                     "baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
@@ -153,7 +169,7 @@ public class PriceFeedService {
                 }
             } else {
                 log.warn("We received an error with throwable={}", throwable);
-                retryAfterPriceRequestException();
+                retryWithNewProvider();
             }
 
             if (faultHandler != null)
@@ -178,7 +194,7 @@ public class PriceFeedService {
         }
     }
 
-    private void retryAfterPriceRequestException() {
+    private void retryWithNewProvider() {
         // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
         UserThread.runAfter(() -> {
             retryDelay = Math.min(retryDelay + 5, PERIOD_SEC);
@@ -223,7 +239,8 @@ public class PriceFeedService {
         if (this.currencyCode == null || !this.currencyCode.equals(currencyCode)) {
             this.currencyCode = currencyCode;
             currencyCodeProperty.set(currencyCode);
-            applyPriceToConsumer();
+            if (priceConsumer != null)
+                applyPriceToConsumer();
         }
     }
 
@@ -293,25 +310,50 @@ public class PriceFeedService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyPriceToConsumer() {
-        if (priceConsumer != null && currencyCode != null) {
+    private boolean applyPriceToConsumer() {
+        boolean result = false;
+        String errorMessage = null;
+        if (currencyCode != null) {
+            final String baseUrl = priceProvider.getBaseUrl();
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    if (marketPrice.isRecentExternalPriceAvailable())
-                        priceConsumer.accept(marketPrice.getPrice());
+                    if (marketPrice.isExternallyProvidedPrice()) {
+                        if (marketPrice.isRecentPriceAvailable()) {
+                            if (priceConsumer != null)
+                                priceConsumer.accept(marketPrice.getPrice());
+                            result = true;
+                        } else {
+                            errorMessage = "Price for currency " + currencyCode + " is outdated. marketPrice= " +
+                                    marketPrice + " priceProvider=" + baseUrl;
+                        }
+                    } else {
+                        log.info("Market price for currency " + currencyCode + " is not provided by the provider " +
+                                baseUrl + ". That is expected for currencies not listed at providers.");
+                        result = true;
+                    }
                 } catch (Throwable t) {
-                    log.warn("Error at applyPriceToConsumer " + t.getMessage());
+                    errorMessage = "Exception at applyPriceToConsumer for currency " + currencyCode +
+                            ". priceProvider=" + baseUrl + ". Exception=" + t;
                 }
-
             } else {
-                String errorMessage = "We don't have a price for " + currencyCode + ". priceProvider=" + priceProvider;
-                log.debug(errorMessage);
-                if (faultHandler != null)
-                    faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
+                log.info("We don't have a price for currency " + currencyCode + ". priceProvider=" + baseUrl +
+                        ". That is expected for currencies not listed at providers.");
+                result = true;
             }
+        } else {
+            errorMessage = "We don't have a currency yet set. That should never happen";
         }
+
+        if (errorMessage != null) {
+            log.warn(errorMessage);
+            if (faultHandler != null)
+                faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
+        }
+
         updateCounter.set(updateCounter.get() + 1);
+
+        return result;
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
