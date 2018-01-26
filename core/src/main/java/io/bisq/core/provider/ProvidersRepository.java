@@ -38,7 +38,7 @@ public class ProvidersRepository {
             "http://ceaanhbvluug4we6.onion/",// @miker
             "http://44mgyoe2b6oqiytt.onion/",// @manfredkarrer
             "http://5bmpx76qllutpcyp.onion/",// @manfredkarrer
-            "http://rb2l2qale2pqzjyo.onion/" // @manfredkarrer
+            "http://62nvujg5iou3vu3i.onion/" // @manfredkarrer
     );
 
     private final String providersFromProgramArgs;
