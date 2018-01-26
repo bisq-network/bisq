@@ -246,7 +246,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                             " / peer=" + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
 
                                     // We only set the data back by half of the TTL and remove the data only if is has
-                                    // expired after tha back dating.
+                                    // expired after that back dating.
                                     // We might get connection drops which are not caused by the node going offline, so
                                     // we give more tolerance with that approach, giving the node the change to
                                     // refresh the TTL with a refresh message.
@@ -256,7 +256,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                     // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
                                     protectedData.backDate();
                                     if (protectedData.isExpired()) {
-                                        log.warn("We found an expired data entry which we have already back dated. " +
+                                        log.info("We found an expired data entry which we have already back dated. " +
                                                 "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedData.getProtectedStoragePayload(), 100));
                                         doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                     }

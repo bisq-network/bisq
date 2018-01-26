@@ -210,7 +210,7 @@ public class PriceFeedService {
     }
 
     private void setNewPriceProvider() {
-        providersRepository.setRandomBaseUrl();
+        providersRepository.selectNextProviderBaseUrl();
         if (!providersRepository.getBaseUrl().isEmpty())
             priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
         else
