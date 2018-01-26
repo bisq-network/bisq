@@ -176,7 +176,13 @@ public class BuyerStep4View extends TradeStepView {
         withdrawAddressTextField.setVisible(true);
         GridPane.setRowSpan(withdrawTitledGroupBg, 2);
         withdrawToExternalWalletButton.setDefaultButton(true);
-        withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
+        withdrawToExternalWalletButton.setOnAction(e -> {
+            if (model.dataModel.isReadyForTxBroadcast())
+                reviewWithdrawal();
+            else
+                model.dataModel.showNotReadyForTxBroadcastPopups();
+        });
+
     }
 
     @SuppressWarnings("PointlessBooleanExpression")

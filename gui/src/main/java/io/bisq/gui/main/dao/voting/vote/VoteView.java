@@ -25,6 +25,7 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.ChangeBelowDustException;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.*;
@@ -35,8 +36,9 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.BsqFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -73,6 +75,8 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private final CompensationRequestManager compensationRequestManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
+    private final WalletsSetup walletsSetup;
+    private final P2PService p2PService;
     private final FeeService feeService;
     private final BSFormatter btcFormatter;
     private final VotingManager voteManager;
@@ -90,12 +94,18 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VoteView(CompensationRequestManager compensationRequestManager, BsqWalletService bsqWalletService,
-                     BtcWalletService btcWalletService, FeeService feeService, BsqFormatter bsqFormatter,
+    private VoteView(CompensationRequestManager compensationRequestManager,
+                     BsqWalletService bsqWalletService,
+                     BtcWalletService btcWalletService,
+                     WalletsSetup walletsSetup,
+                     P2PService p2PService,
+                     FeeService feeService,
                      BSFormatter btcFormatter, VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.walletsSetup = walletsSetup;
+        this.p2PService = p2PService;
         this.feeService = feeService;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
@@ -198,66 +208,71 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         voteButton.visibleProperty().bind(voteButton.managedProperty());
 
         voteButton.setOnAction(event -> {
-            log.error(voteItemsList.toString());
-            //TODO
-            if (voteItemsList.isMyVote()) {
-                new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
-            } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::isHasVoted).findAny().isPresent() &&
-                    !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
-                            .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
-                new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
-            } else {
-                try {
-                    byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
+            // TODO break up in methods
+            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+                log.info(voteItemsList.toString());
+                //TODO
+                if (voteItemsList.isMyVote()) {
+                    new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
+                } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::isHasVoted).findAny().isPresent() &&
+                        !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
+                                .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
+                    new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
+                } else {
                     try {
-                        Coin votingTxFee = feeService.getVotingTxFee();
-                        Transaction preparedVotingTx = bsqWalletService.getPreparedBurnFeeTx(votingTxFee);
-                        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedVotingTx, false, opReturnData);
-                        Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                        Coin miningFee = signedTx.getFee();
-                        int txSize = signedTx.bitcoinSerialize().length;
-                        new Popup<>().headLine(Res.get("dao.voting.confirmTx"))
-                                .confirmation(Res.get("dao.tx.summary",
-                                        btcFormatter.formatCoinWithCode(votingTxFee),
-                                        btcFormatter.formatCoinWithCode(miningFee),
-                                        CoinUtil.getFeePerByte(miningFee, txSize),
-                                        (txSize / 1000d)))
-                                .actionButtonText(Res.get("shared.yes"))
-                                .onAction(() -> {
-                                    bsqWalletService.commitTx(txWithBtcFee);
-                                    // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                    // if it gets committed 2 times
-                                    btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                        byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
+                        try {
+                            Coin votingTxFee = feeService.getVotingTxFee();
+                            Transaction preparedVotingTx = bsqWalletService.getPreparedBurnFeeTx(votingTxFee);
+                            Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedVotingTx, false, opReturnData);
+                            Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+                            Coin miningFee = signedTx.getFee();
+                            int txSize = signedTx.bitcoinSerialize().length;
+                            new Popup<>().headLine(Res.get("dao.voting.confirmTx"))
+                                    .confirmation(Res.get("dao.tx.summary",
+                                            btcFormatter.formatCoinWithCode(votingTxFee),
+                                            btcFormatter.formatCoinWithCode(miningFee),
+                                            CoinUtil.getFeePerByte(miningFee, txSize),
+                                            (txSize / 1000d)))
+                                    .actionButtonText(Res.get("shared.yes"))
+                                    .onAction(() -> {
+                                        bsqWalletService.commitTx(txWithBtcFee);
+                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                        // if it gets committed 2 times
+                                        btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
 
-                                    bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                        @Override
-                                        public void onSuccess(@Nullable Transaction transaction) {
-                                            checkNotNull(transaction, "Transaction must not be null at doSend callback.");
-                                            log.error("tx successful published" + transaction.getHashAsString());
-                                            new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                            voteItemsList.setIsMyVote(true);
+                                        bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                            @Override
+                                            public void onSuccess(@Nullable Transaction transaction) {
+                                                checkNotNull(transaction, "Transaction must not be null at doSend callback.");
+                                                log.error("tx successful published" + transaction.getHashAsString());
+                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                                voteItemsList.setIsMyVote(true);
 
-                                            //TODO send to P2P network
-                                        }
+                                                //TODO send to P2P network
+                                            }
 
-                                        @Override
-                                        public void onFailure(@NotNull Throwable t) {
-                                            new Popup<>().warning(t.toString()).show();
-                                        }
-                                    }, 15);
-                                })
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .show();
-                    } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
-                            ChangeBelowDustException e) {
-                        log.error(e.toString());
+                                            @Override
+                                            public void onFailure(@NotNull Throwable t) {
+                                                new Popup<>().warning(t.toString()).show();
+                                            }
+                                        }, 15);
+                                    })
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .show();
+                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
+                                ChangeBelowDustException e) {
+                            log.error(e.toString());
+                            e.printStackTrace();
+                            new Popup<>().warning(e.toString()).show();
+                        }
+                    } catch (IOException e) {
                         e.printStackTrace();
-                        new Popup<>().warning(e.toString()).show();
+                        new Popup<>().error(e.toString()).show();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    new Popup<>().error(e.toString()).show();
                 }
+            } else {
+                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

@@ -32,6 +32,7 @@ public class PriceRequest {
     }
 
     public SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> requestAllPrices(PriceProvider provider) {
+        final String baseUrl = provider.getBaseUrl();
         final SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
         ListenableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = executorService.submit(() -> {
             Thread.currentThread().setName("PriceRequest-" + provider.toString());
@@ -45,7 +46,7 @@ public class PriceRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                resultFuture.setException(throwable);
+                resultFuture.setException(new PriceRequestException(throwable, baseUrl));
             }
         });
 

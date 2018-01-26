@@ -27,17 +27,19 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ProvidersRepository {
-    private static final String NODES = "http://xc3nh4juf2hshy7e.onion/, " + // @emzy
-            "http://ceaanhbvluug4we6.onion/, " +// @miker
-            "http://44mgyoe2b6oqiytt.onion/, " +// @manfredkarrer
-            "http://5bmpx76qllutpcyp.onion/, " +// @manfredkarrer
-            "http://rb2l2qale2pqzjyo.onion/";  // @manfredkarrer
+    private static final List<String> DEFAULT_NODES = Arrays.asList(
+            "http://xc3nh4juf2hshy7e.onion/", // @emzy
+            "http://ceaanhbvluug4we6.onion/",// @miker
+            "http://44mgyoe2b6oqiytt.onion/",// @manfredkarrer
+            "http://5bmpx76qllutpcyp.onion/",// @manfredkarrer
+            "http://62nvujg5iou3vu3i.onion/" // @manfredkarrer
+    );
 
     private final String providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
@@ -45,6 +47,10 @@ public class ProvidersRepository {
     private List<String> providerList;
     @Getter
     private String baseUrl = "";
+    @Getter
+    @Nullable
+    private List<String> bannedNodes;
+    private int index = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,54 +65,59 @@ public class ProvidersRepository {
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
 
+        Collections.shuffle(DEFAULT_NODES);
+
         applyBannedNodes(bisqEnvironment.getBannedPriceRelayNodes());
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
-        String providerAsString;
+        this.bannedNodes = bannedNodes;
+        fillProviderList();
+        selectNextProviderBaseUrl();
+
+        if (bannedNodes == null)
+            log.info("Selected provider baseUrl={}, providerList={}", baseUrl, providerList);
+        else
+            log.warn("We have banned provider nodes: bannedNodes={}, selected provider baseUrl={}, providerList={}",
+                    bannedNodes, baseUrl, providerList);
+    }
+
+    public void selectNextProviderBaseUrl() {
+        if (!providerList.isEmpty()) {
+            if (index >= providerList.size())
+                index = 0;
+
+            baseUrl = providerList.get(index);
+            index++;
+
+            if (providerList.size() == 1)
+                log.warn("We oly have one provider");
+        } else {
+            baseUrl = "";
+            log.warn("We do not have any providers. That can be if all providers are filtered or providersFromProgramArgs is set but empty. " +
+                    "bannedNodes={}. providersFromProgramArgs={}", bannedNodes, providersFromProgramArgs);
+        }
+    }
+
+    private void fillProviderList() {
+        List<String> providers;
         if (providersFromProgramArgs == null || providersFromProgramArgs.isEmpty()) {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
-                // providerAsString = "http://localhost:8080/";
-                providerAsString = "http://174.138.104.137:8080/"; // @miker
+                // providerAsString = Collections.singletonList("http://localhost:8080/");
+                providers = Collections.singletonList("http://174.138.104.137:8080/"); // @miker
             } else {
-                providerAsString = NODES;
+                providers = DEFAULT_NODES;
             }
         } else {
-            providerAsString = providersFromProgramArgs;
+            providers = Arrays.asList(StringUtils.deleteWhitespace(providersFromProgramArgs).split(","));
         }
-
-        providerList = Arrays.asList(StringUtils.deleteWhitespace(providerAsString).split(","))
-                .stream()
-                .filter(e -> bannedNodes == null || !bannedNodes.contains(e.replace("http://", "").replace("/", "").replace(".onion", "")))
+        providerList = providers.stream()
+                .filter(e -> bannedNodes == null ||
+                        !bannedNodes.contains(e.replace("http://", "")
+                                .replace("/", "")
+                                .replace(".onion", "")))
                 .collect(Collectors.toList());
-
-        if (!providerList.isEmpty())
-            baseUrl = providerList.get(new Random().nextInt(providerList.size()));
-
-        if (bannedNodes == null)
-            log.info("selected baseUrl={}, providerList={}", baseUrl, providerList);
-        else
-            log.warn("We received banned provider nodes: bannedNodes={}, selected baseUrl={}, providerList={}",
-                    bannedNodes, baseUrl, providerList);
-
-    }
-
-    public void selectNewRandomBaseUrl() {
-        int counter = 0;
-        String newBaseUrl = "";
-        do {
-            if (!providerList.isEmpty())
-                newBaseUrl = providerList.get(new Random().nextInt(providerList.size()));
-            counter++;
-        }
-        while (counter < 100 && baseUrl.equals(newBaseUrl));
-        baseUrl = newBaseUrl;
-        log.info("Use new provider baseUrl: " + baseUrl);
-    }
-
-    public boolean hasMoreProviders() {
-        return !providerList.isEmpty();
     }
 }

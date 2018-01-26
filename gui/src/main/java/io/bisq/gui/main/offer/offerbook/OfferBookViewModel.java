@@ -132,9 +132,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.navigation = navigation;
         this.formatter = formatter;
 
-        ObservableList<OfferBookListItem> offerBookListItems = offerBook.getOfferBookListItems();
-
-        this.filteredItems = new FilteredList<>(offerBookListItems);
+        this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> {
@@ -256,10 +254,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
-    }
-
-    boolean hasSufficientPeersForBroadcast() {
-        return walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     TradeCurrency getSelectedTradeCurrency() {
@@ -435,11 +429,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
-            boolean isPreferredCurrency = getTradeCurrencies().stream()
-                    .filter(c -> c.getCode().equals(offer.getCurrencyCode()))
-                    .findAny()
-                    .isPresent();
-            boolean currencyResult = (showAllTradeCurrenciesProperty.get() && isPreferredCurrency) ||
+            boolean currencyResult = (showAllTradeCurrenciesProperty.get()) ||
                     offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);

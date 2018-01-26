@@ -141,13 +141,7 @@ public class FilterManager {
 
         p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
-            public void onRequestingDataCompleted() {
-                // We should have received all data at that point and if the filers was not set we
-                // clean up as it might be that we missed the filter remove message if we have not been online.
-                UserThread.runAfter(() -> {
-                    if (filterProperty.get() == null)
-                        resetFilters();
-                }, 30);
+            public void onDataReceived() {
             }
 
             @Override
@@ -159,7 +153,13 @@ public class FilterManager {
             }
 
             @Override
-            public void onBootstrapComplete() {
+            public void onUpdatedDataReceived() {
+                // We should have received all data at that point and if the filers was not set we
+                // clean up as it might be that we missed the filter remove message if we have not been online.
+                UserThread.runAfter(() -> {
+                    if (filterProperty.get() == null)
+                        resetFilters();
+                }, 1);
             }
 
             @Override
@@ -184,8 +184,10 @@ public class FilterManager {
         bisqEnvironment.saveBannedBtcNodes(null);
         bisqEnvironment.saveBannedSeedNodes(null);
         bisqEnvironment.saveBannedPriceRelayNodes(null);
-        providersRepository.applyBannedNodes(null);
-        providersRepository.selectNewRandomBaseUrl();
+
+        if (providersRepository.getBannedNodes() != null)
+            providersRepository.applyBannedNodes(null);
+
         filterProperty.set(null);
     }
 
@@ -200,11 +202,11 @@ public class FilterManager {
             // Banned price relay nodes we can apply at runtime
             final List<String> priceRelayNodes = filter.getPriceRelayNodes();
             bisqEnvironment.saveBannedPriceRelayNodes(priceRelayNodes);
+
             providersRepository.applyBannedNodes(priceRelayNodes);
-            providersRepository.selectNewRandomBaseUrl();
 
             filterProperty.set(filter);
-            listeners.stream().forEach(e -> e.onFilterAdded(filter));
+            listeners.forEach(e -> e.onFilterAdded(filter));
 
             if (filter.isPreventPublicBtcNetwork() &&
                     preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.PUBLIC.ordinal())
@@ -312,41 +314,33 @@ public class FilterManager {
         return getFilter() != null &&
                 getFilter().getBannedCurrencies() != null &&
                 getFilter().getBannedCurrencies().stream()
-                        .filter(e -> e.equals(currencyCode))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(currencyCode));
     }
 
     public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentMethods() != null &&
                 getFilter().getBannedPaymentMethods().stream()
-                        .filter(e -> e.equals(paymentMethod.getId()))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(paymentMethod.getId()));
     }
 
     public boolean isOfferIdBanned(String offerId) {
         return getFilter() != null &&
                 getFilter().getBannedOfferIds().stream()
-                        .filter(e -> e.equals(offerId))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(offerId));
     }
 
     public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
-                        .filter(e -> e.equals(nodeAddress.getFullAddress()))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> {
+                        .anyMatch(paymentAccountFilter -> {
                             final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
                                     paymentAccountPayload.getPaymentMethodId());
                             if (samePaymentMethodId) {
@@ -362,8 +356,6 @@ public class FilterManager {
                             } else {
                                 return false;
                             }
-                        })
-                        .findAny()
-                        .isPresent();
+                        });
     }
 }

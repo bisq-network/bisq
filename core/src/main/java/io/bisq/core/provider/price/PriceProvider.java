@@ -52,7 +52,7 @@ public class PriceProvider extends HttpClientProvider {
 
         //noinspection unchecked
         List<LinkedTreeMap<String, Object>> list = (ArrayList<LinkedTreeMap<String, Object>>) map.get("data");
-        list.stream().forEach(treeMap -> {
+        list.forEach(treeMap -> {
             try {
                 final String currencyCode = (String) treeMap.get("currencyCode");
                 final double price = (double) treeMap.get("price");
@@ -66,5 +66,9 @@ public class PriceProvider extends HttpClientProvider {
 
         });
         return new Tuple2<>(tsMap, marketPriceMap);
+    }
+
+    public String getBaseUrl() {
+        return httpClient.getBaseUrl();
     }
 }

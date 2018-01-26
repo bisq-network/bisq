@@ -367,7 +367,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
-				case "CAGE":
+                case "CAGE":
                     if (input.matches("^[D][a-zA-Z0-9]{26,34}$")) {
                         //noinspection ConstantConditions
                         try {
@@ -397,7 +397,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
-                    // Add new coins at the end...
                 case "ONION":
                     try {
                         Address.fromBase58(OnionParams.get(), input);
@@ -405,8 +404,20 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "CREA":
+                    try {
+                        Address.fromBase58(CreaParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "XIN":
+                    if (!input.matches("^XIN-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{5}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
-                // Add new coins at the end...
+                    // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;

@@ -889,8 +889,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.hasAcceptedArbitrators();
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped() && walletsSetup.hasSufficientPeersForBroadcast();
+    boolean isReadyForTxBroadcast() {
+        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
+    }
+
+    void showNotReadyForTxBroadcastPopups() {
+        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
     }
 
 

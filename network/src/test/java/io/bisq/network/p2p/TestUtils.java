@@ -53,7 +53,7 @@ public class TestUtils {
         seedNode.createAndStartP2PService(new NodeAddress("localhost", port), DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhostForP2P, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
-                    public void onRequestingDataCompleted() {
+                    public void onDataReceived() {
                     }
 
                     @Override
@@ -65,7 +65,7 @@ public class TestUtils {
                     }
 
                     @Override
-                    public void onBootstrapComplete() {
+                    public void onUpdatedDataReceived() {
                     }
 
                     @Override

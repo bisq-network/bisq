@@ -19,6 +19,7 @@ package io.bisq.gui.main.offer.takeoffer;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -55,6 +56,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -111,6 +113,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public TakeOfferViewModel(TakeOfferDataModel dataModel,
                               BtcValidator btcValidator,
                               P2PService p2PService,
+                              WalletsSetup walletsSetup,
                               Navigation navigation,
                               BSFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
@@ -119,6 +122,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
@@ -615,6 +619,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     boolean hasAcceptedArbitrators() {
         return dataModel.hasAcceptedArbitrators();
+    }
+
+    boolean isReadyForTxBroadcast() {
+        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
+    }
+
+    void showNotReadyForTxBroadcastPopups() {
+        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
     }
 
     public void resetOfferWarning() {

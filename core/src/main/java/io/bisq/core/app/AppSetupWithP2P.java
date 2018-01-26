@@ -129,7 +129,7 @@ public class AppSetupWithP2P extends AppSetup {
             }
 
             @Override
-            public void onRequestingDataCompleted() {
+            public void onDataReceived() {
                 log.info("onRequestingDataCompleted");
                 p2pNetworkInitialized.set(true);
             }
@@ -147,8 +147,8 @@ public class AppSetupWithP2P extends AppSetup {
             }
 
             @Override
-            public void onBootstrapComplete() {
-                log.info("onBootstrapComplete");
+            public void onUpdatedDataReceived() {
+                log.info("onUpdatedDataReceived");
             }
 
             @Override

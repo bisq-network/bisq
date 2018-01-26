@@ -301,7 +301,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPlaceOffer() {
-        if (model.isBootstrapped()) {
+        if (model.isReadyForTxBroadcast()) {
             if (model.dataModel.isMakerFeeValid()) {
                 if (model.hasAcceptedArbitrators()) {
                     Offer offer = model.createAndGetOffer();
@@ -329,7 +329,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
         } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            model.showNotReadyForTxBroadcastPopups();
         }
     }
 

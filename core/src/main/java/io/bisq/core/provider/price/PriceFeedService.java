@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
+import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
@@ -55,15 +56,21 @@ public class PriceFeedService {
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final String baseCurrencyCode;
     private PriceProvider priceProvider;
+    @Nullable
     private Consumer<Double> priceConsumer;
+    @Nullable
     private FaultHandler faultHandler;
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
     private final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
-    private int retryCounter = 0;
-    private int retryDelay = 1;
+    private long retryDelay = 1;
+    private long requestTs;
+    @Nullable
+    private String baseUrlOfRespondingProvider;
+    @Nullable
+    private Timer requestTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,49 +104,125 @@ public class PriceFeedService {
         }
     }
 
+    public void initialRequestPriceFeed() {
+        request(false);
+    }
+
     public void requestPriceFeed(Consumer<Double> resultHandler, FaultHandler faultHandler) {
         this.priceConsumer = resultHandler;
         this.faultHandler = faultHandler;
 
-        request();
+        request(true);
     }
 
     public String getProviderNodeAddress() {
         return httpClient.getBaseUrl();
     }
 
-    private void request() {
-        requestAllPrices(priceProvider, () -> {
-            applyPriceToConsumer();
-            // after first response we know the providers timestamp and want to request quickly after next expected update
-            long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
-            UserThread.runAfter(this::request, delay);
-            retryDelay = 1;
-        }, (errorMessage, throwable) -> {
-            // Try other provider if more then 1 is available
-            if (providersRepository.hasMoreProviders()) {
-                providersRepository.selectNewRandomBaseUrl();
-                priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-            }
-            UserThread.runAfter(() -> {
-                retryCounter++;
-                retryDelay *= retryCounter;
-                request();
-            }, retryDelay);
+    private void request(boolean repeatRequests) {
+        if (requestTs == 0)
+            log.info("request from provider {}",
+                    providersRepository.getBaseUrl());
+        else
+            log.info("request from provider {} {} sec. after last request",
+                    providersRepository.getBaseUrl(),
+                    (System.currentTimeMillis() - requestTs) / 1000d);
 
-            this.faultHandler.handleFault(errorMessage, throwable);
+        requestTs = System.currentTimeMillis();
+
+        baseUrlOfRespondingProvider = null;
+
+        requestAllPrices(priceProvider, () -> {
+            baseUrlOfRespondingProvider = priceProvider.getBaseUrl();
+
+            // At applyPriceToConsumer we also check if price is not exceeding max. age for price data.
+            boolean success = applyPriceToConsumer();
+            if (success) {
+                final MarketPrice marketPrice = cache.get(currencyCode);
+                if (marketPrice != null)
+                    log.info("Received new {} from provider {} after {} sec.",
+                            marketPrice,
+                            baseUrlOfRespondingProvider,
+                            (System.currentTimeMillis() - requestTs) / 1000d);
+                else
+                    log.info("Received new data from provider {} after {} sec. " +
+                                    "Requested market price for currency {} was not provided. " +
+                                    "That is expected if currency is not listed at provider.",
+                            baseUrlOfRespondingProvider,
+                            (System.currentTimeMillis() - requestTs) / 1000d,
+                            currencyCode);
+            } else {
+                log.warn("applyPriceToConsumer was not successful. We retry with a new provider.");
+                retryWithNewProvider();
+            }
+        }, (errorMessage, throwable) -> {
+            if (throwable instanceof PriceRequestException) {
+                final String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
+                final String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
+                if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
+                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                    retryWithNewProvider();
+                } else {
+                    log.info("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
+                                    "baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                }
+            } else {
+                log.warn("We received an error with throwable={}", throwable);
+                retryWithNewProvider();
+            }
+
+            if (faultHandler != null)
+                faultHandler.handleFault(errorMessage, throwable);
         });
+
+        if (repeatRequests) {
+            if (requestTimer != null)
+                requestTimer.stop();
+
+            long delay = PERIOD_SEC + new Random().nextInt(5);
+            requestTimer = UserThread.runAfter(() -> {
+                // If we have not received a result from the last request. We try a new provider.
+                if (baseUrlOfRespondingProvider == null) {
+                    final String oldBaseUrl = priceProvider.getBaseUrl();
+                    setNewPriceProvider();
+                    log.warn("We did not received a response from provider {}. " +
+                            "We select the new provider {} and use that for a new request.", oldBaseUrl, priceProvider.getBaseUrl());
+                }
+                request(true);
+            }, delay);
+        }
+    }
+
+    private void retryWithNewProvider() {
+        // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
+        UserThread.runAfter(() -> {
+            retryDelay = Math.min(retryDelay + 5, PERIOD_SEC);
+
+            final String oldBaseUrl = priceProvider.getBaseUrl();
+            setNewPriceProvider();
+            log.warn("We received an error at the request from provider {}. " +
+                    "We select the new provider {} and use that for a new request. retryDelay was {} sec.", oldBaseUrl, priceProvider.getBaseUrl(), retryDelay);
+
+            request(true);
+        }, retryDelay);
+    }
+
+    private void setNewPriceProvider() {
+        providersRepository.selectNextProviderBaseUrl();
+        if (!providersRepository.getBaseUrl().isEmpty())
+            priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+        else
+            log.warn("We cannot create a new priceProvider because new base url is empty.");
     }
 
     @Nullable
     public MarketPrice getMarketPrice(String currencyCode) {
-        if (cache.containsKey(currencyCode))
-            return cache.get(currencyCode);
-        else
-            return null;
+        return cache.getOrDefault(currencyCode, null);
     }
 
-    public void setBisqMarketPrice(String currencyCode, Price price) {
+    private void setBisqMarketPrice(String currencyCode, Price price) {
         if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
             cache.put(currencyCode, new MarketPrice(currencyCode,
                     MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
@@ -157,7 +240,8 @@ public class PriceFeedService {
         if (this.currencyCode == null || !this.currencyCode.equals(currencyCode)) {
             this.currencyCode = currencyCode;
             currencyCodeProperty.set(currencyCode);
-            applyPriceToConsumer();
+            if (priceConsumer != null)
+                applyPriceToConsumer();
         }
     }
 
@@ -201,7 +285,7 @@ public class PriceFeedService {
     public void applyLatestBisqMarketPrice(HashSet<TradeStatistics2> tradeStatisticsSet) {
         // takes about 10 ms for 5000 items
         Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
-        tradeStatisticsSet.stream().forEach(e -> {
+        tradeStatisticsSet.forEach(e -> {
             final List<TradeStatistics2> list;
             final String currencyCode = e.getCurrencyCode();
             if (mapByCurrencyCode.containsKey(currencyCode)) {
@@ -227,24 +311,57 @@ public class PriceFeedService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyPriceToConsumer() {
-        if (priceConsumer != null && currencyCode != null) {
+    private boolean applyPriceToConsumer() {
+        boolean result = false;
+        String errorMessage = null;
+        if (currencyCode != null) {
+            final String baseUrl = priceProvider.getBaseUrl();
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    if (marketPrice.isRecentExternalPriceAvailable())
-                        priceConsumer.accept(marketPrice.getPrice());
+                    if (marketPrice.isExternallyProvidedPrice()) {
+                        if (marketPrice.isRecentPriceAvailable()) {
+                            if (priceConsumer != null)
+                                priceConsumer.accept(marketPrice.getPrice());
+                            result = true;
+                        } else {
+                            errorMessage = "Price for currency " + currencyCode + " is outdated by " +
+                                    (Instant.now().getEpochSecond() - marketPrice.getTimestampSec()) / 60 + " minutes. " +
+                                    "Max. allowed age of price is " + MarketPrice.MARKET_PRICE_MAX_AGE_SEC / 60 + " minutes. " +
+                                    "priceProvider=" + baseUrl + ". " +
+                                    "marketPrice= " + marketPrice;
+                        }
+                    } else {
+                        if (baseUrlOfRespondingProvider == null)
+                            log.info("Market price for currency " + currencyCode + " was not delivered by provider " +
+                                    baseUrl + ". That is expected at startup.");
+                        else
+                            log.info("Market price for currency " + currencyCode + " is not provided by the provider " +
+                                    baseUrl + ". That is expected for currencies not listed at providers.");
+                        result = true;
+                    }
                 } catch (Throwable t) {
-                    log.warn("Error at applyPriceToConsumer " + t.getMessage());
+                    errorMessage = "Exception at applyPriceToConsumer for currency " + currencyCode +
+                            ". priceProvider=" + baseUrl + ". Exception=" + t;
                 }
-
             } else {
-                String errorMessage = "We don't have a price for " + currencyCode + ". priceProvider=" + priceProvider;
-                log.debug(errorMessage);
-                faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
+                log.info("We don't have a price for currency " + currencyCode + ". priceProvider=" + baseUrl +
+                        ". That is expected for currencies not listed at providers.");
+                result = true;
             }
+        } else {
+            errorMessage = "We don't have a currency yet set. That should never happen";
         }
+
+        if (errorMessage != null) {
+            log.warn(errorMessage);
+            if (faultHandler != null)
+                faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
+        }
+
         updateCounter.set(updateCounter.get() + 1);
+
+        return result;
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
@@ -271,18 +388,17 @@ public class PriceFeedService {
                             MarketPrice baseCurrencyPrice = priceMap.get(baseCurrencyCode);
                             if (baseCurrencyPrice != null) {
                                 Map<String, MarketPrice> convertedPriceMap = new HashMap<>();
-                                priceMap.entrySet().stream().forEach(e -> {
-                                    final MarketPrice marketPrice = e.getValue();
+                                priceMap.forEach((key, marketPrice) -> {
                                     if (marketPrice != null) {
                                         double convertedPrice;
                                         final double marketPriceAsDouble = marketPrice.getPrice();
                                         final double baseCurrencyPriceAsDouble = baseCurrencyPrice.getPrice();
                                         if (marketPriceAsDouble > 0 && baseCurrencyPriceAsDouble > 0) {
-                                            if (CurrencyUtil.isCryptoCurrency(e.getKey()))
+                                            if (CurrencyUtil.isCryptoCurrency(key))
                                                 convertedPrice = marketPriceAsDouble / baseCurrencyPriceAsDouble;
                                             else
                                                 convertedPrice = marketPriceAsDouble * baseCurrencyPriceAsDouble;
-                                            convertedPriceMap.put(e.getKey(),
+                                            convertedPriceMap.put(key,
                                                     new MarketPrice(marketPrice.getCurrencyCode(), convertedPrice, marketPrice.getTimestampSec(), true));
                                         } else {
                                             log.warn("marketPriceAsDouble or baseCurrencyPriceAsDouble is 0: marketPriceAsDouble={}, " +
@@ -307,7 +423,6 @@ public class PriceFeedService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("Could not load marketPrices. Error: " + throwable.toString());
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
         });

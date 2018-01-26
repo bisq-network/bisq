@@ -115,7 +115,7 @@ public abstract class BsqNode {
                 }
 
                 @Override
-                public void onRequestingDataCompleted() {
+                public void onDataReceived() {
                 }
 
                 @Override
@@ -129,7 +129,7 @@ public abstract class BsqNode {
                 }
 
                 @Override
-                public void onBootstrapComplete() {
+                public void onUpdatedDataReceived() {
                     log.info("onAllServicesInitialized: onBootstrapComplete");
                     onP2PNetworkReady();
                 }

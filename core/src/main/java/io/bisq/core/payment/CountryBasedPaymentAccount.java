@@ -25,7 +25,6 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 public abstract class CountryBasedPaymentAccount extends PaymentAccount {
@@ -51,9 +50,7 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
     public Country getCountry() {
         if (country == null) {
             final String countryCode = ((CountryBasedPaymentAccountPayload) paymentAccountPayload).getCountryCode();
-            Optional<Country> countryOptional = CountryUtil.findCountryByCode(countryCode);
-            if (countryOptional.isPresent())
-                this.country = countryOptional.get();
+            CountryUtil.findCountryByCode(countryCode).ifPresent(c -> this.country = c);
         }
         return country;
     }

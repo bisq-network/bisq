@@ -95,7 +95,7 @@ public class AccountAgeWitnessService {
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
-                public void onBootstrapComplete() {
+                public void onUpdatedDataReceived() {
                     republishAllFiatAccounts();
                 }
             });
