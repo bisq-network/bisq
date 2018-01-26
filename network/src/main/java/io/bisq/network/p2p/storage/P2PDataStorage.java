@@ -343,7 +343,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
-                hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
+                hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
                 // printData("after add");
             } else {
                 log.trace("We got that version of the data already, so we don't store it.");

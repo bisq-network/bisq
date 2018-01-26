@@ -57,9 +57,7 @@ public class OfferBook {
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
                 // We filter here to only add new offers if the same offer (using equals) was not already added.
                 boolean hasSameOffer = offerBookListItems.stream()
-                        .filter(item -> item.getOffer().equals(offer))
-                        .findAny()
-                        .isPresent();
+                        .anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
                     OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
                     // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
@@ -97,11 +95,6 @@ public class OfferBook {
                 }
             }
         });
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean isOfferWithIdInList(Offer offer) {
-        return offerBookListItems.stream().filter(o -> o.getOffer().getId().equals(offer.getId())).findAny().isPresent();
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
