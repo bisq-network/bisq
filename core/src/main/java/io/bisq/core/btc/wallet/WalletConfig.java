@@ -466,9 +466,10 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    public long getBlockDateForTx(Transaction tx) throws BlockStoreException {
-        // Date in Bitcoin blocks can be max. 2 hours off
+    public long getBlockDateForTx(Transaction tx) {
+        // Date in Bitcoin blocks can be off by max. 2 hours
         final Date updateTime = tx.getUpdateTime();
+        log.error("getBlockDateForTx: updateTime={}; txId={}", updateTime, tx.getHashAsString());
         if (updateTime != null)
             return updateTime.getTime();
         else

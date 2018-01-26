@@ -41,7 +41,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -171,26 +170,28 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private long getTimeWhenDisputeOpens() {
         final Trade trade = dataModel.getTrade();
         if (trade != null) {
-            long blockTime = 0;
+            final long now = System.currentTimeMillis();
+            long blockTime = now;
             final Transaction depositTx = trade.getDepositTx();
             if (depositTx != null) {
                 if (depositTx.getConfidence().getDepthInBlocks() > 0) {
-                    try {
-                        // Date in Bitcoin blocks can be max. 2 hours off
-                        blockTime = walletsSetup.getWalletConfig().getBlockDateForTx(depositTx);
-                        log.error("block for tx {} was mined at date: {}", depositTx.getHashAsString(), new Date(blockTime));
-                    } catch (BlockStoreException e) {
-                        log.error(e.toString());
-                        e.printStackTrace();
-                    }
+                    blockTime = walletsSetup.getWalletConfig().getBlockDateForTx(depositTx);
+                    log.error("block for tx {} was mined at date: {}", depositTx.getHashAsString(), new Date(blockTime));
+                } else {
+                    log.error("tx {} not confirmed yet. depthInBlocks={}", depositTx.getHashAsString(), depositTx.getConfidence().getDepthInBlocks());
                 }
-            }
 
-            final long tradeTime = trade.getDate().getTime();
-            final long startTime = blockTime == 0 ? System.currentTimeMillis() : blockTime;
-            log.error("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
-                    new Date(startTime), new Date(tradeTime), new Date(blockTime));
-            return startTime + getMaxTradePeriod();
+                final long tradeTime = trade.getDate().getTime();
+                // If block date is in future (Date in Bitcoin blocks can be off by max. 2 hours) we use our current date.
+                // If block date is before our trade date we ignore block data as well.
+                final long startTime = Math.max(Math.min(blockTime, now), trade.getDate().getTime());
+                log.error("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
+                        new Date(startTime), new Date(tradeTime), new Date(blockTime));
+                return startTime + getMaxTradePeriod();
+            } else {
+                log.warn("depositTx is null");
+                return 0;
+            }
         } else {
             return 0;
         }
