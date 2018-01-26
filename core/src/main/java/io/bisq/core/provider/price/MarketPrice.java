@@ -23,7 +23,7 @@ import java.time.Instant;
 
 @Value
 public class MarketPrice {
-    private static final long MARKET_PRICE_MAX_AGE_SEC = 1800;  // 30 min
+    public static final long MARKET_PRICE_MAX_AGE_SEC = 1800;  // 30 min
 
     private final String currencyCode;
     private final double price;

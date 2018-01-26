@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -324,12 +325,19 @@ public class PriceFeedService {
                                 priceConsumer.accept(marketPrice.getPrice());
                             result = true;
                         } else {
-                            errorMessage = "Price for currency " + currencyCode + " is outdated. marketPrice= " +
-                                    marketPrice + " priceProvider=" + baseUrl;
+                            errorMessage = "Price for currency " + currencyCode + " is outdated by " +
+                                    (Instant.now().getEpochSecond() - marketPrice.getTimestampSec()) / 60 + " minutes. " +
+                                    "Max. allowed age of price is " + MarketPrice.MARKET_PRICE_MAX_AGE_SEC / 60 + " minutes. " +
+                                    "priceProvider=" + baseUrl + ". " +
+                                    "marketPrice= " + marketPrice;
                         }
                     } else {
-                        log.info("Market price for currency " + currencyCode + " is not provided by the provider " +
-                                baseUrl + ". That is expected for currencies not listed at providers.");
+                        if (baseUrlOfRespondingProvider == null)
+                            log.info("Market price for currency " + currencyCode + " was not delivered by provider " +
+                                    baseUrl + ". That is expected at startup.");
+                        else
+                            log.info("Market price for currency " + currencyCode + " is not provided by the provider " +
+                                    baseUrl + ". That is expected for currencies not listed at providers.");
                         result = true;
                     }
                 } catch (Throwable t) {
