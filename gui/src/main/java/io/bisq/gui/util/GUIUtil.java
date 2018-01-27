@@ -41,6 +41,7 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.P2PService;
@@ -445,6 +446,23 @@ public class GUIUtil {
             new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
         else if (!walletsSetup.isDownloadComplete())
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
+    }
+
+    public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
+        try {
+            walletsSetup.reSyncSPVChain();
+            new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                    .useShutDownButton()
+                    .actionButtonText(Res.get("shared.shutDown"))
+                    .onAction(() -> {
+                        preferences.setResyncSpvRequested(true);
+                        UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
+                    })
+                    .hideCloseButton()
+                    .show();
+        } catch (Throwable t) {
+            new Popup<>().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
+        }
     }
 
     public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
