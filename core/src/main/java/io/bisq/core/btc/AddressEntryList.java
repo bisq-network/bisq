@@ -89,7 +89,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         this.wallet = wallet;
 
         if (list != null) {
-            list.stream().forEach(addressEntry -> {
+            list.forEach(addressEntry -> {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);

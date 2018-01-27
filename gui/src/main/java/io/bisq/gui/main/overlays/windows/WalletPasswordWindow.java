@@ -69,7 +69,8 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @Slf4j
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private final WalletsManager walletsManager;
-    private final File storageDir;
+    private File storageDir;
+
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
