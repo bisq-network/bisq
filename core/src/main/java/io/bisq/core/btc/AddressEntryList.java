@@ -100,6 +100,15 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         } else {
             list = new ArrayList<>();
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
+
+            // In case we restore from seed words and have balance we need to add the relevant addresses to our list:
+            if (wallet.getBalance().isPositive()) {
+                wallet.getIssuedReceiveAddresses().forEach(address -> {
+                    log.info("Create AddressEntry for address={}", address);
+                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()), AddressEntry.Context.AVAILABLE));
+                });
+            }
+
             persist();
         }
     }
