@@ -18,13 +18,20 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.locale.Res;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
 public class BSFormatterTest {
+
+    @Before
+    public void setup() {
+        Locale.setDefault(new Locale("en", "US"));
+    }
 
     @Test
     public void testIsValid() {
