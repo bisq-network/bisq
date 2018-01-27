@@ -239,14 +239,8 @@ public class WalletsSetup {
         }
     }
 
-    public boolean reSyncSPVChain() {
-        try {
-            return new File(walletDir, SPV_CHAIN_FILE_NAME).delete();
-        } catch (Throwable t) {
-            log.error(t.toString());
-            t.printStackTrace();
-            return false;
-        }
+    public void reSyncSPVChain() throws IOException {
+        FileUtil.deleteFileIfExists(new File(walletDir, SPV_CHAIN_FILE_NAME));
     }
 
 
