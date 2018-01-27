@@ -75,18 +75,7 @@ public class JsonFileManager {
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(json);
 
-                if (Utilities.isWindows()) {
-                    // Work around an issue on Windows whereby you can't rename over existing files.
-                    final File canonical = jsonFile.getCanonicalFile();
-                    if (canonical.exists() && !canonical.delete()) {
-                        throw new IOException("Failed to delete canonical file for replacement with save");
-                    }
-                    if (!tempFile.renameTo(canonical)) {
-                        throw new IOException("Failed to rename " + tempFile + " to " + canonical);
-                    }
-                } else if (!tempFile.renameTo(jsonFile)) {
-                    throw new IOException("Failed to rename " + tempFile + " to " + jsonFile);
-                }
+                FileUtil.renameFile(tempFile, jsonFile);
             } catch (Throwable t) {
                 log.error("storageFile " + jsonFile.toString());
                 t.printStackTrace();
