@@ -25,6 +25,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import io.bisq.generated.protobuffer.PB;
@@ -137,8 +138,8 @@ public class BsqBlockChain implements PersistableEnvelope {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqBlockChain(PersistenceProtoResolver persistenceProtoResolver,
-                         @Named(Storage.STORAGE_DIR) File storageDir) {
-
+                         @Named(Storage.STORAGE_DIR) File storageDir,
+                         @Named(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) String manualGenesisTxId) {
         bsqBlocks = new LinkedList<>();
         txMap = new HashMap<>();
         unspentTxOutputsMap = new HashMap<>();
@@ -153,7 +154,7 @@ public class BsqBlockChain implements PersistableEnvelope {
                 genesisBlockHeight = BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
                 break;
             case BTC_REGTEST:
-                genesisTxId = BTC_REG_TEST_GENESIS_TX_ID;
+                genesisTxId = manualGenesisTxId.isEmpty() ? BTC_REG_TEST_GENESIS_TX_ID : manualGenesisTxId;
                 genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
                 break;
             case BTC_MAINNET:

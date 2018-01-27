@@ -284,14 +284,12 @@ public class BsqParser {
 
     @VisibleForTesting
     boolean isBsqTx(int blockHeight, Tx tx) {
-        return bsqBlockChain.<Boolean>callFunctionWithWriteLock(() -> isBsqTxUnsafe(blockHeight, tx));
+        return bsqBlockChain.<Boolean>callFunctionWithWriteLock(() -> doIsBsqTx(blockHeight, tx));
     }
 
     // Not thread safe wrt bsqBlockChain
     // Check if any of the inputs are BSQ inputs and update BsqBlockChain state accordingly
-    private boolean isBsqTxUnsafe(int blockHeight, Tx tx) {
-        log.error("isBsqTxUnsafe tx={}", tx.toString());
-
+    private boolean doIsBsqTx(int blockHeight, Tx tx) {
         boolean isBsqTx = false;
         long availableBsqFromInputs = 0;
         // For each input in tx

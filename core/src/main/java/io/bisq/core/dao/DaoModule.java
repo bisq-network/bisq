@@ -75,6 +75,8 @@ public class DaoModule extends AppModule {
                 .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
                 .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
+        bindConstant().annotatedWith(named(DaoOptionKeys.REG_TEST_GENESIS_TX_ID))
+                .to(environment.getRequiredProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID));
     }
 }
 
