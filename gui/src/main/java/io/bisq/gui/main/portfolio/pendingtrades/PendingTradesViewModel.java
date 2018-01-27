@@ -22,7 +22,6 @@ import io.bisq.common.Clock;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -40,7 +39,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -79,7 +77,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final BtcAddressValidator btcAddressValidator;
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
     private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
@@ -97,7 +94,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
-                                  WalletsSetup walletsSetup,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   Clock clock) {
@@ -107,7 +103,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
-        this.walletsSetup = walletsSetup;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.clock = clock;
@@ -117,7 +112,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     protected void activate() {
     }
 
-    // Dont set own listener as we need to control the order of the calls
+    // Don't set own listener as we need to control the order of the calls
     public void onSelectedItemChanged(PendingTradesListItem selectedItem) {
         if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
@@ -161,62 +156,23 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
         return btcFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
-    // trade period
 
     private long getMaxTradePeriod() {
         return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
     }
 
-    private long getTimeWhenDisputeOpens() {
-        final Trade trade = dataModel.getTrade();
-        if (trade != null) {
-            final long now = System.currentTimeMillis();
-            long startTime;
-            final Transaction depositTx = trade.getDepositTx();
-            if (depositTx != null) {
-                if (depositTx.getConfidence().getDepthInBlocks() > 0) {
-                    final long tradeTime = trade.getDate().getTime();
-                    long blockTime = depositTx.getUpdateTime().getTime();
-                    // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
-                    // If block date is earlier than our trade date we use our trade date.
-                    if (blockTime > now)
-                        startTime = now;
-                    else if (blockTime < tradeTime)
-                        startTime = tradeTime;
-                    else
-                        startTime = blockTime;
-
-                    log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
-                            new Date(startTime), new Date(tradeTime), new Date(blockTime));
-                } else {
-                    log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getHashAsString());
-                    startTime = now;
-                }
-                return startTime + getMaxTradePeriod();
-            } else {
-                log.warn("depositTx is null");
-                return 0;
-            }
-        } else {
-            log.warn("trade is null");
-            return 0;
-        }
+    @Nullable
+    private Date getMaxTradePeriodDate() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getMaxTradePeriodDate() : null;
     }
 
-    private long getTimeWhenHalfPeriodReached() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() / 2 : 0;
-    }
-
-    private Date getDateWhenDisputeOpens() {
-        return new Date(getTimeWhenDisputeOpens());
-    }
-
-    private Date getDateWhenHalfPeriodReached() {
-        return new Date(getTimeWhenHalfPeriodReached());
+    @Nullable
+    private Date getHalfTradePeriodDate() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getHalfTradePeriodDate() : null;
     }
 
     private long getRemainingTradeDuration() {
-        return getDateWhenDisputeOpens().getTime() - new Date().getTime();
+        return getMaxTradePeriodDate() != null ? getMaxTradePeriodDate().getTime() - new Date().getTime() : getMaxTradePeriod();
     }
 
     public String getRemainingTradeDurationAsWords() {
@@ -237,11 +193,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean showWarning() {
-        return new Date().after(getDateWhenHalfPeriodReached());
+        return getHalfTradePeriodDate() != null && new Date().after(getHalfTradePeriodDate());
     }
 
     public boolean showDispute() {
-        return new Date().after(getDateWhenDisputeOpens());
+        return getMaxTradePeriodDate() != null && new Date().after(getMaxTradePeriodDate());
     }
 
     //
@@ -282,7 +238,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTxFee() {
-        if (trade != null) {
+        if (trade != null && trade.getTradeAmount() != null) {
             Coin txFee = dataModel.getTxFee();
             String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(), btcFormatter);
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
@@ -293,7 +249,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getTradeFee() {
         if (trade != null && dataModel.getOffer() != null) {
-            if (dataModel.getOffer().isCurrencyForMakerFeeBtc()) {
+            if (dataModel.getOffer().isCurrencyForMakerFeeBtc() && trade.getTradeAmount() != null) {
                 Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
                 String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
@@ -308,7 +264,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getSecurityDeposit() {
         Offer offer = dataModel.getOffer();
         Trade trade = dataModel.getTrade();
-        if (offer != null && trade != null) {
+        if (offer != null && trade != null && trade.getTradeAmount() != null) {
             Coin securityDeposit = dataModel.isBuyer() ?
                     offer.getBuyerSecurityDeposit()
                     : offer.getSellerSecurityDeposit();

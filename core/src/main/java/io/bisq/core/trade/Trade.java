@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade;
 
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -329,14 +328,11 @@ public abstract class Trade implements Tradable, Model {
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
     transient final private ObjectProperty<DisputeState> disputeStateProperty = new SimpleObjectProperty<>(disputeState);
     transient final private ObjectProperty<TradePeriodState> tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
-    transient final private StringProperty errorMessageProperty = new SimpleStringProperty(errorMessage);
+    transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
     //  Mutable
     @Getter
     transient protected TradeProtocol tradeProtocol;
-    @Nullable
-    @Setter
-    transient private Date maxTradePeriodDate, halfTradePeriodDate;
     @Nullable
     transient private Transaction payoutTx;
     @Nullable
@@ -503,7 +499,7 @@ public abstract class Trade implements Tradable, Model {
         // or async calls there.
         // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
         HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
-        set.stream().forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
+        set.forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
 
@@ -690,20 +686,46 @@ public abstract class Trade implements Tradable, Model {
             return null;
     }
 
-    @Nullable
-    public Date getMaxTradePeriodDate() {
-        if (maxTradePeriodDate == null && getTakeOfferDate() != null)
-            maxTradePeriodDate = new Date(getTakeOfferDate().getTime() + getOffer().getPaymentMethod().getMaxTradePeriod());
-
-        return maxTradePeriodDate;
+    public Date getHalfTradePeriodDate() {
+        return new Date(getTradeStartTime() + getMaxTradePeriod() / 2);
     }
 
-    @Nullable
-    public Date getHalfTradePeriodDate() {
-        if (halfTradePeriodDate == null && getTakeOfferDate() != null)
-            halfTradePeriodDate = new Date(getTakeOfferDate().getTime() + getOffer().getPaymentMethod().getMaxTradePeriod() / 2);
+    public Date getMaxTradePeriodDate() {
+        return new Date(getTradeStartTime() + getMaxTradePeriod());
+    }
 
-        return halfTradePeriodDate;
+    private long getMaxTradePeriod() {
+        return getOffer().getPaymentMethod().getMaxTradePeriod();
+    }
+
+    private long getTradeStartTime() {
+        final long now = System.currentTimeMillis();
+        long startTime;
+        final Transaction depositTx = getDepositTx();
+        if (depositTx != null && getTakeOfferDate() != null) {
+            if (depositTx.getConfidence().getDepthInBlocks() > 0) {
+                final long tradeTime = getTakeOfferDate().getTime();
+                long blockTime = depositTx.getUpdateTime().getTime();
+                // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
+                // If block date is earlier than our trade date we use our trade date.
+                if (blockTime > now)
+                    startTime = now;
+                else if (blockTime < tradeTime)
+                    startTime = tradeTime;
+                else
+                    startTime = blockTime;
+
+                log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
+                        new Date(startTime), new Date(tradeTime), new Date(blockTime));
+            } else {
+                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getHashAsString());
+                startTime = now;
+            }
+        } else {
+            log.warn("depositTx is null");
+            startTime = now;
+        }
+        return startTime;
     }
 
     public boolean hasFailed() {
@@ -863,7 +885,7 @@ public abstract class Trade implements Tradable, Model {
                     public void onFailure(@NotNull Throwable t) {
                         t.printStackTrace();
                         log.error(t.getMessage());
-                        Throwables.propagate(t);
+                        throw new RuntimeException(t);
                     }
                 });
             }
@@ -916,8 +938,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradePeriodStateProperty=" + tradePeriodStateProperty +
                 ",\n     errorMessageProperty=" + errorMessageProperty +
                 ",\n     tradeProtocol=" + tradeProtocol +
-                ",\n     maxTradePeriodDate=" + maxTradePeriodDate +
-                ",\n     halfTradePeriodDate=" + halfTradePeriodDate +
                 ",\n     payoutTx=" + payoutTx +
                 ",\n     depositTx=" + depositTx +
                 ",\n     tradeAmount=" + tradeAmount +
