@@ -299,22 +299,34 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
+        boolean useTorForBitcoinJ = socks5Proxy != null;
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
-        walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
-                String bitcoinNodesString = preferences.getBitcoinNodes();
-                if (bitcoinNodesString != null) {
+                final String bitcoinNodesString = preferences.getBitcoinNodes();
+                if (bitcoinNodesString != null && !bitcoinNodesString.isEmpty()) {
                     btcNodeList = Splitter.on(",")
                             .splitToList(StringUtils.deleteWhitespace(bitcoinNodesString))
                             .stream()
                             .filter(e -> !e.isEmpty())
                             .map(BitcoinNodes.BtcNode::fromFullAddress)
                             .collect(Collectors.toList());
+                    walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
+                    long onionAddresses = btcNodeList.stream()
+                            .filter(BitcoinNodes.BtcNode::hasOnionAddress)
+                            .count();
+                    if (onionAddresses != btcNodeList.size()) {
+                        log.warn("We do not support mixed onion and clear net addresses. We use those which represent the majority of nodes, either all clear-net or all onion addresses.");
+                        useTorForBitcoinJ = onionAddresses >= (btcNodeList.size() - onionAddresses);
+                    }
+                } else {
+                    log.warn("Custom nodes is set but no nodes are provided.");
+                    walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
                 }
                 break;
             case PUBLIC:
                 // we keep the empty list
+                walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
                 break;
             default:
             case PROVIDED:
@@ -326,7 +338,6 @@ public class WalletsSetup {
                 break;
         }
 
-        final boolean useTorForBitcoinJ = socks5Proxy != null;
         List<PeerAddress> peerAddressList = new ArrayList<>();
 
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
