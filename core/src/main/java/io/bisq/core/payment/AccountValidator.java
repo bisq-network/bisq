@@ -12,8 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.bisq.core.payment.PaymentAccountUtil.getInfoForMismatchingPaymentMethodLimits;
-
 @Slf4j
 class AccountValidator {
     private final Offer offer;
@@ -29,16 +27,10 @@ class AccountValidator {
             return false;
         }
 
-        // check if we have a matching payment method or if its a bank account payment method which is treated special
-        final boolean arePaymentMethodsEqual = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
-
-        if (!arePaymentMethodsEqual &&
-                paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId())) {
-            log.warn(getInfoForMismatchingPaymentMethodLimits(offer, paymentAccount));
-        }
+        final boolean isEqualPaymentMethods = isEqualPaymentMethods();
 
         if (!(paymentAccount instanceof CountryBasedPaymentAccount)) {
-            return arePaymentMethodsEqual;
+            return isEqualPaymentMethods;
         }
 
         if (!isMatchesCountryCodes()) {
@@ -47,29 +39,52 @@ class AccountValidator {
 
         // We have same country
         if (isSepaRelated()) {
-            return arePaymentMethodsEqual;
+            return isEqualPaymentMethods;
         } else if (isSameOrSpecificBank()) {
             return isValidForSameOrSpecificBankAccount();
         } else {
-            if (paymentAccount instanceof SpecificBanksAccount) {
-                // check if we have a matching bank
-                final List<String> acceptedBanksForAccount = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
-                boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+            return isValidByType();
+        }
+    }
 
-                return offer.getBankId() != null && paymentAccountSideMatchesBank;
-            } else if (paymentAccount instanceof SameBankAccount) {
-                // check if we have a matching bank
-                final String bankId = ((SameBankAccount) paymentAccount).getBankId();
-                return bankId != null && offer.getBankId() != null && bankId.equals(offer.getBankId());
-            } else if (paymentAccount instanceof NationalBankAccount) {
-                return true;
-            } else if (paymentAccount instanceof WesternUnionAccount) {
-                return offer.getPaymentMethod().equals(PaymentMethod.WESTERN_UNION);
-            } else {
-                log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}. offer={}",
-                        paymentAccount, offer);
-                return false;
+    private boolean isEqualPaymentMethods() {
+        // check if we have a matching payment method or if its a bank account payment method which is treated special
+        PaymentMethod accountPaymentMethod = paymentAccount.getPaymentMethod();
+        PaymentMethod offerPaymentMethod = offer.getPaymentMethod();
+
+        final boolean arePaymentMethodsEqual = accountPaymentMethod.equals(offerPaymentMethod);
+
+        if (log.isWarnEnabled()) {
+            String accountPaymentMethodId = accountPaymentMethod.getId();
+            String offerPaymentMethodId = offerPaymentMethod.getId();
+            if (!arePaymentMethodsEqual && accountPaymentMethodId.equals(offerPaymentMethodId)) {
+                log.warn(PaymentAccountUtil.getInfoForMismatchingPaymentMethodLimits(offer, paymentAccount));
             }
+        }
+
+        return arePaymentMethodsEqual;
+    }
+
+    private boolean isValidByType() {
+        if (paymentAccount instanceof SpecificBanksAccount) {
+            // check if we have a matching bank
+            final List<String> acceptedBanksForAccount = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
+            boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+
+            return (offer.getBankId() != null) && paymentAccountSideMatchesBank;
+        } else if (paymentAccount instanceof SameBankAccount) {
+            // check if we have a matching bank
+            final String accountBankId = ((SameBankAccount) paymentAccount).getBankId();
+            return (accountBankId != null) && (offer.getBankId() != null) && accountBankId.equals(offer.getBankId());
+        } else if (paymentAccount instanceof NationalBankAccount) {
+            return true;
+        } else if (paymentAccount instanceof WesternUnionAccount) {
+            PaymentMethod paymentMethod = offer.getPaymentMethod();
+            return paymentMethod.equals(PaymentMethod.WESTERN_UNION);
+        } else {
+            log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}. offer={}",
+                    paymentAccount, offer);
+            return false;
         }
     }
 
