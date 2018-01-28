@@ -15,21 +15,26 @@ import static io.bisq.core.payment.PaymentAccountUtil.getInfoForMismatchingPayme
 
 @Slf4j
 class AccountValidator {
-    public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
-        // check if we have  a matching currency
-        Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream()
-                .map(TradeCurrency::getCode)
-                .collect(Collectors.toSet());
-        boolean matchesCurrencyCode = paymentAccountCurrencyCodes.contains(offer.getCurrencyCode());
-        if (!matchesCurrencyCode)
+    private final Offer offer;
+    private final PaymentAccount paymentAccount;
+
+    AccountValidator(Offer offer, PaymentAccount paymentAccount) {
+        this.offer = offer;
+        this.paymentAccount = paymentAccount;
+    }
+
+    boolean isPaymentAccountValidForOffer() {
+        if (!isMatchingCurrency()) {
             return false;
+        }
 
         // check if we have a matching payment method or if its a bank account payment method which is treated special
         final boolean arePaymentMethodsEqual = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
 
         if (!arePaymentMethodsEqual &&
-                paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId()))
+                paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId())) {
             log.warn(getInfoForMismatchingPaymentMethodLimits(offer, paymentAccount));
+        }
 
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
@@ -37,14 +42,12 @@ class AccountValidator {
             // check if we have a matching country
             boolean matchesCountryCodes = offer.getAcceptedCountryCodes() != null && countryBasedPaymentAccount.getCountry() != null &&
                     offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
-            if (!matchesCountryCodes)
+            if (!matchesCountryCodes) {
                 return false;
+            }
 
             // We have same country
-            if (countryBasedPaymentAccount instanceof SepaAccount ||
-                    countryBasedPaymentAccount instanceof SepaInstantAccount ||
-                    offer.getPaymentMethod().equals(PaymentMethod.SEPA) ||
-                    offer.getPaymentMethod().equals(PaymentMethod.SEPA_INSTANT)) {
+            if (isSepaRelated(countryBasedPaymentAccount)) {
                 return arePaymentMethodsEqual;
             } else if (countryBasedPaymentAccount instanceof BankAccount && (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
                     offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))) {
@@ -75,8 +78,7 @@ class AccountValidator {
                 } else if (countryBasedPaymentAccount instanceof WesternUnionAccount) {
                     return offer.getPaymentMethod().equals(PaymentMethod.WESTERN_UNION);
                 } else {
-                    log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}." +
-                                    "offer={}",
+                    log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}. offer={}",
                             countryBasedPaymentAccount, offer);
                     return false;
                 }
@@ -84,5 +86,22 @@ class AccountValidator {
         } else {
             return arePaymentMethodsEqual;
         }
+    }
+
+    private boolean isMatchingCurrency() {
+        List<TradeCurrency> currencies = paymentAccount.getTradeCurrencies();
+        Set<String> codes = currencies.stream()
+                .map(TradeCurrency::getCode)
+                .collect(Collectors.toSet());
+
+        return codes.contains(offer.getCurrencyCode());
+    }
+
+    private boolean isSepaRelated(CountryBasedPaymentAccount account) {
+        PaymentMethod paymentMethod = offer.getPaymentMethod();
+        return account instanceof SepaAccount
+                || account instanceof SepaInstantAccount
+                || paymentMethod.equals(PaymentMethod.SEPA)
+                || paymentMethod.equals(PaymentMethod.SEPA_INSTANT);
     }
 }
