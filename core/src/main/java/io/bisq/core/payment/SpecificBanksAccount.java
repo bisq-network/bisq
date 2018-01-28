@@ -35,6 +35,7 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
         return new SpecificBanksAccountPayload(paymentMethod.getId(), id);
     }
 
+    // TODO change to List
     public ArrayList<String> getAcceptedBanks() {
         return ((SpecificBanksAccountPayload) paymentAccountPayload).getAcceptedBanks();
     }

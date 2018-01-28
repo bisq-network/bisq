@@ -1,18 +1,17 @@
 package io.bisq.core.payment;
 
+import com.google.common.base.Preconditions;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.payment.PaymentAccountUtil.getInfoForMismatchingPaymentMethodLimits;
 
 @Slf4j
@@ -42,10 +41,7 @@ class AccountValidator {
             return arePaymentMethodsEqual;
         }
 
-        CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
-
-        boolean matchesCountryCodes = isMatchesCountryCodes();
-        if (!matchesCountryCodes) {
+        if (!isMatchesCountryCodes()) {
             return false;
         }
 
@@ -53,36 +49,46 @@ class AccountValidator {
         if (isSepaRelated()) {
             return arePaymentMethodsEqual;
         } else if (isSameOrSpecificBank()) {
-            final List<String> acceptedBankIds = offer.getAcceptedBankIds();
-            checkNotNull(acceptedBankIds, "offer.getAcceptedBankIds() must not be null");
-            final String bankId = ((BankAccount) countryBasedPaymentAccount).getBankId();
-            if (countryBasedPaymentAccount instanceof SpecificBanksAccount) {
-                // check if we have a matching bank
-                boolean offerSideMatchesBank = bankId != null && acceptedBankIds.contains(bankId);
-                boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) countryBasedPaymentAccount).getAcceptedBanks().contains(offer.getBankId());
-                return offerSideMatchesBank && paymentAccountSideMatchesBank;
-            } else {
-                // national or same bank
-                return bankId != null && acceptedBankIds.contains(bankId);
-            }
+            return isValidForSameOrSpecificBankAccount();
         } else {
-            if (countryBasedPaymentAccount instanceof SpecificBanksAccount) {
+            if (paymentAccount instanceof SpecificBanksAccount) {
                 // check if we have a matching bank
-                final ArrayList<String> acceptedBanks = ((SpecificBanksAccount) countryBasedPaymentAccount).getAcceptedBanks();
-                return acceptedBanks != null && offer.getBankId() != null && acceptedBanks.contains(offer.getBankId());
-            } else if (countryBasedPaymentAccount instanceof SameBankAccount) {
+                final List<String> acceptedBanksForAccount = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
+                boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+
+                return offer.getBankId() != null && paymentAccountSideMatchesBank;
+            } else if (paymentAccount instanceof SameBankAccount) {
                 // check if we have a matching bank
-                final String bankId = ((SameBankAccount) countryBasedPaymentAccount).getBankId();
+                final String bankId = ((SameBankAccount) paymentAccount).getBankId();
                 return bankId != null && offer.getBankId() != null && bankId.equals(offer.getBankId());
-            } else if (countryBasedPaymentAccount instanceof NationalBankAccount) {
+            } else if (paymentAccount instanceof NationalBankAccount) {
                 return true;
-            } else if (countryBasedPaymentAccount instanceof WesternUnionAccount) {
+            } else if (paymentAccount instanceof WesternUnionAccount) {
                 return offer.getPaymentMethod().equals(PaymentMethod.WESTERN_UNION);
             } else {
                 log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}. offer={}",
-                        countryBasedPaymentAccount, offer);
+                        paymentAccount, offer);
                 return false;
             }
+        }
+    }
+
+    private boolean isValidForSameOrSpecificBankAccount() {
+        final List<String> acceptedBanksForOffer = offer.getAcceptedBankIds();
+        Preconditions.checkNotNull(acceptedBanksForOffer, "offer.getAcceptedBankIds() must not be null");
+
+        final String accountBankId = ((BankAccount) paymentAccount).getBankId();
+
+        if (paymentAccount instanceof SpecificBanksAccount) {
+            // check if we have a matching bank
+            boolean offerSideMatchesBank = (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
+            List<String> acceptedBanksForAccount = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
+            boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+
+            return offerSideMatchesBank && paymentAccountSideMatchesBank;
+        } else {
+            // national or same bank
+            return (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
         }
     }
 
@@ -108,6 +114,7 @@ class AccountValidator {
 
     private boolean isMatchingCurrency() {
         List<TradeCurrency> currencies = paymentAccount.getTradeCurrencies();
+
         Set<String> codes = currencies.stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.toSet());
