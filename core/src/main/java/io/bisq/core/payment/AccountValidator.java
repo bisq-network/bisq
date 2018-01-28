@@ -44,18 +44,15 @@ class AccountValidator {
 
         CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
 
-        // check if we have a matching country
-        boolean matchesCountryCodes = isMatchesCountryCodes(countryBasedPaymentAccount);
+        boolean matchesCountryCodes = isMatchesCountryCodes();
         if (!matchesCountryCodes) {
             return false;
         }
 
         // We have same country
-        if (isSepaRelated(countryBasedPaymentAccount)) {
+        if (isSepaRelated()) {
             return arePaymentMethodsEqual;
-        } else if (countryBasedPaymentAccount instanceof BankAccount && (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
-                offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))) {
-
+        } else if (isSameOrSpecificBank()) {
             final List<String> acceptedBankIds = offer.getAcceptedBankIds();
             checkNotNull(acceptedBankIds, "offer.getAcceptedBankIds() must not be null");
             final String bankId = ((BankAccount) countryBasedPaymentAccount).getBankId();
@@ -89,15 +86,24 @@ class AccountValidator {
         }
     }
 
-    private boolean isMatchesCountryCodes(CountryBasedPaymentAccount countryBasedPaymentAccount) {
-        List<String> accpetedCodes = Optional.ofNullable(offer.getAcceptedCountryCodes())
+    private boolean isSameOrSpecificBank() {
+        PaymentMethod paymentMethod = offer.getPaymentMethod();
+        boolean isSameOrSpecificBank = paymentMethod.equals(PaymentMethod.SAME_BANK)
+                || paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
+        return (paymentAccount instanceof BankAccount) && isSameOrSpecificBank;
+    }
+
+    private boolean isMatchesCountryCodes() {
+        List<String> acceptedCodes = Optional.ofNullable(offer.getAcceptedCountryCodes())
                 .orElse(Collections.emptyList());
 
-        String code = Optional.ofNullable(countryBasedPaymentAccount.getCountry())
+        String code = Optional.of(paymentAccount)
+                .map(CountryBasedPaymentAccount.class::cast)
+                .map(CountryBasedPaymentAccount::getCountry)
                 .map(country -> country.code)
                 .orElse("undefined");
 
-        return accpetedCodes.contains(code);
+        return acceptedCodes.contains(code);
     }
 
     private boolean isMatchingCurrency() {
@@ -109,10 +115,10 @@ class AccountValidator {
         return codes.contains(offer.getCurrencyCode());
     }
 
-    private boolean isSepaRelated(CountryBasedPaymentAccount account) {
+    private boolean isSepaRelated() {
         PaymentMethod paymentMethod = offer.getPaymentMethod();
-        return account instanceof SepaAccount
-                || account instanceof SepaInstantAccount
+        return paymentAccount instanceof SepaAccount
+                || paymentAccount instanceof SepaInstantAccount
                 || paymentMethod.equals(PaymentMethod.SEPA)
                 || paymentMethod.equals(PaymentMethod.SEPA_INSTANT);
     }
