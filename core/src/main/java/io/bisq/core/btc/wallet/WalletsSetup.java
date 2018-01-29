@@ -86,7 +86,7 @@ public class WalletsSetup {
     private final BisqEnvironment bisqEnvironment;
     private final BitcoinNodes bitcoinNodes;
     private final int numConnectionForBtc;
-    private final boolean useAllProvidedNodes;
+    private boolean useAllProvidedNodes;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -299,7 +299,6 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
-        boolean useTorForBitcoinJ = socks5Proxy != null;
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
@@ -312,16 +311,13 @@ public class WalletsSetup {
                             .map(BitcoinNodes.BtcNode::fromFullAddress)
                             .collect(Collectors.toList());
                     walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
-                    long onionAddresses = btcNodeList.stream()
-                            .filter(BitcoinNodes.BtcNode::hasOnionAddress)
-                            .count();
-                    if (onionAddresses != btcNodeList.size()) {
-                        log.warn("We do not support mixed onion and clear net addresses. We use those which represent the majority of nodes, either all clear-net or all onion addresses.");
-                        useTorForBitcoinJ = onionAddresses >= (btcNodeList.size() - onionAddresses);
-                    }
+                    // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
+                    useAllProvidedNodes = true;
                 } else {
-                    log.warn("Custom nodes is set but no nodes are provided.");
-                    walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
+                    log.warn("Custom nodes is set but no nodes are provided. We fall back to provided nodes option.");
+                    preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
+                    btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+                    walletConfig.setMinBroadcastConnections(4);
                 }
                 break;
             case PUBLIC:
@@ -331,7 +327,6 @@ public class WalletsSetup {
             default:
             case PROVIDED:
                 btcNodeList = bitcoinNodes.getProvidedBtcNodes();
-
                 // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
                 // are more reliable than random public nodes.
                 walletConfig.setMinBroadcastConnections(4);
@@ -339,7 +334,7 @@ public class WalletsSetup {
         }
 
         List<PeerAddress> peerAddressList = new ArrayList<>();
-
+        boolean useTorForBitcoinJ = socks5Proxy != null;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
         if (useTorForBitcoinJ) {
