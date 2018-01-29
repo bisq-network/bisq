@@ -90,8 +90,8 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
         spreadColumn.setComparator((o1, o2) -> {
-            BigDecimal spreadO1 = o1.priceSpread != null ? BigDecimal.valueOf(o1.priceSpread.getValue()) : new BigDecimal(0);
-            BigDecimal spreadO2 = o2.priceSpread != null ? BigDecimal.valueOf(o2.priceSpread.getValue()) : new BigDecimal(0);
+            Long spreadO1 = o1.priceSpread != null ? o1.priceSpread.getValue() : 0;
+            Long spreadO2 = o2.priceSpread != null ? o2.priceSpread.getValue() : 0;
             return spreadO1.compareTo(spreadO2);
         });
 
