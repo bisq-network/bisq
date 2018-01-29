@@ -257,6 +257,9 @@ public class TradeStatisticsManager {
         // v0.6.4
         coinsWithValidator.add("CREA");
         coinsWithValidator.add("XIN");
+        // v0.6.5
+        coinsWithValidator.add("BETR");
+        coinsWithValidator.add("MVT");
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -284,6 +287,9 @@ public class TradeStatisticsManager {
         // v0.6.4
         newlyAdded.add("CREA");
         newlyAdded.add("XIN");
+        // v0.6.5
+        newlyAdded.add("BETR");
+        newlyAdded.add("MVT");
 
         CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
