@@ -39,7 +39,7 @@ public class PaymentAccountUtil {
     }
 
     public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
-        return AccountValidator.isPaymentAccountValidForOffer(offer, paymentAccount);
+        return new ReceiptValidator(offer, paymentAccount).isValid();
     }
 
     public static Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer,
