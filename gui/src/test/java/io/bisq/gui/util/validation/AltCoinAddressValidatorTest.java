@@ -525,4 +525,18 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("XIN-FXFA-LR6Y-QZA-9V4SX").isValid);
         assertFalse(validator.validate("XIN-FXFA-LR6Y-QZAW-9V4S").isValid);
     }
+
+    @Test
+    public void testBETR() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("BETR");
+
+        assertTrue(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+        assertTrue(validator.validate("2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d1641353982266").isValid);
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
+        assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }
