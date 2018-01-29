@@ -94,6 +94,7 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         result.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
         result.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
+        result.add(new CryptoCurrency("BETR", "Better Betting", true));
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
