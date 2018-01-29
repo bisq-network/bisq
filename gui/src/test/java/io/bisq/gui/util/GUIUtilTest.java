@@ -2,16 +2,25 @@ package io.bisq.gui.util;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static io.bisq.common.locale.TradeCurrencyMakers.bitcoin;
 import static io.bisq.common.locale.TradeCurrencyMakers.euro;
 import static io.bisq.core.user.PreferenceMakers.empty;
-import static org.junit.Assert.assertEquals;
+import static io.bisq.gui.util.CurrencyListItemMakers.bitcoinItem;
+import static io.bisq.gui.util.CurrencyListItemMakers.euroItem;
+import static io.bisq.gui.util.CurrencyListItemMakers.numberOfTrades;
+import static org.junit.Assert.*;
 
 public class GUIUtilTest {
 
@@ -36,9 +45,20 @@ public class GUIUtilTest {
                 Res.get("shared.offers"),
                 empty);
 
-        assertEquals("✦ BTC (BTC) - 10 offers", currencyListItemConverter.toString(new CurrencyListItem(bitcoin,10)));
-        assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(new CurrencyListItem(euro, 0)));
-        assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(new CurrencyListItem(euro, 1)));
+        assertEquals("✦ BTC (BTC) - 10 offers", currencyListItemConverter.toString(make(bitcoinItem.but(with(numberOfTrades,10)))));
+        assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(make(euroItem)));
+        assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(make(euroItem.but(with(numberOfTrades, 1)))));
 
+    }
+
+    @Test
+    public void testFillCurrencyListItems() {
+        ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+        List<TradeCurrency> tradeCurrencyList = new ArrayList<>();
+        tradeCurrencyList.add(euro);
+        CurrencyListItem euroListItem = make(euroItem.but(with(numberOfTrades,1)));
+
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, null, empty );
+        assertTrue(euroListItem.equals(currencyListItems.get(0)));
     }
 }
