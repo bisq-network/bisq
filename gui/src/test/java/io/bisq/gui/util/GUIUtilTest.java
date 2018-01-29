@@ -37,6 +37,8 @@ public class GUIUtilTest {
                 empty);
 
         assertEquals("✦ BTC (BTC) - 10 offers", currencyListItemConverter.toString(new CurrencyListItem(bitcoin,10)));
+        assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(new CurrencyListItem(euro, 0)));
+        assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(new CurrencyListItem(euro, 1)));
 
     }
 }
