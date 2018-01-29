@@ -6,7 +6,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
@@ -96,8 +99,20 @@ public class FileUtil {
     }
 
     public static void deleteFileIfExists(File file) throws IOException {
-        if (file.exists() && !file.delete())
-            throw new FileNotFoundException("Failed to delete file: " + file);
+        try {
+            if (Utilities.isWindows()) {
+                final File canonical = file.getCanonicalFile();
+                if (canonical.exists() && !canonical.delete()) {
+                    throw new IOException("Failed to delete canonical file");
+                }
+            } else if (file.exists() && !file.delete()) {
+                throw new IOException("Failed to delete file");
+            }
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+            throw new IOException(t);
+        }
     }
 
     public static void resourceToFile(String resourcePath, File destinationFile) throws ResourceNotFoundException, IOException {

@@ -20,6 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import com.google.common.base.Splitter;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
@@ -27,6 +28,7 @@ import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
 import io.bisq.gui.util.validation.PasswordValidator;
 import javafx.beans.property.BooleanProperty;
@@ -43,15 +45,16 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.wallet.DeterministicSeed;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -63,8 +66,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static io.bisq.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
+@Slf4j
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
-    private static final Logger log = LoggerFactory.getLogger(WalletPasswordWindow.class);
+    private final WalletsManager walletsManager;
+    private File storageDir;
+
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
@@ -78,7 +84,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private ChangeListener<String> wordsTextAreaChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
     private LocalDate walletCreationDate;
-    private final WalletsManager walletsManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +95,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     @Inject
-    private WalletPasswordWindow(WalletsManager walletsManager) {
+    private WalletPasswordWindow(WalletsManager walletsManager,
+                                 @Named(Storage.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
+        this.storageDir = storageDir;
         type = Type.Attention;
         width = 800;
     }
@@ -278,7 +285,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-        log.info("walletCreationDate "+walletCreationDate);
+        log.info("walletCreationDate " + walletCreationDate);
         datePicker.setValue(walletCreationDate);
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !seedWordsEdited.get(),
                 seedWordsValid, seedWordsEdited));
@@ -344,19 +351,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         //TODO Is ZoneOffset correct?
         long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        walletsManager.restoreSeedWords(
-                seed,
-                () -> UserThread.execute(() -> {
-                    log.info("Wallet restored with seed words");
-                    new Popup<>().feedback(Res.get("seed.restore.success"))
-                            .useShutDownButton()
-                            .show();
-                }),
-                throwable -> UserThread.execute(() -> {
-                    log.error(throwable.getMessage());
-                    new Popup<>().error(Res.get("seed.restore.error",
-                            Res.get("shared.errorMessageInline", throwable.getMessage())))
-                            .show();
-                }));
+        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
     }
 }

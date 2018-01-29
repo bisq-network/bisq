@@ -35,6 +35,7 @@ import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Statistic;
 import javafx.beans.value.ChangeListener;
@@ -234,21 +235,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
-        reSyncSPVChainButton.setOnAction(event -> {
-            if (walletsSetup.reSyncSPVChain()) {
-                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
-                        .useShutDownButton()
-                        .actionButtonText(Res.get("shared.shutDown"))
-                        .onAction(() -> {
-                            preferences.setResyncSpvRequested(true);
-                            UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
-                        })
-                        .hideCloseButton()
-                        .show();
-            } else {
-                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
-            }
-        });
+        reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain(walletsSetup, preferences));
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTextArea());
@@ -337,7 +324,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
-        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning ||  !bitcoinNodes.useProvidedBtcNodes());
+        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning || !bitcoinNodes.useProvidedBtcNodes());
         useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
         usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
 

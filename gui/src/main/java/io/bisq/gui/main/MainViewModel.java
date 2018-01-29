@@ -522,16 +522,9 @@ public class MainViewModel implements ViewModel {
                                         .useShutDownButton()
                                         .show();
                             } else {
-                                new Popup<>().warning(Res.get("error.spvFileCorrupted",
-                                        exception.getMessage()))
+                                new Popup<>().warning(Res.get("error.spvFileCorrupted", exception.getMessage()))
                                         .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
-                                        .onAction(() -> {
-                                            if (walletsSetup.reSyncSPVChain())
-                                                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
-                                                        .useShutDownButton().show();
-                                            else
-                                                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
-                                        })
+                                        .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
                                         .show();
                             }
                         } else {
