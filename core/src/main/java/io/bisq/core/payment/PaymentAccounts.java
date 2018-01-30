@@ -32,16 +32,19 @@ class PaymentAccounts {
 
     @Nullable
     PaymentAccount getOldestPaymentAccountForOffer(Offer offer) {
-        Comparator<PaymentAccount> comparator = this::compareByAge;
+        List<PaymentAccount> sortedValidAccounts = sortValidAccounts(offer);
 
-        List<PaymentAccount> sortedAccounts = accounts.stream()
+        logAccounts(sortedValidAccounts);
+
+        return firstOrNull(sortedValidAccounts);
+    }
+
+    private List<PaymentAccount> sortValidAccounts(Offer offer) {
+        Comparator<PaymentAccount> comparator = this::compareByAge;
+        return accounts.stream()
                 .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
                 .collect(Collectors.toList());
-
-        logValidAccounts(service, sortedAccounts);
-
-        return firstOrNull(sortedAccounts);
     }
 
     @Nullable
@@ -49,7 +52,7 @@ class PaymentAccounts {
         return accounts.isEmpty() ? null : accounts.get(0);
     }
 
-    private static void logValidAccounts(AccountAgeWitnessService service, List<PaymentAccount> accounts) {
+    private void logAccounts(List<PaymentAccount> accounts) {
         if (log.isDebugEnabled()) {
             StringBuilder message = new StringBuilder("Valid accounts: \n");
             for (PaymentAccount account : accounts) {
