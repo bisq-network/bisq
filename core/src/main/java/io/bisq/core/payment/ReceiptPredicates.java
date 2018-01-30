@@ -31,7 +31,7 @@ class ReceiptPredicates {
         return arePaymentMethodsEqual;
     }
 
-    boolean isSameOrSpecificBank(Offer offer, PaymentAccount account) {
+    boolean isOfferRequireSameOrSpecificBank(Offer offer, PaymentAccount account) {
         PaymentMethod paymentMethod = offer.getPaymentMethod();
         boolean isSameOrSpecificBank = paymentMethod.equals(PaymentMethod.SAME_BANK)
                 || paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);

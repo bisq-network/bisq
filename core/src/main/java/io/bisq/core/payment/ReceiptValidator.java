@@ -13,11 +13,14 @@ class ReceiptValidator {
     private final PaymentAccount account;
     private final Offer offer;
 
-
     ReceiptValidator(Offer offer, PaymentAccount account) {
-        this.account = account;
+        this(offer, account, new ReceiptPredicates());
+    }
+
+    ReceiptValidator(Offer offer, PaymentAccount account, ReceiptPredicates predicates) {
         this.offer = offer;
-        this.predicates = new ReceiptPredicates();
+        this.account = account;
+        this.predicates = predicates;
     }
 
     boolean isValid() {
@@ -38,14 +41,14 @@ class ReceiptValidator {
         // We have same country
         if (predicates.isSepaRelated(offer, account)) {
             return isEqualPaymentMethods;
-        } else if (predicates.isSameOrSpecificBank(offer, account)) {
-            return isValidForSameOrSpecificBankAccount();
+        } else if (predicates.isOfferRequireSameOrSpecificBank(offer, account)) {
+            return isValidWhenOfferRequireSameOrSpecificBank();
         } else {
             return isValidByType();
         }
     }
 
-    private boolean isValidForSameOrSpecificBankAccount() {
+    private boolean isValidWhenOfferRequireSameOrSpecificBank() {
         final List<String> acceptedBanksForOffer = offer.getAcceptedBankIds();
         Preconditions.checkNotNull(acceptedBanksForOffer, "offer.getAcceptedBankIds() must not be null");
 

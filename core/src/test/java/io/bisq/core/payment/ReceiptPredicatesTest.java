@@ -53,7 +53,7 @@ public class ReceiptPredicatesTest {
         Offer offer = mock(Offer.class);
         when(offer.getPaymentMethod()).thenReturn(PaymentMethod.SAME_BANK);
 
-        assertTrue(predicates.isSameOrSpecificBank(offer, mock(NationalBankAccount.class)));
+        assertTrue(predicates.isOfferRequireSameOrSpecificBank(offer, mock(NationalBankAccount.class)));
     }
 
     @Test
