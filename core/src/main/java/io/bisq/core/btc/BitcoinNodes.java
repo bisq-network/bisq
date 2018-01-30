@@ -25,7 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -76,6 +78,13 @@ public class BitcoinNodes {
 
     public boolean useProvidedBtcNodes() {
         return BisqEnvironment.getBaseCurrencyNetwork().isBitcoin() && BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+    }
+
+    public static List<BitcoinNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {
+        return nodes.stream()
+                .filter(e -> !e.isEmpty())
+                .map(BitcoinNodes.BtcNode::fromFullAddress)
+                .collect(Collectors.toList());
     }
 
     @EqualsAndHashCode

@@ -7,6 +7,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
+import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
@@ -240,8 +241,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 setUseTorForBitcoinJ(true);
         }
 
-        if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty())
+        if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty()) {
+            if (getBitcoinNodes() != null && !getBitcoinNodes().equals(btcNodesFromOptions)) {
+                log.warn("The Bitcoin node(s) from the program argument and the one(s) persisted in the UI are different. " +
+                        "The Bitcoin node(s) {} from the program argument will be used.", btcNodesFromOptions);
+            }
             setBitcoinNodes(btcNodesFromOptions);
+            setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal());
+        }
 
         initialReadDone = true;
         persist();
