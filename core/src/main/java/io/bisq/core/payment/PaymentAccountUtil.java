@@ -119,6 +119,6 @@ public class PaymentAccountUtil {
                                                                                Set<PaymentAccount> paymentAccounts,
                                                                                AccountAgeWitnessService service) {
         PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service);
-        return Optional.ofNullable(accounts.getMostMaturePaymentAccountForOffer(offer));
+        return Optional.ofNullable(accounts.getOldestPaymentAccountForOffer(offer));
     }
 }

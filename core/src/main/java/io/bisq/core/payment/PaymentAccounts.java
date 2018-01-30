@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 class PaymentAccounts {
@@ -16,18 +17,25 @@ class PaymentAccounts {
 
     private final Set<PaymentAccount> accounts;
     private final AccountAgeWitnessService service;
+    private final BiFunction<Offer, PaymentAccount, Boolean> validator;
 
     PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service) {
+        this(accounts, service, PaymentAccountUtil::isPaymentAccountValidForOffer);
+    }
+
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service,
+                    BiFunction<Offer, PaymentAccount, Boolean> validator) {
         this.accounts = accounts;
         this.service = service;
+        this.validator = validator;
     }
 
     @Nullable
-    PaymentAccount getMostMaturePaymentAccountForOffer(Offer offer) {
+    PaymentAccount getOldestPaymentAccountForOffer(Offer offer) {
         Comparator<PaymentAccount> comparator = this::compareByAge;
 
         List<PaymentAccount> sortedAccounts = accounts.stream()
-                .filter(paymentAccount -> PaymentAccountUtil.isPaymentAccountValidForOffer(offer, paymentAccount))
+                .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
                 .collect(Collectors.toList());
 
@@ -37,8 +45,8 @@ class PaymentAccounts {
     }
 
     @Nullable
-    private PaymentAccount firstOrNull(List<PaymentAccount> list) {
-        return list.isEmpty() ? null : list.get(0);
+    private PaymentAccount firstOrNull(List<PaymentAccount> accounts) {
+        return accounts.isEmpty() ? null : accounts.get(0);
     }
 
     private static void logValidAccounts(AccountAgeWitnessService service, List<PaymentAccount> accounts) {
@@ -64,6 +72,7 @@ class PaymentAccounts {
         AccountAgeWitness rightWitness = service.getMyWitness(right.getPaymentAccountPayload());
 
         Date now = new Date();
+
         long leftAge = service.getAccountAge(leftWitness, now);
         long rightAge = service.getAccountAge(rightWitness, now);
 
