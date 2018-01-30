@@ -332,7 +332,7 @@ public class WalletsSetup {
         }
 
         List<PeerAddress> peerAddressList = new ArrayList<>();
-        boolean useTorForBitcoinJ = socks5Proxy != null;
+        final boolean useTorForBitcoinJ = socks5Proxy != null;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
         if (useTorForBitcoinJ) {
