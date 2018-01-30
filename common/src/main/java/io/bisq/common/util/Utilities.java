@@ -17,6 +17,7 @@
 
 package io.bisq.common.util;
 
+import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -56,7 +57,7 @@ public class Utilities {
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())
                 /*.excludeFieldsWithModifiers(Modifier.TRANSIENT)*/
-              /*  .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)*/
+                /*  .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)*/
                 .setPrettyPrinting()
                 .create();
         return gson.toJson(object);
@@ -399,6 +400,23 @@ public class Utilities {
         return calendar.getTime();
     }
 
+    /**
+     * @param stringList      String of comma separated tokens.
+     * @param allowWhitespace If white space inside the list tokens is allowed. If not the token will be ignored.
+     * @return Set of tokens
+     */
+    public static Set<String> commaSeparatedListToSet(String stringList, boolean allowWhitespace) {
+        if (stringList != null) {
+            return Splitter.on(",")
+                    .splitToList(allowWhitespace ? stringList : StringUtils.deleteWhitespace(stringList))
+                    .stream()
+                    .filter(e -> !e.isEmpty())
+                    .collect(Collectors.toSet());
+        } else {
+            return new HashSet<>();
+        }
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
@@ -482,13 +500,13 @@ public class Utilities {
             return;
         }
         try {
-        /*
-         * Do the following, but with reflection to bypass access checks:
-         *
-         * JceSecurity.isRestricted = false;
-         * JceSecurity.defaultPolicy.perms.clear();
-         * JceSecurity.defaultPolicy.add(CryptoAllPermission.INSTANCE);
-         */
+            /*
+             * Do the following, but with reflection to bypass access checks:
+             *
+             * JceSecurity.isRestricted = false;
+             * JceSecurity.defaultPolicy.perms.clear();
+             * JceSecurity.defaultPolicy.add(CryptoAllPermission.INSTANCE);
+             */
             final Class<?> jceSecurity = Class.forName("javax.crypto.JceSecurity");
             final Class<?> cryptoPermissions = Class.forName("javax.crypto.CryptoPermissions");
             final Class<?> cryptoAllPermission = Class.forName("javax.crypto.CryptoAllPermission");

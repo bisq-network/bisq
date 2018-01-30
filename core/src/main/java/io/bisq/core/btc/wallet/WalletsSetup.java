@@ -18,7 +18,6 @@
 package io.bisq.core.btc.wallet;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Inject;
@@ -29,6 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
@@ -75,7 +75,6 @@ public class WalletsSetup {
     private static final int DEFAULT_CONNECTIONS = 9;
 
     private static final long STARTUP_TIMEOUT = 180;
-    private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
@@ -85,8 +84,8 @@ public class WalletsSetup {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final BisqEnvironment bisqEnvironment;
     private final BitcoinNodes bitcoinNodes;
+    private final String btcWalletFileName;
     private final int numConnectionForBtc;
-    private final boolean useAllProvidedNodes;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -96,6 +95,7 @@ public class WalletsSetup {
     private final DownloadListener downloadListener = new DownloadListener();
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
     public final BooleanProperty shutDownComplete = new SimpleBooleanProperty();
+    private final boolean useAllProvidedNodes;
     private WalletConfig walletConfig;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -293,36 +293,40 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
+        boolean useCustomNodes = false;
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
-        walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
+
+        // We prefer to duplicate the check for CUSTOM here as in case the custom nodes lead to an empty list we fall back to the PROVIDED mode.
+        if (preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal()) {
+            btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
+            if (btcNodeList.isEmpty()) {
+                log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
+                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
+            }
+        }
+
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
-                String bitcoinNodesString = preferences.getBitcoinNodes();
-                if (bitcoinNodesString != null) {
-                    btcNodeList = Splitter.on(",")
-                            .splitToList(StringUtils.deleteWhitespace(bitcoinNodesString))
-                            .stream()
-                            .filter(e -> !e.isEmpty())
-                            .map(BitcoinNodes.BtcNode::fromFullAddress)
-                            .collect(Collectors.toList());
-                }
+                // We have set the btcNodeList already above
+                walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
+                // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
+                useCustomNodes = true;
                 break;
             case PUBLIC:
-                // we keep the empty list
+                // We keep the empty btcNodeList
+                walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
                 break;
             default:
             case PROVIDED:
                 btcNodeList = bitcoinNodes.getProvidedBtcNodes();
-
                 // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
                 // are more reliable than random public nodes.
                 walletConfig.setMinBroadcastConnections(4);
                 break;
         }
 
-        final boolean useTorForBitcoinJ = socks5Proxy != null;
         List<PeerAddress> peerAddressList = new ArrayList<>();
-
+        final boolean useTorForBitcoinJ = socks5Proxy != null;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
         if (useTorForBitcoinJ) {
@@ -344,7 +348,7 @@ public class WalletsSetup {
                             e.printStackTrace();
                         }
                     });
-            if (useAllProvidedNodes) {
+            if (useAllProvidedNodes || useCustomNodes) {
                 // We also use the clear net nodes (used for monitor)
                 btcNodeList.stream()
                         .filter(BitcoinNodes.BtcNode::hasClearNetAddress)

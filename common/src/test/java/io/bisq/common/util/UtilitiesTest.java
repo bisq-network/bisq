@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class UtilitiesTest {
@@ -31,5 +32,24 @@ public class UtilitiesTest {
         assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03})));
         assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03, 0x04}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03}, new byte[]{0x04})));
         assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03, 0x04, 0x05}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03}, new byte[]{0x04}, new byte[]{0x05})));
+    }
+
+    @Test
+    public void testToStringList() {
+        assertTrue(Utilities.commaSeparatedListToSet(null, false).isEmpty());
+        assertTrue(Utilities.commaSeparatedListToSet(null, true).isEmpty());
+        assertTrue(Utilities.commaSeparatedListToSet("", false).isEmpty());
+        assertTrue(Utilities.commaSeparatedListToSet("", true).isEmpty());
+        assertTrue(Utilities.commaSeparatedListToSet(" ", false).isEmpty());
+        assertEquals(1, Utilities.commaSeparatedListToSet(" ", true).size());
+        assertTrue(Utilities.commaSeparatedListToSet(",", false).isEmpty());
+        assertTrue(Utilities.commaSeparatedListToSet(",", true).isEmpty());
+        assertEquals(1, Utilities.commaSeparatedListToSet(",test1", false).size());
+        assertEquals(1, Utilities.commaSeparatedListToSet(", , test1", false).size());
+        assertEquals(2, Utilities.commaSeparatedListToSet(", , test1", true).size());
+        assertEquals(1, Utilities.commaSeparatedListToSet("test1,", false).size());
+        assertEquals(1, Utilities.commaSeparatedListToSet("test1, ,", false).size());
+        assertEquals(1, Utilities.commaSeparatedListToSet("test1", false).size());
+        assertEquals(2, Utilities.commaSeparatedListToSet("test1, test2", false).size());
     }
 }
