@@ -301,22 +301,25 @@ public class WalletsSetup {
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
         boolean useCustomNodes = false;
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
+
+        // We prefer to duplicate the check for CUSTOM here as in case the custom nodes lead to an empty list we fall back to the PROVIDED mode.
+        if (preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal()) {
+            btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
+            if (btcNodeList.isEmpty()) {
+                log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
+                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
+            }
+        }
+
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
-                btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
-                if (!btcNodeList.isEmpty()) {
-                    walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
-                    // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
-                    useCustomNodes = true;
-                } else {
-                    log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
-                    preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
-                    btcNodeList = bitcoinNodes.getProvidedBtcNodes();
-                    walletConfig.setMinBroadcastConnections(4);
-                }
+                // We have set the btcNodeList already above
+                walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
+                // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
+                useCustomNodes = true;
                 break;
             case PUBLIC:
-                // we keep the empty list
+                // We keep the empty btcNodeList
                 walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
                 break;
             default:
