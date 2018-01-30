@@ -29,6 +29,7 @@ import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
@@ -40,8 +41,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // time in blocks (average 10 min for one block confirmation
-    private static final long HOUR = 3600_000;
-    private static final long DAY = HOUR * 24;
+    private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";

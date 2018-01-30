@@ -29,9 +29,11 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountList;
@@ -39,6 +41,7 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.P2PService;
@@ -59,6 +62,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.wallet.DeterministicSeed;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -442,5 +446,43 @@ public class GUIUtil {
             new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
         else if (!walletsSetup.isDownloadComplete())
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
+    }
+
+    public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
+        try {
+            walletsSetup.reSyncSPVChain();
+            new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                    .useShutDownButton()
+                    .actionButtonText(Res.get("shared.shutDown"))
+                    .onAction(() -> {
+                        preferences.setResyncSpvRequested(true);
+                        UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
+                    })
+                    .hideCloseButton()
+                    .show();
+        } catch (Throwable t) {
+            new Popup<>().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
+        }
+    }
+
+    public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
+        try {
+            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
+        } catch (Throwable t) {
+            new Popup<>().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
+        }
+        walletsManager.restoreSeedWords(
+                seed,
+                () -> UserThread.execute(() -> {
+                    log.info("Wallets restored with seed words");
+                    new Popup<>().feedback(Res.get("seed.restore.success"))
+                            .useShutDownButton()
+                            .show();
+                }),
+                throwable -> UserThread.execute(() -> {
+                    log.error(throwable.toString());
+                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
+                            .show();
+                }));
     }
 }

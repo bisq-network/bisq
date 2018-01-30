@@ -19,8 +19,8 @@ package io.bisq.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.user.DontShowAgainLookup;
@@ -28,6 +28,7 @@ import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -41,6 +42,8 @@ import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -56,6 +59,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private final WalletsManager walletsManager;
     private final BtcWalletService btcWalletService;
     private final WalletPasswordWindow walletPasswordWindow;
+    private final File storageDir;
 
     private Button restoreButton;
     private TextArea displaySeedWordsTextArea, seedWordsTextArea;
@@ -75,10 +79,14 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(WalletsManager walletsManager, BtcWalletService btcWalletService, WalletPasswordWindow walletPasswordWindow) {
+    private SeedWordsView(WalletsManager walletsManager,
+                          BtcWalletService btcWalletService,
+                          WalletPasswordWindow walletPasswordWindow,
+                          @Named(Storage.STORAGE_DIR) File storageDir) {
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
         this.walletPasswordWindow = walletPasswordWindow;
+        this.storageDir = storageDir;
     }
 
     @Override
@@ -230,19 +238,6 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         //TODO Is ZoneOffset correct?
         long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
-        walletsManager.restoreSeedWords(
-                seed,
-                () -> UserThread.execute(() -> {
-                    log.info("Wallets restored with seed words");
-                    new Popup<>().feedback(Res.get("seed.restore.success"))
-                            .useShutDownButton()
-                            .show();
-                }),
-                throwable -> UserThread.execute(() -> {
-                    log.error(throwable.getMessage());
-                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
-                            throwable.getMessage())))
-                            .show();
-                }));
+        GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
     }
 }

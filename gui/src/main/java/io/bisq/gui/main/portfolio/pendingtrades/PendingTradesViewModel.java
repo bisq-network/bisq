@@ -112,7 +112,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     protected void activate() {
     }
 
-    // Dont set own listener as we need to control the order of the calls
+    // Don't set own listener as we need to control the order of the calls
     public void onSelectedItemChanged(PendingTradesListItem selectedItem) {
         if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
@@ -156,30 +156,23 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
         return btcFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
-    // trade period
 
     private long getMaxTradePeriod() {
         return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
     }
 
-    private long getTimeWhenDisputeOpens() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() : 0;
+    @Nullable
+    private Date getMaxTradePeriodDate() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getMaxTradePeriodDate() : null;
     }
 
-    private long getTimeWhenHalfPeriodReached() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() / 2 : 0;
-    }
-
-    private Date getDateWhenDisputeOpens() {
-        return new Date(getTimeWhenDisputeOpens());
-    }
-
-    private Date getDateWhenHalfPeriodReached() {
-        return new Date(getTimeWhenHalfPeriodReached());
+    @Nullable
+    private Date getHalfTradePeriodDate() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getHalfTradePeriodDate() : null;
     }
 
     private long getRemainingTradeDuration() {
-        return getDateWhenDisputeOpens().getTime() - new Date().getTime();
+        return getMaxTradePeriodDate() != null ? getMaxTradePeriodDate().getTime() - new Date().getTime() : getMaxTradePeriod();
     }
 
     public String getRemainingTradeDurationAsWords() {
@@ -200,11 +193,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean showWarning() {
-        return new Date().after(getDateWhenHalfPeriodReached());
+        return getHalfTradePeriodDate() != null && new Date().after(getHalfTradePeriodDate());
     }
 
     public boolean showDispute() {
-        return new Date().after(getDateWhenDisputeOpens());
+        return getMaxTradePeriodDate() != null && new Date().after(getMaxTradePeriodDate());
     }
 
     //
@@ -245,7 +238,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTxFee() {
-        if (trade != null) {
+        if (trade != null && trade.getTradeAmount() != null) {
             Coin txFee = dataModel.getTxFee();
             String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(), btcFormatter);
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
@@ -256,7 +249,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getTradeFee() {
         if (trade != null && dataModel.getOffer() != null) {
-            if (dataModel.getOffer().isCurrencyForMakerFeeBtc()) {
+            if (dataModel.getOffer().isCurrencyForMakerFeeBtc() && trade.getTradeAmount() != null) {
                 Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
                 String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
@@ -271,7 +264,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getSecurityDeposit() {
         Offer offer = dataModel.getOffer();
         Trade trade = dataModel.getTrade();
-        if (offer != null && trade != null) {
+        if (offer != null && trade != null && trade.getTradeAmount() != null) {
             Coin securityDeposit = dataModel.isBuyer() ?
                     offer.getBuyerSecurityDeposit()
                     : offer.getSellerSecurityDeposit();
