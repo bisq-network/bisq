@@ -18,7 +18,6 @@
 package io.bisq.core.btc.wallet;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Inject;
@@ -29,6 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
@@ -75,7 +75,6 @@ public class WalletsSetup {
     private static final int DEFAULT_CONNECTIONS = 9;
 
     private static final long STARTUP_TIMEOUT = 180;
-    private final String btcWalletFileName;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
@@ -85,8 +84,8 @@ public class WalletsSetup {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final BisqEnvironment bisqEnvironment;
     private final BitcoinNodes bitcoinNodes;
+    private final String btcWalletFileName;
     private final int numConnectionForBtc;
-    private boolean useAllProvidedNodes;
     private final String userAgent;
     private final NetworkParameters params;
     private final File walletDir;
@@ -96,6 +95,7 @@ public class WalletsSetup {
     private final DownloadListener downloadListener = new DownloadListener();
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
     public final BooleanProperty shutDownComplete = new SimpleBooleanProperty();
+    private boolean useAllProvidedNodes;
     private WalletConfig walletConfig;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -302,19 +302,13 @@ public class WalletsSetup {
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
-                final String bitcoinNodesString = preferences.getBitcoinNodes();
-                if (bitcoinNodesString != null && !bitcoinNodesString.isEmpty()) {
-                    btcNodeList = Splitter.on(",")
-                            .splitToList(StringUtils.deleteWhitespace(bitcoinNodesString))
-                            .stream()
-                            .filter(e -> !e.isEmpty())
-                            .map(BitcoinNodes.BtcNode::fromFullAddress)
-                            .collect(Collectors.toList());
+                btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
+                if (!btcNodeList.isEmpty()) {
                     walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
                     // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
                     useAllProvidedNodes = true;
                 } else {
-                    log.warn("Custom nodes is set but no nodes are provided. We fall back to provided nodes option.");
+                    log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
                     preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
                     btcNodeList = bitcoinNodes.getProvidedBtcNodes();
                     walletConfig.setMinBroadcastConnections(4);
