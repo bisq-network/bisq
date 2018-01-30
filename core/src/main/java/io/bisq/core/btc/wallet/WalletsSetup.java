@@ -95,7 +95,7 @@ public class WalletsSetup {
     private final DownloadListener downloadListener = new DownloadListener();
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
     public final BooleanProperty shutDownComplete = new SimpleBooleanProperty();
-    private boolean useAllProvidedNodes;
+    private final boolean useAllProvidedNodes;
     private WalletConfig walletConfig;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -299,6 +299,7 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
+        boolean useCustomNodes = false;
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
@@ -306,7 +307,7 @@ public class WalletsSetup {
                 if (!btcNodeList.isEmpty()) {
                     walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
                     // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
-                    useAllProvidedNodes = true;
+                    useCustomNodes = true;
                 } else {
                     log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
                     preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
@@ -350,7 +351,7 @@ public class WalletsSetup {
                             e.printStackTrace();
                         }
                     });
-            if (useAllProvidedNodes) {
+            if (useAllProvidedNodes || useCustomNodes) {
                 // We also use the clear net nodes (used for monitor)
                 btcNodeList.stream()
                         .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
