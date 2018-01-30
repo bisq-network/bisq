@@ -59,7 +59,7 @@ import static com.google.common.base.Preconditions.*;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    private static int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
+    private static final int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -219,6 +219,7 @@ public class WalletConfig extends AbstractIdleService {
         this.peerAddresses = addresses;
         return this;
     }
+
 
     /**
      * If true, the wallet will save itself to disk automatically whenever it changes.
@@ -539,17 +540,14 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private void installShutdownHook() {
-        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("ShutdownHook");
-                try {
-                    WalletConfig.this.stopAsync();
-                    WalletConfig.this.awaitTerminated();
-                } catch (Throwable ignore) {
-                }
+        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("ShutdownHook");
+            try {
+                WalletConfig.this.stopAsync();
+                WalletConfig.this.awaitTerminated();
+            } catch (Throwable ignore) {
             }
-        });
+        }));
     }
 
     @Override

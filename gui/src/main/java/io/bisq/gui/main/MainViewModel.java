@@ -829,7 +829,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateTradePeriodState() {
-        tradeManager.getTradableList().stream().forEach(trade -> {
+        tradeManager.getTradableList().forEach(trade -> {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
