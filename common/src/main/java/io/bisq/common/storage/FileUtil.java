@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -72,16 +73,10 @@ public class FileUtil {
     }
 
     public static void deleteDirectory(File file) throws IOException {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files != null)
-                for (File c : files)
-                    deleteDirectory(c);
-        }
-        deleteFileIfExists(file);
+        deleteDirectory(file, null, true);
     }
 
-    public static void deleteDirectory(File file, File exclude) throws IOException {
+    public static void deleteDirectory(File file, @Nullable File exclude, boolean ignoreLockedFiles) throws IOException {
         boolean excludeFileFound = false;
         if (file.isDirectory()) {
             File[] files = file.listFiles();
@@ -90,29 +85,49 @@ public class FileUtil {
                     if (!excludeFileFound)
                         excludeFileFound = f.equals(exclude);
                     if (!f.equals(exclude))
-                        deleteDirectory(f);
+                        deleteDirectory(f, exclude, ignoreLockedFiles);
                 }
         }
         // Finally delete main file/dir if exclude file was not found in directory
-        if (!excludeFileFound && !file.equals(exclude))
-            deleteFileIfExists(file);
+        if (!excludeFileFound && !file.equals(exclude)) {
+            try {
+                deleteFileIfExists(file, ignoreLockedFiles);
+            } catch (Throwable t) {
+                log.error("Could not delete file. Error=" + t.toString());
+                throw new IOException(t);
+            }
+        }
     }
 
     public static void deleteFileIfExists(File file) throws IOException {
+        deleteFileIfExists(file, true);
+    }
+
+    public static void deleteFileIfExists(File file, boolean ignoreLockedFiles) throws IOException {
         try {
-            if (Utilities.isWindows()) {
-                final File canonical = file.getCanonicalFile();
-                if (canonical.exists() && !canonical.delete()) {
-                    throw new IOException("Failed to delete canonical file");
+            if (Utilities.isWindows())
+                file = file.getCanonicalFile();
+
+            if (file.exists() && !file.delete()) {
+                if (ignoreLockedFiles) {
+                    // We check if file is locked. On Windows all open files are locked by the OS, so we
+                    if (isFileLocked(file))
+                        log.info("Failed to delete locked file: " + file.getAbsolutePath());
+                } else {
+                    final String message = "Failed to delete file: " + file.getAbsolutePath();
+                    log.error(message);
+                    throw new IOException(message);
                 }
-            } else if (file.exists() && !file.delete()) {
-                throw new IOException("Failed to delete file");
             }
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
             throw new IOException(t);
         }
+    }
+
+    private static boolean isFileLocked(File file) {
+        return !file.canWrite();
     }
 
     public static void resourceToFile(String resourcePath, File destinationFile) throws ResourceNotFoundException, IOException {

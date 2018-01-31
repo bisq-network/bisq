@@ -115,15 +115,17 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void show() {
-        if (headLine == null)
-            headLine = Res.get("torNetworkSettingWindow.header");
+        if (!isDisplayed) {
+            if (headLine == null)
+                headLine = Res.get("torNetworkSettingWindow.header");
 
-        width = 1000;
-        createGridPane();
-        addContent();
-        addCloseButton();
-        applyStyles();
-        display();
+            width = 1000;
+            createGridPane();
+            addContent();
+            addCloseButton();
+            applyStyles();
+            display();
+        }
     }
 
     protected void addCloseButton() {
@@ -205,7 +207,11 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         Button deleteFilesButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
         deleteFilesButton.setOnAction(e -> {
             cleanTorDir();
-            new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success")).show();
+            gridPane.setMouseTransparent(true);
+            new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success"))
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show();
         });
 
 
@@ -319,7 +325,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private void cleanTorDir() {
         final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
         try {
-            FileUtil.deleteDirectory(torDir, hiddenservice);
+            FileUtil.deleteDirectory(torDir, hiddenservice, true);
         } catch (IOException e) {
             e.printStackTrace();
             log.error(e.toString());

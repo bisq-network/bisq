@@ -332,7 +332,6 @@ public class MainViewModel implements ViewModel {
     }
 
     private void showTorNetworkSettingsWindow() {
-        MainView.blur();
         torNetworkSettingsWindow.show();
     }
 

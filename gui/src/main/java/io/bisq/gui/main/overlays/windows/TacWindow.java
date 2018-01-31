@@ -9,9 +9,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Screen;
+import lombok.extern.slf4j.Slf4j;
 
 import static io.bisq.gui.util.FormBuilder.addHyperlinkWithIcon;
 
+@Slf4j
 public class TacWindow extends Overlay<TacWindow> {
 
     private final boolean smallScreen;

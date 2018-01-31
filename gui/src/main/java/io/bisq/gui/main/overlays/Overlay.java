@@ -53,9 +53,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,9 +64,8 @@ import java.util.concurrent.TimeUnit;
 
 import static io.bisq.gui.util.FormBuilder.addCheckBox;
 
+@Slf4j
 public abstract class Overlay<T extends Overlay> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -141,6 +139,7 @@ public abstract class Overlay<T extends Overlay> {
     protected boolean hideCloseButton;
     protected boolean useAnimation = true;
     private String headlineStyle;
+    protected boolean isDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,6 +186,7 @@ public abstract class Overlay<T extends Overlay> {
                 onHidden();
             });
         }
+        isDisplayed = false;
     }
 
     protected void onHidden() {
@@ -489,6 +489,7 @@ public abstract class Overlay<T extends Overlay> {
                 window.widthProperty().addListener(positionListener);
 
                 animateDisplay();
+                isDisplayed = true;
             }
         }
     }

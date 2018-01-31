@@ -34,6 +34,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +42,7 @@ import java.util.function.Consumer;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
+@Slf4j
 public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
     private TextField makerFeeTextField;
     private ChangeListener<Toggle> toggleChangeListener;

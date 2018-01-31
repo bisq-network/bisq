@@ -28,6 +28,7 @@ import io.bisq.gui.common.view.ViewFactory;
 import io.bisq.gui.common.view.ViewLoader;
 import io.bisq.gui.common.view.guice.InjectorViewFactory;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
+import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Transitions;
@@ -59,6 +60,7 @@ public class GuiModule extends AppModule {
         bind(OfferBook.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
         bind(BsqFormatter.class).in(Singleton.class);
+        bind(TorNetworkSettingsWindow.class).in(Singleton.class);
 
         bind(Transitions.class).in(Singleton.class);
 
