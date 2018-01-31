@@ -40,12 +40,11 @@ class DisplayedTransactions extends AbstractObservableListDecorator<Transactions
     private TransactionsListItem convertTransactionToListItem(Transaction transaction) {
         Set<Tradable> tradables = tradableRepository.getAll();
 
-        @SuppressWarnings("ConstantConditions")
         TransactionAwareTradable maybeTradable = tradables.stream()
                 .map(transactionAwareTradableFactory::create)
                 .filter(tradable -> tradable.isRelatedToTransaction(transaction))
                 .findAny()
-                .get();
+                .orElse(null);
 
         return transactionListItemFactory.create(transaction, maybeTradable);
     }

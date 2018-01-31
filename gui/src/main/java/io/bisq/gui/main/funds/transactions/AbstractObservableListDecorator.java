@@ -4,21 +4,27 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
+import java.util.AbstractList;
 import java.util.Collection;
-import java.util.function.Consumer;
 
-abstract class AbstractObservableListDecorator<T> {
+abstract class AbstractObservableListDecorator<T> extends AbstractList<T> {
     private final ObservableList<T> delegate = FXCollections.observableArrayList();
 
     SortedList<T> asSortedList() {
         return new SortedList<>(delegate);
     }
 
-    void forEach(Consumer<? super T> consumer) {
-        delegate.forEach(consumer);
-    }
-
     void setAll(Collection<? extends T> elements) {
         delegate.setAll(elements);
+    }
+
+    @Override
+    public T get(int index) {
+        return delegate.get(index);
+    }
+
+    @Override
+    public int size() {
+        return delegate.size();
     }
 }
