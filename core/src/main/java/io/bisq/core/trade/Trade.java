@@ -225,6 +225,7 @@ public abstract class Trade implements Tradable, Model {
 
     // Persistable
     // Immutable
+    @Nullable
     @Getter
     private final Offer offer;
     @Getter
