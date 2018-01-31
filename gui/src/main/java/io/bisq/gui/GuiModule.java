@@ -27,6 +27,8 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.common.view.ViewFactory;
 import io.bisq.gui.common.view.ViewLoader;
 import io.bisq.gui.common.view.guice.InjectorViewFactory;
+import io.bisq.gui.main.funds.transactions.TradableRepository;
+import io.bisq.gui.main.funds.transactions.TransactionListItemFactory;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
@@ -63,6 +65,10 @@ public class GuiModule extends AppModule {
         bind(Transitions.class).in(Singleton.class);
 
         bind(Stage.class).toInstance(primaryStage);
+
+        bind(TradableRepository.class).in(Singleton.class);
+        bind(TransactionListItemFactory.class).in(Singleton.class);
+        bind(TransactionListItemFactory.class).in(Singleton.class);
 
         bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
     }
