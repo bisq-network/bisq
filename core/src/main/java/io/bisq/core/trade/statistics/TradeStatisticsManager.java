@@ -260,6 +260,7 @@ public class TradeStatisticsManager {
         // v0.6.5
         coinsWithValidator.add("BETR");
         coinsWithValidator.add("MVT");
+        coinsWithValidator.add("REF");
 
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
@@ -290,13 +291,14 @@ public class TradeStatisticsManager {
         // v0.6.5
         newlyAdded.add("BETR");
         newlyAdded.add("MVT");
+        newlyAdded.add("REF");
 
-        CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+        CurrencyUtil.getAllSortedCryptoCurrencies()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
         StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
         StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
         map2.entrySet().stream()
-                .sorted((o1, o2) -> Integer.valueOf(o2.getValue().size()).compareTo(o1.getValue().size()))
+                .sorted((o1, o2) -> Integer.compare(o2.getValue().size(), o1.getValue().size()))
                 .forEach(e -> {
                     final String key = e.getKey();
                     sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
@@ -309,7 +311,7 @@ public class TradeStatisticsManager {
 
         // Not considered age of newly added coins, so take care with removal if coin was added recently.
         allCryptoCurrencies.sort(String::compareTo);
-        allCryptoCurrencies.stream()
+        allCryptoCurrencies
                 .forEach(e -> {
                     // key is: USD Tether (USDT)
                     String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
