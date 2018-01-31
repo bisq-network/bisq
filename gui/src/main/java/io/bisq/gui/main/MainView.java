@@ -151,17 +151,37 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             daoButton.setManaged(false);
         }
 
-        // TODO can be removed once DAO is released
-        if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
-            UserThread.runAfter(() -> {
-                root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
+        UserThread.runAfter(() -> {
+            root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+                // TODO can be removed once DAO is released
+                if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
+                    if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
                         daoButton.setVisible(true);
                         daoButton.setManaged(true);
                     }
-                });
-            }, 1);
-        }
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                    marketButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                    buyButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
+                    sellButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
+                    portfolioButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
+                    fundsButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
+                    disputesButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
+                    settingsButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
+                    accountButton.fire();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
+                    if (daoButton.isVisible()) {
+                        daoButton.fire();
+                    }
+                }
+            });
+        }, 1);
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
             setLeftAnchor(this, 10d);
