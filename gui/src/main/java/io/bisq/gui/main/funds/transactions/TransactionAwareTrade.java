@@ -23,13 +23,13 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     public boolean isRelatedToTransaction(Transaction transaction) {
         String txId = transaction.getHashAsString();
 
-        boolean isTakeOfferFeeTx = txId.equals(delegate.getTakerFeeTxId());
+        boolean isTakerOfferFeeTx = txId.equals(delegate.getTakerFeeTxId());
         boolean isOfferFeeTx = isOfferFeeTx(txId);
         boolean isDepositTx = isDepositTx(txId);
         boolean isPayoutTx = isPayoutTx(txId);
         boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
 
-        return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
+        return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
     }
 
     private boolean isPayoutTx(String txId) {
