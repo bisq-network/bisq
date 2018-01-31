@@ -577,9 +577,9 @@ public class AltCoinAddressValidatorTest {
         assertTrue(validator.validate("Se3x7sVdvUnMMn2KoYLyYVHMJGRoB2R3V8K3LYuHAiEXgVac7vsmFiXUC8dSpJnjXDfwytKsQJV6HFH8MjwPagTJ2Aha46RZM").isValid);
         assertTrue(validator.validate("Se3F51UzpbVVnQRx2VNbcjfBoQJfeuyFF353i1jLnCZda9yVN3vy8csbYCESBvf38TFkchH1C1tMY6XHkC8L678K2vLsVZVMU").isValid);
         
-        assertFalse(validator.validate("Se3x7svUnMMn2KoYLyYVHMJGRoB2R3V8K3LYuHAiEXgVac7vsmFiXUC8dSpJnjXDfwytKsQJV6HFH8MjwPagTJ2Aha46RZM").isValid);
-        assertFalse(validator.validate("Se3F51UzpbVVnQRx2VNbcjfBoQJfeuyFF353i1jLnCZda9yVN3vy8csbYCESBvf38TFkchH1C1tMY6XHkC8L678K2vLsVZVMUXQ").isValid);
-        assertFalse(validator.validate("SX45GjRnvqheAgCpx4nJeKRjDtS5tYawxEP1GaTj79dTEm21Dtdxex6EHyDqBpofoDqW9k9uQWtkGgbbF8kiRSZ27AksBg7G111").isValid);
+        assertFalse(validator.validate("Se3x7svUnMMn2KoYLyYVHMJGRoB2R3V8K3LYuHAiEXgVac7vsmFiXUC8dSpJnjXDfwytKsQJV6HFH8MjwPagTJ2Aha46RZM").isValid); //Only 95 charecter, expected is 97.
+        assertFalse(validator.validate("Se3F51UzpbVVnQRx2VNbcjfBoQJfeuyFF353i1jLnCZda9yVN3vy8csbYCESBvf38TFkchH1C1tMY6XHkC8L678K2vLsVZVMUXQ").isValid); //99 charecters, expected is 97.
+        assertFalse(validator.validate("SX45GjRnvqheAgCpx4nJeKRjDtS5tYawxEP1GaTj79dTEm21Dtdxex6EHyDqBpofoDqW9k9uQWtkGgbbF8kiRSZ27AksBg7G111").isValid); //Address prefix is Se and not SX.
         assertFalse(validator.validate("").isValid);       
     }
 }
