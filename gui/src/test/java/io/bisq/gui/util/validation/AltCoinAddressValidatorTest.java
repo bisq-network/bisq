@@ -568,4 +568,21 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
         assertFalse(validator.validate("").isValid);
     }
+    
+    @Test
+    public void testTOKC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("TOKC");
+
+        assertTrue(validator.validate("TEJDontvGWEMhqQD5AJCGnntaL5rCjeqYg").isValid);
+        assertTrue(validator.validate("TRoPhStzKp5aMrjCWZsrZXNNYgLGeevT7b").isValid);
+        assertTrue(validator.validate("TUA8cfYfHhYkeC6vWoNVHovLCMcpBqFe5i").isValid);
+
+        assertFalse(validator.validate("TXykgFmYuWW3oxacTxCeZpCaPzb2yThr7f").isValid);
+        assertFalse(validator.validate("TE9vAkd9FCUN87rFEmm3cjyqmsTeMQP5XU").isValid);
+        assertFalse(validator.validate("TQnsyJUEpMWfsnsf6rdh1v2Aze4pA5A7rY").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }
+ 
+
