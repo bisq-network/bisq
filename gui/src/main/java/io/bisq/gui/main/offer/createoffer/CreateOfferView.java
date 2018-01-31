@@ -106,7 +106,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
-            totalToPayInfoIconLabel, priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
+            priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
             waitingForFundsLabel, marketBasedPriceLabel, xLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
@@ -412,7 +412,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setVisible(true);
         cancelButton2.setVisible(true);
 
-        setupTotalToPayInfoIconLabel();
+        totalToPayTextField.setInfoPopOver(createInfoPopover());
 
         final byte[] imageBytes = QRCode
                 .from(getBitcoinURI())
@@ -910,7 +910,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayLabel.setVisible(false);
         totalToPayTextField = fundsTuple.second;
         totalToPayTextField.setVisible(false);
-        totalToPayInfoIconLabel = totalToPayTextField.getInfoIcon();
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
@@ -1180,16 +1179,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     // PayInfo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupTotalToPayInfoIconLabel() {
-        totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
-        totalToPayInfoIconLabel.setOnMouseExited(e -> {
-            if (totalToPayInfoPopover != null)
-                totalToPayInfoPopover.hide();
-        });
-    }
-
-    // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-    private void createInfoPopover() {
+    private GridPane createInfoPopover() {
         GridPane infoGridPane = new GridPane();
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(5);
@@ -1208,14 +1198,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"), model.getTotalToPayInfo());
-        totalToPayInfoPopover = new PopOver(infoGridPane);
-        if (totalToPayInfoIconLabel.getScene() != null) {
-            totalToPayInfoPopover.setDetachable(false);
-            totalToPayInfoPopover.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
-            totalToPayInfoPopover.setArrowIndent(5);
-
-            totalToPayInfoPopover.show(totalToPayInfoIconLabel, -17);
-        }
+        return infoGridPane;
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {

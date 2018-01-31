@@ -23,10 +23,12 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
+import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ public class FundsTextField extends AnchorPane {
 
     private final StringProperty amount = new SimpleStringProperty();
     private final Label infoIcon;
+    private PopOver infoPopover;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -43,6 +46,7 @@ public class FundsTextField extends AnchorPane {
 
 
     public FundsTextField() {
+
         TextField textField = new TextField();
         // might be removed if no styling is necessary
         textField.setId("amount-text-field");
@@ -85,7 +89,36 @@ public class FundsTextField extends AnchorPane {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setInfoPopOver(Node node) {
+        // As we don't use binding here we need to recreate it on mouse over to reflect the current state
+        infoIcon.setOnMouseEntered(e -> createInfoPopOver(node));
+        infoIcon.setOnMouseExited(e -> {
+            if (infoPopover != null)
+                infoPopover.hide();
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void createInfoPopOver(Node node) {
         node.getStyleClass().add("default-text");
+
+        infoPopover = new PopOver(node);
+        if (infoIcon.getScene() != null) {
+            infoPopover.setDetachable(false);
+            infoPopover.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
+            infoPopover.setArrowIndent(5);
+
+            infoPopover.show(infoIcon, -17);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters/Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -99,9 +132,5 @@ public class FundsTextField extends AnchorPane {
 
     public StringProperty amountProperty() {
         return amount;
-    }
-
-    public Label getInfoIcon() {
-        return infoIcon;
     }
 }
