@@ -6,7 +6,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
-import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -22,8 +21,6 @@ import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -66,18 +63,6 @@ public class TradeStatisticsManager {
         this.priceFeedService = priceFeedService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
-
-        // delay to not stress startup
-        UserThread.runAfter(() -> {
-            try {
-                //TODO can be removed at some point...
-                // Remove files from pre v0.6.0 versions
-                FileUtil.deleteFileIfExists(new File(Paths.get(storageDir.getAbsolutePath(), "TradeStatistics").toString()));
-                FileUtil.deleteFileIfExists(new File(Paths.get(storageDir.getAbsolutePath(), "EntryMap").toString()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }, 60);
     }
 
     public void onAllServicesInitialized() {
