@@ -92,7 +92,7 @@ public class FundsTextField extends AnchorPane {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setInfoPopOver(Node node) {
+    public void setContentForInfoPopOver(Node node) {
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
         infoIcon.setOnMouseEntered(e -> createInfoPopOver(node));
         infoIcon.setOnMouseExited(e -> {
