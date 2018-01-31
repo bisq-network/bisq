@@ -35,12 +35,17 @@
 
 package io.bisq.gui.main.overlays.windows;
 
+import com.google.inject.name.Named;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
+import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.util.Layout;
+import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.network.DefaultPluggableTransports;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
@@ -56,8 +61,11 @@ import javafx.scene.layout.Priority;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +88,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private final Preferences preferences;
+    private final File torDir;
     private RadioButton noBridgesRadioButton, providedBridgesRadioButton, customBridgesRadioButton;
     private Label enterBridgeLabel;
     private ComboBox<Transport> transportTypeComboBox;
@@ -89,12 +98,17 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private Transport selectedTorTransportOrdinal = Transport.OBFS_4;
     private String customBridges = "";
 
-    public TorNetworkSettingsWindow(Preferences preferences) {
+    @Inject
+    public TorNetworkSettingsWindow(Preferences preferences,
+                                    @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
         this.preferences = preferences;
+        this.torDir = torDir;
+
         type = Type.Attention;
 
         useShutDownButton();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -106,8 +120,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
         width = 1000;
         createGridPane();
-        addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();
@@ -174,23 +186,46 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         }
     }
 
+    @Override
+    protected void applyStyles() {
+        super.applyStyles();
+        gridPane.setId("popup-grid-pane-bg");
+    }
+
     private void addContent() {
-        gridPane.setStyle("-fx-background-color: #f8f8f8;");
+        addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("torNetworkSettingWindow.deleteFiles.header"));
 
-        Label label = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.info"));
-        label.setWrapText(true);
-        GridPane.setColumnIndex(label, 0);
-        GridPane.setColumnSpan(label, 2);
-        GridPane.setHalignment(label, HPos.LEFT);
-        GridPane.setValignment(label, VPos.TOP);
+        Label deleteFilesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.info"), Layout.FIRST_ROW_DISTANCE);
+        deleteFilesLabel.setWrapText(true);
+        GridPane.setColumnIndex(deleteFilesLabel, 0);
+        GridPane.setColumnSpan(deleteFilesLabel, 2);
+        GridPane.setHalignment(deleteFilesLabel, HPos.LEFT);
+        GridPane.setValignment(deleteFilesLabel, VPos.TOP);
 
-        GridPane.setMargin(label, new Insets(0, 0, 20, 0));
+        Button deleteFilesButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
+        deleteFilesButton.setOnAction(e -> {
+            cleanTorDir();
+            new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success")).show();
+        });
+
+
+        addTitledGroupBg(gridPane, ++rowIndex, 7, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
+
+        Label bridgesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.bridges.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        bridgesLabel.setWrapText(true);
+        GridPane.setColumnIndex(bridgesLabel, 0);
+        GridPane.setColumnSpan(bridgesLabel, 2);
+        GridPane.setHalignment(bridgesLabel, HPos.LEFT);
+        GridPane.setValignment(bridgesLabel, VPos.TOP);
+
+        //addLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
         // noBridges
         noBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.noBridges"));
         noBridgesRadioButton.setUserData(BridgeOption.NONE);
+        GridPane.setMargin(noBridgesRadioButton, new Insets(20, 0, 0, 0));
 
         // providedBridges
         providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
@@ -238,8 +273,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setColumnIndex(label2, 1);
         GridPane.setColumnSpan(label2, 2);
         GridPane.setHalignment(label2, HPos.LEFT);
-        GridPane.setValignment(label, VPos.TOP);
-        GridPane.setMargin(label, new Insets(10, 10, 20, 0));
+        GridPane.setValignment(label2, VPos.TOP);
+        GridPane.setMargin(label2, new Insets(10, 10, 20, 0));
 
         // init persisted values
         selectedBridgeOption = BridgeOption.values()[preferences.getBridgeOptionOrdinal()];
@@ -279,6 +314,17 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                     setBridgeAddressesByCustomBridges();
                 }
         );
+    }
+
+    private void cleanTorDir() {
+        final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
+        try {
+            FileUtil.deleteDirectory(torDir, hiddenservice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error(e.toString());
+            new Popup<>().error(e.toString()).show();
+        }
     }
 
     private void applyToggleSelection() {

@@ -1068,6 +1068,15 @@ textfield */
     -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
 }
 
+#popup-grid-pane-bg {
+    -fx-font-size: 14;
+    -fx-text-fill: #333;
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-radius: 10 10 10 10;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+}
+
 #notification-popup-headline {
     -fx-font-size: 13;
     -fx-font-weight: bold;
