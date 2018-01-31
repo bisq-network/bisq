@@ -2,6 +2,7 @@ package io.bisq.monitor.metrics.p2p;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.monitor.MonitorOptionKeys;
 import io.bisq.monitor.metrics.Metrics;
 import io.bisq.monitor.metrics.MetricsModel;
 import io.bisq.network.p2p.NodeAddress;
@@ -11,7 +12,6 @@ import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.monitor.MonitorOptionKeys;
 import lombok.extern.slf4j.Slf4j;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;
@@ -142,6 +142,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                         nodeAddress);
                                 stopRetryTimer(nodeAddress);
                                 retryCounterMap.remove(nodeAddress);
+                                metrics.setNumRequestAttempts(retryCounterMap.getOrDefault(nodeAddress, 1));
 
                                 // need to remove before listeners are notified as they cause the update call
                                 handlerMap.remove(nodeAddress);
@@ -164,12 +165,8 @@ public class MonitorRequestManager implements ConnectionListener {
                                 handlerMap.remove(nodeAddress);
                                 stopRetryTimer(nodeAddress);
 
-                                int retryCounter;
-                                if (retryCounterMap.containsKey(nodeAddress))
-                                    retryCounter = retryCounterMap.get(nodeAddress);
-                                else
-                                    retryCounter = 0;
-
+                                int retryCounter = retryCounterMap.getOrDefault(nodeAddress, 0);
+                                metrics.setNumRequestAttempts(retryCounter);
                                 if (retryCounter < MAX_RETRIES) {
                                     log.info("We got an error at peer={}. We will try again after a delay of {} sec. error={} ",
                                             nodeAddress, RETRY_DELAY_SEC, errorMessage);

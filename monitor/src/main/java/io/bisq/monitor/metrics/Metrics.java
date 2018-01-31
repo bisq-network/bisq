@@ -18,6 +18,7 @@
 package io.bisq.monitor.metrics;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,4 +29,10 @@ public class Metrics {
     List<Long> requestDurations = new ArrayList<>();
     List<String> errorMessages = new ArrayList<>();
     List<Map<String, Integer>> receivedObjectsList = new ArrayList<>();
+    @Setter
+    long lastDataRequestTs;
+    @Setter
+    long lastDataResponseTs;
+    @Setter
+    long numRequestAttempts;
 }

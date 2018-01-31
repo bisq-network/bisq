@@ -22,9 +22,9 @@ import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.monitor.MonitorOptionKeys;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.monitor.MonitorOptionKeys;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +37,14 @@ import org.bitcoinj.core.Peer;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.InetAddress;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class MetricsModel {
+    private final DateFormat dateFormat = new SimpleDateFormat("MMMMM dd, HH:mm:ss");
     @Getter
     private String resultAsString;
     @Getter
@@ -139,10 +142,13 @@ public class MetricsModel {
                         "<tr>" +
                         "<th align=\"left\">Operator</th>" +
                         "<th align=\"left\">Node address</th>" +
-                        "<th align=\"left\">Num requests</th>" +
-                        "<th align=\"left\">Num errors</th>" +
-                        "<th align=\"left\">Last error message</th>" +
+                        "<th align=\"left\">Total num requests</th>" +
+                        "<th align=\"left\">Total num errors</th>" +
+                        "<th align=\"left\">Last request</th>" +
+                        "<th align=\"left\">Last response</th>" +
                         "<th align=\"left\">RRT average</th>" +
+                        "<th align=\"left\">Num requests (retries)</th>" +
+                        "<th align=\"left\">Last error message</th>" +
                         "<th align=\"left\">Last data</th>" +
                         "<th align=\"left\">Data deviation last request</th>" +
                         "</tr>");
@@ -151,8 +157,9 @@ public class MetricsModel {
         sb.append("Seed nodes in error:" + totalErrors);
         sb.append("\nLast check started at: " + time + "\n");
 
-        entryList.stream().forEach(e -> {
-            final List<Long> allDurations = e.getValue().getRequestDurations();
+        entryList.forEach(e -> {
+            final Metrics metrics = e.getValue();
+            final List<Long> allDurations = metrics.getRequestDurations();
             final String allDurationsString = allDurations.stream().map(Object::toString).collect(Collectors.joining("<br/>"));
             final OptionalDouble averageOptional = allDurations.stream().mapToLong(value -> value).average();
             double durationAverage = 0;
@@ -160,7 +167,7 @@ public class MetricsModel {
                 durationAverage = averageOptional.getAsDouble() / 1000;
             final NodeAddress nodeAddress = e.getKey();
             final String operator = seedNodesRepository.getOperator(nodeAddress);
-            final List<String> errorMessages = e.getValue().getErrorMessages();
+            final List<String> errorMessages = metrics.getErrorMessages();
             final int numErrors = (int) errorMessages.stream().filter(s -> !s.isEmpty()).count();
             int numRequests = allDurations.size();
             String lastErrorMsg = "";
@@ -173,17 +180,23 @@ public class MetricsModel {
                 }
             }
             //  String lastErrorMsg = numErrors > 0 ? errorMessages.get(errorMessages.size() - 1) : "";
-            final List<Map<String, Integer>> allReceivedData = e.getValue().getReceivedObjectsList();
+            final List<Map<String, Integer>> allReceivedData = metrics.getReceivedObjectsList();
             Map<String, Integer> lastReceivedData = !allReceivedData.isEmpty() ? allReceivedData.get(allReceivedData.size() - 1) : new HashMap<>();
             final String lastReceivedDataString = lastReceivedData.entrySet().stream().map(Object::toString).collect(Collectors.joining("<br/>"));
             final String allReceivedDataString = allReceivedData.stream().map(Object::toString).collect(Collectors.joining("<br/>"));
+            final String requestTs = metrics.getLastDataRequestTs() > 0 ? dateFormat.format(new Date(metrics.getLastDataRequestTs())) : "" + "<br/>";
+            final String responseTs = metrics.getLastDataResponseTs() > 0 ? dateFormat.format(new Date(metrics.getLastDataResponseTs())) : "" + "<br/>";
+            final String numRequestAttempts = metrics.getNumRequestAttempts() + "<br/>";
 
             sb.append("\nOperator: ").append(operator)
                     .append("\nNode address: ").append(nodeAddress)
-                    .append("\nNum requests: ").append(numRequests)
-                    .append("\nNum errors: ").append(numErrors)
-                    .append("\nLast error message: ").append(lastErrorMsg)
+                    .append("\nTotal num requests: ").append(numRequests)
+                    .append("\nTotal num errors: ").append(numErrors)
+                    .append("\nLast request: ").append(requestTs)
+                    .append("\nLast response: ").append(responseTs)
                     .append("\nRRT average: ").append(durationAverage)
+                    .append("\nNum requests (retries): ").append(numRequestAttempts)
+                    .append("\nLast error message: ").append(lastErrorMsg)
                     .append("\nLast data: ").append(lastReceivedDataString);
 
             String colorNumErrors = lastIndexOfError == numErrors ? "black" : "red";
@@ -193,8 +206,11 @@ public class MetricsModel {
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + nodeAddress + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numRequests + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numErrors + "</font> ").append("</td>")
-                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + lastErrorMsg + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + requestTs + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + responseTs + "</font> ").append("</td>")
                     .append("<td>").append("<font color=\"" + colorDurationAverage + "\">" + durationAverage + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + numRequestAttempts + "</font> ").append("</td>")
+                    .append("<td>").append("<font color=\"" + colorNumErrors + "\">" + lastErrorMsg + "</font> ").append("</td>")
                     .append("<td>").append(lastReceivedDataString).append("</td><td>");
 
             if (!allReceivedData.isEmpty()) {
@@ -409,6 +425,7 @@ public class MetricsModel {
     public void addNodesInError(NodeAddress nodeAddress) {
         nodesInError.add(nodeAddress);
     }
+
     public void removeNodesInError(NodeAddress nodeAddress) {
         nodesInError.remove(nodeAddress);
     }

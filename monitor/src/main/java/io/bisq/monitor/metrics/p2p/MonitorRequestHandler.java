@@ -90,6 +90,7 @@ class MonitorRequestHandler implements MessageListener {
                     .collect(Collectors.toSet());
 
             GetDataRequest getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
+            metrics.setLastDataRequestTs(System.currentTimeMillis());
 
             if (timeoutTimer != null) {
                 log.warn("timeoutTimer was already set. That must not happen.");
@@ -220,6 +221,7 @@ class MonitorRequestHandler implements MessageListener {
                     log.info("Requesting data took {} ms", duration);
                     metrics.getRequestDurations().add(duration);
                     metrics.getErrorMessages().add(arbitratorReceived[0] ? "" : "No Arbitrator objects received! Seed node need to be restarted!");
+                    metrics.setLastDataResponseTs(System.currentTimeMillis());
 
                     cleanup();
                     connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, listener::onComplete);
