@@ -40,8 +40,10 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.util.Tuple2;
+import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.Layout;
@@ -208,14 +210,21 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setHalignment(deleteFilesLabel, HPos.LEFT);
         GridPane.setValignment(deleteFilesLabel, VPos.TOP);
 
-        Button deleteFilesButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
+        Button deleteFilesButton = tuple.first;
         deleteFilesButton.setOnAction(e -> {
-            cleanTorDir();
+            tuple.second.play();
+            tuple.third.setText(Res.get("torNetworkSettingWindow.deleteFiles.progress"));
             gridPane.setMouseTransparent(true);
-            new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success"))
-                    .useShutDownButton()
-                    .hideCloseButton()
-                    .show();
+            deleteFilesButton.setDisable(true);
+            cleanTorDir(() -> {
+                tuple.second.stop();
+                tuple.third.setText("");
+                new Popup<>().feedback(Res.get("torNetworkSettingWindow.deleteFiles.success"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show();
+            });
         });
 
 
@@ -326,7 +335,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         );
     }
 
-    private void cleanTorDir() {
+    private void cleanTorDir(Runnable resultHandler) {
         // We shut down Tor to be able to delete locked files (Windows locks files used by a process)
         networkNode.shutDown(() -> {
             // We give it a bit extra time to be sure that OS locks are removed
@@ -334,6 +343,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                 final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
                 try {
                     FileUtil.deleteDirectory(torDir, hiddenservice, true);
+                    resultHandler.run();
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.error(e.toString());
