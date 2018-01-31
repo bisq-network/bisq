@@ -28,16 +28,18 @@ import static org.junit.Assert.assertEquals;
 
 public class BSFormatterTest {
 
+    private BSFormatter formatter;
+
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
+        formatter = new BSFormatter();
+        Res.setBaseCurrencyCode("BTC");
+        Res.setBaseCurrencyName("Bitcoin");
     }
 
     @Test
     public void testIsValid() {
-        BSFormatter formatter = new BSFormatter();
-        Res.setBaseCurrencyCode("BTC");
-        Res.setBaseCurrencyName("Bitcoin");
         assertEquals("0 days", formatter.formatAccountAge(TimeUnit.HOURS.toMillis(23)));
         assertEquals("0 days", formatter.formatAccountAge(0));
         assertEquals("0 days", formatter.formatAccountAge(-1));
@@ -45,5 +47,17 @@ public class BSFormatterTest {
         assertEquals("2 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(2)));
         assertEquals("30 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(30)));
         assertEquals("60 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(60)));
+    }
+
+    @Test
+    public void testFormatDurationAsWords() {
+        assertEquals("1 hour, 0 minutes", formatter.formatDurationAsWords(60 * 60 * 1000));
+        assertEquals("1 day, 0 hours, 0 minutes", formatter.formatDurationAsWords(24 * 60 * 60 * 1000));
+        assertEquals("2 days, 0 hours, 1 minute", formatter.formatDurationAsWords((2 * 24 * 60 + 1) * 60 * 1000));
+        assertEquals("2 days, 0 hours, 2 minutes", formatter.formatDurationAsWords((2 * 24 * 60 + 2) * 60 * 1000));
+        assertEquals("1 hour, 0 minutes, 0 seconds", formatter.formatDurationAsWords(60 * 60 * 1000, true));
+        assertEquals("1 hour, 0 minutes, 1 second", formatter.formatDurationAsWords((60 * 60 + 1) * 1000, true));
+        assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords((60 * 60 + 2) * 1000, true));
+        assertEquals("Trade period is over", formatter.formatDurationAsWords(0));
     }
 }
