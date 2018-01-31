@@ -47,6 +47,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.Layout;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.network.DefaultPluggableTransports;
+import io.bisq.network.p2p.network.NetworkNode;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -88,6 +89,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private final Preferences preferences;
+    private NetworkNode networkNode;
     private final File torDir;
     private RadioButton noBridgesRadioButton, providedBridgesRadioButton, customBridgesRadioButton;
     private Label enterBridgeLabel;
@@ -100,8 +102,10 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
     @Inject
     public TorNetworkSettingsWindow(Preferences preferences,
+                                    NetworkNode networkNode,
                                     @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
         this.preferences = preferences;
+        this.networkNode = networkNode;
         this.torDir = torDir;
 
         type = Type.Attention;
@@ -323,14 +327,20 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void cleanTorDir() {
-        final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
-        try {
-            FileUtil.deleteDirectory(torDir, hiddenservice, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.toString());
-            new Popup<>().error(e.toString()).show();
-        }
+        // We shut down Tor to be able to delete locked files (Windows locks files used by a process)
+        networkNode.shutDown(() -> {
+            // We give it a bit extra time to be sure that OS locks are removed
+            UserThread.runAfter(() -> {
+                final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
+                try {
+                    FileUtil.deleteDirectory(torDir, hiddenservice, true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.error(e.toString());
+                    new Popup<>().error(e.toString()).show();
+                }
+            }, 3);
+        });
     }
 
     private void applyToggleSelection() {
