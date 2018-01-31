@@ -156,6 +156,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
             amountTextField.setText(model.amount.get());
         };
+
+        GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 
 

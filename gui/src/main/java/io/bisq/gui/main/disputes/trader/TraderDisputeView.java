@@ -401,6 +401,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             } catch (ParseException ignore) {
             }
         }
+        GUIUtil.requestFocus(filterTextField);
     }
 
     @Override
@@ -911,6 +912,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             root.getChildren().add(2, messagesAnchorPane);
 
             scrollToBottom();
+            GUIUtil.requestFocus(inputTextArea);
         }
 
         addListenersOnSelectDispute();

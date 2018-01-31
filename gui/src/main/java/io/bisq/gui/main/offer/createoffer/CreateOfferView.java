@@ -174,6 +174,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 return null;
             }
         });
+
+        GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 
     @Override
