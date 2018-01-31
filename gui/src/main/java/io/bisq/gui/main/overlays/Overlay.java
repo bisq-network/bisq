@@ -174,17 +174,19 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     public void hide() {
-        animateHide(() -> {
-            removeEffectFromBackground();
+        if (gridPane != null) {
+            animateHide(() -> {
+                removeEffectFromBackground();
 
-            if (stage != null)
-                stage.hide();
-            else
-                log.warn("Stage is null");
+                if (stage != null)
+                    stage.hide();
+                else
+                    log.warn("Stage is null");
 
-            cleanup();
-            onHidden();
-        });
+                cleanup();
+                onHidden();
+            });
+        }
     }
 
     protected void onHidden() {

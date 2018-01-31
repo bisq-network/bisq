@@ -37,7 +37,6 @@ import io.bisq.gui.main.market.MarketView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.util.BSFormatter;
@@ -100,12 +99,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         transitions.removeEffect(MainView.rootContainer);
     }
 
-    private final ToggleGroup navButtons = new ToggleGroup();
+    private static Transitions transitions;
+    private static StackPane rootContainer;
+
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private static Transitions transitions;
     private final BSFormatter formatter;
+
+    private final ToggleGroup navButtons = new ToggleGroup();
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
@@ -117,11 +119,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
-    private static StackPane rootContainer;
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
+    public MainView(MainViewModel model,
+                    CachingViewLoader viewLoader,
+                    Navigation navigation,
+                    Transitions transitions,
                     BSFormatter formatter) {
         super(model);
         this.viewLoader = viewLoader;
@@ -478,7 +482,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         showTorNetworkSettingsButton.setVisible(false);
         showTorNetworkSettingsButton.setManaged(false);
         showTorNetworkSettingsButton.setOnAction(e -> {
-            new TorNetworkSettingsWindow(model.preferences).show();
+            model.torNetworkSettingsWindow.show();
         });
 
         ImageView splashP2PNetworkIcon = new ImageView();

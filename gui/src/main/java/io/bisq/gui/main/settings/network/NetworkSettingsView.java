@@ -90,6 +90,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final BitcoinNodes bitcoinNodes;
     private final FilterManager filterManager;
     private final BisqEnvironment bisqEnvironment;
+    private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final Clock clock;
     private final BSFormatter formatter;
     private final WalletsSetup walletsSetup;
@@ -109,8 +110,15 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private ChangeListener<Filter> filterPropertyListener;
 
     @Inject
-    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences, BitcoinNodes bitcoinNodes,
-                               FilterManager filterManager, BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
+    public NetworkSettingsView(WalletsSetup walletsSetup,
+                               P2PService p2PService,
+                               Preferences preferences,
+                               BitcoinNodes bitcoinNodes,
+                               FilterManager filterManager,
+                               BisqEnvironment bisqEnvironment,
+                               TorNetworkSettingsWindow torNetworkSettingsWindow,
+                               Clock clock,
+                               BSFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -118,6 +126,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         this.bitcoinNodes = bitcoinNodes;
         this.filterManager = filterManager;
         this.bisqEnvironment = bisqEnvironment;
+        this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.clock = clock;
         this.formatter = formatter;
     }
@@ -260,7 +269,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         btcNodesInputTextField.textProperty().addListener(btcNodesInputTextFieldListener);
         btcNodesInputTextField.focusedProperty().addListener(btcNodesInputTextFieldFocusListener);
 
-        openTorSettingsButton.setOnAction(e -> new TorNetworkSettingsWindow(preferences).show());
+        openTorSettingsButton.setOnAction(e -> torNetworkSettingsWindow.show());
     }
 
     @Override
