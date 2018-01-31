@@ -83,8 +83,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     Button exportButton;
 
-    private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
+    private final DisplayedTransactions observableList = new DisplayedTransactions();
+    private final SortedList<TransactionsListItem> sortedList = observableList.asSortedList();
 
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
@@ -302,10 +302,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                             trade.getPayoutTx().getHashAsString().equals(txId);
 
                                     boolean isDisputedPayoutTx = disputeManager.getDisputesAsObservableList().stream()
-                                            .filter(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
-                                                    tradable.getId().equals(dispute.getTradeId()))
-                                            .findAny()
-                                            .isPresent();
+                                            .anyMatch(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
+                                                    tradable.getId().equals(dispute.getTradeId()));
 
                                     return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
                                 } else
@@ -599,7 +597,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void showStatisticsPopup() {
         Map<Long, List<Coin>> map = new HashMap<>();
         Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-        observableList.stream().forEach(item -> {
+        observableList.forEach(item -> {
             Coin amountAsCoin = item.getAmountAsCoin();
             List<Coin> amounts;
             long key = amountAsCoin.getValue();
