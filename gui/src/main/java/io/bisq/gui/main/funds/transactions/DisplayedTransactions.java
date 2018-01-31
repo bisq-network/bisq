@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class DisplayedTransactions extends AbstractObservableListDecorator<TransactionsListItem> {
+class DisplayedTransactions extends ObservableListDecorator<TransactionsListItem> {
     private final BtcWalletService btcWalletService;
     private final TradableRepository tradableRepository;
     private final TransactionListItemFactory transactionListItemFactory;
