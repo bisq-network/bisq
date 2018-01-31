@@ -433,7 +433,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
-
+                case "STL":
+                    if(!input.matches("^(Se)?[a-zA-Z0-9_.-]{97}$")
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                     // Add new coins at the end...
                 default:
