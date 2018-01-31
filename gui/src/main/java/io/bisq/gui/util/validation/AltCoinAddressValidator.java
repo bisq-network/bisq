@@ -404,6 +404,13 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "TOKC":
+                    try {
+                        Address.fromBase58(TOKCParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
                 case "CREA":
                     try {
                         Address.fromBase58(CreaParams.get(), input);
