@@ -7,7 +7,7 @@ import javafx.collections.transformation.SortedList;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-abstract class ObservableListDecorator<T> {
+abstract class AbstractObservableListDecorator<T> {
     private final ObservableList<T> delegate = FXCollections.observableArrayList();
 
     SortedList<T> asSortedList() {

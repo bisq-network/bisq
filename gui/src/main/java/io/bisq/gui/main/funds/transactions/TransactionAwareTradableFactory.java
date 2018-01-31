@@ -11,7 +11,7 @@ public class TransactionAwareTradableFactory {
     private final DisputeManager disputeManager;
 
     @Inject
-    public TransactionAwareTradableFactory(DisputeManager disputeManager) {
+    TransactionAwareTradableFactory(DisputeManager disputeManager) {
         this.disputeManager = disputeManager;
     }
 
