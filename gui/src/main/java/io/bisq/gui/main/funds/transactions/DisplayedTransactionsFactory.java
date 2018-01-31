@@ -4,7 +4,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 
 import javax.inject.Inject;
 
-class DisplayedTransactionsFactory {
+public class DisplayedTransactionsFactory {
     private final BtcWalletService btcWalletService;
     private final TradableRepository tradableRepository;
     private final TransactionListItemFactory transactionListItemFactory;

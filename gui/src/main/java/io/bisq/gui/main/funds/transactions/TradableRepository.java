@@ -17,7 +17,7 @@ public class TradableRepository {
     private final FailedTradesManager failedTradesManager;
 
     @Inject
-    public TradableRepository(OpenOfferManager openOfferManager, TradeManager tradeManager,
+    TradableRepository(OpenOfferManager openOfferManager, TradeManager tradeManager,
                        ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager) {
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;

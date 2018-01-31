@@ -16,7 +16,7 @@ public class TransactionListItemFactory {
     private final BSFormatter formatter;
 
     @Inject
-    public TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+    TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                                       BSFormatter formatter) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
