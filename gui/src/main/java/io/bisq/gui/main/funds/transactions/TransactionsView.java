@@ -75,8 +75,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     Button exportButton;
 
-    private final DisplayedTransactions observableList = new DisplayedTransactions();
-    private final SortedList<TransactionsListItem> sortedList = observableList.asSortedList();
+    private final DisplayedTransactions displayedTransactions;
+    private final SortedList<TransactionsListItem> sortedDisplayedTransactions;
 
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
@@ -103,7 +103,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
                              Stage stage,
-                             OfferDetailsWindow offerDetailsWindow) {
+                             OfferDetailsWindow offerDetailsWindow,
+                             DisplayedTransactionsFactory displayedTransactionsFactory) {
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -112,6 +113,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.stage = stage;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.displayedTransactions = displayedTransactionsFactory.create();
+        this.sortedDisplayedTransactions = displayedTransactions.asSortedList();
     }
 
     @Override
@@ -135,17 +138,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setConfidenceColumnCellFactory();
         setRevertTxColumnCellFactory();
 
-        dateColumn.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+        dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         detailsColumn.setComparator((o1, o2) -> {
             String id1 = o1.getTradable() != null ? o1.getTradable().getId() : o1.getDetails();
             String id2 = o2.getTradable() != null ? o2.getTradable().getId() : o2.getDetails();
             return id1.compareTo(id2);
         });
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        transactionColumn.setComparator((o1, o2) -> o1.getTxId().compareTo(o2.getTxId()));
-        amountColumn.setComparator((o1, o2) -> o1.getAmountAsCoin().compareTo(o2.getAmountAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
-                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
+        addressColumn.setComparator(Comparator.comparing(TransactionsListItem::getAddressString));
+        transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
+        amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
+        confidenceColumn.setComparator(Comparator.comparingDouble(item -> item.getTxConfidenceIndicator().getProgress()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -154,17 +156,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                observableList.update();
+                displayedTransactions.update();
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                observableList.update();
+                displayedTransactions.update();
             }
 
             @Override
             public void onReorganize(Wallet wallet) {
-                observableList.update();
+                displayedTransactions.update();
             }
 
             @Override
@@ -173,17 +175,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
             @Override
             public void onWalletChanged(Wallet wallet) {
-                observableList.update();
+                displayedTransactions.update();
             }
 
             @Override
             public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                observableList.update();
+                displayedTransactions.update();
             }
 
             @Override
             public void onKeysAdded(List<ECKey> keys) {
-                observableList.update();
+                displayedTransactions.update();
             }
         };
 
@@ -199,9 +201,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-        observableList.update();
+        sortedDisplayedTransactions.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedDisplayedTransactions);
+        displayedTransactions.update();
 
         btcWalletService.addEventListener(walletEventListener);
 
@@ -230,14 +232,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             };
 
             GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
-                    new TransactionsListItem(), sortedList, stage);
+                    new TransactionsListItem(), sortedDisplayedTransactions, stage);
         });
     }
 
     @Override
     protected void deactivate() {
-        sortedList.comparatorProperty().unbind();
-        observableList.forEach(TransactionsListItem::cleanup);
+        sortedDisplayedTransactions.comparatorProperty().unbind();
+        displayedTransactions.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeEventListener(walletEventListener);
 
         if (scene != null)
@@ -524,7 +526,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void showStatisticsPopup() {
         Map<Long, List<Coin>> map = new HashMap<>();
         Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-        observableList.forEach(item -> {
+        displayedTransactions.forEach(item -> {
             Coin amountAsCoin = item.getAmountAsCoin();
             List<Coin> amounts;
             long key = amountAsCoin.getValue();
@@ -568,12 +570,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         });
 
         StringBuilder stringBuilder = new StringBuilder();
-        map.entrySet().stream().forEach(e -> {
+        map.forEach((key, value) -> {
             // This is not intended for the public so we don't translate here
             stringBuilder.append("No. of transactions for amount ").
-                    append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
+                    append(formatter.formatCoinWithCode(Coin.valueOf(key))).
                     append(": ").
-                    append(e.getValue().size()).
+                    append(value.size()).
                     append("\n");
         });
 
@@ -581,16 +583,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 map(e -> {
                     Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
                     return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
-                }).
-                collect(Collectors.toList());
-        sortedDataByDayList.sort((o1, o2) -> o2.second.compareTo(o1.second));
+                }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
+                .collect(Collectors.toList());
         StringBuilder transactionsByDayStringBuilder = new StringBuilder();
         StringBuilder offersStringBuilder = new StringBuilder();
         StringBuilder tradesStringBuilder = new StringBuilder();
         StringBuilder allStringBuilder = new StringBuilder();
         // This is not intended for the public so we don't translate here
         allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
-        sortedDataByDayList.stream().forEach(tuple4 -> {
+        sortedDataByDayList.forEach(tuple4 -> {
             offersStringBuilder.append(tuple4.forth.first).append(",");
             tradesStringBuilder.append(tuple4.forth.second).append(",");
             allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
