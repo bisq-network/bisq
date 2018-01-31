@@ -144,6 +144,7 @@ public class MainViewModel implements ViewModel {
     private final FailedTradesManager failedTradesManager;
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final BSFormatter formatter;
 
     // BTC network
@@ -197,7 +198,6 @@ public class MainViewModel implements ViewModel {
     private MonadicBinding<String> marketPriceBinding;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
-    private TorNetworkSettingsWindow torNetworkSettingsWindow;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
@@ -219,7 +219,7 @@ public class MainViewModel implements ViewModel {
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         BSFormatter formatter) {
+                         TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -247,6 +247,7 @@ public class MainViewModel implements ViewModel {
         this.failedTradesManager = failedTradesManager;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
@@ -332,7 +333,6 @@ public class MainViewModel implements ViewModel {
 
     private void showTorNetworkSettingsWindow() {
         MainView.blur();
-        torNetworkSettingsWindow = new TorNetworkSettingsWindow(preferences).useShutDownButton();
         torNetworkSettingsWindow.show();
     }
 

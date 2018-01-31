@@ -220,6 +220,8 @@ public class TradeStatisticsManager {
 
         List<String> allCryptoCurrencies = new ArrayList<>();
         Set<String> coinsWithValidator = new HashSet<>();
+
+        // List of coins with validator before 0.6.0 hard requirements for address validator
         coinsWithValidator.add("BTC");
         coinsWithValidator.add("BSQ");
         coinsWithValidator.add("LTC");
@@ -232,36 +234,8 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("ZEC");
         coinsWithValidator.add("GBYTE");
         coinsWithValidator.add("NXT");
-        //v0.6.0
-        coinsWithValidator.add("DCT");
-        coinsWithValidator.add("PNC");
-        coinsWithValidator.add("WAC");
-        coinsWithValidator.add("ZEN");
-        coinsWithValidator.add("ELLA");
-        coinsWithValidator.add("XCN");
-        coinsWithValidator.add("TRC");
-        coinsWithValidator.add("INXT");
-        coinsWithValidator.add("PART");
-        // v0.6.1
-        coinsWithValidator.add("MAD");
-        coinsWithValidator.add("BCH");
-        coinsWithValidator.add("BCHC");
-        coinsWithValidator.add("BTG");
-        // v0.6.2
-        coinsWithValidator.add("CAGE");
-        coinsWithValidator.add("CRED");
-        coinsWithValidator.add("XSPEC");
-        // v0.6.3
-        coinsWithValidator.add("WILD");
-        coinsWithValidator.add("ONION");
-        // v0.6.4
-        coinsWithValidator.add("CREA");
-        coinsWithValidator.add("XIN");
-        // v0.6.5
-        coinsWithValidator.add("BETR");
-        coinsWithValidator.add("MVT");
-        coinsWithValidator.add("REF");
 
+        // All those need to have a address validator
         Set<String> newlyAdded = new HashSet<>();
         // v0.6.0
         newlyAdded.add("DCT");
@@ -292,6 +266,9 @@ public class TradeStatisticsManager {
         newlyAdded.add("BETR");
         newlyAdded.add("MVT");
         newlyAdded.add("REF");
+
+
+        coinsWithValidator.addAll(newlyAdded);
 
         CurrencyUtil.getAllSortedCryptoCurrencies()
                 .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
