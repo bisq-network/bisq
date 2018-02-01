@@ -1,7 +1,6 @@
 package io.bisq.gui.util;
 
 import com.google.common.collect.Lists;
-import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.user.Preferences;
 import javafx.collections.ObservableList;
@@ -11,15 +10,21 @@ import java.util.*;
 import java.util.function.BiFunction;
 
 class CurrencyList {
+    private final CurrencyPredicates predicates;
     private final ObservableList<CurrencyListItem> delegate;
     private final Preferences preferences;
 
     CurrencyList(ObservableList<CurrencyListItem> delegate, Preferences preferences) {
-        this.delegate = delegate;
-        this.preferences = preferences;
+        this(delegate, preferences, new CurrencyPredicates());
     }
 
-     void updateWithCurrencies(List<TradeCurrency> currencies, @Nullable CurrencyListItem first) {
+    CurrencyList(ObservableList<CurrencyListItem> delegate, Preferences preferences, CurrencyPredicates predicates) {
+        this.predicates = predicates;
+        this.preferences = preferences;
+        this.delegate = delegate;
+    }
+
+    void updateWithCurrencies(List<TradeCurrency> currencies, @Nullable CurrencyListItem first) {
         List<CurrencyListItem> result = Lists.newLinkedList();
         Optional.ofNullable(first).ifPresent(result::add);
         result.addAll(getPartitionedSortedItems(currencies));
@@ -38,13 +43,11 @@ class CurrencyList {
             Integer count = entry.getValue();
             CurrencyListItem item = new CurrencyListItem(currency, count);
 
-            String code = currency.getCode();
-
-            if (CurrencyUtil.isFiatCurrency(code)) {
+            if (predicates.isFiatCurrency(currency)) {
                 fiatCurrencies.add(item);
             }
 
-            if (CurrencyUtil.isCryptoCurrency(code)) {
+            if (predicates.isCryptoCurrency(currency)) {
                 cryptoCurrencies.add(item);
             }
         }
@@ -70,9 +73,9 @@ class CurrencyList {
     private Map<TradeCurrency, Integer> countTrades(List<TradeCurrency> currencies) {
         Map<TradeCurrency, Integer> result = new HashMap<>();
 
-        BiFunction<TradeCurrency, Integer, Integer> incrementCurrentOrZero =
-                (key, value) -> value == null ? 0 : value + 1;
-        currencies.forEach(currency -> result.compute(currency, incrementCurrentOrZero));
+        BiFunction<TradeCurrency, Integer, Integer> incrementCurrentOrOne =
+                (key, value) -> value == null ? 1 : value + 1;
+        currencies.forEach(currency -> result.compute(currency, incrementCurrentOrOne));
 
         Set<TradeCurrency> preferred = new HashSet<>();
         preferred.addAll(preferences.getFiatCurrencies());
