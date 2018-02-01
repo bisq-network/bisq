@@ -28,7 +28,6 @@ public class CurrencyListTest {
     private static final TradeCurrency ETH = new CryptoCurrency("ETH", "Ether");
     private static final TradeCurrency BSQ = new CryptoCurrency("BSQ", "Bisq Token");
 
-    private CurrencyPredicates predicates;
     private Preferences preferences;
     private List<CurrencyListItem> delegate;
     private CurrencyList testedEntity;
@@ -37,7 +36,7 @@ public class CurrencyListTest {
     public void setUp() {
         Locale.setDefault(new Locale("en", "US"));
 
-        this.predicates = mock(CurrencyPredicates.class);
+        CurrencyPredicates predicates = mock(CurrencyPredicates.class);
         when(predicates.isCryptoCurrency(USD)).thenReturn(false);
         when(predicates.isCryptoCurrency(RUR)).thenReturn(false);
         when(predicates.isCryptoCurrency(BTC)).thenReturn(true);
