@@ -28,16 +28,18 @@ import static org.junit.Assert.assertEquals;
 
 public class BSFormatterTest {
 
+    private BSFormatter formatter;
+
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
+        formatter = new BSFormatter();
+        Res.setBaseCurrencyCode("BTC");
+        Res.setBaseCurrencyName("Bitcoin");
     }
 
     @Test
     public void testIsValid() {
-        BSFormatter formatter = new BSFormatter();
-        Res.setBaseCurrencyCode("BTC");
-        Res.setBaseCurrencyName("Bitcoin");
         assertEquals("0 days", formatter.formatAccountAge(TimeUnit.HOURS.toMillis(23)));
         assertEquals("0 days", formatter.formatAccountAge(0));
         assertEquals("0 days", formatter.formatAccountAge(-1));
@@ -45,5 +47,22 @@ public class BSFormatterTest {
         assertEquals("2 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(2)));
         assertEquals("30 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(30)));
         assertEquals("60 days", formatter.formatAccountAge(TimeUnit.DAYS.toMillis(60)));
+    }
+
+    @Test
+    public void testFormatDurationAsWords() {
+        long oneDay = TimeUnit.DAYS.toMillis(1);
+        long oneHour = TimeUnit.HOURS.toMillis(1);
+        long oneMinute = TimeUnit.MINUTES.toMillis(1);
+        long oneSecond = TimeUnit.SECONDS.toMillis(1);
+
+        assertEquals("1 hour, 0 minutes", formatter.formatDurationAsWords(oneHour));
+        assertEquals("1 day, 0 hours, 0 minutes", formatter.formatDurationAsWords(oneDay));
+        assertEquals("2 days, 0 hours, 1 minute", formatter.formatDurationAsWords(oneDay * 2 + oneMinute));
+        assertEquals("2 days, 0 hours, 2 minutes", formatter.formatDurationAsWords(oneDay * 2 + oneMinute * 2));
+        assertEquals("1 hour, 0 minutes, 0 seconds", formatter.formatDurationAsWords(oneHour, true));
+        assertEquals("1 hour, 0 minutes, 1 second", formatter.formatDurationAsWords(oneHour + oneSecond, true));
+        assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords(oneHour + oneSecond * 2, true));
+        assertEquals("Trade period is over", formatter.formatDurationAsWords(0));
     }
 }
