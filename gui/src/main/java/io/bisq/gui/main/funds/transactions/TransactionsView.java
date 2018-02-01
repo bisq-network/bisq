@@ -23,17 +23,11 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple4;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -46,7 +40,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
@@ -71,7 +64,6 @@ import javax.inject.Inject;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
@@ -83,21 +75,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     Button exportButton;
 
-    private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
+    private final DisplayedTransactions displayedTransactions;
+    private final SortedList<TransactionsListItem> sortedDisplayedTransactions;
 
     private final BtcWalletService btcWalletService;
-    private final BsqWalletService bsqWalletService;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final TradeManager tradeManager;
-    private final OpenOfferManager openOfferManager;
-    private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final DisputeManager disputeManager;
     private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
     @SuppressWarnings("deprecation")
@@ -111,33 +97,24 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Inject
     private TransactionsView(BtcWalletService btcWalletService,
-                             BsqWalletService bsqWalletService,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             TradeManager tradeManager,
-                             OpenOfferManager openOfferManager,
-                             ClosedTradableManager closedTradableManager,
-                             FailedTradesManager failedTradesManager,
                              BSFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
-                             DisputeManager disputeManager,
                              Stage stage,
-                             OfferDetailsWindow offerDetailsWindow) {
+                             OfferDetailsWindow offerDetailsWindow,
+                             DisplayedTransactionsFactory displayedTransactionsFactory) {
         this.btcWalletService = btcWalletService;
-        this.bsqWalletService = bsqWalletService;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.tradeManager = tradeManager;
-        this.openOfferManager = openOfferManager;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
-        this.disputeManager = disputeManager;
         this.stage = stage;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.displayedTransactions = displayedTransactionsFactory.create();
+        this.sortedDisplayedTransactions = displayedTransactions.asSortedList();
     }
 
     @Override
@@ -161,17 +138,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setConfidenceColumnCellFactory();
         setRevertTxColumnCellFactory();
 
-        dateColumn.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+        dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         detailsColumn.setComparator((o1, o2) -> {
             String id1 = o1.getTradable() != null ? o1.getTradable().getId() : o1.getDetails();
             String id2 = o2.getTradable() != null ? o2.getTradable().getId() : o2.getDetails();
             return id1.compareTo(id2);
         });
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        transactionColumn.setComparator((o1, o2) -> o1.getTxId().compareTo(o2.getTxId()));
-        amountColumn.setComparator((o1, o2) -> o1.getAmountAsCoin().compareTo(o2.getAmountAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
-                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
+        addressColumn.setComparator(Comparator.comparing(TransactionsListItem::getAddressString));
+        transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
+        amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
+        confidenceColumn.setComparator(Comparator.comparingDouble(item -> item.getTxConfidenceIndicator().getProgress()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -180,17 +156,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateList();
+                displayedTransactions.update();
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateList();
+                displayedTransactions.update();
             }
 
             @Override
             public void onReorganize(Wallet wallet) {
-                updateList();
+                displayedTransactions.update();
             }
 
             @Override
@@ -199,17 +175,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
             @Override
             public void onWalletChanged(Wallet wallet) {
-                updateList();
+                displayedTransactions.update();
             }
 
             @Override
             public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                updateList();
+                displayedTransactions.update();
             }
 
             @Override
             public void onKeysAdded(List<ECKey> keys) {
-                updateList();
+                displayedTransactions.update();
             }
         };
 
@@ -225,9 +201,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-        updateList();
+        sortedDisplayedTransactions.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedDisplayedTransactions);
+        displayedTransactions.update();
 
         btcWalletService.addEventListener(walletEventListener);
 
@@ -256,69 +232,20 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             };
 
             GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
-                    new TransactionsListItem(), sortedList, stage);
+                    new TransactionsListItem(), sortedDisplayedTransactions, stage);
         });
     }
 
     @Override
     protected void deactivate() {
-        sortedList.comparatorProperty().unbind();
-        observableList.forEach(TransactionsListItem::cleanup);
+        sortedDisplayedTransactions.comparatorProperty().unbind();
+        displayedTransactions.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeEventListener(walletEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         exportButton.setOnAction(null);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void updateList() {
-        Stream<Tradable> concat1 = Stream.concat(openOfferManager.getObservableList().stream(), tradeManager.getTradableList().stream());
-        Stream<Tradable> concat2 = Stream.concat(concat1, closedTradableManager.getClosedTradables().stream());
-        Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
-        Set<Tradable> all = concat3.collect(Collectors.toSet());
-
-        Set<Transaction> transactions = btcWalletService.getTransactions(false);
-        List<TransactionsListItem> transactionsListItems = transactions.stream()
-                .map(transaction -> {
-                    Optional<Tradable> tradableOptional = all.stream()
-                            .filter(tradable -> {
-                                String txId = transaction.getHashAsString();
-                                if (tradable instanceof OpenOffer)
-                                    return tradable.getOffer().getOfferFeePaymentTxId().equals(txId);
-                                else if (tradable instanceof Trade) {
-                                    Trade trade = (Trade) tradable;
-                                    boolean isTakeOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
-                                    boolean isOfferFeeTx = trade.getOffer() != null &&
-                                            txId.equals(trade.getOffer().getOfferFeePaymentTxId());
-                                    boolean isDepositTx = trade.getDepositTx() != null &&
-                                            trade.getDepositTx().getHashAsString().equals(txId);
-                                    boolean isPayoutTx = trade.getPayoutTx() != null &&
-                                            trade.getPayoutTx().getHashAsString().equals(txId);
-
-                                    boolean isDisputedPayoutTx = disputeManager.getDisputesAsObservableList().stream()
-                                            .filter(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
-                                                    tradable.getId().equals(dispute.getTradeId()))
-                                            .findAny()
-                                            .isPresent();
-
-                                    return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
-                                } else
-                                    return false;
-                            })
-                            .findAny();
-                    return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, tradableOptional, formatter);
-                })
-                .collect(Collectors.toList());
-
-        // are sorted by getRecentTransactions
-        observableList.forEach(TransactionsListItem::cleanup);
-        observableList.setAll(transactionsListItems);
     }
 
     private void openTxInBlockExplorer(TransactionsListItem item) {
@@ -599,7 +526,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void showStatisticsPopup() {
         Map<Long, List<Coin>> map = new HashMap<>();
         Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-        observableList.stream().forEach(item -> {
+        displayedTransactions.forEach(item -> {
             Coin amountAsCoin = item.getAmountAsCoin();
             List<Coin> amounts;
             long key = amountAsCoin.getValue();
@@ -643,12 +570,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         });
 
         StringBuilder stringBuilder = new StringBuilder();
-        map.entrySet().stream().forEach(e -> {
+        map.forEach((key, value) -> {
             // This is not intended for the public so we don't translate here
             stringBuilder.append("No. of transactions for amount ").
-                    append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
+                    append(formatter.formatCoinWithCode(Coin.valueOf(key))).
                     append(": ").
-                    append(e.getValue().size()).
+                    append(value.size()).
                     append("\n");
         });
 
@@ -656,16 +583,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 map(e -> {
                     Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
                     return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
-                }).
-                collect(Collectors.toList());
-        sortedDataByDayList.sort((o1, o2) -> o2.second.compareTo(o1.second));
+                }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
+                .collect(Collectors.toList());
         StringBuilder transactionsByDayStringBuilder = new StringBuilder();
         StringBuilder offersStringBuilder = new StringBuilder();
         StringBuilder tradesStringBuilder = new StringBuilder();
         StringBuilder allStringBuilder = new StringBuilder();
         // This is not intended for the public so we don't translate here
         allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
-        sortedDataByDayList.stream().forEach(tuple4 -> {
+        sortedDataByDayList.forEach(tuple4 -> {
             offersStringBuilder.append(tuple4.forth.first).append(",");
             tradesStringBuilder.append(tuple4.forth.second).append(",");
             allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
