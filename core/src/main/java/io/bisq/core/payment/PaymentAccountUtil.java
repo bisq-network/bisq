@@ -6,8 +6,6 @@ import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,16 +43,7 @@ public class PaymentAccountUtil {
     public static Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer,
                                                                                Set<PaymentAccount> paymentAccounts,
                                                                                AccountAgeWitnessService service) {
-        List<PaymentAccount> list = paymentAccounts.stream()
-                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
-                .sorted((o1, o2) -> {
-                    return new Long(service.getAccountAge(service.getMyWitness(o2.getPaymentAccountPayload()), new Date()))
-                            .compareTo(service.getAccountAge(service.getMyWitness(o1.getPaymentAccountPayload()), new Date()));
-                }).collect(Collectors.toList());
-        list.stream().forEach(e -> log.debug("getMostMaturePaymentAccountForOffer AccountName={}, witnessHashAsHex={}", e.getAccountName(), service.getMyWitnessHashAsHex(e.getPaymentAccountPayload())));
-        final Optional<PaymentAccount> first = list.stream().findFirst();
-        if (first.isPresent())
-            log.debug("first={}", first.get().getAccountName());
-        return first;
+        PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service);
+        return Optional.ofNullable(accounts.getOldestPaymentAccountForOffer(offer));
     }
 }
