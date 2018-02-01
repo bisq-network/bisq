@@ -111,9 +111,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final BisqEnvironment bisqEnvironment;
     private final String btcNodesFromOptions;
     private final String useTorFlagFromOptions;
-    private boolean autoSelectArbitrators;
-    private boolean resyncSpvRequested;
-    private boolean tacAccepted;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

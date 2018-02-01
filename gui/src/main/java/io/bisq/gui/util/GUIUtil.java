@@ -450,7 +450,6 @@ public class GUIUtil {
 
     public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
         try {
-            walletsSetup.reSyncSPVChain();
             new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))

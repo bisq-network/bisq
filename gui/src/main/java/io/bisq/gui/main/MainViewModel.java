@@ -266,6 +266,16 @@ public class MainViewModel implements ViewModel {
         //noinspection ConstantConditions,ConstantConditions
         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
+        // We do the delete of the spv file at startup before BitcoinJ is initialized to avoid issues with locked files under Windows.
+        if (preferences.isResyncSpvRequested()) {
+            try {
+                walletsSetup.reSyncSPVChain();
+            } catch (IOException e) {
+                log.error(e.toString());
+                e.printStackTrace();
+            }
+        }
+
         //noinspection ConstantConditions,ConstantConditions,PointlessBooleanExpression
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
