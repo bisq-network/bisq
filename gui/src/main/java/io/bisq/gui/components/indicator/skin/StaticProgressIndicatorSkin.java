@@ -25,12 +25,11 @@
 
 package io.bisq.gui.components.indicator.skin;
 
-import com.sun.javafx.css.converters.BooleanConverter;
-import com.sun.javafx.css.converters.PaintConverter;
-import com.sun.javafx.css.converters.SizeConverter;
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import javafx.css.converter.BooleanConverter;
+import javafx.css.converter.PaintConverter;
+import javafx.css.converter.SizeConverter;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
-import io.bisq.gui.components.indicator.behavior.StaticProgressIndicatorBehavior;
+import javafx.scene.control.ProgressIndicator;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -57,8 +56,7 @@ import java.util.List;
 // TODO Copied form OpenJFX, check license issues and way how we integrated it
 // We changed behaviour which was not exposed via APIs
 
-public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIndicator,
-        StaticProgressIndicatorBehavior<TxConfidenceIndicator>> {
+public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator> {
 
     /**
      * ************************************************************************
@@ -183,7 +181,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
      */
     @SuppressWarnings("deprecation")
     public StaticProgressIndicatorSkin(TxConfidenceIndicator control) {
-        super(control, new StaticProgressIndicatorBehavior<>(control));
+        super(control);
 
         InvalidationListener indeterminateListener = valueModel -> initialize();
         control.indeterminateProperty().addListener(indeterminateListener);
@@ -198,7 +196,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
             }
 
             if (spinner != null) {
-                if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
+                if (getSkinnable().getScene() != null) {
                     getChildren().remove(spinner);
                     spinner = null;
                     timeLineNulled = true;
@@ -412,8 +410,8 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
             final double bottom = snapSize(controlInsets.getBottom());
 
             /*
-            ** use the min of width, or height, keep it a circle
-            */
+             ** use the min of width, or height, keep it a circle
+             */
             final double areaW = control.getWidth() - left - right;
             final double areaH = control.getHeight() - top - bottom /*- textGap - doneTextHeight*/;
             final double radiusW = areaW / 2;

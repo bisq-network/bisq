@@ -48,7 +48,7 @@ public class MathUtils {
     }
 
     public static long doubleToLong(double value) {
-        return new Double(value).longValue();
+        return Double.doubleToLongBits(value);
     }
 
     public static double scaleUpByPowerOf10(double value, int exponent) {
