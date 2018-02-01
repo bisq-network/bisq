@@ -255,60 +255,6 @@ public class GUIUtil {
         };
     }
 
-    // TODO could be done more elegantly...
-    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList,
-                                             ObservableList<CurrencyListItem> currencyListItems,
-                                             @Nullable CurrencyListItem showAllCurrencyListItem,
-                                             Preferences preferences) {
-        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
-        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
-
-        // We get the list of all offers or trades. We want to find out how many items at each currency we have.
-        tradeCurrencyList.stream().forEach(tradeCurrency -> {
-            tradeCurrencySet.add(tradeCurrency);
-            String code = tradeCurrency.getCode();
-            if (tradesPerCurrencyMap.containsKey(code))
-                tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
-            else
-                tradesPerCurrencyMap.put(code, 1);
-        });
-
-        Set<TradeCurrency> userSet = new HashSet<>(preferences.getFiatCurrencies());
-        userSet.addAll(preferences.getCryptoCurrencies());
-        // Now all those items which are not in the offers or trades list but comes from the user preferred currency list
-        // will get set to 0
-        userSet.stream().forEach(tradeCurrency -> {
-            tradeCurrencySet.add(tradeCurrency);
-            String code = tradeCurrency.getCode();
-            if (!tradesPerCurrencyMap.containsKey(code))
-                tradesPerCurrencyMap.put(code, 0);
-        });
-
-        List<CurrencyListItem> list = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-                .collect(Collectors.toList());
-        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-                .collect(Collectors.toList());
-
-        if (preferences.isSortMarketCurrenciesNumerically()) {
-            list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-        } else {
-            list.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-        }
-
-        list.addAll(cryptoList);
-
-        if (showAllCurrencyListItem != null)
-            list.add(0, showAllCurrencyListItem);
-
-        currencyListItems.setAll(list);
-    }
-
     public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {

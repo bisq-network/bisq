@@ -34,6 +34,7 @@ import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
+import io.bisq.gui.util.CurrencyList;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
 import javafx.beans.property.ObjectProperty;
@@ -53,8 +54,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookChartViewModel.class);
-
     private static final int TAB_INDEX = 0;
 
     private final OfferBook offerBook;
@@ -67,7 +66,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
-    final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+    final CurrencyList currencyListItems;
     private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
@@ -120,6 +119,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 }
             }
         };
+
+        this.currencyListItems = new CurrencyList(preferences);
     }
 
     private void fillTradeCurrencies() {
@@ -137,7 +138,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, null, preferences);
+        currencyListItems.updateWithCurrencies(tradeCurrencyList, null);
     }
 
     @Override
