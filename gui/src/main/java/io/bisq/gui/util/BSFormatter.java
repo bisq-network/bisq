@@ -30,6 +30,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -492,7 +493,7 @@ public class BSFormatter {
     }
 
     public static String formatDurationAsWords(long durationMillis, boolean showSeconds) {
-        String format;
+        String format = "";
         String second = Res.get("time.second");
         String minute = Res.get("time.minute");
         String hour = Res.get("time.hour").toLowerCase();
@@ -501,55 +502,22 @@ public class BSFormatter {
         String hours = Res.get("time.hours");
         String minutes = Res.get("time.minutes");
         String seconds = Res.get("time.seconds");
+
+        if (durationMillis >= DateUtils.MILLIS_PER_DAY) {
+            format = "d\' " + days + ", \'";
+        }
+
         if (showSeconds) {
-            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
+            format += "H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
         } else
-            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + "\'";
-        String duration = DurationFormatUtils.formatDuration(durationMillis, format);
-        String tmp;
-        duration = " " + duration;
-        tmp = StringUtils.replaceOnce(duration, " 0 " + days, "");
-        if (tmp.length() != duration.length()) {
-            duration = tmp;
-            tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
-            if (tmp.length() != duration.length()) {
-                tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
-                duration = tmp;
-                if (tmp.length() != tmp.length()) {
-                    duration = StringUtils.replaceOnce(tmp, " 0 " + seconds, "");
-                }
-            }
-        }
+            format += "H\' " + hours + ", \'m\' " + minutes + "\'";
 
-        if (duration.length() != 0) {
-            duration = duration.substring(1);
-        }
+        String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : Res.get("formatter.tradePeriodOver");
 
-        tmp = StringUtils.replaceOnce(duration, " 0 " + seconds, "");
-
-        if (tmp.length() != duration.length()) {
-            duration = tmp;
-            tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
-            if (tmp.length() != duration.length()) {
-                duration = tmp;
-                tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
-                if (tmp.length() != duration.length()) {
-                    duration = StringUtils.replaceOnce(tmp, " 0 " + days, "");
-                }
-            }
-        }
-
-        duration = " " + duration;
-        duration = StringUtils.replaceOnce(duration, " 1 " + seconds, " 1 " + second);
-        duration = StringUtils.replaceOnce(duration, " 1 " + minutes, " 1 " + minute);
-        duration = StringUtils.replaceOnce(duration, " 1 " + hours, " 1 " + hour);
-        duration = StringUtils.replaceOnce(duration, " 1 " + days, " 1 " + day);
-        if (duration.startsWith(" ,"))
-            duration = duration.replace(" ,", "");
-        else if (duration.startsWith(", "))
-            duration = duration.replace(", ", "");
-        if (duration.equals(""))
-            duration = Res.get("formatter.tradePeriodOver");
+        duration = StringUtils.replaceOnce(duration, "1 " + seconds, "1 " + second);
+        duration = StringUtils.replaceOnce(duration, "1 " + minutes, "1 " + minute);
+        duration = StringUtils.replaceOnce(duration, "1 " + hours, "1 " + hour);
+        duration = StringUtils.replaceOnce(duration, "1 " + days, "1 " + day);
         return duration.trim();
     }
 
