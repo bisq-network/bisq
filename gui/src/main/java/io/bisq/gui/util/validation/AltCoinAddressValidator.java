@@ -403,7 +403,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(true);
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
-                    }
+                    }                
                 case "CREA":
                     try {
                         Address.fromBase58(CreaParams.get(), input);
@@ -433,6 +433,18 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "TOKC":
+                    if (input.matches("^[0][I][O][l]{26,34}$")) {
+                        //noinspection ConstantConditions
+                        try {
+                            Address.fromBase58(TOKCParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }    
 
 
                     // Add new coins at the end...
