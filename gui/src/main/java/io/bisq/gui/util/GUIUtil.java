@@ -319,8 +319,12 @@ public class GUIUtil {
     }
 
     public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+        return " (" + getPercentage(fee, tradeAmount, formatter) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
+    }
+
+    public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
+        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
