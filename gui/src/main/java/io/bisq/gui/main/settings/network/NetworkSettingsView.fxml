@@ -17,9 +17,7 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import io.bisq.gui.components.InputTextField?>
-<?import io.bisq.gui.components.TitledGroupBg?>
-<?import io.bisq.gui.components.AutoTooltipLabel?>
+<?import io.bisq.gui.components.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.control.cell.*?>
