@@ -1,0 +1,84 @@
+package io.bisq.gui.util;
+
+import com.google.common.collect.Lists;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.user.Preferences;
+import javafx.collections.ObservableList;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.BiFunction;
+
+class CurrencyList {
+    private final ObservableList<CurrencyListItem> delegate;
+    private final Preferences preferences;
+
+    CurrencyList(ObservableList<CurrencyListItem> delegate, Preferences preferences) {
+        this.delegate = delegate;
+        this.preferences = preferences;
+    }
+
+     void updateWithCurrencies(List<TradeCurrency> currencies, @Nullable CurrencyListItem first) {
+        List<CurrencyListItem> result = Lists.newLinkedList();
+        Optional.ofNullable(first).ifPresent(result::add);
+        result.addAll(getPartitionedSortedItems(currencies));
+        delegate.setAll(result);
+    }
+
+    private List<CurrencyListItem> getPartitionedSortedItems(List<TradeCurrency> currencies) {
+        Map<TradeCurrency, Integer> tradesPerCurrency = countTrades(currencies);
+
+        Comparator<CurrencyListItem> comparator = getComparator();
+        Queue<CurrencyListItem> fiatCurrencies = new PriorityQueue<>(comparator);
+        Queue<CurrencyListItem> cryptoCurrencies = new PriorityQueue<>(comparator);
+
+        for (Map.Entry<TradeCurrency, Integer> entry : tradesPerCurrency.entrySet()) {
+            TradeCurrency currency = entry.getKey();
+            Integer count = entry.getValue();
+            CurrencyListItem item = new CurrencyListItem(currency, count);
+
+            String code = currency.getCode();
+
+            if (CurrencyUtil.isFiatCurrency(code)) {
+                fiatCurrencies.add(item);
+            }
+
+            if (CurrencyUtil.isCryptoCurrency(code)) {
+                cryptoCurrencies.add(item);
+            }
+        }
+
+        List<CurrencyListItem> result = Lists.newLinkedList();
+        result.addAll(fiatCurrencies);
+        result.addAll(cryptoCurrencies);
+
+        return result;
+    }
+
+    private Comparator<CurrencyListItem> getComparator() {
+        Comparator<CurrencyListItem> result;
+        if (preferences.isSortMarketCurrenciesNumerically()) {
+            Comparator<CurrencyListItem> byCount = Comparator.comparingInt(left -> left.numTrades);
+            result = byCount.reversed();
+        } else {
+            result = Comparator.comparing(item -> item.tradeCurrency);
+        }
+        return result;
+    }
+
+    private Map<TradeCurrency, Integer> countTrades(List<TradeCurrency> currencies) {
+        Map<TradeCurrency, Integer> result = new HashMap<>();
+
+        BiFunction<TradeCurrency, Integer, Integer> incrementCurrentOrZero =
+                (key, value) -> value == null ? 0 : value + 1;
+        currencies.forEach(currency -> result.compute(currency, incrementCurrentOrZero));
+
+        Set<TradeCurrency> preferred = new HashSet<>();
+        preferred.addAll(preferences.getFiatCurrencies());
+        preferred.addAll(preferences.getCryptoCurrencies());
+        preferred.forEach(currency -> result.putIfAbsent(currency, 0));
+
+        return result;
+    }
+}
