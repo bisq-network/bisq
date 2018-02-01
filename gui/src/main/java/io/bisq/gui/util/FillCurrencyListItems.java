@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 class FillCurrencyListItems {
@@ -27,56 +28,54 @@ class FillCurrencyListItems {
     }
 
     public void fillCurrencyListItems() {
-        Map<TradeCurrency, Integer> tradesPerCurrencyMap = getTradeCurrencyIntegerMap(currencies, preferences);
+        Map<TradeCurrency, Integer> tradesPerCurrency = getTradesPerCurrency();
 
-        List<CurrencyListItem> list = tradesPerCurrencyMap.keySet().stream()
+
+        Comparator<CurrencyListItem> comparator = getComparator();
+
+        List<CurrencyListItem> fiatCurrencies = tradesPerCurrency.keySet().stream()
                 .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e)))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrency.get(e)))
+                .sorted(comparator)
                 .collect(Collectors.toList());
-        List<CurrencyListItem> cryptoList = tradesPerCurrencyMap.keySet().stream()
+        List<CurrencyListItem> cryptoCurrencies = tradesPerCurrency.keySet().stream()
                 .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e)))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrency.get(e)))
+                .sorted(comparator)
                 .collect(Collectors.toList());
 
-        if (preferences.isSortMarketCurrenciesNumerically()) {
-            list.sort((left, right) -> Integer.compare(right.numTrades, left.numTrades));
-            cryptoList.sort((left, right) -> Integer.compare(right.numTrades, left.numTrades));
-        } else {
-            list.sort(Comparator.comparing(item -> item.tradeCurrency));
-            cryptoList.sort(Comparator.comparing(item -> item.tradeCurrency));
-        }
-
-        list.addAll(cryptoList);
+        fiatCurrencies.addAll(cryptoCurrencies);
 
         if (showAllCurrencyListItem != null) {
-            list.add(0, showAllCurrencyListItem);
+            fiatCurrencies.add(0, showAllCurrencyListItem);
         }
 
-        currencyItems.setAll(list);
+        currencyItems.setAll(fiatCurrencies);
     }
 
-    private Map<TradeCurrency, Integer> getTradeCurrencyIntegerMap(List<TradeCurrency> currencies, Preferences preferences) {
-        Map<TradeCurrency, Integer> tradesPerCurrencyMap = new HashMap<>();
+    private Comparator<CurrencyListItem> getComparator() {
+        Comparator<CurrencyListItem> result;
+        if (preferences.isSortMarketCurrenciesNumerically()) {
+            Comparator<CurrencyListItem> byCount = Comparator.comparingInt(left -> left.numTrades);
+            result = byCount.reversed();
+        } else {
+            result = Comparator.comparing(item -> item.tradeCurrency);
+        }
+        return result;
+    }
 
-        // We get the list of all offers or trades. We want to find out how many items at each currency we have.
-        currencies.forEach(tradeCurrency -> {
-            if (tradesPerCurrencyMap.containsKey(tradeCurrency)) {
-                tradesPerCurrencyMap.put(tradeCurrency, tradesPerCurrencyMap.get(tradeCurrency) + 1);
-            } else {
-                tradesPerCurrencyMap.put(tradeCurrency, 1);
-            }
-        });
+    private Map<TradeCurrency, Integer> getTradesPerCurrency() {
+        Map<TradeCurrency, Integer> result = new HashMap<>();
 
-        Set<TradeCurrency> userSet = new HashSet<>(preferences.getFiatCurrencies());
-        userSet.addAll(preferences.getCryptoCurrencies());
-        // Now all those items which are not in the offers or trades list but comes from the user preferred currency list
-        // will get set to 0
-        userSet.forEach(tradeCurrency -> {
-            if (!tradesPerCurrencyMap.containsKey(tradeCurrency)) {
-                tradesPerCurrencyMap.put(tradeCurrency, 0);
-            }
-        });
+        BiFunction<TradeCurrency, Integer, Integer> incrementCurrentOrZero =
+                (key, value) -> value == null ? 0 : value + 1;
+        currencies.forEach(currency -> result.compute(currency, incrementCurrentOrZero));
 
-        return tradesPerCurrencyMap;
+        Set<TradeCurrency> preferred = new HashSet<>();
+        preferred.addAll(preferences.getFiatCurrencies());
+        preferred.addAll(preferences.getCryptoCurrencies());
+        preferred.forEach(currency -> result.putIfAbsent(currency, 0));
+
+        return result;
     }
 }
