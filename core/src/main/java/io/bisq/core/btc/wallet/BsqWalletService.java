@@ -17,12 +17,17 @@
 
 package io.bisq.core.btc.wallet;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -36,10 +41,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,9 +50,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
-public class BsqWalletService extends WalletService {
+public class BsqWalletService extends WalletService implements BsqBlockChainListener {
     private final BsqCoinSelector bsqCoinSelector;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -64,8 +66,8 @@ public class BsqWalletService extends WalletService {
     @Inject
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqCoinSelector bsqCoinSelector,
-                            BsqChainState bsqChainState,
-                            BsqBlockchainManager bsqBlockchainManager,
+                            BsqBlockChain bsqBlockChain,
+                            BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -73,7 +75,7 @@ public class BsqWalletService extends WalletService {
                 feeService);
 
         this.bsqCoinSelector = bsqCoinSelector;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
 
         if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             walletsSetup.addSetupCompletedHandler(() -> {
@@ -86,12 +88,12 @@ public class BsqWalletService extends WalletService {
                     wallet.addEventListener(new AbstractWalletEventListener() {
                         @Override
                         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            //TODO do we need updateWalletBsqTransactions(); here?
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
                         public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            //TODO do we need updateWalletBsqTransactions(); here?
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
@@ -102,6 +104,7 @@ public class BsqWalletService extends WalletService {
 
                         @Override
                         public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                            updateBsqWalletTransactions();
                         }
 
                         @Override
@@ -121,13 +124,24 @@ public class BsqWalletService extends WalletService {
 
                     });
                 }
-            });
 
-            bsqBlockchainManager.addBsqChainStateListener(() -> {
-                updateBsqWalletTransactions();
-                updateBsqBalance();
+                final BlockChain chain = walletsSetup.getChain();
+                if (chain != null) {
+                    chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
+                    chainHeightProperty.set(chain.getBestChainHeight());
+                    updateBsqWalletTransactions();
+                }
             });
         }
+
+        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
+    }
+
+
+    @Override
+    public void onBsqBlockChainChanged() {
+        if (isWalletReady())
+            updateBsqWalletTransactions();
     }
 
 
@@ -199,7 +213,7 @@ public class BsqWalletService extends WalletService {
     private Set<Transaction> getBsqWalletTransactions() {
         return getTransactions(false).stream()
                 .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
-                        bsqChainState.containsTx(transaction.getHashAsString()))
+                        bsqBlockChain.containsTx(transaction.getHashAsString()))
                 .collect(Collectors.toSet());
     }
 
@@ -225,6 +239,92 @@ public class BsqWalletService extends WalletService {
                     .forEach(map::remove);
             return new HashSet<>(map.values());
         }
+    }
+
+    @Override
+    public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
+        Coin result = Coin.ZERO;
+        // We check all our inputs and get the connected outputs.
+        for (int i = 0; i < transaction.getInputs().size(); i++) {
+            TransactionInput input = transaction.getInputs().get(i);
+            // We grab the connected output for that input
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            if (connectedOutput != null) {
+                // We grab the parent tx of the connected output
+                final Transaction parentTransaction = connectedOutput.getParentTransaction();
+                final boolean isConfirmed = parentTransaction != null &&
+                        parentTransaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+                if (connectedOutput.isMineOrWatched(wallet)) {
+                    if (isConfirmed) {
+                        // We lookup if we have a BSQ tx matching the parent tx
+                        // We cannot make that findTx call outside of the loop as the parent tx can change at each iteration
+                        Optional<Tx> txOptional = bsqBlockChain.findTx(parentTransaction.getHash().toString());
+                        if (txOptional.isPresent()) {
+                            // BSQ tx and BitcoinJ tx have same outputs (mirrored data structure)
+                            TxOutput txOutput = txOptional.get().getOutputs().get(connectedOutput.getIndex());
+                            if (txOutput.isVerified()) {
+                                //TODO check why values are not the same
+                                if (txOutput.getValue() != connectedOutput.getValue().value)
+                                    log.warn("getValueSentToMeForTransaction: Value of BSQ output do not match BitcoinJ tx output. " +
+                                                    "txOutput.getValue()={}, output.getValue().value={}, txId={}",
+                                            txOutput.getValue(), connectedOutput.getValue().value, txOptional.get().getId());
+
+                                // If it is a valid BSQ output we add it
+                                result = result.add(Coin.valueOf(txOutput.getValue()));
+                            }
+                        }
+                    } /*else {
+                        // TODO atm we don't display amounts of unconfirmed txs but that might change so we leave that code
+                        // if it will be required
+                        // If the tx is not confirmed yet we add the value and assume it is a valid BSQ output.
+                        result = result.add(connectedOutput.getValue());
+                    }*/
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
+        Coin result = Coin.ZERO;
+        final String txId = transaction.getHashAsString();
+        // We check if we have a matching BSQ tx. We do that call here to avoid repeated calls in the loop.
+        Optional<Tx> txOptional = bsqBlockChain.findTx(txId);
+        // We check all the outputs of our tx
+        for (int i = 0; i < transaction.getOutputs().size(); i++) {
+            TransactionOutput output = transaction.getOutputs().get(i);
+            final boolean isConfirmed = output.getParentTransaction() != null &&
+                    output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            if (output.isMineOrWatched(wallet)) {
+                if (isConfirmed) {
+                    if (txOptional.isPresent()) {
+                        // The index of the BSQ tx outputs are the same like the bitcoinj tx outputs
+                        TxOutput txOutput = txOptional.get().getOutputs().get(i);
+                        if (txOutput.isVerified()) {
+                            //TODO check why values are not the same
+                            if (txOutput.getValue() != output.getValue().value)
+                                log.warn("getValueSentToMeForTransaction: Value of BSQ output do not match BitcoinJ tx output. " +
+                                                "txOutput.getValue()={}, output.getValue().value={}, txId={}",
+                                        txOutput.getValue(), output.getValue().value, txId);
+
+                            // If it is a valid BSQ output we add it
+                            result = result.add(Coin.valueOf(txOutput.getValue()));
+                        }
+                    }
+                } /*else {
+                    // TODO atm we don't display amounts of unconfirmed txs but that might change so we leave that code
+                    // if it will be required
+                    // If the tx is not confirmed yet we add the value and assume it is a valid BSQ output.
+                    result = result.add(output.getValue());
+                }*/
+            }
+        }
+        return result;
+    }
+
+    public Optional<Transaction> isWalletTransaction(String txId) {
+        return getWalletTransactions().stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
     }
 
 

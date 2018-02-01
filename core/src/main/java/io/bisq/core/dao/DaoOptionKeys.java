@@ -8,4 +8,5 @@ public class DaoOptionKeys {
 
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
     public static final String FULL_DAO_NODE = "fullDaoNode";
+    public static final String REG_TEST_GENESIS_TX_ID = "regtestBsqGenesisTxId";
 }

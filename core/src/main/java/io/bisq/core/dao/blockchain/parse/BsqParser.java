@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.parse;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.app.DevEnv;
@@ -33,11 +34,16 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// We are in threaded context. Don't mix up with UserThread.
+
+/**
+ * Parses blocks and transactions for finding BSQ relevant transactions.
+ * <p/>
+ * We are in threaded context. Don't mix up with UserThread.
+ */
 @Slf4j
 @Immutable
 public class BsqParser {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final OpReturnVerification opReturnVerification;
     private final IssuanceVerification issuanceVerification;
     private final RpcService rpcService;
@@ -45,16 +51,16 @@ public class BsqParser {
     // Maybe we want to request fee at some point, leave it for now and disable it
     private boolean requestFee = false;
     private final Map<Integer, Long> feesByBlock = new HashMap<>();
-    
+
 
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqParser(RpcService rpcService,
-                     BsqChainState bsqChainState,
+                     BsqBlockChain bsqBlockChain,
                      OpReturnVerification opReturnVerification,
                      IssuanceVerification issuanceVerification) {
         this.rpcService = rpcService;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.opReturnVerification = opReturnVerification;
         this.issuanceVerification = issuanceVerification;
     }
@@ -64,6 +70,7 @@ public class BsqParser {
     // Parsing with data delivered with BsqBlock list
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO check with similar code at BsqLiteNodeExecutor
     void parseBsqBlocks(List<BsqBlock> bsqBlocks,
                         int genesisBlockHeight,
                         String genesisTxId,
@@ -73,7 +80,7 @@ public class BsqParser {
             parseBsqBlock(bsqBlock,
                     genesisBlockHeight,
                     genesisTxId);
-            bsqChainState.addBlock(bsqBlock);
+            bsqBlockChain.addBlock(bsqBlock);
             newBlockHandler.accept(bsqBlock);
         }
     }
@@ -113,7 +120,7 @@ public class BsqParser {
                         btcdBlock.getPreviousBlockHash(),
                         ImmutableList.copyOf(bsqTxsInBlock));
 
-                bsqChainState.addBlock(bsqBlock);
+                bsqBlockChain.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
                 log.info("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
                         System.currentTimeMillis() - startTs, blockHeight, bsqTxsInBlock.size());
@@ -154,9 +161,9 @@ public class BsqParser {
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
-        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
+        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
-        // Lately there is a patter with 24 iterations observed 
+        // Lately there is a patter with 24 iterations observed
         recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
 
         return bsqTxsInBlock;
@@ -164,7 +171,7 @@ public class BsqParser {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Parse when requested from new block arrived handler (rpc) 
+    // Parse when requested from new block arrived handler (rpc)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     BsqBlock parseBlock(Block btcdBlock, int genesisBlockHeight, String genesisTxId)
@@ -176,13 +183,13 @@ public class BsqParser {
                 btcdBlock.getHash(),
                 btcdBlock.getPreviousBlockHash(),
                 ImmutableList.copyOf(bsqTxsInBlock));
-        bsqChainState.addBlock(bsqBlock);
+        bsqBlockChain.addBlock(bsqBlock);
         return bsqBlock;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Generic 
+    // Generic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkForGenesisTx(int genesisBlockHeight,
@@ -194,18 +201,18 @@ public class BsqParser {
             tx.getOutputs().stream().forEach(txOutput -> {
                 txOutput.setUnspent(true);
                 txOutput.setVerified(true);
-                bsqChainState.addUnspentTxOutput(txOutput);
+                bsqBlockChain.addUnspentTxOutput(txOutput);
             });
             tx.setTxType(TxType.GENESIS);
 
-            bsqChainState.setGenesisTx(tx);
-            bsqChainState.addTxToMap(tx);
+            bsqBlockChain.setGenesisTx(tx);
+            bsqBlockChain.addTxToMap(tx);
             bsqTxsInBlock.add(tx);
         }
     }
 
-    // Performance-wise the recursion does not hurt (e.g. 5-20 ms). 
-    // The RPC requestTransaction is the bottleneck.  
+    // Performance-wise the recursion does not hurt (e.g. 5-20 ms).
+    // The RPC requestTransaction is the bottleneck.
     private void recursiveFindBsqTxs(List<Tx> bsqTxsInBlock,
                                      List<Tx> transactions,
                                      int blockHeight,
@@ -236,7 +243,7 @@ public class BsqParser {
                 "txsWithInputsFromSameBlock.size + txsWithoutInputsFromSameBlock.size != transactions.size");
 
         // Usual values is up to 25
-        // There are some blocks where it seems devs have tested graphs of many depending txs, but even 
+        // There are some blocks where it seems devs have tested graphs of many depending txs, but even
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
@@ -256,7 +263,7 @@ public class BsqParser {
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");
 
         // we check if we have any valid BSQ utxo from that tx set
-        // We might have InputsFromSameBlock which are BTC only but not BSQ, so we cannot 
+        // We might have InputsFromSameBlock which are BTC only but not BSQ, so we cannot
         // optimize here and need to iterate further.
         if (!txsWithInputsFromSameBlock.isEmpty()) {
             if (recursionCounter < maxRecursions) {
@@ -275,63 +282,68 @@ public class BsqParser {
         }
     }
 
-    private boolean isBsqTx(int blockHeight, Tx tx) {
+    @VisibleForTesting
+    boolean isBsqTx(int blockHeight, Tx tx) {
+        return bsqBlockChain.<Boolean>callFunctionWithWriteLock(() -> doIsBsqTx(blockHeight, tx));
+    }
+
+    // Not thread safe wrt bsqBlockChain
+    // Check if any of the inputs are BSQ inputs and update BsqBlockChain state accordingly
+    private boolean doIsBsqTx(int blockHeight, Tx tx) {
         boolean isBsqTx = false;
-        long availableValue = 0;
+        long availableBsqFromInputs = 0;
+        // For each input in tx
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
-            TxInput input = tx.getInputs().get(inputIndex);
-            Optional<TxOutput> spendableTxOutput = bsqChainState.getSpendableTxOutput(input.getTxIdIndexTuple());
-            if (spendableTxOutput.isPresent()) {
-                final TxOutput spentTxOutput = spendableTxOutput.get();
-                spentTxOutput.setUnspent(false);
-                bsqChainState.removeUnspentTxOutput(spentTxOutput);
-                spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
-                input.setConnectedTxOutput(spentTxOutput);
-                availableValue = availableValue + spentTxOutput.getValue();
-            }
+            availableBsqFromInputs += getBsqFromInput(blockHeight, tx, inputIndex);
         }
+
         // If we have an input with BSQ we iterate the outputs
-        if (availableValue > 0) {
-            bsqChainState.addTxToMap(tx);
+        if (availableBsqFromInputs > 0) {
+            bsqBlockChain.addTxToMap(tx);
             isBsqTx = true;
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
             final List<TxOutput> outputs = tx.getOutputs();
-            TxOutput btcOutput = null;
+            TxOutput compRequestIssuanceOutputCandidate = null;
             TxOutput bsqOutput = null;
             for (int index = 0; index < outputs.size(); index++) {
                 TxOutput txOutput = outputs.get(index);
                 final long txOutputValue = txOutput.getValue();
-                // We ignore OP_RETURN outputs with txOutputValue 0
-                if (availableValue >= txOutputValue && txOutputValue != 0) {
-                    // We are spending available tokens
-                    txOutput.setVerified(true);
-                    txOutput.setUnspent(true);
-                    bsqChainState.addUnspentTxOutput(txOutput);
-                    tx.setTxType(TxType.TRANSFER_BSQ);
-                    txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
-                    bsqOutput = txOutput;
 
-                    availableValue -= txOutputValue;
-                    if (availableValue == 0) {
-                        log.debug("We don't have anymore BSQ to spend");
+                // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+                if (txOutput.getOpReturnData() == null) {
+                    if (availableBsqFromInputs >= txOutputValue && txOutputValue != 0) {
+                        // We are spending available tokens
+                        markOutputAsBsq(txOutput, tx);
+                        availableBsqFromInputs -= txOutputValue;
+                        bsqOutput = txOutput;
+                        if (availableBsqFromInputs == 0)
+                            log.debug("We don't have anymore BSQ to spend");
+                    } else if (availableBsqFromInputs > 0 && compRequestIssuanceOutputCandidate == null) {
+                        // availableBsq must be > 0 as we expect a bsqFee for an compRequestIssuanceOutput
+                        // We store the btc output as it might be the issuance output from a compensation request which might become BSQ after voting.
+                        compRequestIssuanceOutputCandidate = txOutput;
+                        // As we have not verified the OP_RETURN yet we set it temporary to BTC_OUTPUT
+                        txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+
+                        // The other outputs cannot be BSQ outputs so we ignore them.
+                        // We set the index directly to the last output as that might be an OP_RETURN with DAO data
+                        //TODO remove because its premature optimisation....
+                        // index = Math.max(index, outputs.size() - 2);
+                    } else {
+                        log.debug("We got another BTC output. We ignore it.");
                     }
-                } else if (opReturnVerification.maybeProcessOpReturnData(tx, index, availableValue, blockHeight, btcOutput, bsqOutput)) {
-                    log.debug("We processed valid DAO OP_RETURN data");
                 } else {
-                    btcOutput = txOutput;
-                    txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-                    // The other outputs are not BSQ outputs so we skip them but we
-                    // jump to the last output as that might be an OP_RETURN with DAO data
-                    index = Math.max(index, outputs.size() - 2);
+                    // availableBsq is used as bsqFee paid to miners (burnt) if OP-RETURN is used
+                    opReturnVerification.processDaoOpReturnData(tx, index, availableBsqFromInputs, blockHeight, compRequestIssuanceOutputCandidate, bsqOutput);
                 }
             }
 
-            if (availableValue > 0) {
+            if (availableBsqFromInputs > 0) {
                 log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                        availableValue,
+                        availableBsqFromInputs,
                         tx.toString());
-                tx.setBurntFee(availableValue);
+                tx.setBurntFee(availableBsqFromInputs);
                 if (tx.getTxType() == null)
                     tx.setTxType(TxType.PAY_TRADE_FEE);
             }
@@ -341,6 +353,35 @@ public class BsqParser {
         }
 
         return isBsqTx;
+    }
+
+    // Not thread safe wrt bsqBlockChain
+    private long getBsqFromInput(int blockHeight, Tx tx, int inputIndex) {
+        long bsqFromInput = 0;
+        TxInput input = tx.getInputs().get(inputIndex);
+        // TODO check if Tuple indexes of inputs outputs are not messed up...
+        // Get spendable BSQ output for txidindextuple... (get output used as input in tx if it's spendable BSQ)
+        Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
+        if (spendableTxOutput.isPresent()) {
+            // The output is BSQ, set it as spent, update bsqBlockChain and add to available BSQ for this tx
+            final TxOutput spentTxOutput = spendableTxOutput.get();
+            spentTxOutput.setUnspent(false);
+            bsqBlockChain.removeUnspentTxOutput(spentTxOutput);
+            spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
+            input.setConnectedTxOutput(spentTxOutput);
+            bsqFromInput = spentTxOutput.getValue();
+        }
+        return bsqFromInput;
+    }
+
+    // Not thread safe wrt bsqBlockChain
+    private void markOutputAsBsq(TxOutput txOutput, Tx tx) {
+        // We are spending available tokens
+        txOutput.setVerified(true);
+        txOutput.setUnspent(true);
+        txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
+        tx.setTxType(TxType.TRANSFER_BSQ);
+        bsqBlockChain.addUnspentTxOutput(txOutput);
     }
 
     private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> txs) {

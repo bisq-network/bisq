@@ -24,6 +24,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -123,7 +124,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         addressInputTextField = tuple.second;
-        emptyWalletButton = new Button(Res.get("emptyWalletWindow.button"));
+        emptyWalletButton = new AutoTooltipButton(Res.get("emptyWalletWindow.button"));
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
@@ -140,7 +141,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             }
         });
 
-        closeButton = new Button(Res.get("shared.cancel"));
+        closeButton = new AutoTooltipButton(Res.get("shared.cancel"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

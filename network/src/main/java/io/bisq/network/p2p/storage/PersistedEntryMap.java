@@ -33,14 +33,14 @@ import java.util.stream.Collectors;
 // Only used for converting old TradeStatistic data to new TradeStatistic2 at the moment. But might be used for
 // CompensationRequests and voteItems in future
 @Slf4j
-public class PersistableEntryMap implements PersistableEnvelope {
+public class PersistedEntryMap implements PersistableEnvelope {
     @Getter
     private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
 
-    public PersistableEntryMap() {
+    public PersistedEntryMap() {
     }
 
-    public PersistableEntryMap(Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map) {
+    public PersistedEntryMap(Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map) {
         this.map.putAll(map);
     }
 
@@ -66,10 +66,14 @@ public class PersistableEntryMap implements PersistableEnvelope {
                         e -> new P2PDataStorage.ByteArray(e.getKey()),
                         e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
                 ));
-        return new PersistableEntryMap(new HashMap<>(map));
+        return new PersistedEntryMap(new HashMap<>(map));
     }
 
     public void put(P2PDataStorage.ByteArray key, ProtectedStorageEntry value) {
         map.put(key, value);
+    }
+
+    public void remove(P2PDataStorage.ByteArray key) {
+        map.remove(key);
     }
 }

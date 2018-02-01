@@ -451,9 +451,8 @@ enum TxOutputType {
     BTC_OUTPUT = 3;
     OP_RETURN_OUTPUT = 4;
     COMPENSATION_REQUEST_OP_RETURN_OUTPUT = 5;
-    COMPENSATION_REQUEST_BTC_OUTPUT = 6;
-    SPONSORING_BTC_OUTPUT = 7;
-    VOTING_OP_RETURN_OUTPUT = 8;
+    COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT = 6;
+    VOTING_OP_RETURN_OUTPUT = 7;
 }
 
 message TxOutput {
@@ -662,28 +661,6 @@ message OfferPayload {
     string hash_of_challenge = 36;
     map<string, string> extra_data = 37;
     int32 protocol_version = 38;
-}
-
-// TODO not fully verified as impl. is not completed
-message CompensationRequestPayload {
-    uint32 version = 1;
-    int64 creation_date = 2;
-    string uid = 3;
-    string name = 4;
-    string title = 5;
-    string category = 6;
-    string description = 7;
-    string link = 8;
-    int64 start_date = 9;
-    int64 end_date = 10;
-    int64 requested_btc = 11;
-    string btc_address = 12;
-    string node_address = 13;
-    bytes owner_pub_key_bytes = 14;
-    string owner_pub_key_as_hex = 15;
-    string signature = 16;
-    string fee_tx_id = 17;
-    map<string, string> extra_data = 18;
 }
 
 message AccountAgeWitness {
@@ -976,11 +953,12 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        CompensationRequestPayload compensation_request_payload = 12;
+        CompensationRequestPayload compensation_request_payload = 12; // deprecated. Not used anymore.
         VoteItemsList vote_items_list = 13;
-        BsqChainState bsq_chain_state = 14;
+        BsqBlockChain bsq_block_chain = 14;
 
         PersistableNetworkPayloadList persistable_network_payload_list = 15;
+        CompensationRequestList compensation_request_list = 16;
     }
 }
 
@@ -1047,6 +1025,10 @@ message NavigationPath {
 
 message PaymentAccountList {
     repeated PaymentAccount payment_account = 1;
+}
+
+message CompensationRequestList {
+     repeated CompensationRequest compensation_request = 1;
 }
 
 
@@ -1328,7 +1310,7 @@ message UserPayload {
 // DAO
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message BsqChainState {
+message BsqBlockChain {
     repeated BsqBlock bsq_blocks = 1;
     map<string, Tx> tx_map = 2;
     map<string, TxOutput> unspent_tx_outputs_map = 3;
@@ -1370,6 +1352,23 @@ message VoteItemsList {
     repeated VoteItem vote_item = 1;
 }
 
+message CompensationRequestPayload {
+    uint32 version = 1;  // https://stackoverflow.com/questions/17594881/store-a-single-byte-in-a-protobuf-message
+    int64 creation_date = 2;
+    string uid = 3;
+    string name = 4;
+    string title = 5;
+    string description = 6;
+    string link = 7;
+    int64 requested_bsq = 8;
+    string bsq_address = 9;
+    string node_address = 10;
+    string owner_pub_key_as_hex = 11;
+    string signature = 12;
+    string tx_id = 13;
+    map<string, string> extra_data = 14;
+}
+
 message CompensationRequest {
     CompensationRequestPayload compensation_request_payload = 1;
     bool accepted = 2;
@@ -1378,6 +1377,7 @@ message CompensationRequest {
     bool in_funding_period = 5;
     bool closed = 6;
     bool waiting_for_voting_period = 7;
+    map<string, string> extra_data = 8;
 }
 
 message CompensationRequestVoteItem {

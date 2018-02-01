@@ -30,6 +30,7 @@ import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
@@ -90,13 +91,13 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        dateColumn.setText(Res.get("shared.dateTime"));
-        detailsColumn.setText(Res.get("shared.details"));
-        addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.locked.noFunds")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.locked.noFunds")));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -216,11 +217,11 @@ public class LockedView extends ActivatableView<VBox, Void> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (getTradable(item).isPresent())
-                                setText(formatter.formatDateTime(getTradable(item).get().getDate()));
+                                setGraphic(new AutoTooltipLabel(formatter.formatDateTime(getTradable(item).get().getDate())));
                             else
-                                setText(Res.get("shared.noDateAvailable"));
+                                setGraphic(new AutoTooltipLabel(Res.get("shared.noDateAvailable")));
                         } else {
-                            setText("");
+                            setGraphic(null);
                         }
                     }
                 };
@@ -254,9 +255,9 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
                             } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new Label(Res.get("shared.arbitratorsFee")));
+                                setGraphic(new AutoTooltipLabel(Res.get("shared.arbitratorsFee")));
                             } else {
-                                setGraphic(new Label(Res.get("shared.noDetailsAvailable")));
+                                setGraphic(new AutoTooltipLabel(Res.get("shared.noDetailsAvailable")));
                             }
 
                         } else {

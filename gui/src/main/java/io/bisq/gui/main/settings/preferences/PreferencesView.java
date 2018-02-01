@@ -31,6 +31,8 @@ import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -267,7 +269,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.autoSelectArbitrators"), "").second;
 
-        // ignoreTraders 
+        // ignoreTraders
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers")).second;
         ignoreTradersListListener = (observable, oldValue, newValue) ->
@@ -303,16 +305,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         fiatCurrenciesListView = fiatTuple.second;
         fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
-        Label placeholder = new Label(Res.get("setting.preferences.noFiat"));
+        Label placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noFiat"));
         placeholder.setWrapText(true);
         fiatCurrenciesListView.setPlaceholder(placeholder);
         fiatCurrenciesListView.setCellFactory(new Callback<ListView<FiatCurrency>, ListCell<FiatCurrency>>() {
             @Override
             public ListCell<FiatCurrency> call(ListView<FiatCurrency> list) {
                 return new ListCell<FiatCurrency>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
@@ -354,16 +356,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
         cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         cryptoCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
-        placeholder = new Label(Res.get("setting.preferences.noAltcoins"));
+        placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noAltcoins"));
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
         cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
             @Override
             public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
                 return new ListCell<CryptoCurrency>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
@@ -449,12 +451,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void activateGeneralOptions() {
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
-        // We don't support DOGE anymore due lack of interest but leave it in the code in case it will get 
+        // We don't support DOGE anymore due lack of interest but leave it in the code in case it will get
         // re-activated some day
         baseCurrencyNetworks = baseCurrencyNetworks.stream()
                 .filter(e -> !e.isDoge())
                 .collect(Collectors.toList());
-        
+
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
             baseCurrencyNetworks = baseCurrencyNetworks.stream()

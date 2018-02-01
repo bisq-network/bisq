@@ -31,8 +31,7 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.components.PeerInfoIcon;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.account.AccountView;
 import io.bisq.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -170,7 +169,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -193,7 +192,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getFullAddress().compareTo(o2.getOffer().getOwnerNodeAddress().getFullAddress()));
 
-        nrOfOffersLabel = new Label("");
+        nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
         GridPane.setHalignment(nrOfOffersLabel, HPos.LEFT);
         GridPane.setVgrow(nrOfOffersLabel, Priority.NEVER);
@@ -253,14 +252,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 (showAll, code) -> {
                     setDirectionTitles();
                     if (showAll) {
-                        volumeColumn.setText(Res.get("shared.amountMinMax"));
-                        priceColumn.setText(Res.get("shared.price"));
+                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
+                        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
 
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setText(Res.get("offerbook.volume", code));
-                        priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
+                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("offerbook.volume", code)));
+                        priceColumn.setGraphic(new AutoTooltipLabel(formatter.getPriceWithCurrencyCode(code)));
 
                         if (tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().remove(marketColumn);
@@ -488,11 +487,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax")) {
-            {
-                setMinWidth(150);
-            }
-        };
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax"));
+        column.setMinWidth(150);
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -516,7 +512,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
                 setMinWidth(120);
                 // setMaxWidth(130);
@@ -665,7 +661,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
             {
                 setMinWidth(125);
             }
@@ -683,7 +679,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item), true);
+                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                     setPadding(new Insets(4, 0, 0, 0));
@@ -701,7 +697,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.wantTo")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.wantTo")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -716,7 +712,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
-                            final Button button = new Button();
+                            final Button button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
@@ -829,7 +825,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
                 setMinWidth(40);
                 setMaxWidth(40);

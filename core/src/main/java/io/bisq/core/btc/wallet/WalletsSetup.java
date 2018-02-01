@@ -486,8 +486,9 @@ public class WalletsSetup {
         return params;
     }
 
+    @Nullable
     public BlockChain getChain() {
-        return walletConfig.chain();
+        return walletConfig != null ? walletConfig.chain() : null;
     }
 
     public PeerGroup getPeerGroup() {

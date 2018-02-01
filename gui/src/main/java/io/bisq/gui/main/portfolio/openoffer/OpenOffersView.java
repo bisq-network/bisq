@@ -25,6 +25,8 @@ import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.funds.FundsView;
@@ -62,14 +64,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.BTCMinMax"));
-        volumeColumn.setText(Res.get("shared.amountMinMax"));
-        marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.offerType"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        offerIdColumn.setText(Res.get("shared.offerId"));
-        removeItemColumn.setText("");
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
+        removeItemColumn.setGraphic(new AutoTooltipLabel(""));
 
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -81,7 +83,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
 
         offerIdColumn.setComparator((o1, o2) -> o1.getOffer().getId().compareTo(o2.getOffer().getId()));
         directionColumn.setComparator((o1, o2) -> o1.getOffer().getDirection().compareTo(o2.getOffer().getDirection()));
@@ -167,7 +169,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
@@ -195,9 +197,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getDate(item));
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -216,7 +218,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getAmount(item));
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
                         };
                     }
@@ -235,7 +237,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getPrice(item));
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
                         };
                     }
@@ -255,9 +257,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getVolume(item));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -276,7 +278,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getDirectionLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
                         };
                     }
@@ -295,7 +297,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
@@ -319,7 +321,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         iconView.setId("image-remove");
-                                        button = new Button(Res.get("shared.remove"));
+                                        button = new AutoTooltipButton(Res.get("shared.remove"));
                                         button.setMinWidth(70);
                                         button.setGraphic(iconView);
                                         setGraphic(button);

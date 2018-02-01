@@ -10,8 +10,8 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.DisputeList;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.compensation.CompensationRequestList;
 import io.bisq.core.dao.vote.VoteItemsList;
 import io.bisq.core.payment.PaymentAccountList;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -20,7 +20,7 @@ import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
-import io.bisq.network.p2p.storage.PersistableEntryMap;
+import io.bisq.network.p2p.storage.PersistedEntryMap;
 import io.bisq.network.p2p.storage.PersistableNetworkPayloadCollection;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case SEQUENCE_NUMBER_MAP:
                     return SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
                 case PERSISTED_ENTRY_MAP:
-                    return PersistableEntryMap.fromProto(proto.getPersistedEntryMap().getPersistedEntryMapMap(),
+                    return PersistedEntryMap.fromProto(proto.getPersistedEntryMap().getPersistedEntryMapMap(),
                             networkProtoResolver);
                 case PEER_LIST:
                     return PeerList.fromProto(proto.getPeerList());
@@ -78,13 +78,15 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case PAYMENT_ACCOUNT_LIST:
                     return PaymentAccountList.fromProto(proto.getPaymentAccountList(), this);
                 case COMPENSATION_REQUEST_PAYLOAD:
-                    return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
+                    throw new ProtobufferException("COMPENSATION_REQUEST_PAYLOAD is not used anymore");
                 case VOTE_ITEMS_LIST:
                     return VoteItemsList.fromProto(proto.getVoteItemsList());
-                case BSQ_CHAIN_STATE:
-                    return BsqChainState.fromProto(proto.getBsqChainState());
+                case BSQ_BLOCK_CHAIN:
+                    return BsqBlockChain.fromProto(proto.getBsqBlockChain());
                 case PERSISTABLE_NETWORK_PAYLOAD_LIST:
                     return PersistableNetworkPayloadCollection.fromProto(proto.getPersistableNetworkPayloadList(), this);
+                case COMPENSATION_REQUEST_LIST:
+                    return CompensationRequestList.fromProto(proto.getCompensationRequestList());
                 default:
                     throw new ProtobufferException("Unknown proto message case(PB.PersistableEnvelope). messageCase=" + proto.getMessageCase());
             }

@@ -81,11 +81,11 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        String fontSize = smallScreen ? "9" : "12";
-        messageLabel.setStyle("-fx-font-size: " + fontSize + ";");
+        String fontStyleClass = smallScreen ? "small-text" : "normal-text";
+        messageLabel.getStyleClass().add(fontStyleClass);
         HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
                 "https://bisq.network/arbitration_system.pdf");
-        hyperlinkWithIcon.setStyle("-fx-font-size: " + fontSize + ";");
+        hyperlinkWithIcon.getStyleClass().add(fontStyleClass);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(-6, 0, -20, -4));
     }
 

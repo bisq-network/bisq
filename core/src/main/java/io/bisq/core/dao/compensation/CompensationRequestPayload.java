@@ -17,16 +17,15 @@
 
 package io.bisq.core.dao.compensation;
 
+import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.LazyProcessedPayload;
-import io.bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistableProtectedPayload;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -35,27 +34,20 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Data
-public final class CompensationRequestPayload implements LazyProcessedPayload, ProtectedStoragePayload, PersistablePayload, PersistableEnvelope {
+public final class CompensationRequestPayload implements LazyProcessedPayload, PersistableProtectedPayload, CapabilityRequiringPayload {
     private final String uid;
     private final String name;
     private final String title;
-    private final String category;
     private final String description;
     private final String link;
-    private final long startDate;
-    private final long endDate;
-    private final long requestedBtc;
-    private final String btcAddress;
+    private final long requestedBsq;
+    private final String bsqAddress;
     private final String nodeAddress;
-    @JsonExclude
-    private final byte[] ownerPubKeyBytes;
     // used for json
     private String ownerPubPubKeyAsHex;
     // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
@@ -64,43 +56,45 @@ public final class CompensationRequestPayload implements LazyProcessedPayload, P
     private String signature;
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     @JsonExclude
-    private String feeTxId;
+    private String txId;
+
+    private final byte version;
+    private final long creationDate;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;
 
-    private final byte version;
-    private final long creationDate;
-
+    // Used just for caching
     @JsonExclude
+    @Nullable
     private transient PublicKey ownerPubKey;
 
     public CompensationRequestPayload(String uid,
                                       String name,
                                       String title,
-                                      String category,
                                       String description,
                                       String link,
-                                      Date startDate,
-                                      Date endDate,
-                                      Coin requestedBtc,
-                                      String btcAddress,
+                                      Coin requestedBsq,
+                                      String bsqAddress,
                                       NodeAddress nodeAddress,
-                                      PublicKey ownerPubKey) {
+                                      PublicKey ownerPubKey,
+                                      Date creationDate) {
         this(uid,
                 name,
                 title,
-                category,
                 description,
                 link,
-                startDate,
-                endDate,
-                requestedBtc,
-                btcAddress,
+                requestedBsq.value,
+                bsqAddress,
                 nodeAddress.getFullAddress(),
-                Sig.getPublicKeyBytes(ownerPubKey),
+                Utils.HEX.encode(ownerPubKey.getEncoded()),
+                Version.COMPENSATION_REQUEST_VERSION,
+                creationDate.getTime(),
+                null,
+                null,
                 null);
     }
 
@@ -112,71 +106,99 @@ public final class CompensationRequestPayload implements LazyProcessedPayload, P
     private CompensationRequestPayload(String uid,
                                        String name,
                                        String title,
-                                       String category,
                                        String description,
                                        String link,
-                                       Date startDate,
-                                       Date endDate,
-                                       Coin requestedBtc,
-                                       String btcAddress,
+                                       long requestedBsq,
+                                       String bsqAddress,
                                        String nodeAddress,
-                                       byte[] ownerPubKeyBytes,
+                                       String ownerPubPubKeyAsHex,
+                                       byte version,
+                                       long creationDate,
+                                       String signature,
+                                       String txId,
                                        @Nullable Map<String, String> extraDataMap) {
         this.uid = uid;
         this.name = name;
         this.title = title;
-        this.category = category;
         this.description = description;
         this.link = link;
-        this.startDate = startDate.getTime();
-        this.endDate = endDate.getTime();
-        this.requestedBtc = requestedBtc.value;
-        this.btcAddress = btcAddress;
+        this.requestedBsq = requestedBsq;
+        this.bsqAddress = bsqAddress;
         this.nodeAddress = nodeAddress;
-        this.ownerPubKeyBytes = ownerPubKeyBytes;
+        this.ownerPubPubKeyAsHex = ownerPubPubKeyAsHex;
+        this.version = version;
+        this.creationDate = creationDate;
+        this.signature = signature;
+        this.txId = txId;
         this.extraDataMap = extraDataMap;
-
-        version = Version.COMPENSATION_REQUEST_VERSION;
-        creationDate = new Date().getTime();
-        this.ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
-        ownerPubPubKeyAsHex = Utils.HEX.encode(this.ownerPubKey.getEncoded());
     }
 
-    @Override
-    public PB.StoragePayload toProtoMessage() {
+    public PB.CompensationRequestPayload.Builder getCompensationRequestPayloadBuilder() {
         final PB.CompensationRequestPayload.Builder builder = PB.CompensationRequestPayload.newBuilder()
                 .setUid(uid)
                 .setName(name)
                 .setTitle(title)
-                .setCategory(category)
                 .setDescription(description)
                 .setLink(link)
-                .setStartDate(startDate)
-                .setEndDate(endDate)
-                .setRequestedBtc(requestedBtc)
-                .setBtcAddress(btcAddress)
+                .setRequestedBsq(requestedBsq)
+                .setBsqAddress(bsqAddress)
                 .setNodeAddress(nodeAddress)
                 .setOwnerPubKeyAsHex(ownerPubPubKeyAsHex)
-                .setSignature(signature)
-                .setFeeTxId(feeTxId)
                 .setVersion(version)
-                .setCreationDate(creationDate);
+                .setCreationDate(creationDate)
+                .setSignature(signature)
+                .setTxId(txId);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
+        return builder;
+    }
+
+    @Override
+    public PB.StoragePayload toProtoMessage() {
+        return PB.StoragePayload.newBuilder().setCompensationRequestPayload(getCompensationRequestPayloadBuilder()).build();
     }
 
     public static CompensationRequestPayload fromProto(PB.CompensationRequestPayload proto) {
-        return new CompensationRequestPayload(proto.getUid(),
+        return new CompensationRequestPayload(
+                proto.getUid(),
                 proto.getName(),
                 proto.getTitle(),
-                proto.getCategory(),
-                proto.getDescription(), proto.getLink(),
-                new Date(proto.getStartDate()),
-                new Date(proto.getEndDate()),
-                Coin.valueOf(proto.getRequestedBtc()),
-                proto.getBtcAddress(),
-                proto.getNodeAddress(), proto.getOwnerPubKeyBytes().toByteArray(),
+                proto.getDescription(),
+                proto.getLink(),
+                proto.getRequestedBsq(),
+                proto.getBsqAddress(),
+                proto.getNodeAddress(),
+                proto.getOwnerPubKeyAsHex(),
+                (byte) proto.getVersion(),
+                proto.getCreationDate(),
+                proto.getSignature(),
+                proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    //TODo not needed?
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+
+    @Override
+    public PublicKey getOwnerPubKey() {
+        if (ownerPubKey == null)
+            ownerPubKey = Sig.getPublicKeyFromBytes(Utils.HEX.decode(ownerPubPubKeyAsHex));
+        return ownerPubKey;
+    }
+
+    // Pre 0.6 version don't know the new message type and throw an error which leads to disconnecting the peer.
+    @Override
+    public List<Integer> getRequiredCapabilities() {
+        return new ArrayList<>(Collections.singletonList(
+                Capabilities.Capability.COMP_REQUEST.ordinal()
+        ));
     }
 
 
@@ -184,25 +206,12 @@ public final class CompensationRequestPayload implements LazyProcessedPayload, P
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public long getTTL() {
-        return TimeUnit.DAYS.toMillis(30);
-    }
-
-    public Date getStartDate() {
-        return new Date(startDate);
-    }
-
-    public Date getEndDate() {
-        return new Date(endDate);
-    }
-
     public Date getCreationDate() {
         return new Date(creationDate);
     }
 
-    public Coin getRequestedBtc() {
-        return Coin.valueOf(requestedBtc);
+    public Coin getRequestedBsq() {
+        return Coin.valueOf(requestedBsq);
     }
 
     public NodeAddress getNodeAddress() {
@@ -216,24 +225,20 @@ public final class CompensationRequestPayload implements LazyProcessedPayload, P
     @Override
     public String toString() {
         return "CompensationRequestPayload{" +
-                "version=" + version +
-                ", creationDate=" + getCreationDate() +
-                ", uid='" + uid + '\'' +
-                ", name='" + name + '\'' +
-                ", title='" + title + '\'' +
-                ", category='" + category + '\'' +
-                ", description='" + description + '\'' +
-                ", link='" + link + '\'' +
-                ", startDate=" + getStartDate() +
-                ", endDate=" + getEndDate() +
-                ", requestedBtc=" + requestedBtc +
-                ", btcAddress='" + btcAddress + '\'' +
-                ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", p2pStorageSignaturePubKeyBytes=" + Utilities.bytesAsHexString(ownerPubKeyBytes) +
-                ", p2pStorageSignaturePubKeyAsHex='" + ownerPubPubKeyAsHex + '\'' +
-                ", signature='" + signature + '\'' +
-                ", feeTxId='" + feeTxId + '\'' +
-                ", extraDataMap=" + extraDataMap +
-                '}';
+                "\n     uid='" + uid + '\'' +
+                ",\n     name='" + name + '\'' +
+                ",\n     title='" + title + '\'' +
+                ",\n     description='" + description + '\'' +
+                ",\n     link='" + link + '\'' +
+                ",\n     requestedBsq=" + requestedBsq +
+                ",\n     bsqAddress='" + bsqAddress + '\'' +
+                ",\n     nodeAddress='" + nodeAddress + '\'' +
+                ",\n     ownerPubPubKeyAsHex='" + ownerPubPubKeyAsHex + '\'' +
+                ",\n     signature='" + signature + '\'' +
+                ",\n     txId='" + txId + '\'' +
+                ",\n     version=" + version +
+                ",\n     creationDate=" + creationDate +
+                ",\n     extraDataMap=" + extraDataMap +
+                "\n}";
     }
 }

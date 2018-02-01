@@ -8,6 +8,7 @@ import io.bisq.network.p2p.DirectMessage;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
+@ToString
 public final class GetBsqBlocksRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
     private final int fromBlockHeight;
     private final int nonce;

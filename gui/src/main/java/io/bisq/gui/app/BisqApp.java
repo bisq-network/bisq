@@ -43,7 +43,7 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
+import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
@@ -60,6 +60,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewLoader;
 import io.bisq.gui.common.view.guice.InjectorViewFactory;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -169,7 +170,8 @@ public class BisqApp extends Application {
         Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
                 Capabilities.Capability.TRADE_STATISTICS.ordinal(),
                 Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
-                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
+                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
+                Capabilities.Capability.COMP_REQUEST.ordinal()
         )));
     }
 
@@ -396,7 +398,7 @@ public class BisqApp extends Application {
     }
 
     private void showFPSWindow() {
-        Label label = new Label();
+        Label label = new AutoTooltipLabel();
         EventStreams.animationTicks()
                 .latestN(100)
                 .map(ticks -> {
@@ -446,7 +448,7 @@ public class BisqApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(JsonChainStateExporter.class).shutDown();
+                injector.getInstance(JsonBlockChainExporter.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {

@@ -17,6 +17,6 @@
 
 package io.bisq.core.dao.blockchain;
 
-public interface BsqChainStateListener {
-    void onBsqChainStateChanged();
+public interface BsqBlockChainListener {
+    void onBsqBlockChainChanged();
 }

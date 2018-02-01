@@ -26,21 +26,21 @@ import io.bisq.core.dao.blockchain.vo.TxType;
 import javax.inject.Inject;
 
 public class CompensationRequestVerification {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
 
     @Inject
-    public CompensationRequestVerification(BsqChainState bsqChainState) {
-        this.bsqChainState = bsqChainState;
+    public CompensationRequestVerification(BsqBlockChain bsqBlockChain) {
+        this.bsqBlockChain = bsqBlockChain;
     }
 
-    boolean maybeProcessData(Tx tx, byte[] opReturnData, TxOutput opReturnTxOutput, long fee, int blockHeight, TxOutput btcTxOutput) {
+    boolean processOpReturnData(Tx tx, byte[] opReturnData, TxOutput opReturnTxOutput, long bsqFee, int blockHeight, TxOutput btcTxOutput) {
         if (btcTxOutput != null &&
-                opReturnData.length == 2 &&
+                opReturnData.length > 1 &&
                 Version.COMPENSATION_REQUEST_VERSION == opReturnData[1] &&
-                fee == bsqChainState.getCreateCompensationRequestFee(blockHeight) &&
-                bsqChainState.isCompensationRequestPeriodValid(blockHeight)) {
+                bsqFee == bsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
+                bsqBlockChain.isCompensationRequestPeriodValid(blockHeight)) {
             opReturnTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_OP_RETURN_OUTPUT);
-            btcTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_BTC_OUTPUT);
+            btcTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT);
             tx.setTxType(TxType.COMPENSATION_REQUEST);
             return true;
         }

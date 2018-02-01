@@ -24,7 +24,7 @@ import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.parse.BsqLiteNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
@@ -53,12 +53,12 @@ public class BsqLiteNode extends BsqNode {
     public BsqLiteNode(P2PService p2PService,
                        BsqParser bsqParser,
                        BsqLiteNodeExecutor bsqLiteNodeExecutor,
-                       BsqChainState bsqChainState,
+                       BsqBlockChain bsqBlockChain,
                        FeeService feeService,
                        SeedNodesRepository seedNodesRepository) {
         super(p2PService,
                 bsqParser,
-                bsqChainState,
+                bsqBlockChain,
                 feeService,
                 seedNodesRepository);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
@@ -82,7 +82,7 @@ public class BsqLiteNode extends BsqNode {
                 p2PService.getPeerManager(),
                 p2PService.getBroadcaster(),
                 seedNodesRepository.getSeedNodeAddresses(),
-                bsqChainState,
+                bsqBlockChain,
                 new RequestManager.Listener() {
                     @Override
                     public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
@@ -112,7 +112,7 @@ public class BsqLiteNode extends BsqNode {
                         // Be safe and reset all mutable data in case the provider would not have done it
                         bsqBlock.reset();
                         log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
-                        if (!bsqChainState.containsBlock(bsqBlock)) {
+                        if (!bsqBlockChain.containsBlock(bsqBlock)) {
                             bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                                     genesisBlockHeight,
                                     genesisTxId,
@@ -155,6 +155,6 @@ public class BsqLiteNode extends BsqNode {
     @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         parseBlockchainComplete = true;
-        bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
+        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 }

@@ -19,12 +19,16 @@ package io.bisq.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.CompensationRequestVoteItem;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.HPos;
@@ -37,15 +41,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CompensationViewItem {
-    private static final Logger log = LoggerFactory.getLogger(CompensationViewItem.class);
-
     private static final List<CompensationViewItem> instances = new ArrayList<>();
 
     private final Button removeButton;
@@ -54,8 +54,13 @@ public class CompensationViewItem {
     private Pane owner;
 
     @SuppressWarnings("UnusedParameters")
-    public static void attach(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, DoubleProperty labelWidth, Runnable removeHandler) {
-        instances.add(new CompensationViewItem(compensationRequestVoteItem, vBox, removeHandler));
+    public static void attach(CompensationRequestVoteItem compensationRequestVoteItem,
+                              BsqWalletService bsqWalletService,
+                              VBox vBox,
+                              DoubleProperty labelWidth,
+                              BsqFormatter bsqFormatter,
+                              Runnable removeHandler) {
+        instances.add(new CompensationViewItem(compensationRequestVoteItem,bsqWalletService, vBox, bsqFormatter, removeHandler));
     }
 
     public static void cleanupAllInstances() {
@@ -64,8 +69,8 @@ public class CompensationViewItem {
 
     public static boolean contains(CompensationRequestVoteItem selectedItem) {
         return instances.stream()
-                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getCompensationRequestPayload().getUid().equals(
-                        selectedItem.compensationRequest.getCompensationRequestPayload().getUid()))
+                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
+                        selectedItem.compensationRequest.getPayload().getUid()))
                 .findAny()
                 .isPresent();
     }
@@ -75,10 +80,14 @@ public class CompensationViewItem {
         return instances.isEmpty();
     }
 
-    private CompensationViewItem(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, Runnable removeHandler) {
+    private CompensationViewItem(CompensationRequestVoteItem compensationRequestVoteItem,
+                                 BsqWalletService bsqWalletService,
+                                 VBox vBox,
+                                 BsqFormatter bsqFormatter,
+                                 Runnable removeHandler) {
         this.compensationRequestVoteItem = compensationRequestVoteItem;
         CompensationRequest compensationRequest = compensationRequestVoteItem.compensationRequest;
-        CompensationRequestPayload compensationRequestPayload = compensationRequest.getCompensationRequestPayload();
+        CompensationRequestPayload compensationRequestPayload = compensationRequest.getPayload();
 
         HBox hBox = new HBox();
         hBox.setSpacing(5);
@@ -109,8 +118,7 @@ public class CompensationViewItem {
             AnchorPane.setLeftAnchor(gridPane, 25d);
             AnchorPane.setTopAnchor(gridPane, -20d);
 
-
-            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
+            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService);
             compensationRequestDisplay.createAllFields(Res.get("dao.voting.item.title"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
             compensationRequestDisplay.fillWithData(compensationRequestPayload);
@@ -138,10 +146,10 @@ public class CompensationViewItem {
 
         });
 
-        acceptCheckBox = new CheckBox(Res.get("shared.accept"));
+        acceptCheckBox = new AutoTooltipCheckBox(Res.get("shared.accept"));
         HBox.setMargin(acceptCheckBox, new Insets(5, 0, 0, 0));
 
-        declineCheckBox = new CheckBox(Res.get("shared.decline"));
+        declineCheckBox = new AutoTooltipCheckBox(Res.get("shared.decline"));
         HBox.setMargin(declineCheckBox, new Insets(5, 0, 0, 0));
 
 
@@ -171,7 +179,7 @@ public class CompensationViewItem {
         });
         declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
 
-        removeButton = new Button(Res.get("shared.remove"));
+        removeButton = new AutoTooltipButton(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

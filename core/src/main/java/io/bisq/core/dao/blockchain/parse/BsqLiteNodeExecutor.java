@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 public class BsqLiteNodeExecutor {
 
     private final BsqParser bsqParser;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
 
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
 
@@ -48,9 +48,9 @@ public class BsqLiteNodeExecutor {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqLiteNodeExecutor(BsqParser bsqParser, BsqChainState bsqChainState) {
+    public BsqLiteNodeExecutor(BsqParser bsqParser, BsqBlockChain bsqBlockChain) {
         this.bsqParser = bsqParser;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
     }
 
     public void parseBsqBlocksForLiteNode(List<BsqBlock> bsqBlockList,
@@ -82,6 +82,7 @@ public class BsqLiteNodeExecutor {
         });
     }
 
+    // TODO check why it's not handled in the parser
     public void parseBsqBlockForLiteNode(BsqBlock bsqBlock,
                                          int genesisBlockHeight,
                                          String genesisTxId,
@@ -93,7 +94,7 @@ public class BsqLiteNodeExecutor {
                     genesisBlockHeight,
                     genesisTxId);
             log.info("parseBlocks took {} ms", System.currentTimeMillis() - startTs);
-            bsqChainState.addBlock(bsqBlock);
+            bsqBlockChain.addBlock(bsqBlock);
             return null;
         });
 

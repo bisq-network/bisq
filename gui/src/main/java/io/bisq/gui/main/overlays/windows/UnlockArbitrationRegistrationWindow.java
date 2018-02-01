@@ -19,6 +19,8 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -103,7 +105,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     }
 
     private void addInputFields() {
-        Label label = new Label(Res.get("shared.enterPrivKey"));
+        Label label = new AutoTooltipLabel(Res.get("shared.enterPrivKey"));
         label.setWrapText(true);
         GridPane.setMargin(label, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(label, ++rowIndex);
@@ -120,7 +122,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     }
 
     private void addButtons() {
-        unlockButton = new Button(Res.get("shared.unlock"));
+        unlockButton = new AutoTooltipButton(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
         unlockButton.setDisable(keyInputTextField.getText().length() == 0);
         unlockButton.setOnAction(e -> {
@@ -130,7 +132,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
                 new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
-        Button closeButton = new Button(Res.get("shared.close"));
+        Button closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

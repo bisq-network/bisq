@@ -39,29 +39,34 @@ public class OpReturnVerification {
         this.votingVerification = votingVerification;
     }
 
-    boolean maybeProcessOpReturnData(Tx tx, int index, long availableValue,
-                                     int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
+    // FIXME bsqOutput can be null in case there is no BSQ change output at comp requests tx
+    boolean processDaoOpReturnData(Tx tx, int index, long bsqFee,
+                                   int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
         List<TxOutput> txOutputs = tx.getOutputs();
         TxOutput txOutput = txOutputs.get(index);
         final long txOutputValue = txOutput.getValue();
-        if (txOutputValue == 0 && index == txOutputs.size() - 1 && availableValue > 0) {
-            // If we get an OP_RETURN it has to be the last output and 
-            // the txOutputValue is 0 as well we expect that availableValue>0
+        // If we get an OP_RETURN it has to be the last output and the txOutputValue has to be 0 as well there have be at least one bsqOutput
+        if (txOutputValue == 0 && index == txOutputs.size() - 1 && bsqOutput != null && bsqFee > 0) {
             byte[] opReturnData = txOutput.getOpReturnData();
+            // We expect at least the type byte
             if (opReturnData != null && opReturnData.length > 1) {
                 txOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
                 switch (opReturnData[0]) {
                     case DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST:
-                        return compensationRequestVerification.maybeProcessData(tx, opReturnData, txOutput,
-                                availableValue, blockHeight, btcOutput);
+                        return compensationRequestVerification.processOpReturnData(tx, opReturnData, txOutput,
+                                bsqFee, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
-                        return votingVerification.maybeProcessData(tx, opReturnData, txOutput, availableValue, blockHeight, bsqOutput);
+                        return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
                     default:
-                        log.warn("OP_RETURN data version does not match expected version bytes. opReturnData={}",
-                                Utils.HEX.encode(opReturnData));
+                        log.warn("OP_RETURN version of the BSQ tx ={} does not match expected version bytes. opReturnData={}",
+                                tx.getId(), Utils.HEX.encode(opReturnData));
                         break;
                 }
+            } else {
+                log.warn("opReturnData is null or has no content. opReturnData={}", opReturnData != null ? Utils.HEX.encode(opReturnData) : "null");
             }
+        } else {
+            log.warn("opReturnData is not matching DAO rules.");
         }
         return false;
     }

@@ -18,7 +18,7 @@
 package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -30,7 +30,7 @@ import javax.inject.Inject;
 
 @Slf4j
 public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
-    private final BsqBlockchainManager bsqBlockchainManager;
+    private final DaoManager daoManager;
 
     @Inject
     public AppSetupWithP2PAndDAO(EncryptionService encryptionService,
@@ -39,20 +39,20 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  FilterManager filterManager,
-                                 BsqBlockchainManager bsqBlockchainManager) {
+                                 DaoManager daoManager) {
         super(encryptionService,
                 keyRing,
                 p2PService,
                 tradeStatisticsManager,
                 accountAgeWitnessService,
                 filterManager);
-        this.bsqBlockchainManager = bsqBlockchainManager;
+        this.daoManager = daoManager;
     }
 
     @Override
     protected void onBasicServicesInitialized() {
         super.onBasicServicesInitialized();
 
-        bsqBlockchainManager.onAllServicesInitialized(log::error);
+        daoManager.onAllServicesInitialized(log::error);
     }
 }

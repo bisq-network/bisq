@@ -29,10 +29,7 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.AddressTextField;
-import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.components.TitledGroupBg;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.util.BSFormatter;
@@ -112,17 +109,17 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
-        selectColumn.setText(Res.get("shared.select"));
-        addressColumn.setText(Res.get("shared.address"));
-        balanceColumn.setText(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode()));
-        confirmationsColumn.setText(Res.get("shared.confirmations"));
-        usageColumn.setText(Res.get("shared.usage"));
+        selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
+        addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
+        balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
+        confirmationsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations")));
+        usageColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.usage")));
 
         // trigger creation of at least 1 savings address
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("funds.deposit.noAddresses")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.deposit.noAddresses")));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null)
                 fillForm(newValue.getAddressString());
@@ -145,7 +142,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("funds.deposit.fundWallet"));
 
         qrCodeImageView = new ImageView();
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
@@ -316,7 +313,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setGraphic(new Label(item.getUsage()));
+                            setGraphic(new AutoTooltipLabel(item.getUsage()));
                         } else {
                             setGraphic(null);
                         }
@@ -344,7 +341,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.select"));
+                                        button = new AutoTooltipButton(Res.get("shared.select"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));

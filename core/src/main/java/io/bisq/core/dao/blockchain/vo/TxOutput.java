@@ -35,6 +35,8 @@ public class TxOutput implements PersistablePayload {
     private final int index;
     private final long value;
     private final String txId;
+
+    // Only set if dumpBlockchainData is true
     @Nullable
     private final PubKeyScript pubKeyScript;
     @Nullable
@@ -143,11 +145,11 @@ public class TxOutput implements PersistablePayload {
     }
 
     public boolean isCompensationRequestBtcOutput() {
-        return txOutputType == TxOutputType.COMPENSATION_REQUEST_BTC_OUTPUT;
+        return txOutputType == TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT;
     }
 
     public boolean isSponsoringBtcOutput() {
-        return txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
+        return false; //txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
     }
 
     public String getId() {

@@ -188,6 +188,9 @@ public abstract class BisqExecutable {
                         "set as well.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(DaoOptionKeys.REG_TEST_GENESIS_TX_ID,
+                description("Reg test BSQ genesis transaction id when not using the hard coded one", ""))
+                .withRequiredArg();
 
     }
 

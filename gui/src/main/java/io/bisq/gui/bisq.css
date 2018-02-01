@@ -21,77 +21,151 @@ bg color of non edit textFields: fafafa
 */
 
 .root {
-    -bs-grey: #666666;
-    -bs-bg-grey: #dddddd;
-    -bs-light-grey: #cccccc;
-    -bs-content-bg-grey: #f4f4f4;
-    -bs-very-light-grey: #f8f8f8;
+    -bs-very-dark-grey3: #444; /* 3 usages */
+    -bs-grey: #666666; /* 8 usages */
+    -bs-medium-grey: #AAAAAA; /* 8 usages */
+    -bs-bg-grey: #dddddd; /* 25 usages */
+    -bs-bg-grey2: #bbb; /* 1 usages */
+    -bs-bg-grey3: #d3d3d3; /* 1 usages */
+    -bs-dark-grey:#999; /* 8 usages */
+    -bs-light-grey: #cccccc; /* derive(-bs-white, -20%); 13 usages */
+    -bs-content-bg-grey: #f4f4f4; /* 14 usages */
+    -bs-very-light-grey: #f8f8f8; /* 10 usages */
+    -bs-bg-light: #FAFAFA; /* derive(-bs-white, -2%) 4 usages */
+    -bs-very-light-grey:#F0F0F0; /* derive(-bs-white, -6%) 10 usages */
+    -bs-very-dark-grey: #3c3c3c; /* 8 usages */
+    -bs-very-dark-grey2: #111; /* 1 usages */
+    -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
+    -bs-light-grey2: #cfcfcf;/* 2 usages */
+    -bs-light-grey3: #b5b5b5; /* 1 usages */
+    -bs-bg-grey4: #f6f6f6; /* 1 usages */
+    -bs-black: #000000; /* 13 usages */
+    -bs-font-dark: #333; /* 11 usages */
+    -bs-bg-grey7: #e0e0e0; /* 2 usages */
+    -bs-white: #ffffff; /* 30 usages */
+    -bs-bg-grey9: #fcfcfc; /* 1 usages */
+    -bs-bg-grey10: #e5e5e5; /* 1 usages */
+    -bs-bg-grey11: #f1f1f1; /* 1 usages */
+    -bs-dark-grey: #555; /* 8 usages */
+    -bs-dim-grey: dimgrey; /* 1 usages */
+    -bs-very-dark-grey3: #333000; /* 3 usages */
 
-    -fx-accent: #0f86c3;
-    -bs-blue-soft: derive(-fx-accent, 60%);
+    -bs-red: red; /* 5 usages */
+    -bs-error-red: #dd0000; /* 5 usages */
+    -bs-pink: #ff8986; /* 2 usages */
+    -bs-orange: #ff8a2b; /* 2 usages */
+    -bs-orange2: #dd6900; /* 1 usages */
+    -bs-yellow: #ffb60f; /* 2 usages */
+    -bs-bg-grey8: #E1E9E1; /* 1 usages */
+    -bs-bg-green2:#619865; /* 2 usages */
+    -bs-bg-green:#99ba9c; /* 4 usages */
+    -bs-green: #00aa33; /* 6 usages */
+    -bs-turquoise: #2cacaf; /* 1 usages */
+    -bs-bg-grey5: #f1f6f7; /* 4 usages */
+    -bs-bg-grey6: #e7f5f9; /* 3 usages */
+    -bs-bg-blue2: #6aa4b6; /* 3 usages */
+    -bs-bg-blue1: #b5e1ef; /* 3 usages */
+    -bs-bg-blue4: #57acc9; /* 1 usages */
+    -bs-bg-blue3: #9bbdc9; /* 1 usages */
+    -fx-faint-focus-color: #0f87c322; /* 5 usages */
+    -fx-accent: #0f86c3; /* 18 usages */
     -bs-blue-transparent: #0f87c344;
+    -bs-blue: blue; /* 1 usages */
 
-    -bs-green: #00aa33;
-    -bs-green-soft: derive(-bs-green, 60%);
-    -bs-green-transparent: #00aa3344;
+    -bs-green-soft: derive(-bs-green, 60%); /* 2 usages */
+    -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
 
-    -bs-error-red: #dd0000;
-    -bs-red-soft: derive(-bs-error-red, 60%);
+    -bs-warning: -bs-orange; /* 1 usages */
 
-    -bs-orange: #ff8a2b;
-    -bs-yellow: #ffb60f;
-    -bs-turquoise: #2cacaf;
-    -bs-turquoise2: #1c9099;
-    -bs-brown: #52321b;
-    -bs-dark-blue: #0b456d;
-    -bs-dark-green: #708614;
-    -bs-fresh-green: #b7d042;
-    -bs-ocher: #de9d2c;
-    -bs-light-blue: #c4eef2;
-    -bs-smooth-red: #ed7157;
-    -bs-soft-red: #fe5e1c;
-    -bs-soft-red2: #f35e1c;
-    -bs-soft-red3: #fa6f25;
-    -bs-yellow2: #f7ac03;
+    -bs-buy: -bs-yellow; /* 12 usages */
+    -bs-buy-focus: derive(-bs-buy, -50%); /* 2 usages */
+    -bs-buy-hover: derive(-bs-buy, -10%); /* 2 usages */
+    -bs-buy-transparent: derive(-bs-buy, 75%); /* 1 usages */
 
-    -bs-warning: -bs-orange;
+    -bs-sell: -bs-turquoise; /* 11 usages */
+    -bs-sell-focus: derive(-bs-sell, -50%); /* 2 usages */
+    -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
+    -bs-sell-transparent: derive(-bs-sell, 95%); /* 1 usages */
 
-    -bs-buy: -bs-yellow;
-    -bs-buy-focus: derive(-bs-buy, -50%);
-    -bs-buy-hover: derive(-bs-buy, -10%);
-    -bs-buy-transparent: derive(-bs-buy, 75%);
-
-    -bs-sell: -bs-turquoise;
-    -bs-sell-focus: derive(-bs-sell, -50%);
-    -bs-sell-hover: derive(-bs-sell, -10%);
-    -bs-sell-transparent: derive(-bs-sell, 95%);
-
-    -bs-cancel: #ddd;
-    -bs-cancel-focus: derive(-bs-cancel, -50%);
-    -bs-cancel-hover: derive(-bs-cancel, -10%);
+    -bs-cancel: -bs-bg-grey; /* 5 usages */
+    -bs-cancel-focus: derive(-bs-cancel, -50%); /* 1 usages */
+    -bs-cancel-hover: derive(-bs-cancel, -10%); /* 1 usages */
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: #0f87c322;
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
     -fx-font-family: "Verdana";
 }
 
-/* Splash */
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * General                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
 
-#splash {
-    -fx-background-color: #ffffff;
-}
-
-#splash-error-state-msg {
+/* Text */
+.error-text {
     -fx-text-fill: -bs-error-red;
 }
 
-#splash-bitcoin-network-label {
+.error {
+    -fx-accent: -bs-error-red;
+}
+
+.success-text {
+    -fx-text-fill: -bs-green;
+}
+
+.highlight {
     -fx-text-fill: -fx-accent;
+}
+
+.highlight:hover {
+    -fx-text-fill: -bs-black;
+}
+
+.headline-label {
     -fx-font-weight: bold;
+    -fx-font-size: 22;
+}
+
+/* Other UI Elements */
+
+.separator {
+    -fx-background: -bs-light-grey;
+}
+
+/* Behavior */
+
+.show-hand {
+    -fx-cursor: hand;
+}
+
+.hide-focus {
+    -fx-focus-color: transparent;
+}
+
+/* Font */
+
+.very-small-text {
+    -fx-font-size: 9;
+}
+
+.small-text {
+    -fx-font-size: 10;
+}
+
+.normal-text {
+    -fx-font-size: 12;
+}
+
+
+/* Splash */
+
+#splash {
+    -fx-background-color: -bs-white;
 }
 
 /* Main UI */
@@ -104,13 +178,13 @@ bg color of non edit textFields: fafafa
 }
 
 #footer-pane {
-    -fx-background-color: #ddd;
+    -fx-background-color: -bs-bg-grey;
     -fx-font-size: 12;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #footer-pane-line {
-    -fx-background: #bbb;
+    -fx-background: -bs-bg-grey2;
 }
 
 #headline-label {
@@ -134,10 +208,6 @@ bg color of non edit textFields: fafafa
     -fx-fill: -fx-accent;
 }
 
-#nav-button-label {
-    -fx-font-size: 10;
-}
-
 #nav-balance-label {
     -fx-font-size: 10;
     -fx-alignment: center;
@@ -147,7 +217,7 @@ bg color of non edit textFields: fafafa
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 11;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 .text-field {
@@ -155,22 +225,31 @@ bg color of non edit textFields: fafafa
 }
 
 .text-field:readonly {
-    -fx-text-fill: #000000;
-    -fx-background-color: #FAFAFA;
+    -fx-text-fill: -bs-black;
+    -fx-background-color: -bs-bg-light;
+}
+
+.display-text-field {
+    -fx-alignment: center;
+    -fx-background-color: -bs-white;
 }
 
 .text-area:readonly .content {
-    -fx-background-color: #FAFAFA;
-}
-
-#feedback-text {
-    -fx-font-size: 10;
+    -fx-background-color: -bs-bg-light;
 }
 
 #label-url {
     -fx-cursor: hand;
-    -fx-text-fill: blue;
+    -fx-text-fill: -bs-blue;
     -fx-underline: true;
+}
+
+.icon, icon:hover {
+    -fx-cursor: hand;
+}
+
+.hidden-icon-button {
+    -fx-background-color: transparent;
 }
 
 #icon-button {
@@ -178,97 +257,78 @@ bg color of non edit textFields: fafafa
     -fx-background-color: transparent;
 }
 
-.copy-icon {
-    -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
-}
-
 .copy-icon-disputes {
-    -fx-text-fill: white;
-    -fx-cursor: hand;
+    -fx-text-fill: -bs-white;
 }
 
 .copy-icon:hover {
-    -fx-text-fill: black;
-}
-
-.external-link-icon {
-    -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
+    -fx-text-fill: -bs-black;
 }
 
 .received-funds-icon {
     -fx-text-fill: -bs-green-soft;
-    -fx-cursor: hand;
-}
-
-.received-funds-icon:hover {
-    -fx-text-fill: black;
-    -fx-cursor: hand;
 }
 
 .sent-funds-icon {
     -fx-text-fill: -bs-red-soft;
-    -fx-cursor: hand;
 }
 
-.sent-funds-icon:hover {
-    -fx-text-fill: black;
+.dao-tx-type-fee-icon,
+.dao-tx-type-fee-icon:hover {
+    -fx-text-fill: #5ab9ea;
     -fx-cursor: hand;
 }
-
-.internal-funds-icon {
-    -fx-text-fill: #999;
-    -fx-cursor: hand;
-}
-
 
 .dao-tx-type-unverified-icon,
 .dao-tx-type-unverified-icon:hover {
     -fx-text-fill: -bs-yellow;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-invalid-icon,
 .dao-tx-type-invalid-icon:hover {
     -fx-text-fill: -bs-error-red;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-default-icon,
 .dao-tx-type-default-icon:hover {
     -fx-text-fill: -bs-grey;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-genesis-icon,
 .dao-tx-type-genesis-icon:hover {
     -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
 }
 
 
 .dao-tx-type-received-funds-icon,
 .dao-tx-type-received-funds-icon:hover {
     -fx-text-fill: -bs-green-soft;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-sent-funds-icon,
 .dao-tx-type-sent-funds-icon:hover {
     -fx-text-fill: -bs-red-soft;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-default-icon,
 .dao-tx-type-default-icon:hover {
     -fx-text-fill: -bs-grey;
-    -fx-cursor: hand;
 }
 
 .dao-tx-type-issuance-icon,
 .dao-tx-type-issuance-icon:hover {
     -fx-text-fill: -bs-green;
+}
+
+.version {
+    -fx-text-fill: black;
+    -fx-underline: false;
+    -fx-cursor: null;
+}
+
+.version-new {
+    -fx-text-fill: -bs-error-red;
+    -fx-underline: true;
     -fx-cursor: hand;
 }
 
@@ -280,83 +340,72 @@ bg color of non edit textFields: fafafa
  ******************************************************************************/
 
 .tooltip {
-    -fx-background: white;
-    -fx-text-fill: black;
-    -fx-background-color: white;
+    -fx-background: -bs-white;
+    -fx-text-fill: -bs-black;
+    -fx-background-color: -bs-white;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
+    -fx-effect: dropshadow(three-pass-box, -bs-black-transparent, 10, 0.0, 0, 3);
     -fx-font-size: 0.85em;
 }
 
 /* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally
 textfield */
 #label-with-background {
-    -fx-background-color: #FAFAFA;
+    -fx-background-color: -bs-bg-light;
     -fx-border-radius: 4;
     -fx-padding: 4 4 4 4;
 }
 
-#address-text-field {
-    -fx-cursor: hand;
-    -fx-text-fill: -fx-accent;
-}
-
 #address-text-field:hover {
-    -fx-text-fill: black;
+    -fx-text-fill: -bs-black;
 }
 
 #funds-confidence {
-    -fx-progress-color: dimgrey;
+    -fx-progress-color: -bs-dim-grey;
+}
+
+.hyperlink,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused
+{
+    -fx-border-style: none;
+    -fx-border-width: 0px;
 }
 
 .hyperlink {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
+    -fx-text-fill: -fx-accent;
 }
 
-.hyperlink .text {
-    -fx-fill: white;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-}
-
-.hyperlink .text {
-    -fx-fill: -fx-accent;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-}
-
-.hyperlink .text:hover,
-.hyperlink .tooltip .text,
-.hyperlink .text:hover {
-    -fx-fill: black;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
+.hyperlink:hover {
+    -fx-text-fill: -bs-black;
 }
 
 .hyperlink:hover,
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-underline: false;
-    -fx-border-style: none;
-    -fx-border-width: 0px;
 }
 
-.hyperlink:focused {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
+.market-price-tooltip {
+    -fx-font-size: 12;
 }
 
 /*******************************************************************************
  *                                                                             *
- * Table                                                                     *
+ * Table                                                                       *
  *                                                                             *
  ******************************************************************************/
 
 .table-view .table-cell {
     -fx-alignment: center;
+}
+
+#addressColumn {
+    -fx-alignment: left;
 }
 
 .table-view .column-header .label {
@@ -368,7 +417,7 @@ textfield */
 }
 
 .table-view .text {
-    -fx-fill: black;
+    -fx-fill: -bs-black;
 }
 
 .table-view:focused {
@@ -387,11 +436,11 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
-    -fx-fill: white;
+    -fx-fill: -bs-white;
 }
 
 .table-view .table-row-cell:selected .button .text {
-    -fx-fill: black;
+    -fx-fill: -bs-black;
 }
 
 .table-view .table-row-cell .copy-icon .text,
@@ -400,15 +449,15 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: white;
+    -fx-fill: -bs-white;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
-    -fx-fill: black;
+    -fx-fill: -bs-black;
 }
 
 .table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: white;
+    -fx-fill: -bs-white;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -420,9 +469,8 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text:hover,
-.table-view .table-row-cell:selected .hyperlink .tooltip .text,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
-    -fx-fill: black;
+    -fx-fill: -bs-black;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -442,17 +490,12 @@ textfield */
 
 /*******************************************************************************
  *                                                                             *
- * Icons                                                                     *
+ * Icons                                                                       *
  *                                                                             *
  ******************************************************************************/
 
 #non-clickable-icon {
-    -fx-text-fill: #AAAAAA;
-}
-
-#clickable-icon {
-    -fx-text-fill: -fx-accent;
-    -fx-cursor: hand;
+    -fx-text-fill: -bs-medium-grey;
 }
 
 #clickable-icon:hover {
@@ -461,7 +504,27 @@ textfield */
 
 /*******************************************************************************
  *                                                                             *
- * Tab pane                                                                     *
+ * Images                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.qr-code {
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Textarea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-border-color: -bs-bg-grey;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tab pane                                                                    *
  *                                                                             *
  ******************************************************************************/
 
@@ -507,21 +570,21 @@ textfield */
 
 /* validation */
 #validation-error {
-    -fx-text-fill: red;
+    -fx-text-fill: -bs-red;
 }
 
 /* Account */
 
 #content-pane-top {
-    -fx-background-color: #cfcfcf,
-    linear-gradient(#cfcfcf 0%, #b5b5b5 100%),
-    linear-gradient(#d3d3d3 0%, -bs-bg-grey 100%);
+    -fx-background-color: -bs-light-grey2,
+    linear-gradient(-bs-light-grey2 0%, -bs-light-grey3 100%),
+    linear-gradient(-bs-bg-grey3 0%, -bs-bg-grey 100%);
     -fx-background-insets: 0 0 0 0, 0, 1;
 }
 
 #info-icon-label {
     -fx-font-size: 16;
-    -fx-text-fill: #333000;
+    -fx-text-fill: -bs-very-dark-grey3;
 }
 
 /* OfferPayload book */
@@ -550,8 +613,8 @@ textfield */
 #currency-info-label {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-background-color: #f6f6f6;
-    -fx-border-color: #aaa;
+    -fx-background-color: -bs-bg-grey4;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid none;
     -fx-border-insets: 0 0 0 -2;
 }
@@ -559,8 +622,8 @@ textfield */
 #currency-info-label-disabled {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-background-color: #e0e0e0;
-    -fx-border-color: #e0e0e0;
+    -fx-background-color: -bs-bg-grey7;
+    -fx-border-color: -bs-bg-grey7;
     -fx-border-style: solid solid solid none;
     -fx-border-insets: 0 0 0 -2;
 }
@@ -568,7 +631,7 @@ textfield */
 #toggle-price-left {
     -fx-border-radius: 4 0 0 4;
     -fx-padding: 4 4 4 4;
-    -fx-border-color: #aaa;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid none solid solid;
     -fx-border-insets: 0 -2 0 0;
     -fx-background-insets: 0 -2 0 0;
@@ -578,7 +641,7 @@ textfield */
 #toggle-price-right {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-border-color: #aaa;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid none;
     -fx-border-insets: 0 0 0 -2;
     -fx-background-insets: 0 0 0 -2;
@@ -586,47 +649,52 @@ textfield */
 }
 
 #totals-separator {
-    -fx-background: #AAAAAA;
+    -fx-background: -bs-medium-grey;
 }
 
 #payment-info {
     -fx-background-color: -bs-content-bg-grey;
 }
 
+.toggle-button-active {
+    -fx-background-color: -bs-blue-transparent;
+}
+
+.toggle-button-inactive {
+    -fx-background-color: -bs-very-light-grey;
+}
+
+/* OfferBook */
+
+.table-title {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-alignment: center;
+}
+
+/* Offer */
+
+.percentage-label {
+    -fx-alignment: center;
+}
+
+.offer-separator {
+    -fx-background: -bs-grey;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: -bs-black;
+}
+
 /* Account setup */
-#wizard-title-deactivated {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: #999999;
-}
-
-#wizard-title-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: #333333;
-}
-
-#wizard-title-completed {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: #333333;
-}
-
-#wizard-sub-title-deactivated {
-    -fx-text-fill: #999999;
-}
-
-#wizard-sub-title-active {
-    -fx-text-fill: #333333;
-}
-
-#wizard-sub-title-completed {
-    -fx-text-fill: #333333;
-}
-
 #wizard-item-background-deactivated {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -636,8 +704,8 @@ textfield */
 }
 
 #wizard-item-background-active {
-    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
-    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -647,8 +715,8 @@ textfield */
 }
 
 #wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -658,27 +726,10 @@ textfield */
 }
 
 /* Account settings */
-#wizard-title-disabled {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: #999999;
-}
-
-#wizard-title-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: #333333;
-}
-
-#wizard-title-selected {
-    -fx-font-weight: bold;
-    -fx-font-size: 16;
-    -fx-text-fill: -fx-accent;
-}
 
 #account-settings-item-background-disabled {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -688,8 +739,8 @@ textfield */
 }
 
 #account-settings-item-background-active {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -699,8 +750,8 @@ textfield */
 }
 
 #account-settings-item-background-selected {
-    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
-    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -712,10 +763,10 @@ textfield */
 /* Pending trades */
 #trade-wizard-item-background-disabled {
     -fx-text-fill: -bs-grey;
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
-    /*  -fx-body-color:  #F0F0F0;
-      -fx-outer-border:  #ccc;*/
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    /*  -fx-body-color:  -bs-very-light-grey;
+      -fx-outer-border:  -bs-light-grey;*/
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -727,10 +778,8 @@ textfield */
 #trade-wizard-item-background-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
-    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
-    /* -fx-body-color: #e7f5f9;
-     -fx-outer-border:  #6aa4b6;*/
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -740,10 +789,8 @@ textfield */
 }
 
 #trade-wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #E1E9E1);
-    -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
-    /* -fx-body-color: #def6df;
-     -fx-outer-border: #7db581;*/
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-bg-grey8);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -761,7 +808,7 @@ textfield */
 #open-dispute-button {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-base: #dd0000;
+    -fx-base: -bs-error-red;
 }
 
 /* TitledGroupBg */
@@ -775,13 +822,12 @@ textfield */
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill: -fx-accent;
     -fx-background-color: -bs-content-bg-grey;
 }
 
 #titled-group-bg {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, #ccc);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -791,8 +837,8 @@ textfield */
 }
 
 #titled-group-bg-active {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #9bbdc9, #57acc9);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue3, -bs-bg-blue4);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -835,23 +881,23 @@ textfield */
 
 /* message-list-view*/
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #message-list-view.list-cell {
@@ -887,34 +933,47 @@ textfield */
 }
 
 .attachment-icon {
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-cursor: hand;
 }
 
 .attachment-icon-black {
-    -fx-text-fill: black;
+    -fx-text-fill: -bs-black;
     -fx-cursor: hand;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.grid-pane {
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+    -fx-background-insets: 10;
+}
+
 /********************************************************************************************************************
- *
- * Text validation
- *
+ *                                                                                                                  *
+ * Text validation                                                                                                  *
+ *                                                                                                                  *
  ********************************************************************************************************************/
 
 .text-field.validation_error, .text-area.validation_error .content, .date-picker.validation_error > .text-field {
-    -fx-background-color: red,
+    -fx-background-color: -bs-red,
     linear-gradient(
             to bottom,
-            derive(#ff8986, 40%) 5%,
-            derive(#ff8986, 70%) 40%
+            derive(-bs-pink, 40%) 5%,
+            derive(-bs-pink, 70%) 40%
     );
 }
 
 /********************************************************************************************************************
- *
- * Market overview
- *
+ *                                                                                                                  *
+ * Market overview                                                                                                  *
+ *                                                                                                                  *
  ********************************************************************************************************************/
 
 #charts .chart-legend {
@@ -923,19 +982,19 @@ textfield */
 }
 
 #charts .axis {
-    -fx-tick-label-fill: black;
+    -fx-tick-label-fill: -bs-black;
 }
 
 #charts .chart-plot-background {
-    -fx-background-color: white;
+    -fx-background-color: -bs-white;
 }
 
 #charts .default-color0.chart-area-symbol {
-    -fx-background-color: -bs-sell, white;
+    -fx-background-color: -bs-sell, -bs-white;
 }
 
 #charts .default-color1.chart-area-symbol {
-    -fx-background-color: -bs-buy, white;
+    -fx-background-color: -bs-buy, -bs-white;
 }
 
 #charts .default-color0.chart-series-area-line {
@@ -960,14 +1019,14 @@ textfield */
 }
 
 /********************************************************************************************************************
- *
- * Rounded buttons
- *
+ *                                                                                                                  *
+ * Rounded buttons                                                                                                  *
+ *                                                                                                                  *
  ********************************************************************************************************************/
 
 #buy-button-big {
     -fx-base: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
     -fx-background-radius: 5;
@@ -983,7 +1042,7 @@ textfield */
 
 #buy-button {
     -fx-base: -bs-buy;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
 }
 
@@ -997,7 +1056,7 @@ textfield */
 
 #sell-button-big {
     -fx-base: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
     -fx-background-radius: 5;
@@ -1013,7 +1072,7 @@ textfield */
 
 #sell-button {
     -fx-base: -bs-sell;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
 }
 
@@ -1027,7 +1086,7 @@ textfield */
 
 #cancel-button {
     -fx-base: -bs-cancel;
-    -fx-text-fill: #444;
+    -fx-text-fill: -bs-very-dark-grey3;
     -fx-font-weight: bold;
 }
 
@@ -1040,32 +1099,32 @@ textfield */
 }
 
 /********************************************************************************************************************
- *
- * Popups
- *
+ *                                                                                                                  *
+ * Popups                                                                                                           *
+ *                                                                                                                  *
  ********************************************************************************************************************/
 
 #popup-headline {
     -fx-font-size: 16;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #popup-bg {
     -fx-font-size: 14;
-    -fx-text-fill: #333;
-    -fx-background-color: white;
+    -fx-text-fill: -bs-font-dark;
+    -fx-background-color: -bs-white;
     -fx-background-radius: 10 10 10 10;
     -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
 }
 
 #popup-bg-top {
     -fx-font-size: 14;
-    -fx-text-fill: #333;
-    -fx-background-color: white;
+    -fx-text-fill: -bs-font-dark;
+    -fx-background-color: -bs-white;
     -fx-background-radius: 0 0 10 10;
     -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
 }
 
 #popup-grid-pane-bg {
@@ -1080,49 +1139,49 @@ textfield */
 #notification-popup-headline {
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 #notification-popup-bg {
     -fx-font-size: 11;
-    -fx-text-fill: #3c3c3c;
-    -fx-background-color: linear-gradient(to bottom, #fcfcfc, #e5e5e5);
+    -fx-text-fill: -bs-very-dark-grey;
+    -fx-background-color: linear-gradient(to bottom, -bs-bg-grey9, -bs-bg-grey10);
     -fx-background-radius: 5 5 5 5;
     -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
+    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
 }
 
 #peer-info-popup-bg {
     -fx-font-size: 11;
-    -fx-text-fill: #3c3c3c;
-    -fx-background-color: linear-gradient(to bottom, #fafafa, #f1f1f1);
+    -fx-text-fill: -bs-very-dark-grey;
+    -fx-background-color: linear-gradient(to bottom, -bs-bg-light, -bs-bg-grey11);
     -fx-background-radius: 3 3 3 3;
     -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
+    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
 }
 
 #peer-info-popup-headline {
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-font-dark;
 }
 
 .popup-icon-information {
-    -fx-text-fill: #ddd;
+    -fx-text-fill: -bs-bg-grey;
 }
 
 .popup-icon-warning {
-    -fx-text-fill: #dd6900;
+    -fx-text-fill: -bs-orange2;
 }
 
 #price-feed-combo {
-    -fx-background-color: #555;
-    -fx-text-fill: white;
+    -fx-background-color: -bs-dark-grey;
+    -fx-text-fill: -bs-white;
     -fx-alignment: center;
 }
 
 #invert-market-price {
-    -fx-text-fill: #111;
+    -fx-text-fill: -bs-very-dark-grey2;
 }
 
 #popup-qr-code-info {
@@ -1133,13 +1192,13 @@ textfield */
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 10;
-    -fx-text-fill: white;
+    -fx-text-fill: -bs-white;
 }
 
 #toggle-left {
     -fx-border-radius: 4 0 0 4;
     -fx-padding: 4 4 4 4;
-    -fx-border-color: #aaa;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid solid;
     -fx-border-insets: 0 -2 0 0;
     -fx-background-insets: 0 -2 0 0;
@@ -1149,7 +1208,7 @@ textfield */
 #toggle-center {
     -fx-border-radius: 0 0 0 0;
     -fx-padding: 4 4 4 4;
-    -fx-border-color: #aaa;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid solid;
     -fx-border-insets: 0 0 0 0;
     -fx-background-insets: 0 0 0 0;
@@ -1159,9 +1218,39 @@ textfield */
 #toggle-right {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-border-color: #aaa;
+    -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid solid;
     -fx-border-insets: 0 0 0 -2;
     -fx-background-insets: 0 0 0 -2;
     -fx-background-radius: 0 4 4 0;
 }
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Arbitration                                                                                                      *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.message {
+    -fx-text-fill: -bs-black;
+}
+
+.my-message {
+    -fx-text-fill: -bs-white;
+}
+
+.message-header {
+     -fx-text-fill: -bs-light-grey;
+     -fx-font-size: 11;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * DAO                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.compensation-root {
+    -fx-background-insets: 0, 0 0 0 0
+}
+

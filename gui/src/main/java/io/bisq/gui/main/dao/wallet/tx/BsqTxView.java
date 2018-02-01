@@ -19,20 +19,22 @@ package io.bisq.gui.main.dao.wallet.tx;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqChainStateListener;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.BsqNode;
+import io.bisq.core.dao.blockchain.BsqNodeProvider;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
@@ -54,13 +56,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -71,10 +71,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final BsqBlockchainManager bsqBlockchainManager;
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
+    private final BsqNode bsqNode;
     private final Preferences preferences;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
@@ -84,10 +84,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
-    private BsqChainStateListener bsqChainStateListener;
+    private BsqBlockChainListener bsqBlockChainListener;
     private BsqBalanceListener bsqBalanceListener;
     private ProgressBar chainSyncIndicator;
-    private NewBestBlockListener newBestBlockListener;
+    private ChangeListener<Number> chainHeightChangedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,15 +96,15 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
-                      BsqBlockchainManager bsqBlockchainManager,
+                      BsqNodeProvider bsqNodeProvider,
                       Preferences preferences,
-                      BsqChainState bsqChainState,
+                      BsqBlockChain bsqBlockChain,
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.bsqBlockchainManager = bsqBlockchainManager;
+        this.bsqNode = bsqNodeProvider.getBsqNode();
         this.preferences = preferences;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -150,8 +150,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         walletBsqTransactionsListener = change -> updateList();
         bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
-        bsqChainStateListener = this::onChainHeightChanged;
-        newBestBlockListener = block -> onChainHeightChanged();
+        bsqBlockChainListener = this::onChainHeightChanged;
+        chainHeightChangedListener = (observable, oldValue, newValue) -> onChainHeightChanged();
     }
 
     @Override
@@ -159,13 +159,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
         bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
-
-        btcWalletService.addNewBestBlockListener(newBestBlockListener);
+        btcWalletService.getChainHeightProperty().addListener(chainHeightChangedListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        bsqBlockchainManager.addBsqChainStateListener(bsqChainStateListener);
+        bsqNode.addBsqBlockChainListener(bsqBlockChainListener);
+
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
             rootParent.heightProperty().addListener(parentHeightListener);
@@ -182,38 +182,39 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
-        btcWalletService.removeNewBestBlockListener(newBestBlockListener);
+        btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
+        bsqNode.removeBsqBlockChainListener(bsqBlockChainListener);
 
         observableList.forEach(BsqTxListItem::cleanup);
-        bsqBlockchainManager.removeBsqChainStateListener(bsqChainStateListener);
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
     private void onChainHeightChanged() {
-        UserThread.runAfter(() -> {
-            if (bsqWalletService.getBestChainHeight() > 0) {
-                final boolean synced = bsqWalletService.getBestChainHeight() == bsqChainState.getChainHeadHeight();
-                chainSyncIndicator.setVisible(!synced);
-                chainSyncIndicator.setManaged(!synced);
-                if (bsqChainState.getChainHeadHeight() > 0)
-                    chainSyncIndicator.setProgress((double) bsqChainState.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
+        final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
+        final int bsqBlockChainHeight = bsqBlockChain.getChainHeadHeight();
+        if (bsqWalletChainHeight > 0) {
+            final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
+            chainSyncIndicator.setVisible(!synced);
+            chainSyncIndicator.setManaged(!synced);
+            if (bsqBlockChainHeight > 0)
+                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletService.getBestChainHeight());
 
-                if (synced)
-                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                            bsqChainState.getChainHeadHeight(),
-                            bsqWalletService.getBestChainHeight()));
-                else
-                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                            bsqChainState.getChainHeadHeight(),
-                            bsqWalletService.getBestChainHeight()));
-            } else {
-                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                        bsqChainState.getChainHeadHeight(),
+            if (synced)
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
+                        bsqBlockChainHeight,
                         bsqWalletService.getBestChainHeight()));
-            }
-        }, 300, TimeUnit.MILLISECONDS);
+            else
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                        bsqBlockChainHeight,
+                        bsqWalletService.getBestChainHeight()));
+        } else {
+            chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                    bsqBlockChainHeight,
+                    bsqWalletService.getBestChainHeight()));
+        }
+        updateList();
     }
 
     private void updateList() {
@@ -225,8 +226,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                 .map(transaction -> new BsqTxListItem(transaction,
                                 bsqWalletService,
                                 btcWalletService,
-                                bsqChainState.getTxType(transaction.getHashAsString()),
-                                bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqBlockChain.getTxType(transaction.getHashAsString()),
+                                bsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqBlockChain,
                                 bsqFormatter)
                 )
                 .collect(Collectors.toSet());
@@ -238,10 +240,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addDateColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.dateTime"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.dateTime"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
-        column.setMaxWidth(180);
+        column.setMaxWidth(column.getMinWidth() + 20);
+
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {
@@ -271,7 +274,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addTxIdColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.txId"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.txId"));
+
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
@@ -307,9 +311,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addAddressColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.address"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.address"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(140);
+        column.setMinWidth(160);
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {
@@ -320,27 +324,54 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                         return new TableCell<BsqTxListItem, BsqTxListItem>() {
 
                             private AddressWithIconAndDirection field;
-                            private Label label;
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    String addressString = item.getAddress();
-                                    if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
-                                        if (field != null)
-                                            field.setOnAction(null);
+                                    TxType txType = item.getTxType();
+                                    String labelString = Res.get("dao.tx.type.enum." + txType.name());
+                                    Label label;
+                                    if (item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal()) {
+                                        if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
+                                            if (field != null)
+                                                field.setOnAction(null);
 
-                                        label = new Label(item.isBurnedBsqTx() ?
-                                                Res.get("dao.wallet.bsqFee") : Res.get("funds.tx.direction.self"));
-                                        setGraphic(label);
+                                            switch (txType) {
+                                                case UNDEFINED_TX_TYPE:
+                                                case UNVERIFIED:
+                                                    break;
+                                                case INVALID:
+                                                    break;
+                                                case GENESIS:
+                                                    break;
+                                                case TRANSFER_BSQ:
+                                                    if (item.getAmount().isZero())
+                                                        labelString = Res.get("funds.tx.direction.self");
+                                                    break;
+                                                case PAY_TRADE_FEE:
+                                                case COMPENSATION_REQUEST:
+                                                case VOTE:
+                                                    break;
+                                                case ISSUANCE:
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+
+                                            label = new AutoTooltipLabel(labelString);
+                                            setGraphic(label);
+                                        } else {
+                                            String addressString = item.getAddress();
+                                            field = new AddressWithIconAndDirection(item.getDirection(), addressString,
+                                                    AwesomeIcon.EXTERNAL_LINK, item.isReceived());
+                                            field.setOnAction(event -> openAddressInBlockExplorer(item));
+                                            field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
+                                            setGraphic(field);
+                                        }
                                     } else {
-                                        field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                AwesomeIcon.EXTERNAL_LINK, item.isReceived());
-                                        field.setOnAction(event -> openAddressInBlockExplorer(item));
-                                        field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
-                                        setGraphic(field);
+                                        label = new AutoTooltipLabel(labelString);
+                                        setGraphic(label);
                                     }
                                 } else {
                                     setGraphic(null);
@@ -356,8 +387,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addAmountColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
-        column.setMinWidth(100);
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
+        column.setMinWidth(120);
+        column.setMaxWidth(column.getMinWidth());
+
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
                 TableCell<BsqTxListItem, BsqTxListItem>>() {
@@ -370,12 +403,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
                         super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            setText(bsqFormatter.formatCoin(item.getAmount()));
-                        } else {
+                        if (item != null && !empty)
+                            setText(item.getConfirmations() > 0 && item.getTxType().ordinal() > TxType.INVALID.ordinal() ?
+                                    bsqFormatter.formatCoin(item.getAmount()) :
+                                    Res.get("shared.na"));
+                        else
                             setText("");
-                        }
                     }
                 };
             }
@@ -384,9 +417,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addConfidenceColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.confirmations"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.confirmations"));
         column.setMinWidth(130);
-        column.setMaxWidth(130);
+        column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
@@ -414,7 +447,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addTxTypeColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("dao.wallet.tx.type"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("dao.wallet.tx.type"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(70);
         column.setMaxWidth(column.getMinWidth());
@@ -433,13 +466,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                 if (item != null && !empty) {
                                     String style;
                                     AwesomeIcon awesomeIcon;
-                                    TxType txType;
-                                    if (item.getTxType().isPresent())
-                                        txType = item.getTxType().get();
-                                    else
-                                        txType = item.getConfirmations() == 0 ? TxType.UNVERIFIED : TxType.INVALID;
+                                    TxType txType = item.getTxType();
                                     String toolTipText = Res.get("dao.tx.type.enum." + txType.name());
+                                    boolean doRotate = false;
                                     switch (txType) {
+                                        case UNDEFINED_TX_TYPE:
                                         case UNVERIFIED:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;
                                             style = "dao-tx-type-unverified-icon";
@@ -453,26 +484,32 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             style = "dao-tx-type-genesis-icon";
                                             break;
                                         case TRANSFER_BSQ:
-                                            awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
-                                            style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
-                                            toolTipText = item.isReceived() ?
-                                                    Res.get("dao.tx.type.enum.received." + txType.name()) :
-                                                    Res.get("dao.tx.type.enum.sent." + txType.name());
+                                            if (item.getAmount().isZero()) {
+                                                awesomeIcon = AwesomeIcon.EXCHANGE;
+                                                style = "dao-tx-type-default-icon";
+                                            } else {
+                                                awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
+                                                doRotate = item.isReceived();
+                                                style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
+                                                toolTipText = item.isReceived() ?
+                                                        Res.get("dao.tx.type.enum.received." + txType.name()) :
+                                                        Res.get("dao.tx.type.enum.sent." + txType.name());
+                                            }
                                             break;
                                         case PAY_TRADE_FEE:
                                             awesomeIcon = AwesomeIcon.TICKET;
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.UMBRELLA;
-                                            style = "dao-tx-type-default-icon";
+                                            awesomeIcon = AwesomeIcon.TINT;
+                                            style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case ISSUANCE:
-                                            awesomeIcon = AwesomeIcon.TINT;
+                                            awesomeIcon = AwesomeIcon.UMBRELLA;
                                             style = "dao-tx-type-issuance-icon";
                                             break;
                                         default:
@@ -481,8 +518,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             break;
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
-                                    label.getStyleClass().add(style);
+                                    label.getStyleClass().addAll("icon", style);
                                     label.setTooltip(new Tooltip(toolTipText));
+                                    if (doRotate)
+                                        label.setRotate(180);
                                     setGraphic(label);
                                 } else {
                                     setGraphic(null);

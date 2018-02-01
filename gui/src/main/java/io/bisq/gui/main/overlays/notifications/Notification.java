@@ -199,7 +199,7 @@ public class Notification extends Overlay<Notification> {
 
    /* @Override
     protected void addCloseButton() {
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());

@@ -81,7 +81,7 @@ public class RequestBlocksHandler implements MessageListener {
 
         if (!stopped) {
             GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight, nonce);
-
+            log.debug("getBsqBlocksRequest " + getBsqBlocksRequest);
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
