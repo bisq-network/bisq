@@ -303,6 +303,7 @@ public class MainViewModel implements ViewModel {
         log.info("startBasicServices");
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
+            // TODO that seems to be called too often if Tor takes longer to start up...
             if (newValue && !p2pNetWorkReady.get())
                 showTorNetworkSettingsWindow();
         };
