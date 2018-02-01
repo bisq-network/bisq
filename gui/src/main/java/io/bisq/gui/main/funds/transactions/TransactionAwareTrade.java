@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bisq.gui.main.funds.transactions;
 
 import io.bisq.core.arbitration.Dispute;
@@ -34,23 +51,23 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     private boolean isPayoutTx(String txId) {
         return Optional.ofNullable(delegate.getPayoutTx())
-                    .map(Transaction::getHashAsString)
-                    .map(hash -> hash.equals(txId))
-                    .orElse(false);
+                .map(Transaction::getHashAsString)
+                .map(hash -> hash.equals(txId))
+                .orElse(false);
     }
 
     private boolean isDepositTx(String txId) {
         return Optional.ofNullable(delegate.getDepositTx())
-                    .map(Transaction::getHashAsString)
-                    .map(hash -> hash.equals(txId))
-                    .orElse(false);
+                .map(Transaction::getHashAsString)
+                .map(hash -> hash.equals(txId))
+                .orElse(false);
     }
 
     private boolean isOfferFeeTx(String txId) {
         return Optional.ofNullable(delegate.getOffer())
-                    .map(Offer::getOfferFeePaymentTxId)
-                    .map(paymentTxId -> paymentTxId.equals(txId))
-                    .orElse(false);
+                .map(Offer::getOfferFeePaymentTxId)
+                .map(paymentTxId -> paymentTxId.equals(txId))
+                .orElse(false);
     }
 
     private boolean isDisputedPayoutTx(String txId) {
