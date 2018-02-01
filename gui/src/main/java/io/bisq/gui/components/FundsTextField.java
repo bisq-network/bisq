@@ -64,7 +64,7 @@ public class FundsTextField extends AnchorPane {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
-        Tooltip.install(copyIcon, new Tooltip(Res.get("addressTextField.copyToClipboard")));
+        Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             String text = getAmount();
