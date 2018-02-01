@@ -783,6 +783,24 @@ public class FormBuilder {
         return new Tuple2<>(label, addressTextField);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + FundsTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static Tuple2<Label, FundsTextField> addLabelFundsTextfield(GridPane gridPane, int rowIndex, String text) {
+        return addLabelFundsTextfield(gridPane, rowIndex, text, 0);
+    }
+
+    public static Tuple2<Label, FundsTextField> addLabelFundsTextfield(GridPane gridPane, int rowIndex, String text, double top) {
+        Label label = addLabel(gridPane, rowIndex, text, top);
+
+        FundsTextField fundsTextField = new FundsTextField();
+        GridPane.setRowIndex(fundsTextField, rowIndex);
+        GridPane.setColumnIndex(fundsTextField, 1);
+        GridPane.setMargin(fundsTextField, new Insets(top, 0,0,0));
+        gridPane.getChildren().add(fundsTextField);
+
+        return new Tuple2<>(label, fundsTextField);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + BsqAddressTextField
@@ -1083,6 +1101,4 @@ public class FormBuilder {
                 .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
                 .forEach(e -> gridPane.getChildren().remove(e));
     }
-
-
 }
