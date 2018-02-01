@@ -1,34 +1,33 @@
 package io.bisq.gui.util;
 
 import com.google.common.collect.Lists;
+import com.sun.javafx.collections.ObservableListWrapper;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.user.Preferences;
-import javafx.collections.ObservableList;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 
-class CurrencyList {
+public class CurrencyList extends ObservableListWrapper<CurrencyListItem>{
     private final CurrencyPredicates predicates;
-    private final ObservableList<CurrencyListItem> delegate;
     private final Preferences preferences;
 
-    CurrencyList(ObservableList<CurrencyListItem> delegate, Preferences preferences) {
-        this(delegate, preferences, new CurrencyPredicates());
+    public CurrencyList(Preferences preferences) {
+        this(new ArrayList<>(), preferences, new CurrencyPredicates());
     }
 
-    CurrencyList(ObservableList<CurrencyListItem> delegate, Preferences preferences, CurrencyPredicates predicates) {
+    CurrencyList(List<CurrencyListItem> delegate, Preferences preferences, CurrencyPredicates predicates) {
+        super(delegate);
         this.predicates = predicates;
         this.preferences = preferences;
-        this.delegate = delegate;
     }
 
-    void updateWithCurrencies(List<TradeCurrency> currencies, @Nullable CurrencyListItem first) {
+    public void updateWithCurrencies(List<TradeCurrency> currencies, @Nullable CurrencyListItem first) {
         List<CurrencyListItem> result = Lists.newLinkedList();
         Optional.ofNullable(first).ifPresent(result::add);
         result.addAll(getPartitionedSortedItems(currencies));
-        delegate.setAll(result);
+        setAll(result);
     }
 
     private List<CurrencyListItem> getPartitionedSortedItems(List<TradeCurrency> currencies) {

@@ -5,15 +5,15 @@ import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.user.Preferences;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -29,10 +29,15 @@ public class CurrencyListTest {
     private static final TradeCurrency BSQ = new CryptoCurrency("BSQ", "Bisq Token");
 
     private CurrencyPredicates predicates;
+    private Preferences preferences;
+    private List<CurrencyListItem> delegate;
+    private CurrencyList testedEntity;
 
     @Before
     public void setUp() {
-        predicates = mock(CurrencyPredicates.class);
+        Locale.setDefault(new Locale("en", "US"));
+
+        this.predicates = mock(CurrencyPredicates.class);
         when(predicates.isCryptoCurrency(USD)).thenReturn(false);
         when(predicates.isCryptoCurrency(RUR)).thenReturn(false);
         when(predicates.isCryptoCurrency(BTC)).thenReturn(true);
@@ -42,16 +47,15 @@ public class CurrencyListTest {
         when(predicates.isFiatCurrency(RUR)).thenReturn(true);
         when(predicates.isFiatCurrency(BTC)).thenReturn(false);
         when(predicates.isFiatCurrency(ETH)).thenReturn(false);
+
+        this.preferences = mock(Preferences.class);
+        this.delegate = new ArrayList<>();
+        this.testedEntity = new CurrencyList(delegate, preferences, predicates);
     }
 
     @Test
     public void testUpdateWhenSortNumerically() {
-        ObservableList<CurrencyListItem> delegate = FXCollections.observableArrayList();
-
-        Preferences preferences = mock(Preferences.class);
         when(preferences.isSortMarketCurrenciesNumerically()).thenReturn(true);
-
-        CurrencyList testedEntity = new CurrencyList(delegate, preferences, predicates);
 
         List<TradeCurrency> currencies = Lists.newArrayList(USD, RUR, USD, ETH, ETH, BTC);
         testedEntity.updateWithCurrencies(currencies, null);
@@ -67,12 +71,7 @@ public class CurrencyListTest {
 
     @Test
     public void testUpdateWhenNotSortNumerically() {
-        ObservableList<CurrencyListItem> delegate = FXCollections.observableArrayList();
-
-        Preferences preferences = mock(Preferences.class);
         when(preferences.isSortMarketCurrenciesNumerically()).thenReturn(false);
-
-        CurrencyList testedEntity = new CurrencyList(delegate, preferences, predicates);
 
         List<TradeCurrency> currencies = Lists.newArrayList(USD, RUR, USD, ETH, ETH, BTC);
         testedEntity.updateWithCurrencies(currencies, null);
@@ -88,12 +87,7 @@ public class CurrencyListTest {
 
     @Test
     public void testUpdateWhenSortNumericallyAndFirstSpecified() {
-        ObservableList<CurrencyListItem> delegate = FXCollections.observableArrayList();
-
-        Preferences preferences = mock(Preferences.class);
         when(preferences.isSortMarketCurrenciesNumerically()).thenReturn(true);
-
-        CurrencyList testedEntity = new CurrencyList(delegate, preferences, predicates);
 
         List<TradeCurrency> currencies = Lists.newArrayList(USD, RUR, USD, ETH, ETH, BTC);
         CurrencyListItem first = new CurrencyListItem(BSQ, 5);
@@ -108,5 +102,4 @@ public class CurrencyListTest {
 
         assertEquals(expected, delegate);
     }
-
 }
