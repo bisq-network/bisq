@@ -36,6 +36,7 @@ import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.CurrencyList;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
 import javafx.beans.property.BooleanProperty;
@@ -82,7 +83,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final SetChangeListener<TradeStatistics2> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
-    private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+    private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     final ObservableList<TradeStatistics2> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
@@ -119,6 +120,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
             selectedTradeCurrencyProperty.set(GlobalSettings.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
+
+        currencyListItems = new CurrencyList(this.preferences);
     }
 
     private void fillTradeCurrencies() {
@@ -135,7 +138,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
+        currencyListItems.updateWithCurrencies(tradeCurrencyList, showAllCurrencyListItem);
     }
 
     @Override
