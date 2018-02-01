@@ -407,6 +407,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setVisible(true);
         cancelButton2.setVisible(true);
 
+        totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
+                model.getSecurityDepositPercentage(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
         totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         final byte[] imageBytes = QRCode

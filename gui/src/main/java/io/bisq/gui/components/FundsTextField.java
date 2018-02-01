@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
@@ -32,11 +33,11 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class FundsTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(FundsTextField.class);
 
     private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty fundsStructure = new SimpleStringProperty();
     private final Label infoIcon;
     private PopOver infoPopover;
 
@@ -52,7 +53,7 @@ public class FundsTextField extends AnchorPane {
         textField.setId("amount-text-field");
         textField.setEditable(false);
         textField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
-        textField.textProperty().bind(amount);
+        textField.textProperty().bind(Bindings.concat(amount, " ", fundsStructure));
         textField.setFocusTraversable(false);
 
         infoIcon = new Label();
@@ -81,8 +82,8 @@ public class FundsTextField extends AnchorPane {
         });
 
         AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(infoIcon, 30.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setRightAnchor(infoIcon, 37.0);
+        AnchorPane.setRightAnchor(textField, 30.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
         getChildren().addAll(textField, infoIcon, copyIcon);
@@ -132,5 +133,9 @@ public class FundsTextField extends AnchorPane {
 
     public StringProperty amountProperty() {
         return amount;
+    }
+
+    public void setFundsStructure(String fundsStructure) {
+        this.fundsStructure.set(fundsStructure);
     }
 }
