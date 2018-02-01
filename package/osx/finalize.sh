@@ -3,7 +3,7 @@
 version="0.6.5"
 
 target_dir="/Users/dev/Documents/__bisq/_releases/$version"
-src_dir="/Users/dev/Documents/intellij/exchange_bisq"
+src_dir="/Users/dev/Documents/idea/exchange_bisq"
 
 rm -r $target_dir
 
