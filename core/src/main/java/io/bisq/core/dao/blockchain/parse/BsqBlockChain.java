@@ -394,7 +394,6 @@ public class BsqBlockChain implements PersistableEnvelope {
         return lock.read(() -> chainHeadHeight);
     }
 
-    // Only used for Json Exporter
     public Map<String, Tx> getTxMap() {
         return lock.read(() -> txMap);
     }
