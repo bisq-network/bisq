@@ -434,16 +434,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                 case "TOKC":
-                    if (input.matches("^[0][I][O][l]{35}$")) {
-                        //noinspection ConstantConditions
-                        try {
-                            Address.fromBase58(TokcParams.get(), input);
-                            return new ValidationResult(true);
-                        } catch (AddressFormatException e) {
-                            return new ValidationResult(false, getErrorMessage(e));
-                        }
-                    } else {
-                        return regexTestFailed;
+                    try {
+                        Address.fromBase58(TokcParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
                     }
 
 
