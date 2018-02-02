@@ -22,19 +22,19 @@ import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.utils.MonetaryFormat;
 
-public class CageParams extends NetworkParameters {
+public class TokcParams extends NetworkParameters {
 
-    private static CageParams instance;
+    private static TokcParams instance;
 
-    public static synchronized CageParams get() {
+    public static synchronized TokcParams get() {
         if (instance == null) {
-            instance = new CageParams();
+            instance = new TokcParams();
         }
         return instance;
     }
 
     // We only use the properties needed for address validation
-    public CageParams() {
+    public TokcParams() {
         super();
         addressHeader = 65;
         p2shHeader = 85;
