@@ -225,9 +225,6 @@ public class Connection implements MessageListener {
                     }
                 } catch (Throwable t) {
                     handleException(t);
-                } finally {
-                    if (protoOutputStreamLock.isLocked())
-                        protoOutputStreamLock.unlock();
                 }
             } else {
                 log.debug("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
