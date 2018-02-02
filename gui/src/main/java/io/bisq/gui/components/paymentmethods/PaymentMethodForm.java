@@ -113,11 +113,10 @@ public abstract class PaymentMethodForm {
 
     public static void addOpenTradeDuration(GridPane gridPane,
                                             int gridRow,
-                                            Offer offer,
-                                            String dateFromBlocks) {
+                                            Offer offer) {
         long hours = offer.getMaxTradePeriod() / 3600_000;
         addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                getTimeText(hours) + " / " + dateFromBlocks);
+                getTimeText(hours));
     }
 
     protected static String getTimeText(long hours) {
