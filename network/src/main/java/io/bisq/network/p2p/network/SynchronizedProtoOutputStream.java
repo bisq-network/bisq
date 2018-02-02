@@ -23,5 +23,6 @@ class SynchronizedProtoOutputStream extends ProtoOutputStream {
 
     void onConnectionShutdown() {
         executorService.shutdownNow();
+        super.onConnectionShutdown();
     }
 }

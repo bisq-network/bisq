@@ -31,6 +31,14 @@ class ProtoOutputStream {
         }
     }
 
+    void onConnectionShutdown() {
+        try {
+            delegate.close();
+        } catch (IOException e) {
+            log.error("Failed to close connection", e);
+        }
+    }
+
     private void writeEnvelopeOrThrow(NetworkEnvelope envelope) throws IOException {
         PB.NetworkEnvelope proto = envelope.toProtoNetworkEnvelope();
         proto.writeDelimitedTo(delegate);
