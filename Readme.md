@@ -58,7 +58,7 @@ Bitcoin mainnet (meaning you can lose real BTC):
 
 When testing it's advisable to run Bisq in REGTEST mode.
 See below on how to pass Bisq arguments to enable REGTEST mode.
-All regular Bisq arguments can be used. 
+All regular Bisq arguments can be used.
 
 ```
 mvn exec:java
@@ -89,3 +89,46 @@ Set the environment variable `BISQ_API_PORT` to your desired port.
 * produce jar with all dependencies for easier deployment
 * Dockerfile to get up-and-running without having java/maven/git/...
 * fix the Bisq dependency to the latest release, once it's released (post 0.5.3)
+
+
+## Docker for developers
+
+Since maven dependencies are being fetched after container is started you can seed 'm2' volume used for caching local maven repo:
+
+    docker volume create m2
+    docker container create -v m2:/m2 --name m2helperContainer busybox
+    docker cp ~/.m2/repository m2helperContainer:/m2/
+    docker rm m2helperContainer
+
+Build bisq-api image:
+
+    docker-compose build
+
+Now depending on what scenario you want to run execute one of following commands:
+
+    docker-compose up alice
+    docker-compose up alice bob
+    docker-compose up alice bob arbitrator
+
+Api ports:
+
+* localhost:8080 Alice
+* localhost:8081 Bob
+* localhost:8082 Arbitrator
+
+## Integration tests
+
+Integration tests are being run using Arquillian Cube.
+Arquillian will create and start containers for alice, bob, arbitrator, seednode and bitcoind on the fly during tests.
+You have to build bisq-api and bisq-seednode images before running integration tests.
+(bisq-seednode image sources reside in [exchange project](https://github.com/bisq-network/exchange/tree/master/seednode))
+
+Run integration tests:
+
+    mvn verify -P integration
+
+## Build
+
+In order to build shaded jar:
+
+    mvn package -P shade

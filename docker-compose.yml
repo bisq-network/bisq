@@ -1,11 +1,50 @@
-version: '2'
+version: '2.1'
 
 services:
-    bisq-api:
-        build:
-            context: .
-        image: bisq:api
-        container_name: bisq-api
-        ports:
-          - 8080:8080
+    alice:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8080:8080
+      environment:
+        - NODE_PORT=8003
+      links:
+        - seed
+        - bitcoin
+    bob:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8081:8080
+      environment:
+        - NODE_PORT=8004
+      links:
+        - seed
+        - bitcoin
+    arbitrator:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8082:8080
+      environment:
+        - NODE_PORT=8005
+      links:
+        - seed
+        - bitcoin
+    seed:
+      extends:
+        file: docker-compose-base.yml
+        service: seed
+      links:
+        - bitcoin
+    bitcoin:
+      extends:
+        file: docker-compose-base.yml
+        service: bitcoin
 
+volumes:
+  m2:
+    name: m2

@@ -13,4 +13,3 @@ server:
   connector:
     type: http
     port: ${BISQ_API_PORT:-8080}
-    bindHost: 127.0.0.1 # only bind to loopback
