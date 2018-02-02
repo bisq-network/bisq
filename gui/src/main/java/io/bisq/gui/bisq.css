@@ -126,6 +126,14 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-black;
 }
 
+.info {
+    -fx-text-fill: -bs-bg-green2;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+}
+
 .headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 22;

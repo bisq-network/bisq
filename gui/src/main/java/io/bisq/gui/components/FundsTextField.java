@@ -58,8 +58,7 @@ public class FundsTextField extends AnchorPane {
 
         infoIcon = new Label();
         infoIcon.setLayoutY(3);
-        infoIcon.setId("clickable-icon");
-        infoIcon.getStyleClass().addAll("highlight", "show-hand");
+        infoIcon.getStyleClass().addAll("icon", "info");
         AwesomeDude.setIcon(infoIcon, AwesomeIcon.INFO_SIGN);
 
         Label copyIcon = new Label();
@@ -81,9 +80,9 @@ public class FundsTextField extends AnchorPane {
             }
         });
 
-        AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(infoIcon, 37.0);
-        AnchorPane.setRightAnchor(textField, 30.0);
+        AnchorPane.setRightAnchor(copyIcon, 30.0);
+        AnchorPane.setRightAnchor(infoIcon, 62.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
         getChildren().addAll(textField, infoIcon, copyIcon);
@@ -95,7 +94,7 @@ public class FundsTextField extends AnchorPane {
 
     public void setContentForInfoPopOver(Node node) {
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        infoIcon.setOnMouseEntered(e -> createInfoPopOver(node));
+        infoIcon.setOnMouseEntered(e -> showInfoPopOver(node));
         infoIcon.setOnMouseExited(e -> {
             if (infoPopover != null)
                 infoPopover.hide();
@@ -106,10 +105,11 @@ public class FundsTextField extends AnchorPane {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createInfoPopOver(Node node) {
+    private void showInfoPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        infoPopover = new PopOver(node);
+        if (infoPopover == null) infoPopover = new PopOver(node);
+
         if (infoIcon.getScene() != null) {
             infoPopover.setDetachable(false);
             infoPopover.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
