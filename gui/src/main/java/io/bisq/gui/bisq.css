@@ -362,10 +362,6 @@ textfield */
     -fx-padding: 4 4 4 4;
 }
 
-#address-text-field:hover {
-    -fx-text-fill: -bs-black;
-}
-
 #funds-confidence {
     -fx-progress-color: -bs-dim-grey;
 }
