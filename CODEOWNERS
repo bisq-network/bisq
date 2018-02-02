@@ -3,3 +3,5 @@
 # see https://help.github.com/articles/about-codeowners/.
 
 * @ManfredKarrer
+
+/gui/* @ripcurlx
