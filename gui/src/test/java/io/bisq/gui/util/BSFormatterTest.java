@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BSFormatterTest {
 
@@ -63,6 +64,7 @@ public class BSFormatterTest {
         assertEquals("1 hour, 0 minutes, 0 seconds", formatter.formatDurationAsWords(oneHour, true));
         assertEquals("1 hour, 0 minutes, 1 second", formatter.formatDurationAsWords(oneHour + oneSecond, true));
         assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords(oneHour + oneSecond * 2, true));
-        assertEquals("Trade period is over", formatter.formatDurationAsWords(0));
+        assertEquals("", formatter.formatDurationAsWords(0));
+        assertTrue(formatter.formatDurationAsWords(0).isEmpty());
     }
 }

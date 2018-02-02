@@ -211,14 +211,16 @@ public abstract class TradeStepView extends AnchorPane {
         if (timeLeftTextField != null) {
             String remainingTime = model.getRemainingTradeDurationAsWords();
             timeLeftProgressBar.setProgress(model.getRemainingTradeDurationAsPercentage());
-            if (remainingTime != null) {
-                timeLeftTextField.setText(remainingTime);
+            if (!remainingTime.isEmpty()) {
+                timeLeftTextField.setText(Res.get("portfolio.pending.remainingTimeDetail",
+                        remainingTime, model.getDateForOpenDispute()));
                 if (model.showWarning() || model.showDispute()) {
                     timeLeftTextField.getStyleClass().add("error-text");
                     timeLeftProgressBar.getStyleClass().add("error");
                 }
             } else {
-                timeLeftTextField.setText("Trade not completed in time (" + model.getDateForOpenDispute() + ")");
+                timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted",
+                        model.getDateForOpenDispute()));
                 timeLeftTextField.getStyleClass().add("error-text");
                 timeLeftProgressBar.getStyleClass().add("error");
             }
