@@ -498,10 +498,6 @@ textfield */
     -fx-text-fill: -bs-medium-grey;
 }
 
-#clickable-icon:hover {
-    -fx-text-fill: -bs-grey;
-}
-
 /*******************************************************************************
  *                                                                             *
  * Images                                                                      *
