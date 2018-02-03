@@ -1,6 +1,5 @@
 package io.bisq.network.p2p.network;
 
-import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -83,9 +81,6 @@ public class Connection implements MessageListener {
         return PERMITTED_MESSAGE_SIZE;
     }
 
-    private static final CycleDetectingLockFactory cycleDetectingLockFactory = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW);
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,14 +91,13 @@ public class Connection implements MessageListener {
     private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-    private final ReentrantLock protoOutputStreamLock = cycleDetectingLockFactory.newReentrantLock("protoOutputStreamLock");
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
     private final Statistic statistic;
 
     // set in init
     private InputHandler inputHandler;
-    private OutputStream protoOutputStream;
+    private SynchronizedProtoOutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
     private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
@@ -146,7 +140,7 @@ public class Connection implements MessageListener {
             // When you construct an ObjectInputStream, in the constructor the class attempts to read a header that
             // the associated ObjectOutputStream on the other end of the connection has written.
             // It will not return until that header has been read.
-            protoOutputStream = socket.getOutputStream();
+            protoOutputStream = new SynchronizedProtoOutputStream(socket.getOutputStream(), statistic);
             InputStream protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
             inputHandler = new InputHandler(sharedModel, protoInputStream, portInfo, this, networkProtoResolver);
@@ -227,22 +221,10 @@ public class Connection implements MessageListener {
                     }
 
                     if (!stopped) {
-                        protoOutputStreamLock.lock();
-                        proto.writeDelimitedTo(protoOutputStream);
-                        protoOutputStream.flush();
-
-                        statistic.addSentBytes(proto.getSerializedSize());
-                        statistic.addSentMessage(networkEnvelope);
-
-                        // We don't want to get the activity ts updated by ping/pong msg
-                        if (!(networkEnvelope instanceof KeepAliveMessage))
-                            statistic.updateLastActivityTimestamp();
+                        protoOutputStream.writeEnvelope(networkEnvelope);
                     }
                 } catch (Throwable t) {
                     handleException(t);
-                } finally {
-                    if (protoOutputStreamLock.isLocked())
-                        protoOutputStreamLock.unlock();
                 }
             } else {
                 log.debug("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, sharedModel.getSupportedCapabilities());
@@ -490,24 +472,7 @@ public class Connection implements MessageListener {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
         } finally {
-            try {
-                //TODO check why the exc. is thrown
-                /* We got those exceptions at seed nodes:
-                java.lang.IllegalMonitorStateException
-                at java.util.concurrent.locks.ReentrantLock$Sync.tryRelease(ReentrantLock.java:151)
-                at java.util.concurrent.locks.AbstractQueuedSynchronizer.release(AbstractQueuedSynchronizer.java:1261)
-                at java.util.concurrent.locks.ReentrantLock.unlock(ReentrantLock.java:457)
-                at com.google.common.util.concurrent.CycleDetectingLockFactory$CycleDetectingReentrantLock.unlock(CycleDetectingLockFactory.java:858)
-                at io.bisq.network.p2p.network.Connection.doShutDown(Connection.java:502)
-                 */
-                if (protoOutputStreamLock.isLocked())
-                    protoOutputStreamLock.unlock();
-            } catch (Throwable ignore) {
-            }
-            try {
-                protoOutputStream.close();
-            } catch (Throwable ignore) {
-            }
+            protoOutputStream.onConnectionShutdown();
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
