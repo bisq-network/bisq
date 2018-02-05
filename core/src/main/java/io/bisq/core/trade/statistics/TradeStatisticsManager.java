@@ -252,6 +252,8 @@ public class TradeStatisticsManager {
         newlyAdded.add("MVT");
         newlyAdded.add("REF");
 
+        newlyAdded.add("ODN");
+
 
         coinsWithValidator.addAll(newlyAdded);
 
