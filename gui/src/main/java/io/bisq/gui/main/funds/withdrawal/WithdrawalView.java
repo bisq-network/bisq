@@ -243,6 +243,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             inputsToggleGroup.selectToggle(useAllInputsRadioButton);
 
         updateInputSelection();
+        GUIUtil.requestFocus(withdrawToTextField);
     }
 
     @Override

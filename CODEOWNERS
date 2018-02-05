@@ -1,0 +1,7 @@
+# This file determines which @bisq-network/exchange-maintainers get suggested
+# to review each pull request submitted to this repository. For more details,
+# see https://help.github.com/articles/about-codeowners/.
+
+* @ManfredKarrer
+
+/gui/* @ripcurlx
