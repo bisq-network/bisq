@@ -121,8 +121,10 @@ public class DepositView extends ActivatableView<VBox, Void> {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.deposit.noAddresses")));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 fillForm(newValue.getAddressString());
+                GUIUtil.requestFocus(amountTextField);
+            }
         };
 
         setSelectColumnCellFactory();
@@ -202,6 +204,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 updateList();
             }
         };
+
+        GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 
     @Override

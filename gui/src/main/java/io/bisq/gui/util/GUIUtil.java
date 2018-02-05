@@ -97,6 +97,14 @@ public class GUIUtil {
         return 0;
     }
 
+    public static void focusWhenAddedToScene(Node node) {
+        node.sceneProperty().addListener((observable, oldValue, newValue) -> {
+            if (null != newValue) {
+                node.requestFocus();
+            }
+        });
+    }
+
     @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         //noinspection UnusedAssignment
@@ -396,6 +404,10 @@ public class GUIUtil {
             new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
         else if (!walletsSetup.isDownloadComplete())
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
+    }
+
+    public static void requestFocus(Node node) {
+        UserThread.execute(node::requestFocus);
     }
 
     public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
