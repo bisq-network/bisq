@@ -127,7 +127,7 @@ bg color of non edit textFields: fafafa
 }
 
 .info {
-    -fx-text-fill: -bs-bg-green2;
+    -fx-text-fill: -bs-green;
 }
 
 .info:hover {
