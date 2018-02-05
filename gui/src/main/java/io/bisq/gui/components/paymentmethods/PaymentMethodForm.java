@@ -26,6 +26,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.gui.components.InfoTextField;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -111,12 +112,12 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    public static void addOpenTradeDuration(GridPane gridPane,
-                                            int gridRow,
-                                            Offer offer) {
+    public static InfoTextField addOpenTradeDuration(GridPane gridPane,
+                                                     int gridRow,
+                                                     Offer offer) {
         long hours = offer.getMaxTradePeriod() / 3600_000;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                getTimeText(hours));
+        return addLabelInfoTextfield(gridPane, gridRow, Res.get("payment.maxPeriod"),
+                getTimeText(hours)).second;
     }
 
     protected static String getTimeText(long hours) {

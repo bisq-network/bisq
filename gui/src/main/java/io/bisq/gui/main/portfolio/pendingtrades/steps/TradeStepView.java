@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.components.InfoTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.components.paymentmethods.PaymentMethodForm;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bisq.gui.components.paymentmethods.PaymentMethodForm.addOpenTradeDuration;
 import static io.bisq.gui.util.FormBuilder.*;
 
 public abstract class TradeStepView extends AnchorPane {
@@ -175,8 +177,9 @@ public abstract class TradeStepView extends AnchorPane {
         else
             txIdTextField.cleanup();
 
-        if (model.dataModel.getTrade() != null)
-            PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+        if (model.dataModel.getTrade() != null) {
+            InfoTextField infoTextField = addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+        }
 
         timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
