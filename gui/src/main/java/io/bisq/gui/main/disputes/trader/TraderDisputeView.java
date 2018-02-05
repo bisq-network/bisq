@@ -715,6 +715,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             statusIcon.getStyleClass().add("small-text");
                             copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
+                            messageLabel.setOnMouseClicked(event -> {
+                                if (2 > event.getClickCount()) {
+                                    return;
+                                }
+                                GUIUtil.showSelectableTextModal(headerLabel.getText(), messageLabel.getText());
+                            });
                         }
 
                         @Override
