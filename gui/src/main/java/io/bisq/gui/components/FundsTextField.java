@@ -19,6 +19,7 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import javafx.beans.binding.Bindings;
@@ -33,12 +34,15 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 public class FundsTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(FundsTextField.class);
 
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty fundsStructure = new SimpleStringProperty();
     private final Label infoIcon;
+    private Boolean hidePopover;
     private PopOver infoPopover;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,10 +98,19 @@ public class FundsTextField extends AnchorPane {
 
     public void setContentForInfoPopOver(Node node) {
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        infoIcon.setOnMouseEntered(e -> showInfoPopOver(node));
+        infoIcon.setOnMouseEntered(e -> {
+            hidePopover = false;
+            showInfoPopOver(node);
+        });
         infoIcon.setOnMouseExited(e -> {
             if (infoPopover != null)
-                infoPopover.hide();
+                hidePopover = true;
+                UserThread.runAfter(() -> {
+                    if (hidePopover) {
+                        infoPopover.hide();
+                        hidePopover = false;
+                    }
+                },250, TimeUnit.MILLISECONDS);
         });
     }
 
