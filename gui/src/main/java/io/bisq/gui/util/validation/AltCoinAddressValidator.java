@@ -433,9 +433,15 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "ODN":
+                  try {
+                      Address.fromBase58(ODNParams.get(), input);
+                      return new ValidationResult(true);
+                  } catch (AddressFormatException e) {
+                      return new ValidationResult(false, getErrorMessage(e));
+                  }
 
-
-                    // Add new coins at the end...
+                // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
