@@ -124,33 +124,16 @@ class ConfigPeerNodes {
                     });
             if (useAllProvidedNodes || useCustomNodes) {
                 // We also use the clear net nodes (used for monitor)
-                btcNodeList.stream()
+                List<PeerAddress> torAddresses = btcNodeList.stream()
                         .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
-                        .forEach(btcNode -> {
-                            try {
-                                // We use DnsLookupTor to not leak with DNS lookup
-                                // Blocking call. takes about 600 ms ;-(
-                                InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getHostNameOrAddress()), btcNode.getPort());
-                                log.info("We add a clear net node (tor is used)  with InetAddress={}, btcNode={}", address.getAddress(), btcNode);
-                                peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                            } catch (Exception e) {
-                                if (btcNode.getAddress() != null) {
-                                    log.warn("Dns lookup failed. We try with provided IP address. BtcNode: {}", btcNode);
-                                    try {
-                                        InetSocketAddress address = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, btcNode.getAddress()), btcNode.getPort());
-                                        log.info("We add a clear net node (tor is used)  with InetAddress={}, BtcNode={}", address.getAddress(), btcNode);
-                                        peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                                    } catch (Exception e2) {
-                                        log.warn("Dns lookup failed for BtcNode: {}", btcNode);
-                                    }
-                                } else {
-                                    log.warn("Dns lookup failed. No IP address is provided. BtcNode: {}", btcNode);
-                                }
-                            }
-                        });
+                        .flatMap(btcNode -> nullableAsStream(btcNodeConverter.convertWithTor(btcNode, socks5Proxy)))
+                        .collect(Collectors.toList());
+
+                peerAddressList.addAll(torAddresses);
             }
         } else {
             peerAddressList = btcNodeList.stream()
+                    .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
                     .flatMap(btcNode -> nullableAsStream(btcNodeConverter.convertClearNode(btcNode)))
                     .collect(Collectors.toList());
         }

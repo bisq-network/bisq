@@ -1,13 +1,17 @@
 package io.bisq.core.btc.wallet;
 
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.core.btc.BitcoinNodes.BtcNode;
+import io.bisq.network.DnsLookupTor;
 import org.bitcoinj.core.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+// TODO refactor
 class BtcNodeConverter {
     private static final Logger log = LoggerFactory.getLogger(BtcNodeConverter.class);
 
@@ -21,10 +25,40 @@ class BtcNodeConverter {
             if (address != null) {
                 result = create(address, port);
             } else {
-                log.warn("Lookup failed, no ip address for node", node);
+                log.warn("Lookup failed, no address for node", node);
             }
         }
         return result;
+    }
+
+    @Nullable
+    PeerAddress convertWithTor(BtcNode node, Socks5Proxy proxy) {
+        int port = node.getPort();
+
+        PeerAddress result = create(proxy, node.getHostNameOrAddress(), port);
+        if (result == null) {
+            String address = node.getAddress();
+            if (address != null) {
+                result = create(proxy, address, port);
+            } else {
+                log.warn("Lookup failed, no address for node", node);
+            }
+        }
+        return result;
+    }
+
+    @Nullable
+    private static PeerAddress create(Socks5Proxy proxy, String host, int port) {
+        try {
+            // We use DnsLookupTor to not leak with DNS lookup
+            // Blocking call. takes about 600 ms ;-(
+            InetAddress lookupAddress = DnsLookupTor.lookup(proxy, host);
+            InetSocketAddress address = new InetSocketAddress(lookupAddress, port);
+            return new PeerAddress(address.getAddress(), address.getPort());
+        } catch (Exception e) {
+            log.error("Failed to create peer address", e);
+            return null;
+        }
     }
 
     @Nullable
@@ -32,8 +66,8 @@ class BtcNodeConverter {
         try {
             InetSocketAddress address = new InetSocketAddress(hostName, port);
             return new PeerAddress(address.getAddress(), address.getPort());
-        } catch (Throwable t) {
-            log.error("Failed to create peer address", t);
+        } catch (Exception e) {
+            log.error("Failed to create peer address", e);
             return null;
         }
     }
