@@ -20,8 +20,11 @@ class PeerAddressesRepository {
         this.nodes = nodes;
     }
 
-    // TODO remove flag
-    List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseProxifiedClearNodes) {
+    PeerAddressesRepository(List<BtcNode> nodes) {
+        this(new BtcNodeConverter(), nodes);
+    }
+
+    List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseClearNodesWithProxies) {
         List<PeerAddress> result;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
@@ -29,9 +32,9 @@ class PeerAddressesRepository {
             List<PeerAddress> onionHosts = getOnionHosts();
             result = new ArrayList<>(onionHosts);
 
-            if (isUseProxifiedClearNodes) {
+            if (isUseClearNodesWithProxies) {
                 // We also use the clear net nodes (used for monitor)
-                List<PeerAddress> torAddresses = getProxifiedClearNodes(proxy);
+                List<PeerAddress> torAddresses = getClearNodesBehindProxy(proxy);
                 result.addAll(torAddresses);
             }
         } else {
@@ -54,7 +57,7 @@ class PeerAddressesRepository {
                 .collect(Collectors.toList());
     }
 
-    private List<PeerAddress> getProxifiedClearNodes(Socks5Proxy proxy) {
+    private List<PeerAddress> getClearNodesBehindProxy(Socks5Proxy proxy) {
         return nodes.stream()
                 .filter(BtcNode::hasClearNetAddress)
                 .flatMap(node -> nullableAsStream(converter.convertWithTor(node, proxy)))

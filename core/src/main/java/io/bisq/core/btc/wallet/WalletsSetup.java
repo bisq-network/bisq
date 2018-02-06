@@ -290,12 +290,17 @@ public class WalletsSetup {
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
         WalletSetupPreferences walletSetupPreferences = new WalletSetupPreferences(preferences);
-        List<BtcNode> nodes = walletSetupPreferences.selectPreferredNodes(bitcoinNodes);
-        walletSetupPreferences.calculateMinBroadcastConnections(walletConfig, nodes);
-        List<PeerAddress> peers = new PeerAddressesRepository(new BtcNodeConverter(), nodes).getPeerAddresses(proxy,
-                useAllProvidedNodes || walletSetupPreferences.isUseCustomNodes());
-        new WalletNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy).setPeers(peers);
 
+        List<BtcNode> nodes = walletSetupPreferences.selectPreferredNodes(bitcoinNodes);
+        int minBroadcastConnections = walletSetupPreferences.calculateMinBroadcastConnections(nodes);
+        walletConfig.setMinBroadcastConnections(minBroadcastConnections);
+
+        PeerAddressesRepository repository = new PeerAddressesRepository(nodes);
+        boolean isUseClearNodesWithProxies = (useAllProvidedNodes || walletSetupPreferences.isUseCustomNodes());
+        List<PeerAddress> peers = repository.getPeerAddresses(proxy, isUseClearNodesWithProxies);
+
+        WalletNetworkConfig networkConfig = new WalletNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy);
+        networkConfig.proposePeers(peers);
     }
 
 

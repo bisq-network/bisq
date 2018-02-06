@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static io.bisq.core.btc.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 import static io.bisq.core.btc.wallet.WalletsSetup.DEFAULT_CONNECTIONS;
@@ -24,19 +25,20 @@ class WalletSetupPreferences {
         this.preferences = preferences;
     }
 
-    List<BtcNode> selectPreferredNodes(BitcoinNodes bitcoinNodes) {
+    List<BtcNode> selectPreferredNodes(BitcoinNodes nodes) {
         List<BtcNode> result;
 
         BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         switch (nodesOption) {
             case CUSTOM:
-                result = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(),
-                        false));
+                String bitcoinNodes = preferences.getBitcoinNodes();
+                Set<String> distinctNodes = Utilities.commaSeparatedListToSet(bitcoinNodes, false);
+                result = BitcoinNodes.toBtcNodesList(distinctNodes);
                 if (result.isEmpty()) {
                     log.warn("Custom nodes is set but no valid nodes are provided. " +
                             "We fall back to provided nodes option.");
                     preferences.setBitcoinNodesOptionOrdinal(BitcoinNodesOption.PROVIDED.ordinal());
-                    result = bitcoinNodes.getProvidedBtcNodes();
+                    result = nodes.getProvidedBtcNodes();
                 }
                 break;
             case PUBLIC:
@@ -44,7 +46,7 @@ class WalletSetupPreferences {
                 break;
             case PROVIDED:
             default:
-                result = bitcoinNodes.getProvidedBtcNodes();
+                result = nodes.getProvidedBtcNodes();
                 break;
         }
 
@@ -55,26 +57,28 @@ class WalletSetupPreferences {
         return CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
     }
 
-    void calculateMinBroadcastConnections(WalletConfig walletConfig, List<BtcNode> nodes) {
+    int calculateMinBroadcastConnections(List<BtcNode> nodes) {
         BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        int result;
         switch (nodesOption) {
             case CUSTOM:
                 // We have set the nodes already above
-                walletConfig.setMinBroadcastConnections((int) Math.ceil(nodes.size() * 0.5));
+                result = (int) Math.ceil(nodes.size() * 0.5);
                 // If Tor is set we usually only use onion nodes,
                 // but if user provides mixed clear net and onion nodes we want to use both
                 break;
             case PUBLIC:
                 // We keep the empty nodes
-                walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
+                result = (int) Math.floor(DEFAULT_CONNECTIONS * 0.8);
                 break;
             case PROVIDED:
             default:
                 // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
                 // are more reliable than random public nodes.
-                walletConfig.setMinBroadcastConnections(4);
+                result = 4;
                 break;
         }
+        return result;
     }
 
 }
