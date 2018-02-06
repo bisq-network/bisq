@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>bisq-api</artifactId>
     <packaging>jar</packaging>
-    <version>v0.6.3-dev</version>
+    <version>v0.6.5-dev</version>
     <description>API for Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>com.github.mrosseel</groupId>
             <artifactId>bisq-exchange</artifactId>
-            <version>0.6.3-dev-SNAPSHOT</version>
+            <version>0.6.5-dev-SNAPSHOT</version>
         </dependency>
 
         <!-- Java 9 compatibility fix -->
