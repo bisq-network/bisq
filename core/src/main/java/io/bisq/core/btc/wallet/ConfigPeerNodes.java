@@ -14,10 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.bisq.core.btc.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 
@@ -32,101 +30,115 @@ class ConfigPeerNodes {
     private final int socks5DiscoverMode;
     private final boolean useAllProvidedNodes;
     private final BitcoinNodes bitcoinNodes;
-    private final BtcNodeConverter btcNodeConverter;
 
-    private void configPeerNodes(Socks5Proxy socks5Proxy) {
-        List<BtcNode> btcNodeList = getBtcNodes();
-
-        final boolean useTorForBitcoinJ = socks5Proxy != null;
-        List<PeerAddress> peerAddressList = getPeerAddresses(socks5Proxy, btcNodeList, useTorForBitcoinJ);
-
-        updateWalletConfig(socks5Proxy, useTorForBitcoinJ, peerAddressList);
+    ConfigPeerNodes(Preferences preferences, WalletConfig walletConfig, NetworkParameters params,
+                    int socks5DiscoverMode, boolean useAllProvidedNodes, BitcoinNodes bitcoinNodes) {
+        this.preferences = preferences;
+        this.walletConfig = walletConfig;
+        this.params = params;
+        this.socks5DiscoverMode = socks5DiscoverMode;
+        this.useAllProvidedNodes = useAllProvidedNodes;
+        this.bitcoinNodes = bitcoinNodes;
     }
 
-    private void updateWalletConfig(Socks5Proxy socks5Proxy, boolean useTorForBitcoinJ, List<PeerAddress> peerAddressList) {
-        if (!peerAddressList.isEmpty()) {
-            final PeerAddress[] peerAddresses = peerAddressList.toArray(new PeerAddress[peerAddressList.size()]);
-            log.info("You connect with peerAddresses: " + peerAddressList.toString());
+    public void configPeerNodes(@Nullable Socks5Proxy proxy) {
+        List<BtcNode> nodes = getBtcNodes();
+        setUpMinBroadcastConnections(nodes);
+        List<PeerAddress> peers = getPeerAddresses(proxy, nodes);
+        updateWalletConfig(proxy, peers);
+    }
+
+    private void updateWalletConfig(@Nullable Socks5Proxy socks5Proxy, List<PeerAddress> peers) {
+        if (!peers.isEmpty()) {
+            log.info("You connect with peerAddresses: {}", peers);
+            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);
             walletConfig.setPeerNodes(peerAddresses);
-        } else if (useTorForBitcoinJ) {
-            if (params == MainNetParams.get())
-                log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
-                        "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
+        } else if (socks5Proxy != null) {
+            MainNetParams mainNetParams = MainNetParams.get();
+            if (log.isWarnEnabled() && params.equals(mainNetParams)) {
+                log.warn("You use the public Bitcoin network and are exposed to privacy issues " +
+                        "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                        "for more info. It is recommended to use the provided nodes.");
+            }
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
         } else {
-            log.warn("You don't use gtor and use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
-                    "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use Tor and the provided nodes.");
+            log.warn("You don't use tor and use the public Bitcoin network and are exposed to privacy issues " +
+                    "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
+                    "for more info. It is recommended to use Tor and the provided nodes.");
         }
     }
 
     private List<BtcNode> getBtcNodes() {
-        List<BtcNode> btcNodeList = new ArrayList<>();
-
-        // We prefer to duplicate the check for CUSTOM here as in case the custom nodes lead to an empty list we fall back to the PROVIDED mode.
-        if (preferences.getBitcoinNodesOptionOrdinal() == CUSTOM.ordinal()) {
-            btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
-            if (btcNodeList.isEmpty()) {
-                log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
-                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
-            }
-        }
+        List<BtcNode> btcNodeList;
 
         switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
             case CUSTOM:
-                // We have set the btcNodeList already above
-                walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
-                // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
+                btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
+                if (btcNodeList.isEmpty()) {
+                    log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
+                    preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
+
+                    // TODO refactor as "PROVIDED"
+                    btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+                }
                 break;
             case PUBLIC:
-                // We keep the empty btcNodeList
+                btcNodeList = Collections.emptyList();
+                break;
+            case PROVIDED:
+            default:
+                btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+                break;
+        }
+
+        return btcNodeList;
+    }
+
+    private void setUpMinBroadcastConnections(List<BtcNode> nodes) {
+        switch (BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()]) {
+            case CUSTOM:
+                // We have set the nodes already above
+                walletConfig.setMinBroadcastConnections((int) Math.ceil(nodes.size() * 0.5));
+                // If Tor is set we usually only use onion nodes,
+                // but if user provides mixed clear net and onion nodes we want to use both
+                break;
+            case PUBLIC:
+                // We keep the empty nodes
                 walletConfig.setMinBroadcastConnections((int) Math.floor(DEFAULT_CONNECTIONS * 0.8));
                 break;
-            default:
             case PROVIDED:
-                btcNodeList = bitcoinNodes.getProvidedBtcNodes();
+            default:
                 // We require only 4 nodes instead of 7 (for 9 max connections) because our provided nodes
                 // are more reliable than random public nodes.
                 walletConfig.setMinBroadcastConnections(4);
                 break;
         }
-        return btcNodeList;
     }
 
-    private List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy socks5Proxy, List<BtcNode> nodes) {
+    private List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, List<BtcNode> nodes) {
+        // TODO factory
+        PeerAddressesRepository repository = new PeerAddressesRepository(new BtcNodeConverter(), nodes);
+
         List<PeerAddress> result;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
-        if (socks5Proxy != null) {
-            List<PeerAddress> onionHosts = nodes.stream()
-                    .filter(BtcNode::hasOnionAddress)
-                    .flatMap(node -> nullableAsStream(btcNodeConverter.convertOnionHost(node)))
-                    .collect(Collectors.toList());
+        if (proxy != null) {
+            List<PeerAddress> onionHosts = repository.getOnionHosts();
+            result = new ArrayList<>(onionHosts);
 
-            boolean useCustomNodes = CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
-            if (useAllProvidedNodes || useCustomNodes) {
+            if (useAllProvidedNodes || isUseCustomNodes()) {
                 // We also use the clear net nodes (used for monitor)
-                List<PeerAddress> torAddresses = nodes.stream()
-                        .filter(BtcNode::hasClearNetAddress)
-                        .flatMap(node -> nullableAsStream(btcNodeConverter.convertWithTor(node, socks5Proxy)))
-                        .collect(Collectors.toList());
-
-                result = new ArrayList<>();
-                result.addAll(onionHosts);
+                List<PeerAddress> torAddresses = repository.getProxifiedClearNodes(proxy);
                 result.addAll(torAddresses);
             }
         } else {
-            result = nodes.stream()
-                    .filter(BtcNode::hasClearNetAddress)
-                    .flatMap(node -> nullableAsStream(btcNodeConverter.convertClearNode(node)))
-                    .collect(Collectors.toList());
+            result = repository.getClearNodes();
         }
         return result;
     }
 
-    private static <T> Stream<T> nullableAsStream(@Nullable T item) {
-        return Optional.ofNullable(item)
-                .map(Stream::of)
-                .orElse(Stream.empty());
+    private boolean isUseCustomNodes() {
+        return CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
     }
 }
