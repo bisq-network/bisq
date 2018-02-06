@@ -1,7 +1,25 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bisq.core.btc.wallet;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.core.btc.BitcoinNodes.BtcNode;
+import io.bisq.network.DnsLookupException;
 import io.bisq.network.DnsLookupTor;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.net.OnionCat;
@@ -17,6 +35,16 @@ import java.util.Objects;
 class BtcNodeConverter {
     private static final Logger log = LoggerFactory.getLogger(BtcNodeConverter.class);
 
+    private final Facade facade;
+
+    BtcNodeConverter() {
+        this.facade = new Facade();
+    }
+
+    BtcNodeConverter(Facade facade) {
+        this.facade = facade;
+    }
+
     @Nullable
     PeerAddress convertOnionHost(BtcNode node) {
         // no DNS lookup for onion addresses
@@ -24,7 +52,7 @@ class BtcNodeConverter {
         try {
             // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
             // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
-            InetAddress inetAddress = OnionCat.onionHostToInetAddress(onionAddress);
+            InetAddress inetAddress = facade.onionHostToInetAddress(onionAddress);
             PeerAddress result = new PeerAddress(onionAddress, node.getPort());
             result.setAddr(inetAddress);
             return result;
@@ -67,11 +95,11 @@ class BtcNodeConverter {
     }
 
     @Nullable
-    private static PeerAddress create(Socks5Proxy proxy, String host, int port) {
+    private PeerAddress create(Socks5Proxy proxy, String host, int port) {
         try {
             // We use DnsLookupTor to not leak with DNS lookup
             // Blocking call. takes about 600 ms ;-(
-            InetAddress lookupAddress = DnsLookupTor.lookup(proxy, host);
+            InetAddress lookupAddress = facade.torLookup(proxy, host);
             InetSocketAddress address = new InetSocketAddress(lookupAddress, port);
             return new PeerAddress(address.getAddress(), address.getPort());
         } catch (Exception e) {
@@ -88,6 +116,16 @@ class BtcNodeConverter {
         } catch (Exception e) {
             log.error("Failed to create peer address", e);
             return null;
+        }
+    }
+
+    static class Facade {
+        InetAddress onionHostToInetAddress(String onionAddress) throws UnknownHostException {
+            return OnionCat.onionHostToInetAddress(onionAddress);
+        }
+
+        InetAddress torLookup(Socks5Proxy proxy, String host) throws DnsLookupException {
+            return DnsLookupTor.lookup(proxy, host);
         }
     }
 }
