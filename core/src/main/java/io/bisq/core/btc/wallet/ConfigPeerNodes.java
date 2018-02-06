@@ -21,7 +21,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ConfigPeerNodes {
+class ConfigPeerNodes {
     private static final Logger log = LoggerFactory.getLogger(ConfigPeerNodes.class);
 
     private static final int DEFAULT_CONNECTIONS;
@@ -34,7 +34,32 @@ public class ConfigPeerNodes {
     private final BitcoinNodes bitcoinNodes;
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
-        boolean useCustomNodes = false;
+        List<BitcoinNodes.BtcNode> btcNodeList = getBtcNodes();
+
+        final boolean useTorForBitcoinJ = socks5Proxy != null;
+        List<PeerAddress> peerAddressList = getPeerAddresses(socks5Proxy, btcNodeList, useTorForBitcoinJ);
+
+        updateWalletConfig(socks5Proxy, useTorForBitcoinJ, peerAddressList);
+    }
+
+    private void updateWalletConfig(Socks5Proxy socks5Proxy, boolean useTorForBitcoinJ, List<PeerAddress> peerAddressList) {
+        if (!peerAddressList.isEmpty()) {
+            final PeerAddress[] peerAddresses = peerAddressList.toArray(new PeerAddress[peerAddressList.size()]);
+            log.info("You connect with peerAddresses: " + peerAddressList.toString());
+            walletConfig.setPeerNodes(peerAddresses);
+        } else if (useTorForBitcoinJ) {
+            if (params == MainNetParams.get())
+                log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
+                        "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
+            // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
+            walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
+        } else {
+            log.warn("You don't use gtor and use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
+                    "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use Tor and the provided nodes.");
+        }
+    }
+
+    private List<BitcoinNodes.BtcNode> getBtcNodes() {
         List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
 
         // We prefer to duplicate the check for CUSTOM here as in case the custom nodes lead to an empty list we fall back to the PROVIDED mode.
@@ -51,7 +76,6 @@ public class ConfigPeerNodes {
                 // We have set the btcNodeList already above
                 walletConfig.setMinBroadcastConnections((int) Math.ceil(btcNodeList.size() * 0.5));
                 // If Tor is set we usually only use onion nodes, but if user provides mixed clear net and onion nodes we want to use both
-                useCustomNodes = true;
                 break;
             case PUBLIC:
                 // We keep the empty btcNodeList
@@ -65,9 +89,13 @@ public class ConfigPeerNodes {
                 walletConfig.setMinBroadcastConnections(4);
                 break;
         }
+        return btcNodeList;
+    }
+
+    private List<PeerAddress> getPeerAddresses(Socks5Proxy socks5Proxy, List<BitcoinNodes.BtcNode> btcNodeList, boolean useTorForBitcoinJ) {
+        boolean useCustomNodes = BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
 
         List<PeerAddress> peerAddressList = new ArrayList<>();
-        final boolean useTorForBitcoinJ = socks5Proxy != null;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
         if (useTorForBitcoinJ) {
@@ -140,21 +168,7 @@ public class ConfigPeerNodes {
                         }
                     });
         }
-
-        if (!peerAddressList.isEmpty()) {
-            final PeerAddress[] peerAddresses = peerAddressList.toArray(new PeerAddress[peerAddressList.size()]);
-            log.info("You connect with peerAddresses: " + peerAddressList.toString());
-            walletConfig.setPeerNodes(peerAddresses);
-        } else if (useTorForBitcoinJ) {
-            if (params == MainNetParams.get())
-                log.warn("You use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
-                        "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use the provided nodes.");
-            // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
-            walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
-        } else {
-            log.warn("You don't use gtor and use the public Bitcoin network and are exposed to privacy issues caused by the broken bloom filters." +
-                    "See https://bisq.network/blog/privacy-in-bitsquare/ for more info. It is recommended to use Tor and the provided nodes.");
-        }
+        return peerAddressList;
     }
 
 }
