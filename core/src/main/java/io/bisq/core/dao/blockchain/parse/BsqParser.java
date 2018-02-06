@@ -102,6 +102,7 @@ public class BsqParser {
     // Parsing with data requested from bsqBlockchainService
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
     void parseBlocks(int startBlockHeight,
                      int chainHeadHeight,
                      int genesisBlockHeight,
@@ -112,6 +113,7 @@ public class BsqParser {
             for (int blockHeight = startBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
                 long startTs = System.currentTimeMillis();
                 Block btcdBlock = rpcService.requestBlock(blockHeight);
+
                 List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                         genesisBlockHeight,
                         genesisTxId);
