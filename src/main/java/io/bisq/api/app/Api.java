@@ -64,6 +64,7 @@ public class Api {
     private final AppSetup appSetup;
     private final User user;
     private PriceFeedService priceFeedService;
+    MainViewModelHeadless mainViewModelHeadless;
 
     public Api() {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
@@ -112,12 +113,12 @@ public class Api {
         walletsSetup = injector.getInstance(WalletsSetup.class);
         priceFeedService = injector.getInstance(PriceFeedService.class);
         appSetup = injector.getInstance(AppSetupWithP2P.class);
-        appSetup.start();
+        mainViewModelHeadless = injector.getInstance(MainViewModelHeadless.class);
+
+        //appSetup.start(); // TODO refactor MainViewModel into AppSetupWithP2P and use it for API + GUI
+        mainViewModelHeadless.start();
 
         try {
-
-            injector.getInstance(BisqApiApplication.class).run("server", "bisq-api.yml");
-
             // All classes which are persisting objects need to be added here
             // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
@@ -145,8 +146,10 @@ public class Api {
                 }
             });
 
+            injector.getInstance(BisqApiApplication.class).run("server", "bisq-api.yml");
             ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
 
+            /*
             // copy encryption handling from MainViewModel - initWalletService()
             walletsSetup.initialize(null,
                     () -> {
@@ -157,6 +160,7 @@ public class Api {
                         }
                     },
                     throwable -> log.error(throwable.toString()));
+                    */
             long ts = new Date().getTime();
             boolean logged[] = {false};
             priceFeedService.setCurrencyCodeOnInit();

@@ -264,10 +264,8 @@ public class BisqApiWithUI extends Application {
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
-                        TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                        BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
-                        if (walletService.isWalletReady())
-                            new ManualPayoutTxWindow(tradeWalletService).show();
+                        if (injector.getInstance(BtcWalletService.class).isWalletReady())
+                            injector.getInstance(ManualPayoutTxWindow.class).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else if (DevEnv.DEV_MODE) {

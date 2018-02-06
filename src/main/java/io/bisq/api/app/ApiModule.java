@@ -88,6 +88,7 @@ public class ApiModule extends AppModule {
 
         // added for API usage
         bind(BisqApiApplication.class).in(Singleton.class);
+        bind(MainViewModelHeadless.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());
