@@ -3,27 +3,23 @@ package io.bisq.core.btc.wallet;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.BitcoinNodes;
+import io.bisq.core.btc.BitcoinNodes.BtcNode;
 import io.bisq.core.user.Preferences;
-import io.bisq.network.DnsLookupTor;
 import io.bisq.network.Socks5MultiDiscovery;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.net.OnionCat;
 import org.bitcoinj.params.MainNetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bisq.core.btc.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 
 class ConfigPeerNodes {
     private static final Logger log = LoggerFactory.getLogger(ConfigPeerNodes.class);
@@ -39,7 +35,7 @@ class ConfigPeerNodes {
     private final BtcNodeConverter btcNodeConverter;
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
-        List<BitcoinNodes.BtcNode> btcNodeList = getBtcNodes();
+        List<BtcNode> btcNodeList = getBtcNodes();
 
         final boolean useTorForBitcoinJ = socks5Proxy != null;
         List<PeerAddress> peerAddressList = getPeerAddresses(socks5Proxy, btcNodeList, useTorForBitcoinJ);
@@ -64,11 +60,11 @@ class ConfigPeerNodes {
         }
     }
 
-    private List<BitcoinNodes.BtcNode> getBtcNodes() {
-        List<BitcoinNodes.BtcNode> btcNodeList = new ArrayList<>();
+    private List<BtcNode> getBtcNodes() {
+        List<BtcNode> btcNodeList = new ArrayList<>();
 
         // We prefer to duplicate the check for CUSTOM here as in case the custom nodes lead to an empty list we fall back to the PROVIDED mode.
-        if (preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal()) {
+        if (preferences.getBitcoinNodesOptionOrdinal() == CUSTOM.ordinal()) {
             btcNodeList = BitcoinNodes.toBtcNodesList(Utilities.commaSeparatedListToSet(preferences.getBitcoinNodes(), false));
             if (btcNodeList.isEmpty()) {
                 log.warn("Custom nodes is set but no valid nodes are provided. We fall back to provided nodes option.");
@@ -97,53 +93,40 @@ class ConfigPeerNodes {
         return btcNodeList;
     }
 
-    private List<PeerAddress> getPeerAddresses(Socks5Proxy socks5Proxy, List<BitcoinNodes.BtcNode> btcNodeList, boolean useTorForBitcoinJ) {
-        boolean useCustomNodes = BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
-
-        List<PeerAddress> peerAddressList = new ArrayList<>();
+    private List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy socks5Proxy, List<BtcNode> nodes) {
+        List<PeerAddress> result;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.
-        if (useTorForBitcoinJ) {
-            btcNodeList.stream()
-                    .filter(BitcoinNodes.BtcNode::hasOnionAddress)
-                    .forEach(btcNode -> {
-                        // no DNS lookup for onion addresses
-                        log.info("We add a onion node. btcNode={}", btcNode);
-                        final String onionAddress = checkNotNull(btcNode.getOnionAddress());
-                        try {
-                            // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
-                            // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
-                            final InetAddress inetAddress = OnionCat.onionHostToInetAddress(onionAddress);
-                            final PeerAddress peerAddress = new PeerAddress(onionAddress, btcNode.getPort());
-                            peerAddress.setAddr(inetAddress);
-                            peerAddressList.add(peerAddress);
-                        } catch (UnknownHostException e) {
-                            log.error("OnionCat.onionHostToInetAddress() failed with btcNode={}, error={}", btcNode.toString(), e.toString());
-                            e.printStackTrace();
-                        }
-                    });
+        if (socks5Proxy != null) {
+            List<PeerAddress> onionHosts = nodes.stream()
+                    .filter(BtcNode::hasOnionAddress)
+                    .flatMap(node -> nullableAsStream(btcNodeConverter.convertOnionHost(node)))
+                    .collect(Collectors.toList());
+
+            boolean useCustomNodes = CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
             if (useAllProvidedNodes || useCustomNodes) {
                 // We also use the clear net nodes (used for monitor)
-                List<PeerAddress> torAddresses = btcNodeList.stream()
-                        .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
-                        .flatMap(btcNode -> nullableAsStream(btcNodeConverter.convertWithTor(btcNode, socks5Proxy)))
+                List<PeerAddress> torAddresses = nodes.stream()
+                        .filter(BtcNode::hasClearNetAddress)
+                        .flatMap(node -> nullableAsStream(btcNodeConverter.convertWithTor(node, socks5Proxy)))
                         .collect(Collectors.toList());
 
-                peerAddressList.addAll(torAddresses);
+                result = new ArrayList<>();
+                result.addAll(onionHosts);
+                result.addAll(torAddresses);
             }
         } else {
-            peerAddressList = btcNodeList.stream()
-                    .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
-                    .flatMap(btcNode -> nullableAsStream(btcNodeConverter.convertClearNode(btcNode)))
+            result = nodes.stream()
+                    .filter(BtcNode::hasClearNetAddress)
+                    .flatMap(node -> nullableAsStream(btcNodeConverter.convertClearNode(node)))
                     .collect(Collectors.toList());
         }
-        return peerAddressList;
+        return result;
     }
 
     private static <T> Stream<T> nullableAsStream(@Nullable T item) {
         return Optional.ofNullable(item)
                 .map(Stream::of)
                 .orElse(Stream.empty());
-
     }
 }

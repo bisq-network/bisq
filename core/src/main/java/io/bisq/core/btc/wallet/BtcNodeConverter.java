@@ -4,16 +4,36 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.core.btc.BitcoinNodes.BtcNode;
 import io.bisq.network.DnsLookupTor;
 import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.net.OnionCat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Objects;
 
 // TODO refactor
 class BtcNodeConverter {
     private static final Logger log = LoggerFactory.getLogger(BtcNodeConverter.class);
+
+    @Nullable
+    PeerAddress convertOnionHost(BtcNode node) {
+        // no DNS lookup for onion addresses
+        String onionAddress = Objects.requireNonNull(node.getOnionAddress());
+        try {
+            // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
+            // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
+            InetAddress inetAddress = OnionCat.onionHostToInetAddress(onionAddress);
+            PeerAddress result = new PeerAddress(onionAddress, node.getPort());
+            result.setAddr(inetAddress);
+            return result;
+        } catch (UnknownHostException e) {
+            log.error("Failed to convert node", e);
+            return null;
+        }
+    }
 
     @Nullable
     PeerAddress convertClearNode(BtcNode node) {
