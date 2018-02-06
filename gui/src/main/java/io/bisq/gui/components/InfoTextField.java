@@ -34,7 +34,7 @@ public class InfoTextField extends AnchorPane {
 
         infoIcon = new Label();
         infoIcon.setLayoutY(3);
-        infoIcon.getStyleClass().addAll("highlight", "show-hand");
+        infoIcon.getStyleClass().addAll("icon", "info");
         AwesomeDude.setIcon(infoIcon, AwesomeIcon.INFO_SIGN);
 
         AnchorPane.setRightAnchor(infoIcon, 7.0);
