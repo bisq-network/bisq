@@ -13,11 +13,15 @@ import org.bitcoinj.params.MainNetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,6 +36,7 @@ class ConfigPeerNodes {
     private final int socks5DiscoverMode;
     private final boolean useAllProvidedNodes;
     private final BitcoinNodes bitcoinNodes;
+    private final BtcNodeConverter btcNodeConverter;
 
     private void configPeerNodes(Socks5Proxy socks5Proxy) {
         List<BitcoinNodes.BtcNode> btcNodeList = getBtcNodes();
@@ -145,30 +150,17 @@ class ConfigPeerNodes {
                         });
             }
         } else {
-            btcNodeList.stream()
-                    .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
-                    .forEach(btcNode -> {
-                        try {
-                            InetSocketAddress address = new InetSocketAddress(btcNode.getHostNameOrAddress(), btcNode.getPort());
-                            log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
-                            peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                        } catch (Throwable t) {
-                            if (btcNode.getAddress() != null) {
-                                log.warn("Dns lookup failed. We try with provided IP address. BtcNode: {}", btcNode);
-                                try {
-                                    InetSocketAddress address = new InetSocketAddress(btcNode.getAddress(), btcNode.getPort());
-                                    log.info("We add a clear net node (no tor is used) with host={}, btcNode.getPort()={}", btcNode.getHostNameOrAddress(), btcNode.getPort());
-                                    peerAddressList.add(new PeerAddress(address.getAddress(), address.getPort()));
-                                } catch (Throwable t2) {
-                                    log.warn("Failed to create InetSocketAddress from btcNode {}", btcNode);
-                                }
-                            } else {
-                                log.warn("Dns lookup failed. No IP address is provided. BtcNode: {}", btcNode);
-                            }
-                        }
-                    });
+            peerAddressList = btcNodeList.stream()
+                    .flatMap(btcNode -> nullableAsStream(btcNodeConverter.convertClearNode(btcNode)))
+                    .collect(Collectors.toList());
         }
         return peerAddressList;
     }
 
+    private static <T> Stream<T> nullableAsStream(@Nullable T item) {
+        return Optional.ofNullable(item)
+                .map(Stream::of)
+                .orElse(Stream.empty());
+
+    }
 }
