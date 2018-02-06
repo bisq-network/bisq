@@ -409,7 +409,7 @@ textfield */
 }
 
 #addressColumn {
-    -fx-alignment: left;
+    -fx-alignment: center-left;
 }
 
 .table-view .column-header .label {
