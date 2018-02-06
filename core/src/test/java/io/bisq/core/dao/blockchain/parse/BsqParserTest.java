@@ -49,13 +49,10 @@ public class BsqParserTest {
         int height = 200;
         String hash = "abc123";
         long time = new Date().getTime();
-        List<TxInput> inputs = new ArrayList<>();
-        inputs.add(new TxInput("tx1", 0));
-        inputs.add(new TxInput("tx1", 1));
-        List<TxOutput> outputs = new ArrayList<>();
-        outputs.add(new TxOutput(0, 101, "tx1", null, null, null, height));
-        TxVo txVo = new TxVo("vo", height, hash, time);
-        Tx tx = new Tx(txVo, inputs, outputs);
+        Tx tx = new Tx(new TxVo("vo", height, hash, time),
+                asList(new TxInput("tx1", 0),
+                        new TxInput("tx1", 1)),
+                asList(new TxOutput(0, 101, "tx1", null, null, null, height)));
 
         // Return one spendable txoutputs with value, for three test cases
         // 1) - null, 0     -> not BSQ transaction
