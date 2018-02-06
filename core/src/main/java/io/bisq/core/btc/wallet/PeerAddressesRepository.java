@@ -5,6 +5,7 @@ import io.bisq.core.btc.BitcoinNodes.BtcNode;
 import org.bitcoinj.core.PeerAddress;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,21 +20,41 @@ class PeerAddressesRepository {
         this.nodes = nodes;
     }
 
-    List<PeerAddress> getClearNodes() {
+    // TODO remove flag
+    List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseProxifiedClearNodes) {
+        List<PeerAddress> result;
+        // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
+        // exit nodes with bloom filters.
+        if (proxy != null) {
+            List<PeerAddress> onionHosts = getOnionHosts();
+            result = new ArrayList<>(onionHosts);
+
+            if (isUseProxifiedClearNodes) {
+                // We also use the clear net nodes (used for monitor)
+                List<PeerAddress> torAddresses = getProxifiedClearNodes(proxy);
+                result.addAll(torAddresses);
+            }
+        } else {
+            result = getClearNodes();
+        }
+        return result;
+    }
+
+    private List<PeerAddress> getClearNodes() {
         return nodes.stream()
                 .filter(BtcNode::hasClearNetAddress)
                 .flatMap(node -> nullableAsStream(converter.convertClearNode(node)))
                 .collect(Collectors.toList());
     }
 
-    List<PeerAddress> getOnionHosts() {
+    private List<PeerAddress> getOnionHosts() {
         return nodes.stream()
                 .filter(BtcNode::hasOnionAddress)
                 .flatMap(node -> nullableAsStream(converter.convertOnionHost(node)))
                 .collect(Collectors.toList());
     }
 
-    List<PeerAddress> getProxifiedClearNodes(Socks5Proxy proxy) {
+    private List<PeerAddress> getProxifiedClearNodes(Socks5Proxy proxy) {
         return nodes.stream()
                 .filter(BtcNode::hasClearNetAddress)
                 .flatMap(node -> nullableAsStream(converter.convertWithTor(node, proxy)))
