@@ -40,6 +40,10 @@ bg color of non edit textFields: fafafa
     src: url("/fonts/FiraSans-Italic.ttf");
 }
 
+@font-face {
+    src: url("/fonts/FiraSans-Medium.ttf");
+}
+
 .root {
     -bs-very-dark-grey3: #444; /* 3 usages */
     -bs-grey: #666666; /* 8 usages */
@@ -434,6 +438,8 @@ textfield */
 
 .table-view .column-header .label {
     -fx-alignment: center;
+    -fx-font-weight: normal;
+    -fx-font-family: "Fira Sans Medium";
 }
 
 .table-view .focus {
