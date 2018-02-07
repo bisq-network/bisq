@@ -22,6 +22,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.CoinMaker;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,13 +32,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
+import static com.natpryce.makeiteasy.MakeItEasy.*;
 import static io.bisq.common.monetary.PriceMaker.priceString;
 import static io.bisq.common.monetary.PriceMaker.usdPrice;
 import static io.bisq.common.monetary.VolumeMaker.usdVolume;
 import static io.bisq.common.monetary.VolumeMaker.volumeString;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
+import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -95,7 +96,9 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoin() {
-        assertEquals("1.00", formatter.formatCoin(oneBitcoin));
+        assertEquals("1.0000", formatter.formatCoin(oneBitcoin));
+        assertEquals("0.000001", formatter.formatCoin(make(a(CoinMaker.Coin).but(with(satoshis, 100L)))));
+        assertEquals("0.00000001", formatter.formatCoin(make(a(CoinMaker.Coin).but(with(satoshis, 1L)))));
     }
 
     @Test
@@ -142,7 +145,7 @@ public class BSFormatterTest {
         when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
         when(offer.getAmount()).thenReturn(Coin.valueOf(10000000));
 
-        assertEquals("0.10", formatter.formatAmountWithMinAmount(offer));
+        assertEquals("0.1000", formatter.formatAmountWithMinAmount(offer));
     }
 
     @Test
@@ -152,7 +155,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(20000000L);
 
-        assertEquals("0.10 - 0.20", formatter.formatAmountWithMinAmount(offer));
+        assertEquals("0.1000 - 0.2000", formatter.formatAmountWithMinAmount(offer));
     }
 
     @Test

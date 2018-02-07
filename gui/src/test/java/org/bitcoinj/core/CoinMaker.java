@@ -10,7 +10,7 @@ import static org.bitcoinj.core.Coin.*;
 public class CoinMaker {
 
 
-    private static final Property<Coin, Long> satoshis = new Property<>();
+    public static final Property<Coin, Long> satoshis = new Property<>();
 
     public static final Instantiator<Coin> Coin = lookup ->
             valueOf(lookup.valueOf(satoshis, 100000000L));

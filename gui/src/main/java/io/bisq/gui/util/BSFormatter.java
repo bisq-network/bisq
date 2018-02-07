@@ -83,7 +83,7 @@ public class BSFormatter {
     public String formatCoin(Coin coin) {
         if (coin != null) {
             try {
-                return coinFormat.noCode().format(coin).toString();
+                return coinFormat.noCode().minDecimals(4).repeatOptionalDecimals(1,4).format(coin).toString();
             } catch (Throwable t) {
                 log.warn("Exception at formatBtc: " + t.toString());
                 return "";
