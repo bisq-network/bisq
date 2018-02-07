@@ -1033,6 +1033,8 @@ textfield */
 
 #charts .axis {
     -fx-tick-label-fill: -bs-black;
+    -fx-tick-label-font-size: 0.923em;
+    -fx-tick-label-font-family:"Fira Sans Condensed Light";
 }
 
 #charts .chart-plot-background {
