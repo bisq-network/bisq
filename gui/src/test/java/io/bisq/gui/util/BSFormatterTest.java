@@ -19,12 +19,14 @@ package io.bisq.gui.util;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.VolumeMaker;
+import org.bitcoinj.core.CoinMaker;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static io.bisq.common.monetary.PriceMaker.ltcPrice;
@@ -32,7 +34,9 @@ import static io.bisq.common.monetary.PriceMaker.priceString;
 import static io.bisq.common.monetary.PriceMaker.usdPrice;
 import static io.bisq.common.monetary.VolumeMaker.usdVolume;
 import static io.bisq.common.monetary.VolumeMaker.volumeString;
+import static org.bitcoinj.core.CoinMaker.Coin;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
+import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
 
 public class BSFormatterTest {
@@ -84,7 +88,9 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoin() {
-        assertEquals("1.00", formatter.formatCoin(oneBitcoin));
+        assertEquals("1.0000", formatter.formatCoin(oneBitcoin));
+        assertEquals("0.000001", formatter.formatCoin(make(a(Coin).but(with(satoshis, 100L)))));
+        assertEquals("0.00000001", formatter.formatCoin(make(a(Coin).but(with(satoshis, 1L)))));
     }
 
     @Test
