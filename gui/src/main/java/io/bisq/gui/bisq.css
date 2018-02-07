@@ -33,15 +33,11 @@ bg color of non edit textFields: fafafa
 }
 
 @font-face {
-    src: url("/fonts/FiraSans-BoldItalic.ttf");
-}
-
-@font-face {
-    src: url("/fonts/FiraSans-Italic.ttf");
-}
-
-@font-face {
     src: url("/fonts/FiraSans-Medium.ttf");
+}
+
+@font-face {
+    src: url("/fonts/FiraSansCondensed-Light.ttf");
 }
 
 .root {
