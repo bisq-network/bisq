@@ -75,6 +75,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
+import javafx.embed.swing.JFXPanel;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -86,15 +87,19 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.Security;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import io.bisq.common.Timer;
 
 /*
 
@@ -245,6 +250,8 @@ public class MainViewModelHeadless {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
+        initialiseJavaFxToolkit();
+
         //noinspection ConstantConditions,ConstantConditions
         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
@@ -256,6 +263,22 @@ public class MainViewModelHeadless {
             checkIfLocalHostNodeIsRunning();
         } else {
             checkIfLocalHostNodeIsRunning();
+        }
+    }
+
+    /** javafx toolkit needs to be initialised because some bisq methods use e.g. javafx collections */
+    private void initialiseJavaFxToolkit() {
+        try {
+            final CountDownLatch latch = new CountDownLatch(1);
+            SwingUtilities.invokeLater(() -> {
+                new JFXPanel(); // initializes JavaFX environment
+                latch.countDown();
+            });
+
+            if (!latch.await(5L, TimeUnit.SECONDS))
+                throw new ExceptionInInitializerError();
+        } catch (InterruptedException e) {
+            log.error("Error initializing javafx toolxit",e);
         }
     }
 
