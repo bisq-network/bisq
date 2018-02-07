@@ -514,7 +514,7 @@ textfield */
 
 .number-column.table-cell {
     -fx-font-family: "Fira Mono";
-    /*-fx-alignment: center-right;*/
+    -fx-font-size:0.923em;
 }
 
 /*******************************************************************************
