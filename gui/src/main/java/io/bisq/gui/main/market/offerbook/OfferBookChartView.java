@@ -309,6 +309,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         priceColumn.setMinWidth(115);
         priceColumn.setMaxWidth(115);
         priceColumn.setSortable(false);
+        priceColumn.getStyleClass().add("number-column");
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
@@ -320,7 +321,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatPrice(offer.getPrice()));
+                                        setText(formatter.formatPrice(offer.getPrice(), true));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -335,7 +336,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatPrice(offerListItem.offer.getPrice()));
+                                        setText(formatter.formatPrice(offerListItem.offer.getPrice(), true));
                                     }
                                 } else {
                                     if (listener != null)
@@ -353,6 +354,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         volumeColumn.setMinWidth(115);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
+        volumeColumn.getStyleClass().add("number-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
@@ -364,7 +366,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatVolume(offer.getVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume(), true));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -380,7 +382,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatVolume(offer.getVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume(), true));
                                     }
                                 } else {
                                     if (listener != null)
@@ -397,6 +399,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         TableColumn<OfferListItem, OfferListItem> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
+        amountColumn.getStyleClass().add("number-column");
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
