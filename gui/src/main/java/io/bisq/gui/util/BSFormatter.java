@@ -36,6 +36,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,6 +252,24 @@ public class BSFormatter {
     // Volume
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String formatVolume(Volume volume, Boolean decimalAligned) {
+        String formattedVolume = formatVolume(volume);
+
+        if(decimalAligned) {
+            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, 5);
+        }
+        return formattedVolume;
+    }
+
+    @NotNull
+    private String fillUpPlacesWithEmptyStrings(String formattedVolume, int maxNumberOfDigits) {
+        int numberOfPlacesToFill = maxNumberOfDigits - formattedVolume.split("\\.")[0].length();
+        for (int i = 0; i < numberOfPlacesToFill; i++) {
+            formattedVolume = " " + formattedVolume;
+        }
+        return formattedVolume;
+    }
+
     public String formatVolume(Volume volume) {
         return formatVolume(volume, fiatVolumeFormat, false);
     }
@@ -301,7 +320,6 @@ public class BSFormatter {
         return Res.get("formatter.formatVolumeLabel",
                 currencyCode, postFix);
     }
-
     public String formatMinVolumeAndVolume(Offer offer) {
         return offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
     }
@@ -339,6 +357,15 @@ public class BSFormatter {
 
     public String formatPrice(Price price) {
         return formatPrice(price, fiatPriceFormat, false);
+    }
+
+    public String formatPrice(Price price, Boolean decimalAligned) {
+        String formattedPrice = formatPrice(price);
+
+        if(decimalAligned) {
+            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, 5);
+        }
+        return formattedPrice;
     }
 
     public String formatPriceWithCode(Price price) {

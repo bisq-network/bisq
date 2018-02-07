@@ -31,13 +31,20 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
+import static io.bisq.common.monetary.PriceMaker.priceString;
+import static io.bisq.common.monetary.PriceMaker.usdPrice;
+import static io.bisq.common.monetary.VolumeMaker.usdVolume;
+import static io.bisq.common.monetary.VolumeMaker.volumeString;
+import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Offer.class,OfferPayload.class})
+@PrepareForTest({Offer.class, OfferPayload.class})
 public class BSFormatterTest {
 
     private BSFormatter formatter;
@@ -77,6 +84,25 @@ public class BSFormatterTest {
         assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords(oneHour + oneSecond * 2, true));
         assertEquals("", formatter.formatDurationAsWords(0));
         assertTrue(formatter.formatDurationAsWords(0).isEmpty());
+    }
+
+    @Test
+    public void testFormatPrice() {
+        assertEquals("100.0000", formatter.formatPrice(make(usdPrice)));
+        assertEquals("  100.0000", formatter.formatPrice(make(usdPrice), true));
+        assertEquals("7098.4700", formatter.formatPrice(make(usdPrice.but(with(priceString, "7098.4700")))));
+    }
+
+    @Test
+    public void testFormatCoin() {
+        assertEquals("1.00", formatter.formatCoin(oneBitcoin));
+    }
+
+    @Test
+    public void testFormatVolume() {
+        assertEquals("  100.00", formatter.formatVolume(make(usdVolume), true));
+        assertEquals("100.00", formatter.formatVolume(make(usdVolume)));
+        assertEquals("1774.62", formatter.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
 
     @Test
