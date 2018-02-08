@@ -582,4 +582,9 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("Se3F51UzpbVVnQRx2VNbcjfBoQJfeuyFF353i1jLnCZda9yVN3vy8csbYCESBvf38TFkchH1C1tMY6XHkC8L678K2vLsVZVMUII").isValid); //99 Charecters, expected is 97
         assertFalse(validator.validate("").isValid);
     }
+
+    @Test
+    public void testBOGUS() {
+        assertTrue(true);
+    }
 }
