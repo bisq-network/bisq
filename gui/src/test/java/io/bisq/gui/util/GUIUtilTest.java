@@ -6,7 +6,9 @@ import javafx.util.StringConverter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
@@ -25,10 +27,18 @@ public class GUIUtilTest {
 
     @Test
     public void testTradeCurrencyConverter() {
-        StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter();
+        Res.setBaseCurrencyCode("EUR");
+        Res.setBaseCurrencyName("Euro");
+        Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
+            put("EUR", 10);
+        }};
+        StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter(
+                Res.get("shared.offer"),
+                Res.get("shared.offers"),
+                offerCounts
+        );
 
-        assertEquals("✦ BTC (BTC)", tradeCurrencyConverter.toString(bitcoin));
-        assertEquals("★ Euro (EUR)", tradeCurrencyConverter.toString(euro));
+        assertEquals("★ Euro (EUR) - 10 offers", tradeCurrencyConverter.toString(euro));
     }
 
     @Test

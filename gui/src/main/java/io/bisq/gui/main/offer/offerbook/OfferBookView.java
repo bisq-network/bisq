@@ -120,7 +120,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         //noinspection unchecked
         currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
         //noinspection unchecked
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.getWithCol("offerbook.filterByPaymentMethod")).second;
@@ -222,6 +221,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
+        currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter(
+                Res.get("shared.offer"),
+                Res.get("shared.offers"),
+                (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
