@@ -46,16 +46,15 @@ import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.DoubleProperty;
-import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
@@ -64,7 +63,6 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.wallet.DeterministicSeed;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,9 +71,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class GUIUtil {
@@ -445,5 +443,23 @@ public class GUIUtil {
                     new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
                             .show();
                 }));
+    }
+
+    public static void showSelectableTextModal(String title, String text) {
+        TextArea textArea = new TextArea();
+        textArea.setText(text);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefSize(800, 600);
+
+        Scene scene = new Scene(textArea);
+        Stage stage = new Stage();
+        if (null != title) {
+            stage.setTitle(title);
+        }
+        stage.setScene(scene);
+        stage.initModality(Modality.NONE);
+        stage.initStyle(StageStyle.UTILITY);
+        stage.show();
     }
 }
