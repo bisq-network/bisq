@@ -21,23 +21,23 @@ bg color of non edit textFields: fafafa
 */
 
 @font-face {
-    src: url("/fonts/FiraMono-Regular.ttf");
+    src: url("/fonts/RobotoMono-Regular.ttf");
 }
 
 @font-face {
-    src: url("/fonts/FiraSans-Regular.ttf");
+    src: url("/fonts/Roboto-Regular.ttf");
 }
 
 @font-face {
-    src: url("/fonts/FiraSans-Bold.ttf");
+    src: url("/fonts/Roboto-Bold.ttf");
 }
 
 @font-face {
-    src: url("/fonts/FiraSans-Medium.ttf");
+    src: url("/fonts/Roboto-Medium.ttf");
 }
 
 @font-face {
-    src: url("/fonts/FiraSansCondensed-Light.ttf");
+    src: url("/fonts/RobotoCondensed-Light.ttf");
 }
 
 .root {
@@ -117,7 +117,7 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 14;
-    -fx-font-family: "Fira Sans";
+    -fx-font-family: "Roboto";
 }
 
 /********************************************************************************************************************
@@ -457,7 +457,7 @@ textfield */
 .table-view .column-header .label {
     -fx-alignment: center;
     -fx-font-weight: normal;
-    -fx-font-family: "Fira Sans Medium";
+    -fx-font-family: "Roboto Medium";
 }
 
 .table-view .focus {
@@ -537,7 +537,7 @@ textfield */
 }
 
 .number-column.table-cell {
-    -fx-font-family: "Fira Mono";
+    -fx-font-family: "Roboto Mono";
     -fx-font-size:0.923em;
 }
 
@@ -1034,7 +1034,7 @@ textfield */
 #charts .axis {
     -fx-tick-label-fill: -bs-black;
     -fx-tick-label-font-size: 0.923em;
-    -fx-tick-label-font-family:"Fira Sans Condensed Light";
+    -fx-tick-label-font-family:"Roboto Condensed Light";
 }
 
 #charts .chart-plot-background {
