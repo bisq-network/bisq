@@ -18,16 +18,22 @@
 package io.bisq.core.dao.compensation;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // Represents the state of the CompensationRequest data
 // TODO cleanup
@@ -51,6 +57,14 @@ public final class CompensationRequest implements PersistablePayload {
     private boolean closed;
     @Setter //TODO
     private boolean waitingForVotingPeriod;
+    @Setter
+    private Coin compensationRequestFee;
+    @Setter
+    private Transaction feeTx;
+    @Setter
+    Transaction txWithBtcFee;
+    @Setter
+    private Transaction signedTx;
 
     @Nullable
     private Map<String, String> extraDataMap;
@@ -107,5 +121,18 @@ public final class CompensationRequest implements PersistablePayload {
                 proto.getClosed(),
                 proto.getWaitingForVotingPeriod(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+    /// API
+    public Coin getRequestedBsq() {
+        checkNotNull(payload);
+        return payload.getRequestedBsq();
+    }
+
+    public Address getIssuanceAddress (BsqWalletService bsqWalletService) {
+        checkNotNull(payload);
+        // Remove leading 'B'
+        String underlying_btc_address = payload.getBsqAddress().substring(1, payload.getBsqAddress().length());
+        return Address.fromBase58(bsqWalletService.getParams(), underlying_btc_address);
     }
 }
