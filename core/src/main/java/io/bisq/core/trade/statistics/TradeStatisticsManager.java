@@ -251,7 +251,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("BETR");
         newlyAdded.add("MVT");
         newlyAdded.add("REF");
-
+        newlyAdded.add("YTN");
 
         coinsWithValidator.addAll(newlyAdded);
 
