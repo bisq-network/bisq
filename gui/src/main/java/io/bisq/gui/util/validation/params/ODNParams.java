@@ -36,8 +36,8 @@ public class ODNParams extends NetworkParameters {
     // We only use the properties needed for address validation
     public ODNParams() {
         super();
-        addressHeader = 75; // networkVersion (0x4b)
-        p2shHeader = -1; // TODO ??privateKeyPrefix 203 (0xcb) tbd?
+        addressHeader = 75;
+        p2shHeader = 125;
         acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
     }
 
