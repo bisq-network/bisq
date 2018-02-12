@@ -915,7 +915,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             root.getChildren().add(2, messagesAnchorPane);
 
             scrollToBottom();
-            GUIUtil.requestFocus(inputTextArea);
         }
 
         addListenersOnSelectDispute();
