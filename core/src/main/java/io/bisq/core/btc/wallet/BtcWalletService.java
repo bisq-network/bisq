@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -183,7 +182,8 @@ public class BtcWalletService extends WalletService {
         final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
         Transaction resultTx = null;
-        boolean isFeeInTolerance;
+        boolean isFeeOutsideTolerance;
+        boolean opReturnIsOnlyOutput;
         do {
             counter++;
             if (counter >= 10) {
@@ -222,7 +222,8 @@ public class BtcWalletService extends WalletService {
             // We might have the rare case that both inputs matched the required fees, so both did not require
             // a change output.
             // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
-            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Restrictions.getMinNonDustOutput() : Coin.ZERO;
+            opReturnIsOnlyOutput = resultTx.getOutputs().size() == 0;
+            forcedChangeValue = opReturnIsOnlyOutput ? Restrictions.getMinNonDustOutput() : Coin.ZERO;
 
             // add OP_RETURN output
             if (opReturnData != null)
@@ -232,9 +233,11 @@ public class BtcWalletService extends WalletService {
             txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
             final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
-            isFeeInTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
+            isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
-        while (forcedChangeValue.isPositive() || isFeeInTolerance);
+        while (opReturnIsOnlyOutput ||
+                isFeeOutsideTolerance ||
+                resultTx.getFee().value < txFeePerByte.multiply(resultTx.bitcoinSerialize().length).value);
 
         // Sign all BTC inputs
         for (int i = preparedBsqTxInputs.size(); i < resultTx.getInputs().size(); i++) {
@@ -248,9 +251,10 @@ public class BtcWalletService extends WalletService {
         checkWalletConsistency(wallet);
         verifyTransaction(resultTx);
 
-        //printTx("BTC wallet: Signed tx", resultTx);
+        printTx("BTC wallet: Signed tx", resultTx);
         return resultTx;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Commit tx
@@ -493,10 +497,6 @@ public class BtcWalletService extends WalletService {
                         do {
                             counter++;
                             fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                            final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
-                            if (fee.compareTo(defaultMinFee) < 0)
-                                fee = defaultMinFee;
-
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount.subtract(fee), toAddress);
 
@@ -511,9 +511,10 @@ public class BtcWalletService extends WalletService {
                             tx = sendRequest.tx;
                             txSize = tx.bitcoinSerialize().length;
                             printTx("FeeEstimationTransaction", tx);
-                            sendRequest.tx.getOutputs().stream().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
+                            sendRequest.tx.getOutputs().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
                         }
-                        while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
+                        while (feeEstimationNotSatisfied(counter, tx));
+
                         if (counter == 10)
                             log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -612,17 +613,13 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
-                if (fee.compareTo(defaultMinFee) < 0)
-                    fee = defaultMinFee;
-
                 SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
                 printTx("FeeEstimationTransaction", tx);
             }
-            while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
+            while (feeEstimationNotSatisfied(counter, tx));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -663,9 +660,6 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
-                final Coin defaultMinFee = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee();
-                if (fee.compareTo(defaultMinFee) < 0)
-                    fee = defaultMinFee;
                 // We use a dummy address for the output
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddressString(), amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
@@ -673,7 +667,7 @@ public class BtcWalletService extends WalletService {
                 txSize = tx.bitcoinSerialize().length;
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
-            while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
+            while (feeEstimationNotSatisfied(counter, tx));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -684,6 +678,14 @@ public class BtcWalletService extends WalletService {
                     "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
         }
     }
+
+    private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
+        long targetFee = getTxFeeForWithdrawalPerByte().multiply(tx.bitcoinSerialize().length).value;
+        return counter < 10 &&
+                (tx.getFee().value < targetFee ||
+                        tx.getFee().value - targetFee > 1000);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Send
@@ -763,7 +765,7 @@ public class BtcWalletService extends WalletService {
                 "The amount is too low (dust limit).");
 
         final Coin netValue = amount.subtract(fee);
-        if(netValue.isNegative())
+        if (netValue.isNegative())
             throw new InsufficientMoneyException(netValue.multiply(-1), "The mining fee for that transaction exceed the available amount.");
 
         tx.addOutput(netValue, Address.fromBase58(params, toAddress));

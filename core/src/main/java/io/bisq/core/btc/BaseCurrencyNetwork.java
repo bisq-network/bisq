@@ -20,7 +20,6 @@ package io.bisq.core.btc;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.fee.FeeService;
 import lombok.Getter;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -84,17 +83,16 @@ public enum BaseCurrencyNetwork {
         return "DOGE".equals(currencyCode);
     }
 
-
-    public Coin getDefaultMinFee() {
+    public long getDefaultMinFeePerByte() {
         switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
             case "BTC":
-                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB.divide(1000).value;
             case "LTC":
-                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             case "DOGE":
-                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             case "DASH":
-                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             default:
                 throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
         }

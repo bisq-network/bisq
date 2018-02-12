@@ -604,6 +604,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.getBridgeAddresses();
     }
 
+    public long getWithdrawalTxFeeInBytes() {
+        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -688,8 +692,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setBridgeAddresses(List<String> bridgeAddresses);
 
-        List<String> getBridgeAddresses();
-
         void setBridgeOptionOrdinal(int bridgeOptionOrdinal);
 
         void setTorTransportOrdinal(int torTransportOrdinal);
@@ -697,5 +699,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setCustomBridges(String customBridges);
 
         void setBitcoinNodesOptionOrdinal(int bitcoinNodesOption);
+
+        List<String> getBridgeAddresses();
+
+        long getWithdrawalTxFeeInBytes();
     }
 }

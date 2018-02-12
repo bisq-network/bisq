@@ -45,7 +45,7 @@ public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
     // fixed min fee
-    public static final Coin BTC_REFERENCE_DEFAULT_MIN_TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // 5000
+    public static final Coin BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // 5000
     // https://litecoin.info/Transaction_fees min fee is 100_000
     public static final Coin LTC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(100_000);
     // min fee is 1 DOGE
@@ -80,6 +80,7 @@ public class FeeService {
     private long epochInSecondAtLastRequest;
     private long lastRequest;
     private IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
+    private long minFeePerByte;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +133,8 @@ public class FeeService {
     }
 
     public void onAllServicesInitialized() {
+        minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
+
         requestFees(null, null);
 
         // We update all 5 min.
@@ -154,6 +157,12 @@ public class FeeService {
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
                         txFeePerByte = map.get(baseCurrencyCode);
+
+                        if (txFeePerByte < minFeePerByte) {
+                            log.warn("The delivered fee per byte is smaller than the min. default fee of 5 sat/byte");
+                            txFeePerByte = minFeePerByte;
+                        }
+
                         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
                         log.info("{} tx fee: txFeePerByte={}", baseCurrencyCode, txFeePerByte);
                         if (resultHandler != null)
