@@ -67,10 +67,9 @@ public class LocalhostNetworkNode extends NetworkNode {
                     e.printStackTrace();
                     log.error("Exception at startServer: " + e.getMessage());
                 }
-
-                final NodeAddress nodeAddress;
-                if (null == address) nodeAddress = new NodeAddress("localhost", servicePort);
-                else nodeAddress = new NodeAddress(address);
+                final NodeAddress nodeAddress = address == null ?
+                        new NodeAddress("localhost", servicePort) :
+                        new NodeAddress(address);
                 nodeAddressProperty.set(nodeAddress);
                 setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
             }, simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
