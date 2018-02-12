@@ -1,8 +1,6 @@
 language: java
 jdk: oraclejdk8
 
-script: mvn clean install -DskipTests
-
 notifications:
   slack:
     rooms:
