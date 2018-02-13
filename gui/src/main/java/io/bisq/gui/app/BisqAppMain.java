@@ -25,17 +25,12 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
-import java.util.Locale;
-
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BisqAppMain extends BisqExecutable {
 
     static {
-        // Need to set default locale initially otherwise we get problems at non-english OS
-        Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
-
         Utilities.removeCryptographyRestrictions();
     }
 
