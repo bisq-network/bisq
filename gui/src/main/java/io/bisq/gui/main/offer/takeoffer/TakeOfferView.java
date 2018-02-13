@@ -420,8 +420,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
 
-        totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
-                model.getSecurityDepositPercentage(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
+        totalToPayTextField.setFundsStructure(Res.get("takeOffer.fundsBox.fundsStructure",
+                model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
         totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         if (model.dataModel.isWalletFunded.get()) {

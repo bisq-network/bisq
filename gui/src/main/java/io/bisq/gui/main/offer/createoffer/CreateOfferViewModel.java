@@ -831,9 +831,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
     }
 
-    public String getSecurityDepositPercentage() {
-        return GUIUtil.getPercentage(dataModel.getSecurityDeposit(), dataModel.getAmount().get(),
-                btcFormatter);
+    public String getSecurityDepositWithCode() {
+        return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
     }
 
     public String getMakerFee() {

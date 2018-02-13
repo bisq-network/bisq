@@ -126,6 +126,14 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-black;
 }
 
+.info {
+    -fx-text-fill: -bs-green;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+}
+
 .headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 22;
@@ -362,10 +370,6 @@ textfield */
     -fx-padding: 4 4 4 4;
 }
 
-#address-text-field:hover {
-    -fx-text-fill: -bs-black;
-}
-
 #funds-confidence {
     -fx-progress-color: -bs-dim-grey;
 }
@@ -500,10 +504,6 @@ textfield */
 
 #non-clickable-icon {
     -fx-text-fill: -bs-medium-grey;
-}
-
-#clickable-icon:hover {
-    -fx-text-fill: -bs-grey;
 }
 
 /*******************************************************************************
