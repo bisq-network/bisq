@@ -443,7 +443,7 @@ public abstract class TradeStepView extends AnchorPane {
         GridPane infoGridPane = new GridPane();
         int rowIndex = 0;
         infoGridPane.setHgap(5);
-        infoGridPane.setVgap(5);
+        infoGridPane.setVgap(10);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
         Label label = addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
         label.setMaxWidth(450);
