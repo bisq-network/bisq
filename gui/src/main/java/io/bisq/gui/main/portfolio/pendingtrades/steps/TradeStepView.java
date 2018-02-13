@@ -17,12 +17,16 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Clock;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.InfoTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.components.paymentmethods.PaymentMethodForm;
@@ -31,10 +35,15 @@ import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bisq.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
@@ -43,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bisq.gui.components.paymentmethods.PaymentMethodForm.addOpenTradeDuration;
 import static io.bisq.gui.util.FormBuilder.*;
 
 public abstract class TradeStepView extends AnchorPane {
@@ -175,9 +185,10 @@ public abstract class TradeStepView extends AnchorPane {
         else
             txIdTextField.cleanup();
 
-        if (model.dataModel.getTrade() != null)
-            PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer(),
-                    model.getDateForOpenDispute());
+        if (model.dataModel.getTrade() != null) {
+            InfoTextField infoTextField = addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+            infoTextField.setContentForInfoPopOver(createInfoPopover());
+        }
 
         timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
@@ -212,14 +223,16 @@ public abstract class TradeStepView extends AnchorPane {
         if (timeLeftTextField != null) {
             String remainingTime = model.getRemainingTradeDurationAsWords();
             timeLeftProgressBar.setProgress(model.getRemainingTradeDurationAsPercentage());
-            if (remainingTime != null) {
-                timeLeftTextField.setText(remainingTime);
+            if (!remainingTime.isEmpty()) {
+                timeLeftTextField.setText(Res.get("portfolio.pending.remainingTimeDetail",
+                        remainingTime, model.getDateForOpenDispute()));
                 if (model.showWarning() || model.showDispute()) {
                     timeLeftTextField.getStyleClass().add("error-text");
                     timeLeftProgressBar.getStyleClass().add("error");
                 }
             } else {
-                timeLeftTextField.setText("Trade not completed in time (" + model.getDateForOpenDispute() + ")");
+                timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted",
+                        model.getDateForOpenDispute()));
                 timeLeftTextField.getStyleClass().add("error-text");
                 timeLeftProgressBar.getStyleClass().add("error");
             }
@@ -420,5 +433,39 @@ public abstract class TradeStepView extends AnchorPane {
                     break;
             }
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TradeDurationLimitInfo
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private GridPane createInfoPopover() {
+        GridPane infoGridPane = new GridPane();
+        int rowIndex = 0;
+        infoGridPane.setHgap(5);
+        infoGridPane.setVgap(10);
+        infoGridPane.setPadding(new Insets(10, 10, 10, 10));
+        Label label = addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
+        label.setMaxWidth(450);
+
+        HBox warningBox = new HBox();
+        warningBox.setMinHeight(30);
+        warningBox.setPadding(new Insets(5));
+        warningBox.getStyleClass().add("warning-box");
+        GridPane.setRowIndex(warningBox, rowIndex);
+        GridPane.setColumnSpan(warningBox, 2);
+
+        Label warningIcon = new Label();
+        AwesomeDude.setIcon(warningIcon, AwesomeIcon.WARNING_SIGN);
+        warningIcon.getStyleClass().add("warning");
+
+        Label warning = new Label(Res.get("portfolio.pending.tradePeriodWarning"));
+        warning.setWrapText(true);
+        warning.setMaxWidth(410);
+
+        warningBox.getChildren().addAll(warningIcon, warning);
+        infoGridPane.getChildren().add(warningBox);
+
+        return infoGridPane;
     }
 }

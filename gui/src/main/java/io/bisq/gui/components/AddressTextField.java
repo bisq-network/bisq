@@ -87,12 +87,12 @@ public class AddressTextField extends AnchorPane {
                 Utilities.copyToClipboard(address.get());
         }));
 
-        AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(extWalletIcon, 30.0);
+        AnchorPane.setRightAnchor(copyIcon, 30.0);
+        AnchorPane.setRightAnchor(extWalletIcon, 5.0);
         AnchorPane.setRightAnchor(textField, 55.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(textField, extWalletIcon, copyIcon);
+        getChildren().addAll(textField, copyIcon, extWalletIcon);
     }
 
     private void openWallet() {
