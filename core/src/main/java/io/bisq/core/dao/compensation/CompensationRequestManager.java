@@ -230,7 +230,8 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
             if (storeLocally)
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
         } else {
-            log.info("We already have an item with the same CompensationRequest.");
+            if (!isMine(compensationRequestPayload))
+                log.warn("We already have an item with the same CompensationRequest.");
         }
     }
 
