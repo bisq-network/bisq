@@ -438,17 +438,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 */
-        if (direction == OfferPayload.Direction.BUY) {
-            // tableView.getColumns().add(accumulatedColumn);
-            tableView.getColumns().add(volumeColumn);
-            tableView.getColumns().add(amountColumn);
-            tableView.getColumns().add(priceColumn);
-        } else {
-            tableView.getColumns().add(priceColumn);
-            tableView.getColumns().add(amountColumn);
-            tableView.getColumns().add(volumeColumn);
-            //tableView.getColumns().add(accumulatedColumn);
-        }
+        tableView.getColumns().add(volumeColumn);
+        tableView.getColumns().add(amountColumn);
+        tableView.getColumns().add(priceColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
