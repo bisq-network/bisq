@@ -230,11 +230,12 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
             if (storeLocally)
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
         } else {
-            log.warn("We have already an item with the same CompensationRequest.");
+            log.info("We already have an item with the same CompensationRequest.");
         }
     }
 
     private void updateFilteredLists() {
+        // TODO: Does this only need to be set once to keep the list updated?
         pastRequests.setPredicate(daoPeriodService::isInPastCycle);
         activeRequests.setPredicate(compensationRequest -> {
             return daoPeriodService.isInCurrentCycle(compensationRequest) ||
