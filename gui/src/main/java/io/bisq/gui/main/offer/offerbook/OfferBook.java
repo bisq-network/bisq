@@ -26,8 +26,12 @@ import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static io.bisq.core.offer.OfferPayload.Direction.BUY;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -40,7 +44,8 @@ import java.util.stream.Collectors;
 public class OfferBook {
     private final OfferBookService offerBookService;
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-
+    private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
+    private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -113,9 +118,37 @@ public class OfferBook {
             Log.logIfStressTests("OfferPayload filled: No. of offers = " + offerBookListItems.size());
 
             log.debug("offerBookListItems.size " + offerBookListItems.size());
+            fillOfferCountMaps();
         } catch (Throwable t) {
             t.printStackTrace();
             log.error("Error at fillOfferBookListItems: " + t.toString());
         }
+    }
+
+    public Map<String, Integer> getBuyOfferCountMap() {
+        return buyOfferCountMap;
+    }
+
+    public Map<String, Integer> getSellOfferCountMap() {
+        return sellOfferCountMap;
+    }
+
+    private void fillOfferCountMaps() {
+        buyOfferCountMap.clear();
+        sellOfferCountMap.clear();
+        final String[] ccyCode = new String[1];
+        final int[] offerCount = new int[1];
+        offerBookListItems.forEach(o -> {
+            ccyCode[0] = o.getOffer().getCurrencyCode();
+            if (o.getOffer().getDirection() == BUY) {
+                offerCount[0] = buyOfferCountMap.getOrDefault(ccyCode[0], 0) + 1;
+                buyOfferCountMap.put(ccyCode[0], offerCount[0]);
+            } else {
+                offerCount[0] = sellOfferCountMap.getOrDefault(ccyCode[0], 0) + 1;
+                sellOfferCountMap.put(ccyCode[0], offerCount[0]);
+            }
+        });
+        log.debug("buyOfferCountMap.size {}   sellOfferCountMap.size {}",
+                buyOfferCountMap.size(), sellOfferCountMap.size());
     }
 }
