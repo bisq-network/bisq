@@ -157,6 +157,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.OK_PAY_ID:
                 gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.UPHOLD_ID:
+                gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.PERFECT_MONEY_ID:
                 gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;

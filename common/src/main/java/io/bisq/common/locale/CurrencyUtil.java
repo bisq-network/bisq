@@ -238,6 +238,38 @@ public class CurrencyUtil {
         return currencies;
     }
 
+    // https://support.uphold.com/hc/en-us/articles/202473803-Supported-currencies
+    public static List<TradeCurrency> getAllUpholdCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("CNY"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("KES"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("ARS"),
+                new FiatCurrency("BRL"),
+                new FiatCurrency("AED"),
+                new FiatCurrency("PHP")
+        ));
+
+        currencies.sort(TradeCurrency::compareTo);
+        return currencies;
+    }
+
     public static boolean isFiatCurrency(String currencyCode) {
         try {
             return currencyCode != null && !currencyCode.isEmpty() && !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;

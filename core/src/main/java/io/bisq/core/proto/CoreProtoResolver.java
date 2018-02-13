@@ -60,6 +60,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return InteracETransferAccountPayload.fromProto(proto);
                 case O_K_PAY_ACCOUNT_PAYLOAD:
                     return OKPayAccountPayload.fromProto(proto);
+                case UPHOLD_ACCOUNT_PAYLOAD:
+                    return UpholdAccountPayload.fromProto(proto);
                 case PERFECT_MONEY_ACCOUNT_PAYLOAD:
                     return PerfectMoneyAccountPayload.fromProto(proto);
                 case SWISH_ACCOUNT_PAYLOAD:

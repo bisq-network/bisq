@@ -28,7 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
@@ -44,6 +47,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
     public static final String OK_PAY_ID = "OK_PAY";
+    public static final String UPHOLD_ID = "UPHOLD";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
@@ -62,6 +66,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
+    public static PaymentMethod UPHOLD;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
     public static PaymentMethod SEPA_INSTANT;
@@ -180,6 +185,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // Trans national
                     OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
+                    UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitMidRisk),
                     PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China

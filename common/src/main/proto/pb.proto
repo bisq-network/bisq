@@ -830,6 +830,7 @@ message PaymentAccountPayload {
         PerfectMoneyAccountPayload perfect_money_account_payload = 12;
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
+        UpholdAccountPayload uphold_account_payload = 16;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -938,6 +939,10 @@ message InteracETransferAccountPayload {
 
 message OKPayAccountPayload {
     string account_nr = 1;
+}
+
+message UpholdAccountPayload {
+    string account_id = 1;
 }
 
 message PerfectMoneyAccountPayload {
