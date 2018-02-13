@@ -803,6 +803,28 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + InfoTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static Tuple2<Label, InfoTextField> addLabelInfoTextfield(GridPane gridPane, int rowIndex, String labelText,
+                                                                     String fieldText) {
+        return addLabelInfoTextfield(gridPane, rowIndex, labelText, fieldText, 0);
+    }
+
+    public static Tuple2<Label, InfoTextField> addLabelInfoTextfield(GridPane gridPane, int rowIndex, String labelText,
+                                                                     String fieldText, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelText, top);
+
+        InfoTextField infoTextField = new InfoTextField();
+        infoTextField.setText(fieldText);
+        GridPane.setRowIndex(infoTextField, rowIndex);
+        GridPane.setColumnIndex(infoTextField, 1);
+        GridPane.setMargin(infoTextField, new Insets(top, 0,0,0));
+        gridPane.getChildren().add(infoTextField);
+
+        return new Tuple2<>(label, infoTextField);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + BsqAddressTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 

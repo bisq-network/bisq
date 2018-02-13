@@ -56,6 +56,7 @@ bg color of non edit textFields: fafafa
     -bs-orange: #ff8a2b; /* 2 usages */
     -bs-orange2: #dd6900; /* 1 usages */
     -bs-yellow: #ffb60f; /* 2 usages */
+    -bs-yellow-light: derive(-bs-yellow, 81%);
     -bs-bg-grey8: #E1E9E1; /* 1 usages */
     -bs-bg-green2:#619865; /* 2 usages */
     -bs-bg-green:#99ba9c; /* 4 usages */
@@ -139,6 +140,23 @@ bg color of non edit textFields: fafafa
     -fx-font-size: 22;
 }
 
+.info {
+    -fx-text-fill: -bs-green;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+    -fx-spacing: 6;
+    -fx-alignment: center;
+}
+
+.warning {
+    -fx-text-fill: -bs-yellow;
+}
 /* Other UI Elements */
 
 .separator {
