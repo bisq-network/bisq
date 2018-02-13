@@ -826,6 +826,7 @@ textfield */
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
+    -fx-text-fill: -fx-accent;
     -fx-background-color: -bs-content-bg-grey;
 }
 
