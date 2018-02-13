@@ -60,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -238,6 +239,14 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     SortedList<OfferBookListItem> getOfferList() {
         return sortedItems;
+    }
+
+    Map<String, Integer> getBuyOfferCounts() {
+        return offerBook.getBuyOfferCountMap();
+    }
+
+    Map<String, Integer> getSellOfferCounts() {
+        return offerBook.getSellOfferCountMap();
     }
 
     boolean isMyOffer(Offer offer) {
