@@ -208,10 +208,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", code));
-                        leftButton.setText(Res.get("market.offerBook.leftButtonAltcoin", code, Res.getBaseCurrencyCode()));
+                        leftButton.setText(Res.get("market.offerBook.buyAltcoin", code, Res.getBaseCurrencyCode()));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", code));
-                        rightButton.setText(Res.get("market.offerBook.rightButtonAltcoin", code, Res.getBaseCurrencyCode()));
+                        rightButton.setText(Res.get("market.offerBook.sellAltcoin", code, Res.getBaseCurrencyCode()));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
                     } else {
@@ -221,10 +221,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        leftButton.setText(Res.get("market.offerBook.rightButtonFiat", Res.getBaseCurrencyCode(), code));
+                        leftButton.setText(Res.get("market.offerBook.sellWithFiat", Res.getBaseCurrencyCode(), code));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        rightButton.setText(Res.get("market.offerBook.leftButtonFiat", Res.getBaseCurrencyCode(), code));
+                        rightButton.setText(Res.get("market.offerBook.buyWithFiat", Res.getBaseCurrencyCode(), code));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
