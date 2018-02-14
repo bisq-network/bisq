@@ -81,9 +81,21 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatCoin(Coin coin) {
+        return formatCoin(coin, -1);
+    }
+
+    @NotNull
+    public String formatCoin(Coin coin, int decimalPlaces) {
+        final int repetitions = decimalPlaces;
+
         if (coin != null) {
             try {
-                return coinFormat.noCode().minDecimals(4).repeatOptionalDecimals(1,4).format(coin).toString();
+                if (decimalPlaces < 0) {
+                    return coinFormat.noCode().format(coin).toString();
+                } else {
+                    final int decimals = decimalPlaces/repetitions;
+                    return coinFormat.noCode().minDecimals(repetitions).repeatOptionalDecimals(decimals, repetitions).format(coin).toString();
+                }
             } catch (Throwable t) {
                 log.warn("Exception at formatBtc: " + t.toString());
                 return "";

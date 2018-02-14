@@ -90,7 +90,8 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatCoin() {
-        assertEquals("1.0000", formatter.formatCoin(oneBitcoin));
+        assertEquals("1.00", formatter.formatCoin(oneBitcoin));
+        assertEquals("1.0000", formatter.formatCoin(oneBitcoin, 4));
         assertEquals("0.000001", formatter.formatCoin(make(a(Coin).but(with(satoshis, 100L)))));
         assertEquals("0.00000001", formatter.formatCoin(make(a(Coin).but(with(satoshis, 1L)))));
     }
