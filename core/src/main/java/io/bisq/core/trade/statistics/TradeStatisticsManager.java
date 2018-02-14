@@ -252,7 +252,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("MVT");
         newlyAdded.add("REF");
         newlyAdded.add("DAI");
-
+        newlyAdded.add("YTN");
 
         coinsWithValidator.addAll(newlyAdded);
 

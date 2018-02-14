@@ -444,6 +444,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "YTN":
+                    return YTNAddressValidator.ValidateAddress(input);
 
                     // Add new coins at the end...
                 default:
