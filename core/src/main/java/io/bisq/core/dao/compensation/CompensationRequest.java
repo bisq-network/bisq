@@ -132,7 +132,7 @@ public final class CompensationRequest implements PersistablePayload {
     public Address getIssuanceAddress (BsqWalletService bsqWalletService) {
         checkNotNull(payload);
         // Remove leading 'B'
-        String underlying_btc_address = payload.getBsqAddress().substring(1, payload.getBsqAddress().length());
-        return Address.fromBase58(bsqWalletService.getParams(), underlying_btc_address);
+        String underlyingBtcAddress = payload.getBsqAddress().substring(1, payload.getBsqAddress().length());
+        return Address.fromBase58(bsqWalletService.getParams(), underlyingBtcAddress);
     }
 }
