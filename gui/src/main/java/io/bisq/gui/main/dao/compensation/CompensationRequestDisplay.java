@@ -22,6 +22,7 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
@@ -42,6 +43,7 @@ public class CompensationRequestDisplay {
     private int gridRow = 0;
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
+    public TxIdTextField txIdTextField;
 
     public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService) {
         this.gridPane = gridPane;
@@ -50,7 +52,7 @@ public class CompensationRequestDisplay {
     }
 
     public void createAllFields(String title, double top) {
-        addTitledGroupBg(gridPane, gridRow, 7, title, top);
+        addTitledGroupBg(gridPane, gridRow, 8, title, top);
         uidTextField = addLabelInputTextField(gridPane, gridRow, Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
         uidTextField.setEditable(false);
         nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.name")).second;
@@ -68,6 +70,9 @@ public class CompensationRequestDisplay {
                 Res.get("dao.compensation.display.bsqAddress")).second;
         bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
         bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
+
+        txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
+                Res.get("dao.compensation.display.txId"), "").second;
     }
 
     public void fillWithData(CompensationRequestPayload data) {
@@ -83,6 +88,7 @@ public class CompensationRequestDisplay {
         linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(data.getLink()));
         requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(data.getRequestedBsq()));
         bsqAddressTextField.setText(data.getBsqAddress());
+        txIdTextField.setup(data.getTxId());
     }
 
     public void clearForm() {
@@ -94,6 +100,7 @@ public class CompensationRequestDisplay {
         linkHyperlinkWithIcon.clear();
         requestedBsqTextField.clear();
         bsqAddressTextField.clear();
+        txIdTextField.cleanup();
     }
 
     public void fillWithMock() {
