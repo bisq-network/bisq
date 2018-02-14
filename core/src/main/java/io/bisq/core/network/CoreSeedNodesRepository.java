@@ -55,6 +55,11 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
     }
 
+    public CoreSeedNodesRepository(Set<NodeAddress> seedNodeAddresses) {
+        this.seedNodeAddresses = seedNodeAddresses;
+
+    }
+
     public String getOperator(NodeAddress nodeAddress) {
         switch (nodeAddress.getFullAddress()) {
             case "5quyxpxheyvzmb2d.onion:8000":
@@ -142,7 +147,7 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             // regtest
             new NodeAddress("localhost:2002"),
             new NodeAddress("localhost:3002"),
-         /*    new NodeAddress("localhost:4002"),*/
+            /*    new NodeAddress("localhost:4002"),*/
 
             // LTC
             // mainnet
