@@ -410,7 +410,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
                                 if (offerListItem != null && !empty)
-                                    setText(formatter.formatCoin(offerListItem.offer.getAmount()));
+                                    setText(formatter.formatCoin(offerListItem.offer.getAmount(),4));
                                 else
                                     setText("");
                             }
@@ -418,29 +418,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
-        // Lets remove that as it is not really relevant and seems to be confusing to some users
-        // accumulated
-       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new AutoTooltipTableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
-        accumulatedColumn.setMinWidth(100);
-        accumulatedColumn.setSortable(false);
-        accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        accumulatedColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
-                    @Override
-                    public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
-                            @Override
-                            public void updateItem(final OfferListItem offerListItem, boolean empty) {
-                                super.updateItem(offerListItem, empty);
-                                if (offerListItem != null && !empty)
-                                    setText(formatter.formatRoundedDoubleWithPrecision(offerListItem.accumulated, 4));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-*/
         tableView.getColumns().add(volumeColumn);
         tableView.getColumns().add(amountColumn);
         tableView.getColumns().add(priceColumn);
