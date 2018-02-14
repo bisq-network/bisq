@@ -249,10 +249,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = formatter.parsePercentStringToDouble(newValue);
-                if (value <= 0.3) {
+                final double maxDeviation = 0.5;
+                if (value <= maxDeviation) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge")).show();
+                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
