@@ -459,7 +459,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
 
-                // Add new coins at the end...
+                    // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
