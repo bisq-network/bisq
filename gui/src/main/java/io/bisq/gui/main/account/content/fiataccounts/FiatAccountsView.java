@@ -63,6 +63,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final InputValidator inputValidator;
     private final OKPayValidator okPayValidator;
     private final UpholdValidator upholdValidator;
+    private final CashAppValidator cashAppValidator;
     private final AliPayValidator aliPayValidator;
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
@@ -87,6 +88,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             InputValidator inputValidator,
                             OKPayValidator okPayValidator,
                             UpholdValidator upholdValidator,
+                            CashAppValidator cashAppValidator,
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
@@ -103,6 +105,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.inputValidator = inputValidator;
         this.okPayValidator = okPayValidator;
         this.upholdValidator = upholdValidator;
+        this.cashAppValidator = cashAppValidator;
         this.aliPayValidator = aliPayValidator;
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
@@ -344,6 +347,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new OKPayForm(paymentAccount, accountAgeWitnessService, okPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CASH_APP_ID:
+                return new CashAppForm(paymentAccount, accountAgeWitnessService, cashAppValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:

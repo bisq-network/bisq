@@ -26,6 +26,8 @@ public class PaymentAccountFactory {
                 return new OKPayAccount();
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdAccount();
+            case PaymentMethod.CASH_APP_ID:
+                return new CashAppAccount();
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:
