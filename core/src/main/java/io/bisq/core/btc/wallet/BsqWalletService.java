@@ -17,8 +17,6 @@
 
 package io.bisq.core.btc.wallet;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
@@ -365,7 +363,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
 
     public Transaction getPreparedSendTx(String receiverAddress,
                                          Coin receiverAmount) throws AddressFormatException,
-            InsufficientMoneyException, WalletException, TransactionVerificationException {
+            InsufficientBsqException, WalletException, TransactionVerificationException {
 
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
@@ -381,7 +379,11 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         sendRequest.signInputs = false;
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.changeAddress = getUnusedAddress();
-        wallet.completeTx(sendRequest);
+        try {
+            wallet.completeTx(sendRequest);
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientBsqException(e.missing);
+        }
         checkWalletConsistency(wallet);
         verifyTransaction(tx);
         // printTx("prepareSendTx", tx);
@@ -394,7 +396,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws
-            InsufficientMoneyException, ChangeBelowDustException {
+            InsufficientBsqException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
 
         // We might have no output if inputs match fee.
@@ -404,9 +406,13 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         // TODO check dust output
         CoinSelection coinSelection = bsqCoinSelector.select(fee, wallet.calculateAllSpendCandidates());
         coinSelection.gathered.stream().forEach(tx::addInput);
-        Coin change = bsqCoinSelector.getChange(fee, coinSelection);
-        if (change.isPositive())
-            tx.addOutput(change, getUnusedAddress());
+        try {
+            Coin change = bsqCoinSelector.getChange(fee, coinSelection);
+            if (change.isPositive())
+                tx.addOutput(change, getUnusedAddress());
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientBsqException(e.missing);
+        }
 
         //printTx("getPreparedBurnFeeTx", tx);
         return tx;

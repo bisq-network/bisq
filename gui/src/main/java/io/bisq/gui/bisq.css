@@ -76,6 +76,7 @@ bg color of non edit textFields: fafafa
     -bs-orange: #ff8a2b; /* 2 usages */
     -bs-orange2: #dd6900; /* 1 usages */
     -bs-yellow: #ffb60f; /* 2 usages */
+    -bs-yellow-light: derive(-bs-yellow, 81%);
     -bs-bg-grey8: #E1E9E1; /* 1 usages */
     -bs-bg-green2:#619865; /* 2 usages */
     -bs-bg-green:#99ba9c; /* 4 usages */
@@ -146,11 +147,36 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-black;
 }
 
+.info {
+    -fx-text-fill: -bs-green;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+}
+
 .headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 1.692em;
 }
 
+.info {
+    -fx-text-fill: -bs-green;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+    -fx-spacing: 6;
+    -fx-alignment: center;
+}
+
+.warning {
+    -fx-text-fill: -bs-yellow;
+}
 /* Other UI Elements */
 
 .separator {
@@ -382,10 +408,6 @@ textfield */
     -fx-padding: 4 4 4 4;
 }
 
-#address-text-field:hover {
-    -fx-text-fill: -bs-black;
-}
-
 #funds-confidence {
     -fx-progress-color: -bs-dim-grey;
 }
@@ -527,10 +549,6 @@ textfield */
 
 #non-clickable-icon {
     -fx-text-fill: -bs-medium-grey;
-}
-
-#clickable-icon:hover {
-    -fx-text-fill: -bs-grey;
 }
 
 /*******************************************************************************
@@ -853,6 +871,7 @@ textfield */
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
+    -fx-text-fill: -fx-accent;
     -fx-background-color: -bs-content-bg-grey;
 }
 

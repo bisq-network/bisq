@@ -36,10 +36,10 @@ import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.MainView;
-import io.bisq.gui.main.funds.FundsView;
-import io.bisq.gui.main.funds.transactions.TransactionsView;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.portfolio.PortfolioView;
+import io.bisq.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.BSFormatter;
@@ -286,8 +286,8 @@ public class BuyerStep4View extends TradeStepView {
             //noinspection unchecked
             new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
-                    .actionButtonTextWithGoTo("navigation.funds.transactions")
-                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                    .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
+                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
                     .dontShowAgainId(key)
                     .show();
         }
