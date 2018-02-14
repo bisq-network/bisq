@@ -569,6 +569,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("").isValid);
     }
 
+    // Added 0.6.6
     @Test
     public void testSTL() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
@@ -583,7 +584,6 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("").isValid);
     }
 
-    // Added 0.6.6
     @Test
     public void testDAI() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();

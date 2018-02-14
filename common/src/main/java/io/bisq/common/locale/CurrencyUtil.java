@@ -96,6 +96,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
         result.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
+        result.add(new CryptoCurrency("DARX", "BitDaric"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("CAGE", "Cagecoin"));
@@ -148,8 +149,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("XSPEC", "Spectrecoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
-	    result.add(new CryptoCurrency("STL", "Stellite"));
-	    result.add(new CryptoCurrency("TRC", "Terracoin"));
+        result.add(new CryptoCurrency("STL", "Stellite"));
+        result.add(new CryptoCurrency("TRC", "Terracoin"));
         result.add(new CryptoCurrency("MVT", "The Movement", true));
 
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
@@ -160,7 +161,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
-        result.add(new CryptoCurrency("DARX", "BitDaric"));
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
