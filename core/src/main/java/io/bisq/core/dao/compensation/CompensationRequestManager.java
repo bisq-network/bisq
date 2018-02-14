@@ -17,18 +17,28 @@
 
 package io.bisq.core.dao.compensation;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.app.Version;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.exceptions.TransactionVerificationException;
+import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.ChangeBelowDustException;
+import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -37,11 +47,21 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CompensationRequestManager implements PersistedDataHost, BsqBlockChainListener, HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
@@ -49,9 +69,11 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
+    private final BtcWalletService btcWalletService;
     private final BsqBlockChain bsqBlockChain;
     private final Storage<CompensationRequestList> compensationRequestsStorage;
     private final PublicKey signaturePubKey;
+    private final FeeService feeService;
 
     @Getter
     private final ObservableList<CompensationRequest> allRequests = FXCollections.observableArrayList();
@@ -68,16 +90,20 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     @Inject
     public CompensationRequestManager(P2PService p2PService,
                                       BsqWalletService bsqWalletService,
+                                      BtcWalletService btcWalletService,
                                       DaoPeriodService daoPeriodService,
                                       BsqBlockChain bsqBlockChain,
                                       BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                       KeyRing keyRing,
-                                      Storage<CompensationRequestList> compensationRequestsStorage) {
+                                      Storage<CompensationRequestList> compensationRequestsStorage,
+                                      FeeService feeService) {
         this.p2PService = p2PService;
-        this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
+        this.btcWalletService = btcWalletService;
+        this.daoPeriodService = daoPeriodService;
         this.bsqBlockChain = bsqBlockChain;
         this.compensationRequestsStorage = compensationRequestsStorage;
+        this.feeService = feeService;
 
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
         bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
@@ -112,6 +138,79 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
         p2PService.addProtectedStorageEntry(compensationRequestPayload, true);
+    }
+
+    public CompensationRequest prepareCompensationRequest(CompensationRequestPayload compensationRequestPayload)
+            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException {
+        CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
+            compensationRequest.setFeeTx(bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee()));
+
+            String bsqAddress = compensationRequestPayload.getBsqAddress();
+            // Remove initial B
+            bsqAddress = bsqAddress.substring(1, bsqAddress.length());
+            checkArgument(!compensationRequest.getFeeTx().getInputs().isEmpty(), "preparedTx inputs must not be empty");
+
+            // We use the key of the first BSQ input for signing the data
+            TransactionOutput connectedOutput = compensationRequest.getFeeTx().getInputs().get(0).getConnectedOutput();
+            checkNotNull(connectedOutput, "connectedOutput must not be null");
+            DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+            checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
+
+            // We get the JSON of the object excluding signature and feeTxId
+            String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
+            // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
+            // encoded string.
+            String signature = bsqKeyPair.signMessage(payloadAsJson);
+            compensationRequestPayload.setSignature(signature);
+
+            String dataAndSig = payloadAsJson + signature;
+            byte[] dataAndSigAsBytes = dataAndSig.getBytes();
+            outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
+            outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
+            outputStream.write(Hash.getSha256Ripemd160hash(dataAndSigAsBytes));
+            byte opReturnData[] = outputStream.toByteArray();
+
+            //TODO should we store the hash in the compensationRequestPayload object?
+
+            //TODO 1 Btc output (small payment to own compensation receiving address)
+            compensationRequest.setTxWithBtcFee(
+                    btcWalletService.completePreparedCompensationRequestTx(
+                            compensationRequest.getRequestedBsq(),
+                            compensationRequest.getIssuanceAddress(bsqWalletService),
+                            compensationRequest.getFeeTx(),
+                            opReturnData));
+            if (contains(compensationRequestPayload))  {log.error("Req found");}
+            compensationRequest.setSignedTx(bsqWalletService.signTx(compensationRequest.getTxWithBtcFee()));
+            if (contains(compensationRequestPayload))  {log.error("Req found");}
+        }
+        if (contains(compensationRequestPayload))  {log.error("Req found");}
+        return compensationRequest;
+    }
+
+    public void commitCompensationRequest(CompensationRequest compensationRequest, FutureCallback<Transaction> callback) {
+        // We need to create another instance, otherwise the tx would trigger an invalid state exception
+        // if it gets committed 2 times
+        // We clone before commit to avoid unwanted side effects
+        final Transaction clonedTransaction = btcWalletService.getClonedTransaction(compensationRequest.getTxWithBtcFee());
+        bsqWalletService.commitTx(compensationRequest.getTxWithBtcFee());
+        btcWalletService.commitTx(clonedTransaction);
+        bsqWalletService.broadcastTx(compensationRequest.getSignedTx(), new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(@Nullable Transaction transaction) {
+                checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
+                compensationRequest.getPayload().setTxId(transaction.getHashAsString());
+                addToP2PNetwork(compensationRequest.getPayload());
+
+                callback.onSuccess(transaction);
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                callback.onFailure(t);
+            }
+        });
     }
 
     public boolean removeCompensationRequest(CompensationRequest compensationRequest) {
@@ -230,11 +329,13 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
             if (storeLocally)
                 compensationRequestsStorage.queueUpForSave(new CompensationRequestList(getAllRequests()), 500);
         } else {
-            log.warn("We have already an item with the same CompensationRequest.");
+            if (!isMine(compensationRequestPayload))
+                log.warn("We already have an item with the same CompensationRequest.");
         }
     }
 
     private void updateFilteredLists() {
+        // TODO: Does this only need to be set once to keep the list updated?
         pastRequests.setPredicate(daoPeriodService::isInPastCycle);
         activeRequests.setPredicate(compensationRequest -> {
             return daoPeriodService.isInCurrentCycle(compensationRequest) ||
