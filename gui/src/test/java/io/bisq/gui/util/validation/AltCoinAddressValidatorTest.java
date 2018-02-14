@@ -129,20 +129,6 @@ public class AltCoinAddressValidatorTest {
     }
 
     @Test
-    public void testDAI() {
-        AltCoinAddressValidator validator = new AltCoinAddressValidator();
-        validator.setCurrencyCode("DAI");
-
-        assertTrue(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
-        assertTrue(validator.validate("2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
-
-        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d1641353982266").isValid);
-        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
-        assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
-        assertFalse(validator.validate("").isValid);
-    }
-
-    @Test
     public void testPIVX() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
         validator.setCurrencyCode("PIVX");
@@ -594,6 +580,21 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("Se3x7svUnMMn2KoYLyYVHMJGRoB2R3V8K3LYuHAiEXgVac7vsmFiXUC8dSpJnjXDfwytKsQJV6HFH8MjwPagTJ2Aha46RZM").isValid); //Only 95 charecter, expected is 97.
         assertFalse(validator.validate("SX45GjRnvqheAgCpx4nJeKRjDtS5tYawxEP1GaTj79dTEm21Dtdxex6EHyDqBpofoDqW9k9uQWtkGgbbF8kiRSZ27AksBg7G111").isValid); //Address prefix is Se and not SX and not 99 chars.
         assertFalse(validator.validate("Se3F51UzpbVVnQRx2VNbcjfBoQJfeuyFF353i1jLnCZda9yVN3vy8csbYCESBvf38TFkchH1C1tMY6XHkC8L678K2vLsVZVMUII").isValid); //99 Charecters, expected is 97
+        assertFalse(validator.validate("").isValid);
+    }
+
+    // Added 0.6.6
+    @Test
+    public void testDAI() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("DAI");
+
+        assertTrue(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+        assertTrue(validator.validate("2a65Aca4D5fC5B5C859090a6c34d164135398226").isValid);
+
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d1641353982266").isValid);
+        assertFalse(validator.validate("0x2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
+        assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
         assertFalse(validator.validate("").isValid);
     }
 
