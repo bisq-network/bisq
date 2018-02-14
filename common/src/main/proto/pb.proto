@@ -832,6 +832,7 @@ message PaymentAccountPayload {
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
         UpholdAccountPayload uphold_account_payload = 16;
         CashAppAccountPayload cash_app_account_payload = 17;
+        MoneyBeamAccountPayload money_beam_account_payload = 18;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -947,6 +948,10 @@ message UpholdAccountPayload {
 }
 
 message CashAppAccountPayload {
+    string account_id = 1;
+}
+
+message MoneyBeamAccountPayload {
     string account_id = 1;
 }
 

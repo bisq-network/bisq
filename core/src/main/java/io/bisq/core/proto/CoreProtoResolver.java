@@ -64,6 +64,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return UpholdAccountPayload.fromProto(proto);
                 case CASH_APP_ACCOUNT_PAYLOAD:
                     return CashAppAccountPayload.fromProto(proto);
+                case MONEY_BEAM_ACCOUNT_PAYLOAD:
+                    return MoneyBeamAccountPayload.fromProto(proto);
                 case PERFECT_MONEY_ACCOUNT_PAYLOAD:
                     return PerfectMoneyAccountPayload.fromProto(proto);
                 case SWISH_ACCOUNT_PAYLOAD:

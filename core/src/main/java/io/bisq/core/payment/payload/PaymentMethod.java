@@ -49,6 +49,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String UPHOLD_ID = "UPHOLD";
     public static final String CASH_APP_ID = "CASH_APP";
+    public static final String MONEY_BEAM_ID = "MONEY_BEAM";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
@@ -69,6 +70,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod OK_PAY;
     public static PaymentMethod UPHOLD;
     public static PaymentMethod CASH_APP;
+    public static PaymentMethod MONEY_BEAM;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
     public static PaymentMethod SEPA_INSTANT;
@@ -163,6 +165,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // EUR
                     SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
                     SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, maxTradeLimitMidRisk),
+                    MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, maxTradeLimitMidRisk),
 
                     // UK
                     FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),

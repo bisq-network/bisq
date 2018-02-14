@@ -64,6 +64,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final OKPayValidator okPayValidator;
     private final UpholdValidator upholdValidator;
     private final CashAppValidator cashAppValidator;
+    private final MoneyBeamValidator moneyBeamValidator;
     private final AliPayValidator aliPayValidator;
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
@@ -89,6 +90,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             OKPayValidator okPayValidator,
                             UpholdValidator upholdValidator,
                             CashAppValidator cashAppValidator,
+                            MoneyBeamValidator moneyBeamValidator,
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
@@ -106,6 +108,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.okPayValidator = okPayValidator;
         this.upholdValidator = upholdValidator;
         this.cashAppValidator = cashAppValidator;
+        this.moneyBeamValidator = moneyBeamValidator;
         this.aliPayValidator = aliPayValidator;
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
@@ -349,6 +352,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_APP_ID:
                 return new CashAppForm(paymentAccount, accountAgeWitnessService, cashAppValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.MONEY_BEAM_ID:
+                return new MoneyBeamForm(paymentAccount, accountAgeWitnessService, moneyBeamValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
