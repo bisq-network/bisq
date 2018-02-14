@@ -196,6 +196,12 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "DAI":
+                    // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
