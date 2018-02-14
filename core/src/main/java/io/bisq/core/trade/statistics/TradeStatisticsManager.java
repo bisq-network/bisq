@@ -253,6 +253,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("REF");
         newlyAdded.add("DAI");
         newlyAdded.add("YTN");
+        newlyAdded.add("DARX");
 
         coinsWithValidator.addAll(newlyAdded);
 

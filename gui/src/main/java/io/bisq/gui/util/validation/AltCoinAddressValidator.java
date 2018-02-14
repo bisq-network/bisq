@@ -446,6 +446,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(true);
                 case "YTN":
                     return YTNAddressValidator.ValidateAddress(input);
+                case "DARX":
+                    if (!input.matches("^[R][a-km-zA-HJ-NP-Z1-9]{25,34}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                 // Add new coins at the end...
                 default:
