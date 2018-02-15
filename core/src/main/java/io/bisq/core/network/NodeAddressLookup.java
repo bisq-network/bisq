@@ -43,25 +43,33 @@ class NodeAddressLookup {
     }
 
     Set<NodeAddress> resolveNodeAddresses() {
-        NodeAddresses nodeAddresses = NodeAddresses.fromString(seedNodes);
+        NodeAddresses allNodeAddresses = getAllAddresses();
+
+        Set<String> bannedHosts = getBannedHosts();
+        allNodeAddresses = allNodeAddresses.excludeByHost(bannedHosts);
+
+        if (myAddress != null) {
+            allNodeAddresses = allNodeAddresses.excludeByFullAddress(myAddress);
+        }
+
+        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, allNodeAddresses);
+        return allNodeAddresses.toSet();
+    }
+
+    private NodeAddresses getAllAddresses() {
+        NodeAddresses nodeAddresses = Optional.ofNullable(seedNodes)
+                .map(nodes -> NodeAddresses.fromString(seedNodes))
+                .orElse(new NodeAddresses(Collections.emptySet()));
+
         if (nodeAddresses.isEmpty()) {
-            Set<NodeAddress> delegate = isLocalHostUsed
-                    ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
+            Set<NodeAddress> delegate = isLocalHostUsed ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
                     : DEFAULT_TOR_SEED_NODE_ADDRESSES;
             nodeAddresses = NodeAddresses.fromSet(delegate, networkId);
         }
-
-        Set<String> bannedHosts = getBannedHosts(environment);
-        nodeAddresses = nodeAddresses.excludeByHost(bannedHosts);
-
-        // TODO refactor when null
-        nodeAddresses = nodeAddresses.excludeByFullAddress(myAddress);
-
-        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, nodeAddresses);
-        return nodeAddresses.toSet();
+        return nodeAddresses;
     }
 
-    private Set<String> getBannedHosts(BisqEnvironment environment) {
+    private Set<String> getBannedHosts() {
         return Optional.ofNullable(environment.getBannedSeedNodes())
                 .map(HashSet::new)
                 .map(hosts -> (Set<String>) hosts)

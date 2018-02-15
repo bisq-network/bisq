@@ -5,23 +5,19 @@ import com.google.common.collect.ImmutableSet;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+// TODO to many methods
 class NodeAddresses {
     private final Set<NodeAddress> delegate;
 
-    static NodeAddresses fromString(@Nullable String seedNodes) {
-        Set<NodeAddress> addresses = Optional.ofNullable(seedNodes)
-                .map(StringUtils::deleteWhitespace)
-                .map(nodes -> nodes.split(","))
-                .map(Arrays::stream)
-                .orElse(Stream.empty())
+    static NodeAddresses fromString(String seedNodes) {
+        String trimmed = StringUtils.deleteWhitespace(seedNodes);
+        String[] nodes = trimmed.split(",");
+        Set<NodeAddress> addresses = Arrays.stream(nodes)
                 .map(NodeAddress::new)
                 .collect(Collectors.toSet());
         return new NodeAddresses(addresses);
@@ -34,7 +30,7 @@ class NodeAddresses {
         return new NodeAddresses(delegate);
     }
 
-    private NodeAddresses(Set<NodeAddress> delegate) {
+    NodeAddresses(Set<NodeAddress> delegate) {
         this.delegate = delegate;
     }
 
