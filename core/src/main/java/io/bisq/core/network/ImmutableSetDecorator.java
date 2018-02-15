@@ -7,10 +7,10 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Set;
 
-class AbstractImmutableSetDecorator<T> extends AbstractSet<T> {
+class ImmutableSetDecorator<T> extends AbstractSet<T> {
     private final Set<T> delegate;
 
-    AbstractImmutableSetDecorator(Set<T> delegate) {
+    ImmutableSetDecorator(Set<T> delegate) {
         this.delegate = ImmutableSet.copyOf(delegate);
     }
 

@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-class NodeAddresses extends AbstractImmutableSetDecorator<NodeAddress> {
+class NodeAddresses extends ImmutableSetDecorator<NodeAddress> {
     static NodeAddresses fromString(String seedNodes) {
         String trimmed = StringUtils.deleteWhitespace(seedNodes);
         String[] nodes = trimmed.split(",");
