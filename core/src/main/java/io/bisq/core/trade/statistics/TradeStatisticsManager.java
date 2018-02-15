@@ -251,7 +251,12 @@ public class TradeStatisticsManager {
         newlyAdded.add("BETR");
         newlyAdded.add("MVT");
         newlyAdded.add("REF");
-
+        // v0.6.6
+        newlyAdded.add("STL");
+        newlyAdded.add("DAI");
+        newlyAdded.add("YTN");
+        newlyAdded.add("DARX");
+        newlyAdded.add("ODN");
 
         coinsWithValidator.addAll(newlyAdded);
 
