@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
+@NotThreadSafe
 public class CoreSeedNodesRepository implements SeedNodesRepository {
 
     @Getter
@@ -53,11 +55,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             log.info("seedNodeAddresses={}", seedNodeAddresses);
         else
             log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
-    }
-
-    public CoreSeedNodesRepository(Set<NodeAddress> seedNodeAddresses) {
-        this.seedNodeAddresses = seedNodeAddresses;
-
     }
 
     public String getOperator(NodeAddress nodeAddress) {

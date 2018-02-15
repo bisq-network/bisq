@@ -27,7 +27,7 @@ class NodeAddresses {
         return new NodeAddresses(addresses);
     }
 
-    static NodeAddresses createFromSet(Set<NodeAddress> addresses, int networkId) {
+    static NodeAddresses fromSet(Set<NodeAddress> addresses, int networkId) {
         Set<NodeAddress> delegate = addresses.stream()
                 .filter(address -> isAddressFromNetwork(address, networkId))
                 .collect(Collectors.toSet());
