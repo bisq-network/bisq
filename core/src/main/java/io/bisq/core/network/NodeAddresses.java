@@ -1,5 +1,6 @@
 package io.bisq.core.network;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +16,7 @@ import java.util.stream.Stream;
 class NodeAddresses {
     private final Set<NodeAddress> delegate;
 
-    static NodeAddresses createFromSeedNodes(@Nullable String seedNodes) {
+    static NodeAddresses fromString(@Nullable String seedNodes) {
         Set<NodeAddress> addresses = Optional.ofNullable(seedNodes)
                 .map(StringUtils::deleteWhitespace)
                 .map(nodes -> nodes.split(","))
@@ -65,5 +66,12 @@ class NodeAddresses {
 
     Set<NodeAddress> toSet() {
         return ImmutableSet.copyOf(delegate);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("delegate", delegate)
+                .toString();
     }
 }

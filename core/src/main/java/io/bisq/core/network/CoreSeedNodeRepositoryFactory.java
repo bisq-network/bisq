@@ -5,15 +5,14 @@ import com.google.inject.name.Named;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.NodeAddress;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 class CoreSeedNodeRepositoryFactory {
     private static final Logger log = LoggerFactory.getLogger(CoreSeedNodeRepositoryFactory.class);
@@ -89,74 +88,38 @@ class CoreSeedNodeRepositoryFactory {
             new NodeAddress("acyvotgewx46pebw.onion:8003"),
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
 
-            // DOGE mainnet
-            // new NodeAddress("t6bwuj75mvxswavs.onion:8006"), removed in version 0.6 (DOGE not supported anymore)
-
             // DASH mainnet
             new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
             new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
     );
 
 
-    CoreSeedNodesRepository create(BisqEnvironment bisqEnvironment,
+    CoreSeedNodesRepository create(BisqEnvironment environment,
                                    @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                                    @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
                                    @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
                                    @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
-
-        Set<NodeAddress> nodeAddresses = createFromSeedNodes(seedNodes);
+        NodeAddresses nodeAddresses = NodeAddresses.fromString(seedNodes);
         if (nodeAddresses.isEmpty()) {
-            nodeAddresses = createFromDefault(useLocalhostForP2P, networkId);
+            Set<NodeAddress> delegate = useLocalhostForP2P
+                    ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
+                    : DEFAULT_TOR_SEED_NODE_ADDRESSES;
+            nodeAddresses = NodeAddresses.createFromSet(delegate, networkId);
         }
 
-        Set<String> bannedHosts = Optional.ofNullable(bisqEnvironment.getBannedSeedNodes())
+        Set<String> bannedHosts = getBannedHosts(environment);
+        nodeAddresses = nodeAddresses.excludeByHost(bannedHosts);
+
+        nodeAddresses = nodeAddresses.excludeByFullAddress(myAddress);
+
+        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, nodeAddresses);
+        return new CoreSeedNodesRepository(nodeAddresses.toSet());
+    }
+
+    private Set<String> getBannedHosts(BisqEnvironment environment) {
+        return Optional.ofNullable(environment.getBannedSeedNodes())
                 .map(HashSet::new)
                 .map(hosts -> (Set<String>) hosts)
                 .orElse(Collections.emptySet());
-
-
-        Set<NodeAddress> seedNodeAddresses = nodeAddresses.stream()
-                .filter(e -> myAddress == null || myAddress.isEmpty() || !e.getFullAddress().equals(myAddress))
-                .filter(e -> !bannedHosts.contains(e.getHostName()))
-                .collect(Collectors.toSet());
-
-        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, seedNodeAddresses);
-
-        return new CoreSeedNodesRepository(seedNodeAddresses);
-    }
-
-    private boolean isBanned(NodeAddress address, Set<String> bannedHosts) {
-        Predicate<NodeAddress> isBanned = address -> bannedHosts.contains(address.getHostName());
-
-        return addresses.stream()
-                .filter(isBanned.negate())
-                .collect(Collectors.toSet());
-    }
-
-    private Set<NodeAddress> createFromSeedNodes(@Nullable String seedNodes) {
-        return Optional.ofNullable(seedNodes)
-                .map(StringUtils::deleteWhitespace)
-                .map(nodes -> nodes.split(","))
-                .map(Arrays::stream)
-                .orElse(Stream.empty())
-                .map(NodeAddress::new)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<NodeAddress> createFromDefault(boolean isLocalHostUsed, int networkId) {
-        Set<NodeAddress> result = isLocalHostUsed
-                ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
-                : DEFAULT_TOR_SEED_NODE_ADDRESSES;
-
-        return result.stream()
-                .filter(address -> isAddressFromNetwork(address, networkId))
-                .collect(Collectors.toSet());
-    }
-
-    private boolean isAddressFromNetwork(NodeAddress address, int networkId) {
-        String suffix = "0" + networkId;
-        int port = address.getPort();
-        String portAsString = String.valueOf(port);
-        return portAsString.endsWith(suffix);
     }
 }
