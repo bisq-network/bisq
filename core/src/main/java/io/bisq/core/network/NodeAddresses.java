@@ -1,73 +1,43 @@
 package io.bisq.core.network;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-// TODO to many methods
-class NodeAddresses {
-    private final Set<NodeAddress> delegate;
-
+class NodeAddresses extends AbstractImmutableSetDecorator<NodeAddress> {
     static NodeAddresses fromString(String seedNodes) {
         String trimmed = StringUtils.deleteWhitespace(seedNodes);
         String[] nodes = trimmed.split(",");
-        Set<NodeAddress> addresses = Arrays.stream(nodes)
+        return Arrays.stream(nodes)
                 .map(NodeAddress::new)
-                .collect(Collectors.toSet());
-        return new NodeAddresses(addresses);
-    }
-
-    static NodeAddresses fromSet(Set<NodeAddress> addresses, int networkId) {
-        Set<NodeAddress> delegate = addresses.stream()
-                .filter(address -> isAddressFromNetwork(address, networkId))
-                .collect(Collectors.toSet());
-        return new NodeAddresses(delegate);
+                .collect(collector());
     }
 
     NodeAddresses(Set<NodeAddress> delegate) {
-        this.delegate = delegate;
-    }
-
-    private static boolean isAddressFromNetwork(NodeAddress address, int networkId) {
-        String suffix = "0" + networkId;
-        int port = address.getPort();
-        String portAsString = String.valueOf(port);
-        return portAsString.endsWith(suffix);
+        super(delegate);
     }
 
     NodeAddresses excludeByHost(Set<String> hosts) {
-        Set<NodeAddress> addresses = new HashSet<>(delegate);
-        addresses.removeIf(address -> {
+        Set<NodeAddress> copy = new HashSet<>(this);
+        copy.removeIf(address -> {
             String hostName = address.getHostName();
             return !hosts.contains(hostName);
         });
-        return new NodeAddresses(addresses);
+        return new NodeAddresses(copy);
     }
 
     NodeAddresses excludeByFullAddress(String fullAddress) {
-        Set<NodeAddress> addresses = new HashSet<>(delegate);
-        addresses.removeIf(address -> fullAddress.equals(address.getFullAddress()));
-        return new NodeAddresses(delegate);
+        Set<NodeAddress> copy = new HashSet<>(this);
+        copy.removeIf(address -> fullAddress.equals(address.getFullAddress()));
+        return new NodeAddresses(copy);
     }
 
-    boolean isEmpty() {
-        return delegate.isEmpty();
-    }
-
-    Set<NodeAddress> toSet() {
-        return ImmutableSet.copyOf(delegate);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("delegate", delegate)
-                .toString();
+    static Collector<NodeAddress, ?, NodeAddresses> collector() {
+        return Collectors.collectingAndThen(Collectors.toSet(), NodeAddresses::new);
     }
 }

@@ -53,7 +53,14 @@ class NodeAddressLookup {
         }
 
         log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, allNodeAddresses);
-        return allNodeAddresses.toSet();
+        return allNodeAddresses;
+    }
+
+    private Set<String> getBannedHosts() {
+        return Optional.ofNullable(environment.getBannedSeedNodes())
+                .map(HashSet::new)
+                .map(hosts -> (Set<String>) hosts)
+                .orElse(Collections.emptySet());
     }
 
     private NodeAddresses getAllAddresses() {
@@ -62,17 +69,20 @@ class NodeAddressLookup {
                 .orElse(new NodeAddresses(Collections.emptySet()));
 
         if (nodeAddresses.isEmpty()) {
-            Set<NodeAddress> delegate = isLocalHostUsed ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
+            Set<NodeAddress> delegate = isLocalHostUsed
+                    ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
                     : DEFAULT_TOR_SEED_NODE_ADDRESSES;
-            nodeAddresses = NodeAddresses.fromSet(delegate, networkId);
+            nodeAddresses = delegate.stream()
+                    .filter(address -> isAddressFromNetwork(address, networkId))
+                    .collect(NodeAddresses.collector());
         }
         return nodeAddresses;
     }
 
-    private Set<String> getBannedHosts() {
-        return Optional.ofNullable(environment.getBannedSeedNodes())
-                .map(HashSet::new)
-                .map(hosts -> (Set<String>) hosts)
-                .orElse(Collections.emptySet());
+    private static boolean isAddressFromNetwork(NodeAddress address, int networkId) {
+        String suffix = "0" + networkId;
+        int port = address.getPort();
+        String portAsString = String.valueOf(port);
+        return portAsString.endsWith(suffix);
     }
 }
