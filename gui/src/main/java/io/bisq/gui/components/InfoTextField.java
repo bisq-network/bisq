@@ -20,15 +20,14 @@ public class InfoTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(InfoTextField.class);
 
     private final StringProperty text = new SimpleStringProperty();
-    private final Label infoIcon;
+    protected final Label infoIcon;
+    protected final TextField textField;
     private Boolean hidePopover;
     private PopOver infoPopover;
 
     public InfoTextField() {
-        TextField textField = new TextField();
-        // might be removed if no styling is necessary
+        textField = new TextField();
         textField.setEditable(false);
-        textField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
         textField.textProperty().bind(text);
         textField.setFocusTraversable(false);
 
@@ -97,7 +96,7 @@ public class InfoTextField extends AnchorPane {
         return text.get();
     }
 
-    public StringProperty amountProperty() {
+    public StringProperty textProperty() {
         return text;
     }
 }
