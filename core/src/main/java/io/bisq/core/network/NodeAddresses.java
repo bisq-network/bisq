@@ -26,7 +26,7 @@ class NodeAddresses extends ImmutableSetDecorator<NodeAddress> {
         Set<NodeAddress> copy = new HashSet<>(this);
         copy.removeIf(address -> {
             String hostName = address.getHostName();
-            return !hosts.contains(hostName);
+            return hosts.contains(hostName);
         });
         return new NodeAddresses(copy);
     }
