@@ -81,4 +81,7 @@ class DefaultNodeAddresses {
             new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
             new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
     );
+
+    private DefaultNodeAddresses() {
+    }
 }
