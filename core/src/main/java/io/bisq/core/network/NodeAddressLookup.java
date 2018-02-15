@@ -17,8 +17,7 @@ import java.util.Set;
 import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
 import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
 
-// TODO bind
-class NodeAddressLookup {
+public class NodeAddressLookup {
     private static final Logger log = LoggerFactory.getLogger(NodeAddressLookup.class);
 
     private final BisqEnvironment environment;

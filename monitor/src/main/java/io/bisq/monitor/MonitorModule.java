@@ -32,6 +32,7 @@ import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.network.CoreSeedNodesRepository;
+import io.bisq.core.network.NodeAddressLookup;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.network.CoreNetworkProtoResolver;
 import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -70,6 +71,7 @@ class MonitorModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
+        bind(NodeAddressLookup.class).in(Singleton.class);
         bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
