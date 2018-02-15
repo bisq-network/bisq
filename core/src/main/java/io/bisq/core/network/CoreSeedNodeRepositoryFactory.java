@@ -1,6 +1,6 @@
 package io.bisq.core.network;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.name.Named;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.NetworkOptionKeys;
@@ -10,10 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class CoreSeedNodeRepositoryFactory {
     private static final Logger log = LoggerFactory.getLogger(CoreSeedNodeRepositoryFactory.class);
@@ -22,7 +22,7 @@ class CoreSeedNodeRepositoryFactory {
     // - mainnet use port ends in 0
     // - testnet use port ends in 1
     // - regtest use port ends in 2
-    private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
+    private static final Set<NodeAddress> DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES = ImmutableSet.of(
             // BTC
             // mainnet
             new NodeAddress("localhost:2000"),
@@ -57,8 +57,7 @@ class CoreSeedNodeRepositoryFactory {
     // - mainnet uses port 8000
     // - testnet uses port 8001
     // - regtest uses port 8002
-    @SuppressWarnings("ConstantConditions")
-    private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
+    private static final Set<NodeAddress> DEFAULT_TOR_SEED_NODE_ADDRESSES = ImmutableSet.of(
             // BTC mainnet
             new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @miker
             new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy
@@ -104,30 +103,60 @@ class CoreSeedNodeRepositoryFactory {
                                    @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
                                    @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
                                    @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
-        List<String> bannedNodes = bisqEnvironment.getBannedSeedNodes();
-        Set<NodeAddress> nodeAddresses;
-        if (seedNodes != null && !seedNodes.isEmpty()) {
-            nodeAddresses = Arrays.asList(StringUtils.deleteWhitespace(seedNodes).split(","))
-                    .stream()
-                    .map(NodeAddress::new)
-                    .collect(Collectors.toSet());
-        } else {
-            nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
-            nodeAddresses = nodeAddresses.stream()
-                    .filter(e -> String.valueOf(e.getPort()).endsWith("0" + String.valueOf(networkId)))
-                    .collect(Collectors.toSet());
+
+        Set<NodeAddress> nodeAddresses = createFromSeedNodes(seedNodes);
+        if (nodeAddresses.isEmpty()) {
+            nodeAddresses = createFromDefault(useLocalhostForP2P, networkId);
         }
+
+        Set<String> bannedHosts = Optional.ofNullable(bisqEnvironment.getBannedSeedNodes())
+                .map(HashSet::new)
+                .map(hosts -> (Set<String>) hosts)
+                .orElse(Collections.emptySet());
+
 
         Set<NodeAddress> seedNodeAddresses = nodeAddresses.stream()
                 .filter(e -> myAddress == null || myAddress.isEmpty() || !e.getFullAddress().equals(myAddress))
-                .filter(e -> bannedNodes == null || !bannedNodes.contains(e.getHostName()))
+                .filter(e -> !bannedHosts.contains(e.getHostName()))
                 .collect(Collectors.toSet());
 
-        if (bannedNodes == null)
-            log.info("seedNodeAddresses={}", seedNodeAddresses);
-        else
-            log.warn("We received banned seed nodes={}, seedNodeAddresses={}", bannedNodes, seedNodeAddresses);
+        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, seedNodeAddresses);
 
         return new CoreSeedNodesRepository(seedNodeAddresses);
+    }
+
+    private boolean isBanned(NodeAddress address, Set<String> bannedHosts) {
+        Predicate<NodeAddress> isBanned = address -> bannedHosts.contains(address.getHostName());
+
+        return addresses.stream()
+                .filter(isBanned.negate())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<NodeAddress> createFromSeedNodes(@Nullable String seedNodes) {
+        return Optional.ofNullable(seedNodes)
+                .map(StringUtils::deleteWhitespace)
+                .map(nodes -> nodes.split(","))
+                .map(Arrays::stream)
+                .orElse(Stream.empty())
+                .map(NodeAddress::new)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<NodeAddress> createFromDefault(boolean isLocalHostUsed, int networkId) {
+        Set<NodeAddress> result = isLocalHostUsed
+                ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
+                : DEFAULT_TOR_SEED_NODE_ADDRESSES;
+
+        return result.stream()
+                .filter(address -> isAddressFromNetwork(address, networkId))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isAddressFromNetwork(NodeAddress address, int networkId) {
+        String suffix = "0" + networkId;
+        int port = address.getPort();
+        String portAsString = String.valueOf(port);
+        return portAsString.endsWith(suffix);
     }
 }
