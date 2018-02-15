@@ -512,7 +512,7 @@ public class BSFormatter {
         } else
             format += "H\' " + hours + ", \'m\' " + minutes + "\'";
 
-        String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : Res.get("formatter.tradePeriodOver");
+        String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : "";
 
         duration = StringUtils.replaceOnce(duration, "1 " + seconds, "1 " + second);
         duration = StringUtils.replaceOnce(duration, "1 " + minutes, "1 " + minute);

@@ -207,10 +207,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             reverseTableColumns();
                         }
 
-                        leftHeaderLabel.setText(Res.get("market.offerBook.leftHeaderLabel", code, Res.getBaseCurrencyCode()));
+                        leftHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", code));
                         leftButton.setText(Res.get("market.offerBook.leftButtonAltcoin", code, Res.getBaseCurrencyCode()));
 
-                        rightHeaderLabel.setText(Res.get("market.offerBook.rightHeaderLabel", code, Res.getBaseCurrencyCode()));
+                        rightHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", code));
                         rightButton.setText(Res.get("market.offerBook.rightButtonAltcoin", code, Res.getBaseCurrencyCode()));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
@@ -220,10 +220,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             reverseTableColumns();
                         }
 
-                        leftHeaderLabel.setText(Res.get("market.offerBook.rightHeaderLabel", Res.getBaseCurrencyCode(), code));
+                        leftHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", Res.getBaseCurrencyCode()));
                         leftButton.setText(Res.get("market.offerBook.rightButtonFiat", Res.getBaseCurrencyCode(), code));
 
-                        rightHeaderLabel.setText(Res.get("market.offerBook.leftHeaderLabel", Res.getBaseCurrencyCode(), code));
+                        rightHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", Res.getBaseCurrencyCode()));
                         rightButton.setText(Res.get("market.offerBook.leftButtonFiat", Res.getBaseCurrencyCode(), code));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
@@ -438,17 +438,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 */
-        if (direction == OfferPayload.Direction.BUY) {
-            // tableView.getColumns().add(accumulatedColumn);
-            tableView.getColumns().add(volumeColumn);
-            tableView.getColumns().add(amountColumn);
-            tableView.getColumns().add(priceColumn);
-        } else {
-            tableView.getColumns().add(priceColumn);
-            tableView.getColumns().add(amountColumn);
-            tableView.getColumns().add(volumeColumn);
-            //tableView.getColumns().add(accumulatedColumn);
-        }
+        tableView.getColumns().add(volumeColumn);
+        tableView.getColumns().add(amountColumn);
+        tableView.getColumns().add(priceColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));

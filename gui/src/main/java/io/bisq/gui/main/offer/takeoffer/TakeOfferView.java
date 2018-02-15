@@ -420,8 +420,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
 
-        totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
-                model.getSecurityDepositPercentage(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
+        totalToPayTextField.setFundsStructure(Res.get("takeOffer.fundsBox.fundsStructure",
+                model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
         totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         if (model.dataModel.isWalletFunded.get()) {
@@ -462,7 +462,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addBindings() {
         amountTextField.textProperty().bindBidirectional(model.amount);
         volumeTextField.textProperty().bindBidirectional(model.volume);
-        totalToPayTextField.amountProperty().bind(model.totalToPay);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCurrencyPair(model.dataModel.getCurrencyCode())));
@@ -481,7 +481,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void removeBindings() {
         amountTextField.textProperty().unbindBidirectional(model.amount);
         volumeTextField.textProperty().unbindBidirectional(model.volume);
-        totalToPayTextField.amountProperty().unbind();
+        totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();

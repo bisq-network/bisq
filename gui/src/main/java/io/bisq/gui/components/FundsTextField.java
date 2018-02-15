@@ -19,6 +19,7 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import javafx.beans.binding.Bindings;
@@ -33,13 +34,12 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FundsTextField extends AnchorPane {
+import java.util.concurrent.TimeUnit;
+
+public class FundsTextField extends InfoTextField {
     public static final Logger log = LoggerFactory.getLogger(FundsTextField.class);
 
-    private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty fundsStructure = new SimpleStringProperty();
-    private final Label infoIcon;
-    private PopOver infoPopover;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -47,20 +47,9 @@ public class FundsTextField extends AnchorPane {
 
 
     public FundsTextField() {
-
-        TextField textField = new TextField();
-        // might be removed if no styling is necessary
-        textField.setId("amount-text-field");
-        textField.setEditable(false);
-        textField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
-        textField.textProperty().bind(Bindings.concat(amount, " ", fundsStructure));
-        textField.setFocusTraversable(false);
-
-        infoIcon = new Label();
-        infoIcon.setLayoutY(3);
-        infoIcon.setId("clickable-icon");
-        infoIcon.getStyleClass().addAll("highlight", "show-hand");
-        AwesomeDude.setIcon(infoIcon, AwesomeIcon.INFO_SIGN);
+        super();
+        textField.textProperty().unbind();
+        textField.textProperty().bind(Bindings.concat(textProperty(), " ", fundsStructure));
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -68,7 +57,7 @@ public class FundsTextField extends AnchorPane {
         Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            String text = getAmount();
+            String text = getText();
             if (text != null && text.length() > 0) {
                 String copyText;
                 String[] strings = text.split(" ");
@@ -81,59 +70,16 @@ public class FundsTextField extends AnchorPane {
             }
         });
 
-        AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(infoIcon, 37.0);
-        AnchorPane.setRightAnchor(textField, 30.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(copyIcon, 30.0);
+        AnchorPane.setRightAnchor(infoIcon, 62.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
 
-        getChildren().addAll(textField, infoIcon, copyIcon);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setContentForInfoPopOver(Node node) {
-        // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        infoIcon.setOnMouseEntered(e -> createInfoPopOver(node));
-        infoIcon.setOnMouseExited(e -> {
-            if (infoPopover != null)
-                infoPopover.hide();
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void createInfoPopOver(Node node) {
-        node.getStyleClass().add("default-text");
-
-        infoPopover = new PopOver(node);
-        if (infoIcon.getScene() != null) {
-            infoPopover.setDetachable(false);
-            infoPopover.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
-            infoPopover.setArrowIndent(5);
-
-            infoPopover.show(infoIcon, -17);
-        }
+        getChildren().add(copyIcon);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters/Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setAmount(String amount) {
-        this.amount.set(amount);
-    }
-
-    public String getAmount() {
-        return amount.get();
-    }
-
-    public StringProperty amountProperty() {
-        return amount;
-    }
 
     public void setFundsStructure(String fundsStructure) {
         this.fundsStructure.set(fundsStructure);

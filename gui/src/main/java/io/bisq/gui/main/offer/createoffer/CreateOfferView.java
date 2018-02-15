@@ -410,7 +410,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2.setVisible(true);
 
         totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
-                model.getSecurityDepositPercentage(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
+                model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
         totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         final byte[] imageBytes = QRCode
@@ -496,7 +496,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceTextField.textProperty().bindBidirectional(model.marketPriceMargin);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
-        totalToPayTextField.amountProperty().bind(model.totalToPay);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         buyerSecurityDepositInputTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
 
@@ -544,7 +544,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
-        totalToPayTextField.amountProperty().unbind();
+        totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         buyerSecurityDepositInputTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
 
