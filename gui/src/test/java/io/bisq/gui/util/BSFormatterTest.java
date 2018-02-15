@@ -18,21 +18,31 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Volume;
+import io.bisq.core.offer.Offer;
+import org.bitcoinj.core.Coin;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Offer.class)
 public class BSFormatterTest {
 
     private BSFormatter formatter;
 
     @Before
-    public void setup() {
+    public void setUp() {
         Locale.setDefault(new Locale("en", "US"));
         formatter = new BSFormatter();
         Res.setBaseCurrencyCode("BTC");
@@ -66,5 +76,62 @@ public class BSFormatterTest {
         assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords(oneHour + oneSecond * 2, true));
         assertEquals("", formatter.formatDurationAsWords(0));
         assertTrue(formatter.formatDurationAsWords(0).isEmpty());
+    }
+
+    @Test
+    public void testFormatSameVolume() {
+        Offer offer = mock(Offer.class);
+        Volume btc = Volume.parse("0.10", "BTC");
+        when(offer.getMinVolume()).thenReturn(btc);
+        when(offer.getVolume()).thenReturn(btc);
+
+        assertEquals("0.10000000", formatter.formatMinVolumeAndVolume(offer));
+    }
+
+    @Test
+    public void testFormatDifferentVolume() {
+        Offer offer = mock(Offer.class);
+        Volume btcMin = Volume.parse("0.10", "BTC");
+        Volume btcMax = Volume.parse("0.25", "BTC");
+        when(offer.getMinVolume()).thenReturn(btcMin);
+        when(offer.getVolume()).thenReturn(btcMax);
+
+        assertEquals("0.10000000 - 0.25000000", formatter.formatMinVolumeAndVolume(offer));
+    }
+
+    @Test
+    public void testFormatNullVolume() {
+        Offer offer = mock(Offer.class);
+        when(offer.getMinVolume()).thenReturn(null);
+        when(offer.getVolume()).thenReturn(null);
+
+        assertEquals("", formatter.formatMinVolumeAndVolume(offer));
+    }
+
+    @Test
+    public void testFormatSameAmount() {
+        Offer offer = mock(Offer.class);
+        when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
+        when(offer.getAmount()).thenReturn(Coin.valueOf(10000000));
+
+        assertEquals("0.10", formatter.formatAmountWithMinAmount(offer));
+    }
+
+    @Test
+    public void testFormatDifferentAmount() {
+        Offer offer = mock(Offer.class);
+        when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
+        when(offer.getAmount()).thenReturn(Coin.valueOf(20000000));
+
+        assertEquals("0.10 - 0.20", formatter.formatAmountWithMinAmount(offer));
+    }
+
+    @Test
+    public void testFormatNullAmount() {
+        Offer offer = mock(Offer.class);
+        when(offer.getMinAmount()).thenReturn(null);
+        when(offer.getAmount()).thenReturn(null);
+
+        assertEquals("", formatter.formatAmountWithMinAmount(offer));
     }
 }
