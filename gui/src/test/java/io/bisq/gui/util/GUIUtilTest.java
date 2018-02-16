@@ -27,9 +27,8 @@ public class GUIUtilTest {
 
     @Test
     public void testTradeCurrencyConverter() {
-        Res.setBaseCurrencyCode("EUR");
-        Res.setBaseCurrencyName("Euro");
         Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
+            put("BTC", 11);
             put("EUR", 10);
         }};
         StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter(
@@ -38,6 +37,7 @@ public class GUIUtilTest {
                 offerCounts
         );
 
+        assertEquals("✦ BTC (BTC) - 11 offers", tradeCurrencyConverter.toString(bitcoin));
         assertEquals("★ Euro (EUR) - 10 offers", tradeCurrencyConverter.toString(euro));
     }
 
