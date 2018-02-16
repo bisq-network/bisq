@@ -721,6 +721,10 @@ textfield */
     -fx-alignment: center;
 }
 
+.offer-table .table-row-cell {
+    -fx-cell-size: 23px;
+}
+
 /* Offer */
 
 .percentage-label {
