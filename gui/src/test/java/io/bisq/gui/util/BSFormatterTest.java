@@ -20,6 +20,7 @@ package io.bisq.gui.util;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(Offer.class)
+@PrepareForTest({Offer.class,OfferPayload.class})
 public class BSFormatterTest {
 
     private BSFormatter formatter;
@@ -93,6 +94,7 @@ public class BSFormatterTest {
         Offer offer = mock(Offer.class);
         Volume btcMin = Volume.parse("0.10", "BTC");
         Volume btcMax = Volume.parse("0.25", "BTC");
+        when(offer.isRange()).thenReturn(true);
         when(offer.getMinVolume()).thenReturn(btcMin);
         when(offer.getVolume()).thenReturn(btcMax);
 
@@ -119,9 +121,10 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatDifferentAmount() {
-        Offer offer = mock(Offer.class);
-        when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
-        when(offer.getAmount()).thenReturn(Coin.valueOf(20000000));
+        OfferPayload offerPayload = mock(OfferPayload.class);
+        Offer offer = new Offer(offerPayload);
+        when(offerPayload.getMinAmount()).thenReturn(10000000L);
+        when(offerPayload.getAmount()).thenReturn(20000000L);
 
         assertEquals("0.10 - 0.20", formatter.formatAmountWithMinAmount(offer));
     }

@@ -270,6 +270,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return Coin.valueOf(offerPayload.getMinAmount());
     }
 
+    public boolean isRange() {
+        return offerPayload.getAmount() != offerPayload.getMinAmount();
+    }
+
     public Date getDate() {
         return new Date(offerPayload.getDate());
     }

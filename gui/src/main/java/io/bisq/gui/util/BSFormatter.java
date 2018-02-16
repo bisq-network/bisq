@@ -303,16 +303,7 @@ public class BSFormatter {
     }
 
     public String formatMinVolumeAndVolume(Offer offer) {
-        String volume = "";
-
-        if (offer.getMinVolume() != null) {
-            if (offer.getMinVolume().equals(offer.getVolume())) {
-                volume = formatVolume(offer.getVolume());
-            } else {
-                volume = formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume());
-            }
-        }
-        return volume;
+        return offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
     }
 
 
@@ -325,16 +316,7 @@ public class BSFormatter {
     }
 
     public String formatAmountWithMinAmount(Offer offer) {
-        String amount = "";
-
-        if (offer.getMinAmount() != null) {
-            if (offer.getMinAmount().equals(offer.getAmount())) {
-                amount = formatCoin(offer.getAmount());
-            } else {
-                amount = formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
-            }
-        }
-        return amount;
+        return offer.isRange() ? formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
     }
 
 
