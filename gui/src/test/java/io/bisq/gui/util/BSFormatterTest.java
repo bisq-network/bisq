@@ -18,25 +18,18 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.VolumeMaker;
-import org.bitcoinj.core.CoinMaker;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static com.natpryce.makeiteasy.MakeItEasy.a;
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.common.monetary.PriceMaker.ltcPrice;
+import static com.natpryce.makeiteasy.MakeItEasy.*;
 import static io.bisq.common.monetary.PriceMaker.priceString;
 import static io.bisq.common.monetary.PriceMaker.usdPrice;
 import static io.bisq.common.monetary.VolumeMaker.usdVolume;
 import static io.bisq.common.monetary.VolumeMaker.volumeString;
-import static org.bitcoinj.core.CoinMaker.Coin;
-import static org.bitcoinj.core.CoinMaker.oneBitcoin;
-import static org.bitcoinj.core.CoinMaker.satoshis;
+import static org.bitcoinj.core.CoinMaker.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
