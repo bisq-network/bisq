@@ -273,28 +273,6 @@ public class GUIUtil {
         };
     }
 
-    @Deprecated
-    public static StringConverter<TradeCurrency> getTradeCurrencyConverter() {
-        return new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                String code = tradeCurrency.getCode();
-                final String displayString = CurrencyUtil.getNameAndCode(code);
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ " + Res.get("list.currency.showAll");
-                else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ " + Res.get("list.currency.editList");
-                return tradeCurrency.getDisplayPrefix() + displayString;
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        };
-    }
-
     public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
