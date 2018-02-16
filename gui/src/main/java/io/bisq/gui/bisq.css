@@ -177,6 +177,11 @@ bg color of non edit textFields: fafafa
 .warning {
     -fx-text-fill: -bs-yellow;
 }
+
+.zero-decimals {
+    -fx-fill: -bs-light-grey;
+}
+
 /* Other UI Elements */
 
 .separator {

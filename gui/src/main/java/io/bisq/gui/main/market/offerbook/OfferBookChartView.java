@@ -29,6 +29,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipTableColumn;
+import io.bisq.gui.components.ColoredDecimalPlacesWithZerosText;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
@@ -54,6 +55,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxmisc.easybind.EasyBind;
@@ -410,8 +415,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             @Override
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
-                                if (offerListItem != null && !empty)
-                                    setText(formatter.formatCoin(offerListItem.offer.getAmount(),4));
+                                if (offerListItem != null && !empty) {
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(offerListItem.offer.getAmount(), 4)));
+                                }
                                 else
                                     setText("");
                             }
