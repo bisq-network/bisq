@@ -302,6 +302,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tableView.setMinHeight(109);
         tableView.setPrefHeight(121);
         tableView.setMinWidth(480);
+        tableView.getStyleClass().add("offer-table");
 
         // price
         TableColumn<OfferListItem, OfferListItem> priceColumn = new TableColumn<>();
