@@ -118,7 +118,7 @@ public class CompensationViewItem {
             AnchorPane.setLeftAnchor(gridPane, 25d);
             AnchorPane.setTopAnchor(gridPane, -20d);
 
-            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService);
+            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService, null);
             compensationRequestDisplay.createAllFields(Res.get("dao.voting.item.title"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
             compensationRequestDisplay.fillWithData(compensationRequestPayload);

@@ -141,7 +141,10 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     public CompensationRequest prepareCompensationRequest(CompensationRequestPayload compensationRequestPayload)
-            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException {
+            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException, CompensationAmountException {
+        if (compensationRequestPayload.getRequestedBsq().compareTo(feeService.getCreateCompensationRequestFee()) <= 0) {
+            throw new CompensationAmountException(feeService.getCreateCompensationRequestFee(), compensationRequestPayload.getRequestedBsq());
+        }
         CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());

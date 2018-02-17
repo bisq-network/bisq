@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.compensation;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TxIdTextField;
@@ -27,9 +28,11 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BsqAddressValidator;
+import io.bisq.gui.util.validation.BsqValidator;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 import static io.bisq.gui.util.FormBuilder.*;
@@ -44,11 +47,13 @@ public class CompensationRequestDisplay {
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
     public TxIdTextField txIdTextField;
+    private FeeService feeService;
 
-    public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService) {
+    public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, @Nullable FeeService feeService) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
+        this.feeService = feeService;
     }
 
     public void createAllFields(String title, double top) {
@@ -64,7 +69,11 @@ public class CompensationRequestDisplay {
         linkHyperlinkWithIcon.setManaged(false);
         linkInputTextField.setPromptText(Res.get("dao.compensation.display.link.prompt"));
         requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBsq")).second;
-
+        if (feeService != null) {
+            BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
+            bsqValidator.setMinCompensationRequest(feeService.getCreateCompensationRequestFee());
+            requestedBsqTextField.setValidator(bsqValidator);
+        }
         // TODO validator, addressTF
         bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
                 Res.get("dao.compensation.display.bsqAddress")).second;

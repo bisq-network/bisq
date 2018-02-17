@@ -139,7 +139,7 @@ public class BtcWalletService extends WalletService {
         // inputs [1-n] BTC inputs for BSQ issuance and  miner fee
         // outputs [0-1] BSQ request fee change output
         // outputs [1] BSQ issuance output
-        // outputs [0-1] BTC  change output from issuance and miner fee inputs
+        // outputs [0-1] BTC change output from issuance and miner fee inputs
         // outputs [0-1] OP_RETURN with opReturnData
         // mining fee: BTC mining fee + burned BSQ fee
 
