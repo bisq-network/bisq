@@ -46,7 +46,7 @@ public class OpReturnVerification {
         TxOutput txOutput = txOutputs.get(index);
         final long txOutputValue = txOutput.getValue();
         // If we get an OP_RETURN it has to be the last output and the txOutputValue has to be 0 as well there have be at least one bsqOutput
-        if (txOutputValue == 0 && index == txOutputs.size() - 1 && bsqOutput != null && bsqFee > 0) {
+        if (txOutputValue == 0 && index == txOutputs.size() - 1 && bsqFee > 0) {
             byte[] opReturnData = txOutput.getOpReturnData();
             // We expect at least the type byte
             if (opReturnData != null && opReturnData.length > 1) {
@@ -56,6 +56,9 @@ public class OpReturnVerification {
                         return compensationRequestVerification.processOpReturnData(tx, opReturnData, txOutput,
                                 bsqFee, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
+                        if (bsqOutput == null) {
+                            log.warn("Voting tx is missing bsqOutput for vote base txid={}", tx.getId());
+                        }
                         return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
                     default:
                         log.warn("OP_RETURN version of the BSQ tx ={} does not match expected version bytes. opReturnData={}",
@@ -66,7 +69,8 @@ public class OpReturnVerification {
                 log.warn("opReturnData is null or has no content. opReturnData={}", opReturnData != null ? Utils.HEX.encode(opReturnData) : "null");
             }
         } else {
-            log.warn("opReturnData is not matching DAO rules.");
+            log.warn("opReturnData is not matching DAO rules txId={} outValue={} index={} #outputs={} hasBsqOut={} bsqFee={}",
+                    tx.getId(), txOutputValue, index, txOutputs.size(), bsqOutput != null, bsqFee);
         }
         return false;
     }
