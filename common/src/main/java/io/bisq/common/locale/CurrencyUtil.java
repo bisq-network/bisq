@@ -109,6 +109,7 @@ public class CurrencyUtil {
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("DGM", "DigiMoney"));
         result.add(new CryptoCurrency("ONION", "DeepOnion"));
         if (!baseCurrencyCode.equals("DOGE"))
             result.add(new CryptoCurrency("DOGE", "Dogecoin"));
