@@ -1099,6 +1099,7 @@ message OpenOffer {
         RESERVED = 2;
         CLOSED = 3;
         CANCELED = 4;
+        DEACTIVATED = 5;
     }
 
     Offer offer = 1;

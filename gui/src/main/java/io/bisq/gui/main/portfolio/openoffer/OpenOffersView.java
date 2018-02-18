@@ -38,6 +38,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
@@ -48,7 +49,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     TableView<OpenOfferListItem> tableView;
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
-            marketColumn, directionColumn, dateColumn, offerIdColumn, removeItemColumn;
+            marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
@@ -69,6 +70,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setText(Res.get("shared.offerType"));
         dateColumn.setText(Res.get("shared.dateTime"));
         offerIdColumn.setText(Res.get("shared.offerId"));
+        deactivateItemColumn.setText("");
         removeItemColumn.setText("");
 
         setOfferIdColumnCellFactory();
@@ -78,6 +80,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
+        setDeactivateColumnCellFactory();
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -115,6 +118,36 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         sortedList.comparatorProperty().unbind();
     }
 
+    private void onDeactivateOpenOffer(OpenOffer openOffer) {
+        if (model.isBootstrapped()) {
+            model.onDeactivateOpenOffer(openOffer,
+                    () -> {
+                        log.debug("Deactivate offer was successful");
+                    },
+                    (message) -> {
+                        log.error(message);
+                        new Popup<>().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
+                    });
+        } else {
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        }
+    }
+
+    private void onActivateOpenOffer(OpenOffer openOffer) {
+        if (model.isBootstrapped()) {
+            model.onActivateOpenOffer(openOffer,
+                    () -> {
+                        log.debug("Activate offer was successful");
+                    },
+                    (message) -> {
+                        log.error(message);
+                        new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
+                    });
+        } else {
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        }
+    }
+
     private void onRemoveOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
@@ -133,7 +166,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void doRemoveOpenOffer(OpenOffer openOffer) {
-        model.onCancelOpenOffer(openOffer,
+        model.onRemoveOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
@@ -302,6 +335,61 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
+    private void setDeactivateColumnCellFactory() {
+        deactivateItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        deactivateItemColumn.setCellFactory(
+                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                            final ImageView iconView = new ImageView();
+                            Button button;
+
+                            private void updateState(@NotNull OpenOffer openOffer) {
+                                if (openOffer.isDeactivated()) {
+                                    button.setText(Res.get("shared.activate"));
+                                    iconView.setId("image-alert-round");
+                                    button.setGraphic(iconView);
+                                } else {
+                                    button.setText(Res.get("shared.deactivate"));
+                                    iconView.setId("image-green_circle");
+                                    button.setGraphic(iconView);
+                                }
+                            }
+
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = new Button();
+                                        button.setGraphic(iconView);
+                                        updateState(item.getOpenOffer());
+                                        button.setMinWidth(70);
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> {
+                                        if (item.getOpenOffer().isDeactivated()) {
+                                            onActivateOpenOffer(item.getOpenOffer());
+                                        } else {
+                                            onDeactivateOpenOffer(item.getOpenOffer());
+                                        }
+                                        updateState(item.getOpenOffer());
+                                    });
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
     private void setRemoveColumnCellFactory() {
         removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         removeItemColumn.setCellFactory(
@@ -318,9 +406,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        iconView.setId("image-remove");
                                         button = new Button(Res.get("shared.remove"));
                                         button.setMinWidth(70);
+                                        iconView.setId("image-remove");
                                         button.setGraphic(iconView);
                                         setGraphic(button);
                                     }

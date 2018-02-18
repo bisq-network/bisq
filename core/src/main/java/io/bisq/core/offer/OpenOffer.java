@@ -19,6 +19,7 @@ package io.bisq.core.offer;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
@@ -40,29 +41,34 @@ public final class OpenOffer implements Tradable {
         AVAILABLE,
         RESERVED,
         CLOSED,
-        CANCELED
+        CANCELED,
+        DEACTIVATED
     }
 
     @Getter
     private final Offer offer;
     @Getter
-    private State state = State.AVAILABLE;
+    private State state;
 
     transient private Storage<TradableList<OpenOffer>> storage;
 
     public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
         this.offer = offer;
         this.storage = storage;
+        state = State.AVAILABLE;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OpenOffer(Offer offer) {
+    private OpenOffer(Offer offer, State state) {
         this.offer = offer;
-    }
+        this.state = state;
 
+        if (this.state == State.RESERVED)
+            setState(State.AVAILABLE);
+    }
 
     @Override
     public PB.Tradable toProtoMessage() {
@@ -73,11 +79,8 @@ public final class OpenOffer implements Tradable {
     }
 
     public static Tradable fromProto(PB.OpenOffer proto) {
-        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()));
-        // If we have a reserved state from the local db we reset it
-        if (openOffer.getState() == State.RESERVED)
-            openOffer.setState(State.AVAILABLE);
-        return openOffer;
+        return new OpenOffer(Offer.fromProto(proto.getOffer()),
+                ProtoUtil.enumFromProto(OpenOffer.State.class, proto.getState().name()));
     }
 
 
@@ -116,6 +119,10 @@ public final class OpenOffer implements Tradable {
             startTimeout();
         else
             stopTimeout();
+    }
+
+    public boolean isDeactivated() {
+        return state == State.DEACTIVATED;
     }
 
     private void startTimeout() {
