@@ -9,7 +9,7 @@ public class ColoredDecimalPlacesWithZerosText extends TextFlow {
     public ColoredDecimalPlacesWithZerosText(String number) {
         super();
 
-        String placesBeforeZero = number.split("0*$")[0];
+        String placesBeforeZero = number.split("0{1,3}$")[0];
         String zeroDecimalPlaces = number.substring(placesBeforeZero.length());
         Text first = new Text(placesBeforeZero);
         Text last = new Text(zeroDecimalPlaces);
