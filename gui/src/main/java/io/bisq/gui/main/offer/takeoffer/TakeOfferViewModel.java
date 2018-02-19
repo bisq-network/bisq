@@ -555,6 +555,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getOffer();
     }
 
+    public boolean isRange() {return dataModel.getOffer().isRange(); }
+
     public String getAmountRange() {
         return amountRange;
     }
