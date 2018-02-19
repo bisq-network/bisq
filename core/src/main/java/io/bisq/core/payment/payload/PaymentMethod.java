@@ -180,8 +180,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // US
                     CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
                     CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitMidRisk),
-                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
-                    POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, maxTradeLimitMidRisk),
+
+                    // Seems Venmo has a high chargeback risk, so we keep it out for now.
+                    //VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
+
+                    POPMONEY = new PaymentMethod(POPMONEY_ID, 4 * DAY, maxTradeLimitMidRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
                     US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
