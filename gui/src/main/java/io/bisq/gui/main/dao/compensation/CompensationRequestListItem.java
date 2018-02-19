@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.gui.main.dao.compensation.active;
+package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
@@ -42,7 +42,7 @@ import java.util.Optional;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-class CompensationRequestListItem implements BsqBlockChainListener {
+public class CompensationRequestListItem implements BsqBlockChainListener {
     @Getter
     private final CompensationRequest compensationRequest;
     private final BsqWalletService bsqWalletService;
