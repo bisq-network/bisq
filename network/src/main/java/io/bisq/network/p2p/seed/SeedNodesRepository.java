@@ -22,9 +22,6 @@ import io.bisq.network.p2p.NodeAddress;
 import java.util.Set;
 
 public interface SeedNodesRepository {
-    void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses);
-
-    void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses);
 
     boolean isSeedNode(NodeAddress nodeAddress);
 

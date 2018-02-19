@@ -8,22 +8,20 @@ import javax.inject.Inject;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
-import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
-
 @NotThreadSafe
 public class CoreSeedNodesRepository implements SeedNodesRepository {
+
     private final NodeAddressLookup lookup;
+    private final Set<NodeAddress> torSeedNodeAddresses;
+    private final Set<NodeAddress> localhostSeedNodeAddresses;
 
     private Set<NodeAddress> seedNodeAddresses;
-    private Set<NodeAddress> torSeedNodeAddresses;
-    private Set<NodeAddress> localhostSeedNodeAddresses;
 
     @Inject
     public CoreSeedNodesRepository(NodeAddressLookup lookup) {
         this.lookup = lookup;
-        this.torSeedNodeAddresses = DEFAULT_TOR_SEED_NODE_ADDRESSES;
-        this.localhostSeedNodeAddresses = DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
+        this.torSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
+        this.localhostSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
     }
 
     @Override
@@ -55,14 +53,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             default:
                 return "Undefined";
         }
-    }
-
-    public void setTorSeedNodeAddresses(Set<NodeAddress> torSeedNodeAddresses) {
-        this.torSeedNodeAddresses = torSeedNodeAddresses;
-    }
-
-    public void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses) {
-        this.localhostSeedNodeAddresses = localhostSeedNodeAddresses;
     }
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
