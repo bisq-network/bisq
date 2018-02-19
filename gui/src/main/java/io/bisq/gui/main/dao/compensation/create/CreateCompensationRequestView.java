@@ -126,7 +126,6 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         new Date()
                 );
 
-                boolean walletExceptionMightBeCausedByBtCWallet = false;
                 try {
                     CompensationRequest compensationRequest = compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
                     Coin miningFee = compensationRequest.getSignedTx().getFee();
