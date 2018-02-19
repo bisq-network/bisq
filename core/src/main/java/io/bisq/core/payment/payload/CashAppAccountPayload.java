@@ -36,7 +36,7 @@ import java.util.Map;
 @Getter
 @Slf4j
 public final class CashAppAccountPayload extends PaymentAccountPayload {
-    private String accountId = "";
+    private String cashTag = "";
 
     public CashAppAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -49,7 +49,7 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
 
     private CashAppAccountPayload(String paymentMethod,
                                   String id,
-                                  String accountId,
+                                  String cashTag,
                                   long maxTradePeriod,
                                   Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -57,21 +57,21 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
                 maxTradePeriod,
                 excludeFromJsonDataMap);
 
-        this.accountId = accountId;
+        this.cashTag = cashTag;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setCashAppAccountPayload(PB.CashAppAccountPayload.newBuilder()
-                        .setAccountId(accountId))
+                        .setCashTag(cashTag))
                 .build();
     }
 
     public static CashAppAccountPayload fromProto(PB.PaymentAccountPayload proto) {
         return new CashAppAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getCashAppAccountPayload().getAccountId(),
+                proto.getCashAppAccountPayload().getCashTag(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -83,7 +83,7 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "CashApp - Account: " + accountId;
+        return "CashApp - Account: " + cashTag;
     }
 
     @Override
@@ -93,6 +93,6 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountId.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(cashTag.getBytes(Charset.forName("UTF-8")));
     }
 }

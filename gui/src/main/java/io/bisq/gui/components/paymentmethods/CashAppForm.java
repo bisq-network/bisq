@@ -41,7 +41,7 @@ public class CashAppForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.accountId"), ((CashAppAccountPayload) paymentAccountPayload).getAccountId());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), ((CashAppAccountPayload) paymentAccountPayload).getCashTag());
         return gridRow;
     }
 
@@ -55,10 +55,10 @@ public class CashAppForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.cashApp.accountId")).second;
+        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag")).second;
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setCashTag(newValue);
             updateFromInputs();
         });
 
@@ -84,7 +84,7 @@ public class CashAppForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.cashApp.accountId"), account.getAccountId()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), account.getCashTag()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
@@ -95,7 +95,7 @@ public class CashAppForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && validator.validate(account.getAccountId()).isValid
+                && validator.validate(account.getCashTag()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }
 }

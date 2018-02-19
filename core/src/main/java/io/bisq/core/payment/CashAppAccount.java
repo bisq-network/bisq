@@ -36,11 +36,11 @@ public final class CashAppAccount extends PaymentAccount {
         return new CashAppAccountPayload(paymentMethod.getId(), id);
     }
 
-    public void setAccountId(String accountId) {
-        ((CashAppAccountPayload) paymentAccountPayload).setAccountId(accountId);
+    public void setCashTag(String cashTag) {
+        ((CashAppAccountPayload) paymentAccountPayload).setCashTag(cashTag);
     }
 
-    public String getAccountId() {
-        return ((CashAppAccountPayload) paymentAccountPayload).getAccountId();
+    public String getCashTag() {
+        return ((CashAppAccountPayload) paymentAccountPayload).getCashTag();
     }
 }
