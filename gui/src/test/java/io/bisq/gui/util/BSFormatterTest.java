@@ -45,7 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Offer.class,OfferPayload.class})
+@PrepareForTest({Offer.class, OfferPayload.class})
 public class BSFormatterTest {
 
     private BSFormatter formatter;
@@ -146,7 +146,7 @@ public class BSFormatterTest {
         when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
         when(offer.getAmount()).thenReturn(Coin.valueOf(10000000));
 
-        assertEquals("0.10", formatter.formatAmountWithMinAmount(offer));
+        assertEquals("0.10", formatter.formatAmount(offer));
     }
 
     @Test
@@ -156,7 +156,27 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(20000000L);
 
-        assertEquals("0.10 - 0.20", formatter.formatAmountWithMinAmount(offer));
+        assertEquals("0.10 - 0.20", formatter.formatAmount(offer));
+    }
+
+    @Test
+    public void testFormatAmountWithAlignmenWithDecimals() {
+        OfferPayload offerPayload = mock(OfferPayload.class);
+        Offer offer = new Offer(offerPayload);
+        when(offerPayload.getMinAmount()).thenReturn(10000000L);
+        when(offerPayload.getAmount()).thenReturn(20000000L);
+
+        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4,true));
+    }
+
+    @Test
+    public void testFormatAmountWithAlignmenWithDecimalsNoRange() {
+        OfferPayload offerPayload = mock(OfferPayload.class);
+        Offer offer = new Offer(offerPayload);
+        when(offerPayload.getMinAmount()).thenReturn(10000000L);
+        when(offerPayload.getAmount()).thenReturn(10000000L);
+
+        assertEquals("         0.1000", formatter.formatAmount(offer, 4,true));
     }
 
     @Test
@@ -165,6 +185,7 @@ public class BSFormatterTest {
         when(offer.getMinAmount()).thenReturn(null);
         when(offer.getAmount()).thenReturn(null);
 
-        assertEquals("", formatter.formatAmountWithMinAmount(offer));
+        assertEquals("", formatter.formatAmount(offer));
+    }
     }
 }

@@ -82,10 +82,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> volumeColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> marketColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> priceColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -491,7 +488,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax"));
-        column.setMinWidth(150);
+        column.setMinWidth(100);
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -504,9 +502,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(model.getAmount(item));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -517,8 +515,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
-                setMinWidth(120);
-                // setMaxWidth(130);
+                setMinWidth(40);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -548,9 +545,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(120);
+                setMinWidth(100);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -620,6 +618,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(125);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -633,7 +632,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
-                                        setText(model.getVolume(offerBookListItem));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -648,13 +647,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(model.getVolume(item));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(item)));
                                     }
                                 } else {
                                     if (listener != null)
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -666,7 +667,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
             {
-                setMinWidth(125);
+                setMinWidth(80);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
