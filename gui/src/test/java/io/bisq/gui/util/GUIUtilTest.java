@@ -32,8 +32,8 @@ public class GUIUtilTest {
             put("EUR", 10);
         }};
         StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter(
-                Res.get("shared.offer"),
-                Res.get("shared.offers"),
+                Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 offerCounts
         );
 
@@ -45,8 +45,8 @@ public class GUIUtilTest {
     public void testCurrencyListWithOffersConverter() {
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
-        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.offer"),
-                Res.get("shared.offers"),
+        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 empty);
 
         assertEquals("✦ BTC (BTC) - 10 offers", currencyListItemConverter.toString(make(bitcoinItem.but(with(numberOfTrades,10)))));
