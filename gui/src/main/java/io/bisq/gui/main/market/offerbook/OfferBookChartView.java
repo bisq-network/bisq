@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @FxmlView
