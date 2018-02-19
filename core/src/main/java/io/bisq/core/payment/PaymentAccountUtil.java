@@ -99,6 +99,8 @@ public class PaymentAccountUtil {
                     return true;
                 } else if (countryBasedPaymentAccount instanceof WesternUnionAccount) {
                     return offer.getPaymentMethod().equals(PaymentMethod.WESTERN_UNION);
+                } else if (countryBasedPaymentAccount instanceof CashDepositAccount) {
+                    return offer.getPaymentMethod().equals(PaymentMethod.CASH_DEPOSIT);
                 } else {
                     log.warn("Not handled case at isPaymentAccountValidForOffer. paymentAccount={}." +
                                     "offer={}",
