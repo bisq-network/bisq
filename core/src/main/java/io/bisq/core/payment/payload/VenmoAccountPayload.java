@@ -37,6 +37,7 @@ import java.util.Map;
 @Slf4j
 public final class VenmoAccountPayload extends PaymentAccountPayload {
     private String venmoUserName = "";
+    private String holderName = "";
 
     public VenmoAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -50,6 +51,7 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
     private VenmoAccountPayload(String paymentMethod,
                                 String id,
                                 String venmoUserName,
+                                String holderName,
                                 long maxTradePeriod,
                                 Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -58,13 +60,15 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.venmoUserName = venmoUserName;
+        this.holderName = holderName;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setVenmoAccountPayload(PB.VenmoAccountPayload.newBuilder()
-                        .setVenmoUserName(venmoUserName))
+                        .setVenmoUserName(venmoUserName)
+                        .setHolderName(holderName))
                 .build();
     }
 
@@ -72,6 +76,7 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
         return new VenmoAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getVenmoAccountPayload().getVenmoUserName(),
+                proto.getVenmoAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }

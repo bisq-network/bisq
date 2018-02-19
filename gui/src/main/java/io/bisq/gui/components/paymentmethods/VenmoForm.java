@@ -41,6 +41,8 @@ public class VenmoForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                ((VenmoAccountPayload) paymentAccountPayload).getHolderName());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), ((VenmoAccountPayload) paymentAccountPayload).getVenmoUserName());
         return gridRow;
     }
@@ -54,6 +56,14 @@ public class VenmoForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner")).second;
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue);
+            updateFromInputs();
+        });
 
         accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName")).second;
         accountIdInputTextField.setValidator(validator);
@@ -84,6 +94,8 @@ public class VenmoForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                account.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), account.getVenmoUserName()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
@@ -95,6 +107,7 @@ public class VenmoForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
+                && inputValidator.validate(account.getHolderName()).isValid
                 && validator.validate(account.getVenmoUserName()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }

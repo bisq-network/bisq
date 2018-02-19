@@ -43,4 +43,12 @@ public final class VenmoAccount extends PaymentAccount {
     public String getVenmoUserName() {
         return ((VenmoAccountPayload) paymentAccountPayload).getVenmoUserName();
     }
+
+    public void setHolderName(String holderName) {
+        ((VenmoAccountPayload) paymentAccountPayload).setHolderName(holderName);
+    }
+
+    public String getHolderName() {
+        return ((VenmoAccountPayload) paymentAccountPayload).getHolderName();
+    }
 }
