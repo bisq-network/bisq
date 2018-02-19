@@ -277,12 +277,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     String getAmount(OfferBookListItem item) {
         Offer offer = item.getOffer();
-        Coin amount = offer.getAmount();
-        Coin minAmount = offer.getMinAmount();
-        if (amount.equals(minAmount))
-            return formatter.formatAmount(offer);
-        else
-            return formatter.formatAmountWithMinAmount(offer);
+        return formatter.formatAmount(offer, 4, true);
     }
 
     String getPrice(OfferBookListItem item) {

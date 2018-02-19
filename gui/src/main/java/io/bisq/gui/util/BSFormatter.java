@@ -268,18 +268,18 @@ public class BSFormatter {
         String formattedVolume = formatVolume(volume);
 
         if(decimalAligned) {
-            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, 5);
+            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, 8);
         }
         return formattedVolume;
     }
 
     @NotNull
-    private String fillUpPlacesWithEmptyStrings(String formattedVolume, int maxNumberOfDigits) {
-        int numberOfPlacesToFill = maxNumberOfDigits - formattedVolume.split("\\.")[0].length();
+    private String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
+        int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {
-            formattedVolume = " " + formattedVolume;
+            formattedNumber = " " + formattedNumber;
         }
-        return formattedVolume;
+        return formattedNumber;
     }
 
     public String formatVolume(Volume volume) {
@@ -342,11 +342,24 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatAmount(Offer offer) {
-        return formatCoin(offer.getAmount());
+        return formatAmount(offer, false);
     }
 
-    public String formatAmountWithMinAmount(Offer offer) {
-        return offer.isRange() ? formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
+    public String formatAmount(Offer offer, boolean decimalAligned) {
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
+        if(decimalAligned) {
+            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
+        }
+        return formattedAmount;
+    }
+
+    public String formatAmount(Offer offer, int decimalPlaces, boolean decimalAligned) {
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount(), decimalPlaces) + " - " + formatCoin(offer.getAmount(), decimalPlaces) : formatCoin(offer.getAmount(), decimalPlaces);
+
+        if(decimalAligned) {
+            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
+        }
+        return formattedAmount;
     }
 
 
@@ -375,7 +388,7 @@ public class BSFormatter {
         String formattedPrice = formatPrice(price);
 
         if(decimalAligned) {
-            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, 5);
+            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, 10);
         }
         return formattedPrice;
     }
