@@ -57,6 +57,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
         return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
-                .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
+                .anyMatch(e -> e.equals(nodeAddress));
     }
 }
