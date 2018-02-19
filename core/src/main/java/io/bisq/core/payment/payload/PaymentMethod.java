@@ -51,6 +51,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String CASH_APP_ID = "CASH_APP";
     public static final String MONEY_BEAM_ID = "MONEY_BEAM";
     public static final String VENMO_ID = "VENMO";
+    public static final String POPMONEY_ID = "POPMONEY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
@@ -73,6 +74,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod CASH_APP;
     public static PaymentMethod MONEY_BEAM;
     public static PaymentMethod VENMO;
+    public static PaymentMethod POPMONEY;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
     public static PaymentMethod SEPA_INSTANT;
@@ -179,6 +181,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
                     CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitMidRisk),
                     VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
+                    POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, maxTradeLimitMidRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
                     US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 

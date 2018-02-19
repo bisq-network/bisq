@@ -35,11 +35,11 @@ import java.util.Map;
 @Setter
 @Getter
 @Slf4j
-public final class VenmoAccountPayload extends PaymentAccountPayload {
-    private String venmoUserName = "";
+public final class PopmoneyAccountPayload extends PaymentAccountPayload {
+    private String accountId = "";
     private String holderName = "";
 
-    public VenmoAccountPayload(String paymentMethod, String id) {
+    public PopmoneyAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -48,35 +48,35 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private VenmoAccountPayload(String paymentMethod,
-                                String id,
-                                String venmoUserName,
-                                String holderName,
-                                long maxTradePeriod,
-                                Map<String, String> excludeFromJsonDataMap) {
+    private PopmoneyAccountPayload(String paymentMethod,
+                                   String id,
+                                   String accountId,
+                                   String holderName,
+                                   long maxTradePeriod,
+                                   Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
 
-        this.venmoUserName = venmoUserName;
+        this.accountId = accountId;
         this.holderName = holderName;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setVenmoAccountPayload(PB.VenmoAccountPayload.newBuilder()
-                        .setVenmoUserName(venmoUserName)
+                .setPopmoneyAccountPayload(PB.PopmoneyAccountPayload.newBuilder()
+                        .setAccountId(accountId)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static VenmoAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        return new VenmoAccountPayload(proto.getPaymentMethodId(),
+    public static PopmoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new PopmoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getVenmoAccountPayload().getVenmoUserName(),
-                proto.getVenmoAccountPayload().getHolderName(),
+                proto.getPopmoneyAccountPayload().getAccountId(),
+                proto.getPopmoneyAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -88,7 +88,7 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Venmo - Holder name: " + holderName + ", Venmo username: " + venmoUserName;
+        return "Popmoney - Holder name: " + holderName + ", email or phone no.: " + accountId;
     }
 
     @Override
@@ -98,6 +98,6 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(venmoUserName.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(accountId.getBytes(Charset.forName("UTF-8")));
     }
 }

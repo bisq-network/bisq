@@ -169,6 +169,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.VENMO_ID:
                 gridRow = VenmoForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.POPMONEY_ID:
+                gridRow = PopmoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.PERFECT_MONEY_ID:
                 gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;

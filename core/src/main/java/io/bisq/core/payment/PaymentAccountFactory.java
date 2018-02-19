@@ -32,6 +32,8 @@ public class PaymentAccountFactory {
                 return new MoneyBeamAccount();
             case PaymentMethod.VENMO_ID:
                 return new VenmoAccount();
+            case PaymentMethod.POPMONEY_ID:
+                return new PopmoneyAccount();
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:

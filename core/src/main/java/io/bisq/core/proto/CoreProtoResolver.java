@@ -68,6 +68,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return MoneyBeamAccountPayload.fromProto(proto);
                 case VENMO_ACCOUNT_PAYLOAD:
                     return VenmoAccountPayload.fromProto(proto);
+                case POPMONEY_ACCOUNT_PAYLOAD:
+                    return PopmoneyAccountPayload.fromProto(proto);
                 case PERFECT_MONEY_ACCOUNT_PAYLOAD:
                     return PerfectMoneyAccountPayload.fromProto(proto);
                 case SWISH_ACCOUNT_PAYLOAD:
