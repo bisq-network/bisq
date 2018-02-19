@@ -30,6 +30,8 @@ public class PaymentAccountFactory {
                 return new CashAppAccount();
             case PaymentMethod.MONEY_BEAM_ID:
                 return new MoneyBeamAccount();
+            case PaymentMethod.VENMO_ID:
+                return new VenmoAccount();
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:

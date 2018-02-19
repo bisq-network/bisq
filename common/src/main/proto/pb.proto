@@ -833,6 +833,7 @@ message PaymentAccountPayload {
         UpholdAccountPayload uphold_account_payload = 16;
         CashAppAccountPayload cash_app_account_payload = 17;
         MoneyBeamAccountPayload money_beam_account_payload = 18;
+        VenmoAccountPayload venmo_account_payload = 19;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -953,6 +954,10 @@ message CashAppAccountPayload {
 
 message MoneyBeamAccountPayload {
     string account_id = 1;
+}
+
+message VenmoAccountPayload {
+    string venmo_user_name = 1;
 }
 
 message PerfectMoneyAccountPayload {
