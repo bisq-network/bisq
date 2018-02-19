@@ -118,8 +118,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offer"),
-                Res.get("shared.offers"),
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 model.preferences));
 
         Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
@@ -213,10 +213,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", code));
-                        leftButton.setText(Res.get("market.offerBook.leftButtonAltcoin", code, Res.getBaseCurrencyCode()));
+                        leftButton.setText(Res.get("market.offerBook.buyAltcoin", code, Res.getBaseCurrencyCode()));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", code));
-                        rightButton.setText(Res.get("market.offerBook.rightButtonAltcoin", code, Res.getBaseCurrencyCode()));
+                        rightButton.setText(Res.get("market.offerBook.sellAltcoin", code, Res.getBaseCurrencyCode()));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
                     } else {
@@ -226,10 +226,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        leftButton.setText(Res.get("market.offerBook.rightButtonFiat", Res.getBaseCurrencyCode(), code));
+                        leftButton.setText(Res.get("market.offerBook.sellWithFiat", Res.getBaseCurrencyCode(), code));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        rightButton.setText(Res.get("market.offerBook.leftButtonFiat", Res.getBaseCurrencyCode(), code));
+                        rightButton.setText(Res.get("market.offerBook.buyWithFiat", Res.getBaseCurrencyCode(), code));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
@@ -430,7 +430,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tableView.getColumns().add(priceColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.multipleOffers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
