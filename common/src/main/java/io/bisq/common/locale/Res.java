@@ -43,6 +43,8 @@ public class Res {
 
     static {
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> {
+            if ("en".equalsIgnoreCase(newValue.getLanguage()))
+                newValue = Locale.ROOT;
             resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", newValue, new UTF8Control());
         });
     }
