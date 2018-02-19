@@ -56,6 +56,7 @@ public class OpReturnVerification {
                         return compensationRequestVerification.processOpReturnData(tx, opReturnData, txOutput,
                                 bsqFee, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
+                        // TODO: Handle missing bsqOutput, is it considered an invalid vote?
                         if (bsqOutput == null) {
                             log.warn("Voting tx is missing bsqOutput for vote base txid={}", tx.getId());
                         }
