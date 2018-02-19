@@ -23,6 +23,7 @@ import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipTableColumn;
+import io.bisq.gui.components.ColoredDecimalPlacesWithZerosText;
 import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
@@ -168,6 +169,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                 setMinWidth(100);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
@@ -196,6 +198,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                 setMinWidth(100);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
@@ -252,6 +255,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                 setMinWidth(140);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
@@ -264,7 +268,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatCoin(item.totalAmount));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.totalAmount, 4)));
                                 else
                                     setText("");
                             }
@@ -280,6 +284,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                 setMinWidth(110);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
