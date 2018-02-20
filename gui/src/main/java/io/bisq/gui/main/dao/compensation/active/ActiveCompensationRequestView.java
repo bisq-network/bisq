@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.dao.compensation.active;
 
-import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.DaoPeriodService;
@@ -27,24 +26,20 @@ import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
-import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.dao.compensation.CompensationRequestListItem;
+import io.bisq.gui.main.dao.compensation.CompensationRequestView;
 import io.bisq.gui.main.dao.voting.VotingView;
 import io.bisq.gui.main.dao.voting.vote.VoteView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -60,32 +55,15 @@ import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
 import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ActiveCompensationRequestView extends ActivatableView<GridPane, Void> implements BsqBlockChainListener {
+public class ActiveCompensationRequestView extends CompensationRequestView implements BsqBlockChainListener {
 
-    TableView<CompensationRequestListItem> tableView;
-    private final CompensationRequestManager compensationRequestManger;
-    private final DaoPeriodService daoPeriodService;
-    private final BsqWalletService bsqWalletService;
-    private final BsqBlockChain bsqBlockChain;
-    private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
-    private final Navigation navigation;
-    private final BsqFormatter bsqFormatter;
-    private final ObservableList<CompensationRequestListItem> observableList = FXCollections.observableArrayList();
-    private SortedList<CompensationRequestListItem> sortedList = new SortedList<>(observableList);
-    private Subscription selectedCompensationRequestSubscription, phaseSubscription;
-    private CompensationRequestDisplay compensationRequestDisplay;
-    private int gridRow = 0;
-    private GridPane detailsGridPane, gridPane;
-    private SplitPane compensationRequestPane;
-    private DaoPeriodService.Phase currentPhase;
-    private CompensationRequestListItem selectedCompensationRequest;
-    private Button removeButton, voteButton;
-    private TextField cycleTextField;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private ChangeListener<Number> chainHeightChangeListener;
-    private ListChangeListener<CompensationRequest> compensationRequestListChangeListener;
+    private Button removeButton, voteButton;
+    private final Navigation navigation;
+    private final DaoPeriodService daoPeriodService;
+    private DaoPeriodService.Phase currentPhase;
     private ChangeListener<DaoPeriodService.Phase> phaseChangeListener;
-
+    private Subscription phaseSubscription;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -99,13 +77,9 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
                                           BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                           Navigation navigation,
                                           BsqFormatter bsqFormatter) {
-        this.compensationRequestManger = compensationRequestManger;
+        super(compensationRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter);
         this.daoPeriodService = daoPeriodService;
-        this.bsqWalletService = bsqWalletService;
-        this.bsqBlockChain = bsqBlockChain;
-        this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.navigation = navigation;
-        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -143,7 +117,7 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
         compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
         compensationRequestPane = compensationRequestDisplay.createCompensationRequestPane(tableView, Res.get("dao.compensation.active.header"));
         GridPane.setColumnSpan(compensationRequestPane, 2);
-        GridPane.setMargin(compensationRequestPane, new Insets(Layout.FIRST_ROW_DISTANCE - 6, -11, 0, -11));
+        GridPane.setMargin(compensationRequestPane, new Insets(Layout.FIRST_ROW_DISTANCE - 6, -10, 0, -10));
         GridPane.setRowIndex(compensationRequestPane, ++gridRow);
         gridPane.getChildren().add(compensationRequestPane);
 
@@ -158,6 +132,7 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
         phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
+
     private SeparatedPhaseBars createSeparatedPhaseBars() {
         phaseBarsItems = Arrays.asList(
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.COMPENSATION_REQUESTS, true),
@@ -170,18 +145,14 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
         return separatedPhaseBars;
     }
 
-
     @Override
     protected void activate() {
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-
-        selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
+        super.activate();
         phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
                 onSelectCompensationRequest(selectedCompensationRequest);
             }
-
             phaseBarsItems.stream().forEach(item -> {
                 if (item.getPhase() == phase) {
                     item.setActive();
@@ -191,46 +162,19 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
             });
         });
 
-        bsqWalletService.getChainHeightProperty().addListener(chainHeightChangeListener);
-        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
-        compensationRequestManger.getAllRequests().addListener(compensationRequestListChangeListener);
         daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
-
         onChainHeightChanged(bsqWalletService.getChainHeightProperty().get());
     }
 
     @Override
     protected void deactivate() {
-        sortedList.comparatorProperty().unbind();
-
-        selectedCompensationRequestSubscription.unsubscribe();
+        super.deactivate();
         phaseSubscription.unsubscribe();
-
-        bsqWalletService.getChainHeightProperty().removeListener(chainHeightChangeListener);
-        bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
-        compensationRequestManger.getAllRequests().removeListener(compensationRequestListChangeListener);
         daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
-
-        observableList.forEach(CompensationRequestListItem::cleanup);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBsqBlockChainChanged() {
-        // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
-        UserThread.execute(this::updateList);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void updateList() {
+    protected void updateList() {
         observableList.forEach(CompensationRequestListItem::cleanup);
 
         final FilteredList<CompensationRequest> activeRequests = compensationRequestManger.getActiveRequests();
@@ -243,8 +187,6 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
     }
 
     private void onChainHeightChanged(int height) {
-        //cycleTextField.setText(String.valueOf(daoPeriodService.getNumOfStartedCycles(height)));
-
         phaseBarsItems.stream().forEach(item -> {
             int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
             int endBlock = daoPeriodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
@@ -259,19 +201,11 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
             }
             item.getProgressProperty().set(progress);
         });
-
-        updateList();
     }
 
-    private void onSelectCompensationRequest(CompensationRequestListItem item) {
-        selectedCompensationRequest = item;
+    protected void onSelectCompensationRequest(CompensationRequestListItem item) {
+        super.onSelectCompensationRequest(item);
         if (item != null) {
-            final CompensationRequest compensationRequest = item.getCompensationRequest();
-            compensationRequestDisplay.removeAllFields();
-            compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
-            compensationRequestDisplay.setAllFieldsEditable(false);
-            compensationRequestDisplay.fillWithData(compensationRequest.getPayload());
-
             if (removeButton != null) {
                 removeButton.setManaged(false);
                 removeButton.setVisible(false);
@@ -286,7 +220,7 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
         }
     }
 
-    private void onPhaseChanged(DaoPeriodService.Phase phase) {
+    protected void onPhaseChanged(DaoPeriodService.Phase phase) {
         if (removeButton != null) {
             removeButton.setManaged(false);
             removeButton.setVisible(false);
@@ -340,11 +274,5 @@ public class ActiveCompensationRequestView extends ActivatableView<GridPane, Voi
             }
         }
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Table
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 }
 
