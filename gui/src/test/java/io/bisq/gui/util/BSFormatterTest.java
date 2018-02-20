@@ -187,5 +187,4 @@ public class BSFormatterTest {
 
         assertEquals("", formatter.formatAmount(offer));
     }
-    }
 }
