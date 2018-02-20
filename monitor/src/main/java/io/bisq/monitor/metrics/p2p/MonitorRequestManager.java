@@ -10,7 +10,7 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.network.NetworkNode;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import lombok.extern.slf4j.Slf4j;
 import net.gpedro.integrations.slack.SlackApi;
@@ -38,7 +38,7 @@ public class MonitorRequestManager implements ConnectionListener {
 
     private SlackApi slackApi;
     private P2PDataStorage dataStorage;
-    private SeedNodesRepository seedNodesRepository;
+    private SeedNodeRepository seedNodeRepository;
     private MetricsModel metricsModel;
     private final Set<NodeAddress> seedNodeAddresses;
 
@@ -55,19 +55,19 @@ public class MonitorRequestManager implements ConnectionListener {
     @Inject
     public MonitorRequestManager(NetworkNode networkNode,
                                  P2PDataStorage dataStorage,
-                                 SeedNodesRepository seedNodesRepository,
+                                 SeedNodeRepository seedNodeRepository,
                                  MetricsModel metricsModel,
                                  @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
-        this.seedNodesRepository = seedNodesRepository;
+        this.seedNodeRepository = seedNodeRepository;
         this.metricsModel = metricsModel;
 
         if (!slackUrlSeedChannel.isEmpty())
             slackApi = new SlackApi(slackUrlSeedChannel);
         this.networkNode.addConnectionListener(this);
 
-        seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
+        seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         seedNodeAddresses.stream().forEach(nodeAddress -> metricsModel.addToMap(nodeAddress, new Metrics()));
         numNodes = seedNodeAddresses.size();
     }
@@ -156,7 +156,7 @@ public class MonitorRequestManager implements ConnectionListener {
                                     metricsModel.removeNodesInError(nodeAddress);
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Fixed: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
+                                                "<" + seedNodeRepository.getOperator(nodeAddress) + ">" + " Your seed node is recovered."));
                                 }
                             }
 
@@ -189,7 +189,7 @@ public class MonitorRequestManager implements ConnectionListener {
 
                                     if (slackApi != null)
                                         slackApi.call(new SlackMessage("Error: " + nodeAddress.getFullAddress(),
-                                                "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
+                                                "<" + seedNodeRepository.getOperator(nodeAddress) + ">" + " Your seed node failed " + RETRY_DELAY_SEC + " times with error message: " + errorMessage));
                                 }
                             }
                         });

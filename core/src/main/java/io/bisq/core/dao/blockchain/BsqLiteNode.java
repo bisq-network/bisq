@@ -31,7 +31,7 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,12 +55,12 @@ public class BsqLiteNode extends BsqNode {
                        BsqLiteNodeExecutor bsqLiteNodeExecutor,
                        BsqBlockChain bsqBlockChain,
                        FeeService feeService,
-                       SeedNodesRepository seedNodesRepository) {
+                       SeedNodeRepository seedNodeRepository) {
         super(p2PService,
                 bsqParser,
                 bsqBlockChain,
                 feeService,
-                seedNodesRepository);
+                seedNodeRepository);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 
@@ -81,7 +81,7 @@ public class BsqLiteNode extends BsqNode {
         requestManager = new RequestManager(p2PService.getNetworkNode(),
                 p2PService.getPeerManager(),
                 p2PService.getBroadcaster(),
-                seedNodesRepository.getSeedNodeAddresses(),
+                seedNodeRepository.getSeedNodeAddresses(),
                 bsqBlockChain,
                 new RequestManager.Listener() {
                     @Override

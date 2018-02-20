@@ -26,7 +26,7 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +47,7 @@ public abstract class BsqNode {
     protected final BsqParser bsqParser;
     @SuppressWarnings("WeakerAccess")
     protected final BsqBlockChain bsqBlockChain;
-    protected final SeedNodesRepository seedNodesRepository;
+    protected final SeedNodeRepository seedNodeRepository;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqBlockChainListener> bsqBlockChainListeners = new ArrayList<>();
     protected final String genesisTxId;
@@ -69,12 +69,12 @@ public abstract class BsqNode {
                    BsqParser bsqParser,
                    BsqBlockChain bsqBlockChain,
                    FeeService feeService,
-                   SeedNodesRepository seedNodesRepository) {
+                   SeedNodeRepository seedNodeRepository) {
 
         this.p2PService = p2PService;
         this.bsqParser = bsqParser;
         this.bsqBlockChain = bsqBlockChain;
-        this.seedNodesRepository = seedNodesRepository;
+        this.seedNodeRepository = seedNodeRepository;
 
         genesisTxId = bsqBlockChain.getGenesisTxId();
         genesisBlockHeight = bsqBlockChain.getGenesisBlockHeight();

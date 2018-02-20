@@ -21,7 +21,7 @@ import io.bisq.network.p2p.NodeAddress;
 
 import java.util.Set;
 
-public interface SeedNodesRepository {
+public interface SeedNodeRepository {
 
     boolean isSeedNode(NodeAddress nodeAddress);
 

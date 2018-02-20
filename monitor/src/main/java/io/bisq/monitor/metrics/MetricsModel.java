@@ -24,7 +24,7 @@ import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.monitor.MonitorOptionKeys;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class MetricsModel {
     private String resultAsString;
     @Getter
     private String resultAsHtml;
-    private SeedNodesRepository seedNodesRepository;
+    private SeedNodeRepository seedNodeRepository;
     private SlackApi slackSeedApi, slackBtcApi, slackProviderApi;
     private BitcoinNodes bitcoinNodes;
     @Setter
@@ -64,13 +64,13 @@ public class MetricsModel {
     private Set<NodeAddress> nodesInError = new HashSet<>();
 
     @Inject
-    public MetricsModel(SeedNodesRepository seedNodesRepository,
+    public MetricsModel(SeedNodeRepository seedNodeRepository,
                         BitcoinNodes bitcoinNodes,
                         WalletsSetup walletsSetup,
                         @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel,
                         @Named(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL) String slackUrlBtcChannel,
                         @Named(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL) String slackUrlProviderChannel) {
-        this.seedNodesRepository = seedNodesRepository;
+        this.seedNodeRepository = seedNodeRepository;
         this.bitcoinNodes = bitcoinNodes;
         if (!slackUrlSeedChannel.isEmpty())
             slackSeedApi = new SlackApi(slackUrlSeedChannel);
@@ -99,7 +99,7 @@ public class MetricsModel {
         Map<String, Double> accumulatedValues = new HashMap<>();
         final double[] items = {0};
         List<Map.Entry<NodeAddress, Metrics>> entryList = map.entrySet().stream()
-                .sorted(Comparator.comparing(entrySet -> seedNodesRepository.getOperator(entrySet.getKey())))
+                .sorted(Comparator.comparing(entrySet -> seedNodeRepository.getOperator(entrySet.getKey())))
                 .collect(Collectors.toList());
 
         totalErrors = 0;
@@ -166,7 +166,7 @@ public class MetricsModel {
             if (averageOptional.isPresent())
                 durationAverage = averageOptional.getAsDouble() / 1000;
             final NodeAddress nodeAddress = e.getKey();
-            final String operator = seedNodesRepository.getOperator(nodeAddress);
+            final String operator = seedNodeRepository.getOperator(nodeAddress);
             final List<String> errorMessages = metrics.getErrorMessages();
             final int numErrors = (int) errorMessages.stream().filter(s -> !s.isEmpty()).count();
             int numRequests = allDurations.size();
@@ -234,7 +234,7 @@ public class MetricsModel {
                     if (devAbs >= 20) {
                         if (slackSeedApi != null)
                             slackSeedApi.call(new SlackMessage("Warning: " + nodeAddress.getFullAddress(),
-                                    "<" + seedNodesRepository.getOperator(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
+                                    "<" + seedNodeRepository.getOperator(nodeAddress) + ">" + " Your seed node delivers diverging results for " + dataItem + ". " +
                                             "Please check the monitoring status page at http://seedmonitor.0-2-1.net:8080/"));
                     }
                 });
