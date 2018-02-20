@@ -267,10 +267,14 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatVolume(Volume volume, Boolean decimalAligned) {
+        return formatVolume(volume, decimalAligned, 8);
+    }
+
+    public String formatVolume(Volume volume, Boolean decimalAligned, int maxNumberOfDigits) {
         String formattedVolume = formatVolume(volume);
 
         if(decimalAligned) {
-            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, 8);
+            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
         }
         return formattedVolume;
     }
@@ -395,10 +399,14 @@ public class BSFormatter {
     }
 
     public String formatPrice(Price price, Boolean decimalAligned) {
+        return formatPrice(price, decimalAligned, 10);
+    }
+
+    public String formatPrice(Price price, Boolean decimalAligned, int maxPlaces) {
         String formattedPrice = formatPrice(price);
 
         if(decimalAligned) {
-            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, 10);
+            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, maxPlaces);
         }
         return formattedPrice;
     }
@@ -410,7 +418,7 @@ public class BSFormatter {
         else {
             return formatAltcoinWithCode((Altcoin) monetary);
         }
-        //return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+        //return getPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
     }
 
 

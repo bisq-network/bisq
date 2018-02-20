@@ -324,7 +324,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offer.getPrice(), true),
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getPrice(offer),
                                                 model.getZeroDecimalsForPrice(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
@@ -335,13 +335,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
                                 if (offerListItem != null && !empty) {
-                                    if (offerListItem.offer.getPrice() == null) {
-                                        this.offer = offerListItem.offer;
+
+                                    final Offer offer = offerListItem.offer;
+                                    if (offer.getPrice() == null) {
+                                        this.offer = offer;
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offerListItem.offer.getPrice(), true),
-                                                model.getZeroDecimalsForPrice(offerListItem.offer)));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getPrice(offer),
+                                                model.getZeroDecimalsForPrice(offer)));
                                     }
                                 } else {
                                     if (listener != null)
@@ -373,7 +375,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatVolume(offer.getVolume(), true),
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offer),
                                                 model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
@@ -391,7 +393,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatVolume(offer.getVolume(), true),
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offer),
                                                 model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                     }
                                 } else {
