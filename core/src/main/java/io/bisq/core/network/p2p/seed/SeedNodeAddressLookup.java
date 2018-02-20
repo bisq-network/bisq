@@ -44,10 +44,10 @@ public class SeedNodeAddressLookup {
 
     @Inject
     public SeedNodeAddressLookup(BisqEnvironment environment,
-                          @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
-                          @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
-                          @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
-                          @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
+                                 @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
+                                 @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
+                                 @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
+                                 @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
         this.environment = environment;
         this.isLocalHostUsed = useLocalhostForP2P;
         this.networkId = networkId;
