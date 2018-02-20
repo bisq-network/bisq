@@ -306,13 +306,14 @@ class OfferBookViewModel extends ActivatableViewModel {
         Volume minOfferVolume = offer.getMinVolume();
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
-            if (offerVolume.equals(minOfferVolume))
-                return formatter.formatVolume(offerVolume) + postFix;
-            else
-                return formatter.formatMinVolumeAndVolume(offer) + postFix;
+            return formatter.formatMinVolumeAndVolume(offer, false) + postFix;
         } else {
             return Res.get("shared.na");
         }
+    }
+
+    int getNumberOfDecimalsForVolume(OfferBookListItem item) {
+        return CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode()) ? 1 : 7;
     }
 
     String getPaymentMethod(OfferBookListItem item) {

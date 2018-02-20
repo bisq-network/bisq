@@ -55,10 +55,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxmisc.easybind.EasyBind;
@@ -327,7 +323,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offer.getPrice(), true)));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offer.getPrice(), true),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -342,7 +339,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offerListItem.offer.getPrice(), true)));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offerListItem.offer.getPrice(), true),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                     }
                                 } else {
                                     if (listener != null)
@@ -416,7 +414,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
                                 if (offerListItem != null && !empty) {
-                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(offerListItem.offer.getAmount(), 4)));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(offerListItem.offer.getAmount(),
+                                            4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 }
                                 else
                                     setText("");

@@ -7,7 +7,7 @@ import javafx.scene.text.TextFlow;
 
 public class ColoredDecimalPlacesWithZerosText extends TextFlow {
 
-    public ColoredDecimalPlacesWithZerosText(String number) {
+    public ColoredDecimalPlacesWithZerosText(String number, int numberOfZerosToColorize) {
         super();
 
         final String rangeSeparator = " - ";
@@ -15,15 +15,15 @@ public class ColoredDecimalPlacesWithZerosText extends TextFlow {
         if (number.contains(rangeSeparator)) {
             //is range
             String[] splitNumber = number.split(rangeSeparator);
-            Tuple2<Text, Text> numbers = getSplittedNumberNodes(splitNumber[0]);
+            Tuple2<Text, Text> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
 
             getChildren().add(new Text(rangeSeparator));
 
-            numbers = getSplittedNumberNodes(splitNumber[1]);
+            numbers = getSplittedNumberNodes(splitNumber[1], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
         } else {
-            Tuple2<Text, Text> numbers = getSplittedNumberNodes(number);
+            Tuple2<Text, Text> numbers = getSplittedNumberNodes(number, numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
         }
 
@@ -32,8 +32,8 @@ public class ColoredDecimalPlacesWithZerosText extends TextFlow {
 
     }
 
-    private Tuple2<Text, Text> getSplittedNumberNodes(String number) {
-        String placesBeforeZero = number.split("0{1,3}$")[0];
+    private Tuple2<Text, Text> getSplittedNumberNodes(String number, int numberOfZeros) {
+        String placesBeforeZero = number.split("0{1," + Integer.toString(numberOfZeros) + "}$")[0];
         String zeroDecimalPlaces = number.substring(placesBeforeZero.length());
         Text first = new Text(placesBeforeZero);
         Text last = new Text(zeroDecimalPlaces);

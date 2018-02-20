@@ -225,6 +225,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
+    public int getMaxNumberOfPriceZeroDecimalsToColorize(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

@@ -9,7 +9,7 @@ public class ColoredDecimalPlacesWithZerosTextTest {
 
     @Test
     public void testOnlyZeroDecimals() {
-        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.0000");
+        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.0000", 3);
         Text beforeZeros = (Text) text.getChildren().get(0);
         Text zeroDecimals = (Text) text.getChildren().get(1);
         assertEquals("1.0", beforeZeros.getText());
@@ -18,7 +18,7 @@ public class ColoredDecimalPlacesWithZerosTextTest {
 
     @Test
     public void testOneZeroDecimal() {
-        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.2570");
+        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.2570", 3);
         Text beforeZeros = (Text) text.getChildren().get(0);
         Text zeroDecimals = (Text) text.getChildren().get(1);
         assertEquals("1.257", beforeZeros.getText());
@@ -27,7 +27,7 @@ public class ColoredDecimalPlacesWithZerosTextTest {
 
     @Test
     public void testMultipleZeroDecimal() {
-        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.2000");
+        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.2000", 3);
         Text beforeZeros = (Text) text.getChildren().get(0);
         Text zeroDecimals = (Text) text.getChildren().get(1);
         assertEquals("1.2", beforeZeros.getText());
@@ -36,7 +36,7 @@ public class ColoredDecimalPlacesWithZerosTextTest {
 
     @Test
     public void testZeroDecimalsWithRange() {
-        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("0.1000 - 0.1250");
+        ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("0.1000 - 0.1250", 3);
         assertEquals(5, text.getChildren().size());
         Text beforeZeros = (Text) text.getChildren().get(0);
         Text zeroDecimals = (Text) text.getChildren().get(1);

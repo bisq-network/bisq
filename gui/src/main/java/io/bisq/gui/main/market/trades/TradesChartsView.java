@@ -565,7 +565,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.getTradeAmount(),4)));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.getTradeAmount(),
+                                            4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
                                     setText("");
                             }

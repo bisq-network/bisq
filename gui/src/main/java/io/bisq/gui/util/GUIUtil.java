@@ -81,6 +81,11 @@ import java.util.concurrent.TimeUnit;
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     public final static String EDIT_FLAG = "EDIT_FLAG";
+
+    public final static int FIAT_DECIMALS_WITH_ZEROS = 1;
+    public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
+    public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
+
     private static FeeService feeService;
 
     public static void setFeeService(FeeService feeService) {

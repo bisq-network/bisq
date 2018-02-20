@@ -502,7 +502,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item)));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
                                     setGraphic(null);
                             }
@@ -632,7 +632,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem)));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
+                                                model.getNumberOfDecimalsForVolume(offerBookListItem)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -648,7 +649,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(item)));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(item),
+                                                model.getNumberOfDecimalsForVolume(item)));
                                     }
                                 } else {
                                     if (listener != null)

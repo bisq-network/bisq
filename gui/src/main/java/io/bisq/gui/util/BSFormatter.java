@@ -18,6 +18,8 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.GlobalSettings;
+import io.bisq.common.crypto.CryptoUtils;
+import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
@@ -332,8 +334,16 @@ public class BSFormatter {
         return Res.get("formatter.formatVolumeLabel",
                 currencyCode, postFix);
     }
-    public String formatMinVolumeAndVolume(Offer offer) {
-        return offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+
+    public String formatMinVolumeAndVolume(Offer offer, boolean decimalAligned) {
+        String formattedVolume =  offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+
+        if (decimalAligned) {
+            int numberOfPlacesToFill = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? 7 : 15;
+            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, numberOfPlacesToFill);
+        }
+
+        return formattedVolume;
     }
 
 

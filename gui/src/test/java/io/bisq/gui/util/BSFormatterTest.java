@@ -116,7 +116,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(btc);
         when(offer.getVolume()).thenReturn(btc);
 
-        assertEquals("0.10000000", formatter.formatMinVolumeAndVolume(offer));
+        assertEquals("0.10000000", formatter.formatMinVolumeAndVolume(offer, false));
     }
 
     @Test
@@ -128,7 +128,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(btcMin);
         when(offer.getVolume()).thenReturn(btcMax);
 
-        assertEquals("0.10000000 - 0.25000000", formatter.formatMinVolumeAndVolume(offer));
+        assertEquals("0.10000000 - 0.25000000", formatter.formatMinVolumeAndVolume(offer, false));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(null);
         when(offer.getVolume()).thenReturn(null);
 
-        assertEquals("", formatter.formatMinVolumeAndVolume(offer));
+        assertEquals("", formatter.formatMinVolumeAndVolume(offer, false));
     }
 
     @Test
@@ -166,7 +166,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(20000000L);
 
-        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4,true));
+        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4, true));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(10000000L);
 
-        assertEquals("         0.1000", formatter.formatAmount(offer, 4,true));
+        assertEquals("         0.1000", formatter.formatAmount(offer, 4, true));
     }
 
     @Test
