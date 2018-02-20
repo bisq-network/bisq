@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.network;
+package io.bisq.core.network.p2p.seed;
 
 import com.google.inject.name.Named;
 import io.bisq.core.app.BisqEnvironment;
@@ -30,9 +30,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import static io.bisq.core.network.DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
-import static io.bisq.core.network.DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
 
 public class SeedNodeAddressLookup {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeAddressLookup.class);
@@ -86,8 +83,8 @@ public class SeedNodeAddressLookup {
 
         if (seedNodeAddresses.isEmpty()) {
             Set<NodeAddress> delegate = isLocalHostUsed
-                    ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
-                    : DEFAULT_TOR_SEED_NODE_ADDRESSES;
+                    ? DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
+                    : DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
             seedNodeAddresses = delegate.stream()
                     .filter(address -> isAddressFromNetwork(address, networkId))
                     .collect(SeedNodeAddresses.collector());

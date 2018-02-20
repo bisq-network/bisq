@@ -1,4 +1,4 @@
-package io.bisq.core.network;
+package io.bisq.core.network.p2p.seed;
 
 import com.google.common.collect.Sets;
 import org.junit.Test;

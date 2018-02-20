@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.network;
+package io.bisq.core.network.p2p.seed;
 
 import com.google.common.collect.ImmutableSet;
 import io.bisq.network.p2p.NodeAddress;

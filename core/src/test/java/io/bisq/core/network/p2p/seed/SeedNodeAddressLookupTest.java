@@ -1,4 +1,4 @@
-package io.bisq.core.network;
+package io.bisq.core.network.p2p.seed;
 
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.network.p2p.NodeAddress;
