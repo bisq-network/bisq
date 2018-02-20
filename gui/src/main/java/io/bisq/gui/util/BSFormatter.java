@@ -398,10 +398,6 @@ public class BSFormatter {
         return formatPrice(price, fiatPriceFormat, false);
     }
 
-    public String formatPrice(Price price, Boolean decimalAligned) {
-        return formatPrice(price, decimalAligned, 10);
-    }
-
     public String formatPrice(Price price, Boolean decimalAligned, int maxPlaces) {
         String formattedPrice = formatPrice(price);
 
@@ -410,17 +406,6 @@ public class BSFormatter {
         }
         return formattedPrice;
     }
-
-    public String formatPriceWithCode(Price price) {
-        Monetary monetary = price.getMonetary();
-        if (monetary instanceof Fiat)
-            return formatFiat((Fiat) monetary, fiatPriceFormat, true);
-        else {
-            return formatAltcoinWithCode((Altcoin) monetary);
-        }
-        //return getPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Market price
