@@ -63,6 +63,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
+import java.util.function.Function;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
@@ -88,7 +89,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
-
+    private ChangeListener<Number> bisqWindowVerticalSizeListener;
+    private final double pixelsPerOfferTableRow = (109.0 / 4.0) + 10.0;
+    private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
+        // startup defaults: scene height = 710   tbl view height = 109   visible row count = 4
+        int extraRows = screenSize <= 710 ? 0 : (int) ((screenSize - 710) / pixelsPerOfferTableRow);
+        return extraRows == 0 ? 109 : Math.ceil(109 + (extraRows * pixelsPerOfferTableRow));
+    };
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -248,6 +255,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         };
         buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
         sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
+
+        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
+            double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
+            if(buyOfferTableView.getHeight() != newTableViewHeight) {
+                buyOfferTableView.setMinHeight(newTableViewHeight);
+                sellOfferTableView.setMinHeight(newTableViewHeight);
+            }
+        };
+        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
 
         updateChartData();
     }
@@ -476,6 +492,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
+        vBox.setVgrow(tableView, Priority.ALWAYS);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());
