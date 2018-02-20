@@ -323,6 +323,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
+                                        setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offer.getPrice(), true),
                                                 model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
@@ -347,6 +348,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -421,9 +423,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 if (offerListItem != null && !empty) {
                                     setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(offerListItem.offer.getAmount(),
                                             4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
+                                } else {
+                                    setGraphic(null);
                                 }
-                                else
-                                    setText("");
                             }
                         };
                     }
