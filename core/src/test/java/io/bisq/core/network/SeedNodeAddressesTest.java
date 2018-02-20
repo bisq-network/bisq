@@ -15,7 +15,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class NodeAddressesTest {
+public class SeedNodeAddressesTest {
     @Before
     public void setUp() {
         Security.addProvider(new BouncyCastleProvider());
@@ -29,8 +29,8 @@ public class NodeAddressesTest {
                 new NodeAddress("192.168.0.2:2222"));
         Set<NodeAddress> expected = new HashSet<>(addresses);
 
-        NodeAddresses actual = addresses.stream()
-                .collect(NodeAddresses.collector());
+        SeedNodeAddresses actual = addresses.stream()
+                .collect(SeedNodeAddresses.collector());
 
         assertEquals(expected, actual);
     }
@@ -40,8 +40,8 @@ public class NodeAddressesTest {
         Set<NodeAddress> delegate = Sets.newHashSet(
                 new NodeAddress("192.168.0.1:1111"),
                 new NodeAddress("192.168.0.2:2222"));
-        NodeAddresses addresses = new NodeAddresses(delegate);
-        NodeAddresses actual = addresses.excludeByFullAddress("192.168.0.1:1111");
+        SeedNodeAddresses addresses = new SeedNodeAddresses(delegate);
+        SeedNodeAddresses actual = addresses.excludeByFullAddress("192.168.0.1:1111");
 
         assertEquals(1, actual.size());
     }
@@ -55,10 +55,10 @@ public class NodeAddressesTest {
                 new NodeAddress("bbb:2222"),
                 new NodeAddress("ccc:1111"),
                 new NodeAddress("ccc:2222"));
-        NodeAddresses addresses = new NodeAddresses(delegate);
+        SeedNodeAddresses addresses = new SeedNodeAddresses(delegate);
 
         Set<String> hosts = Sets.newHashSet("aaa", "bbb");
-        NodeAddresses actual = addresses.excludeByHost(hosts);
+        SeedNodeAddresses actual = addresses.excludeByHost(hosts);
 
         Set<NodeAddress> expected = Sets.newHashSet(
                 new NodeAddress("ccc:1111"),
@@ -72,13 +72,13 @@ public class NodeAddressesTest {
         Set<NodeAddress> expected = Sets.newHashSet(
                 new NodeAddress("192.168.0.1:1111"),
                 new NodeAddress("192.168.0.2:2222"));
-        NodeAddresses actual = NodeAddresses.fromString("192.168.0.1:1111, 192.168.0.2:2222");
+        SeedNodeAddresses actual = SeedNodeAddresses.fromString("192.168.0.1:1111, 192.168.0.2:2222");
         assertEquals(expected, actual);
     }
 
     @Test
     public void testFromEmptyString() {
-        NodeAddresses nodeAddresses = NodeAddresses.fromString("");
+        SeedNodeAddresses nodeAddresses = SeedNodeAddresses.fromString("");
         assertTrue(nodeAddresses.isEmpty());
     }
 }

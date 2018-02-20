@@ -27,10 +27,10 @@ import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-class NodeAddresses extends ImmutableSetDecorator<NodeAddress> {
-    static NodeAddresses fromString(String seedNodes) {
+class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
+    static SeedNodeAddresses fromString(String seedNodes) {
         if (seedNodes.isEmpty()) {
-            return new NodeAddresses(Collections.emptySet());
+            return new SeedNodeAddresses(Collections.emptySet());
         }
 
         String trimmed = StringUtils.deleteWhitespace(seedNodes);
@@ -40,26 +40,26 @@ class NodeAddresses extends ImmutableSetDecorator<NodeAddress> {
                 .collect(collector());
     }
 
-    NodeAddresses(Set<NodeAddress> delegate) {
+    SeedNodeAddresses(Set<NodeAddress> delegate) {
         super(delegate);
     }
 
-    NodeAddresses excludeByHost(Set<String> hosts) {
+    SeedNodeAddresses excludeByHost(Set<String> hosts) {
         Set<NodeAddress> copy = new HashSet<>(this);
         copy.removeIf(address -> {
             String hostName = address.getHostName();
             return hosts.contains(hostName);
         });
-        return new NodeAddresses(copy);
+        return new SeedNodeAddresses(copy);
     }
 
-    NodeAddresses excludeByFullAddress(String fullAddress) {
+    SeedNodeAddresses excludeByFullAddress(String fullAddress) {
         Set<NodeAddress> copy = new HashSet<>(this);
         copy.removeIf(address -> fullAddress.equals(address.getFullAddress()));
-        return new NodeAddresses(copy);
+        return new SeedNodeAddresses(copy);
     }
 
-    static Collector<NodeAddress, ?, NodeAddresses> collector() {
-        return Collectors.collectingAndThen(Collectors.toSet(), NodeAddresses::new);
+    static Collector<NodeAddress, ?, SeedNodeAddresses> collector() {
+        return Collectors.collectingAndThen(Collectors.toSet(), SeedNodeAddresses::new);
     }
 }

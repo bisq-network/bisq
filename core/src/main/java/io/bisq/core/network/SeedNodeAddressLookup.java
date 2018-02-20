@@ -31,11 +31,11 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
-import static io.bisq.core.network.DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
+import static io.bisq.core.network.DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
+import static io.bisq.core.network.DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
 
-public class NodeAddressLookup {
-    private static final Logger log = LoggerFactory.getLogger(NodeAddressLookup.class);
+public class SeedNodeAddressLookup {
+    private static final Logger log = LoggerFactory.getLogger(SeedNodeAddressLookup.class);
 
     private final BisqEnvironment environment;
     private final boolean isLocalHostUsed;
@@ -46,11 +46,11 @@ public class NodeAddressLookup {
     private final String seedNodes;
 
     @Inject
-    NodeAddressLookup(BisqEnvironment environment,
-                      @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
-                      @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
-                      @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
-                      @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
+    SeedNodeAddressLookup(BisqEnvironment environment,
+                          @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
+                          @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
+                          @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
+                          @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
         this.environment = environment;
         this.isLocalHostUsed = useLocalhostForP2P;
         this.networkId = networkId;
@@ -59,17 +59,17 @@ public class NodeAddressLookup {
     }
 
     Set<NodeAddress> resolveNodeAddresses() {
-        NodeAddresses allNodeAddresses = getAllAddresses();
+        SeedNodeAddresses allSeedNodeAddresses = getAllAddresses();
 
         Set<String> bannedHosts = getBannedHosts();
-        allNodeAddresses = allNodeAddresses.excludeByHost(bannedHosts);
+        allSeedNodeAddresses = allSeedNodeAddresses.excludeByHost(bannedHosts);
 
         if (myAddress != null) {
-            allNodeAddresses = allNodeAddresses.excludeByFullAddress(myAddress);
+            allSeedNodeAddresses = allSeedNodeAddresses.excludeByFullAddress(myAddress);
         }
 
-        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, allNodeAddresses);
-        return allNodeAddresses;
+        log.debug("We received banned seed nodes={}, seedNodeAddresses={}", bannedHosts, allSeedNodeAddresses);
+        return allSeedNodeAddresses;
     }
 
     private Set<String> getBannedHosts() {
@@ -79,20 +79,20 @@ public class NodeAddressLookup {
                 .orElse(Collections.emptySet());
     }
 
-    private NodeAddresses getAllAddresses() {
-        NodeAddresses nodeAddresses = Optional.ofNullable(seedNodes)
-                .map(nodes -> NodeAddresses.fromString(seedNodes))
-                .orElse(new NodeAddresses(Collections.emptySet()));
+    private SeedNodeAddresses getAllAddresses() {
+        SeedNodeAddresses seedNodeAddresses = Optional.ofNullable(seedNodes)
+                .map(nodes -> SeedNodeAddresses.fromString(seedNodes))
+                .orElse(new SeedNodeAddresses(Collections.emptySet()));
 
-        if (nodeAddresses.isEmpty()) {
+        if (seedNodeAddresses.isEmpty()) {
             Set<NodeAddress> delegate = isLocalHostUsed
                     ? DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES
                     : DEFAULT_TOR_SEED_NODE_ADDRESSES;
-            nodeAddresses = delegate.stream()
+            seedNodeAddresses = delegate.stream()
                     .filter(address -> isAddressFromNetwork(address, networkId))
-                    .collect(NodeAddresses.collector());
+                    .collect(SeedNodeAddresses.collector());
         }
-        return nodeAddresses;
+        return seedNodeAddresses;
     }
 
     private static boolean isAddressFromNetwork(NodeAddress address, int networkId) {

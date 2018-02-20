@@ -32,7 +32,7 @@ import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.network.DefaultSeedNodeRepository;
-import io.bisq.core.network.NodeAddressLookup;
+import io.bisq.core.network.SeedNodeAddressLookup;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.network.CoreNetworkProtoResolver;
 import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -70,7 +70,7 @@ class StatisticsModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
-        bind(NodeAddressLookup.class).in(Singleton.class);
+        bind(SeedNodeAddressLookup.class).in(Singleton.class);
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));

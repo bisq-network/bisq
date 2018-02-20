@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
-public class NodeAddressLookupTest {
+public class SeedNodeAddressLookupTest {
     @Before
     public void setUp() {
         Security.addProvider(new BouncyCastleProvider());
@@ -22,7 +22,7 @@ public class NodeAddressLookupTest {
 
     @Test
     public void testResolveNodeAddressesWhenLocalAddressSpecified() {
-        NodeAddressLookup lookup = new NodeAddressLookup(
+        SeedNodeAddressLookup lookup = new SeedNodeAddressLookup(
                 mock(BisqEnvironment.class), false, 1, "192.168.0.1:1234",
                 "192.168.0.1:1234, 192.168.0.2:9897");
 
@@ -33,7 +33,7 @@ public class NodeAddressLookupTest {
 
     @Test
     public void testResolveNodeAddressesWhenSeedNodesAreNull() {
-        NodeAddressLookup lookup = new NodeAddressLookup(
+        SeedNodeAddressLookup lookup = new SeedNodeAddressLookup(
                 mock(BisqEnvironment.class), false, 1, "192.168.0.1:1234", null);
 
         Set<NodeAddress> actual = lookup.resolveNodeAddresses();

@@ -22,7 +22,7 @@ import io.bisq.network.p2p.NodeAddress;
 
 import java.util.Set;
 
-class DefaultNodeAddresses {
+class DefaultSeedNodeAddresses {
     // Addresses are used if the last digit of their port match the network id:
     // - mainnet use port ends in 0
     // - testnet use port ends in 1
@@ -99,6 +99,6 @@ class DefaultNodeAddresses {
             new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
     );
 
-    private DefaultNodeAddresses() {
+    private DefaultSeedNodeAddresses() {
     }
 }

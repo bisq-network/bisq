@@ -14,10 +14,10 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private final Set<NodeAddress> localhostSeedNodeAddresses;
 
     @Inject
-    public DefaultSeedNodeRepository(NodeAddressLookup lookup) {
+    public DefaultSeedNodeRepository(SeedNodeAddressLookup lookup) {
         this.seedNodeAddresses = lookup.resolveNodeAddresses();
-        this.torSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
-        this.localhostSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
+        this.torSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
+        this.localhostSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
     }
 
     @Override
