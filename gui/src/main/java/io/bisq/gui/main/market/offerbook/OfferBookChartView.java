@@ -340,7 +340,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         setText(Res.get("shared.na"));
                                     } else {
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatPrice(offerListItem.offer.getPrice(), true),
-                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offerListItem.offer)));
                                     }
                                 } else {
                                     if (listener != null)
@@ -370,7 +370,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatVolume(offer.getVolume(), true));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatVolume(offer.getVolume(), true),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -386,13 +388,16 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatVolume(offer.getVolume(), true));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatVolume(offer.getVolume(), true),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                     }
                                 } else {
                                     if (listener != null)
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
