@@ -3,32 +3,25 @@ package io.bisq.core.network;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 
-import javax.annotation.concurrent.NotThreadSafe;
 import javax.inject.Inject;
 import java.util.Set;
 import java.util.stream.Stream;
 
-@NotThreadSafe
 public class CoreSeedNodesRepository implements SeedNodesRepository {
 
-    private final NodeAddressLookup lookup;
+    private final Set<NodeAddress> seedNodeAddresses;
     private final Set<NodeAddress> torSeedNodeAddresses;
     private final Set<NodeAddress> localhostSeedNodeAddresses;
 
-    private Set<NodeAddress> seedNodeAddresses;
-
     @Inject
     public CoreSeedNodesRepository(NodeAddressLookup lookup) {
-        this.lookup = lookup;
+        this.seedNodeAddresses = lookup.resolveNodeAddresses();
         this.torSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
         this.localhostSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
     }
 
     @Override
     public Set<NodeAddress> getSeedNodeAddresses() {
-        if (seedNodeAddresses == null) {
-            seedNodeAddresses = lookup.resolveNodeAddresses();
-        }
         return seedNodeAddresses;
     }
 
