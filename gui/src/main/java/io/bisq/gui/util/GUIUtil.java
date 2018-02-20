@@ -83,6 +83,7 @@ public class GUIUtil {
     public final static String EDIT_FLAG = "EDIT_FLAG";
 
     public final static int FIAT_DECIMALS_WITH_ZEROS = 1;
+    public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
     public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
     public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
 

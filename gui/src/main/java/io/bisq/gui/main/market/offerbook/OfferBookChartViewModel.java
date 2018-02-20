@@ -229,6 +229,9 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
     }
 
+    public int getZeroDecimalsForPrice(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_PRICE_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
