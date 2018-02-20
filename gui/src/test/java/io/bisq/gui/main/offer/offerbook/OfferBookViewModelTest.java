@@ -1,13 +1,23 @@
 package io.bisq.gui.main.offer.offerbook;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.*;
+import io.bisq.gui.util.BSFormatter;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +26,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
+import static io.bisq.common.locale.TradeCurrencyMakers.usd;
+import static io.bisq.core.user.PreferenceMakers.empty;
+import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItem;
+import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItemWithRange;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({OfferBook.class, OpenOfferManager.class})
 public class OfferBookViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
+
+    @Before
+    public void setUp() {
+        GlobalSettings.setDefaultTradeCurrency(usd);
+    }
 
     @Ignore("PaymentAccountPayload needs to be set (has been changed with PB changes)")
     public void testIsAnyPaymentAccountValidForOffer() {
@@ -105,7 +131,7 @@ public class OfferBookViewModelTest {
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
-        // same bank 
+        // same bank
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
@@ -151,6 +177,60 @@ public class OfferBookViewModelTest {
 
         //TODO add more tests
 
+    }
+
+    @Test
+    public void testMaxCharactersForAmountWithNoOffes() {
+        OfferBook offerBook = mock(OfferBook.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        assertEquals(0, model.maxPlacesForAmount.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForAmount() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcItem));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(6, model.maxPlacesForAmount.intValue());
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.amount, 2000000000L))));
+        assertEquals(7, model.maxPlacesForAmount.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForAmountRange() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcItemWithRange));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(15, model.maxPlacesForAmount.intValue());
+        offerBookListItems.addAll(make(btcItemWithRange.but(with(OfferBookListItemMaker.amount, 2000000000L))));
+        assertEquals(16, model.maxPlacesForAmount.intValue());
+        offerBookListItems.addAll(make(btcItemWithRange.but(with(OfferBookListItemMaker.minAmount, 30000000000L),
+                with(OfferBookListItemMaker.amount,30000000000L))));
+        assertEquals(19, model.maxPlacesForAmount.intValue());
     }
 
     private PaymentAccount getOKPayAccount(String currencyCode) {

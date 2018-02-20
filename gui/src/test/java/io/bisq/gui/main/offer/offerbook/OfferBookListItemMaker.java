@@ -13,12 +13,21 @@ import static io.bisq.core.offer.OfferMaker.btcOffer;
 public class OfferBookListItemMaker {
 
     public static final Property<OfferBookListItem, Long> price = new Property<>();
-    public static final Property<OfferBookListItem, Long> volume = new Property<>();
+    public static final Property<OfferBookListItem, Long> amount = new Property<>();
+    public static final Property<OfferBookListItem, Long> minAmount = new Property<>();
 
     public static final Instantiator<OfferBookListItem> OfferBookListItem = lookup ->
             new OfferBookListItem(make(btcOffer.but(
                     with(OfferMaker.price, lookup.valueOf(price, 100000L)),
-                    with(OfferMaker.volume, lookup.valueOf(volume, 100000L)))));
+                    with(OfferMaker.amount, lookup.valueOf(amount, 100000L)),
+                    with(OfferMaker.minAmount, lookup.valueOf(amount, 100000L)))));
+
+    public static final Instantiator<OfferBookListItem> OfferBookListItemWithRange = lookup ->
+            new OfferBookListItem(make(btcOffer.but(
+                    with(OfferMaker.price, lookup.valueOf(price, 100000L)),
+                    with(OfferMaker.minAmount, lookup.valueOf(minAmount, 100000L)),
+                    with(OfferMaker.amount, lookup.valueOf(amount, 200000L)))));
 
     public static final Maker<OfferBookListItem> btcItem = a(OfferBookListItem);
+    public static final Maker<OfferBookListItem> btcItemWithRange = a(OfferBookListItemWithRange);
 }

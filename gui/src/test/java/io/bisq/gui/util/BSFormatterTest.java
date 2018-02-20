@@ -90,7 +90,6 @@ public class BSFormatterTest {
     @Test
     public void testFormatPrice() {
         assertEquals("100.0000", formatter.formatPrice(make(usdPrice)));
-        assertEquals("  100.0000", formatter.formatPrice(make(usdPrice), true));
         assertEquals("7098.4700", formatter.formatPrice(make(usdPrice.but(with(priceString, "7098.4700")))));
     }
 
@@ -166,7 +165,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(20000000L);
 
-        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4, true));
+        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4, true, 15));
     }
 
     @Test
@@ -176,7 +175,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(10000000L);
 
-        assertEquals("         0.1000", formatter.formatAmount(offer, 4, true));
+        assertEquals("         0.1000", formatter.formatAmount(offer, 4, true, 15));
     }
 
     @Test

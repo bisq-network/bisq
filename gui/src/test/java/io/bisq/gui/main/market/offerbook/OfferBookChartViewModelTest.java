@@ -84,9 +84,9 @@ public class OfferBookChartViewModelTest {
         final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, new BSFormatter());
         model.activate();
         assertEquals(4, model.maxPlacesForVolume.intValue()); //0.01
-        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.volume,100000000L))));
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.amount,100000000L))));
         assertEquals(5, model.maxPlacesForVolume.intValue()); //10.00
-        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.volume,22128600000L))));
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.amount,22128600000L))));
         assertEquals(7, model.maxPlacesForVolume.intValue()); //2212.86
     }
 }

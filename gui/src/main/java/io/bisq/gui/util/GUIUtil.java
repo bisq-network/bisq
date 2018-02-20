@@ -86,6 +86,8 @@ public class GUIUtil {
     public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
     public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
     public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
+    public final static int AMOUNT_DECIMALS = 4;
+    public final static String RANGE_SEPARATOR = " - ";
 
     private static FeeService feeService;
 

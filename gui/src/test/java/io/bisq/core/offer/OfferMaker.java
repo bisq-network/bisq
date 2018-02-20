@@ -9,7 +9,8 @@ import static com.natpryce.makeiteasy.MakeItEasy.a;
 public class OfferMaker {
 
     public static final Property<Offer, Long> price = new Property<>();
-    public static final Property<Offer, Long> volume = new Property<>();
+    public static final Property<Offer, Long> minAmount = new Property<>();
+    public static final Property<Offer, Long> amount = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
       new OfferPayload("",
@@ -20,8 +21,8 @@ public class OfferMaker {
               lookup.valueOf(price, 100000L),
               0,
               false,
-              lookup.valueOf(volume, 100000L),
-              lookup.valueOf(volume, 100000L),
+              lookup.valueOf(amount, 100000L),
+              lookup.valueOf(minAmount, 100000L),
               "BTC",
               "USD",
               null,

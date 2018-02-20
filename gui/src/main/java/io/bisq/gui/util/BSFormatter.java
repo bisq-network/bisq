@@ -18,8 +18,6 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.GlobalSettings;
-import io.bisq.common.crypto.CryptoUtils;
-import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
@@ -340,7 +338,7 @@ public class BSFormatter {
     }
 
     public String formatMinVolumeAndVolume(Offer offer, boolean decimalAligned) {
-        String formattedVolume =  offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+        String formattedVolume =  offer.isRange() ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
 
         if (decimalAligned) {
             int numberOfPlacesToFill = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? 7 : 15;
@@ -360,18 +358,18 @@ public class BSFormatter {
     }
 
     public String formatAmount(Offer offer, boolean decimalAligned) {
-        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount()) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
         if(decimalAligned) {
             formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
         }
         return formattedAmount;
     }
 
-    public String formatAmount(Offer offer, int decimalPlaces, boolean decimalAligned) {
-        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount(), decimalPlaces) + " - " + formatCoin(offer.getAmount(), decimalPlaces) : formatCoin(offer.getAmount(), decimalPlaces);
+    public String formatAmount(Offer offer, int decimalPlaces, boolean decimalAligned, int maxPlaces) {
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount(), decimalPlaces) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount(), decimalPlaces) : formatCoin(offer.getAmount(), decimalPlaces);
 
         if(decimalAligned) {
-            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
+            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
         }
         return formattedAmount;
     }
@@ -469,7 +467,7 @@ public class BSFormatter {
         if (dateFrom != null && dateTo != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
-            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + " - " + timeFormatter.format(dateTo);
+            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + GUIUtil.RANGE_SEPARATOR + timeFormatter.format(dateTo);
         } else {
             return "";
         }
