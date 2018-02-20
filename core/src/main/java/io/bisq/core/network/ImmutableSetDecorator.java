@@ -27,7 +27,7 @@ import java.util.Set;
 class ImmutableSetDecorator<T> extends AbstractSet<T> {
     private final Set<T> delegate;
 
-    ImmutableSetDecorator(Set<T> delegate) {
+    public ImmutableSetDecorator(Set<T> delegate) {
         this.delegate = ImmutableSet.copyOf(delegate);
     }
 

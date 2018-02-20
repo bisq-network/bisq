@@ -28,7 +28,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
-    static SeedNodeAddresses fromString(String seedNodes) {
+    public static SeedNodeAddresses fromString(String seedNodes) {
         if (seedNodes.isEmpty()) {
             return new SeedNodeAddresses(Collections.emptySet());
         }
@@ -40,11 +40,11 @@ class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
                 .collect(collector());
     }
 
-    SeedNodeAddresses(Set<NodeAddress> delegate) {
+    public SeedNodeAddresses(Set<NodeAddress> delegate) {
         super(delegate);
     }
 
-    SeedNodeAddresses excludeByHost(Set<String> hosts) {
+    public SeedNodeAddresses excludeByHost(Set<String> hosts) {
         Set<NodeAddress> copy = new HashSet<>(this);
         copy.removeIf(address -> {
             String hostName = address.getHostName();
@@ -53,13 +53,13 @@ class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
         return new SeedNodeAddresses(copy);
     }
 
-    SeedNodeAddresses excludeByFullAddress(String fullAddress) {
+    public SeedNodeAddresses excludeByFullAddress(String fullAddress) {
         Set<NodeAddress> copy = new HashSet<>(this);
         copy.removeIf(address -> fullAddress.equals(address.getFullAddress()));
         return new SeedNodeAddresses(copy);
     }
 
-    static Collector<NodeAddress, ?, SeedNodeAddresses> collector() {
+    public static Collector<NodeAddress, ?, SeedNodeAddresses> collector() {
         return Collectors.collectingAndThen(Collectors.toSet(), SeedNodeAddresses::new);
     }
 }

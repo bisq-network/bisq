@@ -27,7 +27,7 @@ class DefaultSeedNodeAddresses {
     // - mainnet use port ends in 0
     // - testnet use port ends in 1
     // - regtest use port ends in 2
-    static final Set<NodeAddress> DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES = ImmutableSet.of(
+    public static final Set<NodeAddress> DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES = ImmutableSet.of(
             // BTC
             // mainnet
             new NodeAddress("localhost:2000"),
@@ -62,7 +62,7 @@ class DefaultSeedNodeAddresses {
     // - mainnet uses port 8000
     // - testnet uses port 8001
     // - regtest uses port 8002
-    static final Set<NodeAddress> DEFAULT_TOR_SEED_NODE_ADDRESSES = ImmutableSet.of(
+    public static final Set<NodeAddress> DEFAULT_TOR_SEED_NODE_ADDRESSES = ImmutableSet.of(
             // BTC mainnet
             new NodeAddress("5quyxpxheyvzmb2d.onion:8000"), // @miker
             new NodeAddress("s67qglwhkgkyvr74.onion:8000"), // @emzy

@@ -46,7 +46,7 @@ public class SeedNodeAddressLookup {
     private final String seedNodes;
 
     @Inject
-    SeedNodeAddressLookup(BisqEnvironment environment,
+    public SeedNodeAddressLookup(BisqEnvironment environment,
                           @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                           @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
                           @Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
@@ -58,7 +58,7 @@ public class SeedNodeAddressLookup {
         this.seedNodes = seedNodes;
     }
 
-    Set<NodeAddress> resolveNodeAddresses() {
+    public Set<NodeAddress> resolveNodeAddresses() {
         SeedNodeAddresses allSeedNodeAddresses = getAllAddresses();
 
         Set<String> bannedHosts = getBannedHosts();
