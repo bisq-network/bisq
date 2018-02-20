@@ -211,8 +211,8 @@ public class CompensationRequestDisplay {
     public SplitPane createCompensationRequestPane(TableView<CompensationRequestListItem> tableView, String headerString) {
         SplitPane compensationRequestPane = new SplitPane();
         compensationRequestPane.setOrientation(Orientation.VERTICAL);
-        compensationRequestPane.setDividerPositions(0.3, 0.7);
-        compensationRequestPane.setStyle("-fx-box-border: transparent;");
+        compensationRequestPane.setDividerPositions(0.2, 0.7);
+        compensationRequestPane.setStyle("-fx-padding: 0; -fx-box-border: transparent;");
 
         compensationRequestPane.getItems().add(createCompensationList(tableView, headerString));
         compensationRequestPane.getItems().add(createCompensationRequestDisplay());
