@@ -25,6 +25,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         return seedNodeAddresses;
     }
 
+    @Override
     public String getOperator(NodeAddress nodeAddress) {
         switch (nodeAddress.getFullAddress()) {
             case "5quyxpxheyvzmb2d.onion:8000":
@@ -48,6 +49,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         }
     }
 
+    @Override
     public boolean isSeedNode(NodeAddress nodeAddress) {
         return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
                 .anyMatch(e -> e.equals(nodeAddress));
