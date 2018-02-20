@@ -28,17 +28,6 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
-    public static SeedNodeAddresses fromString(String seedNodes) {
-        if (seedNodes.isEmpty()) {
-            return new SeedNodeAddresses(Collections.emptySet());
-        }
-
-        String trimmed = StringUtils.deleteWhitespace(seedNodes);
-        String[] nodes = trimmed.split(",");
-        return Arrays.stream(nodes)
-                .map(NodeAddress::new)
-                .collect(collector());
-    }
 
     public SeedNodeAddresses(Set<NodeAddress> delegate) {
         super(delegate);
@@ -61,5 +50,17 @@ class SeedNodeAddresses extends ImmutableSetDecorator<NodeAddress> {
 
     public static Collector<NodeAddress, ?, SeedNodeAddresses> collector() {
         return Collectors.collectingAndThen(Collectors.toSet(), SeedNodeAddresses::new);
+    }
+
+    public static SeedNodeAddresses fromString(String seedNodes) {
+        if (seedNodes.isEmpty()) {
+            return new SeedNodeAddresses(Collections.emptySet());
+        }
+
+        String trimmed = StringUtils.deleteWhitespace(seedNodes);
+        String[] nodes = trimmed.split(",");
+        return Arrays.stream(nodes)
+                .map(NodeAddress::new)
+                .collect(collector());
     }
 }
