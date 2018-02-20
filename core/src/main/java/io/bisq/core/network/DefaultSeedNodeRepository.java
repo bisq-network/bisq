@@ -7,14 +7,14 @@ import javax.inject.Inject;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class CoreSeedNodeRepository implements SeedNodeRepository {
+public class DefaultSeedNodeRepository implements SeedNodeRepository {
 
     private final Set<NodeAddress> seedNodeAddresses;
     private final Set<NodeAddress> torSeedNodeAddresses;
     private final Set<NodeAddress> localhostSeedNodeAddresses;
 
     @Inject
-    public CoreSeedNodeRepository(NodeAddressLookup lookup) {
+    public DefaultSeedNodeRepository(NodeAddressLookup lookup) {
         this.seedNodeAddresses = lookup.resolveNodeAddresses();
         this.torSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
         this.localhostSeedNodeAddresses = DefaultNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
