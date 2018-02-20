@@ -149,7 +149,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                             .show();
                     break;
                 case "BCH":
-                case "BCHC":
+                case "BCL":
                     new Popup<>().information(Res.get("account.altcoin.popup.bch"))
                             .useIUnderstandButton()
                             .show();

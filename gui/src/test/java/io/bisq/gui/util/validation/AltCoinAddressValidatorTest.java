@@ -383,9 +383,9 @@ public class AltCoinAddressValidatorTest {
     }
 
     @Test
-    public void testBCHC() {
+    public void testBCL() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
-        validator.setCurrencyCode("BCHC");
+        validator.setCurrencyCode("BCL");
 
         assertTrue(validator.validate("1HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSH").isValid);
         assertTrue(validator.validate("1MEbUJ5v5MdDEqFJGz4SZp58KkaLdmXZ85").isValid);

@@ -235,7 +235,7 @@ public class TradeStatisticsManager {
         // v0.6.1
         newlyAdded.add("MAD");
         newlyAdded.add("BCH");
-        newlyAdded.add("BCHC");
+        newlyAdded.add("BCL");
         newlyAdded.add("BTG");
         // v0.6.2
         newlyAdded.add("CAGE");

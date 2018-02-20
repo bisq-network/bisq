@@ -353,7 +353,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
-                case "BCHC":
+                case "BCL":
                     try {
                         Address.fromBase58(BtcMainNetParamsForValidation.get(), input);
                         return new ValidationResult(true);

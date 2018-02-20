@@ -94,7 +94,7 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("BTC"))
             result.add(new CryptoCurrency("BTC", "Bitcoin"));
         result.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
-        result.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
+        result.add(new CryptoCurrency("BCL", "Bitcoin Clashic"));
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
         result.add(new CryptoCurrency("DARX", "BitDaric"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
