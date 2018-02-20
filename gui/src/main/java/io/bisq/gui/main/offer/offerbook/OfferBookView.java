@@ -67,6 +67,7 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
+import java.util.Comparator;
 import java.util.Optional;
 
 import static io.bisq.gui.util.FormBuilder.*;
@@ -179,14 +180,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             Price price2 = o2.getOffer().getPrice();
             return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
         });
-        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) -> {
             Volume offerVolume1 = o1.getOffer().getVolume();
             Volume offerVolume2 = o2.getOffer().getVolume();
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
-        paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
-        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getFullAddress().compareTo(o2.getOffer().getOwnerNodeAddress().getFullAddress()));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
+        avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
 
         nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
