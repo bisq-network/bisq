@@ -458,6 +458,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "VDN":
+                    if (!input.matches("^[D][0-9a-zA-Z]{33}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                     // Add new coins at the end...
                 default:

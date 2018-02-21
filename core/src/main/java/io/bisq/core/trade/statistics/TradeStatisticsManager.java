@@ -257,6 +257,8 @@ public class TradeStatisticsManager {
         newlyAdded.add("YTN");
         newlyAdded.add("DARX");
         newlyAdded.add("ODN");
+        // New
+        newlyAdded.add("VDN");
 
         coinsWithValidator.addAll(newlyAdded);
 
