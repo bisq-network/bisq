@@ -227,6 +227,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                 setMinWidth(100);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
