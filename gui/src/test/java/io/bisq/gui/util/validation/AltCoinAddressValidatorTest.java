@@ -643,4 +643,19 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("SSnwqFBiyqK1n4BV7kPX86iesev2NobhEo").isValid);
         assertFalse(validator.validate("").isValid);
     }
+
+    @Test
+    public void testACH() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("ACH");
+
+        assertTrue(validator.validate("AciV7ZyJDpCg7kGGmbo97VjgjpVZkXRTMD").isValid);
+        assertTrue(validator.validate("ARhW8anWaZtExdK2cQkBwsvsQZ9TkC9bwH").isValid);
+        assertTrue(validator.validate("AcxpGTWX4zFiD8p8hfYw99RXV7MY2y8hs9").isValid);
+
+        assertFalse(validator.validate("GWaSW6PHfQKBv8EXV3xiqGG2zxKZh4XYNu").isValid);
+        assertFalse(validator.validate("AcxpGTWX4zFiD8p8hfY099RXV7MY2y8hs9").isValid);
+        assertFalse(validator.validate("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }

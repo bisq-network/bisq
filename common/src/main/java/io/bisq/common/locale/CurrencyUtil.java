@@ -87,6 +87,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
 
+        result.add(new CryptoCurrency("ACH", "AchieveCoin"));
         result.add(new CryptoCurrency("BETR", "Better Betting", true));
         if (DevEnv.DAO_TRADING_ACTIVATED)
             result.add(new CryptoCurrency("BSQ", "Bisq Token"));
