@@ -1040,9 +1040,9 @@ textfield */
     -fx-alignment: center;
 }
 
-#charts .axis {
+#charts .axis, #price-chart .axis, #volume-chart .axis {
     -fx-tick-label-fill: -bs-black;
-    -fx-tick-label-font-size: 0.923em;
+    -fx-tick-label-font-size: 0.846em;
     -fx-tick-label-font-family:"Roboto Condensed Light";
 }
 
