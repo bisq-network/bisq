@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>bisq-api</artifactId>
     <packaging>jar</packaging>
-    <version>v0.6.5-dev</version>
+    <version>0.6.6</version>
     <description>API for Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 
@@ -102,15 +102,62 @@
         -->
 
         <dependency>
-            <groupId>com.github.mrosseel</groupId>
-            <artifactId>bisq-exchange</artifactId>
-            <version>0.6.5-dev-SNAPSHOT</version>
+            <groupId>io.bisq</groupId>
+            <artifactId>common</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>consensus</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>core</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>gui</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>monitor</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>network</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>seednode</artifactId>
+            <version>${bisq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>statistics</artifactId>
+            <version>${bisq.version}</version>
         </dependency>
         <dependency>
             <!--force proper guava version since one of arquillian dependencies forces 18.0-->
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>20.0</version>
+        </dependency>
+        <dependency>
+            <!--force proper version-->
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.1</version>
+        </dependency>
+        <dependency>
+            <!--force proper version-->
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.9.1</version>
         </dependency>
 
         <!-- Java 9 compatibility fix -->

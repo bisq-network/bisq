@@ -21,6 +21,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.bisq.api.service.BisqApiApplication;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
@@ -43,7 +45,6 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
@@ -325,7 +326,8 @@ public class BisqApiWithUI extends Application {
 
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
-        new SendAlertMessageWindow()
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new SendAlertMessageWindow(useDevPrivilegeKeys)
                 .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
                 .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
@@ -333,7 +335,8 @@ public class BisqApiWithUI extends Application {
 
     private void showFilterPopup() {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
-        new FilterWindow(filterManager)
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new FilterWindow(filterManager, useDevPrivilegeKeys)
                 .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
                 .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();
@@ -448,7 +451,7 @@ public class BisqApiWithUI extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(JsonChainStateExporter.class).shutDown();
+//                injector.getInstance(JsonChainStateExporter.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {

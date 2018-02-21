@@ -10,6 +10,7 @@ services:
     environment:
       - LOG_LEVEL=debug
       - USE_LOCALHOST_FOR_P2P=true
+      - USE_DEV_PRIVILEGE_KEYS=true
       - SEED_NODES=seed:8000
       - BTC_NODES=bitcoin:18332
       - BASE_CURRENCY_NETWORK=BTC_REGTEST

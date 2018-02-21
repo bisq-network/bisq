@@ -23,6 +23,9 @@ fi
 if [ ! -z "$LOG_LEVEL" ]; then
     ARGS="$ARGS --logLevel=$LOG_LEVEL"
 fi
+if [ ! -z "$USE_DEV_PRIVILEGE_KEYS" ]; then
+    ARGS="$ARGS --useDevPrivilegeKeys=$USE_DEV_PRIVILEGE_KEYS"
+fi
 
 echo mvn compile exec:java -Dexec.mainClass="io.bisq.api.app.ApiMain" -Dexec.args="$ARGS"
 mvn compile exec:java -Dexec.mainClass="io.bisq.api.app.ApiMain" -Dexec.args="$ARGS"

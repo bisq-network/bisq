@@ -18,6 +18,7 @@
 package io.bisq.api.app;
 
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.bisq.api.service.BisqApiApplication;
 import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
@@ -27,6 +28,7 @@ import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
@@ -89,6 +91,9 @@ public class ApiModule extends AppModule {
         // added for API usage
         bind(BisqApiApplication.class).in(Singleton.class);
         bind(MainViewModelHeadless.class).in(Singleton.class);
+
+        Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
 
         // ordering is used for shut down sequence
         install(tradeModule());

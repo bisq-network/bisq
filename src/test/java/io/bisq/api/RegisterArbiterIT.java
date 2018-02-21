@@ -35,6 +35,7 @@ public class RegisterArbiterIT {
     {
         return withRegtestEnv(Container.withContainerName("bisq-api-" + nameSuffix).fromImage("bisq-api").withVolume("m2", "/root/.m2").withPortBinding(portBinding))
                 .withEnvironment("NODE_PORT", nodePort)
+                .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true)
                 .withLink("bisq-seednode")
                 .build();
     }

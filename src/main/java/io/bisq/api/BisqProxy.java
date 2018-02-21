@@ -82,6 +82,7 @@ public class BisqProxy {
     private FeeService feeService;
     private Preferences preferences;
     private BsqWalletService bsqWalletService;
+    private final boolean useDevPrivilegeKeys;
     private WalletsSetup walletsSetup;
 
 
@@ -95,7 +96,7 @@ public class BisqProxy {
     public BisqProxy(ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user,
                      FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
-                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager) {
+                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys) {
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
@@ -113,6 +114,7 @@ public class BisqProxy {
         this.walletsSetup = walletsSetup;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     protected CurrencyList calculateCurrencyList() {
@@ -739,10 +741,8 @@ public class BisqProxy {
 
     public void registerArbitrator(List<String> languageCodes) {
 //        TODO most of this code is dupplication of ArbitratorRegistrationViewModel.onRegister
-        String privKeyString;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
-            privKeyString = DevEnv.DEV_PRIVILEGE_PRIV_KEY;
-//        TODO hm, are we going to send private key over http?
+        final String privKeyString = useDevPrivilegeKeys ? DevEnv.DEV_PRIVILEGE_PRIV_KEY : null;
+        //        TODO hm, are we going to send private key over http?
         if (null == privKeyString) {
             throw new RuntimeException("Missing private key");
         }
