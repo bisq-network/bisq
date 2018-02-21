@@ -264,12 +264,12 @@ public class BSFormatter {
     // Volume
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatVolume(Volume volume, Boolean decimalAligned) {
-        return formatVolume(volume, decimalAligned, 8);
+    public String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits) {
+        return formatVolume(offer, decimalAligned, maxNumberOfDigits, true);
     }
 
-    public String formatVolume(Volume volume, Boolean decimalAligned, int maxNumberOfDigits) {
-        String formattedVolume = formatVolume(volume);
+    public String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
+        String formattedVolume =  offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
 
         if(decimalAligned) {
             formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
@@ -336,18 +336,6 @@ public class BSFormatter {
         return Res.get("formatter.formatVolumeLabel",
                 currencyCode, postFix);
     }
-
-    public String formatMinVolumeAndVolume(Offer offer, boolean decimalAligned) {
-        String formattedVolume =  offer.isRange() ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
-
-        if (decimalAligned) {
-            int numberOfPlacesToFill = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? 7 : 15;
-            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, numberOfPlacesToFill);
-        }
-
-        return formattedVolume;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Amount

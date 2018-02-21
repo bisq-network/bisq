@@ -233,6 +233,60 @@ public class OfferBookViewModelTest {
         assertEquals(19, model.maxPlacesForAmount.intValue());
     }
 
+    @Test
+    public void testMaxCharactersForVolumeWithNoOffes() {
+        OfferBook offerBook = mock(OfferBook.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        assertEquals(0, model.maxPlacesForVolume.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForVolume() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcItem));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(8, model.maxPlacesForVolume.intValue());
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.amount, 2000000000L))));
+        assertEquals(10, model.maxPlacesForVolume.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForVolumeRange() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcItemWithRange));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(15, model.maxPlacesForVolume.intValue());
+        offerBookListItems.addAll(make(btcItemWithRange.but(with(OfferBookListItemMaker.amount, 2000000000L))));
+        assertEquals(17, model.maxPlacesForVolume.intValue());
+        offerBookListItems.addAll(make(btcItemWithRange.but(with(OfferBookListItemMaker.minAmount, 30000000000L),
+                with(OfferBookListItemMaker.amount,30000000000L))));
+        assertEquals(25, model.maxPlacesForVolume.intValue());
+    }
+
     private PaymentAccount getOKPayAccount(String currencyCode) {
         PaymentAccount paymentAccount = new OKPayAccount();
         paymentAccount.setSelectedTradeCurrency(new FiatCurrency(currencyCode));

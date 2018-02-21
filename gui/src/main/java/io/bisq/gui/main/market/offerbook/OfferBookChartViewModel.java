@@ -246,11 +246,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public String getVolume(Offer offer) {
-        return formatVolume(offer.getVolume(), true);
+        return formatVolume(offer, true);
     }
 
-    private String formatVolume(Volume volume, boolean decimalAligned) {
-        return formatter.formatVolume(volume, decimalAligned, maxPlacesForVolume.get());
+    private String formatVolume(Offer offer, boolean decimalAligned) {
+        return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +300,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         if (highestVolumeOffer.isPresent()) {
             final Offer offer = highestVolumeOffer.get();
-            maxPlacesForVolume.set(formatVolume(offer.getVolume(), false).length());
+            maxPlacesForVolume.set(formatVolume(offer, false).length());
         }
 
         buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);

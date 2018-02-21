@@ -11,7 +11,9 @@ public class ColoredDecimalPlacesWithZerosText extends TextFlow {
     public ColoredDecimalPlacesWithZerosText(String number, int numberOfZerosToColorize) {
         super();
 
-        if (number.contains(GUIUtil.RANGE_SEPARATOR)) {
+        if (numberOfZerosToColorize <= 0) {
+          getChildren().addAll(new Text(number));
+        } else if (number.contains(GUIUtil.RANGE_SEPARATOR)) {
             //is range
             String[] splitNumber = number.split(GUIUtil.RANGE_SEPARATOR);
             Tuple2<Text, Text> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);

@@ -5,12 +5,15 @@ import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class OfferMaker {
 
     public static final Property<Offer, Long> price = new Property<>();
     public static final Property<Offer, Long> minAmount = new Property<>();
     public static final Property<Offer, Long> amount = new Property<>();
+    public static final Property<Offer, String> baseCurrencyCode = new Property<>();
+    public static final Property<Offer, String> counterCurrencyCode = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
       new OfferPayload("",
@@ -23,8 +26,8 @@ public class OfferMaker {
               false,
               lookup.valueOf(amount, 100000L),
               lookup.valueOf(minAmount, 100000L),
-              "BTC",
-              "USD",
+              lookup.valueOf(baseCurrencyCode, "BTC"),
+              lookup.valueOf(counterCurrencyCode, "USD"),
               null,
               null,
               "SEPA",
@@ -52,5 +55,5 @@ public class OfferMaker {
               null,
               0));
 
-    public static final Maker<Offer> btcOffer = a(Offer);
+    public static final Maker<Offer> btcUsdOffer = a(Offer);
 }

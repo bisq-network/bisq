@@ -100,6 +100,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
 
 
@@ -154,8 +155,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 if (!item.getOffer().isRange() && containsRangeAmount) {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(),false)
                             .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false)
+                            .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
                 } else {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(),false).length());
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false).length());
                 }
 
             }
@@ -301,8 +305,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getAmount(OfferBookListItem item) {
-        Offer offer = item.getOffer();
-        return formatAmount(offer, true);
+        return formatAmount(item.getOffer(), true);
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
@@ -331,12 +334,16 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getVolume(OfferBookListItem item) {
-        Offer offer = item.getOffer();
+        return formatVolume(item.getOffer(), true);
+    }
+
+    private String formatVolume(Offer offer, boolean decimalAligned) {
         Volume offerVolume = offer.getVolume();
         Volume minOfferVolume = offer.getMinVolume();
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
-            return formatter.formatMinVolumeAndVolume(offer, false) + postFix;
+            decimalAligned = decimalAligned && !showAllTradeCurrenciesProperty.get();
+            return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
         } else {
             return Res.get("shared.na");
         }

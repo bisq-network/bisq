@@ -8,7 +8,7 @@ import io.bisq.core.offer.OfferMaker;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.core.offer.OfferMaker.btcOffer;
+import static io.bisq.core.offer.OfferMaker.btcUsdOffer;
 
 public class OfferBookListItemMaker {
 
@@ -17,13 +17,13 @@ public class OfferBookListItemMaker {
     public static final Property<OfferBookListItem, Long> minAmount = new Property<>();
 
     public static final Instantiator<OfferBookListItem> OfferBookListItem = lookup ->
-            new OfferBookListItem(make(btcOffer.but(
+            new OfferBookListItem(make(btcUsdOffer.but(
                     with(OfferMaker.price, lookup.valueOf(price, 100000L)),
                     with(OfferMaker.amount, lookup.valueOf(amount, 100000L)),
                     with(OfferMaker.minAmount, lookup.valueOf(amount, 100000L)))));
 
     public static final Instantiator<OfferBookListItem> OfferBookListItemWithRange = lookup ->
-            new OfferBookListItem(make(btcOffer.but(
+            new OfferBookListItem(make(btcUsdOffer.but(
                     with(OfferMaker.price, lookup.valueOf(price, 100000L)),
                     with(OfferMaker.minAmount, lookup.valueOf(minAmount, 100000L)),
                     with(OfferMaker.amount, lookup.valueOf(amount, 200000L)))));

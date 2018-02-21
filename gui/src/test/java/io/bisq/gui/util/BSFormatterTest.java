@@ -37,6 +37,7 @@ import static io.bisq.common.monetary.PriceMaker.priceString;
 import static io.bisq.common.monetary.PriceMaker.usdPrice;
 import static io.bisq.common.monetary.VolumeMaker.usdVolume;
 import static io.bisq.common.monetary.VolumeMaker.volumeString;
+import static io.bisq.core.offer.OfferMaker.btcUsdOffer;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
@@ -103,7 +104,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatVolume() {
-        assertEquals("  100.00", formatter.formatVolume(make(usdVolume), true));
+        assertEquals("    0.01", formatter.formatVolume(make(btcUsdOffer), true, 8));
         assertEquals("100.00", formatter.formatVolume(make(usdVolume)));
         assertEquals("1774.62", formatter.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
@@ -115,7 +116,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(btc);
         when(offer.getVolume()).thenReturn(btc);
 
-        assertEquals("0.10000000", formatter.formatMinVolumeAndVolume(offer, false));
+        assertEquals("0.10000000", formatter.formatVolume(offer.getVolume()));
     }
 
     @Test
@@ -127,7 +128,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(btcMin);
         when(offer.getVolume()).thenReturn(btcMax);
 
-        assertEquals("0.10000000 - 0.25000000", formatter.formatMinVolumeAndVolume(offer, false));
+        assertEquals("0.10000000 - 0.25000000", formatter.formatVolume(offer, false, 0));
     }
 
     @Test
@@ -136,7 +137,7 @@ public class BSFormatterTest {
         when(offer.getMinVolume()).thenReturn(null);
         when(offer.getVolume()).thenReturn(null);
 
-        assertEquals("", formatter.formatMinVolumeAndVolume(offer, false));
+        assertEquals("", formatter.formatVolume(offer.getVolume()));
     }
 
     @Test
