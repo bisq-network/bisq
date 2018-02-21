@@ -343,7 +343,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     int getNumberOfDecimalsForVolume(OfferBookListItem item) {
-        return CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode()) ? 1 : 7;
+        return CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
     }
 
     String getPaymentMethod(OfferBookListItem item) {
