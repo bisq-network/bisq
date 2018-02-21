@@ -1,6 +1,7 @@
 package io.bisq.gui.components;
 
 import io.bisq.common.util.Tuple2;
+import io.bisq.gui.util.GUIUtil;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
@@ -10,15 +11,13 @@ public class ColoredDecimalPlacesWithZerosText extends TextFlow {
     public ColoredDecimalPlacesWithZerosText(String number, int numberOfZerosToColorize) {
         super();
 
-        final String rangeSeparator = " - ";
-
-        if (number.contains(rangeSeparator)) {
+        if (number.contains(GUIUtil.RANGE_SEPARATOR)) {
             //is range
-            String[] splitNumber = number.split(rangeSeparator);
+            String[] splitNumber = number.split(GUIUtil.RANGE_SEPARATOR);
             Tuple2<Text, Text> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
 
-            getChildren().add(new Text(rangeSeparator));
+            getChildren().add(new Text(GUIUtil.RANGE_SEPARATOR));
 
             numbers = getSplittedNumberNodes(splitNumber[1], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
