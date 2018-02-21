@@ -124,6 +124,11 @@ public abstract class BisqExecutable {
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
+                description("If that is true all the privileged features which requires a private key to enable it are overridden by a dev key pair " +
+                        "(This is for developers only!)", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
         parser.accepts(AppOptionKeys.DUMP_STATISTICS,
                 description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()

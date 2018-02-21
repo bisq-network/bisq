@@ -17,8 +17,10 @@
 
 package io.bisq.gui.main.disputes.arbitrator;
 
+import com.google.inject.name.Named;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.FxmlView;
@@ -40,10 +42,10 @@ public class ArbitratorDisputeView extends TraderDisputeView {
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
-                                 P2PService p2PService) {
+                                 P2PService p2PService, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(disputeManager, keyRing, tradeManager, stage, formatter,
                 disputeSummaryWindow, privateNotificationManager, contractWindow,
-                tradeDetailsWindow, p2PService);
+                tradeDetailsWindow, p2PService, useDevPrivilegeKeys);
     }
 
     @Override

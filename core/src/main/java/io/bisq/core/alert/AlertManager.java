@@ -49,10 +49,7 @@ public class AlertManager {
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message
-    @SuppressWarnings("ConstantConditions")
-    private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
-            DevEnv.DEV_PRIVILEGE_PUB_KEY :
-            "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f";
+    private final String pubKeyAsHex;
     private ECKey alertSigningKey;
 
 
@@ -61,7 +58,11 @@ public class AlertManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public AlertManager(P2PService p2PService,
+                        KeyRing keyRing,
+                        User user,
+                        @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
+                        @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
@@ -88,6 +89,9 @@ public class AlertManager {
                 }
             });
         }
+        pubKeyAsHex = useDevPrivilegeKeys ?
+                DevEnv.DEV_PRIVILEGE_PUB_KEY :
+                "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f";
     }
 
 

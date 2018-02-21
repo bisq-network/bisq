@@ -17,11 +17,13 @@
 
 package io.bisq.gui.main.portfolio.closedtrades;
 
+import com.google.inject.name.Named;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -48,12 +50,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
-import sun.security.krb5.internal.rcache.AuthList;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
+    private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -76,7 +78,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
                             Stage stage,
-                            BSFormatter formatter) {
+                            BSFormatter formatter,
+                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
@@ -85,6 +88,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.stage = stage;
         this.preferences = preferences;
         this.formatter = formatter;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -328,7 +332,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             offer,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

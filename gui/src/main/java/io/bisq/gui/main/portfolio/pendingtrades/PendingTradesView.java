@@ -17,10 +17,12 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
+import com.google.inject.name.Named;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
@@ -60,6 +62,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
@@ -80,12 +83,18 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager, Preferences preferences) {
+    public PendingTradesView(PendingTradesViewModel model,
+                             TradeDetailsWindow tradeDetailsWindow,
+                             BSFormatter formatter,
+                             PrivateNotificationManager privateNotificationManager,
+                             Preferences preferences,
+                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -477,7 +486,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             offer,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

@@ -47,6 +47,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
 
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
+    private final boolean useDevPrivilegeKeys;
     private SendPrivateNotificationHandler sendPrivateNotificationHandler;
 
 
@@ -66,9 +67,10 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress) {
+    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress, boolean useDevPrivilegeKeys) {
         this.pubKeyRing = pubKeyRing;
         this.nodeAddress = nodeAddress;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
 
@@ -110,7 +112,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,

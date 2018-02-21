@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
+    private final boolean useDevPrivilegeKeys;
     private InputTextField inputTextField;
     private Point2D position;
     private static PeerInfoWithTagEditor INSTANCE;
@@ -52,10 +53,11 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     @Nullable
     private String accountAge;
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences, boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         width = 400;
         type = Type.Undefined;
         if (INSTANCE != null)
@@ -163,7 +165,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
-                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress())
+                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), useDevPrivilegeKeys)
                     .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                     .show();
             }
