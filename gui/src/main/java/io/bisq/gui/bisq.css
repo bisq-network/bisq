@@ -21,23 +21,15 @@ bg color of non edit textFields: fafafa
 */
 
 @font-face {
-    src: url("/fonts/RobotoMono-Regular.ttf");
+    src: url("/fonts/Verdana.ttf");
 }
 
 @font-face {
-    src: url("/fonts/Roboto-Regular.ttf");
+    src: url("/fonts/VerdanaBold.ttf");
 }
 
 @font-face {
-    src: url("/fonts/Roboto-Bold.ttf");
-}
-
-@font-face {
-    src: url("/fonts/Roboto-Medium.ttf");
-}
-
-@font-face {
-    src: url("/fonts/RobotoCondensed-Light.ttf");
+    src: url("/fonts/LucidaConsole.ttf");
 }
 
 .root {
@@ -116,8 +108,8 @@ bg color of non edit textFields: fafafa
     -fx-focus-color: -fx-accent;
     -fx-selection-bar: derive(-fx-accent, 50%);
 
-    -fx-font-size: 14;
-    -fx-font-family: "Roboto";
+    -fx-font-size: 13;
+    -fx-font-family: "Verdana";
 }
 
 /********************************************************************************************************************
@@ -461,8 +453,7 @@ textfield */
 
 .table-view .column-header .label {
     -fx-alignment: center;
-    -fx-font-weight: normal;
-    -fx-font-family: "Roboto Medium";
+    -fx-font-weight: bold;
 }
 
 .table-view .focus {
@@ -542,8 +533,7 @@ textfield */
 }
 
 .number-column.table-cell {
-    -fx-font-family: "Roboto Mono";
-    -fx-font-size:0.923em;
+    -fx-font-family: "Lucida Console";
 }
 
 /*******************************************************************************
@@ -1039,7 +1029,6 @@ textfield */
 #charts .axis, #price-chart .axis, #volume-chart .axis {
     -fx-tick-label-fill: -bs-black;
     -fx-tick-label-font-size: 0.846em;
-    -fx-tick-label-font-family:"Roboto Condensed Light";
 }
 
 #charts .chart-plot-background {
