@@ -459,13 +459,10 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
                 case "GCH":
-                    try {
-                        Address.fromBase58(ODNParams.get(), input);
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
                         return new ValidationResult(true);
-                    } catch (AddressFormatException e) {
-                        return new ValidationResult(false, getErrorMessage(e));
-                    }
-                    // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
