@@ -1,0 +1,16 @@
+version: '3'
+
+# Fill in your own ONION addres, without the .onion suffix
+
+services:
+    seednode:
+        build:
+            context: .
+            dockerfile: docker/prod/Dockerfile
+            args:
+            - ONION_ADDRESS=123xxxxxxxxxx
+        image: bisq:seednode
+        ports:
+            - 8000:8000
+        environment:
+            - ONION_ADDRESS=123xxxxxxxxxx
