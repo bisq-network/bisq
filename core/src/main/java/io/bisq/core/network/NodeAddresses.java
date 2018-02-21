@@ -21,6 +21,7 @@ import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collector;
@@ -28,6 +29,10 @@ import java.util.stream.Collectors;
 
 class NodeAddresses extends ImmutableSetDecorator<NodeAddress> {
     static NodeAddresses fromString(String seedNodes) {
+        if (seedNodes.isEmpty()) {
+            return new NodeAddresses(Collections.emptySet());
+        }
+
         String trimmed = StringUtils.deleteWhitespace(seedNodes);
         String[] nodes = trimmed.split(",");
         return Arrays.stream(nodes)

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class NodeAddressesTest {
     @Before
@@ -73,5 +74,11 @@ public class NodeAddressesTest {
                 new NodeAddress("192.168.0.2:2222"));
         NodeAddresses actual = NodeAddresses.fromString("192.168.0.1:1111, 192.168.0.2:2222");
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFromEmptyString() {
+        NodeAddresses nodeAddresses = NodeAddresses.fromString("");
+        assertTrue(nodeAddresses.isEmpty());
     }
 }
