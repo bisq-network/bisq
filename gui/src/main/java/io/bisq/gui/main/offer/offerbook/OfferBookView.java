@@ -648,6 +648,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         this.offerBookListItem = item;
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
+                                        setGraphic(null);
                                     } else {
                                         setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(item),
