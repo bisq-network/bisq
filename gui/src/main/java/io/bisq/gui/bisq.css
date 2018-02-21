@@ -179,7 +179,7 @@ bg color of non edit textFields: fafafa
 }
 
 .zero-decimals {
-    -fx-fill: -bs-light-grey;
+    -fx-text-fill: -bs-light-grey;
 }
 
 /* Other UI Elements */
@@ -724,10 +724,6 @@ textfield */
     -fx-font-weight: bold;
     -fx-font-size: 1.231em;
     -fx-alignment: center;
-}
-
-.offer-table .table-row-cell {
-    -fx-cell-size: 23px;
 }
 
 /* Offer */
