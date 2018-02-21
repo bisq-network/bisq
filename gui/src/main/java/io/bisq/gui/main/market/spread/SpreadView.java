@@ -268,7 +268,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.totalAmount, 4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item.totalAmount), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
                                     setText("");
                             }

@@ -86,23 +86,32 @@ public class BSFormatter {
 
     @NotNull
     public String formatCoin(Coin coin, int decimalPlaces) {
+        return formatCoin(coin, decimalPlaces, false, 0);
+    }
+
+
+    public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
         final int repetitions = decimalPlaces;
+        String formattedCoin = "";
 
         if (coin != null) {
             try {
                 if (decimalPlaces < 0) {
-                    return coinFormat.noCode().format(coin).toString();
+                    formattedCoin = coinFormat.noCode().format(coin).toString();
                 } else {
                     final int decimals = decimalPlaces/repetitions;
-                    return coinFormat.noCode().minDecimals(repetitions).repeatOptionalDecimals(decimals, repetitions).format(coin).toString();
+                    formattedCoin = coinFormat.noCode().minDecimals(repetitions).repeatOptionalDecimals(decimals, repetitions).format(coin).toString();
                 }
             } catch (Throwable t) {
                 log.warn("Exception at formatBtc: " + t.toString());
-                return "";
             }
-        } else {
-            return "";
         }
+
+        if (decimalAligned) {
+            formattedCoin = fillUpPlacesWithEmptyStrings(formattedCoin, maxNumberOfDigits);
+        }
+
+        return formattedCoin;
     }
 
     public String formatCoinWithCode(Coin coin) {
