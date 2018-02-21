@@ -91,16 +91,14 @@ public class BSFormatter {
 
 
     public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
-        final int repetitions = decimalPlaces;
         String formattedCoin = "";
 
         if (coin != null) {
             try {
-                if (decimalPlaces < 0) {
+                if (decimalPlaces < 0 || decimalPlaces > 4) {
                     formattedCoin = coinFormat.noCode().format(coin).toString();
                 } else {
-                    final int decimals = decimalPlaces/repetitions;
-                    formattedCoin = coinFormat.noCode().minDecimals(repetitions).repeatOptionalDecimals(decimals, repetitions).format(coin).toString();
+                    formattedCoin = coinFormat.noCode().minDecimals(decimalPlaces).repeatOptionalDecimals(1, decimalPlaces).format(coin).toString();
                 }
             } catch (Throwable t) {
                 log.warn("Exception at formatBtc: " + t.toString());
