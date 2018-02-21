@@ -51,6 +51,7 @@ import org.bitcoinj.core.Coin;
 import sun.security.krb5.internal.rcache.AuthList;
 
 import javax.inject.Inject;
+import java.util.Comparator;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
@@ -112,11 +113,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
-        dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
-        directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection()
-                .compareTo(o2.getTradable().getOffer().getDirection()));
-        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getTradable().getDate()));
+        directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
         priceColumn.setComparator((o1, o2) -> {
             final Tradable tradable1 = o1.getTradable();
