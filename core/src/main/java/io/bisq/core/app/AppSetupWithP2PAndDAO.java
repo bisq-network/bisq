@@ -18,6 +18,7 @@
 package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.core.dao.DaoManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
@@ -47,6 +48,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 accountAgeWitnessService,
                 filterManager);
         this.daoManager = daoManager;
+        this.persistedDataHosts.add(daoManager.getCompensationRequestManager());
     }
 
     @Override
