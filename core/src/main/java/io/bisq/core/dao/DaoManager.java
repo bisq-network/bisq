@@ -24,6 +24,7 @@ import io.bisq.core.dao.blockchain.BsqNode;
 import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
+import lombok.Getter;
 
 /**
  * High level entry point for Dao domain
@@ -31,6 +32,7 @@ import io.bisq.core.dao.vote.VotingManager;
 public class DaoManager {
     private final DaoPeriodService daoPeriodService;
     private final VotingManager voteManager;
+    @Getter
     private final CompensationRequestManager compensationRequestManager;
     private final BsqNode bsqNode;
 
