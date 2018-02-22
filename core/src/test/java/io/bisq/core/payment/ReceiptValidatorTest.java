@@ -10,13 +10,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SpecificBanksAccount.class, SameBankAccount.class, NationalBankAccount.class,
-        WesternUnionAccount.class, PaymentMethod.class})
+        WesternUnionAccount.class, CashDepositAccount.class, PaymentMethod.class})
 public class ReceiptValidatorTest {
     private ReceiptValidator validator;
     private PaymentAccount account;
@@ -66,7 +64,7 @@ public class ReceiptValidatorTest {
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(false);
         when(predicates.isSepaRelated(offer, account)).thenReturn(true);
 
-        assertFalse(validator.isValid());
+        assertTrue(validator.isValid());
         verify(predicates).isSepaRelated(offer, account);
     }
 
@@ -79,9 +77,9 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isSepaRelated(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
+        when(predicates.isMatchingBankId(offer, account)).thenReturn(false);
 
         assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
-        verify((SpecificBanksAccount) account).getAcceptedBanks();
     }
 
     @Test
@@ -93,9 +91,9 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isSepaRelated(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
+        when(predicates.isMatchingBankId(offer, account)).thenReturn(false);
 
         assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
-        verify((BankAccount) account).getBankId();
     }
 
     @Test
@@ -106,10 +104,10 @@ public class ReceiptValidatorTest {
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isSepaRelated(offer, account)).thenReturn(false);
-        when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
+        when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
+        when(predicates.isMatchingBankId(offer, account)).thenReturn(true);
 
-        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
-        verify((SpecificBanksAccount) account).getAcceptedBanks();
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -120,10 +118,10 @@ public class ReceiptValidatorTest {
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isSepaRelated(offer, account)).thenReturn(false);
-        when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
+        when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
+        when(predicates.isMatchingBankId(offer, account)).thenReturn(true);
 
-        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
-        verify((SameBankAccount) account).getBankId();
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -140,7 +138,7 @@ public class ReceiptValidatorTest {
     }
 
     @Test
-    public void testIsValidWhenWesternUnionAccount(){
+    public void testIsValidWhenWesternUnionAccount() {
         account = mock(WesternUnionAccount.class);
 
         PaymentMethod.WESTERN_UNION = mock(PaymentMethod.class);
@@ -154,17 +152,16 @@ public class ReceiptValidatorTest {
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
 
         assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
-        verify(offer).getPaymentMethod();
     }
 
     @Test
-    public void testIsValidWhenWesternIrregularAccount(){
+    public void testIsValidWhenWesternIrregularAccount() {
         when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isSepaRelated(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
 
-        assertFalse(validator.isValid());
+        assertTrue(validator.isValid());
     }
 }

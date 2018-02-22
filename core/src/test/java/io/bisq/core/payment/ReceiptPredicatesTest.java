@@ -15,7 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({NationalBankAccount.class, SepaAccount.class, SepaInstantAccount.class, PaymentMethod.class})
+@PrepareForTest({NationalBankAccount.class, SepaAccount.class, SepaInstantAccount.class, PaymentMethod.class, SameBankAccount.class, SpecificBanksAccount.class})
 public class ReceiptPredicatesTest {
     private final ReceiptPredicates predicates = new ReceiptPredicates();
 
