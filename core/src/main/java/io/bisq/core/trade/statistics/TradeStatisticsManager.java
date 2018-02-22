@@ -258,6 +258,8 @@ public class TradeStatisticsManager {
         newlyAdded.add("DARX");
         newlyAdded.add("ODN");
 
+        newlyAdded.add("SCS");
+
         coinsWithValidator.addAll(newlyAdded);
 
         CurrencyUtil.getAllSortedCryptoCurrencies()
