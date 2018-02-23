@@ -3,7 +3,7 @@
 [Setup]
 AppId={{bisq}}
 AppName=Bisq
-AppVersion=0.6.5
+AppVersion=0.6.6
 AppVerName=Bisq
 AppPublisher=Bisq
 AppComments=Bisq
