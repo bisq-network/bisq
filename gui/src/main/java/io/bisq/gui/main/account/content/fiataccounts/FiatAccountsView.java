@@ -44,6 +44,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -164,24 +165,37 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
-        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-        if (paymentAccount instanceof ClearXchangeAccount) {
-            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
-                    .width(900)
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText(Res.get("shared.iConfirm"))
-                    .onAction(() -> doSaveNewAccount(paymentAccount))
-                    .show();
-        } else if (paymentAccount instanceof WesternUnionAccount) {
-            new Popup<>().information(Res.get("payment.westernUnion.info", currencyName, currencyName))
-                    .width(700)
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText(Res.get("shared.iUnderstand"))
-                    .onAction(() -> doSaveNewAccount(paymentAccount))
-                    .show();
-        } else {
-            doSaveNewAccount(paymentAccount);
-        }
+        Coin maxTradeLimitAsCoin = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin("USD");
+        Coin maxTradeLimitSecondMonth = maxTradeLimitAsCoin.divide(2L);
+        Coin maxTradeLimitFirstMonth = maxTradeLimitAsCoin.divide(4L);
+        new Popup<>().information(Res.get("payment.limits.info",
+                formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
+                formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
+                formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                .width(700)
+                .closeButtonText(Res.get("shared.cancel"))
+                .actionButtonText(Res.get("shared.iUnderstand"))
+                .onAction(() -> {
+                    final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+                    if (paymentAccount instanceof ClearXchangeAccount) {
+                        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                                .width(900)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .actionButtonText(Res.get("shared.iConfirm"))
+                                .onAction(() -> doSaveNewAccount(paymentAccount))
+                                .show();
+                    } else if (paymentAccount instanceof WesternUnionAccount) {
+                        new Popup<>().information(Res.get("payment.westernUnion.info"))
+                                .width(700)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .actionButtonText(Res.get("shared.iUnderstand"))
+                                .onAction(() -> doSaveNewAccount(paymentAccount))
+                                .show();
+                    } else {
+                        doSaveNewAccount(paymentAccount);
+                    }
+                })
+                .show();
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
