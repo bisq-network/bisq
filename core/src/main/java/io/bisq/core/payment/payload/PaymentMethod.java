@@ -138,7 +138,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             Coin maxTradeLimitVeryLowRisk;
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    maxTradeLimitHighRisk = Coin.parseCoin("0.125");
+                    // we want to avoid more then 4 decimal places (0.125 / 4 = 0.03125), so we use a bit higher value to get 0.04 for first month
+                    maxTradeLimitHighRisk = Coin.parseCoin("0.16");
+
                     maxTradeLimitMidRisk = Coin.parseCoin("0.25");
                     maxTradeLimitLowRisk = Coin.parseCoin("0.5");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
