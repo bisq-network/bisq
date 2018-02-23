@@ -107,6 +107,10 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return formatter.formatDateTime(item.getOffer().getDate());
     }
 
+    boolean isDeactivated(OpenOfferListItem item){
+        return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
+    }
+
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
     }

@@ -227,10 +227,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null)
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setText(model.getDate(item));
-                                else
+                                } else {
                                     setText("");
+                                }
                             }
                         };
                     }
@@ -249,6 +251,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                 setText(model.getAmount(item));
                             }
                         };
@@ -268,6 +271,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                 setText(model.getPrice(item));
                             }
                         };
@@ -287,10 +291,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null)
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setText(model.getVolume(item));
-                                else
+                                } else {
                                     setText("");
+                                }
                             }
                         };
                     }
@@ -309,6 +315,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                 setText(model.getDirectionLabel(item));
                             }
                         };
@@ -328,6 +335,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                 setText(model.getMarketLabel(item));
                             }
                         };
@@ -376,6 +384,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                             onDeactivateOpenOffer(item.getOpenOffer());
                                         }
                                         updateState(item.getOpenOffer());
+                                        tableView.refresh();
                                     });
                                 } else {
                                     setGraphic(null);
