@@ -185,7 +185,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitHighRisk),
 
-                    POPMONEY = new PaymentMethod(POPMONEY_ID, 4 * DAY, maxTradeLimitHighRisk),
+                    POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, maxTradeLimitHighRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
                     US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
