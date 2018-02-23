@@ -110,8 +110,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ONION", "DeepOnion"));
-        if (!baseCurrencyCode.equals("DOGE"))
-            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
         result.add(new CryptoCurrency("ELLA", "Ellaism"));
         result.add(new CryptoCurrency("ESP", "Espers"));
@@ -185,8 +184,6 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
-        if (!baseCurrencyCode.equals("DOGE"))
-            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));

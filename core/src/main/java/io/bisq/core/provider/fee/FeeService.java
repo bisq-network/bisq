@@ -48,8 +48,6 @@ public class FeeService {
     public static final Coin BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // 5000
     // https://litecoin.info/Transaction_fees min fee is 100_000
     public static final Coin LTC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(100_000);
-    // min fee is 1 DOGE
-    public static final Coin DOGE_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(1_000_000_000);
     //TODO check
     // min tx fee per tx is 10000 now, 1000 in sept 2017
     public static final Coin DASH_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
@@ -58,7 +56,6 @@ public class FeeService {
     // fees are per byte
     public static final long BTC_DEFAULT_TX_FEE = 200; // fees are between 20-600 sat/byte. We try to stay on  the safe side.
     public static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
-    public static final long DOGE_DEFAULT_TX_FEE = DOGE_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;  // 200 bytes tx -> 200*5_000_000L=1_000_000_000 (1 DOGE)
     public static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
 
     private static long MIN_MAKER_FEE_IN_BASE_CUR;
@@ -112,13 +109,6 @@ public class FeeService {
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 240_000; // 5 USD at LTC price 40 USD for 50 LTC (maxTradeAmount)
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 360_000; // 7.5 USD at LTC price 40 USD
                 txFeePerByte = LTC_DEFAULT_TX_FEE;
-                break;
-            case "DOGE":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000_000_000L; // 0.5 USD at DOGE price 0.003 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 20_000_000_000L;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 5 USD at DOGE price 0.003 USD  for 800 000 DOGE (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 300_000; // 7.5 USD at DOGE price 0.003 USD
-                txFeePerByte = DOGE_DEFAULT_TX_FEE;
                 break;
             case "DASH":
                 MIN_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.5 USD at DASH price 150 USD

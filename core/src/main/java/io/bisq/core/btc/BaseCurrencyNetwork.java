@@ -35,10 +35,6 @@ public enum BaseCurrencyNetwork {
     LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
     LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
 
-    DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
-    DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
-    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin"),
-
     DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
     DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
     DASH_REGTEST(DashRegTestParams.get(), "DASH", "REGTEST", "Dash");
@@ -79,18 +75,12 @@ public enum BaseCurrencyNetwork {
         return "DASH".equals(currencyCode);
     }
 
-    public boolean isDoge() {
-        return "DOGE".equals(currencyCode);
-    }
-
     public long getDefaultMinFeePerByte() {
         switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
             case "BTC":
                 return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB.divide(1000).value;
             case "LTC":
                 return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value;
-            case "DOGE":
-                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             case "DASH":
                 return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             default:

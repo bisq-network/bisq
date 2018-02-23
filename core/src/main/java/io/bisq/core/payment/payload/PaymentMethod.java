@@ -149,12 +149,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     maxTradeLimitLowRisk = Coin.parseCoin("50");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("100");
                     break;
-                case "DOGE":
-                    maxTradeLimitHighRisk = Coin.parseCoin("125000");
-                    maxTradeLimitMidRisk = Coin.parseCoin("250000");
-                    maxTradeLimitLowRisk = Coin.parseCoin("500000");
-                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1000000");
-                    break;
                 case "DASH":
                     maxTradeLimitHighRisk = Coin.parseCoin("5");
                     maxTradeLimitMidRisk = Coin.parseCoin("10");
