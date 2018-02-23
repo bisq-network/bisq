@@ -132,31 +132,31 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static List<PaymentMethod> getAllValues() {
         if (ALL_VALUES == null) {
+            Coin maxTradeLimitHighRisk;
             Coin maxTradeLimitMidRisk;
             Coin maxTradeLimitLowRisk;
             Coin maxTradeLimitVeryLowRisk;
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    // av. price June 2017: 2500 EUR/BTC
-                    // av. price Oct 2017: 4700 EUR/BTC
+                    maxTradeLimitHighRisk = Coin.parseCoin("0.125");
                     maxTradeLimitMidRisk = Coin.parseCoin("0.25");
                     maxTradeLimitLowRisk = Coin.parseCoin("0.5");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
                     break;
                 case "LTC":
-                    // av. price June 2017: 40 EUR/LTC
+                    maxTradeLimitHighRisk = Coin.parseCoin("12.5");
                     maxTradeLimitMidRisk = Coin.parseCoin("25");
                     maxTradeLimitLowRisk = Coin.parseCoin("50");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("100");
                     break;
                 case "DOGE":
-                    // av. price June 2017: 0.002850 EUR/DOGE
+                    maxTradeLimitHighRisk = Coin.parseCoin("125000");
                     maxTradeLimitMidRisk = Coin.parseCoin("250000");
                     maxTradeLimitLowRisk = Coin.parseCoin("500000");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("1000000");
                     break;
                 case "DASH":
-                    // av. price June 2017: 150 EUR/DASH
+                    maxTradeLimitHighRisk = Coin.parseCoin("5");
                     maxTradeLimitMidRisk = Coin.parseCoin("10");
                     maxTradeLimitLowRisk = Coin.parseCoin("20");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("40");
@@ -171,7 +171,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // EUR
                     SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
                     SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, maxTradeLimitMidRisk),
-                    MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, maxTradeLimitMidRisk),
+                    MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, maxTradeLimitHighRisk),
 
                     // UK
                     FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
@@ -181,11 +181,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // US
                     CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitMidRisk),
+                    CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitHighRisk),
 
-                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
+                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitHighRisk),
 
-                    POPMONEY = new PaymentMethod(POPMONEY_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    POPMONEY = new PaymentMethod(POPMONEY_ID, 4 * DAY, maxTradeLimitHighRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
                     US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
@@ -201,8 +201,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // Trans national
                     OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
-                    UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitMidRisk),
-                    REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, maxTradeLimitMidRisk),
+                    UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitHighRisk),
+                    REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, maxTradeLimitHighRisk),
                     PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China
