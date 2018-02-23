@@ -460,16 +460,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
 
                     // Add new coins at the end...
-                case "CDT":
-                    if (input.startsWith("D"))
-                        return new ValidationResult(true);
-                    else
-                        return new ValidationResult(false);
-                    
-                    
-                    
-                    
-                    
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
