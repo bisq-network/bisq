@@ -292,109 +292,104 @@ abstract class BankForm extends PaymentMethodForm {
         countryComboBox.setOnAction(e -> {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
-                if (selectedItem.code.equals("US")) {
-                    new Popup<>().information(Res.get("payment.us.info"))
-                            .onClose(closeHandler::run)
-                            .show();
+                getCountryBasedPaymentAccount().setCountry(selectedItem);
+                String countryCode = selectedItem.code;
+                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
+                paymentAccount.setSingleTradeCurrency(currency);
+                currencyComboBox.setDisable(false);
+                currencyComboBox.getSelectionModel().select(currency);
+
+                bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
+                branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
+                accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
+                accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
+
+                bankNameInputTextField.setText("");
+                bankIdInputTextField.setText("");
+                branchIdInputTextField.setText("");
+                accountNrInputTextField.setText("");
+                accountTypeComboBox.getSelectionModel().clearSelection();
+                accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
+
+                if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
+                    validatorsApplied = true;
+                    if (useHolderID)
+                        holderIdInputTextField.setValidator(inputValidator);
+                    bankNameInputTextField.setValidator(inputValidator);
+                    bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
+                    branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
+                    accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
                 } else {
-                    getCountryBasedPaymentAccount().setCountry(selectedItem);
-                    String countryCode = selectedItem.code;
-                    TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
-                    paymentAccount.setSingleTradeCurrency(currency);
-                    currencyComboBox.setDisable(false);
-                    currencyComboBox.getSelectionModel().select(currency);
-
-                    bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
-                    branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
-                    accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
-                    accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
-
-                    bankNameInputTextField.setText("");
-                    bankIdInputTextField.setText("");
-                    branchIdInputTextField.setText("");
-                    accountNrInputTextField.setText("");
-                    accountTypeComboBox.getSelectionModel().clearSelection();
-                    accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
-
-                    if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
-                        validatorsApplied = true;
-                        if (useHolderID)
-                            holderIdInputTextField.setValidator(inputValidator);
-                        bankNameInputTextField.setValidator(inputValidator);
-                        bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
-                        branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
-                        accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
-                    } else {
-                        validatorsApplied = false;
-                        if (useHolderID)
-                            holderIdInputTextField.setValidator(null);
-                        bankNameInputTextField.setValidator(null);
-                        bankIdInputTextField.setValidator(null);
-                        branchIdInputTextField.setValidator(null);
-                        accountNrInputTextField.setValidator(null);
-                    }
-                    holderNameInputTextField.resetValidation();
-                    bankNameInputTextField.resetValidation();
-                    bankIdInputTextField.resetValidation();
-                    branchIdInputTextField.resetValidation();
-                    accountNrInputTextField.resetValidation();
-
-                    boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
-                    if (requiresHolderId) {
-                        holderNameInputTextField.minWidthProperty().unbind();
-                        holderNameInputTextField.setMinWidth(250);
-                    } else {
-                        holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
-                    }
-
-                    if (useHolderID) {
-                        if (!requiresHolderId)
-                            holderIdInputTextField.setText("");
-
-                        holderIdInputTextField.resetValidation();
-                        holderIdInputTextField.setVisible(requiresHolderId);
-                        holderIdInputTextField.setManaged(requiresHolderId);
-
-                        holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
-                        holderIdLabel.setVisible(requiresHolderId);
-                        holderIdLabel.setManaged(requiresHolderId);
-                    }
-
-
-                    boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
-                    bankNameTuple.first.setVisible(bankNameRequired);
-                    bankNameTuple.first.setManaged(bankNameRequired);
-                    bankNameInputTextField.setVisible(bankNameRequired);
-                    bankNameInputTextField.setManaged(bankNameRequired);
-
-                    boolean bankIdRequired = BankUtil.isBankIdRequired(countryCode);
-                    bankIdTuple.first.setVisible(bankIdRequired);
-                    bankIdTuple.first.setManaged(bankIdRequired);
-                    bankIdInputTextField.setVisible(bankIdRequired);
-                    bankIdInputTextField.setManaged(bankIdRequired);
-
-                    boolean branchIdRequired = BankUtil.isBranchIdRequired(countryCode);
-                    branchIdTuple.first.setVisible(branchIdRequired);
-                    branchIdTuple.first.setManaged(branchIdRequired);
-                    branchIdInputTextField.setVisible(branchIdRequired);
-                    branchIdInputTextField.setManaged(branchIdRequired);
-
-                    boolean accountNrRequired = BankUtil.isAccountNrRequired(countryCode);
-                    accountNrTuple.first.setVisible(accountNrRequired);
-                    accountNrTuple.first.setManaged(accountNrRequired);
-                    accountNrInputTextField.setVisible(accountNrRequired);
-                    accountNrInputTextField.setManaged(accountNrRequired);
-
-                    boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
-                    accountTypeTuple.first.setVisible(accountTypeRequired);
-                    accountTypeTuple.first.setManaged(accountTypeRequired);
-                    accountTypeTuple.second.setVisible(accountTypeRequired);
-                    accountTypeTuple.second.setManaged(accountTypeRequired);
-
-                    updateFromInputs();
-
-                    onCountryChanged();
+                    validatorsApplied = false;
+                    if (useHolderID)
+                        holderIdInputTextField.setValidator(null);
+                    bankNameInputTextField.setValidator(null);
+                    bankIdInputTextField.setValidator(null);
+                    branchIdInputTextField.setValidator(null);
+                    accountNrInputTextField.setValidator(null);
                 }
+                holderNameInputTextField.resetValidation();
+                bankNameInputTextField.resetValidation();
+                bankIdInputTextField.resetValidation();
+                branchIdInputTextField.resetValidation();
+                accountNrInputTextField.resetValidation();
+
+                boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
+                if (requiresHolderId) {
+                    holderNameInputTextField.minWidthProperty().unbind();
+                    holderNameInputTextField.setMinWidth(250);
+                } else {
+                    holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
+                }
+
+                if (useHolderID) {
+                    if (!requiresHolderId)
+                        holderIdInputTextField.setText("");
+
+                    holderIdInputTextField.resetValidation();
+                    holderIdInputTextField.setVisible(requiresHolderId);
+                    holderIdInputTextField.setManaged(requiresHolderId);
+
+                    holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
+                    holderIdLabel.setVisible(requiresHolderId);
+                    holderIdLabel.setManaged(requiresHolderId);
+                }
+
+
+                boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
+                bankNameTuple.first.setVisible(bankNameRequired);
+                bankNameTuple.first.setManaged(bankNameRequired);
+                bankNameInputTextField.setVisible(bankNameRequired);
+                bankNameInputTextField.setManaged(bankNameRequired);
+
+                boolean bankIdRequired = BankUtil.isBankIdRequired(countryCode);
+                bankIdTuple.first.setVisible(bankIdRequired);
+                bankIdTuple.first.setManaged(bankIdRequired);
+                bankIdInputTextField.setVisible(bankIdRequired);
+                bankIdInputTextField.setManaged(bankIdRequired);
+
+                boolean branchIdRequired = BankUtil.isBranchIdRequired(countryCode);
+                branchIdTuple.first.setVisible(branchIdRequired);
+                branchIdTuple.first.setManaged(branchIdRequired);
+                branchIdInputTextField.setVisible(branchIdRequired);
+                branchIdInputTextField.setManaged(branchIdRequired);
+
+                boolean accountNrRequired = BankUtil.isAccountNrRequired(countryCode);
+                accountNrTuple.first.setVisible(accountNrRequired);
+                accountNrTuple.first.setManaged(accountNrRequired);
+                accountNrInputTextField.setVisible(accountNrRequired);
+                accountNrInputTextField.setManaged(accountNrRequired);
+
+                boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
+                accountTypeTuple.first.setVisible(accountTypeRequired);
+                accountTypeTuple.first.setManaged(accountTypeRequired);
+                accountTypeTuple.second.setVisible(accountTypeRequired);
+                accountTypeTuple.second.setManaged(accountTypeRequired);
+
+                updateFromInputs();
+
+                onCountryChanged();
+
             }
         });
 
