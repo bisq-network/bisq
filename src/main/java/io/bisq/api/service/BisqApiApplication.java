@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.health.CurrencyListHealthCheck;
+import io.bisq.api.service.v1.ApiV1;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.AppOptionKeys;
@@ -93,8 +94,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Override
     public void initialize(Bootstrap<ApiConfiguration> bootstrap) {
-        bootstrap.setConfigurationSourceProvider(
-                new ResourceConfigurationSourceProvider());
+        bootstrap.setConfigurationSourceProvider(new ResourceConfigurationSourceProvider());
         bootstrap.addBundle(new SwaggerBundle<ApiConfiguration>() {
             @Override
             protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(ApiConfiguration configuration) {
@@ -111,15 +111,12 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     }
 
     @Override
-    public void run(ApiConfiguration configuration,
-                    Environment environment) {
-//        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+    public void run(ApiConfiguration configuration, Environment environment) {
         BisqProxy bisqProxy = new BisqProxy(arbitratorManager, walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
-        final ApiResourceV1 resource = new ApiResourceV1(configuration.getDefaultName(), bisqProxy);
         preferences.readPersisted();
-        environment.jersey().register(resource);
+        environment.jersey().register(new ApiV1(bisqProxy));
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
     }
 

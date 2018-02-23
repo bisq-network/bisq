@@ -3,6 +3,7 @@ package io.bisq.api;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.bisq.api.model.*;
+import io.bisq.api.model.PaymentAccountList;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
@@ -21,6 +22,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.*;
 import io.bisq.core.payment.*;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -146,11 +148,11 @@ public class BisqProxy {
         return user.getPaymentAccount(paymentAccountId);
     }
 
-    public AccountList getAccountList() {
-        AccountList accountList = new AccountList();
-        accountList.accounts = getPaymentAccountList().stream()
-                .map(paymentAccount -> new Account(paymentAccount)).collect(Collectors.toSet());
-        return accountList;
+    public PaymentAccountList getAccountList() {
+        PaymentAccountList paymentAccountList = new PaymentAccountList();
+        paymentAccountList.paymentAccounts = getPaymentAccountList().stream()
+                .map(Account::new).collect(Collectors.toList());
+        return paymentAccountList;
     }
 
     public Optional<BisqProxyError> offerCancel(String offerId) {
@@ -579,15 +581,14 @@ public class BisqProxy {
     }
 
 
-    public WalletTransactions getWalletTransactions(long start, long end, long limit) {
+    public WalletTransactionList getWalletTransactions() {
         boolean includeDeadTransactions = true;
         Set<Transaction> transactions = btcWalletService.getTransactions(includeDeadTransactions);
 
-        WalletTransactions walletTransactions = new WalletTransactions();
-        List<WalletTransaction> transactionList = walletTransactions.getTransactions();
+        WalletTransactionList walletTransactions = new WalletTransactionList();
 
         for (Transaction t : transactions) {
-            transactionList.add(new WalletTransaction(t, walletsSetup.getBtcWallet()));
+            walletTransactions.transactions.add(new WalletTransaction(t, walletsSetup.getBtcWallet()));
         }
         return walletTransactions;
     }

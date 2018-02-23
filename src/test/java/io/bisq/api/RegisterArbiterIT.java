@@ -1,5 +1,6 @@
 package io.bisq.api;
 
+import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuilder;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
@@ -55,9 +56,10 @@ public class RegisterArbiterIT {
         given().
                 port(arbitrator.getBindPort(8080)).
                 when().
-                formParam("languageCodes", "en,de").
-                post("/api/v1/arbitrator_register").
-                then().statusCode(200);
+                body("{\"languageCodes\":[\"en\",\"de\"]}").
+                contentType(ContentType.JSON).
+                post("/api/v1/arbitrators").
+                then().statusCode(204);
         /* Wait for arbiter registration message to be broadcast across peers*/
         final int P2P_MSG_RELAY_DELAY = 1000;
         Thread.sleep(P2P_MSG_RELAY_DELAY);
