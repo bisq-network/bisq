@@ -34,6 +34,8 @@ public class PaymentAccountFactory {
                 return new VenmoAccount();
             case PaymentMethod.POPMONEY_ID:
                 return new PopmoneyAccount();
+            case PaymentMethod.REVOLUT_ID:
+                return new RevolutAccount();
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:

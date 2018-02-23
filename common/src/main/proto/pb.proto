@@ -835,6 +835,7 @@ message PaymentAccountPayload {
         MoneyBeamAccountPayload money_beam_account_payload = 18;
         VenmoAccountPayload venmo_account_payload = 19;
         PopmoneyAccountPayload popmoney_account_payload = 20;
+        RevolutAccountPayload revolut_account_payload = 21;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -965,6 +966,10 @@ message VenmoAccountPayload {
 message PopmoneyAccountPayload {
     string account_id = 1;
     string holder_name = 2;
+}
+
+message RevolutAccountPayload {
+    string account_id = 1;
 }
 
 message PerfectMoneyAccountPayload {

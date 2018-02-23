@@ -52,6 +52,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String MONEY_BEAM_ID = "MONEY_BEAM";
     public static final String VENMO_ID = "VENMO";
     public static final String POPMONEY_ID = "POPMONEY";
+    public static final String REVOLUT_ID = "REVOLUT";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
@@ -75,6 +76,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod MONEY_BEAM;
     public static PaymentMethod VENMO;
     public static PaymentMethod POPMONEY;
+    public static PaymentMethod REVOLUT;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
     public static PaymentMethod SEPA_INSTANT;
@@ -181,8 +183,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
                     CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitMidRisk),
 
-                    // Seems Venmo has a high chargeback risk, so we keep it out for now.
-                    //VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
+                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitMidRisk),
 
                     POPMONEY = new PaymentMethod(POPMONEY_ID, 4 * DAY, maxTradeLimitMidRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
@@ -201,6 +202,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // Trans national
                     OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
                     UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitMidRisk),
+                    REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, maxTradeLimitMidRisk),
                     PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China
@@ -254,10 +256,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static PaymentMethod getPaymentMethodById(String id) {
         Optional<PaymentMethod> paymentMethodOptional = getAllValues().stream().filter(e -> e.getId().equals(id)).findFirst();
-        if (paymentMethodOptional.isPresent())
-            return paymentMethodOptional.get();
-        else
-            return new PaymentMethod(Res.get("shared.na"));
+        return paymentMethodOptional.orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
 
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!

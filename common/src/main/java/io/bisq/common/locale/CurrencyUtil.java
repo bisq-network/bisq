@@ -239,7 +239,7 @@ public class CurrencyUtil {
                 new FiatCurrency("HKD"),
                 new FiatCurrency("CNY")
         ));
-        currencies.sort(TradeCurrency::compareTo);
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
     }
 
@@ -271,7 +271,40 @@ public class CurrencyUtil {
                 new FiatCurrency("PHP")
         ));
 
-        currencies.sort(TradeCurrency::compareTo);
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    //https://www.revolut.com/pa/faq#can-i-hold-multiple-currencies
+    public static List<TradeCurrency> getAllRevolutCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("AED"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("MAD"),
+                new FiatCurrency("QAR"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("ZAR")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
     }
 

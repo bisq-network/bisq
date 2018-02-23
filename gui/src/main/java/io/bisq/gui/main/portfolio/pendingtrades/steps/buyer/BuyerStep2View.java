@@ -172,6 +172,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.POPMONEY_ID:
                 gridRow = PopmoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.REVOLUT_ID:
+                gridRow = RevolutForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.PERFECT_MONEY_ID:
                 gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
