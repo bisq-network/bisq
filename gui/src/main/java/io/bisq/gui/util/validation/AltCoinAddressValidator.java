@@ -430,6 +430,40 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "CDT":
+                    if (input.startsWith("D"))
+                        return new ValidationResult(true);
+                    else
+                        return new ValidationResult(false);
+                case "DGM":
+                    if (input.matches("^[D-E][a-zA-Z0-9]{33}$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
+                case "SCS":
+                    try {
+                        Address.fromBase58(SpeedCashParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "SOS":
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
+                case "ACH":
+                    try {
+                        Address.fromBase58(ACHParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "VDN":
+                    if (!input.matches("^[D][0-9a-zA-Z]{33}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                     // Add new coins at the end...
                 default:

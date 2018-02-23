@@ -96,14 +96,12 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
         result.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
-        result.add(new CryptoCurrency("DARX", "BitDaric"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("CREA", "Creativecoin"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
-        result.add(new CryptoCurrency("DAI", "Dai Stablecoin", true));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
@@ -132,7 +130,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("ODN", "Obsidian"));
         result.add(new CryptoCurrency("888", "OctoCoin"));
         result.add(new CryptoCurrency("PART", "Particl"));
         result.add(new CryptoCurrency("PASC", "Pascal Coin", true));
@@ -148,7 +145,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("XSPEC", "Spectrecoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
-        result.add(new CryptoCurrency("STL", "Stellite"));
+
         result.add(new CryptoCurrency("TRC", "Terracoin"));
         result.add(new CryptoCurrency("MVT", "The Movement", true));
 
@@ -156,10 +153,23 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("WILD", "WILD Token", true));
-        result.add(new CryptoCurrency("YTN", "Yenten"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
+
+        // Added 0.6.6
+        result.add(new CryptoCurrency("STL", "Stellite"));
+        result.add(new CryptoCurrency("DAI", "Dai Stablecoin", true));
+        result.add(new CryptoCurrency("YTN", "Yenten"));
+        result.add(new CryptoCurrency("DARX", "BitDaric"));
+        result.add(new CryptoCurrency("ODN", "Obsidian"));
+        result.add(new CryptoCurrency("CDT", "Cassubian Detk"));
+        result.add(new CryptoCurrency("DGM", "DigiMoney"));
+        result.add(new CryptoCurrency("SCS", "SpeedCash"));
+        result.add(new CryptoCurrency("SOS", "SOS Coin", true));
+        result.add(new CryptoCurrency("ACH", "AchieveCoin"));
+        result.add(new CryptoCurrency("VDN", "vDinar"));
+
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
