@@ -38,10 +38,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqInstaller {
-    static final String FINGER_PRINT_MANFRED_KARRER = "F379A1C6";
-    static final String FINGER_PRINT_CHRIS_BEAMS = "5BC5ED73";
-    static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
-    static final String DOWNLOAD_HOST_URL = "https://github.com/bisq-network/exchange/releases/download/";
+    private static final String FINGER_PRINT_MANFRED_KARRER = "F379A1C6";
+    private static final String FINGER_PRINT_CHRIS_BEAMS = "5BC5ED73";
+    private static final String FINGER_PRINT_CHRISTOPH_ATTENEDER = "29CDFD3B";
+    private static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
+    private static final String DOWNLOAD_HOST_URL = "https://github.com/bisq-network/exchange/releases/download/";
 
     public boolean isSupportedOS() {
         return Utilities.isOSX() || Utilities.isWindows() || Utilities.isLinux();
@@ -79,7 +80,7 @@ public class BisqInstaller {
         try {
             return Optional.of(downloadFiles(fileDescriptors, Utilities.getDownloadOfHomeDir()));
         } catch (IOException exception) {
-            return Optional.<DownloadTask>empty();
+            return Optional.empty();
         }
     }
 
@@ -91,7 +92,7 @@ public class BisqInstaller {
      * @return The task handling the download
      * @throws IOException
      */
-    public static DownloadTask downloadFiles(List<FileDescriptor> fileDescriptors, String saveDir) throws IOException {
+    private static DownloadTask downloadFiles(List<FileDescriptor> fileDescriptors, String saveDir) throws IOException {
         if (saveDir == null)
             saveDir = Utilities.getDownloadOfHomeDir();
         DownloadTask task = new DownloadTask(fileDescriptors, saveDir);
@@ -178,7 +179,7 @@ public class BisqInstaller {
     }
 
     @NotNull
-    public FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
+    private FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
         String fileName;
         String prefix = "Bisq-";
         // https://github.com/bisq-network/exchange/releases/download/v0.5.1/Bisq-0.5.1.dmg
@@ -200,7 +201,7 @@ public class BisqInstaller {
     }
 
     @NotNull
-    public FileDescriptor getSigningKeyDescriptor(String url) {
+    private FileDescriptor getSigningKeyDescriptor(String url) {
         String fileName = "signingkey.asc";
         return FileDescriptor.builder()
                 .type(DownloadType.SIGNING_KEY)
@@ -217,7 +218,7 @@ public class BisqInstaller {
      *
      * @return list of keys to check agains corresponding sigs.
      */
-    public List<FileDescriptor> getKeyFileDescriptors() {
+    private List<FileDescriptor> getKeyFileDescriptors() {
         List<FileDescriptor> list = new ArrayList<>();
 
         list.add(getKeyFileDescriptor(FINGER_PRINT_MANFRED_KARRER));
@@ -225,6 +226,9 @@ public class BisqInstaller {
 
         list.add(getKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
         list.add(getLocalKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
+
+        list.add(getKeyFileDescriptor(FINGER_PRINT_CHRISTOPH_ATTENEDER));
+        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_CHRISTOPH_ATTENEDER));
 
         return list;
     }
@@ -260,7 +264,7 @@ public class BisqInstaller {
         List<FileDescriptor> result = Lists.newArrayList();
 
         for (FileDescriptor key : keys) {
-            if (!result.stream().filter(e -> e.getId().equals(key.getId())).findAny().isPresent()) {
+            if (result.stream().noneMatch(e -> e.getId().equals(key.getId()))) {
                 result.add(FileDescriptor.builder()
                         .type(DownloadType.SIG)
                         .fileName(installerFileDescriptor.getFileName().concat(suffix))
