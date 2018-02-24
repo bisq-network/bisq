@@ -97,8 +97,8 @@ public class FeeService {
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 20_000; // 4 USD at BTC price 20000 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 20_000;
+                MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 4 USD at BTC price 20000 USD
+                MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
                 DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 20000 USD for 0.25 BTC (maxTradeAmount for most fiat trades)
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
