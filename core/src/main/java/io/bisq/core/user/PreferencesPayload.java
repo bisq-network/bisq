@@ -44,7 +44,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private TradeCurrency preferredTradeCurrency;
     private long withdrawalTxFeeInBytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
-    private double maxPriceDistanceInPercent = 0.1;
+    private double maxPriceDistanceInPercent = 0.3;
     @Nullable
     private String offerBookChartScreenCurrencyCode;
     @Nullable

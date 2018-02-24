@@ -474,4 +474,25 @@ public class GUIUtil {
         stage.initStyle(StageStyle.UTILITY);
         stage.show();
     }
+
+    public static StringConverter<PaymentAccount> getPaymentAccountsComboBoxStringConverter() {
+        return new StringConverter<PaymentAccount>() {
+            @Override
+            public String toString(PaymentAccount paymentAccount) {
+                if (paymentAccount.hasMultipleCurrencies()) {
+                    return paymentAccount.getAccountName() + " (" + Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                } else {
+                    TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                    String prefix = singleTradeCurrency != null ? singleTradeCurrency.getCode() + ", " : "";
+                    return paymentAccount.getAccountName() + " (" + prefix +
+                            Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                }
+            }
+
+            @Override
+            public PaymentAccount fromString(String s) {
+                return null;
+            }
+        };
+    }
 }

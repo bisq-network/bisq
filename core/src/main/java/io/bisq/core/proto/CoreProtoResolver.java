@@ -60,6 +60,18 @@ public class CoreProtoResolver implements ProtoResolver {
                     return InteracETransferAccountPayload.fromProto(proto);
                 case O_K_PAY_ACCOUNT_PAYLOAD:
                     return OKPayAccountPayload.fromProto(proto);
+                case UPHOLD_ACCOUNT_PAYLOAD:
+                    return UpholdAccountPayload.fromProto(proto);
+                case CASH_APP_ACCOUNT_PAYLOAD:
+                    return CashAppAccountPayload.fromProto(proto);
+                case MONEY_BEAM_ACCOUNT_PAYLOAD:
+                    return MoneyBeamAccountPayload.fromProto(proto);
+                case VENMO_ACCOUNT_PAYLOAD:
+                    return VenmoAccountPayload.fromProto(proto);
+                case POPMONEY_ACCOUNT_PAYLOAD:
+                    return PopmoneyAccountPayload.fromProto(proto);
+                case REVOLUT_ACCOUNT_PAYLOAD:
+                    return RevolutAccountPayload.fromProto(proto);
                 case PERFECT_MONEY_ACCOUNT_PAYLOAD:
                     return PerfectMoneyAccountPayload.fromProto(proto);
                 case SWISH_ACCOUNT_PAYLOAD:

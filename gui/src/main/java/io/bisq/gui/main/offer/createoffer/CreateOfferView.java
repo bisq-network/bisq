@@ -155,20 +155,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         balanceTextField.setFormatter(model.getBtcFormatter());
 
-        paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
-            @Override
-            public String toString(PaymentAccount paymentAccount) {
-                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
-                return paymentAccount.getAccountName() + " (" + code + ", " +
-                        Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
-            }
-
-            @Override
-            public PaymentAccount fromString(String s) {
-                return null;
-            }
-        });
+        paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
 
         GUIUtil.focusWhenAddedToScene(amountTextField);
     }
@@ -433,6 +420,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void onPaymentAccountsComboBoxSelected() {
+        // Temporary deactivate handler as the payment account change can populate a new currency list and causes
+        // unwanted selection events (item 0)
+        currencyComboBox.setOnAction(null);
+
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
@@ -441,11 +432,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
-
-                // we select comboBox following the user currency, if user currency not available in account, we select first
-                TradeCurrency tradeCurrency = model.getTradeCurrency();
-                if (tradeCurrencies.contains(tradeCurrency))
-                    currencyComboBox.getSelectionModel().select(tradeCurrency);
+                if (paymentAccount.getSelectedTradeCurrency() != null)
+                    currencyComboBox.getSelectionModel().select(paymentAccount.getSelectedTradeCurrency());
+                else if (tradeCurrencies.contains(model.getTradeCurrency()))
+                    currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
                 else
                     currencyComboBox.getSelectionModel().select(tradeCurrencies.get(0));
 
@@ -461,6 +451,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             currencyComboBox.setVisible(false);
             currencyTextField.setText("");
         }
+
+        currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
     }
 
     private void onCurrencyComboBoxSelected() {

@@ -6,7 +6,7 @@
     <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.5</version>
+    <version>0.6.6</version>
     <description>Bisq - The decentralized exchange network</description>
     <url>https://bisq.io</url>
 

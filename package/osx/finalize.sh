@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.6.5"
+version="0.6.6"
 
 target_dir="/Users/dev/Documents/__bisq/_releases/$version"
 src_dir="/Users/dev/idea/exchange"
@@ -16,6 +16,8 @@ mkdir -p $target_dir
 cp "$target_dir/../F379A1C6.asc" "$target_dir/"
 # sig key cbeams
 cp "$target_dir/../5BC5ED73.asc" "$target_dir/"
+# sig key Christoph Atteneder
+cp "$target_dir/../29CDFD3B.asc" "$target_dir/"
 # signing key
 cp "$target_dir/../signingkey.asc" "$target_dir/"
 

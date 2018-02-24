@@ -20,7 +20,6 @@ package io.bisq.core.btc;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.fee.FeeService;
 import lombok.Getter;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -35,10 +34,6 @@ public enum BaseCurrencyNetwork {
     LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
     LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
     LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
-
-    DOGE_MAINNET(DogecoinMainNetParams.get(), "DOGE", "MAINNET", "Dogecoin"),
-    DOGE_TESTNET(DogecoinTestNet3Params.get(), "DOGE", "TESTNET", "Dogecoin"),
-    DOGE_REGTEST(DogecoinRegTestParams.get(), "DOGE", "REGTEST", "Dogecoin"),
 
     DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
     DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
@@ -80,21 +75,14 @@ public enum BaseCurrencyNetwork {
         return "DASH".equals(currencyCode);
     }
 
-    public boolean isDoge() {
-        return "DOGE".equals(currencyCode);
-    }
-
-
-    public Coin getDefaultMinFee() {
+    public long getDefaultMinFeePerByte() {
         switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
             case "BTC":
-                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB.divide(1000).value;
             case "LTC":
-                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE;
-            case "DOGE":
-                return FeeService.DOGE_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             case "DASH":
-                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE;
+                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value;
             default:
                 throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
         }

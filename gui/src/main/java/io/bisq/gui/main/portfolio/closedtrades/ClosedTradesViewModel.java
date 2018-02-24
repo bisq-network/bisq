@@ -35,8 +35,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
-    public ClosedTradesViewModel(ClosedTradesDataModel dataModel, 
-                                 AccountAgeWitnessService accountAgeWitnessService, 
+    public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
+                                 AccountAgeWitnessService accountAgeWitnessService,
                                  BSFormatter formatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -118,6 +118,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         return state.toString();
                     case CANCELED:
                         return Res.get("portfolio.closed.canceled");
+                    case DEACTIVATED:
+                        log.error("Invalid state {}", state);
+                        return state.toString();
                     default:
                         log.error("Unhandled state {}", state);
                         return state.toString();

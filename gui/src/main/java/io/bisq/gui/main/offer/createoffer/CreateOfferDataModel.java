@@ -493,10 +493,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
-        if (paymentAccount.getSingleTradeCurrency() != null)
-            tradeCurrency = paymentAccount.getSingleTradeCurrency();
-        else if (paymentAccount.getSelectedTradeCurrency() != null)
+        if (paymentAccount.getSelectedTradeCurrency() != null)
             tradeCurrency = paymentAccount.getSelectedTradeCurrency();
+        else if (paymentAccount.getSingleTradeCurrency() != null)
+            tradeCurrency = paymentAccount.getSingleTradeCurrency();
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
 

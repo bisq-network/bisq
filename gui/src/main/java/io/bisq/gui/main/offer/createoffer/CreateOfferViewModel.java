@@ -204,10 +204,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         amount.set("50");
                         price.set("40");
                         break;
-                    case "DOGE":
-                        amount.set("800000");
-                        price.set("0.003");
-                        break;
                     case "DASH":
                         amount.set("0.1");
                         price.set("40");

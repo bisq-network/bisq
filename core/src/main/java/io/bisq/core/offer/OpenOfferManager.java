@@ -327,7 +327,30 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    // Remove from my offers
+    public void activateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Offer offer = openOffer.getOffer();
+        openOffer.setStorage(openOfferTradableListStorage);
+        offerBookService.activateOffer(offer,
+                () -> {
+                    openOffer.setState(OpenOffer.State.AVAILABLE);
+                    log.debug("activateOpenOffer, offerId={}", offer.getId());
+                    resultHandler.handleResult();
+                },
+                errorMessageHandler);
+    }
+
+    public void deactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Offer offer = openOffer.getOffer();
+        openOffer.setStorage(openOfferTradableListStorage);
+        offerBookService.deactivateOffer(offer.getOfferPayload(),
+                () -> {
+                    openOffer.setState(OpenOffer.State.DEACTIVATED);
+                    log.debug("deactivateOpenOffer, offerId={}", offer.getId());
+                    resultHandler.handleResult();
+                },
+                errorMessageHandler);
+    }
+
     public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
         offerBookService.removeOffer(offer.getOfferPayload(),
@@ -483,13 +506,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
                     if (openOffers.contains(openOffer)) {
-                        // The openOffer.getId().contains("_") check is because there was once a version
-                        // where we encoded the version nr in the offer id with a "_" as separator.
-                        // That caused several issues and was reverted. So if there are still old offers out with that
-                        // special offer ID format those must not be published as they cause failed taker attempts
-                        // with lost taker fee.
                         String id = openOffer.getId();
-                        if (id != null && !id.contains("_"))
+                        if (id != null && !openOffer.isDeactivated())
                             republishOffer(openOffer);
                         else
                             log.warn("You have an offer with an invalid offer ID: offerID=" + id);
@@ -567,7 +585,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
                                     // we need to check if in the meantime the offer has been removed
-                                    if (openOffers.contains(openOffer))
+                                    if (openOffers.contains(openOffer) && !openOffer.isDeactivated())
                                         refreshOffer(openOffer);
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }

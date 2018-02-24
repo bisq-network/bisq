@@ -82,7 +82,7 @@ public class OKPayForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supported.okpay"), 0);
+        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));

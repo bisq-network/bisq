@@ -50,10 +50,6 @@ public class BsqFormatter extends BSFormatter {
             case "LTC":
                 coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
                 break;
-            case "DOGE":
-                // BSQ for DOGE not used/supported
-                coinFormat = new MonetaryFormat().shift(3).code(3, "???").minDecimals(5);
-                break;
             case "DASH":
                 // BSQ for DASH not used/supported
                 coinFormat = new MonetaryFormat().shift(3).code(3, "???").minDecimals(5);

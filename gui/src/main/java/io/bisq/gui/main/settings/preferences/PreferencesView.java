@@ -51,6 +51,7 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -217,15 +218,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             if (oldValue && !newValue) {
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
-                    int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
-                    if (withdrawalTxFeeInBytes * 1000 < BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFee().value) {
-                        new Popup<>().warning(Res.get("setting.preferences.txFeeMin")).show();
+                    int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
+                    final long minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
+                    if (withdrawalTxFeePerByte < minFeePerByte) {
+                        new Popup<>().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
-                    } else if (withdrawalTxFeeInBytes > 5000) {
+                    } else if (withdrawalTxFeePerByte > 5000) {
                         new Popup<>().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
-                        preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
+                        preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeePerByte);
                     }
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
@@ -249,10 +251,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = formatter.parsePercentStringToDouble(newValue);
-                if (value <= 0.3) {
+                final double maxDeviation = 0.5;
+                if (value <= maxDeviation) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge")).show();
+                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
@@ -451,12 +454,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void activateGeneralOptions() {
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
-        // We don't support DOGE anymore due lack of interest but leave it in the code in case it will get
-        // re-activated some day
-        baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                .filter(e -> !e.isDoge())
-                .collect(Collectors.toList());
-
         // show ony mainnet in production version
         if (!DevEnv.DEV_MODE)
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
@@ -475,7 +472,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
         }
 
-        transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
+        transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
 
         userLanguageComboBox.setItems(languageCodes);
@@ -557,6 +554,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
     }
 
+    private Coin getTxFeeForWithdrawalPerByte() {
+        Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
+                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
+                feeService.getTxFeePerByte();
+        log.info("tx fee = " + fee.toFriendlyString());
+        return fee;
+    }
+
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
         preferredTradeCurrencyComboBox.getSelectionModel().select(preferences.getPreferredTradeCurrency());
@@ -616,12 +621,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
-    }
-
-    private String getNonTradeTxFeePerBytes() {
-        return preferences.isUseCustomWithdrawalTxFee() ?
-                String.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                String.valueOf(feeService.getTxFeePerByte().value);
     }
 
     private void onSelectNetwork() {

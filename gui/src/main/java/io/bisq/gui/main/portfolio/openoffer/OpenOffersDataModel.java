@@ -63,7 +63,15 @@ class OpenOffersDataModel extends ActivatableDataModel {
         priceFeedService.updateCounterProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
-    void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    }
+
+    void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.deactivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    }
+
+    void onRemoveOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         openOfferManager.removeOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
