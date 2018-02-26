@@ -177,7 +177,7 @@ public class BisqEnvironment extends StandardEnvironment {
     @Getter
     protected List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, regTestBsqGenesisTxId;
@@ -211,6 +211,9 @@ public class BisqEnvironment extends StandardEnvironment {
 
         ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
+                "";
+        useDevPrivilegeKeys = commandLineProperties.containsProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) :
                 "";
         dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
@@ -403,6 +406,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, useDevPrivilegeKeys);
                 setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);

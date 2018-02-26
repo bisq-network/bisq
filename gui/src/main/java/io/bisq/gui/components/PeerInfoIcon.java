@@ -43,7 +43,8 @@ public class PeerInfoIcon extends Group {
                         Offer offer,
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        BSFormatter formatter) {
+                        BSFormatter formatter,
+                        boolean useDevPrivilegeKeys) {
         this.numTrades = numTrades;
 
         hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
@@ -156,7 +157,7 @@ public class PeerInfoIcon extends Group {
                         formatter.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .hostName(hostName)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
