@@ -20,7 +20,7 @@ package io.bisq.gui.main.debug;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
-import io.bisq.core.offer.placeoffer.tasks.AddOfferOfferBook;
+import io.bisq.core.offer.placeoffer.tasks.AddToOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
@@ -78,7 +78,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         ValidateOffer.class,
                         CreateMakerFeeTx.class,
-                        AddOfferOfferBook.class)
+                        AddToOfferBook.class)
                 ));
 
         addGroup("BuyerAsMakerProtocol: ",
