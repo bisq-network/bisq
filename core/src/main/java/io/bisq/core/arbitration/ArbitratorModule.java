@@ -18,9 +18,7 @@
 package io.bisq.core.arbitration;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
-import io.bisq.core.app.AppOptionKeys;
 import org.springframework.core.env.Environment;
 
 public class ArbitratorModule extends AppModule {
@@ -30,8 +28,6 @@ public class ArbitratorModule extends AppModule {
 
     @Override
     protected final void configure() {
-        Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
         bind(ArbitratorManager.class).in(Singleton.class);
         bind(DisputeManager.class).in(Singleton.class);
         bind(ArbitratorService.class).in(Singleton.class);
