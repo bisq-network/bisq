@@ -1,10 +1,12 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
+import io.bisq.api.model.AccountToCreate;
 import io.bisq.api.model.PaymentAccountList;
 import io.bisq.api.model.PaymentAccount;
 import io.swagger.annotations.Api;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -33,8 +35,8 @@ public class PaymentAccountResource {
 
     @POST
     @Path("/")
-    public PaymentAccount create(PaymentAccount account) {
-        throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
+    public PaymentAccount create(@Valid AccountToCreate account) {
+        return bisqProxy.addPaymentAccount(account);
     }
 
     @GET

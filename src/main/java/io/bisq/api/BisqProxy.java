@@ -140,6 +140,11 @@ public class BisqProxy {
     }
 
 
+    public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
+        user.addPaymentAccount(PaymentAccountHelper.toBusinessModel(account));
+        return PaymentAccountHelper.toRestModel(user.currentPaymentAccountProperty().get());
+    }
+
     private List<PaymentAccount> getPaymentAccountList() {
         return new ArrayList(user.getPaymentAccounts());
     }
@@ -151,7 +156,8 @@ public class BisqProxy {
     public PaymentAccountList getAccountList() {
         PaymentAccountList paymentAccountList = new PaymentAccountList();
         paymentAccountList.paymentAccounts = getPaymentAccountList().stream()
-                .map(Account::new).collect(Collectors.toList());
+                .map(PaymentAccountHelper::toRestModel)
+                .collect(Collectors.toList());
         return paymentAccountList;
     }
 
