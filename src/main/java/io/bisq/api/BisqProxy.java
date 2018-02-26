@@ -3,6 +3,7 @@ package io.bisq.api;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.bisq.api.model.*;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -11,6 +12,8 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.arbitration.Arbitrator;
+import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -40,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
@@ -64,6 +68,7 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public class BisqProxy {
+    private ArbitratorManager arbitratorManager;
     private BtcWalletService btcWalletService;
     private User user;
     private TradeManager tradeManager;
@@ -87,12 +92,11 @@ public class BisqProxy {
     @Getter
     private CurrencyList currencyList;
 
-
-    public BisqProxy(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
-                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
-                     PriceFeedService priceFeedService, User user, FeeService feeService, Preferences preferences,
-                     BsqWalletService bsqWalletService, WalletsSetup walletsSetup, ClosedTradableManager closedTradableManager,
-                     FailedTradesManager failedTradesManager) {
+    public BisqProxy(ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user,
+                     FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
+                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager) {
+        this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -731,5 +735,41 @@ public class BisqProxy {
             result =  marketList.markets.stream().filter(market -> market.getPair().equals(marketPair)).count() == 1;
         }
         return result;
+    }
+
+    public void registerArbitrator(List<String> languageCodes) {
+//        TODO most of this code is dupplication of ArbitratorRegistrationViewModel.onRegister
+        String privKeyString;
+        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+            privKeyString = DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+//        TODO hm, are we going to send private key over http?
+        if (null == privKeyString) {
+            throw new RuntimeException("Missing private key");
+        }
+        ECKey registrationKey = arbitratorManager.getRegistrationKey(privKeyString);
+        if (null == registrationKey) {
+            throw new RuntimeException("Missing registration key");
+        }
+        AddressEntry arbitratorDepositAddressEntry = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
+        String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
+        Arbitrator arbitrator = new Arbitrator(
+                p2PService.getAddress(),
+                arbitratorDepositAddressEntry.getPubKey(),
+                arbitratorDepositAddressEntry.getAddressString(),
+                keyRing.getPubKeyRing(),
+                new ArrayList<>(languageCodes),
+                new Date().getTime(),
+                registrationKey.getPubKey(),
+                registrationSignature,
+                null,
+                null,
+                null
+        );
+//        TODO I don't know how to deal with those callbacks in order to send response back
+        arbitratorManager.addArbitrator(arbitrator, () -> System.out.println("Arbi registered"), message -> System.out.println("Error when registering arbi: " + message));
+    }
+
+    public Collection<Arbitrator> getArbitrators() {
+        return arbitratorManager.getArbitratorsObservableMap().values();
     }
 }

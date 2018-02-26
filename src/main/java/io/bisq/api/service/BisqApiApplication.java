@@ -5,6 +5,7 @@ import io.bisq.api.BisqProxy;
 import io.bisq.api.health.CurrencyListHealthCheck;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
@@ -28,6 +29,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 public class BisqApiApplication extends Application<ApiConfiguration> {
+    @Inject
+    ArbitratorManager arbitratorManager;
+
     @Inject
     BtcWalletService walletService;
 
@@ -104,7 +108,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration,
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        BisqProxy bisqProxy = new BisqProxy(walletService, tradeManager, openOfferManager,
+        BisqProxy bisqProxy = new BisqProxy(arbitratorManager, walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager);
         final ApiResourceV1 resource = new ApiResourceV1(configuration.getDefaultName(), bisqProxy);

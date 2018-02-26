@@ -22,9 +22,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -71,6 +69,23 @@ public class ApiResourceV1 {
     @Path("/account_list")
     public AccountList accountList() {
         return bisqProxy.getAccountList();
+    }
+
+    ///////////////// ARBITER ///////////////////////////
+
+    @POST
+    @Timed
+    @Path("/arbitrator_register")
+    public String registerArbitrator(@FormParam("languageCodes") String languageCodes) {
+        bisqProxy.registerArbitrator(Arrays.asList(languageCodes.split(",")));
+        return "OK";
+    }
+
+    @GET
+    @Timed
+    @Path("/arbitrators")
+    public Collection<Arbitrator> getArbitrators() {
+        return bisqProxy.getArbitrators().stream().map(arbitrator -> new Arbitrator(arbitrator.getNodeAddress().getFullAddress())).collect(Collectors.toList());
     }
 
     ///////////////// CURRENCY ///////////////////////////
