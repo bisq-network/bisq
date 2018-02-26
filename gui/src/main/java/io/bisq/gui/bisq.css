@@ -29,7 +29,7 @@ bg color of non edit textFields: fafafa
 }
 
 @font-face {
-    src: url("/fonts/LucidaConsole.ttf");
+    src: url("/fonts/DroidSansMono.ttf");
 }
 
 .root {
@@ -533,7 +533,8 @@ textfield */
 }
 
 .number-column.table-cell {
-    -fx-font-family: "Lucida Console";
+    -fx-font-family: "Droid Sans Mono";
+    -fx-font-size: 1.040em;
 }
 
 /*******************************************************************************
