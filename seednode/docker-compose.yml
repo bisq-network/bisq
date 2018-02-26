@@ -1,15 +1,20 @@
-version: '3'
-
-# Fill in your own ONION addres, without the .onion suffix
+version: '2.1'
 
 services:
     seednode:
         build:
             context: .
-            args:
-            - ONION_ADDRESS=123xxxxxxxxxx
-        image: bisq:seednode
+            dockerfile: Dockerfile
+        image: bisq-seednode
         ports:
             - 8000:8000
         environment:
-            - ONION_ADDRESS=123xxxxxxxxxx
+            - SEED_NODES=seednode:8000
+            - MY_ADDRESS=seednode:8000
+            - USE_LOCALHOST_FOR_P2P=true
+        volumes:
+          - m2:/root/.m2
+
+volumes:
+  m2:
+    name: m2

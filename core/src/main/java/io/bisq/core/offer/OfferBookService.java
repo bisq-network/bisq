@@ -144,6 +144,14 @@ public class OfferBookService {
         }
     }
 
+    public void activateOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+        addOffer(offer, resultHandler, errorMessageHandler);
+    }
+
+    public void deactivateOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+        removeOffer(offerPayload, resultHandler, errorMessageHandler);
+    }
+
     public void removeOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offerPayload, true)) {
             log.trace("Remove offer from network was successful. OfferPayload ID = " + offerPayload.getId());

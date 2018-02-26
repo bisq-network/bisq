@@ -96,22 +96,19 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
         result.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
         result.add(new CryptoCurrency("BTG", "Bitcoin Gold"));
-        result.add(new CryptoCurrency("DARX", "BitDaric"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
         result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("CAGE", "Cagecoin"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("CREA", "Creativecoin"));
         result.add(new CryptoCurrency("XCN", "Cryptonite"));
-        result.add(new CryptoCurrency("DAI", "Dai Stablecoin", true));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ONION", "DeepOnion"));
-        if (!baseCurrencyCode.equals("DOGE"))
-            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
         result.add(new CryptoCurrency("ELLA", "Ellaism"));
         result.add(new CryptoCurrency("ESP", "Espers"));
@@ -133,7 +130,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("ODN", "Obsidian"));
         result.add(new CryptoCurrency("888", "OctoCoin"));
         result.add(new CryptoCurrency("PART", "Particl"));
         result.add(new CryptoCurrency("PASC", "Pascal Coin", true));
@@ -149,7 +145,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("XSPEC", "Spectrecoin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
-        result.add(new CryptoCurrency("STL", "Stellite"));
+
         result.add(new CryptoCurrency("TRC", "Terracoin"));
         result.add(new CryptoCurrency("MVT", "The Movement", true));
 
@@ -157,10 +153,23 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRED", "Verify", true));
         result.add(new CryptoCurrency("WAC", "WACoins"));
         result.add(new CryptoCurrency("WILD", "WILD Token", true));
-        result.add(new CryptoCurrency("YTN", "Yenten"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("ZEN", "ZenCash"));
+
+        // Added 0.6.6
+        result.add(new CryptoCurrency("STL", "Stellite"));
+        result.add(new CryptoCurrency("DAI", "Dai Stablecoin", true));
+        result.add(new CryptoCurrency("YTN", "Yenten"));
+        result.add(new CryptoCurrency("DARX", "BitDaric"));
+        result.add(new CryptoCurrency("ODN", "Obsidian"));
+        result.add(new CryptoCurrency("CDT", "Cassubian Detk"));
+        result.add(new CryptoCurrency("DGM", "DigiMoney"));
+        result.add(new CryptoCurrency("SCS", "SpeedCash"));
+        result.add(new CryptoCurrency("SOS", "SOS Coin", true));
+        result.add(new CryptoCurrency("ACH", "AchieveCoin"));
+        result.add(new CryptoCurrency("VDN", "vDinar"));
+
         result.sort(TradeCurrency::compareTo);
 
         // Util for printing all altcoins for adding to FAQ page
@@ -185,8 +194,7 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("DASH"))
             result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
-        if (!baseCurrencyCode.equals("DOGE"))
-            result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("ONION", "DeepOnion"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
@@ -239,7 +247,72 @@ public class CurrencyUtil {
                 new FiatCurrency("HKD"),
                 new FiatCurrency("CNY")
         ));
-        currencies.sort(TradeCurrency::compareTo);
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    // https://support.uphold.com/hc/en-us/articles/202473803-Supported-currencies
+    public static List<TradeCurrency> getAllUpholdCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("CNY"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("KES"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("ARS"),
+                new FiatCurrency("BRL"),
+                new FiatCurrency("AED"),
+                new FiatCurrency("PHP")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    //https://www.revolut.com/pa/faq#can-i-hold-multiple-currencies
+    public static List<TradeCurrency> getAllRevolutCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("AED"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("MAD"),
+                new FiatCurrency("QAR"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("ZAR")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
     }
 

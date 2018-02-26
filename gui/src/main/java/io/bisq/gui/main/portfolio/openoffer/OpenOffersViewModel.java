@@ -45,8 +45,16 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         this.formatter = formatter;
     }
 
-    void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onCancelOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onActivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    }
+
+    void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onDeactivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    }
+
+    void onRemoveOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onRemoveOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
     public ObservableList<OpenOfferListItem> getList() {
@@ -97,6 +105,10 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
 
     String getDate(OpenOfferListItem item) {
         return formatter.formatDateTime(item.getOffer().getDate());
+    }
+
+    boolean isDeactivated(OpenOfferListItem item) {
+        return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
     }
 
     boolean isBootstrapped() {

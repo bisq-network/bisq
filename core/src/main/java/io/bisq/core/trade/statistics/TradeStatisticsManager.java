@@ -257,6 +257,12 @@ public class TradeStatisticsManager {
         newlyAdded.add("YTN");
         newlyAdded.add("DARX");
         newlyAdded.add("ODN");
+        newlyAdded.add("CDT");
+        newlyAdded.add("DGM");
+        newlyAdded.add("SCS");
+        newlyAdded.add("SOS");
+        newlyAdded.add("ACH");
+        newlyAdded.add("VDN");
 
         coinsWithValidator.addAll(newlyAdded);
 

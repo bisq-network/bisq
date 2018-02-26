@@ -115,9 +115,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             new NodeAddress("acyvotgewx46pebw.onion:8003"),
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
 
-            // DOGE mainnet
-            // new NodeAddress("t6bwuj75mvxswavs.onion:8006"), removed in version 0.6 (DOGE not supported anymore)
-
             // DASH mainnet
             new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
             new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
@@ -150,9 +147,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
             // regtest
             new NodeAddress("localhost:2005"),
-
-            // DOGE regtest
-            new NodeAddress("localhost:2008"),
 
             // DASH regtest
             new NodeAddress("localhost:2011")

@@ -47,10 +47,8 @@ public abstract class PaymentAccount implements PersistablePayload {
     protected String id;
     @Setter
     protected long creationDate;
-
     @Setter
     public PaymentAccountPayload paymentAccountPayload;
-
     @Setter
     protected String accountName;
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
@@ -138,7 +136,7 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     @Nullable
     public TradeCurrency getSingleTradeCurrency() {
-        if (!tradeCurrencies.isEmpty())
+        if (tradeCurrencies.size() == 1)
             return tradeCurrencies.get(0);
         else
             return null;

@@ -19,6 +19,7 @@ package io.bisq.gui.main.account.content.fiataccounts;
 
 import com.google.inject.Inject;
 import io.bisq.common.locale.CryptoCurrency;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -108,7 +109,12 @@ class FiatAccountsDataModel extends ActivatableDataModel {
             else
                 preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
         } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            tradeCurrencies.stream().forEach(tradeCurrency -> {
+            if (tradeCurrencies.contains(CurrencyUtil.getDefaultTradeCurrency()))
+                paymentAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
+            else
+                paymentAccount.setSelectedTradeCurrency(tradeCurrencies.get(0));
+
+            tradeCurrencies.forEach(tradeCurrency -> {
                 if (tradeCurrency instanceof FiatCurrency)
                     preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
                 else

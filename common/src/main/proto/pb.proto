@@ -807,6 +807,12 @@ message PaymentAccountPayload {
         PerfectMoneyAccountPayload perfect_money_account_payload = 12;
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
+        UpholdAccountPayload uphold_account_payload = 16;
+        CashAppAccountPayload cash_app_account_payload = 17;
+        MoneyBeamAccountPayload money_beam_account_payload = 18;
+        VenmoAccountPayload venmo_account_payload = 19;
+        PopmoneyAccountPayload popmoney_account_payload = 20;
+        RevolutAccountPayload revolut_account_payload = 21;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -915,6 +921,32 @@ message InteracETransferAccountPayload {
 
 message OKPayAccountPayload {
     string account_nr = 1;
+}
+
+message UpholdAccountPayload {
+    string account_id = 1;
+}
+
+message CashAppAccountPayload {
+    string cash_tag = 1;
+}
+
+message MoneyBeamAccountPayload {
+    string account_id = 1;
+}
+
+message VenmoAccountPayload {
+    string venmo_user_name = 1;
+    string holder_name = 2;
+}
+
+message PopmoneyAccountPayload {
+    string account_id = 1;
+    string holder_name = 2;
+}
+
+message RevolutAccountPayload {
+    string account_id = 1;
 }
 
 message PerfectMoneyAccountPayload {
@@ -1066,6 +1098,7 @@ message OpenOffer {
         RESERVED = 2;
         CLOSED = 3;
         CANCELED = 4;
+        DEACTIVATED = 5;
     }
 
     Offer offer = 1;

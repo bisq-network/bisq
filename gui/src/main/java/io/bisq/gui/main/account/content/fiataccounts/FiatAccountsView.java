@@ -46,6 +46,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -64,6 +65,12 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final BICValidator bicValidator;
     private final InputValidator inputValidator;
     private final OKPayValidator okPayValidator;
+    private final UpholdValidator upholdValidator;
+    private final CashAppValidator cashAppValidator;
+    private final MoneyBeamValidator moneyBeamValidator;
+    private final VenmoValidator venmoValidator;
+    private final PopmoneyValidator popmoneyValidator;
+    private final RevolutValidator revolutValidator;
     private final AliPayValidator aliPayValidator;
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
@@ -87,6 +94,12 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             BICValidator bicValidator,
                             InputValidator inputValidator,
                             OKPayValidator okPayValidator,
+                            UpholdValidator upholdValidator,
+                            CashAppValidator cashAppValidator,
+                            MoneyBeamValidator moneyBeamValidator,
+                            VenmoValidator venmoValidator,
+                            PopmoneyValidator popmoneyValidator,
+                            RevolutValidator revolutValidator,
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
@@ -102,6 +115,12 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.bicValidator = bicValidator;
         this.inputValidator = inputValidator;
         this.okPayValidator = okPayValidator;
+        this.upholdValidator = upholdValidator;
+        this.cashAppValidator = cashAppValidator;
+        this.moneyBeamValidator = moneyBeamValidator;
+        this.venmoValidator = venmoValidator;
+        this.popmoneyValidator = popmoneyValidator;
+        this.revolutValidator = revolutValidator;
         this.aliPayValidator = aliPayValidator;
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
@@ -148,36 +167,42 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
-        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-        if (paymentAccount instanceof ClearXchangeAccount) {
-            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
-                    .width(900)
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText(Res.get("shared.iConfirm"))
-                    .onAction(() -> doSaveNewAccount(paymentAccount))
-                    .show();
-        } else if (paymentAccount instanceof WesternUnionAccount) {
-            new Popup<>().information(Res.get("payment.westernUnion.info", currencyName, currencyName))
-                    .width(700)
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText(Res.get("shared.iUnderstand"))
-                    .onAction(() -> doSaveNewAccount(paymentAccount))
-                    .show();
-        } else {
-            doSaveNewAccount(paymentAccount);
-        }
+        Coin maxTradeLimitAsCoin = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin("USD");
+        Coin maxTradeLimitSecondMonth = maxTradeLimitAsCoin.divide(2L);
+        Coin maxTradeLimitFirstMonth = maxTradeLimitAsCoin.divide(4L);
+        new Popup<>().information(Res.get("payment.limits.info",
+                formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
+                formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
+                formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                .width(700)
+                .closeButtonText(Res.get("shared.cancel"))
+                .actionButtonText(Res.get("shared.iUnderstand"))
+                .onAction(() -> {
+                    final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+                    if (paymentAccount instanceof ClearXchangeAccount) {
+                        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                                .width(900)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .actionButtonText(Res.get("shared.iConfirm"))
+                                .onAction(() -> doSaveNewAccount(paymentAccount))
+                                .show();
+                    } else if (paymentAccount instanceof WesternUnionAccount) {
+                        new Popup<>().information(Res.get("payment.westernUnion.info"))
+                                .width(700)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .actionButtonText(Res.get("shared.iUnderstand"))
+                                .onAction(() -> doSaveNewAccount(paymentAccount))
+                                .show();
+                    } else {
+                        doSaveNewAccount(paymentAccount);
+                    }
+                })
+                .show();
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
-        if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
-                e.getAccountName().equals(paymentAccount.getAccountName()))
-                .findAny()
-                .isPresent()) {
-
-            // TODO apply salt if user provided it
-            // testing
-            // paymentAccount.setSaltAsHex("a25b65f612e49ba6c4ab80a95fc9b723bcff9e7c6bd06f020d4bdffdac060eed");
-
+        if (model.getPaymentAccounts().stream().noneMatch(e -> e.getAccountName() != null &&
+                e.getAccountName().equals(paymentAccount.getAccountName()))) {
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
@@ -341,6 +366,18 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         switch (paymentMethod.getId()) {
             case PaymentMethod.OK_PAY_ID:
                 return new OKPayForm(paymentAccount, accountAgeWitnessService, okPayValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.UPHOLD_ID:
+                return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CASH_APP_ID:
+                return new CashAppForm(paymentAccount, accountAgeWitnessService, cashAppValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.MONEY_BEAM_ID:
+                return new MoneyBeamForm(paymentAccount, accountAgeWitnessService, moneyBeamValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.VENMO_ID:
+                return new VenmoForm(paymentAccount, accountAgeWitnessService, venmoValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.POPMONEY_ID:
+                return new PopmoneyForm(paymentAccount, accountAgeWitnessService, popmoneyValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.REVOLUT_ID:
+                return new RevolutForm(paymentAccount, accountAgeWitnessService, revolutValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:

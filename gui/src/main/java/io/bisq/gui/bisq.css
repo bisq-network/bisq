@@ -709,6 +709,11 @@ textfield */
     -fx-background-color: -bs-very-light-grey;
 }
 
+/* Open Offer */
+.offer-disabled {
+    -fx-text-fill: -bs-light-grey;
+}
+
 /* OfferBook */
 
 .table-title {

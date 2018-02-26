@@ -20,7 +20,6 @@ package io.bisq.gui.main.offer.takeoffer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
@@ -59,7 +58,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
-import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
@@ -72,9 +70,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-import static io.bisq.gui.util.FormBuilder.addLabelFundsTextfield;
-import static io.bisq.gui.util.FormBuilder.getAmountCurrencyBox;
-import static io.bisq.gui.util.FormBuilder.getNonEditableValueCurrencyBox;
+import static io.bisq.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
@@ -343,10 +339,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 if (model.hasAcceptedArbitrators()) {
                     if (!DevEnv.DEV_MODE) {
                         offerDetailsWindow.onTakeOffer(() ->
-                                        model.onTakeOffer(() -> {
-                                            offerDetailsWindow.hide();
-                                            offerDetailsWindowDisplayed = false;
-                                        })
+                                model.onTakeOffer(() -> {
+                                    offerDetailsWindow.hide();
+                                    offerDetailsWindowDisplayed = false;
+                                })
                         ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
                         offerDetailsWindowDisplayed = true;
                     } else {
@@ -684,20 +680,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         //noinspection unchecked
         paymentAccountsComboBox = tuple.second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
-        paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
-            @Override
-            public String toString(PaymentAccount paymentAccount) {
-                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
-                return paymentAccount.getAccountName() + " (" + code + ", " +
-                        Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
-            }
-
-            @Override
-            public PaymentAccount fromString(String s) {
-                return null;
-            }
-        });
+        paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> {
@@ -971,7 +954,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueCurrencyBox();
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
 
-        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox( amountValueCurrencyBoxTuple.first,
+        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBoxTuple.first,
                 Res.get("takeOffer.amountPriceBox.amountRangeDescription"));
 
         amountRangeBox = amountInputBoxTuple.second;
