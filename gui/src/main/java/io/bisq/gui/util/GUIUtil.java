@@ -139,7 +139,10 @@ public class GUIUtil {
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            fileChooser.setInitialDirectory(initDir);
+        }
         fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
@@ -202,7 +205,10 @@ public class GUIUtil {
 
     public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            directoryChooser.setInitialDirectory(initDir);
+        }
         directoryChooser.setTitle(Res.get("guiUtil.accountExport.selectExportPath"));
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
