@@ -723,9 +723,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null) {
+        if (user.getPaymentAccounts() != null)
             paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
-        }
     }
 
     void setAmount(Coin amount) {

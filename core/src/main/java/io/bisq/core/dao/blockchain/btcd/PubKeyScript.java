@@ -23,13 +23,15 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
+import java.util.Optional;
 
 @Value
 @AllArgsConstructor
 public class PubKeyScript implements PersistablePayload {
     private final int reqSigs;
     private final ScriptType scriptType;
+    @Nullable
     private final ImmutableList<String> addresses;
     private final String asm;
     private final String hex;
@@ -48,19 +50,19 @@ public class PubKeyScript implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PB.PubKeyScript toProtoMessage() {
-        return PB.PubKeyScript.newBuilder()
+        final PB.PubKeyScript.Builder builder = PB.PubKeyScript.newBuilder()
                 .setReqSigs(reqSigs)
                 .setScriptType(scriptType.toProtoMessage())
-                .addAllAddresses(addresses)
                 .setAsm(asm)
-                .setHex(hex)
-                .build();
+                .setHex(hex);
+        Optional.ofNullable(addresses).ifPresent(builder::addAllAddresses);
+        return builder.build();
     }
 
     public static PubKeyScript fromProto(PB.PubKeyScript proto) {
         return new PubKeyScript(proto.getReqSigs(),
                 ScriptType.fromProto(proto.getScriptType()),
-                proto.getAddressesList().isEmpty() ? ImmutableList.copyOf(new ArrayList<>()) : ImmutableList.copyOf(proto.getAddressesList()),
+                proto.getAddressesList().isEmpty() ? null : ImmutableList.copyOf(proto.getAddressesList()),
                 proto.getAsm(),
                 proto.getHex());
     }

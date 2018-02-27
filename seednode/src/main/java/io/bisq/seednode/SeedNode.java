@@ -107,14 +107,16 @@ public class SeedNode {
                     Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
                     Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
                     Capabilities.Capability.SEED_NODE.ordinal(),
-                    Capabilities.Capability.DAO_FULL_NODE.ordinal()
+                    Capabilities.Capability.DAO_FULL_NODE.ordinal(),
+                    Capabilities.Capability.COMP_REQUEST.ordinal()
             )));
         else
             Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
                     Capabilities.Capability.TRADE_STATISTICS.ordinal(),
                     Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
                     Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
-                    Capabilities.Capability.SEED_NODE.ordinal()
+                    Capabilities.Capability.SEED_NODE.ordinal(),
+                    Capabilities.Capability.COMP_REQUEST.ordinal()
             )));
         appSetup.start();
     }

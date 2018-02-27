@@ -18,96 +18,107 @@
 package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.util.BsqFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.gui.util.validation.BsqAddressValidator;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.util.UUID;
 
-import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
-import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
+import static io.bisq.gui.util.FormBuilder.*;
 
 public class CompensationRequestDisplay {
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestDisplay.class);
-
     private final GridPane gridPane;
-    public InputTextField uidTextField, nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
-            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
+    private BsqFormatter bsqFormatter;
+    private BsqWalletService bsqWalletService;
+    public InputTextField uidTextField, nameTextField, titleTextField, linkInputTextField,
+            requestedBsqTextField, bsqAddressTextField;
     private int gridRow = 0;
+    public TextArea descriptionTextArea;
+    private HyperlinkWithIcon linkHyperlinkWithIcon;
 
-    public CompensationRequestDisplay(GridPane gridPane) {
+    public CompensationRequestDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService) {
         this.gridPane = gridPane;
+        this.bsqFormatter = bsqFormatter;
+        this.bsqWalletService = bsqWalletService;
     }
 
     public void createAllFields(String title, double top) {
-        addTitledGroupBg(gridPane, gridRow, 10, title, top);
+        addTitledGroupBg(gridPane, gridRow, 7, title, top);
         uidTextField = addLabelInputTextField(gridPane, gridRow, Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
         uidTextField.setEditable(false);
         nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.name")).second;
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.title")).second;
-        categoryTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.category")).second;
-        descriptionTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.description")).second;
-        linkTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.link")).second;
-        startDateTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.startDate")).second;
-        endDateTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.endDate")).second;
-        requestedBTCTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBTC")).second;
-        btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.btcAddress")).second;
+        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.compensation.display.description"), Res.get("dao.compensation.display.description.prompt")).second;
+        linkInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.link")).second;
+        linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow, Res.get("dao.compensation.display.link"), "", "").second;
+        linkHyperlinkWithIcon.setVisible(false);
+        linkHyperlinkWithIcon.setManaged(false);
+        linkInputTextField.setPromptText(Res.get("dao.compensation.display.link.prompt"));
+        requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBsq")).second;
 
+        // TODO validator, addressTF
+        bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.get("dao.compensation.display.bsqAddress")).second;
+        bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+        bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
     }
 
     public void fillWithData(CompensationRequestPayload data) {
         uidTextField.setText(data.getUid());
         nameTextField.setText(data.getName());
         titleTextField.setText(data.getTitle());
-        categoryTextField.setText(data.getCategory());
-        descriptionTextField.setText(data.getDescription());
-        linkTextField.setText(data.getLink());
-        startDateTextField.setText(data.getStartDate().toString());
-        endDateTextField.setText(data.getEndDate().toString());
-        requestedBTCTextField.setText(data.getRequestedBtc().toPlainString());
-        btcAddressTextField.setText(data.getBtcAddress());
+        descriptionTextArea.setText(data.getDescription());
+        linkInputTextField.setVisible(false);
+        linkInputTextField.setManaged(false);
+        linkHyperlinkWithIcon.setVisible(true);
+        linkHyperlinkWithIcon.setManaged(true);
+        linkHyperlinkWithIcon.setText(data.getLink());
+        linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(data.getLink()));
+        requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(data.getRequestedBsq()));
+        bsqAddressTextField.setText(data.getBsqAddress());
     }
 
     public void clearForm() {
-        uidTextField.setText("");
-        nameTextField.setText("");
-        titleTextField.setText("");
-        categoryTextField.setText("");
-        descriptionTextField.setText("");
-        linkTextField.setText("");
-        startDateTextField.setText("");
-        endDateTextField.setText("");
-        requestedBTCTextField.setText("");
-        btcAddressTextField.setText("");
+        uidTextField.clear();
+        nameTextField.clear();
+        titleTextField.clear();
+        descriptionTextArea.clear();
+        linkInputTextField.clear();
+        linkHyperlinkWithIcon.clear();
+        requestedBsqTextField.clear();
+        bsqAddressTextField.clear();
     }
 
     public void fillWithMock() {
-        int random = new Random().nextInt(100);
-        uidTextField.setText("Mock UID" + random);
-        nameTextField.setText("Mock name" + random);
-        titleTextField.setText("Mock Title " + random);
-        categoryTextField.setText("Mock Category " + random);
-        descriptionTextField.setText("Mock Description " + random);
-        linkTextField.setText("Mock Link " + random);
-        startDateTextField.setText("Mock Start date " + random);
-        endDateTextField.setText("Mock Delivery date " + random);
-        requestedBTCTextField.setText("Mock Requested funds " + random);
-        btcAddressTextField.setText("Mock Bitcoin address " + random);
+        uidTextField.setText(UUID.randomUUID().toString());
+        nameTextField.setText("Manfred Karrer");
+        titleTextField.setText("Development work November 2017");
+        descriptionTextArea.setText("Development work");
+        linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
+        requestedBsqTextField.setText("14000");
+        bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
     }
 
     public void setAllFieldsEditable(boolean isEditable) {
         nameTextField.setEditable(isEditable);
         titleTextField.setEditable(isEditable);
-        categoryTextField.setEditable(isEditable);
-        descriptionTextField.setEditable(isEditable);
-        linkTextField.setEditable(isEditable);
-        startDateTextField.setEditable(isEditable);
-        endDateTextField.setEditable(isEditable);
-        requestedBTCTextField.setEditable(isEditable);
-        btcAddressTextField.setEditable(isEditable);
+        descriptionTextArea.setEditable(isEditable);
+        linkInputTextField.setEditable(isEditable);
+        requestedBsqTextField.setEditable(isEditable);
+        bsqAddressTextField.setEditable(isEditable);
+
+        linkInputTextField.setVisible(true);
+        linkInputTextField.setManaged(true);
+        linkHyperlinkWithIcon.setVisible(false);
+        linkHyperlinkWithIcon.setManaged(false);
+        linkHyperlinkWithIcon.setOnAction(null);
     }
 
     public void removeAllFields() {

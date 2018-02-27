@@ -126,8 +126,8 @@ See https://github.com/bisq-network/exchange/blob/master/doc/rpc.md for more det
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/Testing-bisq-with-Mainnet)
-and how to use [regtest](https://github.com/bisq-network/exchange/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/4.3.-Testing-Bisq-with-Testnet)
+and how to use [regtest](https://github.com/bisq-network/exchange/wiki/4.2.1.-How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 

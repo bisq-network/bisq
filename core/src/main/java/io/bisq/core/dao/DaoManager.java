@@ -20,15 +20,19 @@ package io.bisq.core.dao;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqNode;
+import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 
+/**
+ * High level entry point for Dao domain
+ */
 public class DaoManager {
-    private final BsqBlockchainManager bsqBlockchainManager;
     private final DaoPeriodService daoPeriodService;
     private final VotingManager voteManager;
     private final CompensationRequestManager compensationRequestManager;
+    private final BsqNode bsqNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -36,15 +40,14 @@ public class DaoManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoManager(BsqBlockchainManager bsqBlockchainManager,
+    public DaoManager(BsqNodeProvider bsqNodeProvider,
                       DaoPeriodService daoPeriodService,
                       VotingManager voteManager,
                       CompensationRequestManager compensationRequestManager) {
-        this.bsqBlockchainManager = bsqBlockchainManager;
         this.daoPeriodService = daoPeriodService;
         this.voteManager = voteManager;
         this.compensationRequestManager = compensationRequestManager;
-
+        bsqNode = bsqNodeProvider.getBsqNode();
     }
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
@@ -52,17 +55,7 @@ public class DaoManager {
             daoPeriodService.onAllServicesInitialized();
             voteManager.onAllServicesInitialized();
             compensationRequestManager.onAllServicesInitialized();
-            bsqBlockchainManager.onAllServicesInitialized(errorMessageHandler);
+            bsqNode.onAllServicesInitialized(errorMessageHandler);
         }
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 }

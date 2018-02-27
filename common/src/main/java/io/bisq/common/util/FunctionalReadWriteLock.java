@@ -41,15 +41,6 @@ public class FunctionalReadWriteLock {
         }
     }
 
-    public void write1(Callable block) throws Exception {
-        readLock.lock();
-        try {
-            block.call();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
     public <T> T write(Supplier<T> block) {
         writeLock.lock();
         try {

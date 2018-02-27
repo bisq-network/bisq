@@ -19,6 +19,8 @@ package io.bisq.gui;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -46,8 +48,8 @@ public class AwesomeFontDemo extends Application {
         List<AwesomeIcon> values = new ArrayList<>(Arrays.asList(AwesomeIcon.values()));
         values.sort((o1, o2) -> o1.name().compareTo(o2.name()));
         for (AwesomeIcon icon : values) {
-            Label label = new Label();
-            Button button = new Button(icon.name(), label);
+            Label label = new AutoTooltipLabel();
+            Button button = new AutoTooltipButton(icon.name(), label);
             AwesomeDude.setIcon(label, icon);
             root.getChildren().add(button);
         }

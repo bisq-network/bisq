@@ -17,11 +17,13 @@
 
 package io.bisq.gui.main.portfolio.closedtrades;
 
+import com.google.inject.name.Named;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -29,6 +31,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
@@ -52,6 +55,7 @@ import javax.inject.Inject;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
+    private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -74,7 +78,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
                             Stage stage,
-                            BSFormatter formatter) {
+                            BSFormatter formatter,
+                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
@@ -83,22 +88,23 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.stage = stage;
         this.preferences = preferences;
         this.formatter = formatter;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
     public void initialize() {
-        priceColumn.setText(Res.get("shared.price"));
-        amountColumn.setText(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        volumeColumn.setText(Res.get("shared.volume"));
-        marketColumn.setText(Res.get("shared.market"));
-        directionColumn.setText(Res.get("shared.offerType"));
-        dateColumn.setText(Res.get("shared.dateTime"));
-        tradeIdColumn.setText(Res.get("shared.tradeId"));
-        stateColumn.setText(Res.get("shared.state"));
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
+        stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
         avatarColumn.setText("");
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -215,7 +221,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item), true);
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
                                         Tradable tradable = item.getTradable();
                                         if (tradable instanceof Trade)
@@ -249,9 +255,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getDate(item));
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -270,7 +276,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getMarketLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
                         };
                     }
@@ -290,9 +296,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getState(item));
+                                    setGraphic(new AutoTooltipLabel(model.getState(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -326,7 +332,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             offer,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
@@ -351,7 +358,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getAmount(item));
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
                         };
                     }
@@ -370,7 +377,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getPrice(item));
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
                         };
                     }
@@ -390,9 +397,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.getVolume(item));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -411,7 +418,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(model.getDirectionLabel(item));
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
                         };
                     }

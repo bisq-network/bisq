@@ -555,6 +555,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getOffer();
     }
 
+    public boolean isRange() {return dataModel.getOffer().isRange(); }
+
     public String getAmountRange() {
         return amountRange;
     }
@@ -584,6 +586,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
     }
 
+    public String getSecurityDepositWithCode() {
+        return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
+    }
+
     public String getTakerFee() {
         //TODO use last bisq market price to estimate BSQ val
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
@@ -592,6 +598,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
+    }
+
+    public String getMakerFeePercentage() {
+        final Coin makerFeeAsCoin = dataModel.getTakerFee();
+        if (dataModel.isCurrencyForTakerFeeBtc())
+            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        else
+            return Res.get("shared.paidWithBsq");
     }
 
     public String getTotalToPayInfo() {
@@ -607,6 +621,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
                 GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
 
+    }
+
+    public String getTxFeePercentage() {
+        Coin txFeeAsCoin = dataModel.getTotalTxFee();
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
     }
 
     public PaymentMethod getPaymentMethod() {

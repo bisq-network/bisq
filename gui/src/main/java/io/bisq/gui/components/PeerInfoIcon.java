@@ -43,7 +43,8 @@ public class PeerInfoIcon extends Group {
                         Offer offer,
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        BSFormatter formatter) {
+                        BSFormatter formatter,
+                        boolean useDevPrivilegeKeys) {
         this.numTrades = numTrades;
 
         hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
@@ -132,7 +133,7 @@ public class PeerInfoIcon extends Group {
         numTradesPane.setMouseTransparent(true);
         ImageView numTradesCircle = new ImageView();
         numTradesCircle.setId("image-green_circle");
-        numTradesLabel = new Label();
+        numTradesLabel = new AutoTooltipLabel();
         numTradesLabel.relocate(5, 1);
         numTradesLabel.setId("ident-num-label");
         numTradesPane.getChildren().addAll(numTradesCircle, numTradesLabel);
@@ -142,7 +143,7 @@ public class PeerInfoIcon extends Group {
         tagPane.setMouseTransparent(true);
         ImageView tagCircle = new ImageView();
         tagCircle.setId("image-blue_circle");
-        tagLabel = new Label();
+        tagLabel = new AutoTooltipLabel();
         tagLabel.relocate(5, 1);
         tagLabel.setId("ident-num-label");
         tagPane.getChildren().addAll(tagCircle, tagLabel);
@@ -156,7 +157,7 @@ public class PeerInfoIcon extends Group {
                         formatter.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .hostName(hostName)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)

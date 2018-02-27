@@ -19,10 +19,9 @@ package io.bisq.core.dao.blockchain.parse;
 
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxOutputType;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestModel;
+import io.bisq.core.dao.compensation.CompensationRequestManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -30,25 +29,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+//TODO outdated, ignore
 @Slf4j
 public class IssuanceVerification {
     public static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
     public static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
 
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
-    private final CompensationRequestModel compensationRequestModel;
+    private CompensationRequestManager compensationRequestManager;
 
     @Inject
-    public IssuanceVerification(BsqChainState bsqChainState,
+    public IssuanceVerification(BsqBlockChain bsqBlockChain,
                                 PeriodVerification periodVerification,
                                 VotingVerification votingVerification,
-                                CompensationRequestModel compensationRequestModel) {
-        this.bsqChainState = bsqChainState;
+                                CompensationRequestManager compensationRequestManager) {
+        this.bsqBlockChain = bsqBlockChain;
         this.periodVerification = periodVerification;
         this.votingVerification = votingVerification;
-        this.compensationRequestModel = compensationRequestModel;
+        this.compensationRequestManager = compensationRequestManager;
     }
 
     boolean maybeProcessData(Tx tx) {
@@ -58,15 +58,15 @@ public class IssuanceVerification {
             TxOutput btcTxOutput = outputs.get(1);
             final String btcAddress = btcTxOutput.getAddress();
             // TODO find address by block range/cycle
-            final Optional<CompensationRequest> compensationRequest = compensationRequestModel.findByAddress(btcAddress);
+            final Optional<CompensationRequest> compensationRequest = compensationRequestManager.findByAddress(btcAddress);
             if (compensationRequest.isPresent()) {
                 final CompensationRequest compensationRequest1 = compensationRequest.get();
                 final long bsqAmount = bsqTxOutput.getValue();
-                final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBtc().value;
+                final long requestedBtc = compensationRequest1.getPayload().getRequestedBsq().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
-                Set<TxOutput> issuanceTxs = bsqChainState.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
-                // Sorting rule: the txs are sorted by inter-block dependency and 
+                Set<TxOutput> issuanceTxs = bsqBlockChain.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
+                // Sorting rule: the txs are sorted by inter-block dependency and
                 // at each recursive iteration we add another sorted list which can be parsed, so we have a reproducible
                 // sorting.
                 for (TxOutput txOutput : issuanceTxs) {
@@ -78,12 +78,12 @@ public class IssuanceVerification {
                 }
                 final long btcAmount = btcTxOutput.getValue();
                 if (periodVerification.isInSponsorPeriod(height) &&
-                        bsqChainState.existsCompensationRequestBtcAddress(btcAddress) &&
+                        bsqBlockChain.existsCompensationRequestBtcAddress(btcAddress) &&
                         votingVerification.isCompensationRequestAccepted(compensationRequest1) &&
                         alreadyFundedBtc + btcAmount <= requestedBtc &&
                         bsqAmount >= MIN_BSQ_ISSUANCE_AMOUNT && bsqAmount <= MAX_BSQ_ISSUANCE_AMOUNT &&
                         votingVerification.isConversionRateValid(height, btcAmount, bsqAmount)) {
-                    btcTxOutput.setTxOutputType(TxOutputType.SPONSORING_BTC_OUTPUT);
+                    //btcTxOutput.setTxOutputType(TxOutputType.SPONSORING_BTC_OUTPUT);
                     tx.setTxType(TxType.ISSUANCE);
                     return true;
                 }

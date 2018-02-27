@@ -20,11 +20,11 @@ package io.bisq.core.dao.blockchain.parse;
 import javax.inject.Inject;
 
 public class PeriodVerification {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
 
     @Inject
-    public PeriodVerification(BsqChainState bsqChainState) {
-        this.bsqChainState = bsqChainState;
+    public PeriodVerification(BsqBlockChain bsqBlockChain) {
+        this.bsqBlockChain = bsqBlockChain;
     }
 
     // TODO

@@ -101,7 +101,7 @@ public class VotingManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_VOTING) {
+        if (daoPeriodService.getPhaseProperty().get() == DaoPeriodService.Phase.OPEN_FOR_VOTING) {
             VoteItemsList activeVoteItemsList = new VoteItemsList(votingDefaultValues);
             setActiveVoteItemsList(activeVoteItemsList);
         }
@@ -112,9 +112,9 @@ public class VotingManager implements PersistedDataHost {
     }
 
     public byte[] getCompensationRequestsCollection() {
-        List<CompensationRequestPayload> list = compensationRequestManager.getCompensationRequestsList().stream()
+        List<CompensationRequestPayload> list = compensationRequestManager.getActiveRequests().stream()
                 .filter(CompensationRequest::isInVotePeriod)
-                .map(CompensationRequest::getCompensationRequestPayload)
+                .map(CompensationRequest::getPayload)
                 .collect(Collectors.toList());
         CompensationRequestPayload[] array = new CompensationRequestPayload[list.size()];
         list.toArray(array);

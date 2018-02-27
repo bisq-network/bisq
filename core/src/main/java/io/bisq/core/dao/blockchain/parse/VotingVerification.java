@@ -27,15 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 
+//TODO outdated, ignore
 @Slf4j
 public class VotingVerification {
-    private final BsqChainState bsqChainState;
+    private final BsqBlockChain bsqBlockChain;
     private final PeriodVerification periodVerification;
 
     @Inject
-    public VotingVerification(BsqChainState bsqChainState,
+    public VotingVerification(BsqBlockChain bsqBlockChain,
                               PeriodVerification periodVerification) {
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.periodVerification = periodVerification;
     }
 
@@ -47,15 +48,15 @@ public class VotingVerification {
         return false;
     }
 
-    boolean maybeProcessData(Tx tx, byte[] opReturnData, TxOutput txOutput, long fee, int blockHeight, TxOutput bsqOutput) {
+    boolean processOpReturnData(Tx tx, byte[] opReturnData, TxOutput txOutput, long bsqFee, int blockHeight, TxOutput bsqOutput) {
         if (Version.VOTING_VERSION == opReturnData[1] && opReturnData.length > 22) {
             final int sizeOfCompRequestsVotes = (int) opReturnData[22];
             if (bsqOutput != null &&
                     sizeOfCompRequestsVotes % 2 == 0 &&
                     opReturnData.length % 2 == 1 &&
                     opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
-                    fee == bsqChainState.getVotingFee(blockHeight) &&
-                    bsqChainState.isVotingPeriodValid(blockHeight)) {
+                    bsqFee == bsqBlockChain.getVotingFee(blockHeight) &&
+                    bsqBlockChain.isVotingPeriodValid(blockHeight)) {
                 txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
                 tx.setTxType(TxType.VOTE);
                 // TODO use bsqOutput as weight

@@ -31,13 +31,15 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.util.CoinUtil;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.MainView;
-import io.bisq.gui.main.funds.FundsView;
-import io.bisq.gui.main.funds.transactions.TransactionsView;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.portfolio.PortfolioView;
+import io.bisq.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.BSFormatter;
@@ -140,11 +142,11 @@ public class BuyerStep4View extends TradeStepView {
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        useSavingsWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
+        useSavingsWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
         useSavingsWalletButton.setDefaultButton(false);
-        Label label = new Label(Res.get("shared.OR"));
+        Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        withdrawToExternalWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.withdrawExternal"));
+        withdrawToExternalWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.withdrawExternal"));
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
@@ -284,8 +286,8 @@ public class BuyerStep4View extends TradeStepView {
             //noinspection unchecked
             new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
-                    .actionButtonTextWithGoTo("navigation.funds.transactions")
-                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                    .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
+                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
                     .dontShowAgainId(key)
                     .show();
         }

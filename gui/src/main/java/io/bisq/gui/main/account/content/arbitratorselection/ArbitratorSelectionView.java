@@ -23,7 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.TableGroupHeadline;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
@@ -143,9 +143,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             @Override
             public ListCell<String> call(ListView<String> list) {
                 return new ListCell<String>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
@@ -207,23 +207,23 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         autoSelectAllMatchingCheckBox.setOnAction(event ->
                 model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
-        TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn<>(Res.get("account.arbitratorSelection.regDate"));
+        TableColumn<ArbitratorListItem, String> dateColumn = new AutoTooltipTableColumn<>(Res.get("account.arbitratorSelection.regDate"));
         dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getRegistrationDate()));
         dateColumn.setMinWidth(140);
         dateColumn.setMaxWidth(140);
 
-        TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn<>(Res.get("shared.onionAddress"));
+        TableColumn<ArbitratorListItem, String> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.onionAddress"));
         nameColumn.setSortable(false);
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getAddressString()));
         nameColumn.setMinWidth(90);
 
-        TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn<>(Res.get("account.arbitratorSelection.languages"));
+        TableColumn<ArbitratorListItem, String> languagesColumn = new AutoTooltipTableColumn<>(Res.get("account.arbitratorSelection.languages"));
         languagesColumn.setSortable(false);
         languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getLanguageCodes()));
         languagesColumn.setMinWidth(130);
 
-        TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>(
+        TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new AutoTooltipTableColumn<ArbitratorListItem, ArbitratorListItem>(
                 Res.get("shared.accept")) {
             {
                 setMinWidth(60);
@@ -237,7 +237,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     @Override
                     public TableCell<ArbitratorListItem, ArbitratorListItem> call(TableColumn<ArbitratorListItem, ArbitratorListItem> column) {
                         return new TableCell<ArbitratorListItem, ArbitratorListItem>() {
-                            private final CheckBox checkBox = new CheckBox();
+                            private final CheckBox checkBox = new AutoTooltipCheckBox();
                             private TableRow tableRow;
                             private BooleanProperty selectedProperty;
 

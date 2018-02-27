@@ -23,12 +23,12 @@ import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AddOfferOfferBook extends Task<PlaceOfferModel> {
+public class AddToOfferBook extends Task<PlaceOfferModel> {
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(AddOfferOfferBook.class);
+    private static final Logger log = LoggerFactory.getLogger(AddToOfferBook.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public AddOfferOfferBook(TaskRunner taskHandler, PlaceOfferModel model) {
+    public AddToOfferBook(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

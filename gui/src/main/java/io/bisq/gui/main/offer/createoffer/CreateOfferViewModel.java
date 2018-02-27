@@ -827,6 +827,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
     }
 
+    public String getSecurityDepositWithCode() {
+        return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
+    }
+
     public String getMakerFee() {
         //TODO use last bisq market price to estimate BSQ val
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
@@ -835,6 +839,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
             return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
+    }
+
+    public String getMakerFeePercentage() {
+        final Coin makerFeeAsCoin = dataModel.getMakerFee();
+        if (dataModel.isCurrencyForMakerFeeBtc())
+            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        else
+            return Res.get("shared.paidWithBsq");
     }
 
     public String getTotalToPayInfo() {
@@ -850,6 +862,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
                 GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
 
+    }
+
+    public String getTxFeePercentage() {
+        Coin txFeeAsCoin = dataModel.getTxFee();
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
     }
 
     public PaymentAccount getPaymentAccount() {

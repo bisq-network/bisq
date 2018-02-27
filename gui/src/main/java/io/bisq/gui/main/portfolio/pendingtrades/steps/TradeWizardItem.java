@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.pendingtrades.steps;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.util.Colors;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

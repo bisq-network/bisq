@@ -147,10 +147,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.start(this);
     }
 
-    public void readFromResources(String resourceFileName) {
-        p2PDataStorage.readFromResources(resourceFileName);
-    }
-
     public void onAllServicesInitialized() {
         Log.traceCall();
         if (networkNode.getNodeAddress() != null) {
@@ -778,6 +774,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return networkNode;
     }
 
+    @Nullable
     public NodeAddress getAddress() {
         return networkNode.getNodeAddress();
     }

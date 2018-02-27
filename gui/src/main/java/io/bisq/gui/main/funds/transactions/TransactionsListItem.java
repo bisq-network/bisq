@@ -23,6 +23,8 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -51,13 +53,12 @@ class TransactionsListItem {
     private final Tooltip tooltip;
     @Nullable
     private Tradable tradable;
-    private String details;
+    private String details = "";
     private String addressString = "";
-    private String direction;
+    private String direction = "";
     private TxConfidenceListener txConfidenceListener;
     private boolean received;
     private boolean detailsAvailable;
-    private boolean txFeeForBsqPayment = false;
     private Coin amountAsCoin = Coin.ZERO;
     private BSFormatter formatter;
     private int confirmations = 0;
@@ -74,6 +75,7 @@ class TransactionsListItem {
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Optional<Tradable> tradableOptional,
+                                BsqBlockChain bsqBlockChain,
                                 BSFormatter formatter) {
         this.formatter = formatter;
         txId = transaction.getHashAsString();
@@ -83,19 +85,20 @@ class TransactionsListItem {
         Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
 
         // TODO check and refactor
+        boolean txFeeForBsqPayment = false;
         if (valueSentToMe.isZero()) {
             amountAsCoin = valueSentFromMe.multiply(-1);
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (!btcWalletService.isTransactionOutputMine(output)) {
                     received = false;
-                    if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
-                        txFeeForBsqPayment = true;
-                    } else {
-                        direction = Res.get("funds.tx.direction.sentTo");
-                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                            addressString = WalletService.getAddressStringFromOutput(output);
-                            break;
+                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                        addressString = WalletService.getAddressStringFromOutput(output);
+                        if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
+                            txFeeForBsqPayment = true;
+                        } else {
+                            direction = Res.get("funds.tx.direction.sentTo");
                         }
+                        break;
                     }
                 }
             }
@@ -115,15 +118,20 @@ class TransactionsListItem {
             boolean outgoing = false;
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (!btcWalletService.isTransactionOutputMine(output)) {
-                    if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
-                        outgoing = false;
-                        txFeeForBsqPayment = true;
-                    } else {
-                        outgoing = true;
-                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                            addressString = WalletService.getAddressStringFromOutput(output);
-                            break;
+                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                        addressString = WalletService.getAddressStringFromOutput(output);
+                        if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
+                            outgoing = false;
+                            txFeeForBsqPayment = true;
+
+                            //
+                            final Optional<TxType> txTypeOptional = bsqBlockChain.getTxType(txId);
+                            if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
+                                details = Res.get("funds.tx.compRequest");
+                        } else {
+                            outgoing = true;
                         }
+                        break;
                     }
                 }
             }
@@ -135,8 +143,9 @@ class TransactionsListItem {
         }
 
         if (txFeeForBsqPayment) {
-            direction = Res.get("funds.tx.txFeePaymentForBsqTx");
-            addressString = "";
+            // direction = Res.get("funds.tx.txFeePaymentForBsqTx");
+            direction = Res.get("funds.tx.direction.sentTo");
+            //addressString = "";
         }
 
         // confidence
@@ -199,7 +208,7 @@ class TransactionsListItem {
                 details = Res.get("funds.tx.noFundsFromDispute");
             else if (!txFeeForBsqPayment)
                 details = received ? Res.get("funds.tx.receivedFunds") : Res.get("funds.tx.withdrawnFromWallet");
-            else
+            else if (details.isEmpty())
                 details = Res.get("funds.tx.txFeePaymentForBsqTx");
         }
 

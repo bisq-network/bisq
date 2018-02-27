@@ -18,12 +18,9 @@
 package io.bisq.core.btc.wallet;
 
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ChangeBelowDustException extends Exception {
-    private static final Logger log = LoggerFactory.getLogger(ChangeBelowDustException.class);
-    private final Coin change;
+    public final Coin change;
 
     public ChangeBelowDustException(Coin change) {
         this(change, "Change value would be below min. dust. Change: " + change + " satoshis");

@@ -23,6 +23,8 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
 import io.bisq.gui.main.dao.wallet.dashboard.BsqDashboardView;
@@ -35,7 +37,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
@@ -141,7 +142,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
 }
 
 
-class MenuItem extends ToggleButton {
+class MenuItem extends AutoTooltipToggleButton {
 
     private final ChangeListener<Boolean> selectedPropertyChangeListener;
     private final ChangeListener<Boolean> disablePropertyChangeListener;
@@ -161,8 +162,13 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
+        if (viewClass == BsqReceiveView.class) {
+            icon.setRotate(180);
+            icon.setPadding(new Insets(0, 0, 0, 5));
+        } else {
+            icon.setPadding(new Insets(0, 5, 0, 0));
+        }
         icon.setTextFill(Paint.valueOf("#333"));
-        icon.setPadding(new Insets(0, 5, 0, 0));
         icon.setAlignment(Pos.CENTER);
         icon.setMinWidth(25);
         icon.setMaxWidth(25);

@@ -31,9 +31,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// TODO not used, can be removed
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our address.
+ * We lookup for spendable outputs which matches our address.
  */
 class BtcCompensationRequestFeeCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCompensationRequestFeeCoinSelector.class);

@@ -21,6 +21,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.Alert;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -37,6 +38,7 @@ import javafx.scene.layout.HBox;
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
+    private final boolean useDevPrivilegeKeys;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
 
@@ -57,7 +59,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendAlertMessageWindow() {
+    public SendAlertMessageWindow(boolean useDevPrivilegeKeys) {
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
 
@@ -104,7 +107,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
@@ -121,7 +124,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 Res.get("sendAlertMessageWindow.version")).second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
-        Button sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
+        Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));
         sendButton.setOnAction(e -> {
             final String version = versionInputTextField.getText();
             boolean versionOK = false;
@@ -148,7 +151,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        Button removeAlertMessageButton = new Button(Res.get("sendAlertMessageWindow.remove"));
+        Button removeAlertMessageButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.remove"));
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
@@ -158,7 +161,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

@@ -87,7 +87,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         return new CoinSelection(Coin.valueOf(total), selected);
     }
 
-    public Coin getChange(Coin target, CoinSelection coinSelection) throws InsufficientMoneyException, ChangeBelowDustException {
+    public Coin getChange(Coin target, CoinSelection coinSelection) throws InsufficientMoneyException {
         long targetValue = target.value;
         long total = coinSelection.valueGathered.value;
         long missing = targetValue - total;
@@ -95,9 +95,6 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
             throw new InsufficientMoneyException(Coin.valueOf(missing));
 
         long change = total - targetValue;
-        if (change > 0 && change < Restrictions.getMinNonDustOutput().value)
-            throw new ChangeBelowDustException(Coin.valueOf(change));
-
         return Coin.valueOf(change);
     }
 

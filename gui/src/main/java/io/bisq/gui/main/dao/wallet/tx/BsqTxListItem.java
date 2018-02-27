@@ -22,6 +22,7 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
@@ -65,7 +66,7 @@ class BsqTxListItem {
     @Getter
     private boolean received;
     @Getter
-    private Optional<TxType> txType;
+    private Optional<TxType> txTypeOptional;
     @Getter
     private boolean isBurnedBsqTx;
     private BsqFormatter bsqFormatter;
@@ -77,13 +78,14 @@ class BsqTxListItem {
     public BsqTxListItem(Transaction transaction,
                          BsqWalletService bsqWalletService,
                          BtcWalletService btcWalletService,
-                         Optional<TxType> txType,
+                         Optional<TxType> txTypeOptional,
                          boolean isBurnedBsqTx,
+                         BsqBlockChain bsqBlockChain,
                          BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.txType = txType;
+        this.txTypeOptional = txTypeOptional;
         this.isBurnedBsqTx = isBurnedBsqTx;
         this.bsqFormatter = bsqFormatter;
 
@@ -97,17 +99,15 @@ class BsqTxListItem {
 
         Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction);
-
-        if (valueSentToMe.compareTo(valueSentFromMe) > 0) {
-            amount = valueSentToMe.subtract(valueSentFromMe);
+        amount = valueSentToMe.subtract(valueSentFromMe);
+        if (amount.isPositive()) {
             direction = Res.get("funds.tx.direction.receivedWith");
             received = true;
-        } else if (valueSentToMe.compareTo(valueSentFromMe) < 0) {
-            amount = valueSentFromMe.subtract(valueSentToMe);
+        } else if (amount.isNegative()) {
             direction = Res.get("funds.tx.direction.sentTo");
             received = false;
         } else {
-            amount = Coin.ZERO;
+            // Self send
             direction = "";
         }
 
@@ -146,8 +146,7 @@ class BsqTxListItem {
         txConfidenceIndicator.setId("funds-confidence");
         Tooltip tooltip = new Tooltip();
         txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefHeight(30);
-        txConfidenceIndicator.setPrefWidth(30);
+        txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
         txConfidenceListener = new TxConfidenceListener(txId) {
@@ -169,6 +168,13 @@ class BsqTxListItem {
 
     public void cleanup() {
         bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
+    }
+
+    public TxType getTxType() {
+        if (txTypeOptional.isPresent())
+            return txTypeOptional.get();
+        else
+            return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
     }
 }
 

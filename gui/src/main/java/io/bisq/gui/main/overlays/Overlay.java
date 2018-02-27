@@ -25,6 +25,8 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.GUIUtil;
@@ -690,7 +692,7 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
-            headLineLabel = new Label(headLine);
+            headLineLabel = new AutoTooltipLabel(headLine);
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
@@ -708,7 +710,7 @@ public abstract class Overlay<T extends Overlay> {
             Separator separator = new Separator();
             separator.setMouseTransparent(true);
             separator.setOrientation(Orientation.HORIZONTAL);
-            separator.setStyle("-fx-background: #ccc;");
+            separator.getStyleClass().add("separator");
             GridPane.setHalignment(separator, HPos.CENTER);
             GridPane.setRowIndex(separator, ++rowIndex);
             GridPane.setColumnSpan(separator, 2);
@@ -719,7 +721,7 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addMessage() {
         if (message != null) {
-            messageLabel = new Label(truncatedMessage);
+            messageLabel = new AutoTooltipLabel(truncatedMessage);
             messageLabel.setMouseTransparent(true);
             messageLabel.setWrapText(true);
             GridPane.setHalignment(messageLabel, HPos.LEFT);
@@ -735,7 +737,7 @@ public abstract class Overlay<T extends Overlay> {
     private void addReportErrorButtons() {
         messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
-        Button logButton = new Button(Res.get("popup.reportError.log"));
+        Button logButton = new AutoTooltipButton(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(logButton, HPos.RIGHT);
         GridPane.setRowIndex(logButton, ++rowIndex);
@@ -752,7 +754,7 @@ public abstract class Overlay<T extends Overlay> {
             }
         });
 
-        Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
+        Button gitHubButton = new AutoTooltipButton(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, ++rowIndex);
         GridPane.setColumnIndex(gitHubButton, 1);
@@ -788,11 +790,11 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addCloseButton() {
         if (!hideCloseButton) {
-            closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+            closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.setOnAction(event -> doClose());
         }
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new Button(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
+            actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();

@@ -17,42 +17,122 @@
 
 package io.bisq.core.dao.compensation;
 
-import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Nullable;
+import java.util.Map;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // Represents the state of the CompensationRequest data
+// TODO cleanup
 @Getter
-
+@EqualsAndHashCode
+@Slf4j
 public final class CompensationRequest implements PersistablePayload {
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequest.class);
 
-    private final CompensationRequestPayload compensationRequestPayload;
+    private final CompensationRequestPayload payload;
 
-    @Setter
+    @Setter //TODO
     private boolean accepted;
-    @Setter
+    @Setter //TODO
     private long fundsReceived;
     //TODO
     @Setter
     private boolean inVotePeriod = true;
-    @Setter
+    @Setter //TODO
     private boolean inFundingPeriod;
-    @Setter
+    @Setter //TODO
     private boolean closed;
-    @Setter
+    @Setter //TODO
     private boolean waitingForVotingPeriod;
+    @Setter
+    private Coin compensationRequestFee;
+    @Setter
+    private Transaction feeTx;
+    @Setter
+    Transaction txWithBtcFee;
+    @Setter
+    private Transaction signedTx;
 
-    public CompensationRequest(CompensationRequestPayload compensationRequestPayload) {
-        this.compensationRequestPayload = compensationRequestPayload;
+    @Nullable
+    private Map<String, String> extraDataMap;
+
+    public CompensationRequest(CompensationRequestPayload payload) {
+        this.payload = payload;
     }
 
-    // TODO not impl yet
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private CompensationRequest(CompensationRequestPayload payload,
+                                boolean accepted,
+                                long fundsReceived,
+                                boolean inVotePeriod,
+                                boolean inFundingPeriod,
+                                boolean closed,
+                                boolean waitingForVotingPeriod,
+                                @Nullable Map<String, String> extraDataMap) {
+        this.payload = payload;
+        this.accepted = accepted;
+        this.fundsReceived = fundsReceived;
+        this.inVotePeriod = inVotePeriod;
+        this.inFundingPeriod = inFundingPeriod;
+        this.closed = closed;
+        this.waitingForVotingPeriod = waitingForVotingPeriod;
+        this.extraDataMap = extraDataMap;
+    }
+
     @Override
-    public Message toProtoMessage() {
-        return null;
+    public PB.CompensationRequest toProtoMessage() {
+        final PB.CompensationRequest.Builder builder = PB.CompensationRequest.newBuilder()
+                .setCompensationRequestPayload(payload.getCompensationRequestPayloadBuilder())
+                .setAccepted(accepted)
+                .setFundsReceived(fundsReceived)
+                .setInVotePeriod(isInVotePeriod())
+                .setInFundingPeriod(isInFundingPeriod())
+                .setClosed(closed)
+                .setWaitingForVotingPeriod(waitingForVotingPeriod);
+
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return builder.build();
+    }
+
+    public static CompensationRequest fromProto(PB.CompensationRequest proto) {
+        return new CompensationRequest(
+                CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload()),
+                proto.getAccepted(),
+                proto.getFundsReceived(),
+                proto.getInVotePeriod(),
+                proto.getInFundingPeriod(),
+                proto.getClosed(),
+                proto.getWaitingForVotingPeriod(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+    /// API
+    public Coin getRequestedBsq() {
+        checkNotNull(payload);
+        return payload.getRequestedBsq();
+    }
+
+    public Address getIssuanceAddress (BsqWalletService bsqWalletService) {
+        checkNotNull(payload);
+        // Remove leading 'B'
+        String underlyingBtcAddress = payload.getBsqAddress().substring(1, payload.getBsqAddress().length());
+        return Address.fromBase58(bsqWalletService.getParams(), underlyingBtcAddress);
     }
 }

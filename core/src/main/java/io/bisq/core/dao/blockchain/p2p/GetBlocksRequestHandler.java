@@ -8,7 +8,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -42,16 +42,16 @@ public class GetBlocksRequestHandler {
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
-    private BsqChainState bsqChainState;
+    private BsqBlockChain bsqBlockChain;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBlocksRequestHandler(NetworkNode networkNode, BsqChainState bsqChainState, Listener listener) {
+    public GetBlocksRequestHandler(NetworkNode networkNode, BsqBlockChain bsqBlockChain, Listener listener) {
         this.networkNode = networkNode;
-        this.bsqChainState = bsqChainState;
+        this.bsqBlockChain = bsqBlockChain;
         this.listener = listener;
     }
 
@@ -62,8 +62,9 @@ public class GetBlocksRequestHandler {
 
     public void handle(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
-        List<BsqBlock> bsqBlocks = bsqChainState.getResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+        List<BsqBlock> bsqBlocks = bsqBlockChain.getResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
         final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());
+        log.debug("bsqBlocksResponse " + bsqBlocksResponse.getRequestNonce());
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

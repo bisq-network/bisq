@@ -19,6 +19,7 @@ package io.bisq.gui.main.disputes.trader;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
+import com.google.inject.name.Named;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Timer;
@@ -29,6 +30,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.Attachment;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
@@ -38,10 +40,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.BusyAnimation;
-import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.components.TableGroupHeadline;
+import io.bisq.gui.components.*;
 import io.bisq.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.ContractWindow;
@@ -106,6 +105,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
+    private final boolean useDevPrivilegeKeys;
 
     private TableView<Dispute> tableView;
     private SortedList<Dispute> sortedList;
@@ -150,7 +150,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
-                             P2PService p2PService) {
+                             P2PService p2PService,
+                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
@@ -161,11 +162,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.p2PService = p2PService;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
     public void initialize() {
-        Label label = new Label(Res.get("support.filter"));
+        Label label = new AutoTooltipLabel(Res.get("support.filter"));
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
         filterTextField = new InputTextField();
         filterTextField.setText("open");
@@ -185,7 +187,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         root.getChildren().addAll(filterBox, tableView);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("support.noTickets"));
+        Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         tableView.getSelectionModel().clearSelection();
@@ -318,7 +320,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress)
+                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, useDevPrivilegeKeys)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
@@ -401,6 +403,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             } catch (ParseException ignore) {
             }
         }
+        GUIUtil.requestFocus(filterTextField);
     }
 
     @Override
@@ -643,15 +646,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (!(this instanceof ArbitratorDisputeView))
                 inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
-            sendButton = new Button(Res.get("support.send"));
+            sendButton = new AutoTooltipButton(Res.get("support.send"));
             sendButton.setDefaultButton(true);
             sendButton.setOnAction(e -> onTrySendMessage());
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
-            Button uploadButton = new Button(Res.get("support.addAttachments"));
+            Button uploadButton = new AutoTooltipButton(Res.get("support.addAttachments"));
             uploadButton.setOnAction(e -> onRequestUpload());
 
-            sendMsgInfoLabel = new Label();
+            sendMsgInfoLabel = new AutoTooltipLabel();
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
             sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
@@ -664,7 +667,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
-                    Button closeDisputeButton = new Button(Res.get("support.closeTicket"));
+                    Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(selectedDispute));
                     closeDisputeButton.setDefaultButton(true);
                     Pane spacer = new Pane();
@@ -696,8 +699,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         public ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
-                        final Label headerLabel = new Label();
-                        final Label messageLabel = new Label();
+                        final Label headerLabel = new AutoTooltipLabel();
+                        final Label messageLabel = new AutoTooltipLabel();
                         final Label copyIcon = new Label();
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
@@ -714,9 +717,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             messageLabel.setWrapText(true);
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
-                            statusIcon.setStyle("-fx-font-size: 10;");
+                            statusIcon.getStyleClass().add("small-text");
                             copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
+                            messageLabel.setOnMouseClicked(event -> {
+                                if (2 > event.getClickCount()) {
+                                    return;
+                                }
+                                GUIUtil.showSelectableTextModal(headerLabel.getText(), messageLabel.getText());
+                            });
                         }
 
                         @Override
@@ -747,15 +756,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().addAll("message-header","success-text");
                                     bg.setId("message-bubble-green");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                 } else if (isMyMsg) {
-                                    headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("highlight");
                                     bg.setId("message-bubble-blue");
-                                    messageLabel.setStyle("-fx-text-fill: white;");
-                                    copyIcon.setStyle("-fx-text-fill: white;");
+                                    messageLabel.getStyleClass().add("my-message");
+                                    copyIcon.getStyleClass().add("my-message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_blue_left");
                                     else
@@ -782,10 +791,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     /*else if (sendMsgProgressIndicator.getProgress() == 0)
                                         showNotArrivedIcon();*/
                                 } else {
-                                    headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: 11;");
+                                    headerLabel.getStyleClass().add("message-header");
                                     bg.setId("message-bubble-grey");
-                                    messageLabel.setStyle("-fx-text-fill: black;");
-                                    copyIcon.setStyle("-fx-text-fill: black;");
+                                    messageLabel.getStyleClass().add("message");
+                                    copyIcon.getStyleClass().add("message");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_grey_right");
                                     else
@@ -832,12 +841,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments() != null && item.getAttachments().size() > 0) {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
-                                    attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
+                                    attachmentsBox.getChildren().add(new AutoTooltipLabel(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
-                                            setStyle("-fx-text-fill: white;");
+                                            getStyleClass().add("my-message");
                                         else
-                                            setStyle("-fx-text-fill: black;");
+                                            getStyleClass().add("message");
                                     }});
                                     item.getAttachments().stream().forEach(attachment -> {
                                         final Label icon = new Label();
@@ -859,7 +868,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                                copyIcon.getStyleClass().add("copy-icon-disputes");
+                                copyIcon.getStyleClass().addAll("icon", "copy-icon-disputes");
 
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
@@ -922,13 +931,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.select")) {
-            {
-                setMinWidth(80);
-                setMaxWidth(80);
-                setSortable(false);
-            }
-        };
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute,Dispute>(Res.get("shared.select"));
+        column.setMinWidth(80);
+        column.setMaxWidth(80);
+        column.setSortable(false);
+
         column.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         column.setCellFactory(
@@ -948,7 +955,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.select"));
+                                        button = new AutoTooltipButton(Res.get("shared.select"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));
@@ -967,7 +974,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.details")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.details")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -988,7 +995,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button(Res.get("shared.details"));
+                                        button = new AutoTooltipButton(Res.get("shared.details"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> onOpenContract(item));
@@ -1007,7 +1014,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.date")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.date")) {
             {
                 setMinWidth(180);
             }
@@ -1033,7 +1040,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
             {
                 setMinWidth(110);
             }
@@ -1051,7 +1058,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getShortTradeId(), true);
+                                    field = new HyperlinkWithIcon(item.getShortTradeId());
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
                                     if (tradeOptional.isPresent()) {
                                         field.setMouseTransparent(false);
@@ -1074,7 +1081,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1100,7 +1107,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1153,7 +1160,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getMarketColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.market")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
             }
@@ -1179,7 +1186,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getRoleColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.role")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.role")) {
             {
                 setMinWidth(130);
             }
@@ -1209,7 +1216,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getStateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.state")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.state")) {
             {
                 setMinWidth(50);
             }

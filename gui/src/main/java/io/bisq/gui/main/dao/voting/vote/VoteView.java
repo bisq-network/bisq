@@ -36,6 +36,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.network.p2p.P2PService;
@@ -78,6 +79,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final FeeService feeService;
+    private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final VotingManager voteManager;
     private Button voteButton;
@@ -100,13 +102,16 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                      WalletsSetup walletsSetup,
                      P2PService p2PService,
                      FeeService feeService,
-                     BSFormatter btcFormatter, VotingManager voteManager) {
+                     BsqFormatter bsqFormatter,
+                     BSFormatter btcFormatter,
+                     VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.feeService = feeService;
+        this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
     }
@@ -121,7 +126,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
             @Override
             public String toString(CompensationRequestVoteItem item) {
-                return item.compensationRequest.getCompensationRequestPayload().getUid();
+                return item.compensationRequest.getPayload().getUid();
             }
 
             @Override
@@ -134,7 +139,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             CompensationRequestVoteItem selectedItem = selectionModel.getSelectedItem();
             if (selectedItem != null) {
                 if (!CompensationViewItem.contains(selectedItem)) {
-                    CompensationViewItem.attach(selectedItem, compensationRequestsVBox, compensationRequestsLabelWidth,
+                    CompensationViewItem.attach(selectedItem,
+                            bsqWalletService,
+                            compensationRequestsVBox,
+                            compensationRequestsLabelWidth,
+                            bsqFormatter,
                             () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
@@ -260,8 +269,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                     })
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .show();
-                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
-                                ChangeBelowDustException e) {
+                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException e) {
                             log.error(e.toString());
                             e.printStackTrace();
                             new Popup<>().warning(e.toString()).show();
@@ -288,7 +296,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             compensationRequestsComboBox.setItems(compensationRequestVoteItems);
 
             //TODO move to voteManager.getCurrentVoteItemsList()?
-            compensationRequestManager.getObservableList().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
+            compensationRequestManager.getActiveRequests().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
 
             parametersComboBox.setItems(FXCollections.observableArrayList(voteItemsList.getVoteItemList()));
         } else {
@@ -305,4 +313,3 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         CompensationViewItem.cleanupAllInstances();
     }
 }
-

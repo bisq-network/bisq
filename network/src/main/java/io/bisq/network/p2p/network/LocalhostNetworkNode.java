@@ -20,6 +20,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     private static int simulateTorDelayTorNode = 500;
     private static int simulateTorDelayHiddenService = 500;
 
+    private String address;
+
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
         LocalhostNetworkNode.simulateTorDelayTorNode = simulateTorDelayTorNode;
     }
@@ -33,8 +35,15 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public LocalhostNetworkNode(int port, NetworkProtoResolver networkProtoResolver) {
+    public LocalhostNetworkNode(String address, int port, NetworkProtoResolver networkProtoResolver) {
         super(port, networkProtoResolver);
+        if (null != address && !address.trim().isEmpty()) {
+            this.address = address;
+        }
+    }
+
+    public LocalhostNetworkNode(int port, NetworkProtoResolver networkProtoResolver) {
+        this(null, port, networkProtoResolver);
     }
 
     @Override
@@ -58,8 +67,10 @@ public class LocalhostNetworkNode extends NetworkNode {
                     e.printStackTrace();
                     log.error("Exception at startServer: " + e.getMessage());
                 }
-
-                nodeAddressProperty.set(new NodeAddress("localhost", servicePort));
+                final NodeAddress nodeAddress = address == null ?
+                        new NodeAddress("localhost", servicePort) :
+                        new NodeAddress(address);
+                nodeAddressProperty.set(nodeAddress);
                 setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
             }, simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
         }, simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);

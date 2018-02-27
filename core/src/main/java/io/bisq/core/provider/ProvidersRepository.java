@@ -91,7 +91,7 @@ public class ProvidersRepository {
             index++;
 
             if (providerList.size() == 1)
-                log.warn("We oly have one provider");
+                log.warn("We only have one provider");
         } else {
             baseUrl = "";
             log.warn("We do not have any providers. That can be if all providers are filtered or providersFromProgramArgs is set but empty. " +

@@ -46,16 +46,15 @@ import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.DoubleProperty;
-import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
@@ -64,7 +63,6 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.wallet.DeterministicSeed;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,9 +71,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class GUIUtil {
@@ -95,6 +95,14 @@ public class GUIUtil {
                 return bar.getWidth();
         }
         return 0;
+    }
+
+    public static void focusWhenAddedToScene(Node node) {
+        node.sceneProperty().addListener((observable, oldValue, newValue) -> {
+            if (null != newValue) {
+                node.requestFocus();
+            }
+        });
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -131,7 +139,10 @@ public class GUIUtil {
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            fileChooser.setInitialDirectory(initDir);
+        }
         fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
@@ -194,7 +205,10 @@ public class GUIUtil {
 
     public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            directoryChooser.setInitialDirectory(initDir);
+        }
         directoryChooser.setTitle(Res.get("guiUtil.accountExport.selectExportPath"));
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
@@ -234,12 +248,22 @@ public class GUIUtil {
         };
     }
 
-    public static StringConverter<TradeCurrency> getTradeCurrencyConverter() {
+    public static StringConverter<TradeCurrency> getTradeCurrencyConverter(
+            String postFixSingle,
+            String postFixMulti,
+            Map<String, Integer> offerCounts) {
         return new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 String code = tradeCurrency.getCode();
-                final String displayString = CurrencyUtil.getNameAndCode(code);
+                Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+                final String displayString;
+                if (offerCountOptional.isPresent()) {
+                    displayString = CurrencyUtil.getNameAndCode(code)
+                            + " - " + offerCountOptional.get() + " " + (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti);
+                } else {
+                    displayString = CurrencyUtil.getNameAndCode(code);
+                }
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ " + Res.get("list.currency.showAll");
@@ -253,60 +277,6 @@ public class GUIUtil {
                 return null;
             }
         };
-    }
-
-    // TODO could be done more elegantly...
-    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList,
-                                             ObservableList<CurrencyListItem> currencyListItems,
-                                             @Nullable CurrencyListItem showAllCurrencyListItem,
-                                             Preferences preferences) {
-        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
-        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
-
-        // We get the list of all offers or trades. We want to find out how many items at each currency we have.
-        tradeCurrencyList.stream().forEach(tradeCurrency -> {
-            tradeCurrencySet.add(tradeCurrency);
-            String code = tradeCurrency.getCode();
-            if (tradesPerCurrencyMap.containsKey(code))
-                tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
-            else
-                tradesPerCurrencyMap.put(code, 1);
-        });
-
-        Set<TradeCurrency> userSet = new HashSet<>(preferences.getFiatCurrencies());
-        userSet.addAll(preferences.getCryptoCurrencies());
-        // Now all those items which are not in the offers or trades list but comes from the user preferred currency list
-        // will get set to 0
-        userSet.stream().forEach(tradeCurrency -> {
-            tradeCurrencySet.add(tradeCurrency);
-            String code = tradeCurrency.getCode();
-            if (!tradesPerCurrencyMap.containsKey(code))
-                tradesPerCurrencyMap.put(code, 0);
-        });
-
-        List<CurrencyListItem> list = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-                .collect(Collectors.toList());
-        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-                .collect(Collectors.toList());
-
-        if (preferences.isSortMarketCurrenciesNumerically()) {
-            list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-        } else {
-            list.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-        }
-
-        list.addAll(cryptoList);
-
-        if (showAllCurrencyListItem != null)
-            list.add(0, showAllCurrencyListItem);
-
-        currencyListItems.setAll(list);
     }
 
     public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
@@ -373,8 +343,12 @@ public class GUIUtil {
     }
 
     public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+        return " (" + getPercentage(fee, tradeAmount, formatter) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
+    }
+
+    public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
+        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
@@ -448,6 +422,10 @@ public class GUIUtil {
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
     }
 
+    public static void requestFocus(Node node) {
+        UserThread.execute(node::requestFocus);
+    }
+
     public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
         try {
             new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
@@ -483,6 +461,24 @@ public class GUIUtil {
                     new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
                             .show();
                 }));
+    }
+
+    public static void showSelectableTextModal(String title, String text) {
+        TextArea textArea = new TextArea();
+        textArea.setText(text);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefSize(800, 600);
+
+        Scene scene = new Scene(textArea);
+        Stage stage = new Stage();
+        if (null != title) {
+            stage.setTitle(title);
+        }
+        stage.setScene(scene);
+        stage.initModality(Modality.NONE);
+        stage.initStyle(StageStyle.UTILITY);
+        stage.show();
     }
 
     public static StringConverter<PaymentAccount> getPaymentAccountsComboBoxStringConverter() {

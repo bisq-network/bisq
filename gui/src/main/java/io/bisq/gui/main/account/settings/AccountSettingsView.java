@@ -22,6 +22,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipToggleButton;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.account.AccountView;
 import io.bisq.gui.main.account.content.altcoinaccounts.AltCoinAccountsView;
@@ -37,7 +39,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
@@ -145,7 +146,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 }
 
 
-class MenuItem extends ToggleButton {
+class MenuItem extends AutoTooltipToggleButton {
 
     private final ChangeListener<Boolean> selectedPropertyChangeListener;
     private final ChangeListener<Boolean> disablePropertyChangeListener;

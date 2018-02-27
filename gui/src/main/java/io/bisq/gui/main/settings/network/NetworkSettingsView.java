@@ -30,6 +30,7 @@ import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -145,14 +146,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.setText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
-        onionAddressColumn.setText(Res.get("settings.net.onionAddressColumn"));
-        creationDateColumn.setText(Res.get("settings.net.creationDateColumn"));
-        connectionTypeColumn.setText(Res.get("settings.net.connectionTypeColumn"));
+        onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
+        creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
+        connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
         totalTrafficLabel.setText(Res.get("settings.net.totalTrafficLabel"));
-        roundTripTimeColumn.setText(Res.get("settings.net.roundTripTimeColumn"));
-        sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
-        receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
-        peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn"));
+        roundTripTimeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.roundTripTimeColumn")));
+        sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
+        receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
+        peerTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.peerTypeColumn")));
         openTorSettingsButton.setText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
@@ -165,7 +166,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         tableView.setMinHeight(180);
         tableView.setPrefHeight(180);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
 

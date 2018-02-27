@@ -24,6 +24,7 @@ import io.bisq.core.payment.OKPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.OKPayAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
@@ -95,7 +96,7 @@ public class OKPayForm extends PaymentMethodForm {
 
         CurrencyUtil.getAllOKPayCurrencies().stream().forEach(e ->
         {
-            CheckBox checkBox = new CheckBox(e.getCode());
+            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setSelected(okPayAccount.getTradeCurrencies().contains(e));
             checkBox.setMinWidth(60);

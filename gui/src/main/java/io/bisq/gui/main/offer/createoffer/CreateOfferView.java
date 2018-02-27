@@ -17,8 +17,6 @@
 
 package io.bisq.gui.main.offer.createoffer;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
@@ -64,12 +62,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
-import javafx.stage.Window;
 import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
-import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.jetbrains.annotations.NotNull;
@@ -104,14 +100,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private TextFieldWithCopyIcon totalToPayTextField;
+    private FundsTextField totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
-            totalToPayInfoIconLabel, priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
+            priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
             waitingForFundsLabel, marketBasedPriceLabel, xLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
-    private PopOver totalToPayInfoPopover;
     private ImageView imageView, qrCodeImageView;
     private VBox fixedPriceBox, percentagePriceBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, toggleButtonsHBox,
@@ -161,6 +156,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setFormatter(model.getBtcFormatter());
 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
+
+        GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 
     @Override
@@ -247,9 +244,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
-            // only needed for sell
-            totalToPayTextField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
-
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
@@ -394,7 +388,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayLabel.setVisible(true);
-        totalToPayInfoIconLabel.setVisible(true);
         totalToPayTextField.setVisible(true);
         addressLabel.setVisible(true);
         addressTextField.setVisible(true);
@@ -403,7 +396,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setVisible(true);
         cancelButton2.setVisible(true);
 
-        setupTotalToPayInfoIconLabel();
+        totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
+                model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
+        totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         final byte[] imageBytes = QRCode
                 .from(getBitcoinURI())
@@ -802,7 +797,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
-        directionLabel = new Label();
+        directionLabel = new AutoTooltipLabel();
         directionLabel.setAlignment(Pos.CENTER);
         directionLabel.setPadding(new Insets(-5, 0, 0, 0));
         directionLabel.setId("direction-icon-label");
@@ -900,29 +895,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setColumnSpan(payFundsTitledGroupBg, 3);
         payFundsTitledGroupBg.setVisible(false);
 
-        totalToPayLabel = new Label(Res.get("shared.totalsNeeded"));
+        Tuple2<Label, FundsTextField> fundsTuple = addLabelFundsTextfield(gridPane, gridRow,
+                Res.get("shared.totalsNeeded"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        totalToPayLabel = fundsTuple.first;
         totalToPayLabel.setVisible(false);
-        totalToPayInfoIconLabel = new Label();
-        totalToPayInfoIconLabel.setVisible(false);
-        HBox totalToPayBox = new HBox();
-        totalToPayBox.setSpacing(4);
-        totalToPayBox.setAlignment(Pos.CENTER_RIGHT);
-        totalToPayBox.getChildren().addAll(totalToPayLabel, totalToPayInfoIconLabel);
-        GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        GridPane.setRowIndex(totalToPayBox, gridRow);
-        gridPane.getChildren().add(totalToPayBox);
-        totalToPayTextField = new TextFieldWithCopyIcon();
-        totalToPayTextField.setCopyWithoutCurrencyPostFix(true);
-        totalToPayTextField.setFocusTraversable(false);
+        totalToPayTextField = fundsTuple.second;
         totalToPayTextField.setVisible(false);
-        GridPane.setRowIndex(totalToPayTextField, gridRow);
-        GridPane.setColumnIndex(totalToPayTextField, 1);
-        GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        gridPane.getChildren().add(totalToPayTextField);
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
-        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.getStyleClass().add("qr-code");
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
@@ -952,17 +934,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        Button fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
-        fundFromSavingsWalletButton.setDefaultButton(true);
+        Button fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label(Res.get("shared.OR"));
+        Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        Button fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
+        Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation();
-        waitingForFundsLabel = new Label();
+        waitingForFundsLabel = new AutoTooltipLabel();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
 
         fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
@@ -1026,7 +1007,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
-        xLabel = new Label();
+        xLabel = new AutoTooltipLabel();
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setMinWidth(14);
@@ -1046,7 +1027,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         // Fixed/Percentage toggle
         ToggleGroup toggleGroup = new ToggleGroup();
-        fixedPriceButton = new ToggleButton(Res.get("createOffer.fixed"));
+        fixedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.fixed"));
         editOfferElements.add(fixedPriceButton);
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
@@ -1054,7 +1035,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             updatePriceToggleButtons(newValue);
         });
 
-        useMarketBasedPriceButton = new ToggleButton(Res.get("createOffer.percentage"));
+        useMarketBasedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.percentage"));
         editOfferElements.add(useMarketBasedPriceButton);
         useMarketBasedPriceButton.setId("toggle-price-right");
         useMarketBasedPriceButton.setToggleGroup(toggleGroup);
@@ -1067,7 +1048,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         toggleButtonsHBox.getChildren().addAll(fixedPriceButton, useMarketBasedPriceButton);
 
         // =
-        Label resultLabel = new Label("=");
+        Label resultLabel = new AutoTooltipLabel("=");
         resultLabel.setFont(Font.font("Helvetica-Bold", 20));
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
@@ -1110,10 +1091,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        fixedPriceButton.setStyle(fixedPriceSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-        useMarketBasedPriceButton.setStyle(!fixedPriceSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        fixedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+
+        fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
+                "toggle-button-active" : "toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().add(!fixedPriceSelected ?
+                "toggle-button-active" : "toggle-button-inactive");
 
         if (fixedPriceSelected) {
             if (firstRowHBox.getChildren().contains(percentagePriceBox))
@@ -1152,7 +1136,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         marketBasedPriceTextField.setPromptText(Res.get("shared.enterPercentageValue"));
         marketBasedPriceLabel.setText("%");
-        marketBasedPriceLabel.setStyle("-fx-alignment: center;");
+        marketBasedPriceLabel.getStyleClass().add("percentage-label");
 
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueCurrencyBox(
                 Res.get("createOffer.amount.prompt"));
@@ -1165,7 +1149,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox,
                 Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
-        Label xLabel = new Label("x");
+        Label xLabel = new AutoTooltipLabel("x");
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
@@ -1186,19 +1170,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     // PayInfo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupTotalToPayInfoIconLabel() {
-        totalToPayInfoIconLabel.setId("clickable-icon");
-        AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
-
-        totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
-        totalToPayInfoIconLabel.setOnMouseExited(e -> {
-            if (totalToPayInfoPopover != null)
-                totalToPayInfoPopover.hide();
-        });
-    }
-
-    // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-    private void createInfoPopover() {
+    private GridPane createInfoPopover() {
         GridPane infoGridPane = new GridPane();
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(5);
@@ -1213,22 +1185,15 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
-        separator.setStyle("-fx-background: #666;");
+        separator.getStyleClass().add("offer-separator");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"), model.getTotalToPayInfo());
-        totalToPayInfoPopover = new PopOver(infoGridPane);
-        if (totalToPayInfoIconLabel.getScene() != null) {
-            totalToPayInfoPopover.setDetachable(false);
-            totalToPayInfoPopover.setArrowIndent(5);
-            totalToPayInfoPopover.show(totalToPayInfoIconLabel.getScene().getWindow(),
-                    getPopupPosition().getX(),
-                    getPopupPosition().getY());
-        }
+        return infoGridPane;
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
-        Label label = new Label(labelText);
+        Label label = new AutoTooltipLabel(labelText);
         TextField textField = new TextField(value);
         textField.setMinWidth(500);
         textField.setEditable(false);
@@ -1237,14 +1202,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
         GridPane.setConstraints(textField, 1, row);
         infoGridPane.getChildren().addAll(label, textField);
-    }
-
-    private Point2D getPopupPosition() {
-        Window window = totalToPayInfoIconLabel.getScene().getWindow();
-        Point2D point = totalToPayInfoIconLabel.localToScene(0, 0);
-        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() + 2;
-        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2) - 9;
-        return new Point2D(x, y);
     }
 }
 

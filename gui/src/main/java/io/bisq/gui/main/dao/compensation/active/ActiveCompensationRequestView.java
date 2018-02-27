@@ -17,15 +17,22 @@
 
 package io.bisq.gui.main.dao.compensation.active;
 
-import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.dao.DaoPeriodService;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
+import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipLabel;
+import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;
@@ -33,9 +40,14 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.dao.voting.VotingView;
 import io.bisq.gui.main.dao.voting.vote.VoteView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -45,34 +57,42 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
-import static io.bisq.gui.util.FormBuilder.addLabel;
+import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> {
+public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> implements BsqBlockChainListener {
 
-    TableView<CompensationRequest> tableView;
-    private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
-            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
-
+    TableView<CompensationRequestListItem> tableView;
     private final CompensationRequestManager compensationRequestManger;
-    private final BSFormatter formatter;
+    private final DaoPeriodService daoPeriodService;
+    private final BsqWalletService bsqWalletService;
+    private final BsqBlockChain bsqBlockChain;
+    private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     private final Navigation navigation;
-    private final FundCompensationRequestWindow fundCompensationRequestWindow;
-    private final BSFormatter btcFormatter;
-    private SortedList<CompensationRequest> sortedList;
-    private Subscription selectedCompensationRequestSubscription;
+    private final BsqFormatter bsqFormatter;
+    private final ObservableList<CompensationRequestListItem> observableList = FXCollections.observableArrayList();
+    private SortedList<CompensationRequestListItem> sortedList = new SortedList<>(observableList);
+    private Subscription selectedCompensationRequestSubscription, phaseSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
-    private GridPane gridPane;
+    private int gridRow = 0;
+    private GridPane detailsGridPane, gridPane;
+    private DaoPeriodService.Phase currentPhase;
+    private CompensationRequestListItem selectedCompensationRequest;
+    private Button removeButton, voteButton;
+    private TextField cycleTextField;
+    private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
+    private ChangeListener<Number> chainHeightChangeListener;
+    private ListChangeListener<CompensationRequest> compensationRequestListChangeListener;
+    private ChangeListener<DaoPeriodService.Phase> phaseChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,25 +101,29 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
     @Inject
     private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
-                                          BSFormatter formatter,
+                                          DaoPeriodService daoPeriodService,
+                                          BsqWalletService bsqWalletService,
+                                          BsqBlockChain bsqBlockChain,
+                                          BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                           Navigation navigation,
-                                          FundCompensationRequestWindow fundCompensationRequestWindow,
-                                          BSFormatter btcFormatter) {
+                                          BsqFormatter bsqFormatter) {
         this.compensationRequestManger = compensationRequestManger;
-        this.formatter = formatter;
+        this.daoPeriodService = daoPeriodService;
+        this.bsqWalletService = bsqWalletService;
+        this.bsqBlockChain = bsqBlockChain;
+        this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.navigation = navigation;
-        this.fundCompensationRequestWindow = fundCompensationRequestWindow;
-        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
     public void initialize() {
         root.setDividerPositions(0.3, 0.7);
-        root.setStyle("-fx-background-insets: 0, 0 0 0 0");
+        root.getStyleClass().add("compensation-root");
         AnchorPane topAnchorPane = new AnchorPane();
         root.getItems().add(topAnchorPane);
 
-        GridPane gridPane = new GridPane();
+        gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         AnchorPane.setBottomAnchor(gridPane, 10d);
@@ -108,43 +132,153 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
+        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.compensation.active.phase.header"));
+        phaseBarsItems = Arrays.asList(
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.COMPENSATION_REQUESTS, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK1, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.OPEN_FOR_VOTING, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK2, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.VOTE_CONFIRMATION, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK3, false));
+        SeparatedPhaseBars separatedPhaseBars = new SeparatedPhaseBars(phaseBarsItems);
+        GridPane.setRowIndex(separatedPhaseBars, gridRow);
+        GridPane.setColumnSpan(separatedPhaseBars, 2);
+        GridPane.setColumnIndex(separatedPhaseBars, 0);
+        GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
+        gridPane.getChildren().add(separatedPhaseBars);
+
+     /*   final Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.compensation.active.cycle"));
+        final Label label = tuple2.first;
+        GridPane.setHalignment(label, HPos.RIGHT);
+        cycleTextField = tuple2.second;*/
+
         TableGroupHeadline header = new TableGroupHeadline(Res.get("dao.compensation.active.header"));
-        GridPane.setRowIndex(header, 0);
-        GridPane.setMargin(header, new Insets(0, -10, -10, -10));
+        GridPane.setRowIndex(header, ++gridRow);
+        GridPane.setMargin(header, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         gridPane.getChildren().add(header);
         header.setMinHeight(20);
         header.setMaxHeight(20);
 
         tableView = new TableView<>();
-        GridPane.setRowIndex(tableView, 1);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
+        tableView.setMinHeight(90);
+        GridPane.setRowIndex(tableView, ++gridRow);
+        GridPane.setColumnSpan(tableView, 2);
         GridPane.setMargin(tableView, new Insets(5, -15, -10, -10));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         gridPane.getChildren().add(tableView);
 
-        // tableView.setMinHeight(100);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
-        sortedList = new SortedList<>(compensationRequestManger.getObservableList());
+        createColumns();
+
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
-        setColumns();
+
+        chainHeightChangeListener = (observable, oldValue, newValue) -> {
+            onChainHeightChanged((int) newValue);
+        };
+
+        compensationRequestListChangeListener = c -> updateList();
+        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
     @Override
     protected void activate() {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.getSelectionModel().clearSelection();
+
         selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
+        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
+            if (!phase.equals(this.currentPhase)) {
+                this.currentPhase = phase;
+                onSelectCompensationRequest(selectedCompensationRequest);
+            }
+
+            phaseBarsItems.stream().forEach(item -> {
+                if (item.getPhase() == phase) {
+                    item.setActive();
+                } else {
+                    item.setInActive();
+                }
+            });
+        });
+
+        bsqWalletService.getChainHeightProperty().addListener(chainHeightChangeListener);
+        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
+        compensationRequestManger.getAllRequests().addListener(compensationRequestListChangeListener);
+        daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
+
+        onChainHeightChanged(bsqWalletService.getChainHeightProperty().get());
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+
         selectedCompensationRequestSubscription.unsubscribe();
+        phaseSubscription.unsubscribe();
+
+        bsqWalletService.getChainHeightProperty().removeListener(chainHeightChangeListener);
+        bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
+        compensationRequestManger.getAllRequests().removeListener(compensationRequestListChangeListener);
+        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
+
+        observableList.forEach(CompensationRequestListItem::cleanup);
     }
 
-    private void onSelectCompensationRequest(CompensationRequest compensationRequest) {
-        if (compensationRequest != null) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBsqBlockChainChanged() {
+        // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
+        UserThread.execute(this::updateList);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateList() {
+        observableList.forEach(CompensationRequestListItem::cleanup);
+
+        final FilteredList<CompensationRequest> activeRequests = compensationRequestManger.getActiveRequests();
+        observableList.setAll(activeRequests.stream()
+                .map(e -> new CompensationRequestListItem(e, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter))
+                .collect(Collectors.toSet()));
+
+        if (activeRequests.isEmpty() && compensationRequestDisplay != null)
+            compensationRequestDisplay.removeAllFields();
+    }
+
+    private void onChainHeightChanged(int height) {
+        //cycleTextField.setText(String.valueOf(daoPeriodService.getNumOfStartedCycles(height)));
+
+        phaseBarsItems.stream().forEach(item -> {
+            int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
+            int endBlock = daoPeriodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
+            item.setStartAndEnd(startBlock, endBlock);
+            double progress = 0;
+            if (height >= startBlock && height <= endBlock) {
+                progress = (double) (height - startBlock + 1) / (double) item.getPhase().getDurationInBlocks();
+            } else if (height < startBlock) {
+                progress = 0;
+            } else if (height > endBlock) {
+                progress = 1;
+            }
+            item.getProgressProperty().set(progress);
+        });
+
+        updateList();
+    }
+
+    private void onSelectCompensationRequest(CompensationRequestListItem item) {
+        selectedCompensationRequest = item;
+        if (item != null) {
+            final CompensationRequest compensationRequest = item.getCompensationRequest();
             if (compensationRequestDisplay == null) {
                 ScrollPane scrollPane = new ScrollPane();
                 scrollPane.setFitToWidth(true);
@@ -155,9 +289,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane bottomAnchorPane = new AnchorPane();
                 scrollPane.setContent(bottomAnchorPane);
 
-                gridPane = new GridPane();
-                gridPane.setHgap(5);
-                gridPane.setVgap(5);
+                detailsGridPane = new GridPane();
+                detailsGridPane.setHgap(5);
+                detailsGridPane.setVgap(5);
                 ColumnConstraints columnConstraints1 = new ColumnConstraints();
                 columnConstraints1.setHalignment(HPos.RIGHT);
                 columnConstraints1.setHgrow(Priority.SOMETIMES);
@@ -165,61 +299,96 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 ColumnConstraints columnConstraints2 = new ColumnConstraints();
                 columnConstraints2.setHgrow(Priority.ALWAYS);
                 columnConstraints2.setMinWidth(300);
-                gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
-                AnchorPane.setBottomAnchor(gridPane, 20d);
-                AnchorPane.setRightAnchor(gridPane, -10d);
-                AnchorPane.setLeftAnchor(gridPane, 10d);
-                AnchorPane.setTopAnchor(gridPane, -20d);
-                bottomAnchorPane.getChildren().add(gridPane);
+                detailsGridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+                AnchorPane.setBottomAnchor(detailsGridPane, 20d);
+                AnchorPane.setRightAnchor(detailsGridPane, 10d);
+                AnchorPane.setLeftAnchor(detailsGridPane, 10d);
+                AnchorPane.setTopAnchor(detailsGridPane, -20d);
+                bottomAnchorPane.getChildren().add(detailsGridPane);
 
-                compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
+                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter, bsqWalletService);
             }
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
-
-            //TODO
-            compensationRequest.setInVotePeriod(true);
-
-            if (compensationRequest.isWaitingForVotingPeriod()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
-            } else if (compensationRequest.isInVotePeriod()) {
-                Button voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
-                voteButton.setOnAction(event -> {
-                    compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
-                    //noinspection unchecked
-                    navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
-                });
-            } else if (compensationRequest.isInFundingPeriod()) {
-                checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
-                Button fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
-                fundButton.setOnAction(event -> fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
-                        onAction(() -> {
-                            Coin amount = btcFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
-                            compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
-                                    new FutureCallback<Transaction>() {
-                                        @Override
-                                        public void onSuccess(Transaction transaction) {
-                                            UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
-                                        }
-
-                                        @Override
-                                        public void onFailure(@NotNull Throwable t) {
-                                            UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
-
-                                        }
-                                    });
-                        }).show());
-            } else if (compensationRequest.isClosed()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
-            }
             compensationRequestDisplay.setAllFieldsEditable(false);
+            compensationRequestDisplay.fillWithData(compensationRequest.getPayload());
 
-            compensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
+            if (removeButton != null) {
+                removeButton.setManaged(false);
+                removeButton.setVisible(false);
+                removeButton = null;
+            }
+            if (voteButton != null) {
+                voteButton.setManaged(false);
+                voteButton.setVisible(false);
+                voteButton = null;
+            }
+            onPhaseChanged(daoPeriodService.getPhaseProperty().get());
         }
     }
 
-    private void setColumns() {
-        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
+    private void onPhaseChanged(DaoPeriodService.Phase phase) {
+        if (removeButton != null) {
+            removeButton.setManaged(false);
+            removeButton.setVisible(false);
+            removeButton = null;
+        }
+        if (selectedCompensationRequest != null && compensationRequestDisplay != null) {
+            final CompensationRequest compensationRequest = selectedCompensationRequest.getCompensationRequest();
+            switch (phase) {
+                case COMPENSATION_REQUESTS:
+                    if (compensationRequestManger.isMine(compensationRequest)) {
+                        if (removeButton == null) {
+                            removeButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.remove"));
+                            removeButton.setOnAction(event -> {
+                                if (compensationRequestManger.removeCompensationRequest(compensationRequest))
+                                    compensationRequestDisplay.removeAllFields();
+                                else
+                                    new Popup<>().warning(Res.get("dao.compensation.active.remove.failed")).show();
+                            });
+                        } else {
+                            removeButton.setManaged(true);
+                            removeButton.setVisible(true);
+                        }
+                    }
+                    break;
+                case BREAK1:
+                    break;
+                case OPEN_FOR_VOTING:
+                    if (voteButton == null) {
+                        voteButton = addButtonAfterGroup(detailsGridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
+                        voteButton.setOnAction(event -> {
+                            //noinspection unchecked
+                            navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
+                        });
+                    } else {
+                        voteButton.setManaged(true);
+                        voteButton.setVisible(true);
+                    }
+                    break;
+                case BREAK2:
+                    break;
+                case VOTE_CONFIRMATION:
+                    //TODO
+                    log.warn("VOTE_CONFIRMATION");
+                    break;
+                case BREAK3:
+                    break;
+                case UNDEFINED:
+                default:
+                    log.warn("Undefined phase: " + daoPeriodService.getPhaseProperty());
+                    break;
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Table
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void createColumns() {
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> dateColumn = new AutoTooltipTableColumn<CompensationRequestListItem, CompensationRequestListItem>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -227,75 +396,103 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         };
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
-                        CompensationRequest>>() {
+                new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>, TableCell<CompensationRequestListItem,
+                        CompensationRequestListItem>>() {
                     @Override
-                    public TableCell<CompensationRequest, CompensationRequest> call(
-                            TableColumn<CompensationRequest, CompensationRequest> column) {
-                        return new TableCell<CompensationRequest, CompensationRequest>() {
+                    public TableCell<CompensationRequestListItem, CompensationRequestListItem> call(
+                            TableColumn<CompensationRequestListItem, CompensationRequestListItem> column) {
+                        return new TableCell<CompensationRequestListItem, CompensationRequestListItem>() {
                             @Override
-                            public void updateItem(final CompensationRequest item, boolean empty) {
+                            public void updateItem(final CompensationRequestListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.getCompensationRequestPayload().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getCompensationRequest().getPayload().getCreationDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getCreationDate().compareTo(o2.getCompensationRequestPayload().getCreationDate()));
+        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequest().getPayload().getCreationDate().compareTo(o2.getCompensationRequest().getPayload().getCreationDate()));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
-
-        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>(Res.get("shared.name"));
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
-                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
-                        CompensationRequest>>() {
+                new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>, TableCell<CompensationRequestListItem,
+                        CompensationRequestListItem>>() {
                     @Override
-                    public TableCell<CompensationRequest, CompensationRequest> call(
-                            TableColumn<CompensationRequest, CompensationRequest> column) {
-                        return new TableCell<CompensationRequest, CompensationRequest>() {
+                    public TableCell<CompensationRequestListItem, CompensationRequestListItem> call(
+                            TableColumn<CompensationRequestListItem, CompensationRequestListItem> column) {
+                        return new TableCell<CompensationRequestListItem, CompensationRequestListItem>() {
                             @Override
-                            public void updateItem(final CompensationRequest item, boolean empty) {
+                            public void updateItem(final CompensationRequestListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().getName());
+                                    setText(item.getCompensationRequest().getPayload().getName());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getName().compareTo(o2.getCompensationRequestPayload().getName()));
+        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequest().getPayload().getName().compareTo(o2.getCompensationRequest().getPayload().getName()));
         tableView.getColumns().add(nameColumn);
 
-
-        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>(Res.get("shared.id"));
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         uidColumn.setCellFactory(
-                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
-                        CompensationRequest>>() {
+                new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>, TableCell<CompensationRequestListItem,
+                        CompensationRequestListItem>>() {
                     @Override
-                    public TableCell<CompensationRequest, CompensationRequest> call(
-                            TableColumn<CompensationRequest, CompensationRequest> column) {
-                        return new TableCell<CompensationRequest, CompensationRequest>() {
+                    public TableCell<CompensationRequestListItem, CompensationRequestListItem> call(
+                            TableColumn<CompensationRequestListItem, CompensationRequestListItem> column) {
+                        return new TableCell<CompensationRequestListItem, CompensationRequestListItem>() {
                             @Override
-                            public void updateItem(final CompensationRequest item, boolean empty) {
+                            public void updateItem(final CompensationRequestListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().getUid());
+                                    setText(item.getCompensationRequest().getPayload().getUid());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getUid().compareTo(o2.getCompensationRequestPayload().getUid()));
+        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequest().getPayload().getUid().compareTo(o2.getCompensationRequest().getPayload().getUid()));
         tableView.getColumns().add(uidColumn);
+
+        TableColumn<CompensationRequestListItem, CompensationRequestListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
+        confidenceColumn.setMinWidth(130);
+        confidenceColumn.setMaxWidth(confidenceColumn.getMinWidth());
+
+        confidenceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+
+        confidenceColumn.setCellFactory(new Callback<TableColumn<CompensationRequestListItem, CompensationRequestListItem>,
+                TableCell<CompensationRequestListItem, CompensationRequestListItem>>() {
+
+            @Override
+            public TableCell<CompensationRequestListItem, CompensationRequestListItem> call(TableColumn<CompensationRequestListItem,
+                    CompensationRequestListItem> column) {
+                return new TableCell<CompensationRequestListItem, CompensationRequestListItem>() {
+
+                    @Override
+                    public void updateItem(final CompensationRequestListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            setGraphic(item.getTxConfidenceIndicator());
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
+        confidenceColumn.setComparator((o1, o2) -> o1.getConfirmations().compareTo(o2.getConfirmations()));
+        tableView.getColumns().add(confidenceColumn);
     }
 }
 

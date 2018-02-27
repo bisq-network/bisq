@@ -18,13 +18,17 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 
+import com.google.inject.name.Named;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
+import io.bisq.gui.components.AutoTooltipButton;
+import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import io.bisq.gui.util.FormBuilder;
@@ -48,6 +52,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
 
+    private final boolean useDevPrivilegeKeys;
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
 
@@ -63,8 +68,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model) {
+    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -92,7 +98,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             updateLanguageList();
 
             if (model.registrationPubKeyAsHex.get() == null && unlockArbitrationRegistrationWindow == null) {
-                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
+                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow(useDevPrivilegeKeys);
                 unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
                         .onKey(model::setPrivKeyAndCheckPubKey)
                         .width(700)
@@ -141,9 +147,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             @Override
             public ListCell<String> call(ListView<String> list) {
                 return new ListCell<String>() {
-                    final Label label = new Label();
+                    final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
+                    final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {

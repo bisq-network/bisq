@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.filter.PaymentAccountFilter;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -47,6 +48,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private SendFilterMessageHandler sendFilterMessageHandler;
     private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
+    private final boolean useDevPrivilegeKeys;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +67,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FilterWindow(FilterManager filterManager) {
+    public FilterWindow(FilterManager filterManager, boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
 
@@ -112,7 +115,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
@@ -170,7 +173,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
 
         }
-        Button sendButton = new Button(Res.get("filterWindow.add"));
+        Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
             List<String> offerIds = new ArrayList<>();
             List<String> nodes = new ArrayList<>();
@@ -260,7 +263,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
-        Button removeFilterMessageButton = new Button(Res.get("filterWindow.remove"));
+        Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
         removeFilterMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
@@ -270,7 +273,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             }
         });
 
-        closeButton = new Button(Res.get("shared.close"));
+        closeButton = new AutoTooltipButton(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

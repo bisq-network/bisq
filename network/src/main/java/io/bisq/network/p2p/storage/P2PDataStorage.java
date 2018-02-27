@@ -170,7 +170,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
                             toRemoveSet.add(protectedStorageEntry);
-                            log.info("We found an expired data entry. We remove the protectedDataPayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
+                            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
                             map.remove(hashOfPayload);
                         }
                     });

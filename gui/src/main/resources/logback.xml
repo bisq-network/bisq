@@ -10,8 +10,6 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="org.berndpruenster" level="WARN"/>
-
     <!--
         <logger name="com.neemre.btcdcli4j" level="WARN"/>
 

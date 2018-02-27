@@ -41,10 +41,10 @@ public class VotingDefaultValues {
     public static final long VOTING_FEE_IN_BSQ_AT_GENESIS = 8888;
 
     // 144 blocks is 1 day
-    public static final long COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS = 2880; // 20 days
-    public static final long VOTING_PERIOD_IN_BLOCKS_AT_GENESIS = 432; // 3 days
-    public static final long FUNDING_PERIOD_IN_BLOCKS_AT_GENESIS = 1008; // 7 days
-    public static final long BREAK_BETWEEN_PERIODS_IN_BLOCKS_AT_GENESIS = 10;
+    public static final int COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS = 2880; // 20 days
+    public static final int VOTING_PERIOD_IN_BLOCKS_AT_GENESIS = 432; // 3 days
+    public static final int FUNDING_PERIOD_IN_BLOCKS_AT_GENESIS = 1008; // 7 days
+    public static final int BREAK_BETWEEN_PERIODS_IN_BLOCKS_AT_GENESIS = 10;
 
     public static final long QUORUM_FOR_COMPENSATION_REQUEST_VOTING_AT_GENESIS = 500; // 5%
     public static final long QUORUM_FOR_PARAMETER_VOTING_AT_GENESIS = 500; // 5%
@@ -68,10 +68,10 @@ public class VotingDefaultValues {
     private long createCompensationRequestFeeInBsq = CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ_AT_GENESIS;
     private long votingFeeInBsq = VOTING_FEE_IN_BSQ_AT_GENESIS;
 
-    private long compensationRequestPeriodInBlocks = COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS;
-    private long votingPeriodInBlocks = VOTING_PERIOD_IN_BLOCKS_AT_GENESIS;
-    private long fundingPeriodInBlocks = FUNDING_PERIOD_IN_BLOCKS_AT_GENESIS;
-    private long breakBetweenPeriodsInBlocks = BREAK_BETWEEN_PERIODS_IN_BLOCKS_AT_GENESIS;
+    private int compensationRequestPeriodInBlocks = COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS;
+    private int votingPeriodInBlocks = VOTING_PERIOD_IN_BLOCKS_AT_GENESIS;
+    private int fundingPeriodInBlocks = FUNDING_PERIOD_IN_BLOCKS_AT_GENESIS;
+    private int breakBetweenPeriodsInBlocks = BREAK_BETWEEN_PERIODS_IN_BLOCKS_AT_GENESIS;
 
     private long quorumForCompensationRequestVoting = QUORUM_FOR_COMPENSATION_REQUEST_VOTING_AT_GENESIS;
     private long quorumForParameterVoting = QUORUM_FOR_PARAMETER_VOTING_AT_GENESIS;
@@ -176,16 +176,16 @@ public class VotingDefaultValues {
                 break;
 
             case COMPENSATION_REQUEST_PERIOD_IN_BLOCKS:
-                compensationRequestPeriodInBlocks = value;
+                compensationRequestPeriodInBlocks = (int)value;
                 break;
             case VOTING_PERIOD_IN_BLOCKS:
-                votingPeriodInBlocks = value;
+                votingPeriodInBlocks = (int)value;
                 break;
             case FUNDING_PERIOD_IN_BLOCKS:
-                fundingPeriodInBlocks = value;
+                fundingPeriodInBlocks = (int)value;
                 break;
             case BREAK_BETWEEN_PERIODS_IN_BLOCKS:
-                breakBetweenPeriodsInBlocks = value;
+                breakBetweenPeriodsInBlocks =(int) value;
                 break;
 
             case QUORUM_FOR_COMPENSATION_REQUEST_VOTING:
@@ -212,8 +212,8 @@ public class VotingDefaultValues {
     }
 
     // Interger value of byte values in java are split in 1 half positive and second half negative:
-    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255. 
-    // So we add 256 for values after 127 to get a continuous 0-255 range. 
+    // 0-127 is as expected, then it continues with -128 up to -1 for values 128-255.
+    // So we add 256 for values after 127 to get a continuous 0-255 range.
     public long getAdjustedValue(long originalValue, Byte change) {
         int intValue = change.intValue();
         if (intValue < 0)
@@ -297,35 +297,35 @@ public class VotingDefaultValues {
         this.conversionRate = conversionRate;
     }
 
-    public long getCompensationRequestPeriodInBlocks() {
+    public int getCompensationRequestPeriodInBlocks() {
         return compensationRequestPeriodInBlocks;
     }
 
-    public void setCompensationRequestPeriodInBlocks(long compensationRequestPeriodInBlocks) {
+    public void setCompensationRequestPeriodInBlocks(int compensationRequestPeriodInBlocks) {
         this.compensationRequestPeriodInBlocks = compensationRequestPeriodInBlocks;
     }
 
-    public long getVotingPeriodInBlocks() {
+    public int getVotingPeriodInBlocks() {
         return votingPeriodInBlocks;
     }
 
-    public void setVotingPeriodInBlocks(long votingPeriodInBlocks) {
+    public void setVotingPeriodInBlocks(int votingPeriodInBlocks) {
         this.votingPeriodInBlocks = votingPeriodInBlocks;
     }
 
-    public long getFundingPeriodInBlocks() {
+    public int getFundingPeriodInBlocks() {
         return fundingPeriodInBlocks;
     }
 
-    public void setFundingPeriodInBlocks(long fundingPeriodInBlocks) {
+    public void setFundingPeriodInBlocks(int fundingPeriodInBlocks) {
         this.fundingPeriodInBlocks = fundingPeriodInBlocks;
     }
 
-    public long getBreakBetweenPeriodsInBlocks() {
+    public int getBreakBetweenPeriodsInBlocks() {
         return breakBetweenPeriodsInBlocks;
     }
 
-    public void setBreakBetweenPeriodsInBlocks(long breakBetweenPeriodsInBlocks) {
+    public void setBreakBetweenPeriodsInBlocks(int breakBetweenPeriodsInBlocks) {
         this.breakBetweenPeriodsInBlocks = breakBetweenPeriodsInBlocks;
     }
 

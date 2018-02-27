@@ -44,6 +44,7 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
+import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.Layout;
@@ -135,17 +136,17 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     protected void addCloseButton() {
-        closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+        closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());
 
         if (actionHandlerOptional.isPresent()) {
-            actionButton = new Button(Res.get("shared.shutDown"));
+            actionButton = new AutoTooltipButton(Res.get("shared.shutDown"));
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();
             actionButton.setOnAction(event -> saveAndShutDown());
 
-            Button urlButton = new Button(Res.get("torNetworkSettingWindow.openTorWebPage"));
+            Button urlButton = new AutoTooltipButton(Res.get("torNetworkSettingWindow.openTorWebPage"));
             urlButton.setOnAction(event -> {
                 try {
                     Utilities.openURI(URI.create("https://bridges.torproject.org/bridges"));
