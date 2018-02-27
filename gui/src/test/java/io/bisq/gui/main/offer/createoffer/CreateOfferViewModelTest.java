@@ -39,16 +39,15 @@ import static org.mockito.Mockito.when;
 @PrepareForTest({BtcWalletService .class, AddressEntry.class, PriceFeedService.class, User.class, FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class})
 public class CreateOfferViewModelTest {
 
+    private CreateOfferViewModel model;
+
     @Before
     public void setUp() {
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setBaseCurrencyCode(btc.getCode());
         Res.setBaseCurrencyName(btc.getName());
-    }
 
-    @Test
-    public void testSyncMinAmountWithAmountUntilChanged() {
         final BSFormatter bsFormatter = new BSFormatter();
         final BtcValidator btcValidator = new BtcValidator(bsFormatter);
         final AltcoinValidator altcoinValidator = new AltcoinValidator();
@@ -73,8 +72,12 @@ public class CreateOfferViewModelTest {
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        final CreateOfferViewModel model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, null, null, null, priceFeedService, null, bsFormatter, null);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, null, null, null, priceFeedService, null, bsFormatter, null);
         model.activate();
+    }
+
+    @Test
+    public void testSyncMinAmountWithAmountUntilChanged() {
         assertNull(model.amount.get());
         assertNull(model.minAmount.get());
 
@@ -92,12 +95,6 @@ public class CreateOfferViewModelTest {
         assertEquals("0.0312", model.amount.get());
         assertEquals("0.0312", model.minAmount.get());
 
-        model.minAmount.set("0.0312");
-        model.onFocusOutMinAmountTextField(true, false);
-
-        model.amount.set("0.0315");
-        assertEquals("0.0315", model.minAmount.get());
-
         model.minAmount.set("0.01");
         model.onFocusOutMinAmountTextField(true, false);
 
@@ -107,13 +104,53 @@ public class CreateOfferViewModelTest {
 
         assertEquals("0.0301", model.amount.get());
         assertEquals("0.01", model.minAmount.get());
+    }
+
+    @Test
+    public void testSyncMinAmountWithAmountWhenZeroCoinIsSet() {
+        model.amount.set("0.03");
+
+        assertEquals("0.03", model.amount.get());
+        assertEquals("0.03", model.minAmount.get());
 
         model.minAmount.set("0.00");
         model.onFocusOutMinAmountTextField(true, false);
 
-        model.amount.set("0.0302");
+        model.amount.set("0.04");
 
-        assertEquals("0.0302", model.amount.get());
-        assertEquals("0.0302", model.minAmount.get());
+        assertEquals("0.04", model.amount.get());
+        assertEquals("0.04", model.minAmount.get());
+
     }
+
+    @Test
+    public void testSyncMinAmountWithAmountWhenSameValueIsSet() {
+        model.amount.set("0.03");
+
+        assertEquals("0.03", model.amount.get());
+        assertEquals("0.03", model.minAmount.get());
+
+        model.minAmount.set("0.03");
+        model.onFocusOutMinAmountTextField(true, false);
+
+        model.amount.set("0.04");
+
+        assertEquals("0.04", model.amount.get());
+        assertEquals("0.04", model.minAmount.get());
+    }
+
+    @Test
+    public void testSyncMinAmountWithAmountWhenHigherMinAmountValueIsSet() {
+        model.amount.set("0.03");
+
+        assertEquals("0.03", model.amount.get());
+        assertEquals("0.03", model.minAmount.get());
+
+        model.minAmount.set("0.05");
+        model.onFocusOutMinAmountTextField(true, false);
+
+        assertEquals("0.05", model.amount.get());
+        assertEquals("0.05", model.minAmount.get());
+    }
+
 }
