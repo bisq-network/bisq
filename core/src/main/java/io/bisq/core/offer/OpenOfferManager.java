@@ -47,6 +47,7 @@ import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -353,17 +354,26 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
-        offerBookService.removeOffer(offer.getOfferPayload(),
-                () -> {
-                    offer.setState(Offer.State.REMOVED);
-                    openOffer.setState(OpenOffer.State.CANCELED);
-                    openOffers.remove(openOffer);
-                    closedTradableManager.add(openOffer);
-                    log.debug("removeOpenOffer, offerId={}", offer.getId());
-                    btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
-                    resultHandler.handleResult();
-                },
-                errorMessageHandler);
+        if (openOffer.isDeactivated()) {
+            openOffer.setStorage(openOfferTradableListStorage);
+            onRemoved(openOffer, resultHandler, offer);
+        } else {
+            offerBookService.removeOffer(offer.getOfferPayload(),
+                    () -> {
+                        onRemoved(openOffer, resultHandler, offer);
+                    },
+                    errorMessageHandler);
+        }
+    }
+
+    private void onRemoved(@NotNull OpenOffer openOffer, ResultHandler resultHandler, Offer offer) {
+        offer.setState(Offer.State.REMOVED);
+        openOffer.setState(OpenOffer.State.CANCELED);
+        openOffers.remove(openOffer);
+        closedTradableManager.add(openOffer);
+        log.debug("removeOpenOffer, offerId={}", offer.getId());
+        btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+        resultHandler.handleResult();
     }
 
     // Close openOffer after deposit published
