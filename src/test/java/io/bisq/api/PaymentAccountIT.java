@@ -9,19 +9,20 @@ import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuild
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.*;
 
 @RunWith(Arquillian.class)
 public class PaymentAccountIT {
 
     @DockerContainer
-    Container alice = createApiContainer("alice", "8081->8080", 3333);
+    private Container alice = createApiContainer("alice", "8081->8080", 3333);
 
     private ContainerBuilder.ContainerOptionsBuilder withRegtestEnv(ContainerBuilder.ContainerOptionsBuilder builder) {
         return builder
@@ -51,8 +52,8 @@ public class PaymentAccountIT {
 
     @InSequence(1)
     @Test
-    public void createPaymentAccount_validData_returnsCreatedAccount() throws InterruptedException {
-        final int alicePort = alice.getBindPort(8080);
+    public void create_validData_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
 
         final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
 
@@ -96,52 +97,95 @@ public class PaymentAccountIT {
         ;
     }
 
+    @InSequence(2)
     @Test
-    public void createPaymentAccount_missingAccountName_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("accountName", null);
-        createPaymentAccount_missingAttributeTemplate("accountName", " ");
+    public void removeById_existingAccount_returns204() {
+        final int alicePort = getAlicePort();
+
+        final List<String> accountList = given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                when().
+                get("/api/v1/payment-accounts/").
+                getBody().jsonPath().get("paymentAccounts.id");
+
+        Assert.assertThat(accountList, not(empty()));
+
+        accountList.forEach(id -> given().port(alicePort).when().delete("/api/v1/payment-accounts/" + id).then().statusCode(204));
+
+        given().
+                port(alicePort).
+//
+        when().
+                get("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("paymentAccounts.size()", equalTo(0))
+        ;
+    }
+
+    @InSequence(3)
+    @Test
+    public void removeById_nonExistingAccount_returns404() {
+        final int alicePort = getAlicePort();
+
+        given().
+                port(alicePort).
+//
+        when().
+                delete("/api/v1/payment-accounts/abc").
+//
+        then().
+                statusCode(404);
     }
 
     @Test
-    public void createPaymentAccount_missingCountryCode_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("countryCode", null);
-        createPaymentAccount_missingAttributeTemplate("countryCode", " ");
+    public void create_missingAccountName_returnsError() throws Exception {
+        create_missingAttributeTemplate("accountName", null);
+        create_missingAttributeTemplate("accountName", " ");
     }
 
     @Test
-    public void createPaymentAccount_missingHolderName_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("holderName", null);
-        createPaymentAccount_missingAttributeTemplate("holderName", " ");
+    public void create_missingCountryCode_returnsError() throws Exception {
+        create_missingAttributeTemplate("countryCode", null);
+        create_missingAttributeTemplate("countryCode", " ");
     }
 
     @Test
-    public void createPaymentAccount_missingBic_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("bic", null);
-        createPaymentAccount_missingAttributeTemplate("bic", " ");
+    public void create_missingHolderName_returnsError() throws Exception {
+        create_missingAttributeTemplate("holderName", null);
+        create_missingAttributeTemplate("holderName", " ");
     }
 
     @Test
-    public void createPaymentAccount_missingIban_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("iban", null);
-        createPaymentAccount_missingAttributeTemplate("iban", " ");
+    public void create_missingBic_returnsError() throws Exception {
+        create_missingAttributeTemplate("bic", null);
+        create_missingAttributeTemplate("bic", " ");
     }
 
     @Test
-    public void createPaymentAccount_invalidCountryCode_returnsError() throws Exception {
-        createPaymentAccount_validationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
+    public void create_missingIban_returnsError() throws Exception {
+        create_missingAttributeTemplate("iban", null);
+        create_missingAttributeTemplate("iban", " ");
     }
 
     @Test
-    public void createPaymentAccount_invalidPaymentMethod_returnsError() throws Exception {
-        createPaymentAccount_missingAttributeTemplate("paymentMethod", "");
+    public void create_invalidCountryCode_returnsError() throws Exception {
+        create_validationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
     }
 
-    private void createPaymentAccount_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {
-        createPaymentAccount_validationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
+    @Test
+    public void create_invalidPaymentMethod_returnsError() throws Exception {
+        create_missingAttributeTemplate("paymentMethod", "");
     }
 
-    private void createPaymentAccount_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
-        final int alicePort = alice.getBindPort(8080);
+    private void create_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {
+        create_validationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
+    }
+
+    private void create_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+        final int alicePort = getAlicePort();
 
         final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
         SepaAccountToCreate.class.getField(fieldName).set(accountToCreate, fieldValue);
@@ -158,6 +202,10 @@ public class PaymentAccountIT {
                 statusCode(expectedStatusCode).
                 and().body("errors", hasItem(expectedValidationMessage))
         ;
+    }
+
+    private int getAlicePort() {
+        return alice.getBindPort(8080);
     }
 
     private SepaAccountToCreate randomValidCreateSepaAccountPayload() {
