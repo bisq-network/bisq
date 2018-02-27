@@ -43,7 +43,6 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OfferUtil;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
-import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
@@ -63,7 +62,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -250,7 +248,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
         }
 
-        if (account != null && isNotUSBankAccount(account)) {
+        if (account != null) {
             this.paymentAccount = account;
         } else {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
@@ -725,20 +723,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null) {
-            paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                    .filter(this::isNotUSBankAccount)
-                    .collect(Collectors.toSet()));
-        }
-    }
-
-    private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
-        //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
-                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
-            return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
-        else
-            return true;
+        if (user.getPaymentAccounts() != null)
+            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
     }
 
     void setAmount(Coin amount) {
