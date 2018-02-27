@@ -65,6 +65,8 @@ import javax.inject.Inject;
 import java.util.Collections;
 import java.util.function.Function;
 
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_HEIGHT;
+
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
@@ -90,11 +92,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
     private ChangeListener<Number> bisqWindowVerticalSizeListener;
-    private final double pixelsPerOfferTableRow = (109.0 / 4.0) + 10.0;
+    private final double initialOfferTableViewHeight = 109;
+    private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight / 4.0) + 10.0; // initial visible row count=4
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
-        // startup defaults: scene height = 710   tbl view height = 109   visible row count = 4
-        int extraRows = screenSize <= 710 ? 0 : (int) ((screenSize - 710) / pixelsPerOfferTableRow);
-        return extraRows == 0 ? 109 : Math.ceil(109 + (extraRows * pixelsPerOfferTableRow));
+        int extraRows = screenSize <= INITIAL_SCENE_HEIGHT ? 0 : (int) ((screenSize - INITIAL_SCENE_HEIGHT) / pixelsPerOfferTableRow);
+        return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + (extraRows * pixelsPerOfferTableRow));
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +317,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
-        tableView.setMinHeight(109);
+        tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(121);
         tableView.setMinWidth(480);
 
