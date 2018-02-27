@@ -169,6 +169,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         model.onRemoveOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
+
+                    tableView.refresh();
+
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (DontShowAgainLookup.showAgain(key))
                         //noinspection unchecked
