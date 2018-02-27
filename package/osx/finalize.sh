@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.6.6"
+version="0.6.7"
 
 target_dir="/Users/dev/Documents/__bisq/_releases/$version"
 src_dir="/Users/dev/idea/exchange"
