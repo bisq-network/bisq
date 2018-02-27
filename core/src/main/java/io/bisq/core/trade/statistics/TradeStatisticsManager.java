@@ -214,6 +214,7 @@ public class TradeStatisticsManager {
         coinsWithValidator.add("DASH");
         coinsWithValidator.add("ETH");
         coinsWithValidator.add("PIVX");
+		coinsWithValidator.add("ALC");
         coinsWithValidator.add("IOP");
         coinsWithValidator.add("888");
         coinsWithValidator.add("ZEC");
