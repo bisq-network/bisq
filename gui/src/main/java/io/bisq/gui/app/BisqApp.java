@@ -98,6 +98,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_HEIGHT;
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_WIDTH;
+
 public class BisqApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
 
@@ -232,7 +235,7 @@ public class BisqApp extends Application {
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
-            scene = new Scene(mainView.getRoot(), 1200, 710); //740
+            scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
