@@ -146,6 +146,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private MarketPrice marketPrice;
     final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
     private ChangeListener<Number> currenciesUpdateListener;
+    private boolean syncMinAmountWithAmount = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -669,6 +670,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
             if (result.isValid) {
+                syncMinAmountWithAmount = dataModel.getMinAmount().getValue().equals(dataModel.getAmount().getValue());
                 setMinAmountToModel();
                 minAmount.set(btcFormatter.formatCoin(dataModel.getMinAmount().get()));
 
@@ -679,6 +681,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (amount.get() != null)
                         amountValidationResult.set(isBtcInputValid(amount.get()));
                 }
+            } else {
+                syncMinAmountWithAmount = true;
             }
         }
     }
@@ -918,7 +922,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
             dataModel.setAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
-            if (dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
+            if (syncMinAmountWithAmount || dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
                 minAmount.set(amount.get());
                 setMinAmountToModel();
             }
