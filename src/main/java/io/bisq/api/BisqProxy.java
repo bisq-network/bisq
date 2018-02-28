@@ -794,8 +794,8 @@ public class BisqProxy {
         return arbitratorManager.getArbitratorsObservableMap().values();
     }
 
-    public Collection<Arbitrator> chooseArbitrator(String arbitratorAddress) {
-        final Arbitrator arbitrator = arbitratorManager.getArbitratorsObservableMap().get(new NodeAddress(arbitratorAddress));
+    public Collection<Arbitrator> selectArbitrator(String arbitratorAddress) {
+        final Arbitrator arbitrator = getArbitratorByAddress(arbitratorAddress);
         if (null == arbitrator) {
             throw new NotFoundException("Arbitrator not found: " + arbitratorAddress);
         }
@@ -807,8 +807,21 @@ public class BisqProxy {
         throw new BadRequestException("You cannot select yourself as an arbitrator");
     }
 
+    public Collection<Arbitrator> deselectArbitrator(String arbitratorAddress) {
+        final Arbitrator arbitrator = getArbitratorByAddress(arbitratorAddress);
+        if (null == arbitrator) {
+            throw new NotFoundException("Arbitrator not found: " + arbitratorAddress);
+        }
+        user.removeAcceptedArbitrator(arbitrator);
+        user.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        return user.getAcceptedArbitrators();
+    }
+
+    private Arbitrator getArbitratorByAddress(String arbitratorAddress) {
+        return arbitratorManager.getArbitratorsObservableMap().get(new NodeAddress(arbitratorAddress));
+    }
+
     private boolean arbitratorIsTrader(Arbitrator arbitrator) {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
     }
-
 }

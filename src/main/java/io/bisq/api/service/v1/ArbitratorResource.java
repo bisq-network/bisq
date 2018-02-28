@@ -42,11 +42,18 @@ public class ArbitratorResource {
         return toRestModel(bisqProxy.getArbitrators(acceptedOnly));
     }
 
-    @ApiOperation("Choose arbitrator")
+    @ApiOperation("Select arbitrator")
     @POST
-    @Path("/{address}/choose")
-    public ArbitratorList chooseArbitrator(@NotBlank @PathParam("address") String address) {
-        return toRestModel(bisqProxy.chooseArbitrator(address));
+    @Path("/{address}/select")
+    public ArbitratorList selectArbitrator(@NotBlank @PathParam("address") String address) {
+        return toRestModel(bisqProxy.selectArbitrator(address));
+    }
+
+    @ApiOperation("Deselect arbitrator")
+    @POST
+    @Path("/{address}/deselect")
+    public ArbitratorList deselectArbitrator(@NotBlank @PathParam("address") String address) {
+        return toRestModel(bisqProxy.deselectArbitrator(address));
     }
 
     private static ArbitratorList toRestModel(Collection<io.bisq.core.arbitration.Arbitrator> businessModelList) {
