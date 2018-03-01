@@ -46,6 +46,8 @@ services:
       extends:
         file: docker-compose-base.yml
         service: bitcoin
+      ports:
+        - 18444:18444
 
 volumes:
   m2:
