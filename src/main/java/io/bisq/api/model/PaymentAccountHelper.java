@@ -2,11 +2,14 @@ package io.bisq.api.model;
 
 import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CountryUtil;
+import io.bisq.common.locale.FiatCurrency;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.SepaAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 
 import javax.ws.rs.WebApplicationException;
+import java.util.List;
 
 public final class PaymentAccountHelper {
 
@@ -26,6 +29,14 @@ public final class PaymentAccountHelper {
         paymentAccount.setHolderName(account.holderName);
         paymentAccount.setAccountName(account.accountName);
         paymentAccount.setCountry(CountryUtil.findCountryByCode(account.countryCode).get());
+        if (null != account.selectedTradeCurrency)
+            paymentAccount.setSelectedTradeCurrency(new FiatCurrency(account.selectedTradeCurrency));
+        if (null != account.tradeCurrencies) {
+            account.tradeCurrencies.stream().forEach(currencyCode -> {
+                paymentAccount.addCurrency(new FiatCurrency(currencyCode));
+                paymentAccount.addAcceptedCountry(currencyCode);
+            });
+        }
         return paymentAccount;
     }
 
@@ -46,6 +57,12 @@ public final class PaymentAccountHelper {
         if (null != country)
             sepaPaymentAccount.countryCode = country.code;
         sepaPaymentAccount.holderName = account.getHolderName();
+        final TradeCurrency selectedTradeCurrency = account.getSelectedTradeCurrency();
+        if (null != selectedTradeCurrency)
+            sepaPaymentAccount.selectedTradeCurrency = selectedTradeCurrency.getCode();
+        final List<TradeCurrency> tradeCurrencies = account.getTradeCurrencies();
+        if (null != tradeCurrencies)
+            tradeCurrencies.stream().forEach(currency -> sepaPaymentAccount.tradeCurrencies.add(currency.getCode()));
         return sepaPaymentAccount;
     }
 }

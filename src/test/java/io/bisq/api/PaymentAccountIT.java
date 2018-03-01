@@ -13,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -74,7 +75,9 @@ public class PaymentAccountIT {
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("bic", equalTo(accountToCreate.bic)).
                 and().body("iban", equalTo(accountToCreate.iban)).
-                and().body("size()", equalTo(7))
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("size()", equalTo(9))
         ;
 
         given().
@@ -93,7 +96,9 @@ public class PaymentAccountIT {
                 and().body("paymentAccounts[0].countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("paymentAccounts[0].bic", equalTo(accountToCreate.bic)).
                 and().body("paymentAccounts[0].iban", equalTo(accountToCreate.iban)).
-                and().body("paymentAccounts[0].size()", equalTo(7))
+                and().body("paymentAccounts[0].selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("paymentAccounts[0].tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("paymentAccounts[0].size()", equalTo(9))
         ;
     }
 
@@ -217,6 +222,8 @@ public class PaymentAccountIT {
         accountToCreate.iban = faker.finance().iban();
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
+        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
         return accountToCreate;
     }
 
