@@ -1,21 +1,27 @@
 package io.bisq.api.service.v1;
 
-import io.bisq.api.BisqProxy;
-import io.bisq.api.BisqProxyError;
+import com.google.common.collect.ImmutableList;
+import io.bisq.api.*;
 import io.bisq.api.model.OfferDetail;
 import io.bisq.api.model.OfferToCreate;
 import io.bisq.api.model.PriceType;
 import io.bisq.api.model.TakeOffer;
 import io.bisq.api.service.ResourceHelper;
 import io.bisq.common.util.Tuple2;
+import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.bitcoinj.core.Transaction;
 
+import javax.validation.ValidationException;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 //        TODO use more standard error handling
 @Api("offers")
@@ -57,10 +63,9 @@ public class OfferResource {
 
     @ApiOperation("Create offer")
     @POST
-    @Path("/")
-    public void create(OfferToCreate offer) {
+    public void create(@Suspended final AsyncResponse asyncResponse, OfferToCreate offer) {
 //        TODO should return created offer
-        ResourceHelper.handleBisqProxyError(bisqProxy.offerMake(
+        final CompletableFuture<Transaction> completableFuture = bisqProxy.offerMake(
                 offer.accountId,
                 offer.direction,
                 offer.amount,
@@ -68,7 +73,24 @@ public class OfferResource {
                 PriceType.PERCENTAGE.equals(offer.priceType),
                 offer.percentage_from_market_price,
                 offer.marketPair,
-                offer.fixedPrice));
+                offer.fixedPrice);
+        completableFuture.thenApply(asyncResponse::resume)
+                .exceptionally(e -> {
+                    final Throwable cause = e.getCause();
+                    Response.ResponseBuilder responseBuilder;
+                    if (cause instanceof ValidationException) {
+                        responseBuilder = Response.status(422).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    } else if (cause instanceof IncompatiblePaymentAccountException) {
+                        responseBuilder = Response.status(423).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    } else if (cause instanceof NoAcceptedArbitratorException) {
+                        responseBuilder = Response.status(424).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    } else if (cause instanceof NoPaymentAccountException) {
+                        responseBuilder = Response.status(425).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    } else {
+                        responseBuilder = Response.status(500).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    }
+                    return asyncResponse.resume(responseBuilder.build());
+                });
     }
 
     @ApiOperation("Take offer")
