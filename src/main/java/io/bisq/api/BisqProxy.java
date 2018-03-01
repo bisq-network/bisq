@@ -238,11 +238,11 @@ public class BisqProxy {
 
     }
 
-    public CompletableFuture<Transaction> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+    public CompletableFuture<Offer> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
                                                     boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) {
 //TODO add security deposit parameter
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
-        final CompletableFuture<Transaction> futureResult = new CompletableFuture<>();
+        final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
         final OfferBuilder offerBuilder = injector.getInstance(OfferBuilder.class);
         final Offer offer;
@@ -255,9 +255,10 @@ public class BisqProxy {
         if (!OfferUtil.isBuyOffer(direction))
             reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
 
+//        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
         openOfferManager.placeOffer(offer, reservedFundsForOffer,
                 true,
-                futureResult::complete,
+                transaction -> futureResult.complete(offer),
                 error -> futureResult.completeExceptionally(new RuntimeException(error))
         );
 
