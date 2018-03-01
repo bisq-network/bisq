@@ -11,7 +11,7 @@ public class OfferToCreate {
     public PriceType priceType;
     public String marketPair;
     public Double percentage_from_market_price;
-    public String fixedPrice;
+    public Long fixedPrice;
     public BigDecimal amount;
     public BigDecimal minAmount;
 
