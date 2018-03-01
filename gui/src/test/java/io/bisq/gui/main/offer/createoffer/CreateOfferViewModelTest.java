@@ -3,7 +3,6 @@ package io.bisq.gui.main.offer.createoffer;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -11,17 +10,14 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.trade.Trade;
 import io.bisq.core.user.User;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.AltcoinValidator;
 import io.bisq.gui.util.validation.BtcValidator;
 import io.bisq.gui.util.validation.FiatPriceValidator;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import org.bitcoinj.core.Coin;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,7 +68,7 @@ public class CreateOfferViewModelTest {
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, null, null, null, priceFeedService, null, bsFormatter, null);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, null, null, null, priceFeedService, null, null, bsFormatter, null);
         model.activate();
     }
 

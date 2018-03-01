@@ -29,6 +29,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -84,6 +85,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
+    private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter btcFormatter;
@@ -131,11 +133,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Transitions transitions,
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
+        this.preferences = preferences;
         this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
         this.btcFormatter = btcFormatter;
@@ -261,7 +264,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
-            if (model.dataModel.preferences.showAgain(key)) {
+            if (preferences.showAgain(key)) {
                 //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
@@ -1091,8 +1094,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        fixedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
-        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+        fixedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
 
         fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
                 "toggle-button-active" : "toggle-button-inactive");
