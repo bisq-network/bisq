@@ -196,7 +196,7 @@ public class WalletsSetup {
         };
 
         if (params == RegTestParams.get()) {
-            configPeerNodesForRegTest();
+            configPeerNodesForRegTest(socks5Proxy);
         } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
             configPeerNodesForLocalHostBitcoinNode();
         } else {
@@ -268,7 +268,7 @@ public class WalletsSetup {
         return mode;
     }
 
-    private void configPeerNodesForRegTest() {
+    private void configPeerNodesForRegTest(@Nullable Socks5Proxy proxy) {
         walletConfig.setMinBroadcastConnections(1);
         if (regTestHost == RegTestHost.REG_TEST_SERVER) {
             try {
@@ -280,6 +280,8 @@ public class WalletsSetup {
             }
         } else if (regTestHost == RegTestHost.LOCALHOST) {
             walletConfig.setPeerNodesForLocalHost();
+        } else {
+            configPeerNodes(proxy);
         }
     }
 
