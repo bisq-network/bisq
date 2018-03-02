@@ -46,7 +46,6 @@ import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.main.offer.OfferDataModel;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -74,6 +73,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
+    private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final TradeWalletService tradeWalletService;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -110,14 +110,15 @@ class TakeOfferDataModel extends OfferDataModel {
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                        User user, FeeService feeService, FilterManager filterManager,
                        Preferences preferences, PriceFeedService priceFeedService, TradeWalletService tradeWalletService,
-                       AccountAgeWitnessService accountAgeWitnessService, BSFormatter formatter) {
-        super(btcWalletService, preferences, formatter);
+                       AccountAgeWitnessService accountAgeWitnessService) {
+        super(btcWalletService);
 
         this.tradeManager = tradeManager;
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
         this.filterManager = filterManager;
+        this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.tradeWalletService = tradeWalletService;
         this.accountAgeWitnessService = accountAgeWitnessService;

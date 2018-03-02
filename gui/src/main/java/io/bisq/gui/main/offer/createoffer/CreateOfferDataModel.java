@@ -72,6 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel extends OfferDataModel {
     private final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
+    private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -81,6 +82,7 @@ class CreateOfferDataModel extends OfferDataModel {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
+    private final BSFormatter formatter;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
     private final BsqBalanceListener bsqBalanceListener;
@@ -122,10 +124,11 @@ class CreateOfferDataModel extends OfferDataModel {
                          PriceFeedService priceFeedService, FilterManager filterManager,
                          AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
                          FeeService feeService, BSFormatter formatter) {
-        super(btcWalletService, preferences, formatter);
+        super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
         this.bsqWalletService = bsqWalletService;
+        this.preferences = preferences;
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
@@ -134,6 +137,7 @@ class CreateOfferDataModel extends OfferDataModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
+        this.formatter = formatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +

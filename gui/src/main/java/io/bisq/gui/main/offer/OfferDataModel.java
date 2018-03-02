@@ -17,14 +17,9 @@
 
 package io.bisq.gui.main.offer;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.gui.main.overlays.notifications.Notification;
-import io.bisq.gui.util.BSFormatter;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,8 +34,6 @@ import org.bitcoinj.core.Coin;
  */
 public abstract class OfferDataModel extends ActivatableDataModel {
     protected final BtcWalletService btcWalletService;
-    protected final Preferences preferences;
-    protected final BSFormatter formatter;
 
     @Getter
     protected final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
@@ -51,16 +44,14 @@ public abstract class OfferDataModel extends ActivatableDataModel {
     @Getter
     protected final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     @Getter
+    protected final BooleanProperty showWalletFundedNotification = new SimpleBooleanProperty();
+    @Getter
     protected Coin totalAvailableBalance;
-    protected Notification walletFundedNotification;
     protected AddressEntry addressEntry;
     protected boolean useSavingsWallet;
 
-
-    public OfferDataModel(BtcWalletService btcWalletService, Preferences preferences, BSFormatter formatter) {
+    public OfferDataModel(BtcWalletService btcWalletService) {
         this.btcWalletService = btcWalletService;
-        this.preferences = preferences;
-        this.formatter = formatter;
     }
 
     protected void updateBalance() {
@@ -82,19 +73,10 @@ public abstract class OfferDataModel extends ActivatableDataModel {
             if (missingCoin.get().isNegative())
                 missingCoin.set(Coin.ZERO);
         }
-        log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
-        final boolean balanceSufficient = isBalanceSufficient(balance.get());
-        log.error("balanceSufficient " + balanceSufficient);
-        isBtcWalletFunded.set(balanceSufficient);
-        //noinspection ConstantConditions,ConstantConditions
-        if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
-            walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
-
-            walletFundedNotification.show();
+        isBtcWalletFunded.set(isBalanceSufficient(balance.get()));
+        if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && !showWalletFundedNotification.get()) {
+            showWalletFundedNotification.set(true);
         }
     }
 
