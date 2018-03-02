@@ -38,6 +38,8 @@ services:
       extends:
         file: docker-compose-base.yml
         service: seed
+      ports:
+        - 8000:8000
       links:
         - bitcoin
     bitcoin:

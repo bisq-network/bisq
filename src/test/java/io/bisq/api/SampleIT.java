@@ -40,6 +40,9 @@ public class SampleIT {
         given().
             port(bob.getBindPort(8080)).
             when().
-            get("/api/v1/account_list").then().statusCode(200).and().body(equalToIgnoringWhiteSpace("[]"));
+                get("/api/v1/payment-accounts").
+                then().
+                statusCode(200).
+                and().body(equalToIgnoringWhiteSpace("{\"paymentAccounts\":[]}"));
     }
 }

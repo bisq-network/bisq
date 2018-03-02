@@ -132,3 +132,15 @@ Run integration tests:
 In order to build shaded jar:
 
     mvn package -P shade
+
+
+Api naming guidlines:
+
+* resource names should be in plural
+* use hyphen-case for multi word resource names (camelCase for everything else: payload properties or query params)
+* if you need to return array, use {results,total} pattern in case pagination is required in future
+* use GET / to search
+* use POST / to create
+* use PUT /{id} to update by id
+* use DELETE /{id} to remove by id
+* use POST /{id}/{action} to perform some action on specific resource
