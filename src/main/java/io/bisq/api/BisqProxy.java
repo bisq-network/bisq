@@ -49,6 +49,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.NotFoundException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -140,6 +141,20 @@ public class BisqProxy {
     }
 
 
+    public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
+        user.addPaymentAccount(PaymentAccountHelper.toBusinessModel(account));
+        return PaymentAccountHelper.toRestModel(user.currentPaymentAccountProperty().get());
+    }
+
+
+    public void removePaymentAccount(String id) {
+        final PaymentAccount paymentAccount = user.getPaymentAccount(id);
+        if (null == paymentAccount) {
+            throw new NotFoundException("Payment account not found: " + id);
+        }
+        user.removePaymentAccount(paymentAccount);
+    }
+
     private List<PaymentAccount> getPaymentAccountList() {
         return new ArrayList(user.getPaymentAccounts());
     }
@@ -151,7 +166,8 @@ public class BisqProxy {
     public PaymentAccountList getAccountList() {
         PaymentAccountList paymentAccountList = new PaymentAccountList();
         paymentAccountList.paymentAccounts = getPaymentAccountList().stream()
-                .map(Account::new).collect(Collectors.toList());
+                .map(PaymentAccountHelper::toRestModel)
+                .collect(Collectors.toList());
         return paymentAccountList;
     }
 
