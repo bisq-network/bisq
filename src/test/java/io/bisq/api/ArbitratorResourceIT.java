@@ -3,7 +3,6 @@ package io.bisq.api;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuilder;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
@@ -18,37 +17,14 @@ import static org.hamcrest.Matchers.equalTo;
 public class ArbitratorResourceIT {
 
     @DockerContainer
-    Container alice = createApiContainer("alice", "8081->8080", 3333);
+    Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, true);
 
     @DockerContainer
-    Container arbitrator = createApiContainer("arbitrator", "8082->8080", 3335);
+    Container arbitrator = ContainerFactory.createApiContainer("arbitrator", "8082->8080", 3335, true);
 
     @DockerContainer(order = 4)
-    Container seedNode = createSeedNodeContainer();
+    Container seedNode = ContainerFactory.createSeedNodeContainer();
 
-    private ContainerBuilder.ContainerOptionsBuilder withRegtestEnv(ContainerBuilder.ContainerOptionsBuilder builder) {
-        return builder
-                .withEnvironment("USE_LOCALHOST_FOR_P2P", "true")
-                .withEnvironment("BASE_CURRENCY_NETWORK", "BTC_REGTEST")
-                .withEnvironment("BTC_NODES", "bisq-bitcoin:18332")
-                .withEnvironment("SEED_NODES", "bisq-seednode:8000")
-                .withEnvironment("LOG_LEVEL", "debug");
-    }
-
-    private Container createApiContainer(String nameSuffix, String portBinding, int nodePort)
-    {
-        return withRegtestEnv(Container.withContainerName("bisq-api-" + nameSuffix).fromImage("bisq-api").withVolume("m2", "/root/.m2").withPortBinding(portBinding))
-                .withEnvironment("NODE_PORT", nodePort)
-                .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true)
-                .withLink("bisq-seednode")
-                .build();
-    }
-
-    private Container createSeedNodeContainer() {
-        return withRegtestEnv(Container.withContainerName("bisq-seednode").fromImage("bisq-seednode").withVolume("m2", "/root/.m2"))
-                .withEnvironment("MY_ADDRESS", "bisq-seednode:8000")
-                .build();
-    }
 
     @InSequence
     @Test
@@ -69,7 +45,7 @@ public class ArbitratorResourceIT {
         given().
                 port(alicePort).
 //
-                when().
+        when().
                 get("/api/v1/arbitrators").
 //
         then().
