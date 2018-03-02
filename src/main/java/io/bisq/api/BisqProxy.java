@@ -238,16 +238,19 @@ public class BisqProxy {
 
     }
 
-    public CompletableFuture<Offer> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                                                    boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) {
+    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) {
 //TODO add security deposit parameter
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
+        if (!fundUsingBisqWallet && null == offerId)
+            return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
+
         final OfferBuilder offerBuilder = injector.getInstance(OfferBuilder.class);
         final Offer offer;
         try {
-            offer = offerBuilder.build(accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice);
+            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice);
         } catch (Exception e) {
             return failFuture(futureResult, e);
         }
@@ -255,12 +258,17 @@ public class BisqProxy {
         if (!OfferUtil.isBuyOffer(direction))
             reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
 
+//        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
 //        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
         openOfferManager.placeOffer(offer, reservedFundsForOffer,
-                true,
+                fundUsingBisqWallet,
                 transaction -> futureResult.complete(offer),
-                error -> futureResult.completeExceptionally(new RuntimeException(error))
-        );
+                error -> {
+                    if (error.contains("Insufficient money")) {
+                        futureResult.completeExceptionally(new InsufficientMoneyException(error));
+                    } else
+                        futureResult.completeExceptionally(new RuntimeException(error));
+                });
 
         return futureResult;
     }

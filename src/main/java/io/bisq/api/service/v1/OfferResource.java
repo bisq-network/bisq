@@ -12,6 +12,7 @@ import io.bisq.core.offer.Offer;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.util.Json;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.ValidationException;
@@ -65,17 +66,18 @@ public class OfferResource {
     @ApiOperation("Create offer")
     @POST
     public void create(@Suspended final AsyncResponse asyncResponse, OfferToCreate offer) {
-//        TODO should return created offer
         final CompletableFuture<Offer> completableFuture = bisqProxy.offerMake(
+                offer.fundUsingBisqWallet,
+                offer.offerId,
                 offer.accountId,
                 offer.direction,
                 offer.amount,
                 offer.minAmount,
                 PriceType.PERCENTAGE.equals(offer.priceType),
-                offer.percentage_from_market_price,
+                offer.percentageFromMarketPrice,
                 offer.marketPair,
                 offer.fixedPrice);
-        completableFuture.thenApply(response -> asyncResponse.resume(response.getId()))
+        completableFuture.thenApply(response -> asyncResponse.resume(new OfferDetail(response)))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
                     Response.ResponseBuilder responseBuilder;
@@ -87,14 +89,14 @@ public class OfferResource {
                         responseBuilder = Response.status(424).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
                     } else if (cause instanceof NoPaymentAccountException) {
                         responseBuilder = Response.status(425).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                    } else if (cause instanceof InsufficientMoneyException) {
+                        responseBuilder = Response.status(427).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
                     } else {
                         final String message = cause.getMessage();
-                        if (null != message && message.startsWith("Insufficient money")) {
-                            responseBuilder = Response.status(426).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
-                        } else {
-                            responseBuilder = Response.status(500).entity(new ValidationErrorMessage(ImmutableList.of(message)));
-                            log.error("Unable to create offer.", cause);
-                        }
+                        responseBuilder = Response.status(500);
+                        if (null != message)
+                            responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
+                        log.error("Unable to create offer: " + Json.pretty(offer), cause);
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });

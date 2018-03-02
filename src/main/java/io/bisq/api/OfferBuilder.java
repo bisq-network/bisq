@@ -54,7 +54,7 @@ public class OfferBuilder {
         this.user = user;
     }
 
-    public Offer build(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+    public Offer build(String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
                        boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) throws NoAcceptedArbitratorException, NoPaymentAccountException, IncompatiblePaymentAccountException {
         final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
@@ -63,7 +63,7 @@ public class OfferBuilder {
 
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
-            throw new ValidationException("When choosing PERCENTAGE price, fill in percentage_from_market_price");
+                throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
 //        } else if ((Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
             throw new ValidationException("When choosing FIXED price, fill in fixed_price with a price > 0");
@@ -121,12 +121,11 @@ public class OfferBuilder {
         // TODO dummy values in this constructor !!!
         Coin coinAmount = Coin.valueOf(amount.longValueExact());
         OfferPayload offerPayload = new OfferPayload(
-                UUID.randomUUID().toString(),
+                null == offerId ? UUID.randomUUID().toString() : offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
-//                Long.valueOf(fiatPrice),
                 fiatPrice,
                 marketPriceMargin,
                 useMarketBasedPrice,
