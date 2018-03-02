@@ -60,6 +60,26 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <!--This plugin allow you to automatically verify PGP signature of all project dependency.-->
+                <groupId>com.github.s4u.plugins</groupId>
+                <artifactId>pgpverify-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <pgpverify.keyserver>hkps://hkps.pool.sks-keyservers.net</pgpverify.keyserver>
+                    <pgpverify.failNoSignature>true</pgpverify.failNoSignature>
+                    <pgpgverify.failWeakSignature>true</pgpgverify.failWeakSignature>
+                    <pgpverify.verifyPomFiles>true</pgpverify.verifyPomFiles>
+                </configuration>
+
+            </plugin>
             <!--
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
