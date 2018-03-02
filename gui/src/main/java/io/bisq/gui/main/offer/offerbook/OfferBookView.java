@@ -17,12 +17,14 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
+import com.google.inject.name.Named;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -79,6 +81,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final boolean useDevPrivilegeKeys;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -99,14 +102,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter,
-                  PrivateNotificationManager privateNotificationManager) {
+    OfferBookView(OfferBookViewModel model,
+                  Navigation navigation,
+                  OfferDetailsWindow offerDetailsWindow,
+                  BSFormatter formatter,
+                  PrivateNotificationManager privateNotificationManager,
+                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -862,7 +870,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

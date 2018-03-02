@@ -21,6 +21,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Capabilities;
@@ -95,6 +97,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_HEIGHT;
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_WIDTH;
 
 public class BisqApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
@@ -230,7 +235,7 @@ public class BisqApp extends Application {
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
-            scene = new Scene(mainView.getRoot(), 1200, 710); //740
+            scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
 
             scene.getStylesheets().setAll(
                     "/io/bisq/gui/bisq.css",
@@ -321,7 +326,8 @@ public class BisqApp extends Application {
 
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
-        new SendAlertMessageWindow()
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new SendAlertMessageWindow(useDevPrivilegeKeys)
                 .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
                 .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
@@ -329,7 +335,8 @@ public class BisqApp extends Application {
 
     private void showFilterPopup() {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
-        new FilterWindow(filterManager)
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new FilterWindow(filterManager, useDevPrivilegeKeys)
                 .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
                 .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();

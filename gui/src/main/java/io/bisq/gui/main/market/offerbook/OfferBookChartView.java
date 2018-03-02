@@ -64,6 +64,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
+import java.util.function.Function;
+
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_HEIGHT;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
@@ -89,7 +92,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
-
+    private ChangeListener<Number> bisqWindowVerticalSizeListener;
+    private final double initialOfferTableViewHeight = 109;
+    private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight / 4.0) + 10.0; // initial visible row count=4
+    private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
+        int extraRows = screenSize <= INITIAL_SCENE_HEIGHT ? 0 : (int) ((screenSize - INITIAL_SCENE_HEIGHT) / pixelsPerOfferTableRow);
+        return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + (extraRows * pixelsPerOfferTableRow));
+    };
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -250,6 +259,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
         sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
 
+        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
+            double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
+            if(buyOfferTableView.getHeight() != newTableViewHeight) {
+                buyOfferTableView.setMinHeight(newTableViewHeight);
+                sellOfferTableView.setMinHeight(newTableViewHeight);
+            }
+        };
+        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+
         updateChartData();
     }
 
@@ -300,7 +318,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
-        tableView.setMinHeight(109);
+        tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(121);
         tableView.setMinWidth(480);
         tableView.getStyleClass().add("offer-table");
@@ -471,6 +489,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
+        vBox.setVgrow(tableView, Priority.ALWAYS);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());

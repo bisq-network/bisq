@@ -35,6 +35,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
@@ -68,6 +69,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
     private final Navigation navigation;
+    private final Preferences preferences;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final FiatVolumeValidator fiatVolumeValidator;
@@ -146,6 +148,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private MarketPrice marketPrice;
     final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
     private ChangeListener<Number> currenciesUpdateListener;
+    private boolean syncMinAmountWithAmount = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +167,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 WalletsSetup walletsSetup,
                                 PriceFeedService priceFeedService,
                                 Navigation navigation,
+                                Preferences preferences,
                                 BSFormatter btcFormatter,
                                 BsqFormatter bsqFormatter) {
         super(dataModel);
@@ -178,6 +182,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.walletsSetup = walletsSetup;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
+        this.preferences = preferences;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -623,7 +628,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
-                    btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -669,6 +674,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
             if (result.isValid) {
+                syncMinAmountWithAmount = dataModel.getMinAmount().getValue().equals(dataModel.getAmount().getValue());
                 setMinAmountToModel();
                 minAmount.set(btcFormatter.formatCoin(dataModel.getMinAmount().get()));
 
@@ -679,6 +685,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (amount.get() != null)
                         amountValidationResult.set(isBtcInputValid(amount.get()));
                 }
+            } else {
+                syncMinAmountWithAmount = true;
             }
         }
     }
@@ -742,7 +750,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (result.isValid) {
                 Coin defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDeposit();
                 String key = "buyerSecurityDepositLowerAsDefault";
-                if (dataModel.preferences.showAgain(key) &&
+                if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
                     final String postfix = dataModel.isBuyOffer() ?
                             Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
@@ -783,7 +791,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public boolean isPriceInRange() {
         if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
-            if (Math.abs(btcFormatter.parsePercentStringToDouble(marketPriceMargin.get())) > dataModel.preferences.getMaxPriceDistanceInPercent()) {
+            if (Math.abs(btcFormatter.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;
             } else {
@@ -798,7 +806,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         Popup popup = new Popup<>();
         //noinspection unchecked
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
-                btcFormatter.formatToPercentWithSymbol(dataModel.preferences.getMaxPriceDistanceInPercent())))
+                btcFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))
                 .onAction(popup::hide)
                 .closeButtonTextWithGoTo("navigation.settings.preferences")
@@ -918,7 +926,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
             dataModel.setAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
-            if (dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
+            if (syncMinAmountWithAmount || dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
                 minAmount.set(amount.get());
                 setMinAmountToModel();
             }

@@ -18,6 +18,7 @@
 package io.bisq.core.arbitration;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -25,6 +26,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -63,26 +65,7 @@ public class ArbitratorManager {
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
-    @SuppressWarnings("ConstantConditions")
-    private static final List<String> publicKeys = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
-            new ArrayList<>(Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY)) :
-            new ArrayList<>(Arrays.asList(
-                    "0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
-                    "031c502a60f9dbdb5ae5e438a79819e4e1f417211dd537ac12c9bc23246534c4bd",
-                    "02c1e5a242387b6d5319ce27246cea6edaaf51c3550591b528d2578a4753c56c2c",
-                    "025c319faf7067d9299590dd6c97fe7e56cd4dac61205ccee1cd1fc390142390a2",
-                    "038f6e24c2bfe5d51d0a290f20a9a657c270b94ef2b9c12cd15ca3725fa798fc55",
-                    "0255256ff7fb615278c4544a9bbd3f5298b903b8a011cd7889be19b6b1c45cbefe",
-                    "024a3a37289f08c910fbd925ebc72b946f33feaeff451a4738ee82037b4cda2e95",
-                    "02a88b75e9f0f8afba1467ab26799dcc38fd7a6468fb2795444b425eb43e2c10bd",
-                    "02349a51512c1c04c67118386f4d27d768c5195a83247c150a4b722d161722ba81",
-                    "03f718a2e0dc672c7cdec0113e72c3322efc70412bb95870750d25c32cd98de17d",
-                    "028ff47ee2c56e66313928975c58fa4f1b19a0f81f3a96c4e9c9c3c6768075509e",
-                    "02b517c0cbc3a49548f448ddf004ed695c5a1c52ec110be1bfd65fa0ca0761c94b",
-                    "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
-                    "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
-                    "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5"
-            ));
+    private final List<String> publicKeys;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -103,12 +86,36 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences, FilterManager filterManager) {
+    public ArbitratorManager(KeyRing keyRing,
+                             ArbitratorService arbitratorService,
+                             User user,
+                             Preferences preferences,
+                             FilterManager filterManager,
+                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
         this.user = user;
         this.preferences = preferences;
         this.filterManager = filterManager;
+        publicKeys = useDevPrivilegeKeys ?
+                Collections.unmodifiableList(Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY)) :
+                Collections.unmodifiableList(Arrays.asList(
+                        "0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
+                        "031c502a60f9dbdb5ae5e438a79819e4e1f417211dd537ac12c9bc23246534c4bd",
+                        "02c1e5a242387b6d5319ce27246cea6edaaf51c3550591b528d2578a4753c56c2c",
+                        "025c319faf7067d9299590dd6c97fe7e56cd4dac61205ccee1cd1fc390142390a2",
+                        "038f6e24c2bfe5d51d0a290f20a9a657c270b94ef2b9c12cd15ca3725fa798fc55",
+                        "0255256ff7fb615278c4544a9bbd3f5298b903b8a011cd7889be19b6b1c45cbefe",
+                        "024a3a37289f08c910fbd925ebc72b946f33feaeff451a4738ee82037b4cda2e95",
+                        "02a88b75e9f0f8afba1467ab26799dcc38fd7a6468fb2795444b425eb43e2c10bd",
+                        "02349a51512c1c04c67118386f4d27d768c5195a83247c150a4b722d161722ba81",
+                        "03f718a2e0dc672c7cdec0113e72c3322efc70412bb95870750d25c32cd98de17d",
+                        "028ff47ee2c56e66313928975c58fa4f1b19a0f81f3a96c4e9c9c3c6768075509e",
+                        "02b517c0cbc3a49548f448ddf004ed695c5a1c52ec110be1bfd65fa0ca0761c94b",
+                        "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
+                        "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
+                        "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5"
+                ));
     }
 
     public void shutDown() {

@@ -18,7 +18,6 @@
 package io.bisq.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
@@ -45,11 +44,11 @@ import io.bisq.core.trade.handlers.TradeResultHandler;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
-import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.gui.main.overlays.notifications.Notification;
+import io.bisq.gui.main.offer.OfferDataModel;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.util.BSFormatter;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -68,18 +67,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class TakeOfferDataModel extends ActivatableDataModel {
+class TakeOfferDataModel extends OfferDataModel {
     private final TradeManager tradeManager;
-    private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
-    final Preferences preferences;
+    private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final TradeWalletService tradeWalletService;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BSFormatter formatter;
 
     private Coin txFeeFromFeeService;
     private Coin securityDeposit;
@@ -87,22 +84,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private Offer offer;
 
-    private AddressEntry addressEntry;
-    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
     private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
 
     private BalanceListener balanceListener;
     private PaymentAccount paymentAccount;
     private boolean isTabSelected;
-    private boolean useSavingsWallet;
-    Coin totalAvailableBalance;
-    private Notification walletFundedNotification;
     Price tradePrice;
     // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
     private int feeTxSize = 320;
@@ -121,9 +110,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                        User user, FeeService feeService, FilterManager filterManager,
                        Preferences preferences, PriceFeedService priceFeedService, TradeWalletService tradeWalletService,
-                       AccountAgeWitnessService accountAgeWitnessService, BSFormatter formatter) {
+                       AccountAgeWitnessService accountAgeWitnessService) {
+        super(btcWalletService);
+
         this.tradeManager = tradeManager;
-        this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
@@ -132,7 +122,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.priceFeedService = priceFeedService;
         this.tradeWalletService = tradeWalletService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.formatter = formatter;
 
         // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
     }
@@ -423,7 +412,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void fundFromSavingsWallet() {
         useSavingsWallet = true;
         updateBalance();
-        if (!isWalletFunded.get()) {
+        if (!isBtcWalletFunded.get()) {
             this.useSavingsWallet = false;
             updateBalance();
         }
@@ -553,45 +542,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Nullable
     public Coin getTakerFee() {
         return getTakerFee(isCurrencyForTakerFeeBtc());
-    }
-
-
-    @SuppressWarnings("PointlessBooleanExpression")
-    private void updateBalance() {
-        Coin tradeWalletBalance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
-        if (useSavingsWallet) {
-            Coin savingWalletBalance = btcWalletService.getSavingWalletBalance();
-            totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
-            if (totalToPayAsCoin.get() != null) {
-                if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
-                    balance.set(totalToPayAsCoin.get());
-                else
-                    balance.set(totalAvailableBalance);
-            }
-        } else {
-            balance.set(tradeWalletBalance);
-        }
-        if (totalToPayAsCoin.get() != null) {
-            missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
-            if (missingCoin.get().isNegative())
-                missingCoin.set(Coin.ZERO);
-        }
-        log.debug("missingCoin " + missingCoin.get().toFriendlyString());
-
-        isWalletFunded.set(isBalanceSufficient(balance.get()));
-        //noinspection ConstantConditions,ConstantConditions
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
-            walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
-
-            walletFundedNotification.show();
-        }
-    }
-
-    private boolean isBalanceSufficient(Coin balance) {
-        return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
     }
 
     public void swapTradeToSavings() {

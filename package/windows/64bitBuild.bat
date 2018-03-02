@@ -5,7 +5,7 @@
 :: 64 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
-SET version=0.6.6
+SET version=0.6.7
 
 :: Private setup
 SET outdir=\\VBOXSVR\vm_shared_windows

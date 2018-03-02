@@ -50,10 +50,7 @@ public class PrivateNotificationManager {
     private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global privateNotification message
-    @SuppressWarnings("ConstantConditions")
-    private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
-            DevEnv.DEV_PRIVILEGE_PUB_KEY :
-            "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
+    private final String pubKeyAsHex;
 
     private ECKey privateNotificationSigningKey;
     private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
@@ -64,7 +61,10 @@ public class PrivateNotificationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PrivateNotificationManager(P2PService p2PService, KeyRing keyRing, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public PrivateNotificationManager(P2PService p2PService,
+                                      KeyRing keyRing,
+                                      @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
+                                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
 
@@ -72,6 +72,9 @@ public class PrivateNotificationManager {
             this.p2PService.addDecryptedDirectMessageListener(this::handleMessage);
             this.p2PService.addDecryptedMailboxListener(this::handleMessage);
         }
+        pubKeyAsHex = useDevPrivilegeKeys ?
+                DevEnv.DEV_PRIVILEGE_PUB_KEY :
+                "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
     }
 
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {

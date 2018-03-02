@@ -34,6 +34,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
 public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrationRegistrationWindow> {
+    private final boolean useDevPrivilegeKeys;
     private Button unlockButton;
     private InputTextField keyInputTextField;
     private PrivKeyHandler privKeyHandler;
@@ -53,7 +54,8 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public UnlockArbitrationRegistrationWindow() {
+    public UnlockArbitrationRegistrationWindow(boolean useDevPrivilegeKeys) {
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
 
@@ -111,7 +113,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
         GridPane.setRowIndex(label, ++rowIndex);
 
         keyInputTextField = new InputTextField();
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
         GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(keyInputTextField, rowIndex);

@@ -29,6 +29,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -44,6 +45,7 @@ import io.bisq.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.withdrawal.WithdrawalView;
 import io.bisq.gui.main.offer.OfferView;
+import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.FeeOptionWindow;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
@@ -84,6 +86,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
+    private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter btcFormatter;
@@ -124,6 +127,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
+    private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,11 +135,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Transitions transitions,
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
+        this.preferences = preferences;
         this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
         this.btcFormatter = btcFormatter;
@@ -261,7 +266,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
-            if (model.dataModel.preferences.showAgain(key)) {
+            if (preferences.showAgain(key)) {
                 //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
@@ -655,8 +660,18 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         };
 
-
         marketPriceAvailableListener = (observable, oldValue, newValue) -> updateMarketPriceAvailable();
+
+        getShowWalletFundedNotificationListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                Notification walletFundedNotification = new Notification()
+                        .headLine(Res.get("notification.walletUpdate.headline"))
+                        .notification(Res.get("notification.walletUpdate.msg", btcFormatter.formatCoinWithCode(model.dataModel.getTotalToPayAsCoin().get())))
+                        .autoClose();
+
+                walletFundedNotification.show();
+            }
+        };
     }
 
     private void updateMarketPriceAvailable() {
@@ -684,6 +699,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().addListener(buyerSecurityDepositFocusedListener);
 
+        // notifications
+        model.dataModel.getShowWalletFundedNotification().addListener(getShowWalletFundedNotificationListener);
+
         // warnings
         model.errorMessage.addListener(errorMessageListener);
         // model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
@@ -706,6 +724,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceTextField.focusedProperty().removeListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().removeListener(buyerSecurityDepositFocusedListener);
+
+        // notifications
+        model.dataModel.getShowWalletFundedNotification().removeListener(getShowWalletFundedNotificationListener);
 
         // warnings
         model.errorMessage.removeListener(errorMessageListener);
@@ -1091,8 +1112,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        fixedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
-        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+        fixedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
 
         fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
                 "toggle-button-active" : "toggle-button-inactive");

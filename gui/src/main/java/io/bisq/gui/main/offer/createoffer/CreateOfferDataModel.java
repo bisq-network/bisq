@@ -19,7 +19,6 @@ package io.bisq.gui.main.offer.createoffer;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
@@ -43,14 +42,12 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OfferUtil;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
-import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.gui.main.overlays.notifications.Notification;
+import io.bisq.gui.main.offer.OfferDataModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
@@ -63,7 +60,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -73,11 +69,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferDataModel extends ActivatableDataModel {
+class CreateOfferDataModel extends OfferDataModel {
     private final OpenOfferManager openOfferManager;
-    private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    final Preferences preferences;
+    private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -89,18 +84,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final String offerId;
-    private final AddressEntry addressEntry;
     private final BalanceListener btcBalanceListener;
     private final BsqBalanceListener bsqBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
     private OfferPayload.Direction direction;
-
     private TradeCurrency tradeCurrency;
-
     private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-
-    private final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
     private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
@@ -112,17 +102,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     private final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
     private final Coin sellerSecurityDeposit;
-    private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    private final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
-    private final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
     private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
     boolean isTabSelected;
-    private Notification walletFundedNotification;
-    private boolean useSavingsWallet;
-    Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
     private Coin txFeeFromFeeService;
     private boolean marketPriceAvailable;
@@ -140,8 +124,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
                          PriceFeedService priceFeedService, FilterManager filterManager,
                          AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
                          FeeService feeService, BSFormatter formatter) {
+        super(btcWalletService);
+
         this.openOfferManager = openOfferManager;
-        this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.user = user;
@@ -250,7 +235,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
         }
 
-        if (account != null && isNotUSBankAccount(account)) {
+        if (account != null) {
             this.paymentAccount = account;
         } else {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
@@ -674,45 +659,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return OfferUtil.isBuyOffer(getDirection());
     }
 
-    private void updateBalance() {
-        Coin tradeWalletBalance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
-        if (useSavingsWallet) {
-            Coin savingWalletBalance = btcWalletService.getSavingWalletBalance();
-            totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
-            if (totalToPayAsCoin.get() != null) {
-                if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
-                    balance.set(totalToPayAsCoin.get());
-                else
-                    balance.set(totalAvailableBalance);
-            }
-        } else {
-            balance.set(tradeWalletBalance);
-        }
-
-        if (totalToPayAsCoin.get() != null) {
-            missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
-            if (missingCoin.get().isNegative())
-                missingCoin.set(Coin.ZERO);
-        }
-
-        log.debug("missingCoin " + missingCoin.get().toFriendlyString());
-
-        isBtcWalletFunded.set(isBalanceSufficient(balance.get()));
-        //noinspection PointlessBooleanExpression,ConstantConditions
-        if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
-            walletFundedNotification = new Notification()
-                    .headLine(Res.get("notification.walletUpdate.headline"))
-                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
-                    .autoClose();
-
-            walletFundedNotification.show();
-        }
-    }
-
-    private boolean isBalanceSufficient(Coin balance) {
-        return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
-    }
-
     public Coin getTxFee() {
         if (isCurrencyForMakerFeeBtc())
             return txFeeFromFeeService;
@@ -725,20 +671,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null) {
-            paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                    .filter(this::isNotUSBankAccount)
-                    .collect(Collectors.toSet()));
-        }
-    }
-
-    private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
-        //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
-                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
-            return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
-        else
-            return true;
+        if (user.getPaymentAccounts() != null)
+            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
     }
 
     void setAmount(Coin amount) {
@@ -787,10 +721,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return tradeCurrencyCode;
     }
 
-    ReadOnlyBooleanProperty getIsBtcWalletFunded() {
-        return isBtcWalletFunded;
-    }
-
     ReadOnlyBooleanProperty getUseMarketBasedPrice() {
         return useMarketBasedPrice;
     }
@@ -805,14 +735,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     ReadOnlyObjectProperty<Coin> totalToPayAsCoinProperty() {
         return totalToPayAsCoin;
-    }
-
-    ReadOnlyObjectProperty<Coin> getMissingCoin() {
-        return missingCoin;
-    }
-
-    ReadOnlyObjectProperty<Coin> getBalance() {
-        return balance;
     }
 
     public Coin getBsqBalance() {

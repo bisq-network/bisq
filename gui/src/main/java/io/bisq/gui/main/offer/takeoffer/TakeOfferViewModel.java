@@ -227,14 +227,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     boolean fundFromSavingsWallet() {
         dataModel.fundFromSavingsWallet();
-        if (dataModel.isWalletFunded.get()) {
+        if (dataModel.getIsBtcWalletFunded().get()) {
             updateButtonDisableState();
             return true;
         } else {
             //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
-                    btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
-                    btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -399,7 +399,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
-        isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.isWalletFunded.get());
+        isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.getIsBtcWalletFunded().get());
     }
 
 
@@ -415,7 +415,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
         }
-        totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
+        totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()), dataModel.getTotalToPayAsCoin()));
     }
 
 
@@ -470,7 +470,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
             spinnerInfoText.set("");
-        } else if (dataModel.isWalletFunded.get()) {
+        } else if (dataModel.getIsBtcWalletFunded().get()) {
             spinnerInfoText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
@@ -492,7 +492,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.getAmount().addListener(amountAsCoinListener);
 
-        dataModel.isWalletFunded.addListener(isWalletFundedListener);
+        dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
        /* isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
             updateButtonDisableState();
@@ -506,7 +506,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.getAmount().removeListener(amountAsCoinListener);
 
-        dataModel.isWalletFunded.removeListener(isWalletFundedListener);
+        dataModel.getIsBtcWalletFunded().removeListener(isWalletFundedListener);
         if (offer != null) {
             offer.stateProperty().removeListener(offerStateListener);
             offer.errorMessageProperty().removeListener(offerErrorListener);

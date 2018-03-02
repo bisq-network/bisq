@@ -81,10 +81,7 @@ public class FilterManager {
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new ArrayList<>();
 
-    @SuppressWarnings("ConstantConditions")
-    private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
-            DevEnv.DEV_PRIVILEGE_PUB_KEY :
-            "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
+    private final String pubKeyAsHex;
     private ECKey filterSigningKey;
 
 
@@ -99,7 +96,8 @@ public class FilterManager {
                          Preferences preferences,
                          BisqEnvironment bisqEnvironment,
                          ProvidersRepository providersRepository,
-                         @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+                         @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg,
+                         @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
@@ -107,6 +105,9 @@ public class FilterManager {
         this.bisqEnvironment = bisqEnvironment;
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
+        pubKeyAsHex = useDevPrivilegeKeys ?
+                DevEnv.DEV_PRIVILEGE_PUB_KEY :
+                "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     }
 
     public void onAllServicesInitialized() {

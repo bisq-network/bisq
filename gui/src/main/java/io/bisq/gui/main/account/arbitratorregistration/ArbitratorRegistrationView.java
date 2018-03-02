@@ -18,10 +18,12 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 
+import com.google.inject.name.Named;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -50,6 +52,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
 
+    private final boolean useDevPrivilegeKeys;
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
 
@@ -65,8 +68,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model) {
+    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -94,7 +98,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             updateLanguageList();
 
             if (model.registrationPubKeyAsHex.get() == null && unlockArbitrationRegistrationWindow == null) {
-                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
+                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow(useDevPrivilegeKeys);
                 unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
                         .onKey(model::setPrivKeyAndCheckPubKey)
                         .width(700)
