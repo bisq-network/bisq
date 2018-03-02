@@ -93,52 +93,9 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- waiting for merge of
-        <dependency>
-            <groupId>com.github.bisq-network.bisq-exchange</groupId>
-            <artifactId>gui</artifactId>
-            <version>v0.6.1</version>
-        </dependency>
-        -->
-
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>common</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>consensus</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>core</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.bisq</groupId>
             <artifactId>gui</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>monitor</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>network</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>seednode</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>statistics</artifactId>
             <version>${bisq.version}</version>
         </dependency>
         <dependency>

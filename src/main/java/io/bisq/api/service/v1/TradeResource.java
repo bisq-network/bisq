@@ -39,6 +39,7 @@ public class TradeResource {
             // will use default result
         } else {
             try {
+//                TODO build response using dedicated rest model
                 List<String> stringList = tradeList.trades.stream().map(trade -> trade.toProtoMessage()).map(message -> {
                     try {
                         return JsonFormat.printer().print(message);
