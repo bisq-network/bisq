@@ -667,4 +667,11 @@ public class BisqProxy {
     private boolean arbitratorIsTrader(Arbitrator arbitrator) {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
     }
+
+    public AddressEntry getOrCreateBtcWalletAddresses(AddressEntry.Context context, boolean unused) {
+        if (unused) {
+            return btcWalletService.getOrCreateUnusedAddressEntry(context);
+        }
+        return btcWalletService.getOrCreateAddressEntry(context);
+    }
 }

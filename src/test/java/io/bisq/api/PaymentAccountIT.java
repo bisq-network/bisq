@@ -1,8 +1,6 @@
 package io.bisq.api;
 
-import com.github.javafaker.Faker;
 import io.bisq.api.model.SepaAccountToCreate;
-import io.bisq.core.payment.payload.PaymentMethod;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
@@ -12,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -22,7 +19,7 @@ import static org.hamcrest.Matchers.*;
 public class PaymentAccountIT {
 
     @DockerContainer
-    private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false);
+    private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);
 
     @InSequence
     @Test
@@ -39,7 +36,7 @@ public class PaymentAccountIT {
     public void create_validData_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
+        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
 
         given().
                 port(alicePort).
@@ -175,7 +172,7 @@ public class PaymentAccountIT {
     private void create_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
+        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         SepaAccountToCreate.class.getField(fieldName).set(accountToCreate, fieldValue);
 
         given().
@@ -196,18 +193,5 @@ public class PaymentAccountIT {
         return alice.getBindPort(8080);
     }
 
-    private SepaAccountToCreate randomValidCreateSepaAccountPayload() {
-        final Faker faker = new Faker();
-        final SepaAccountToCreate accountToCreate = new SepaAccountToCreate();
-        accountToCreate.paymentMethod = PaymentMethod.SEPA_ID;
-        accountToCreate.accountName = faker.commerce().productName();
-        accountToCreate.bic = faker.finance().bic();
-        accountToCreate.iban = faker.finance().iban();
-        accountToCreate.holderName = faker.name().fullName();
-        accountToCreate.countryCode = faker.address().countryCode();
-        accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
-        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
-        return accountToCreate;
-    }
 
 }

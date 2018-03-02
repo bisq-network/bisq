@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-//        TODO use more standard error handling
+//        TODO use more standard error handling than ResourceHelper.handleBisqProxyError
 @Api("offers")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
@@ -80,17 +80,18 @@ public class OfferResource {
         completableFuture.thenApply(response -> asyncResponse.resume(new OfferDetail(response)))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
-                    Response.ResponseBuilder responseBuilder;
+                    final Response.ResponseBuilder responseBuilder;
                     if (cause instanceof ValidationException) {
-                        responseBuilder = Response.status(422).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                        final int status = 422;
+                        responseBuilder = toResponse(cause, status);
                     } else if (cause instanceof IncompatiblePaymentAccountException) {
-                        responseBuilder = Response.status(423).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                        responseBuilder = toResponse(cause, 423);
                     } else if (cause instanceof NoAcceptedArbitratorException) {
-                        responseBuilder = Response.status(424).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
-                    } else if (cause instanceof NoPaymentAccountException) {
-                        responseBuilder = Response.status(425).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                        responseBuilder = toResponse(cause, 424);
+                    } else if (cause instanceof PaymentAccountNotFoundException) {
+                        responseBuilder = toResponse(cause, 425);
                     } else if (cause instanceof InsufficientMoneyException) {
-                        responseBuilder = Response.status(427).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+                        responseBuilder = toResponse(cause, 427);
                     } else {
                         final String message = cause.getMessage();
                         responseBuilder = Response.status(500);
@@ -100,6 +101,10 @@ public class OfferResource {
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });
+    }
+
+    private static Response.ResponseBuilder toResponse(Throwable cause, int status) {
+        return Response.status(status).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
     }
 
     @ApiOperation("Take offer")

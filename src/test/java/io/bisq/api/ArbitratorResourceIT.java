@@ -1,6 +1,5 @@
 package io.bisq.api;
 
-import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
@@ -17,10 +16,10 @@ import static org.hamcrest.Matchers.equalTo;
 public class ArbitratorResourceIT {
 
     @DockerContainer
-    Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, true);
+    Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, true, false);
 
     @DockerContainer
-    Container arbitrator = ContainerFactory.createApiContainer("arbitrator", "8082->8080", 3335, true);
+    Container arbitrator = ContainerFactory.createApiContainer("arbitrator", "8082->8080", 3335, true, false);
 
     @DockerContainer(order = 4)
     Container seedNode = ContainerFactory.createSeedNodeContainer();
@@ -53,20 +52,7 @@ public class ArbitratorResourceIT {
                 and().body("arbitrators.size()", equalTo(0)).
                 and().body("total", equalTo(0));
 
-        given().
-                port(arbitratorPort).
-//
-        when().
-                body("{\"languageCodes\":[\"en\",\"de\"]}").
-                contentType(ContentType.JSON).
-                post("/api/v1/arbitrators").
-//
-        then().
-                statusCode(204);
-
-        /* Wait for arbiter registration message to be broadcast across peers*/
-        final int P2P_MSG_RELAY_DELAY = 1000;
-        Thread.sleep(P2P_MSG_RELAY_DELAY);
+        ApiTestHelper.registerArbitrator(arbitratorPort);
 
         given().
                 port(alicePort).

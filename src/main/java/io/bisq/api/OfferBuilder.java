@@ -55,7 +55,7 @@ public class OfferBuilder {
     }
 
     public Offer build(String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) throws NoAcceptedArbitratorException, NoPaymentAccountException, IncompatiblePaymentAccountException {
+                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
         final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
             throw new NoAcceptedArbitratorException("No arbitrator has been chosen");
@@ -82,7 +82,7 @@ public class OfferBuilder {
         Optional<PaymentAccount> optionalAccount = getPaymentAccounts().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
         if (!optionalAccount.isPresent()) {
-            throw new NoPaymentAccountException("Could not find payment account with id: " + accountId);
+            throw new PaymentAccountNotFoundException("Could not find payment account with id: " + accountId);
         }
         PaymentAccount paymentAccount = optionalAccount.get();
 
