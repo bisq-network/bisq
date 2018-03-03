@@ -108,6 +108,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ONION", "DeepOnion"));
+        result.add(new CryptoCurrency("DIN", "Dinero"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
         result.add(new CryptoCurrency("ELLA", "Ellaism"));
