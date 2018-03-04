@@ -37,7 +37,7 @@ public class StrayaParams extends NetworkParameters {
     public StrayaParams() {
         super();
         addressHeader = 63;
-        p2shHeader = 63;
+        p2shHeader = 50;
         acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
     }
 
