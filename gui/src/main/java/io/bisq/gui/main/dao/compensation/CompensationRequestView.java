@@ -33,6 +33,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableView;
@@ -41,9 +42,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
+import java.util.stream.Collectors;
 
 @FxmlView
-public class CompensationRequestView extends ActivatableView<GridPane, Void> implements BsqBlockChainListener {
+public abstract class CompensationRequestView extends ActivatableView<GridPane, Void> implements BsqBlockChainListener {
 
     protected final CompensationRequestManager compensationRequestManger;
     protected final BsqBlockChain bsqBlockChain;
@@ -116,12 +118,22 @@ public class CompensationRequestView extends ActivatableView<GridPane, Void> imp
         UserThread.execute(this::updateList);
     }
 
+    abstract protected void updateList();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void updateList() {
+    protected void doUpdateList(FilteredList<CompensationRequest> list) {
+        observableList.forEach(CompensationRequestListItem::cleanup);
+
+        observableList.setAll(list.stream()
+                .map(e -> new CompensationRequestListItem(e, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter))
+                .collect(Collectors.toSet()));
+
+        if (list.isEmpty() && compensationRequestDisplay != null)
+            compensationRequestDisplay.removeAllFields();
     }
 
     protected void onSelectCompensationRequest(CompensationRequestListItem item) {

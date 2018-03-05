@@ -40,17 +40,17 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
 import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
@@ -177,15 +177,7 @@ public class ActiveCompensationRequestView extends CompensationRequestView imple
 
     @Override
     protected void updateList() {
-        observableList.forEach(CompensationRequestListItem::cleanup);
-
-        final FilteredList<CompensationRequest> activeRequests = compensationRequestManger.getActiveRequests();
-        observableList.setAll(activeRequests.stream()
-                .map(e -> new CompensationRequestListItem(e, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter))
-                .collect(Collectors.toSet()));
-
-        if (activeRequests.isEmpty() && compensationRequestDisplay != null)
-            compensationRequestDisplay.removeAllFields();
+        doUpdateList(compensationRequestManger.getActiveRequests());
     }
 
     private void onChainHeightChanged(int height) {

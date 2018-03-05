@@ -23,23 +23,19 @@ import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
-import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
-import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
-import io.bisq.gui.main.dao.compensation.CompensationRequestListItem;
 import io.bisq.gui.main.dao.compensation.CompensationRequestView;
 import io.bisq.gui.util.BsqFormatter;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @FxmlView
 public class PastCompensationRequestView extends CompensationRequestView implements BsqBlockChainListener {
@@ -100,15 +96,7 @@ public class PastCompensationRequestView extends CompensationRequestView impleme
 
     @Override
     protected void updateList() {
-        observableList.forEach(CompensationRequestListItem::cleanup);
-
-        final FilteredList<CompensationRequest> pastRequests = compensationRequestManger.getPastRequests();
-        observableList.setAll(pastRequests.stream()
-                .map(e -> new CompensationRequestListItem(e, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter))
-                .collect(Collectors.toSet()));
-
-        if (pastRequests.isEmpty() && compensationRequestDisplay != null)
-            compensationRequestDisplay.removeAllFields();
+        doUpdateList(compensationRequestManger.getPastRequests());
     }
 }
 
