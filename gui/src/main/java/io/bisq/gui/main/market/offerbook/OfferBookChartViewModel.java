@@ -23,7 +23,6 @@ import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -72,8 +71,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final ChangeListener<Number> currenciesUpdatedListener;
     private final BSFormatter formatter;
     private int selectedTabIndex;
-    public final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
-    public final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -242,7 +241,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatPrice(Price price, boolean decimalAligned) {
-        return formatter.formatPrice(price, decimalAligned, maxPlacesForPrice.get());
+        return formatter.formatPrice(price, decimalAligned, maxPlacesForBuyPrice.get());
     }
 
     public String getVolume(Offer offer) {
@@ -250,7 +249,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatVolume(Offer offer, boolean decimalAligned) {
-        return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get(), false);
+        return formatter.formatVolume(offer, decimalAligned, maxPlacesForBuyVolume.get(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +291,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         if (highestPriceOffer.isPresent()) {
             final Offer offer = highestPriceOffer.get();
-            maxPlacesForPrice.set(formatPrice(offer.getPrice(), false).length());
+            maxPlacesForBuyPrice.set(formatPrice(offer.getPrice(), false).length());
         }
 
         final Optional<Offer> highestVolumeOffer = allBuyOffers.stream()
@@ -300,7 +299,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         if (highestVolumeOffer.isPresent()) {
             final Offer offer = highestVolumeOffer.get();
-            maxPlacesForVolume.set(formatVolume(offer, false).length());
+            maxPlacesForBuyVolume.set(formatVolume(offer, false).length());
         }
 
         buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);
