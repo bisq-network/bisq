@@ -14,6 +14,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
@@ -33,6 +34,10 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 public class BisqApiApplication extends Application<ApiConfiguration> {
+
+    @Inject
+    AccountAgeWitnessService accountAgeWitnessService;
+
     @Inject
     ArbitratorManager arbitratorManager;
 
@@ -113,7 +118,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
-        BisqProxy bisqProxy = new BisqProxy(arbitratorManager, walletService, tradeManager, openOfferManager,
+        BisqProxy bisqProxy = new BisqProxy(accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();

@@ -9,7 +9,10 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.FiatCurrency;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
@@ -71,6 +74,7 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public class BisqProxy {
+    private AccountAgeWitnessService accountAgeWitnessService;
     private ArbitratorManager arbitratorManager;
     private BtcWalletService btcWalletService;
     private User user;
@@ -96,10 +100,11 @@ public class BisqProxy {
     @Getter
     private CurrencyList currencyList;
 
-    public BisqProxy(ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+    public BisqProxy(AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user,
                      FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
                      ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys) {
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
@@ -142,7 +147,30 @@ public class BisqProxy {
 
 
     public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
-        user.addPaymentAccount(PaymentAccountHelper.toBusinessModel(account));
+        final PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+        user.addPaymentAccount(paymentAccount);
+        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+        if (singleTradeCurrency != null) {
+            if (singleTradeCurrency instanceof FiatCurrency)
+                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
+            else
+                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
+        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
+            if (tradeCurrencies.contains(CurrencyUtil.getDefaultTradeCurrency()))
+                paymentAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
+            else
+                paymentAccount.setSelectedTradeCurrency(tradeCurrencies.get(0));
+
+            tradeCurrencies.forEach(tradeCurrency -> {
+                if (tradeCurrency instanceof FiatCurrency)
+                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
+                else
+                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
+            });
+        }
+
+        accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
         return PaymentAccountHelper.toRestModel(user.currentPaymentAccountProperty().get());
     }
 

@@ -12,7 +12,7 @@ services:
       - USE_LOCALHOST_FOR_P2P=true
       - USE_DEV_PRIVILEGE_KEYS=true
       - SEED_NODES=seed:8000
-      - BTC_NODES=bitcoin:18332
+      - BTC_NODES=bitcoin:18444
       - BASE_CURRENCY_NETWORK=BTC_REGTEST
   seed:
     image: bisq-seednode
@@ -21,12 +21,13 @@ services:
     environment:
       - MY_ADDRESS=seed:8000
       - SEED_NODES=seed:8000
-      - BTC_NODES=bitcoin:18332
+      - BTC_NODES=bitcoin:18444
       - USE_LOCALHOST_FOR_P2P=true
       - BASE_CURRENCY_NETWORK=BTC_REGTEST
   bitcoin:
     image: kylemanna/bitcoind:latest
     command: -logips -rpcallowip=::/0 -regtest -printtoconsole
     environment:
+      - DISABLEWALLET=0
       - RPCUSER=user
       - RPCPASSWORD=password
