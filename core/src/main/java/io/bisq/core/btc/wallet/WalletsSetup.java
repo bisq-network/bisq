@@ -196,9 +196,15 @@ public class WalletsSetup {
         };
 
         if (params == RegTestParams.get()) {
-            configPeerNodesForRegTest(socks5Proxy);
+            if (regTestHost == RegTestHost.LOCALHOST) {
+                configPeerNodesForLocalHost();
+            } else if (regTestHost == RegTestHost.REG_TEST_SERVER) {
+                configPeerNodesForRegTestServer();
+            } else {
+                configPeerNodes(socks5Proxy);
+            }
         } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
-            configPeerNodesForLocalHostBitcoinNode();
+            configPeerNodesForLocalHost();
         } else {
             configPeerNodes(socks5Proxy);
         }
@@ -268,24 +274,18 @@ public class WalletsSetup {
         return mode;
     }
 
-    private void configPeerNodesForRegTest(@Nullable Socks5Proxy proxy) {
+    private void configPeerNodesForRegTestServer() {
         walletConfig.setMinBroadcastConnections(1);
-        if (regTestHost == RegTestHost.REG_TEST_SERVER) {
-            try {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
-            } catch (UnknownHostException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        } else if (regTestHost == RegTestHost.LOCALHOST) {
-            walletConfig.setPeerNodesForLocalHost();
-        } else {
-            configPeerNodes(proxy);
+        try {
+            walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
+        } catch (UnknownHostException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
-    private void configPeerNodesForLocalHostBitcoinNode() {
+    private void configPeerNodesForLocalHost() {
         walletConfig.setMinBroadcastConnections(1);
         walletConfig.setPeerNodesForLocalHost();
     }
