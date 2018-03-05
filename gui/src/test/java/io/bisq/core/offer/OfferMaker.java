@@ -14,13 +14,14 @@ public class OfferMaker {
     public static final Property<Offer, Long> amount = new Property<>();
     public static final Property<Offer, String> baseCurrencyCode = new Property<>();
     public static final Property<Offer, String> counterCurrencyCode = new Property<>();
+    public static final Property<Offer, OfferPayload.Direction> direction = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
       new OfferPayload("",
               0L,
               null,
               null,
-              OfferPayload.Direction.BUY,
+              lookup.valueOf(direction, OfferPayload.Direction.BUY),
               lookup.valueOf(price, 100000L),
               0,
               false,
@@ -56,4 +57,5 @@ public class OfferMaker {
               0));
 
     public static final Maker<Offer> btcUsdOffer = a(Offer);
+    public static final Maker<Offer> btcUsdSellOffer = a(Offer, with(direction, OfferPayload.Direction.SELL));
 }

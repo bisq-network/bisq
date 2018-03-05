@@ -73,6 +73,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private int selectedTabIndex;
     public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForSellPrice = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForSellVolume = new SimpleIntegerProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -237,11 +239,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public String getPrice(Offer offer) {
-        return formatPrice(offer.getPrice(), true);
+        return formatPrice(offer, true);
     }
 
-    private String formatPrice(Price price, boolean decimalAligned) {
-        return formatter.formatPrice(price, decimalAligned, maxPlacesForBuyPrice.get());
+    private String formatPrice(Offer offer, boolean decimalAligned) {
+        return formatter.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
     }
 
     public String getVolume(Offer offer) {
@@ -249,7 +251,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatVolume(Offer offer, boolean decimalAligned) {
-        return formatter.formatVolume(offer, decimalAligned, maxPlacesForBuyVolume.get(), false);
+        return formatter.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -286,19 +288,19 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
 
-        final Optional<Offer> highestPriceOffer = allBuyOffers.stream()
+        final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
                 .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
 
-        if (highestPriceOffer.isPresent()) {
-            final Offer offer = highestPriceOffer.get();
-            maxPlacesForBuyPrice.set(formatPrice(offer.getPrice(), false).length());
+        if (highestBuyPriceOffer.isPresent()) {
+            final Offer offer = highestBuyPriceOffer.get();
+            maxPlacesForBuyPrice.set(formatPrice(offer, false).length());
         }
 
-        final Optional<Offer> highestVolumeOffer = allBuyOffers.stream()
+        final Optional<Offer> highestBuyVolumeOffer = allBuyOffers.stream()
                 .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
 
-        if (highestVolumeOffer.isPresent()) {
-            final Offer offer = highestVolumeOffer.get();
+        if (highestBuyVolumeOffer.isPresent()) {
+            final Offer offer = highestBuyVolumeOffer.get();
             maxPlacesForBuyVolume.set(formatVolume(offer, false).length());
         }
 
@@ -323,6 +325,23 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
+
+        final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
+                .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
+
+        if (highestSellPriceOffer.isPresent()) {
+            final Offer offer = highestSellPriceOffer.get();
+            maxPlacesForSellPrice.set(formatPrice(offer, false).length());
+        }
+
+        final Optional<Offer> highestSellVolumeOffer = allSellOffers.stream()
+                .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
+
+        if (highestSellVolumeOffer.isPresent()) {
+            final Offer offer = highestSellVolumeOffer.get();
+            maxPlacesForSellVolume.set(formatVolume(offer, false).length());
+        }
+
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
