@@ -49,8 +49,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
+import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -804,7 +803,7 @@ public class BisqProxy {
             user.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
             return user.getAcceptedArbitrators();
         }
-        throw new BadRequestException("You cannot select yourself as an arbitrator");
+        throw new ValidationException("You cannot select yourself as an arbitrator");
     }
 
     public Collection<Arbitrator> deselectArbitrator(String arbitratorAddress) {
