@@ -475,7 +475,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 setMaxWidth(240);
             }
         };
-        dateColumn.getStyleClass().add("number-column");
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -611,7 +610,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // paymentMethod
         TableColumn<TradeStatistics2, TradeStatistics2> paymentMethodColumn = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod"));
-        paymentMethodColumn.getStyleClass().add("number-column");
         paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         paymentMethodColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -636,7 +634,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // direction
         TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new AutoTooltipTableColumn<>(Res.get("shared.offerType"));
-        directionColumn.getStyleClass().add("number-column");
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
