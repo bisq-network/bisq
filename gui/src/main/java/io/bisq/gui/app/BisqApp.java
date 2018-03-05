@@ -209,7 +209,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-            persistedDataHosts.stream().forEach(e -> {
+            persistedDataHosts.forEach(e -> {
                 try {
                     log.debug("call readPersisted at " + e.getClass().getSimpleName());
                     e.readPersisted();
@@ -217,6 +217,9 @@ public class BisqApp extends Application {
                     log.error("readPersisted error", e1);
                 }
             });
+
+            boolean useDevMode = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_MODE)));
+            DevEnv.setDevMode(useDevMode);
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
@@ -276,7 +279,7 @@ public class BisqApp extends Application {
                             injector.getInstance(ManualPayoutTxWindow.class).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (DevEnv.DEV_MODE) {
+                    } else if (DevEnv.isDevMode()) {
                         // dev ode only
                         if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
                             // BSQ empty wallet not public yet

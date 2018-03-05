@@ -292,7 +292,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 if (model.hasAcceptedArbitrators()) {
                     Offer offer = model.createAndGetOffer();
                     //noinspection PointlessBooleanExpression
-                    if (!DevEnv.DEV_MODE) {
+                    if (!DevEnv.isDevMode()) {
                         offerDetailsWindow.onPlaceOffer(() ->
                                 model.onPlaceOffer(offer, offerDetailsWindow::hide))
                                 .show(offer);
@@ -364,7 +364,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoinProperty().get());
 
         //noinspection PointlessBooleanExpression
-        if (!DevEnv.DEV_MODE) {
+        if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
             new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -633,7 +633,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
-            if (DevEnv.DEV_MODE) {
+            if (DevEnv.isDevMode()) {
                 close();
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups

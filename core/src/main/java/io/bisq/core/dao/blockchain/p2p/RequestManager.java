@@ -293,7 +293,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                     // FIXME when a lot of blocks are created we get caught here. Seems to be a threading issue...
                     log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
                             "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
-                    if (DevEnv.DEV_MODE)
+                    if (DevEnv.isDevMode())
                         throw new RuntimeException("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
                                 startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
                 }

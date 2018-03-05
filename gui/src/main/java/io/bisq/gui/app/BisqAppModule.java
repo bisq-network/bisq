@@ -90,6 +90,9 @@ public class BisqAppModule extends AppModule {
         Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
 
+        Boolean useDevMode = environment.getProperty(AppOptionKeys.USE_DEV_MODE, Boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_MODE)).toInstance(useDevMode);
+
         // ordering is used for shut down sequence
         install(tradeModule());
         install(encryptionServiceModule());

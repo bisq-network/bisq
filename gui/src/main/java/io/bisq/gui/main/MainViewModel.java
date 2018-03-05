@@ -277,7 +277,7 @@ public class MainViewModel implements ViewModel {
         }
 
         //noinspection ConstantConditions,ConstantConditions,PointlessBooleanExpression
-        if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
+        if (!preferences.isTacAccepted() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
                 tacWindow.onAction(() -> {
                     preferences.setTacAccepted(true);
@@ -655,7 +655,7 @@ public class MainViewModel implements ViewModel {
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
-        if (DevEnv.DEV_MODE) {
+        if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
             setupDevDummyPaymentAccounts();
         }

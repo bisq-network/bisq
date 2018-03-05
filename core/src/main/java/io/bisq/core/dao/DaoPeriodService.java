@@ -226,7 +226,7 @@ public class DaoPeriodService {
             return Phase.BREAK3;
         else {
             log.error("blocksInNewPhase is not covered by phase checks. blocksInNewPhase={}", blocksInNewPhase);
-            if (DevEnv.DEV_MODE)
+            if (DevEnv.isDevMode())
                 throw new RuntimeException("blocksInNewPhase is not covered by phase checks. blocksInNewPhase=" + blocksInNewPhase);
             else
                 return Phase.UNDEFINED;

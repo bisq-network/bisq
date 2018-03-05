@@ -166,7 +166,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, Res.get("funds.deposit.amount"));
         amountLabel = amountTuple.first;
         amountTextField = amountTuple.second;
-        if (DevEnv.DEV_MODE)
+        if (DevEnv.isDevMode())
             amountTextField.setText("10");
 
         titledGroupBg.setVisible(false);

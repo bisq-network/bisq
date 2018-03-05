@@ -33,7 +33,7 @@ import java.text.DecimalFormat;
 @Slf4j
 public class BsqFormatter extends BSFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
-    private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
+    private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
     private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.###");
     private final DecimalFormat marketCapFormat = new DecimalFormat("###,###,###");

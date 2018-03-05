@@ -198,7 +198,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-        if (DevEnv.DEV_MODE) {
+        if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":

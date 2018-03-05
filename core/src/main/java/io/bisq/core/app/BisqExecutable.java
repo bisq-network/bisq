@@ -129,6 +129,10 @@ public abstract class BisqExecutable {
                         "(This is for developers only!)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(AppOptionKeys.USE_DEV_MODE,
+                description("Enables dev mode which is used for convenience for developer testing", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
         parser.accepts(AppOptionKeys.DUMP_STATISTICS,
                 description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()

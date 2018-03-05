@@ -276,7 +276,7 @@ public class BsqParser {
                         "txsWithInputsFromSameBlock=" + txsWithInputsFromSameBlock.toString() + "\n" +
                         "txsWithoutInputsFromSameBlock=" + txsWithoutInputsFromSameBlock;
                 log.warn(msg);
-                if (DevEnv.DEV_MODE)
+                if (DevEnv.isDevMode())
                     throw new RuntimeException(msg);
             }
         } else {

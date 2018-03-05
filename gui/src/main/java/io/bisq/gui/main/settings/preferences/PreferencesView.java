@@ -168,7 +168,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
+                return DevEnv.isDevMode() ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
                         baseCurrencyNetwork.getCurrencyName();
             }
 
@@ -455,7 +455,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
         // show ony mainnet in production version
-        if (!DevEnv.DEV_MODE)
+        if (!DevEnv.isDevMode())
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
                     .filter(e -> e.isMainnet())
                     .collect(Collectors.toList());

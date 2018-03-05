@@ -110,7 +110,7 @@ public class GUIUtil {
         //noinspection UnusedAssignment
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable::run)
                     .useIUnderstandButton()

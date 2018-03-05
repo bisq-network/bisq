@@ -225,14 +225,14 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
             } else {
                 final String msg = "removeCompensationRequest called for a CompensationRequest which is not ours.";
                 log.warn(msg);
-                if (DevEnv.DEV_MODE)
+                if (DevEnv.isDevMode())
                     throw new RuntimeException(msg);
                 return false;
             }
         } else {
             final String msg = "removeCompensationRequest called with a CompensationRequest which is outside of the CompensationRequest phase.";
             log.warn(msg);
-            if (DevEnv.DEV_MODE)
+            if (DevEnv.isDevMode())
                 throw new RuntimeException(msg);
             return false;
         }
@@ -296,7 +296,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
                 } else {
                     final String msg = "onRemoved called of a CompensationRequest which is outside of the CompensationRequest phase is invalid and we ignore it.";
                     log.warn(msg);
-                    if (DevEnv.DEV_MODE)
+                    if (DevEnv.isDevMode())
                         throw new RuntimeException(msg);
                 }
             });

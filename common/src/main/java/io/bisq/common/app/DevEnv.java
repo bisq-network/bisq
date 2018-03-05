@@ -12,11 +12,18 @@ public class DevEnv {
     public static final String DEV_PRIVILEGE_PUB_KEY = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     public static final String DEV_PRIVILEGE_PRIV_KEY = "6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a";
 
-
     // If set to true we ignore several UI behavior like confirmation popups as well dummy accounts are created and
     // offers are filled with default values. Intended to make dev testing faster.
     @SuppressWarnings("PointlessBooleanExpression")
-    public static final boolean DEV_MODE = STRESS_TEST_MODE || false;
+    private static boolean devMode = false;
+
+    public static boolean isDevMode() {
+        return devMode;
+    }
+
+    public static void setDevMode(boolean devMode) {
+        DevEnv.devMode = devMode;
+    }
 
     public static final boolean DAO_PHASE2_ACTIVATED = false;
     public static final boolean DAO_TRADING_ACTIVATED = false;

@@ -89,7 +89,7 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         comboBox.setPromptText(Res.get("shared.select"));
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
         // show ony mainnet in production version
-        if (!DevEnv.DEV_MODE)
+        if (!DevEnv.isDevMode())
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
                     .filter(e -> e.isMainnet())
                     .collect(Collectors.toList());
@@ -98,7 +98,7 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         comboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return DevEnv.DEV_MODE ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
+                return DevEnv.isDevMode() ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
                         baseCurrencyNetwork.getCurrencyName();
             }
 

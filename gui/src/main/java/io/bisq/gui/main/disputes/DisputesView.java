@@ -127,7 +127,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         //noinspection UnusedAssignment
         String key = "supportInfo";
-        if (!DevEnv.DEV_MODE)
+        if (!DevEnv.isDevMode())
             //noinspection unchecked
             new Popup<>().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)

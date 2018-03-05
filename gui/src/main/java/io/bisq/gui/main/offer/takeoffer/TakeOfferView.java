@@ -299,7 +299,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void onClose() {
         Coin balance = model.dataModel.getBalance().get();
         //noinspection ConstantConditions,ConstantConditions
-        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.DEV_MODE) {
+        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
             //noinspection unchecked
             new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
@@ -328,7 +328,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.isReadyForTxBroadcast()) {
             if (model.dataModel.isTakerFeeValid()) {
                 if (model.hasAcceptedArbitrators()) {
-                    if (!DevEnv.DEV_MODE) {
+                    if (!DevEnv.isDevMode()) {
                         offerDetailsWindow.onTakeOffer(() ->
                                 model.onTakeOffer(() -> {
                                     offerDetailsWindow.hide();
@@ -380,7 +380,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
-        if (!DevEnv.DEV_MODE) {
+        if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
             new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -559,7 +559,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             //noinspection ConstantConditions
-            if (newValue && DevEnv.DEV_MODE) {
+            if (newValue && DevEnv.isDevMode()) {
                 close();
             } else //noinspection ConstantConditions,ConstantConditions
                 if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
