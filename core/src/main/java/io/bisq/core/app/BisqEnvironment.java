@@ -180,7 +180,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, regTestBsqGenesisTxId;
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight;
 
 
     public BisqEnvironment(OptionSet options) {
@@ -265,8 +265,11 @@ public class BisqEnvironment extends StandardEnvironment {
         fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
                 "";
-        regTestBsqGenesisTxId = commandLineProperties.containsProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) :
+        genesisTxId = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_TX_ID) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_TX_ID) :
+                "";
+        genesisBlockHeight = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) :
                 "";
 
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
@@ -423,7 +426,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
-                setProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID, regTestBsqGenesisTxId);
+                setProperty(DaoOptionKeys.GENESIS_TX_ID, genesisTxId);
+                setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

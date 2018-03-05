@@ -32,6 +32,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.inject.Named;
+
 /**
  * Provide information about the phase and cycle of the request/voting cycle.
  * A cycle is the sequence of distinct phases. The first cycle and phase starts with the genesis block height.
@@ -84,6 +86,7 @@ public class DaoPeriodService {
     private BsqBlockChain bsqBlockChain;
     private final VotingDefaultValues votingDefaultValues;
     private final VotingService votingService;
+    private final int genesisBlockHeight;
     @Getter
     private ObjectProperty<Phase> phaseProperty = new SimpleObjectProperty<>(Phase.UNDEFINED);
     private int chainHeight;
@@ -97,13 +100,13 @@ public class DaoPeriodService {
     public DaoPeriodService(BtcWalletService btcWalletService,
                             BsqBlockChain bsqBlockChain,
                             VotingDefaultValues votingDefaultValues,
-                            VotingService votingService) {
+                            VotingService votingService,
+                            @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
         this.btcWalletService = btcWalletService;
         this.bsqBlockChain = bsqBlockChain;
         this.votingDefaultValues = votingDefaultValues;
         this.votingService = votingService;
-
-
+        this.genesisBlockHeight = genesisBlockHeight;
     }
 
 
@@ -122,7 +125,7 @@ public class DaoPeriodService {
         Tx tx = bsqBlockChain.getTxMap().get(compensationRequestPayload.getTxId());
         return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
                 chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 phase.getDurationInBlocks(),
                 getNumBlocksOfCycle());
     }
@@ -131,7 +134,7 @@ public class DaoPeriodService {
         Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
         return tx != null && isInCurrentCycle(tx.getBlockHeight(),
                 chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 getNumBlocksOfCycle());
     }
 
@@ -139,33 +142,33 @@ public class DaoPeriodService {
         Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
         return tx != null && isInPastCycle(tx.getBlockHeight(),
                 chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 getNumBlocksOfCycle());
     }
 
     public int getNumOfStartedCycles(int chainHeight) {
         return getNumOfStartedCycles(chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 getNumBlocksOfCycle());
     }
 
     // Not used yet be leave it
     public int getNumOfCompletedCycles(int chainHeight) {
         return getNumOfCompletedCycles(chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 getNumBlocksOfCycle());
     }
 
     public int getAbsoluteStartBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteStartBlockOfPhase(chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 phase,
                 getNumBlocksOfCycle());
     }
 
     public int getAbsoluteEndBlockOfPhase(int chainHeight, Phase phase) {
         return getAbsoluteEndBlockOfPhase(chainHeight,
-                BsqBlockChain.getGenesisHeight(),
+                genesisBlockHeight,
                 phase,
                 getNumBlocksOfCycle());
     }
@@ -185,7 +188,7 @@ public class DaoPeriodService {
 
     private void onChainHeightChanged(int chainHeight) {
         this.chainHeight = chainHeight;
-        final int relativeBlocksInCycle = getRelativeBlocksInCycle(BsqBlockChain.getGenesisHeight(), this.chainHeight, getNumBlocksOfCycle());
+        final int relativeBlocksInCycle = getRelativeBlocksInCycle(genesisBlockHeight, this.chainHeight, getNumBlocksOfCycle());
         phaseProperty.set(calculatePhase(relativeBlocksInCycle));
     }
 

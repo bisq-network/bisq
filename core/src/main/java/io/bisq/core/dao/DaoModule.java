@@ -18,6 +18,7 @@
 package io.bisq.core.dao;
 
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqFullNode;
@@ -75,8 +76,12 @@ public class DaoModule extends AppModule {
                 .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
                 .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
-        bindConstant().annotatedWith(named(DaoOptionKeys.REG_TEST_GENESIS_TX_ID))
-                .to(environment.getRequiredProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID));
+
+        String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, BsqBlockChain.BTC_GENESIS_TX_ID);
+        bind(String.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TX_ID)).toInstance(genesisTxId);
+
+        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, BsqBlockChain.BTC_GENESIS_BLOCK_HEIGHT);
+        bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
     }
 }
 

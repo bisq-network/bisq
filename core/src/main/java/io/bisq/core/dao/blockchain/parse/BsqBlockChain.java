@@ -24,7 +24,6 @@ import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -75,33 +74,8 @@ public class BsqBlockChain implements PersistableEnvelope {
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
     // BTC MAIN NET
-    private static final String BTC_GENESIS_TX_ID = "e5c8313c4144d219b5f6b2dacf1d36f2d43a9039bb2fcd1bd57f8352a9c9809a";
-    private static final int BTC_GENESIS_BLOCK_HEIGHT = 477865; // 2017-07-28
-
-    // TEST NET
-    // Phase 0 initial genesis tx 6.10.2017: 2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a
-    // private static final String BTC_TEST_NET_GENESIS_TX_ID = "2f194230e23459a9211322c4b1c182cf3f367086e8059aca2f8f44e20dac527a";
-    // private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1209140;
-
-    // Rebased genesis tx 9th november 2017
-    private static final String BTC_TEST_NET_GENESIS_TX_ID = "f8b65c65624bd822f92480c39959f8ae4a6f94a9841c1625464ec6353cfba1d9";
-    private static final int BTC_TEST_NET_GENESIS_BLOCK_HEIGHT = 1227630;
-
-    // REG TEST
-    private static final String BTC_REG_TEST_GENESIS_TX_ID = "5116d4f9107ce2b6bacacf750037f1b51fa302a9c96fe20c0d68b35728182a38";
-    private static final int BTC_REG_TEST_GENESIS_BLOCK_HEIGHT = 200;
-
-    public static int getGenesisHeight() {
-        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
-            case BTC_TESTNET:
-                return BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
-            case BTC_REGTEST:
-                return BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
-            case BTC_MAINNET:
-            default:
-                return BTC_GENESIS_BLOCK_HEIGHT;
-        }
-    }
+    public static final String BTC_GENESIS_TX_ID = "e5c8313c4144d219b5f6b2dacf1d36f2d43a9039bb2fcd1bd57f8352a9c9809a";
+    public static final int BTC_GENESIS_BLOCK_HEIGHT = 477865; // 2017-07-28
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,30 +113,18 @@ public class BsqBlockChain implements PersistableEnvelope {
     @Inject
     public BsqBlockChain(PersistenceProtoResolver persistenceProtoResolver,
                          @Named(Storage.STORAGE_DIR) File storageDir,
-                         @Named(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) String manualGenesisTxId) {
+                         @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
+                         @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
+        this.genesisTxId = genesisTxId;
+        this.genesisBlockHeight = genesisBlockHeight;
+
+        storage = new Storage<>(storageDir, persistenceProtoResolver);
+
         bsqBlocks = new LinkedList<>();
         txMap = new HashMap<>();
         unspentTxOutputsMap = new HashMap<>();
         compensationRequestFees = new HashSet<>();
         votingFees = new HashSet<>();
-
-        storage = new Storage<>(storageDir, persistenceProtoResolver);
-
-        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
-            case BTC_TESTNET:
-                genesisTxId = BTC_TEST_NET_GENESIS_TX_ID;
-                genesisBlockHeight = BTC_TEST_NET_GENESIS_BLOCK_HEIGHT;
-                break;
-            case BTC_REGTEST:
-                genesisTxId = manualGenesisTxId.isEmpty() ? BTC_REG_TEST_GENESIS_TX_ID : manualGenesisTxId;
-                genesisBlockHeight = BTC_REG_TEST_GENESIS_BLOCK_HEIGHT;
-                break;
-            case BTC_MAINNET:
-            default:
-                genesisTxId = BTC_GENESIS_TX_ID;
-                genesisBlockHeight = BTC_GENESIS_BLOCK_HEIGHT;
-                break;
-        }
 
         lock = new FunctionalReadWriteLock(true);
     }

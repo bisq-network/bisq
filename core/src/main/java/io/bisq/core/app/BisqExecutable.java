@@ -197,10 +197,12 @@ public abstract class BisqExecutable {
                         "set as well.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(DaoOptionKeys.REG_TEST_GENESIS_TX_ID,
-                description("Reg test BSQ genesis transaction id when not using the hard coded one", ""))
+        parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
+                description("Genesis transaction ID when not using the hard coded one", ""))
                 .withRequiredArg();
-
+        parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
+                description("Genesis transaction block height when not using the hard coded one", ""))
+                .withRequiredArg();
     }
 
     public static BisqEnvironment getBisqEnvironment(OptionSet options) {
