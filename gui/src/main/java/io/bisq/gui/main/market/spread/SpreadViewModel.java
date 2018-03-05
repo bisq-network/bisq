@@ -30,6 +30,9 @@ import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -52,6 +55,7 @@ class SpreadViewModel extends ActivatableViewModel {
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
+    final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +94,9 @@ class SpreadViewModel extends ActivatableViewModel {
             offersByCurrencyMap.get(currencyCode).add(offer);
         }
         spreadItems.clear();
+
+        Coin totalAmount = null;
+
         for (String currencyCode : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
@@ -183,9 +190,19 @@ class SpreadViewModel extends ActivatableViewModel {
                 }
             }
 
-            Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
+            totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
             spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
                     offers.size(), spread, percentage, totalAmount));
         }
+
+        maxPlacesForAmount.set(formatAmount(totalAmount, false).length());
+    }
+
+    public String getAmount(Coin amount) {
+        return formatAmount(amount, true);
+    }
+
+    private String formatAmount(Coin amount, boolean decimalAligned) {
+        return formatter.formatCoin(amount, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get());
     }
 }

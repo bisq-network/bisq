@@ -66,7 +66,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getAmount(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatAmountWithMinAmount(item.getOffer()) : "";
+        return (item != null) ? formatter.formatAmount(item.getOffer()) : "";
     }
 
     String getPrice(OpenOfferListItem item) {
@@ -86,7 +86,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatMinVolumeAndVolume(item.getOffer()) + " " + item.getOffer().getCurrencyCode() : "";
+        return (item != null) ? formatter.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {

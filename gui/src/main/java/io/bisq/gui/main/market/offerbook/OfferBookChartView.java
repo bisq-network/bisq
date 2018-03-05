@@ -29,6 +29,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipTableColumn;
+import io.bisq.gui.components.ColoredDecimalPlacesWithZerosText;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.BuyOfferView;
 import io.bisq.gui.main.offer.SellOfferView;
@@ -320,6 +321,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(121);
         tableView.setMinWidth(480);
+        tableView.getStyleClass().add("offer-table");
 
         // price
         TableColumn<OfferListItem, OfferListItem> priceColumn = new TableColumn<>();
@@ -327,6 +329,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         priceColumn.setMinWidth(115);
         priceColumn.setMaxWidth(115);
         priceColumn.setSortable(false);
+        priceColumn.getStyleClass().add("number-column");
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
@@ -338,7 +341,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatPrice(offer.getPrice()));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getPrice(offer),
+                                                model.getZeroDecimalsForPrice(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -348,18 +353,22 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
                                 if (offerListItem != null && !empty) {
-                                    if (offerListItem.offer.getPrice() == null) {
-                                        this.offer = offerListItem.offer;
+
+                                    final Offer offer = offerListItem.offer;
+                                    if (offer.getPrice() == null) {
+                                        this.offer = offer;
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatPrice(offerListItem.offer.getPrice()));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getPrice(offer),
+                                                model.getZeroDecimalsForPrice(offer)));
                                     }
                                 } else {
                                     if (listener != null)
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -371,6 +380,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         volumeColumn.setMinWidth(115);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
+        volumeColumn.getStyleClass().add("number-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
@@ -382,7 +392,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatVolume(offer.getVolume()));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offer),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -398,13 +410,16 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatVolume(offer.getVolume()));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offer),
+                                                model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                     }
                                 } else {
                                     if (listener != null)
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -415,6 +430,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         TableColumn<OfferListItem, OfferListItem> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
+        amountColumn.getStyleClass().add("number-column");
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
@@ -424,38 +440,17 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             @Override
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
-                                if (offerListItem != null && !empty)
-                                    setText(formatter.formatCoin(offerListItem.offer.getAmount()));
-                                else
-                                    setText("");
+                                if (offerListItem != null && !empty) {
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(offerListItem.offer.getAmount(),
+                                            4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
                 });
 
-        // Lets remove that as it is not really relevant and seems to be confusing to some users
-        // accumulated
-       /* TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new AutoTooltipTableColumn<>(Res.get("shared.sumWithCur", Res.getBaseCurrencyCode()));
-        accumulatedColumn.setMinWidth(100);
-        accumulatedColumn.setSortable(false);
-        accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        accumulatedColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
-                    @Override
-                    public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
-                            @Override
-                            public void updateItem(final OfferListItem offerListItem, boolean empty) {
-                                super.updateItem(offerListItem, empty);
-                                if (offerListItem != null && !empty)
-                                    setText(formatter.formatRoundedDoubleWithPrecision(offerListItem.accumulated, 4));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-*/
         tableView.getColumns().add(volumeColumn);
         tableView.getColumns().add(amountColumn);
         tableView.getColumns().add(priceColumn);

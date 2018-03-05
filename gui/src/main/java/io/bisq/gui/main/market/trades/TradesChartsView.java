@@ -30,6 +30,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipTableColumn;
 import io.bisq.gui.components.AutoTooltipToggleButton;
+import io.bisq.gui.components.ColoredDecimalPlacesWithZerosText;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bisq.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bisq.gui.util.BSFormatter;
@@ -312,6 +313,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
+        priceChart.setId("price-chart");
         priceChart.setMinHeight(198);
         priceChart.setPrefHeight(198);
         priceChart.setMaxHeight(300);
@@ -356,6 +358,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         //noinspection unchecked
+        volumeChart.setId("volume-chart");
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
         volumeChart.setMinHeight(148);
         volumeChart.setPrefHeight(148);
@@ -468,8 +471,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         // date
         TableColumn<TradeStatistics2, TradeStatistics2> dateColumn = new AutoTooltipTableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.dateTime")) {
             {
-                setMinWidth(190);
-                setMaxWidth(190);
+                setMinWidth(240);
+                setMaxWidth(240);
             }
         };
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -525,6 +528,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // price
         priceColumn = new TableColumn<>();
+        priceColumn.getStyleClass().add("number-column");
         priceColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         priceColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -549,6 +553,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // amount
         TableColumn<TradeStatistics2, TradeStatistics2> amountColumn = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
+        amountColumn.getStyleClass().add("number-column");
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
@@ -561,7 +566,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatCoinWithCode(item.getTradeAmount()));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.getTradeAmount(),
+                                            4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
                                     setText("");
                             }
@@ -573,6 +579,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // volume
         volumeColumn = new TableColumn<>();
+        volumeColumn.getStyleClass().add("number-column");
         volumeColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,

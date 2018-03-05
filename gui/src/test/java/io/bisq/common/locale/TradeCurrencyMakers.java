@@ -5,6 +5,7 @@ import com.natpryce.makeiteasy.Property;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class TradeCurrencyMakers {
 
@@ -19,5 +20,6 @@ public class TradeCurrencyMakers {
 
     public static final CryptoCurrency bitcoin = make(a(CryptoCurrency));
     public static final FiatCurrency euro = make(a(FiatCurrency));
+    public static final FiatCurrency usd = make(a(FiatCurrency).but(with(currencyCode,"USD")));
 }
 
