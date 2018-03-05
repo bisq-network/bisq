@@ -34,10 +34,13 @@ import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
+import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyList;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -45,12 +48,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
@@ -70,8 +69,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
+    private final BSFormatter formatter;
     private int selectedTabIndex;
-
+    public final IntegerProperty maxPlacesForBuyPrice = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForSellPrice = new SimpleIntegerProperty();
+    public final IntegerProperty maxPlacesForSellVolume = new SimpleIntegerProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -79,11 +82,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation) {
+    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
+                                   Navigation navigation, BSFormatter formatter) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
+        this.formatter = formatter;
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getOfferBookChartScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
@@ -225,6 +230,29 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
+    public int getMaxNumberOfPriceZeroDecimalsToColorize(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+    }
+
+    public int getZeroDecimalsForPrice(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_PRICE_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+    }
+
+    public String getPrice(Offer offer) {
+        return formatPrice(offer, true);
+    }
+
+    private String formatPrice(Offer offer, boolean decimalAligned) {
+        return formatter.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
+    }
+
+    public String getVolume(Offer offer) {
+        return formatVolume(offer, true);
+    }
+
+    private String formatVolume(Offer offer, boolean decimalAligned) {
+        return formatter.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -259,6 +287,24 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
+
+        final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
+                .filter(o -> o.getPrice() != null)
+                .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
+
+        if (highestBuyPriceOffer.isPresent()) {
+            final Offer offer = highestBuyPriceOffer.get();
+            maxPlacesForBuyPrice.set(formatPrice(offer, false).length());
+        }
+
+        final Optional<Offer> highestBuyVolumeOffer = allBuyOffers.stream()
+                .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
+
+        if (highestBuyVolumeOffer.isPresent()) {
+            final Offer offer = highestBuyVolumeOffer.get();
+            maxPlacesForBuyVolume.set(formatVolume(offer, false).length());
+        }
+
         buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
@@ -280,6 +326,24 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
+
+        final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
+                .filter(o -> o.getPrice() != null)
+                .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
+
+        if (highestSellPriceOffer.isPresent()) {
+            final Offer offer = highestSellPriceOffer.get();
+            maxPlacesForSellPrice.set(formatPrice(offer, false).length());
+        }
+
+        final Optional<Offer> highestSellVolumeOffer = allSellOffers.stream()
+                .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
+
+        if (highestSellVolumeOffer.isPresent()) {
+            final Offer offer = highestSellVolumeOffer.get();
+            maxPlacesForSellVolume.set(formatVolume(offer, false).length());
+        }
+
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 

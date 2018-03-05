@@ -36,6 +36,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,16 +81,35 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatCoin(Coin coin) {
+        return formatCoin(coin, -1);
+    }
+
+    @NotNull
+    public String formatCoin(Coin coin, int decimalPlaces) {
+        return formatCoin(coin, decimalPlaces, false, 0);
+    }
+
+
+    public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
+        String formattedCoin = "";
+
         if (coin != null) {
             try {
-                return coinFormat.noCode().format(coin).toString();
+                if (decimalPlaces < 0 || decimalPlaces > 4) {
+                    formattedCoin = coinFormat.noCode().format(coin).toString();
+                } else {
+                    formattedCoin = coinFormat.noCode().minDecimals(decimalPlaces).repeatOptionalDecimals(1, decimalPlaces).format(coin).toString();
+                }
             } catch (Throwable t) {
                 log.warn("Exception at formatBtc: " + t.toString());
-                return "";
             }
-        } else {
-            return "";
         }
+
+        if (decimalAligned) {
+            formattedCoin = fillUpPlacesWithEmptyStrings(formattedCoin, maxNumberOfDigits);
+        }
+
+        return formattedCoin;
     }
 
     public String formatCoinWithCode(Coin coin) {
@@ -251,6 +271,28 @@ public class BSFormatter {
     // Volume
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits) {
+        return formatVolume(offer, decimalAligned, maxNumberOfDigits, true);
+    }
+
+    public String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
+        String formattedVolume =  offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+
+        if(decimalAligned) {
+            formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
+        }
+        return formattedVolume;
+    }
+
+    @NotNull
+    public String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
+        int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
+        for (int i = 0; i < numberOfPlacesToFill; i++) {
+            formattedNumber = " " + formattedNumber;
+        }
+        return formattedNumber;
+    }
+
     public String formatVolume(Volume volume) {
         return formatVolume(volume, fiatVolumeFormat, false);
     }
@@ -302,21 +344,29 @@ public class BSFormatter {
                 currencyCode, postFix);
     }
 
-    public String formatMinVolumeAndVolume(Offer offer) {
-        return offer.isRange() ? formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Amount
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatAmount(Offer offer) {
-        return formatCoin(offer.getAmount());
+        return formatAmount(offer, false);
     }
 
-    public String formatAmountWithMinAmount(Offer offer) {
-        return offer.isRange() ? formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
+    public String formatAmount(Offer offer, boolean decimalAligned) {
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount()) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
+        if(decimalAligned) {
+            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
+        }
+        return formattedAmount;
+    }
+
+    public String formatAmount(Offer offer, int decimalPlaces, boolean decimalAligned, int maxPlaces) {
+        String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount(), decimalPlaces) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount(), decimalPlaces) : formatCoin(offer.getAmount(), decimalPlaces);
+
+        if(decimalAligned) {
+            formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
+        }
+        return formattedAmount;
     }
 
 
@@ -341,16 +391,14 @@ public class BSFormatter {
         return formatPrice(price, fiatPriceFormat, false);
     }
 
-    public String formatPriceWithCode(Price price) {
-        Monetary monetary = price.getMonetary();
-        if (monetary instanceof Fiat)
-            return formatFiat((Fiat) monetary, fiatPriceFormat, true);
-        else {
-            return formatAltcoinWithCode((Altcoin) monetary);
-        }
-        //return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
-    }
+    public String formatPrice(Price price, Boolean decimalAligned, int maxPlaces) {
+        String formattedPrice = formatPrice(price);
 
+        if(decimalAligned) {
+            formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, maxPlaces);
+        }
+        return formattedPrice;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Market price
@@ -414,7 +462,7 @@ public class BSFormatter {
         if (dateFrom != null && dateTo != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
-            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + " - " + timeFormatter.format(dateTo);
+            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + GUIUtil.RANGE_SEPARATOR + timeFormatter.format(dateTo);
         } else {
             return "";
         }

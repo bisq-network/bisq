@@ -12,7 +12,6 @@ import mockit.Injectable;
 import mockit.Tested;
 import mockit.integration.junit4.JMockit;
 import org.bitcoinj.core.Coin;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -27,7 +26,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JMockit.class)
-@Ignore
 public class BsqParserTest {
     @Tested(availableDuringSetup = true)
     BsqBlockChain bsqBlockChain;
@@ -40,6 +38,8 @@ public class BsqParserTest {
     File storageDir;
     @Injectable
     String manualBsqGenesisId;
+    @Injectable
+    int genesisBlockHeight = 200;
 
     @Injectable
     RpcService rpcService;
@@ -92,7 +92,7 @@ public class BsqParserTest {
         int genesisHeight = 200;
         int startHeight = 199;
         int headHeight = 201;
-        Coin issuance = Coin.parseCoin("25");
+        Coin issuance = Coin.parseCoin("2.5");
 
         // Blockhashes
         String bh199 = "blockhash199";
@@ -121,8 +121,8 @@ public class BsqParserTest {
         // Make a bsq transaction
         String cbId201 = "cbid201";
         String bsqTx1Id = "bsqtx1";
-        long bsqTx1Value1 = Coin.parseCoin("24").getValue();
-        long bsqTx1Value2 = Coin.parseCoin("0.4").getValue();
+        long bsqTx1Value1 = Coin.parseCoin("2.4").getValue();
+        long bsqTx1Value2 = Coin.parseCoin("0.04").getValue();
         Tx cbTx201 = new Tx(new TxVo(cbId201, 201, bh201, time),
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId201, null, null, null, 201)));

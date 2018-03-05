@@ -1,5 +1,6 @@
 package io.bisq.gui.util;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import javafx.util.StringConverter;
@@ -23,6 +24,7 @@ public class GUIUtilTest {
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
+        GlobalSettings.setLocale(new Locale("en", "US"));
     }
 
     @Test

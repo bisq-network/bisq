@@ -240,10 +240,6 @@ public class BisqApp extends Application {
 
             scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
 
-            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
                     "/io/bisq/gui/bisq.css",
                     "/io/bisq/gui/images.css",
