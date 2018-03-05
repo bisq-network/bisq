@@ -26,12 +26,12 @@ import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.AutoTooltipTableColumn;
-import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.MainView;
@@ -76,6 +76,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final BsqBlockChain bsqBlockChain;
+    private final FeeService feeService;
     private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     private final Navigation navigation;
     private final BsqFormatter bsqFormatter;
@@ -104,6 +105,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                                           DaoPeriodService daoPeriodService,
                                           BsqWalletService bsqWalletService,
                                           BsqBlockChain bsqBlockChain,
+                                          FeeService feeService,
                                           BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                           Navigation navigation,
                                           BsqFormatter bsqFormatter) {
@@ -111,6 +113,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockChain = bsqBlockChain;
+        this.feeService = feeService;
         this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.navigation = navigation;
         this.bsqFormatter = bsqFormatter;
@@ -306,7 +309,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane.setTopAnchor(detailsGridPane, -20d);
                 bottomAnchorPane.getChildren().add(detailsGridPane);
 
-                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
+                compensationRequestDisplay = new CompensationRequestDisplay(detailsGridPane, bsqFormatter, bsqWalletService, feeService);
             }
             compensationRequestDisplay.removeAllFields();
             compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);

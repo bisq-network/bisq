@@ -64,15 +64,13 @@ public class CompensationViewItem {
     }
 
     public static void cleanupAllInstances() {
-        instances.stream().forEach(CompensationViewItem::cleanupInstance);
+        instances.forEach(CompensationViewItem::cleanupInstance);
     }
 
     public static boolean contains(CompensationRequestVoteItem selectedItem) {
         return instances.stream()
-                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
-                        selectedItem.compensationRequest.getPayload().getUid()))
-                .findAny()
-                .isPresent();
+                .anyMatch(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
+                        selectedItem.compensationRequest.getPayload().getUid()));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

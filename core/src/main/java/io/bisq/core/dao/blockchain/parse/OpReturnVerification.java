@@ -57,10 +57,11 @@ public class OpReturnVerification {
                                 bsqFee, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
                         // TODO: Handle missing bsqOutput, is it considered an invalid vote?
-                        if (bsqOutput == null) {
+                        if (bsqOutput != null) {
+                            return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
+                        } else {
                             log.warn("Voting tx is missing bsqOutput for vote base txid={}", tx.getId());
                         }
-                        return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
                     default:
                         log.warn("OP_RETURN version of the BSQ tx ={} does not match expected version bytes. opReturnData={}",
                                 tx.getId(), Utils.HEX.encode(opReturnData));

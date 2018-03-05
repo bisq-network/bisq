@@ -34,13 +34,15 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.BsqFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -159,7 +161,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
                     new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
                 } catch (CompensationAmountException e) {
-                    new Popup<>().warning(Res.get("dao.compensation.create.amountTooLow", bsqFormatter.formatCoinWithCode(e.neededAmount))).show();
+                    new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount", bsqFormatter.formatCoinWithCode(e.required))).show();
                 } catch (IOException | TransactionVerificationException | WalletException | ChangeBelowDustException e) {
                     log.error(e.toString());
                     e.printStackTrace();

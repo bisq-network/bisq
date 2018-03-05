@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.compensation;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.compensation.Restrictions;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
@@ -69,11 +70,15 @@ public class CompensationRequestDisplay {
         linkHyperlinkWithIcon.setManaged(false);
         linkInputTextField.setPromptText(Res.get("dao.compensation.display.link.prompt"));
         requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBsq")).second;
+
         if (feeService != null) {
             BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-            bsqValidator.setMinCompensationRequest(feeService.getCreateCompensationRequestFee());
+            //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
+            //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
+            bsqValidator.setMinValue(Restrictions.getMinCompensationRequestAmount());
             requestedBsqTextField.setValidator(bsqValidator);
         }
+
         // TODO validator, addressTF
         bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
                 Res.get("dao.compensation.display.bsqAddress")).second;

@@ -47,12 +47,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
@@ -63,8 +65,8 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class CompensationRequestManager implements PersistedDataHost, BsqBlockChainListener, HashMapChangedListener {
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
@@ -142,9 +144,12 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
 
     public CompensationRequest prepareCompensationRequest(CompensationRequestPayload compensationRequestPayload)
             throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException, CompensationAmountException {
-        if (compensationRequestPayload.getRequestedBsq().compareTo(feeService.getCreateCompensationRequestFee()) <= 0) {
-            throw new CompensationAmountException(feeService.getCreateCompensationRequestFee(), compensationRequestPayload.getRequestedBsq());
+
+        final Coin minRequestAmount = Restrictions.getMinCompensationRequestAmount();
+        if (compensationRequestPayload.getRequestedBsq().compareTo(minRequestAmount) < 0) {
+            throw new CompensationAmountException(minRequestAmount, compensationRequestPayload.getRequestedBsq());
         }
+
         CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
