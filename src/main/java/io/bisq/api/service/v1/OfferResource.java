@@ -2,10 +2,7 @@ package io.bisq.api.service.v1;
 
 import com.google.common.collect.ImmutableList;
 import io.bisq.api.*;
-import io.bisq.api.model.OfferDetail;
-import io.bisq.api.model.OfferToCreate;
-import io.bisq.api.model.PriceType;
-import io.bisq.api.model.TakeOffer;
+import io.bisq.api.model.*;
 import io.bisq.api.service.ResourceHelper;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.offer.Offer;
@@ -21,9 +18,10 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static java.util.stream.Collectors.toList;
 
 //        TODO use more standard error handling than ResourceHelper.handleBisqProxyError
 @Api("offers")
@@ -40,8 +38,12 @@ public class OfferResource {
 
     @ApiOperation("Find offers")
     @GET
-    public Collection<OfferDetail> find() {
-        return bisqProxy.getOfferList();
+    public OfferList find() {
+        final OfferList offerList = new OfferList();
+        offerList.offers = bisqProxy.getOfferList().stream().map(OfferDetail::new).collect(toList());
+        offerList.total = offerList.offers.size();
+        Json.prettyPrint(offerList);
+        return offerList;
     }
 
     @ApiOperation("Get offer details")

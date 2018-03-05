@@ -172,19 +172,20 @@ public class OfferResourceIT {
 //
         then().
                 statusCode(200).
-                and().body("size()", equalTo(1)).
-                and().body("[0].offer_id", isA(String.class)).
-                and().body("[0].created", isA(Long.class)).
-                and().body("[0].arbitrators.size()", equalTo(1)).
-                and().body("[0].offerer", isA(String.class)).
-                and().body("[0].state", isA(String.class)).
-                and().body("[0].btc_amount", equalTo("0.00000001")).
-                and().body("[0].min_btc_amount", equalTo("0.00000001")).
-                and().body("[0].other_amount", equalTo("0.001")).
-                and().body("[0].other_currency", isA(String.class)).
-                and().body("[0].price_detail.use_market_price", equalTo(false)).
-                and().body("[0].price_detail.market_price_margin", isA(Float.class)).
-                and().body("[0].direction", equalTo(OfferPayload.Direction.BUY.name()))
+                and().body("total", equalTo(1)).
+                and().body("offers.size()", equalTo(1)).
+                and().body("offers[0].offer_id", isA(String.class)).
+                and().body("offers[0].created", isA(Long.class)).
+                and().body("offers[0].arbitrators.size()", equalTo(1)).
+                and().body("offers[0].offerer", isA(String.class)).
+                and().body("offers[0].state", isA(String.class)).
+                and().body("offers[0].btc_amount", equalTo("0.00000001")).
+                and().body("offers[0].min_btc_amount", equalTo("0.00000001")).
+                and().body("offers[0].other_amount", equalTo("0.001")).
+                and().body("offers[0].other_currency", isA(String.class)).
+                and().body("offers[0].price_detail.use_market_price", equalTo(false)).
+                and().body("offers[0].price_detail.market_price_margin", isA(Float.class)).
+                and().body("offers[0].direction", equalTo(OfferPayload.Direction.BUY.name()))
         ;
     }
 
