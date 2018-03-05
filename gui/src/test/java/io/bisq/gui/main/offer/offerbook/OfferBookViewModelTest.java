@@ -1,15 +1,20 @@
 package io.bisq.gui.main.offer.offerbook;
 
+import com.natpryce.makeiteasy.Maker;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.FiatCurrency;
+import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.*;
 import io.bisq.core.payment.payload.*;
+import io.bisq.core.provider.price.MarketPrice;
+import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.util.BSFormatter;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.junit.Before;
@@ -21,6 +26,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,22 +37,24 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static io.bisq.common.locale.TradeCurrencyMakers.usd;
 import static io.bisq.core.user.PreferenceMakers.empty;
-import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItem;
-import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItemWithRange;
+import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({OfferBook.class, OpenOfferManager.class})
+@PrepareForTest({OfferBook.class, OpenOfferManager.class, PriceFeedService.class})
 public class OfferBookViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
 
     @Before
     public void setUp() {
         GlobalSettings.setDefaultTradeCurrency(usd);
+        Res.setBaseCurrencyCode(usd.getCode());
+        Res.setBaseCurrencyName(usd.getName());
     }
 
     @Ignore("PaymentAccountPayload needs to be set (has been changed with PB changes)")
@@ -285,6 +294,126 @@ public class OfferBookViewModelTest {
         offerBookListItems.addAll(make(btcItemWithRange.but(with(OfferBookListItemMaker.minAmount, 30000000000L),
                 with(OfferBookListItemMaker.amount,30000000000L))));
         assertEquals(25, model.maxPlacesForVolume.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForPriceWithNoOffers() {
+        OfferBook offerBook = mock(OfferBook.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        assertEquals(0, model.maxPlacesForPrice.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForPrice() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcItem));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(7, model.maxPlacesForPrice.intValue());
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.price, 149558240L)))); //14955.8240
+        assertEquals(10, model.maxPlacesForPrice.intValue());
+        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.price, 14955824L)))); //1495.58240
+        assertEquals(10, model.maxPlacesForPrice.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForPriceDistanceWithNoOffers() {
+        OfferBook offerBook = mock(OfferBook.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+        assertEquals(0, model.maxPlacesForMarketPriceMargin.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForPriceDistance() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        final Maker<io.bisq.gui.main.offer.offerbook.OfferBookListItem> item = btcItem.but(with(useMarketBasedPrice, true));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(null);
+        when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
+
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem item1 = make(item);
+        item1.getOffer().setPriceFeedService(priceFeedService);
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem item2 = make(item.but(with(marketPriceMargin, 0.0197)));
+        item2.getOffer().setPriceFeedService(priceFeedService);
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem item3 = make(item.but(with(marketPriceMargin, 0.1)));
+        item3.getOffer().setPriceFeedService(priceFeedService);
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem item4 = make(item.but(with(marketPriceMargin, -0.1)));
+        item4.getOffer().setPriceFeedService(priceFeedService);
+        offerBookListItems.addAll(item1, item2);
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, priceFeedService,
+                null, null, null, null, null,
+                new BSFormatter());
+        model.activate();
+
+        assertEquals(8, model.maxPlacesForMarketPriceMargin.intValue()); //" (1.97%)"
+        offerBookListItems.addAll(item3);
+        assertEquals(9, model.maxPlacesForMarketPriceMargin.intValue()); //" (10.00%)"
+        offerBookListItems.addAll(item4);
+        assertEquals(10, model.maxPlacesForMarketPriceMargin.intValue()); //" (-10.00%)"
+    }
+
+    @Test
+    public void testGetPrice() {
+        OfferBook offerBook = mock(OfferBook.class);
+        OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
+
+        final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
+                null, null, null, null, null,
+                new BSFormatter());
+
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem item = make(btcItem.but(
+                with(useMarketBasedPrice, true),
+                with(marketPriceMargin, -0.12)));
+
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem lowItem = make(btcItem.but(
+                with(useMarketBasedPrice, true),
+                with(marketPriceMargin, 0.01)));
+
+        final io.bisq.gui.main.offer.offerbook.OfferBookListItem fixedItem = make(btcItem);
+
+        item.getOffer().setPriceFeedService(priceFeedService);
+        lowItem.getOffer().setPriceFeedService(priceFeedService);
+        offerBookListItems.addAll(lowItem, fixedItem);
+        model.activate();
+
+        assertEquals("12557.2046 (1.00%)", model.getPrice(lowItem));
+        assertEquals("   10.0000        ", model.getPrice(fixedItem));
+        offerBookListItems.addAll(item);
+        assertEquals("14206.1304 (-12.00%)", model.getPrice(item));
+        assertEquals("12557.2046   (1.00%)", model.getPrice(lowItem));
+
+
     }
 
     private PaymentAccount getOKPayAccount(String currencyCode) {

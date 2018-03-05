@@ -16,6 +16,7 @@ public class OfferMaker {
     public static final Property<Offer, String> counterCurrencyCode = new Property<>();
     public static final Property<Offer, OfferPayload.Direction> direction = new Property<>();
     public static final Property<Offer, Boolean> useMarketBasedPrice = new Property<>();
+    public static final Property<Offer, Double> marketPriceMargin = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
       new OfferPayload("",
@@ -24,7 +25,7 @@ public class OfferMaker {
               null,
               lookup.valueOf(direction, OfferPayload.Direction.BUY),
               lookup.valueOf(price, 100000L),
-              0,
+              lookup.valueOf(marketPriceMargin, 0.0),
               lookup.valueOf(useMarketBasedPrice, false),
               lookup.valueOf(amount, 100000L),
               lookup.valueOf(minAmount, 100000L),

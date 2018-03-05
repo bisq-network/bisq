@@ -18,6 +18,7 @@ public class OfferBookListItemMaker {
     public static final Property<OfferBookListItem, Long> minAmount = new Property<>();
     public static final Property<OfferBookListItem, OfferPayload.Direction> direction = new Property<>();
     public static final Property<OfferBookListItem, Boolean> useMarketBasedPrice = new Property<>();
+    public static final Property<OfferBookListItem, Double> marketPriceMargin = new Property<>();
 
     public static final Instantiator<OfferBookListItem> OfferBookListItem = lookup ->
             new OfferBookListItem(make(btcUsdOffer.but(
@@ -25,7 +26,8 @@ public class OfferBookListItemMaker {
                     with(OfferMaker.amount, lookup.valueOf(amount, 100000L)),
                     with(OfferMaker.minAmount, lookup.valueOf(amount, 100000L)),
                     with(OfferMaker.direction, lookup.valueOf(direction, OfferPayload.Direction.BUY)),
-                    with(OfferMaker.useMarketBasedPrice, lookup.valueOf(useMarketBasedPrice, false)))));
+                    with(OfferMaker.useMarketBasedPrice, lookup.valueOf(useMarketBasedPrice, false)),
+                    with(OfferMaker.marketPriceMargin, lookup.valueOf(marketPriceMargin, 0.0)))));
 
     public static final Instantiator<OfferBookListItem> OfferBookListItemWithRange = lookup ->
             new OfferBookListItem(make(btcUsdOffer.but(

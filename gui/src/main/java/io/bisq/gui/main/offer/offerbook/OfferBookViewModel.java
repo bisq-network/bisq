@@ -59,6 +59,7 @@ import javafx.scene.control.TableColumn;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
+import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
 
 
@@ -162,6 +165,23 @@ class OfferBookViewModel extends ActivatableViewModel {
                     maxPlacesForVolume.set(formatVolume(item.getOffer(),false).length());
                 }
 
+            }
+
+            final Optional<OfferBookListItem> highestPriceOffer = filteredItems.stream()
+                    .filter(o -> o.getOffer().getPrice() != null)
+                    .max(Comparator.comparingLong(o -> o.getOffer().getPrice().getValue()));
+
+            if (highestPriceOffer.isPresent()) {
+                maxPlacesForPrice.set(formatPrice(highestPriceOffer.get().getOffer(), false).length());
+            }
+
+            final Optional<OfferBookListItem> highestMarketPriceMarginOffer = filteredItems.stream()
+                    .filter(o -> o.getOffer().isUseMarketBasedPrice())
+                    .max(Comparator.comparing(o -> new DecimalFormat("#0.00").format(o.getOffer().getMarketPriceMargin() * 100).length()));
+
+            if (highestMarketPriceMarginOffer.isPresent()) {
+                maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(highestMarketPriceMarginOffer.get().getOffer(), false).length());
+                System.out.println("maxPlacesForMarketPriceMargin set:" +highestMarketPriceMarginOffer.get().getOffer().getMarketPriceMargin()+ " - " + maxPlacesForMarketPriceMargin);
             }
         };
     }
@@ -317,20 +337,31 @@ class OfferBookViewModel extends ActivatableViewModel {
         if ((item == null))
             return "";
 
-        Offer offer = item.getOffer();
-        Price price = offer.getPrice();
+        final Offer offer = item.getOffer();
+        final Price price = offer.getPrice();
         if (price != null) {
-            String postFix = "";
-            if (offer.isUseMarketBasedPrice()) {
-                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            }
-            if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatPrice(price) + postFix;
-            else
-                return formatter.formatPrice(price) + postFix;
+            return formatPrice(offer, true) + formatMarketPriceMargin(offer, true);
         } else {
             return Res.get("shared.na");
         }
+    }
+
+    private String formatPrice(Offer offer, boolean decimalAligned) {
+        return formatter.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
+    }
+
+    private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
+        String postFix = "";
+        if (offer.isUseMarketBasedPrice()) {
+            postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+
+        }
+
+        if (decimalAligned) {
+            postFix = formatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
+        }
+
+        return postFix;
     }
 
     String getVolume(OfferBookListItem item) {

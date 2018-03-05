@@ -285,7 +285,7 @@ public class BSFormatter {
     }
 
     @NotNull
-    private String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
+    public String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
         int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {
             formattedNumber = " " + formattedNumber;
