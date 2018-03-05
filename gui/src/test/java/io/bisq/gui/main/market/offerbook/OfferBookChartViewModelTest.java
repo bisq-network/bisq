@@ -1,11 +1,13 @@
 package io.bisq.gui.main.market.offerbook;
 
 import io.bisq.common.GlobalSettings;
+import io.bisq.common.monetary.Price;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker;
 import io.bisq.gui.util.BSFormatter;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.junit.Before;
@@ -20,7 +22,9 @@ import static io.bisq.common.locale.TradeCurrencyMakers.usd;
 import static io.bisq.core.user.PreferenceMakers.empty;
 import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
+import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.useMarketBasedPrice;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +45,26 @@ public class OfferBookChartViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null,null, new BSFormatter());
+        assertEquals(0, model.maxPlacesForBuyPrice.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForBuyPriceWithOfflinePriceFeedService() {
+        OfferBook offerBook = mock(OfferBook.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+
+
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        final OfferBookListItem item = make(btcItem.but(with(useMarketBasedPrice, true)));
+        item.getOffer().setPriceFeedService(priceFeedService);
+        offerBookListItems.addAll(item);
+
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(null);
+        when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, priceFeedService,null, new BSFormatter());
+        model.activate();
         assertEquals(0, model.maxPlacesForBuyPrice.intValue());
     }
 
@@ -99,6 +123,26 @@ public class OfferBookChartViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null,null, new BSFormatter());
+        assertEquals(0, model.maxPlacesForSellPrice.intValue());
+    }
+
+    @Test
+    public void testMaxCharactersForSellPriceWithOfflinePriceFeedService() {
+        OfferBook offerBook = mock(OfferBook.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+
+
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        final OfferBookListItem item = make(btcSellItem.but(with(useMarketBasedPrice, true)));
+        item.getOffer().setPriceFeedService(priceFeedService);
+        offerBookListItems.addAll(item);
+
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(null);
+        when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, priceFeedService,null, new BSFormatter());
+        model.activate();
         assertEquals(0, model.maxPlacesForSellPrice.intValue());
     }
 

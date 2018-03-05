@@ -15,6 +15,7 @@ public class OfferMaker {
     public static final Property<Offer, String> baseCurrencyCode = new Property<>();
     public static final Property<Offer, String> counterCurrencyCode = new Property<>();
     public static final Property<Offer, OfferPayload.Direction> direction = new Property<>();
+    public static final Property<Offer, Boolean> useMarketBasedPrice = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
       new OfferPayload("",
@@ -24,7 +25,7 @@ public class OfferMaker {
               lookup.valueOf(direction, OfferPayload.Direction.BUY),
               lookup.valueOf(price, 100000L),
               0,
-              false,
+              lookup.valueOf(useMarketBasedPrice, false),
               lookup.valueOf(amount, 100000L),
               lookup.valueOf(minAmount, 100000L),
               lookup.valueOf(baseCurrencyCode, "BTC"),
@@ -57,5 +58,4 @@ public class OfferMaker {
               0));
 
     public static final Maker<Offer> btcUsdOffer = a(Offer);
-    public static final Maker<Offer> btcUsdSellOffer = a(Offer, with(direction, OfferPayload.Direction.SELL));
 }

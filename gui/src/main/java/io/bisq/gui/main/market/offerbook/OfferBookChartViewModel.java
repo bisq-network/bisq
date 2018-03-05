@@ -289,6 +289,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
 
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
+                .filter(o -> o.getPrice() != null)
                 .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
 
         if (highestBuyPriceOffer.isPresent()) {
@@ -327,6 +328,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
 
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
+                .filter(o -> o.getPrice() != null)
                 .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
 
         if (highestSellPriceOffer.isPresent()) {
