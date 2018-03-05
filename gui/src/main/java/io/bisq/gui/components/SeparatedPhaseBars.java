@@ -39,7 +39,7 @@ public class SeparatedPhaseBars extends HBox {
 
             Label startLabel = new Label();
             item.startValueProperty.addListener((observable, oldValue, newValue) -> {
-                startLabel.setText(String.valueOf((int) newValue * 100));
+                startLabel.setText(String.valueOf((int) newValue));
             });
             startLabel.setVisible(item.isShowBlocks());
             AnchorPane startLabelPane = new AnchorPane();
@@ -48,7 +48,7 @@ public class SeparatedPhaseBars extends HBox {
 
             Label endLabel = new Label();
             item.endValueProperty.addListener((observable, oldValue, newValue) -> {
-                endLabel.setText(String.valueOf((int) newValue * 100));
+                endLabel.setText(String.valueOf((int) newValue));
             });
             endLabel.setVisible(item.isShowBlocks());
             AnchorPane endLabelPane = new AnchorPane();
