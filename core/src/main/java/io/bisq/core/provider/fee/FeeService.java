@@ -203,13 +203,12 @@ public class FeeService {
 
 
     public Coin getCreateCompensationRequestFee() {
-        //TODO
-        return Coin.valueOf(1000);
+        return Coin.valueOf(100);
     }
 
     public Coin getVotingTxFee() {
         //TODO
-        return Coin.valueOf(999);
+        return Coin.valueOf(99);
     }
 
     public ReadOnlyIntegerProperty feeUpdateCounterProperty() {

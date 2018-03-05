@@ -94,7 +94,7 @@ public class BsqValidator extends AltcoinValidator {
 
     private ValidationResult validateIfNotFractionalBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(3);
+        final BigDecimal satoshis = bd.movePointRight(2);
         if (satoshis.scale() > 0)
             return new ValidationResult(false, Res.get("validation.btc.fraction"));
         else

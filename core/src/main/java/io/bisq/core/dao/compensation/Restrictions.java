@@ -22,10 +22,10 @@ import org.bitcoinj.core.Coin;
 public class Restrictions {
 
     public static Coin getMinCompensationRequestAmount() {
-        return Coin.valueOf(10_000); // 10 BSQ
+        return Coin.valueOf(5_000); // 50 BSQ
     }
 
     public static Coin getMaxCompensationRequestAmount() {
-        return Coin.valueOf(100_000_000); // 100 000 BSQ
+        return Coin.valueOf(5_000_000); // 50 000 BSQ
     }
 }

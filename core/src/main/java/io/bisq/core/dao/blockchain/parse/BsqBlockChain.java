@@ -64,7 +64,7 @@ public class BsqBlockChain implements PersistableEnvelope {
 
     private static final int SNAPSHOT_GRID = 100;  // set high to deactivate
     private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
-    public static final Coin GENESIS_TOTAL_SUPPLY = Coin.COIN.multiply(25);
+    public static final Coin GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5");
 
     //mainnet
     // this tx has a lot of outputs
