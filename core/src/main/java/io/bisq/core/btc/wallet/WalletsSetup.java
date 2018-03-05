@@ -196,15 +196,18 @@ public class WalletsSetup {
         };
 
         if (params == RegTestParams.get()) {
+            walletConfig.setMinBroadcastConnections(1);
             if (regTestHost == RegTestHost.LOCALHOST) {
-                configPeerNodesForLocalHost();
+                walletConfig.setPeerNodesForLocalHost();
             } else if (regTestHost == RegTestHost.REG_TEST_SERVER) {
+                walletConfig.setMinBroadcastConnections(1);
                 configPeerNodesForRegTestServer();
             } else {
                 configPeerNodes(socks5Proxy);
             }
         } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
-            configPeerNodesForLocalHost();
+            walletConfig.setMinBroadcastConnections(1);
+            walletConfig.setPeerNodesForLocalHost();
         } else {
             configPeerNodes(socks5Proxy);
         }
@@ -275,7 +278,6 @@ public class WalletsSetup {
     }
 
     private void configPeerNodesForRegTestServer() {
-        walletConfig.setMinBroadcastConnections(1);
         try {
             walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
         } catch (UnknownHostException e) {
@@ -283,11 +285,6 @@ public class WalletsSetup {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    private void configPeerNodesForLocalHost() {
-        walletConfig.setMinBroadcastConnections(1);
-        walletConfig.setPeerNodesForLocalHost();
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
