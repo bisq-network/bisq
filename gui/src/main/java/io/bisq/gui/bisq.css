@@ -533,8 +533,10 @@ textfield */
 }
 
 .number-column.table-cell {
+
     -fx-font-family: "Droid Sans Mono";
-    -fx-font-size: 1.040em;
+    -fx-font-size: 1em;
+    -fx-padding: 0 0 0 0;
 }
 
 /*******************************************************************************
