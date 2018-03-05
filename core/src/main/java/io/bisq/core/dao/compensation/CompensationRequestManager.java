@@ -141,15 +141,14 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     public CompensationRequest prepareCompensationRequest(CompensationRequestPayload compensationRequestPayload)
-            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException {
+            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException, CompensationAmountException {
+        if (compensationRequestPayload.getRequestedBsq().compareTo(feeService.getCreateCompensationRequestFee()) <= 0) {
+            throw new CompensationAmountException(feeService.getCreateCompensationRequestFee(), compensationRequestPayload.getRequestedBsq());
+        }
         CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
             compensationRequest.setFeeTx(bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee()));
-
-            String bsqAddress = compensationRequestPayload.getBsqAddress();
-            // Remove initial B
-            bsqAddress = bsqAddress.substring(1, bsqAddress.length());
             checkArgument(!compensationRequest.getFeeTx().getInputs().isEmpty(), "preparedTx inputs must not be empty");
 
             // We use the key of the first BSQ input for signing the data
@@ -181,11 +180,8 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
                             compensationRequest.getIssuanceAddress(bsqWalletService),
                             compensationRequest.getFeeTx(),
                             opReturnData));
-            if (contains(compensationRequestPayload))  {log.error("Req found");}
             compensationRequest.setSignedTx(bsqWalletService.signTx(compensationRequest.getTxWithBtcFee()));
-            if (contains(compensationRequestPayload))  {log.error("Req found");}
         }
-        if (contains(compensationRequestPayload))  {log.error("Req found");}
         return compensationRequest;
     }
 

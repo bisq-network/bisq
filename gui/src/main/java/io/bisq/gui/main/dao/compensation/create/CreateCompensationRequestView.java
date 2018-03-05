@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.*;
+import io.bisq.core.dao.compensation.CompensationAmountException;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -98,7 +99,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Override
     public void initialize() {
-        compensationRequestDisplay = new CompensationRequestDisplay(root, bsqFormatter, bsqWalletService);
+        compensationRequestDisplay = new CompensationRequestDisplay(root, bsqFormatter, bsqWalletService, feeService);
         compensationRequestDisplay.createAllFields(Res.get("dao.compensation.create.createNew"), 0);
         createButton = addButtonAfterGroup(root, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.create.create.button"));
     }
@@ -125,7 +126,6 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         new Date()
                 );
 
-                boolean walletExceptionMightBeCausedByBtCWallet = false;
                 try {
                     CompensationRequest compensationRequest = compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
                     Coin miningFee = compensationRequest.getSignedTx().getFee();
@@ -158,6 +158,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 } catch (InsufficientMoneyException e) {
                     BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
                     new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
+                } catch (CompensationAmountException e) {
+                    new Popup<>().warning(Res.get("dao.compensation.create.amountTooLow", bsqFormatter.formatCoinWithCode(e.neededAmount))).show();
                 } catch (IOException | TransactionVerificationException | WalletException | ChangeBelowDustException e) {
                     log.error(e.toString());
                     e.printStackTrace();

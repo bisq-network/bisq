@@ -36,6 +36,8 @@ public class BsqValidator extends AltcoinValidator {
     protected Coin maxValue;
     @Nullable
     private Coin availableBalance;
+    @Nullable
+    private Coin minCompensationRequest;
 
     @Override
     protected double getMinValue() {
@@ -47,6 +49,10 @@ public class BsqValidator extends AltcoinValidator {
         this.bsqFormatter = bsqFormatter;
         // TODO do we want a limit here?
         //setMaxValue(bsqFormatter.parseToCoin("2500000"));
+    }
+
+    public void setMinCompensationRequest(@NotNull Coin minCompensationRequest) {
+        this.minCompensationRequest = minCompensationRequest;
     }
 
     public void setMaxValue(@NotNull Coin maxValue) {
@@ -71,7 +77,8 @@ public class BsqValidator extends AltcoinValidator {
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input))
                     .and(validateIfSufficientAvailableBalance(input))
-                    .and(validateIfAboveDust(input));
+                    .and(validateIfAboveDust(input))
+                    .and(validateIfMoreThanMinCompensationRequest(input));
         }
 
         return result;
@@ -112,6 +119,19 @@ public class BsqValidator extends AltcoinValidator {
             if (availableBalance != null && coin.compareTo(availableBalance) > 0)
                 return new ValidationResult(false, Res.get("validation.bsq.insufficientBalance",
                         bsqFormatter.formatCoinWithCode(availableBalance)));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    protected ValidationResult validateIfMoreThanMinCompensationRequest(String input) {
+        try {
+            final Coin coin = bsqFormatter.parseToCoin(input);
+            if (minCompensationRequest != null && coin.compareTo(minCompensationRequest) <= 0)
+                return new ValidationResult(false, Res.get("dao.compensation.create.amountTooLow",
+                        bsqFormatter.formatCoinWithCode(minCompensationRequest)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
