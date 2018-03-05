@@ -49,7 +49,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.NotFoundException;
+import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -786,7 +786,41 @@ public class BisqProxy {
         arbitratorManager.addArbitrator(arbitrator, () -> System.out.println("Arbi registered"), message -> System.out.println("Error when registering arbi: " + message));
     }
 
-    public Collection<Arbitrator> getArbitrators() {
+    public Collection<Arbitrator> getArbitrators(boolean acceptedOnly) {
+        if (acceptedOnly) {
+            return user.getAcceptedArbitrators();
+        }
         return arbitratorManager.getArbitratorsObservableMap().values();
+    }
+
+    public Collection<Arbitrator> selectArbitrator(String arbitratorAddress) {
+        final Arbitrator arbitrator = getArbitratorByAddress(arbitratorAddress);
+        if (null == arbitrator) {
+            throw new NotFoundException("Arbitrator not found: " + arbitratorAddress);
+        }
+        if (!arbitratorIsTrader(arbitrator)) {
+            user.addAcceptedArbitrator(arbitrator);
+            user.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+            return user.getAcceptedArbitrators();
+        }
+        throw new ValidationException("You cannot select yourself as an arbitrator");
+    }
+
+    public Collection<Arbitrator> deselectArbitrator(String arbitratorAddress) {
+        final Arbitrator arbitrator = getArbitratorByAddress(arbitratorAddress);
+        if (null == arbitrator) {
+            throw new NotFoundException("Arbitrator not found: " + arbitratorAddress);
+        }
+        user.removeAcceptedArbitrator(arbitrator);
+        user.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        return user.getAcceptedArbitrators();
+    }
+
+    private Arbitrator getArbitratorByAddress(String arbitratorAddress) {
+        return arbitratorManager.getArbitratorsObservableMap().get(new NodeAddress(arbitratorAddress));
+    }
+
+    private boolean arbitratorIsTrader(Arbitrator arbitrator) {
+        return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
     }
 }

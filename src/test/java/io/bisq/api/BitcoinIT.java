@@ -25,7 +25,7 @@ public class BitcoinIT {
 
         return Container.withContainerName("bisq-api-bitcoin-node")
             .fromImage("kylemanna/bitcoind:1.0.0")
-            .withCommand("bitcoind -printconsole -rpcallowip=::/0 -regtest")
+            .withCommand("bitcoind -printtoconsole -rpcallowip=::/0 -regtest")
             .withPortBinding("8332/tcp")
             .withAwaitStrategy(awaitStrategy)
             .build();

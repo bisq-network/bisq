@@ -26,6 +26,7 @@ import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -116,7 +117,9 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
                 offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
-        environment.jersey().register(new ApiV1(bisqProxy));
+        final JerseyEnvironment jerseyEnvironment = environment.jersey();
+        jerseyEnvironment.register(new ApiV1(bisqProxy));
+        ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
     }
 

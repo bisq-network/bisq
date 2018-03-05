@@ -134,7 +134,7 @@ In order to build shaded jar:
     mvn package -P shade
 
 
-Api naming guidlines:
+Api naming guidelines:
 
 * resource names should be in plural
 * use hyphen-case for multi word resource names (camelCase for everything else: payload properties or query params)
