@@ -1,11 +1,9 @@
 package io.bisq.api.service.v1;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import io.bisq.api.BisqProxy;
+import io.bisq.api.model.TradeDetails;
 import io.bisq.api.model.TradeList;
 import io.bisq.api.service.ResourceHelper;
-import io.bisq.core.trade.Trade;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Api("trades")
@@ -31,49 +27,18 @@ public class TradeResource {
 
     @ApiOperation("List trades")
     @GET
-    @Path("/")
-    public String find() {
-        String result = "[]";
-        TradeList tradeList = bisqProxy.getTradeList();
-        if (tradeList == null || tradeList.trades == null || tradeList.trades.size() == 0) {
-            // will use default result
-        } else {
-            try {
-//                TODO build response using dedicated rest model
-                List<String> stringList = tradeList.trades.stream().map(trade -> trade.toProtoMessage()).map(message -> {
-                    try {
-                        return JsonFormat.printer().print(message);
-                    } catch (InvalidProtocolBufferException e) {
-                        e.printStackTrace();
-                    }
-                    return "error";
-                }).collect(Collectors.toList());
-                StringJoiner stringJoiner = new StringJoiner(",", "[", "]");
-                for (String string : stringList) {
-                    stringJoiner.add(string);
-                }
-                result = stringJoiner.toString();
-            } catch (Throwable e) {
-                log.error("Error processing tradeList method", e);
-                // will use default result
-            }
-        }
-        return result;
+    public TradeList find() {
+        final TradeList tradeList = new TradeList();
+        tradeList.trades = bisqProxy.getTradeList().stream().map(TradeDetails::new).collect(toList());
+        tradeList.total = tradeList.trades.size();
+        return tradeList;
     }
 
     @ApiOperation("Get trade details")
     @GET
     @Path("/{id}")
-    public String getById(@PathParam("id") String id) {
-        try {
-            Optional<Trade> any = bisqProxy.getTrade(id);
-            if (any.isPresent())
-                return JsonFormat.printer().print(any.get().toProtoMessage());
-            else
-                throw new WebApplicationException(Response.Status.NOT_FOUND);
-        } catch (InvalidProtocolBufferException e) {
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-        }
+    public TradeDetails getById(@PathParam("id") String id) {
+        return new TradeDetails(bisqProxy.getTrade(id));
     }
 
     @ApiOperation("Confirm payment has started")

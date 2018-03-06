@@ -17,23 +17,15 @@
 
 package io.bisq.api.model;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import io.bisq.core.trade.Trade;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class TradeList {
-    @Setter
-    public List<Trade> trades = new ArrayList<>();
+
+    public List<TradeDetails> trades = new ArrayList<>();
+    public long total;
 
     public TradeList() {
-        // Jackson deserialization
     }
 
-    @JsonValue
-    public List<Trade> getTrade() {
-        return trades;
-    }
 }
