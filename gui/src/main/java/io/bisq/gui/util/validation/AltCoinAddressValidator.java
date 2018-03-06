@@ -169,7 +169,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                 case "ROI":
-                    if (!input.matches("^(R)?[0-9a-fA-F]{34}$"))
+                    if (!input.matches("^[R][0-9a-zA-Z]{33}$"))
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
