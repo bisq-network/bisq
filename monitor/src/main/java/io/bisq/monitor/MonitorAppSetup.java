@@ -72,7 +72,7 @@ public class MonitorAppSetup {
         persistedDataHosts.add(peerManager);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-        persistedDataHosts.stream().forEach(e -> {
+        persistedDataHosts.forEach(e -> {
             try {
                 log.info("call readPersisted at " + e.getClass().getSimpleName());
                 e.readPersisted();

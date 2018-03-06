@@ -60,11 +60,7 @@ public final class CompensationRequest implements PersistablePayload {
     @Setter
     private Coin compensationRequestFee;
     @Setter
-    private Transaction feeTx;
-    @Setter
-    Transaction txWithBtcFee;
-    @Setter
-    private Transaction signedTx;
+    private Transaction tx;
 
     @Nullable
     private Map<String, String> extraDataMap;

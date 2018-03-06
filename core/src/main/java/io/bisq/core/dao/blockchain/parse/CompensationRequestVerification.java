@@ -35,7 +35,7 @@ public class CompensationRequestVerification {
 
     boolean processOpReturnData(Tx tx, byte[] opReturnData, TxOutput opReturnTxOutput, long bsqFee, int blockHeight, TxOutput btcTxOutput) {
         if (btcTxOutput != null &&
-                opReturnData.length > 1 &&
+                opReturnData.length == 22 &&
                 Version.COMPENSATION_REQUEST_VERSION == opReturnData[1] &&
                 bsqFee == bsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
                 bsqBlockChain.isCompensationRequestPeriodValid(blockHeight)) {

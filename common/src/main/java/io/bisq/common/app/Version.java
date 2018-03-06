@@ -120,4 +120,5 @@ public class Version {
 
     public static final byte COMPENSATION_REQUEST_VERSION = (byte) 0x01;
     public static final byte VOTING_VERSION = (byte) 0x01;
+    public static final byte VOTING_RELEASE_VERSION = (byte) 0x01;
 }

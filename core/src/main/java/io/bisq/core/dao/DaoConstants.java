@@ -20,6 +20,7 @@ package io.bisq.core.dao;
 public class DaoConstants {
     public static final byte OP_RETURN_TYPE_COMPENSATION_REQUEST = (byte) 0x01;
     public static final byte OP_RETURN_TYPE_VOTE = (byte) 0x02;
-    public static final byte OP_RETURN_TYPE_LOCK_UP = (byte) 0x03;
-    public static final byte OP_RETURN_TYPE_UNLOCK = (byte) 0x04;
+    public static final byte OP_RETURN_TYPE_VOTE_RELEASE = (byte) 0x03;
+    public static final byte OP_RETURN_TYPE_LOCK_UP = (byte) 0x04;
+    public static final byte OP_RETURN_TYPE_UNLOCK = (byte) 0x05;
 }

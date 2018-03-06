@@ -153,11 +153,12 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
-            compensationRequest.setFeeTx(bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee()));
-            checkArgument(!compensationRequest.getFeeTx().getInputs().isEmpty(), "preparedTx inputs must not be empty");
+            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee());
+            //compensationRequest.setFeeTx(preparedBurnFeeTx);
+            checkArgument(!preparedBurnFeeTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
 
             // We use the key of the first BSQ input for signing the data
-            TransactionOutput connectedOutput = compensationRequest.getFeeTx().getInputs().get(0).getConnectedOutput();
+            TransactionOutput connectedOutput = preparedBurnFeeTx.getInputs().get(0).getConnectedOutput();
             checkNotNull(connectedOutput, "connectedOutput must not be null");
             DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
             checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
@@ -179,13 +180,12 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
             //TODO should we store the hash in the compensationRequestPayload object?
 
             //TODO 1 Btc output (small payment to own compensation receiving address)
-            compensationRequest.setTxWithBtcFee(
-                    btcWalletService.completePreparedCompensationRequestTx(
-                            compensationRequest.getRequestedBsq(),
-                            compensationRequest.getIssuanceAddress(bsqWalletService),
-                            compensationRequest.getFeeTx(),
-                            opReturnData));
-            compensationRequest.setSignedTx(bsqWalletService.signTx(compensationRequest.getTxWithBtcFee()));
+            final Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(
+                    compensationRequest.getRequestedBsq(),
+                    compensationRequest.getIssuanceAddress(bsqWalletService),
+                    preparedBurnFeeTx,
+                    opReturnData);
+            compensationRequest.setTx(bsqWalletService.signTx(txWithBtcFee));
         }
         return compensationRequest;
     }
@@ -194,10 +194,13 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         // We need to create another instance, otherwise the tx would trigger an invalid state exception
         // if it gets committed 2 times
         // We clone before commit to avoid unwanted side effects
-        final Transaction clonedTransaction = btcWalletService.getClonedTransaction(compensationRequest.getTxWithBtcFee());
-        bsqWalletService.commitTx(compensationRequest.getTxWithBtcFee());
-        btcWalletService.commitTx(clonedTransaction);
-        bsqWalletService.broadcastTx(compensationRequest.getSignedTx(), new FutureCallback<Transaction>() {
+        final Transaction tx = compensationRequest.getTx();
+        bsqWalletService.commitTx(tx);
+
+        final Transaction clonedTx = btcWalletService.getClonedTransaction(tx);
+        btcWalletService.commitTx(clonedTx);
+
+        bsqWalletService.broadcastTx(tx, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@Nullable Transaction transaction) {
                 checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");

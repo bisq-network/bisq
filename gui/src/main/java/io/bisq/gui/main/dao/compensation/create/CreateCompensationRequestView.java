@@ -130,8 +130,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                 try {
                     CompensationRequest compensationRequest = compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
-                    Coin miningFee = compensationRequest.getSignedTx().getFee();
-                    int txSize = compensationRequest.getSignedTx().bitcoinSerialize().length;
+                    Coin miningFee = compensationRequest.getTx().getFee();
+                    int txSize = compensationRequest.getTx().bitcoinSerialize().length;
                     new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
                             .confirmation(Res.get("dao.compensation.create.confirm.info",
                                     bsqFormatter.formatCoinWithCode(compensationRequest.getRequestedBsq()),

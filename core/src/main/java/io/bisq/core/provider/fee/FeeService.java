@@ -63,10 +63,10 @@ public class FeeService {
     private static long DEFAULT_MAKER_FEE_IN_BASE_CUR;
     private static long DEFAULT_TAKER_FEE_IN_BASE_CUR;
 
-    private static final long MIN_MAKER_FEE_IN_MBSQ = 50; // about 0.05 EUR if 1 BSQ = 1 EUR
-    private static final long MIN_TAKER_FEE_IN_MBSQ = 50;
-    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 2000; // about 2 USD at BTC price 10000 USD for 1 BTC if 1 BSQ = 1 USD -> 10% of BTC fee
-    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 2000;
+    private static final long MIN_MAKER_FEE_IN_CENTI_BSQ = 5;
+    private static final long MIN_TAKER_FEE_IN_CENTI_BSQ = 5;
+    private static final long DEFAULT_MAKER_FEE_IN_CENTI_BSQ = 200; // about 2 USD at 1 BSQ = 1 USD for a 1 BTC trade
+    private static final long DEFAULT_TAKER_FEE_IN_CENTI_BSQ = 200;
 
     public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
@@ -97,9 +97,9 @@ public class FeeService {
          */
         switch (baseCurrencyCode) {
             case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 1 USD at BTC price 20000 USD
+                MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.5 USD at BTC price 10000 USD
                 MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 10 USD at BTC price 20000 USD for 0.25 BTC (maxTradeAmount for most fiat trades)
+                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD for a 1 BTC trade
                 DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
                 txFeePerByte = BTC_DEFAULT_TX_FEE;
                 break;
@@ -185,20 +185,20 @@ public class FeeService {
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_MBSQ);
+        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_CENTI_BSQ);
     }
 
     public static Coin getMinMakerFee(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_MAKER_FEE_IN_MBSQ);
+        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_MAKER_FEE_IN_CENTI_BSQ);
     }
 
 
     public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_MBSQ);
+        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_CENTI_BSQ);
     }
 
     public static Coin getMinTakerFee(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_TAKER_FEE_IN_MBSQ);
+        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_TAKER_FEE_IN_CENTI_BSQ);
     }
 
 
@@ -207,8 +207,7 @@ public class FeeService {
     }
 
     public Coin getVotingTxFee() {
-        //TODO
-        return Coin.valueOf(99);
+        return Coin.valueOf(500);
     }
 
     public ReadOnlyIntegerProperty feeUpdateCounterProperty() {

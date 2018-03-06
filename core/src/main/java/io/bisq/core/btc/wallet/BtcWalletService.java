@@ -135,21 +135,21 @@ public class BtcWalletService extends WalletService {
 
         // preparedCompensationRequestTx has following structure:
         // inputs [1-n] BSQ inputs for request fee
-        // inputs [1-n] BTC inputs for BSQ issuance and  miner fee
-        // outputs [0-1] BSQ request fee change output
-        // outputs [1] BSQ issuance output
-        // outputs [0-1] BTC change output from issuance and miner fee inputs
-        // outputs [0-1] OP_RETURN with opReturnData
+        // inputs [1-n] BTC inputs for BSQ issuance and miner fee
+        // outputs [0-1] BSQ request fee change output (>= 2730 Satoshi)
+        // outputs [1] Potentially BSQ issuance output (>= 2730 Satoshi)
+        // outputs [0-1] BTC change output from issuance and miner fee inputs (>= 2730 Satoshi)
+        // outputs [0-1] OP_RETURN with opReturnData and amount 0
         // mining fee: BTC mining fee + burned BSQ fee
 
         Transaction preparedTx = new Transaction(params);
         // Copy inputs from BSQ fee tx
-        feeTx.getInputs().stream().forEach(preparedTx::addInput);
+        feeTx.getInputs().forEach(preparedTx::addInput);
         int indexOfBtcFirstInput = feeTx.getInputs().size();
 
         // Need to be first because issuance is not guaranteed to be valid and would otherwise burn change output!
         // BSQ change outputs from BSQ fee inputs.
-        feeTx.getOutputs().stream().forEach(preparedTx::addOutput);
+        feeTx.getOutputs().forEach(preparedTx::addOutput);
 
         // BSQ issuance output
         preparedTx.addOutput(issuanceAmount, issuanceAddress);
