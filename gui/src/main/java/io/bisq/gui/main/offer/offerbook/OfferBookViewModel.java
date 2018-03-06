@@ -181,7 +181,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             if (highestMarketPriceMarginOffer.isPresent()) {
                 maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(highestMarketPriceMarginOffer.get().getOffer(), false).length());
-                System.out.println("maxPlacesForMarketPriceMargin set:" +highestMarketPriceMarginOffer.get().getOffer().getMarketPriceMargin()+ " - " + maxPlacesForMarketPriceMargin);
             }
         };
     }
