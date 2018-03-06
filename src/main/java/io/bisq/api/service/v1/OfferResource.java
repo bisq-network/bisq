@@ -2,6 +2,7 @@ package io.bisq.api.service.v1;
 
 import com.google.common.collect.ImmutableList;
 import io.bisq.api.*;
+import io.bisq.api.NotFoundException;
 import io.bisq.api.model.*;
 import io.bisq.api.service.ResourceHelper;
 import io.bisq.core.offer.Offer;
@@ -11,7 +12,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.util.Json;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
@@ -44,6 +47,13 @@ public class OfferResource {
         return offerList;
     }
 
+    @ApiOperation("Get offer details")
+    @GET
+    @Path("/{id}")
+    public OfferDetail getOfferById(@NotEmpty @PathParam("id") String id) {
+        return new OfferDetail(bisqProxy.getOffer(id));
+    }
+
     @ApiOperation("Cancel offer")
     @DELETE
     @Path("/{id}")
@@ -53,7 +63,7 @@ public class OfferResource {
 
     @ApiOperation(value = "Create offer", response = OfferDetail.class)
     @POST
-    public void create(@Suspended final AsyncResponse asyncResponse, OfferToCreate offer) {
+    public void create(@Suspended final AsyncResponse asyncResponse, @Valid OfferToCreate offer) {
         final CompletableFuture<Offer> completableFuture = bisqProxy.offerMake(
                 offer.fundUsingBisqWallet,
                 offer.offerId,
@@ -98,7 +108,7 @@ public class OfferResource {
     @ApiOperation(value = "Take offer", response = TradeDetails.class)
     @POST
     @Path("/{id}/take")
-    public void takeOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id, TakeOffer data) {
+    public void takeOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id, @Valid TakeOffer data) {
 //        TODO how do we go about not blocking this REST thread?
         final CompletableFuture<Trade> completableFuture = bisqProxy.offerTake(id, data.paymentAccountId, data.amount, true);
         completableFuture.thenApply(trade -> asyncResponse.resume(new TradeDetails(trade)))
@@ -116,6 +126,8 @@ public class OfferResource {
                         responseBuilder = toResponse(cause, 425);
                     } else if (cause instanceof InsufficientMoneyException) {
                         responseBuilder = toResponse(cause, 427);
+                    } else if (cause instanceof NotFoundException) {
+                        responseBuilder = toResponse(cause, 404);
                     } else {
                         final String message = cause.getMessage();
                         responseBuilder = Response.status(500);

@@ -87,7 +87,7 @@ public final class ApiTestHelper {
         Thread.sleep(ALL_SERVICES_INITIALIZED_DELAY);
     }
 
-    public static SepaAccountToCreate randomValidCreateSepaAccountPayload() {
+    public static SepaAccountToCreate randomValidCreateSepaAccountPayload(String tradeCurrency) {
         final Faker faker = new Faker();
         final SepaAccountToCreate accountToCreate = new SepaAccountToCreate();
         final String countryCode = faker.options().nextElement(CountryUtil.getAllSepaCountries()).code;
@@ -98,8 +98,14 @@ public final class ApiTestHelper {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.countryCode = countryCode;
         accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
+        if (null != tradeCurrency)
+            accountToCreate.selectedTradeCurrency = tradeCurrency;
         accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
         return accountToCreate;
+    }
+
+    public static SepaAccountToCreate randomValidCreateSepaAccountPayload() {
+        return randomValidCreateSepaAccountPayload(null);
     }
 
     public static void generateBlocks(Container bitcoin, int numberOfBlocks) {
@@ -132,5 +138,69 @@ public final class ApiTestHelper {
     public static void sendFunds(Container bitcoin, String walletAddress, double amount) {
         final CubeOutput cubeOutput = bitcoin.exec("bitcoin-cli", "-regtest", "sendtoaddress", walletAddress, "" + amount);
         assertEquals("Command 'sendfrom' should succeed", "", cubeOutput.getError());
+    }
+
+    public static String[] toString(Enum[] values) {
+        final String[] result = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            result[i] = values[i].name();
+        }
+        return result;
+    }
+
+    public static void deselectAllArbitrators(int apiPort) {
+        getArbitrators(apiPort).stream().forEach(arbitratorAddress -> deselectArbitrator(apiPort, arbitratorAddress));
+    }
+
+    private static ValidatableResponse deselectArbitrator(int apiPort, String arbitratorAddress) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        post("/api/v1/arbitrators/" + arbitratorAddress + "/deselect").
+//
+        then().
+                        statusCode(200)
+                ;
+    }
+
+    public static ValidatableResponse selectArbitrator(int apiPort, String arbitratorAddress) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        post("/api/v1/arbitrators/" + arbitratorAddress + "/select").
+//
+        then().
+                        statusCode(200)
+                ;
+    }
+
+    public static List<String> getArbitrators(int apiPort) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        get("/api/v1/arbitrators").
+//
+        then().
+                        extract().as(ArbitratorList.class).
+                        arbitrators.
+                        stream().
+                        map(arbitrator -> arbitrator.address).
+                        collect(Collectors.toList());
+    }
+
+    public static OfferDetail getOfferById(int apiPort, String offerId) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        get("/api/v1/offers/" + offerId).
+//
+        then().
+                        statusCode(200).
+                        extract().as(OfferDetail.class)
+                ;
     }
 }

@@ -28,30 +28,33 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class OfferDetail {
     @JsonProperty
-    String offer_id;
+    public String offer_id;
     @JsonProperty
-    OfferPayload.Direction direction;
+    public OfferPayload.Direction direction;
     @JsonProperty
-    Offer.State state;
+    public Offer.State state;
     @JsonProperty
-    Date created;
+    public Date created;
     @JsonProperty
-    List<String> arbitrators;
+    public List<String> arbitrators;
     @JsonProperty
-    String offerer;
+    public String offerer;
     @JsonProperty
-    String btc_amount;
+    public String btc_amount;
     @JsonProperty
-    String min_btc_amount;
+    public String min_btc_amount;
     @JsonProperty
-    String other_amount;
+    public String other_amount;
     @JsonProperty
-    String other_currency;
+    public String other_currency;
     @JsonProperty
-    PriceDetail price_detail;
+    public PriceDetail price_detail;
     // paymentmethod - important for automating
     // offerfeepaymenttxid ???
 
+
+    public OfferDetail() {
+    }
 
     public OfferDetail(Offer offer) {
         this.offer_id = offer.getId();
@@ -74,7 +77,7 @@ public class OfferDetail {
 
     @Data
     @AllArgsConstructor
-    class PriceDetail {
+    public static class PriceDetail {
         @JsonProperty
         boolean use_market_price;
         @JsonProperty

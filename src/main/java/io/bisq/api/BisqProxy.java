@@ -204,7 +204,7 @@ public class BisqProxy {
     }
 
     public Offer getOffer(String offerId) {
-        final String safeOfferId = null == offerId ? "" : offerId;
+        final String safeOfferId = (null == offerId) ? "" : offerId;
         final Optional<Offer> offerOptional = offerBookService.getOffers().stream().filter(offer1 -> safeOfferId.equals(offer1.getId())).findAny();
         if (!offerOptional.isPresent()) {
             throw new NotFoundException("Offer not found: " + offerId);
