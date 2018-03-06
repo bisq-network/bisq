@@ -25,6 +25,11 @@ public class ApiV1 {
         return new CurrencyResource(bisqProxy);
     }
 
+    @Path("info")
+    public InfoResource getInfoResource() {
+        return new InfoResource(bisqProxy);
+    }
+
     @Path("markets")
     public MarketResource getMarketResource() {
         return new MarketResource(bisqProxy);

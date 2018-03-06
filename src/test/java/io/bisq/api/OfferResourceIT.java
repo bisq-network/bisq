@@ -161,8 +161,7 @@ public class OfferResourceIT {
                 and().body("offer_id", isA(String.class)).
                 and().body("created", isA(Long.class)).
                 and().body("arbitrators", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
-//                TODO add endpoint that gets MY_ADDERSS
-        and().body("offerer", isA(String.class)).
+                and().body("offerer", equalTo(ApiTestHelper.getInfo(alicePort).address)).
                 and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
                 and().body("btc_amount", equalTo("0.00000001")).
                 and().body("min_btc_amount", equalTo("0.00000001")).

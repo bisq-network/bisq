@@ -671,4 +671,12 @@ public class BisqProxy {
         }
         return btcWalletService.getOrCreateAddressEntry(context);
     }
+
+    public Info getInfo() {
+        final Info info = new Info();
+        final NodeAddress address = p2PService.getAddress();
+        if (null != address)
+            info.address = address.getFullAddress();
+        return info;
+    }
 }
