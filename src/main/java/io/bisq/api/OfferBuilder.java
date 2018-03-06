@@ -64,7 +64,6 @@ public class OfferBuilder {
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
                 throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
-//        } else if ((Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
             throw new ValidationException("When choosing FIXED price, fill in fixed_price with a price > 0");
         }

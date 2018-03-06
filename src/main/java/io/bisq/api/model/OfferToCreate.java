@@ -29,7 +29,7 @@ public class OfferToCreate {
     public Double percentageFromMarketPrice;
 
     @Min(0)
-    public Long fixedPrice;
+    public long fixedPrice;
 
     @Min(0)
     public BigDecimal amount;
