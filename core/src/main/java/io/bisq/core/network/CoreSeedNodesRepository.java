@@ -33,8 +33,7 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
         List<String> bannedNodes = bisqEnvironment.getBannedSeedNodes();
         Set<NodeAddress> nodeAddresses;
         if (seedNodes != null && !seedNodes.isEmpty()) {
-            nodeAddresses = Arrays.asList(StringUtils.deleteWhitespace(seedNodes).split(","))
-                    .stream()
+            nodeAddresses = Arrays.stream(StringUtils.deleteWhitespace(seedNodes).split(","))
                     .map(NodeAddress::new)
                     .collect(Collectors.toSet());
         } else {
@@ -116,8 +115,8 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
 
             // DASH mainnet
-            new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
-            new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
+            new NodeAddress("toeu5ikb27ydscxt.onion:8006"),
+            new NodeAddress("ae4yvaivhnekkhqf.onion:8006")
     );
 
     // Addresses are used if the last digit of their port match the network id:
@@ -163,6 +162,6 @@ public class CoreSeedNodesRepository implements SeedNodesRepository {
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
         return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
-                .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
+                .anyMatch(e -> e.equals(nodeAddress));
     }
 }
