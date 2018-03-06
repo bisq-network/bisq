@@ -9,12 +9,11 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
+import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.user.User;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.validation.AltcoinValidator;
-import io.bisq.gui.util.validation.BtcValidator;
-import io.bisq.gui.util.validation.FiatPriceValidator;
+import io.bisq.gui.util.validation.*;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import org.bitcoinj.core.Coin;
@@ -24,6 +23,8 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.time.Instant;
+
 import static io.bisq.core.user.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -32,7 +33,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({BtcWalletService .class, AddressEntry.class, PriceFeedService.class, User.class, FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class})
+@PrepareForTest({BtcWalletService .class, AddressEntry.class, PriceFeedService.class, User.class,
+        FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class,
+        SecurityDepositValidator.class})
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;
@@ -56,19 +59,22 @@ public class CreateOfferViewModelTest {
         User user = mock(User.class);
         PaymentAccount paymentAccount = mock(PaymentAccount.class);
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
+        SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
         when(feeService.getTxFee(anyInt())).thenReturn(Coin.valueOf(1000L));
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
+        when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
 
         CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null,null, priceFeedService,null, null, null, feeService, bsFormatter);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, null, null, null, priceFeedService, null, null, bsFormatter, null);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, securityDepositValidator, null, null, priceFeedService, null, null, bsFormatter, null);
         model.activate();
     }
 
@@ -149,4 +155,12 @@ public class CreateOfferViewModelTest {
         assertEquals("0.05", model.minAmount.get());
     }
 
+    @Test
+    public void testSyncPriceMarginWithVolumeAndFixedPrice() {
+        model.amount.set("0.01");
+        model.onFocusOutPriceAsPercentageTextField(true, false); //leave focus without changing
+        assertEquals("0.00", model.marketPriceMargin.get());
+        assertEquals("0.00000078", model.volume.get());
+        assertEquals("12684.04500000", model.price.get());
+    }
 }

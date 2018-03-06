@@ -712,6 +712,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
         if (oldValue && !newValue)
+            if (marketPriceMargin.get() == null) {
+                // field wasn't set manually
+                inputIsMarketBasedPrice = true;
+            }
             marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
     }
 
