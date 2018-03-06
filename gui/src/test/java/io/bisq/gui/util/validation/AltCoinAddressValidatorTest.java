@@ -129,6 +129,20 @@ public class AltCoinAddressValidatorTest {
     }
 
     @Test
+    public void testROI() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("ROI");
+
+        assertTrue(validator.validate("RSdzB2mFpQ6cR3HmEopbaRBjrEMWAwXBYn").isValid);
+        assertTrue(validator.validate("RBQN9ybF5JzsPQdsiHMpGfkA5HpwddKvmU").isValid);
+
+        assertFalse(validator.validate("1RBQN9ybF5JzsPQdsiHMpGfkA5HpwddKvmU").isValid);
+        assertFalse(validator.validate("RBQN9ybF5JzsPQdsiHMpGfkA5HpwddKvmU1").isValid);
+        assertFalse(validator.validate("RBQN9ybF5JzsPQdsiHMpGfkA5HpwddKvmU#").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
+
+    @Test
     public void testPIVX() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
         validator.setCurrencyCode("PIVX");

@@ -168,6 +168,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "ROI":
+                    if (!input.matches("^(R)?[0-9a-fA-F]{34}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
