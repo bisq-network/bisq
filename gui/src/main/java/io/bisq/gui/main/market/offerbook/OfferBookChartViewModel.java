@@ -49,7 +49,10 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
@@ -298,6 +301,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         final Optional<Offer> highestBuyVolumeOffer = allBuyOffers.stream()
+                .filter(o -> o.getVolume() != null)
                 .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
 
         if (highestBuyVolumeOffer.isPresent()) {
@@ -337,6 +341,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         final Optional<Offer> highestSellVolumeOffer = allSellOffers.stream()
+                .filter(o -> o.getVolume() != null)
                 .max(Comparator.comparingLong(o -> o.getVolume().getValue()));
 
         if (highestSellVolumeOffer.isPresent()) {
