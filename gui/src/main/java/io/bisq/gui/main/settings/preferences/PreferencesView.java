@@ -456,14 +456,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         // We don't support Dash anymore due lack of activity but leave it in the code in case it will get
         // re-activated some day
-        baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                .filter(e -> !e.isDash())
-                .collect(Collectors.toList());
-
         // show ony mainnet in production version
         if (!DevEnv.isDevMode())
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.isMainnet())
+                    .filter(e -> !e.isDash())
+                    .filter(BaseCurrencyNetwork::isMainnet)
                     .collect(Collectors.toList());
         selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
