@@ -738,4 +738,23 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("DG1KpSsSXd3uitgwHaA1i6T1Bj1hWLONGER").isValid);
         assertFalse(validator.validate("HG1KpSsSXd3uitgwHaA1i6T1Bj1hWEwAxB").isValid);
     }
+
+    @Test
+    public void testWMCC() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("WMCC");
+
+        assertTrue(validator.validate("wc1qke2es507uz0dcfx7eyvlfuemwys8xem48vp5rw").isValid);
+        assertTrue(validator.validate("wc1qlwsfmqswjnnv20quv203lnksjrgsww3mjhd349").isValid);
+        assertTrue(validator.validate("Wmpfed6ykt9YsFxhGri5KJvKc3r7BC1rVQ").isValid);
+        assertTrue(validator.validate("WSSqzNJvc4X4xWW6WDyUk1oWEeLx45vyRh").isValid);
+        assertTrue(validator.validate("XWJk3GEuNFEn3dGFCi7vTzVuydeGQA9Fnq").isValid);
+        assertTrue(validator.validate("XG1Mc7XvvpR1wQvjeikZwHAjwLvCWQD35u").isValid);
+
+        assertFalse(validator.validate("wc1qke2es507uz0dcfx7eyvlfuemwys8xem48vp5rx").isValid);
+        assertFalse(validator.validate("Wmpfed6ykt9YsFxhGri5KJvKc3r7BC1rvq").isValid);
+        assertFalse(validator.validate("XWJk3GEuNFEn3dGFCi7vTzVuydeGQA9FNQ").isValid);
+        assertFalse(validator.validate("0123456789Abcdefghijklmnopqrstuvwxyz").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }

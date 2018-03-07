@@ -263,6 +263,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("SOS");
         newlyAdded.add("ACH");
         newlyAdded.add("VDN");
+        newlyAdded.add("WMCC");
 
         coinsWithValidator.addAll(newlyAdded);
 
