@@ -1,6 +1,4 @@
-[![Release](https://jitpack.io/v/mrosseel/bisq-api.svg)]
-(https://jitpack.io/#mrosseel/bisq-api)
-
+[![Build Status](https://travis-ci.org/mrosseel/bisq-api.svg?branch=master)](https://travis-ci.org/mrosseel/bisq-api)
 
 *WARNING: the current version of the API is configured to use Dev Privilege keys.
 If you want to use this on mainnet, you need to change the dependency to a release version of Bisq.*
