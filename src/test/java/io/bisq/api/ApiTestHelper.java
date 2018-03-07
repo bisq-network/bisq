@@ -48,6 +48,17 @@ public final class ApiTestHelper {
                         collect(Collectors.toList());
     }
 
+    public static P2PNetworkStatus getP2PNetworkStatus(int apiPort) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        get("/api/v1/p2p/status").
+//
+        then().
+                        extract().as(P2PNetworkStatus.class);
+    }
+
     public static ValidatableResponse registerArbitrator(int apiPort) throws InterruptedException {
         final ValidatableResponse validatableResponse = given().
                 port(apiPort).

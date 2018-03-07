@@ -11,6 +11,7 @@ import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContaine
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jetbrains.annotations.NotNull;
+import org.json.simple.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,6 +45,10 @@ public class OfferResourceIT {
     @Test
     public void waitForAllServicesToBeReady() throws Exception {
         ApiTestHelper.waitForAllServicesToBeReady();
+        addPaymentAccount();
+    }
+
+    private void addPaymentAccount() {
         final SepaAccountToCreate sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         tradeCurrency = sepaAccountToCreate.selectedTradeCurrency;
         paymentAccountId = ApiTestHelper.createPaymentAccount(getAlicePort(), sepaAccountToCreate).extract().body().jsonPath().get("id");
@@ -112,9 +117,19 @@ public class OfferResourceIT {
     public void createOffer_notUseMarketBasePriceButNoFixedPrice_returns422status() {
         final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, paymentAccountId);
         offer.priceType = PriceType.FIXED;
-//        TODO test fails if fixedPrice is null
-        offer.fixedPrice = 0L;
-        createOffer_template(offer, 422);
+        final JSONObject jsonOffer = toJsonObject(offer);
+        jsonOffer.remove("fixedPrice");
+        given().
+                port(getAlicePort()).
+                body(jsonOffer.toString()).
+                contentType(ContentType.JSON).
+//
+        when().
+                post("/api/v1/offers").
+//
+        then().
+                statusCode(422)
+        ;
     }
 
     @InSequence(4)
@@ -146,8 +161,7 @@ public class OfferResourceIT {
                 and().body("offer_id", isA(String.class)).
                 and().body("created", isA(Long.class)).
                 and().body("arbitrators", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
-//                TODO add endpoint that gets MY_ADDERSS
-        and().body("offerer", isA(String.class)).
+                and().body("offerer", equalTo(ApiTestHelper.getP2PNetworkStatus(alicePort).address)).
                 and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
                 and().body("btc_amount", equalTo("0.00000001")).
                 and().body("min_btc_amount", equalTo("0.00000001")).
@@ -202,6 +216,33 @@ public class OfferResourceIT {
         offer.accountId = paymentAccountId;
         offer.percentageFromMarketPrice = 10.0;
         return offer;
+    }
+
+    @NotNull
+    private static JSONObject toJsonObject(OfferToCreate offer) {
+        final JSONObject jsonOffer = new JSONObject();
+        putIfNotNull(jsonOffer, "fundUsingBisqWallet", offer.fundUsingBisqWallet);
+        putIfNotNull(jsonOffer, "amount", offer.amount);
+        putIfNotNull(jsonOffer, "minAmount", offer.minAmount);
+        putIfNotNull(jsonOffer, "direction", offer.direction);
+        putIfNotNull(jsonOffer, "fixedPrice", offer.fixedPrice);
+        putIfNotNull(jsonOffer, "marketPair", offer.marketPair);
+        putIfNotNull(jsonOffer, "priceType", offer.priceType);
+        putIfNotNull(jsonOffer, "accountId", offer.accountId);
+        putIfNotNull(jsonOffer, "percentageFromMarketPrice", offer.percentageFromMarketPrice);
+        return jsonOffer;
+    }
+
+    private static void putIfNotNull(JSONObject jsonObject, String key, Object value) {
+        if (null == value) {
+            return;
+        }
+        if (value instanceof Enum)
+            //noinspection unchecked
+            jsonObject.put(key, value.toString());
+        else
+            //noinspection unchecked
+            jsonObject.put(key, value);
     }
 
     private int getArbitratorPort() {

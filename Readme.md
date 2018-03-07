@@ -123,6 +123,7 @@ You have to build bisq-api and bisq-seednode images before running integration t
 
 Run integration tests:
 
+    docker-compose build #just make sure our images are up to date
     mvn verify -P integration
 
 ## Build
