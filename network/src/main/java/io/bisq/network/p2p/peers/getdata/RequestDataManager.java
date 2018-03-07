@@ -62,7 +62,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
     private final Map<String, GetDataRequestHandler> getDataRequestHandlers = new HashMap<>();
-    private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.<NodeAddress>empty();
+    private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
     private Timer retryTimer;
     private boolean dataUpdateRequested;
     private boolean stopped;
@@ -145,24 +145,25 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         List<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             // We use the node we have already connected to to request again
-            NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
-            nodeAddresses.remove(candidate);
-            requestData(candidate, nodeAddresses);
+            nodeAddressOfPreliminaryDataRequest.ifPresent(candidate -> {
+                nodeAddresses.remove(candidate);
+                requestData(candidate, nodeAddresses);
 
-            // For more redundancy we request as well from other random nodes.
-            Collections.shuffle(nodeAddresses);
-            ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
-            int numRequests = 0;
-            for (int i = 0; i < finalNodeAddresses.size() && numRequests < NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST; i++) {
-                NodeAddress nodeAddress = finalNodeAddresses.get(i);
-                nodeAddresses.remove(nodeAddress);
+                // For more redundancy we request as well from other random nodes.
+                Collections.shuffle(nodeAddresses);
+                ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
+                int numRequests = 0;
+                for (int i = 0; i < finalNodeAddresses.size() && numRequests < NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST; i++) {
+                    NodeAddress nodeAddress = finalNodeAddresses.get(i);
+                    nodeAddresses.remove(nodeAddress);
 
-                // It might be that we have a prelim. request open for the same seed, if so we skip to the next.
-                if (!handlerMap.containsKey(nodeAddress)) {
-                    UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
-                    numRequests++;
+                    // It might be that we have a prelim. request open for the same seed, if so we skip to the next.
+                    if (!handlerMap.containsKey(nodeAddress)) {
+                        UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+                        numRequests++;
+                    }
                 }
-            }
+            });
         }
     }
 
@@ -185,7 +186,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         Log.traceCall();
         closeHandler(connection);
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
+        if (peerManager.isNodeBanned(closeConnectionReason, connection) && connection.getPeersNodeAddressOptional().isPresent()) {
             final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             seedNodeAddresses.remove(nodeAddress);
             handlerMap.remove(nodeAddress);
@@ -307,7 +308,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     // We delay because it can be that we get the HS published before we receive the
                                     // preliminary data and the onPreliminaryDataReceived call triggers the
                                     // dataUpdateRequested set to true, so we would also call the onUpdatedDataReceived.
-                                    UserThread.runAfter(listener::onPreliminaryDataReceived, 100 , TimeUnit.MILLISECONDS);
+                                    UserThread.runAfter(listener::onPreliminaryDataReceived, 100, TimeUnit.MILLISECONDS);
                                 }
 
                                 // 2. Later we get a response from requestUpdatesData
@@ -408,8 +409,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     private List<NodeAddress> getSortedNodeAddresses(Collection<Peer> collection) {
-        return collection.stream()
-                .collect(Collectors.toList())
+        return new ArrayList<>(collection)
                 .stream()
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
                 .map(Peer::getNodeAddress)
@@ -450,7 +450,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     private void closeAllHandlers() {
-        handlerMap.values().stream().forEach(RequestDataHandler::cancel);
+        handlerMap.values().forEach(RequestDataHandler::cancel);
         handlerMap.clear();
     }
 
