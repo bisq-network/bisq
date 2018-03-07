@@ -53,7 +53,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
 
     String getAmount(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatCoinWithCode(((Trade) item.getTradable()).getTradeAmount());
+            return formatter.formatCoin(((Trade) item.getTradable()).getTradeAmount());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else
