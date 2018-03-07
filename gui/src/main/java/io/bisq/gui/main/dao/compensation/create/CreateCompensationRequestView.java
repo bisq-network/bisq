@@ -22,11 +22,14 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.voterequest.compensation.CompensationAmountException;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequest;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestPayload;
+import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.InsufficientBsqException;
+import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.core.dao.request.compensation.CompensationAmountException;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
@@ -47,7 +50,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.UUID;
@@ -162,7 +164,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     new Popup<>().warning(Res.get("dao.compensation.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
                 } catch (CompensationAmountException e) {
                     new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount", bsqFormatter.formatCoinWithCode(e.required))).show();
-                } catch (IOException | TransactionVerificationException | WalletException | ChangeBelowDustException e) {
+                } catch (TransactionVerificationException | WalletException e) {
                     log.error(e.toString());
                     e.printStackTrace();
                     new Popup<>().warning(e.toString()).show();

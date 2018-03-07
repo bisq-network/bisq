@@ -15,14 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.voterequest.compensation;
+package io.bisq.core.dao.request.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Version;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -32,9 +30,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.dao.DaoPeriodService;
-import io.bisq.core.dao.OpReturnTypes;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
@@ -57,8 +53,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Optional;
 
@@ -118,7 +112,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     public void onAllServicesInitialized() {
         p2PService.addHashSetChangedListener(this);
 
-        // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
+        // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
         p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
             final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
             if (protectedStoragePayload instanceof CompensationRequestPayload)
@@ -143,7 +137,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     public CompensationRequest prepareCompensationRequest(CompensationRequestPayload compensationRequestPayload)
-            throws InsufficientMoneyException, ChangeBelowDustException, TransactionVerificationException, WalletException, IOException, CompensationAmountException {
+            throws InsufficientMoneyException, TransactionVerificationException, WalletException, CompensationAmountException {
 
         final Coin minRequestAmount = Restrictions.getMinCompensationRequestAmount();
         if (compensationRequestPayload.getRequestedBsq().compareTo(minRequestAmount) < 0) {
@@ -151,42 +145,35 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         }
 
         CompensationRequest compensationRequest = new CompensationRequest(compensationRequestPayload);
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee());
-            //compensationRequest.setFeeTx(preparedBurnFeeTx);
-            checkArgument(!preparedBurnFeeTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
+        compensationRequest.setCompensationRequestFee(feeService.getCreateCompensationRequestFee());
+        final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(compensationRequest.getCompensationRequestFee());
+        //compensationRequest.setFeeTx(preparedBurnFeeTx);
+        checkArgument(!preparedBurnFeeTx.getInputs().isEmpty(), "preparedTx inputs must not be empty");
 
-            // We use the key of the first BSQ input for signing the data
-            TransactionOutput connectedOutput = preparedBurnFeeTx.getInputs().get(0).getConnectedOutput();
-            checkNotNull(connectedOutput, "connectedOutput must not be null");
-            DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
-            checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
+        // We use the key of the first BSQ input for signing the data
+        TransactionOutput connectedOutput = preparedBurnFeeTx.getInputs().get(0).getConnectedOutput();
+        checkNotNull(connectedOutput, "connectedOutput must not be null");
+        DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+        checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
 
-            // We get the JSON of the object excluding signature and feeTxId
-            String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
-            // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
-            // encoded string.
-            String signature = bsqKeyPair.signMessage(payloadAsJson);
-            compensationRequestPayload.setSignature(signature);
+        // We get the JSON of the object excluding signature and feeTxId
+        String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
+        // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
+        // encoded string.
+        String signature = bsqKeyPair.signMessage(payloadAsJson);
+        compensationRequestPayload.setSignature(signature);
 
-            String dataAndSig = payloadAsJson + signature;
-            byte[] dataAndSigAsBytes = dataAndSig.getBytes();
-            outputStream.write(OpReturnTypes.COMPENSATION_REQUEST);
-            outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
-            outputStream.write(Hash.getSha256Ripemd160hash(dataAndSigAsBytes));
-            byte opReturnData[] = outputStream.toByteArray();
+        //TODO should we store the hash in the compensationRequestPayload object?
+        String dataAndSig = payloadAsJson + signature;
+        byte[] opReturnData = OpReturnData.getBytes(dataAndSig);
 
-            //TODO should we store the hash in the compensationRequestPayload object?
-
-            //TODO 1 Btc output (small payment to own compensation receiving address)
-            final Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(
-                    compensationRequest.getRequestedBsq(),
-                    compensationRequest.getIssuanceAddress(bsqWalletService),
-                    preparedBurnFeeTx,
-                    opReturnData);
-            compensationRequest.setTx(bsqWalletService.signTx(txWithBtcFee));
-        }
+        //TODO 1 Btc output (small payment to own compensation receiving address)
+        final Transaction txWithBtcFee = btcWalletService.completePreparedCompensationRequestTx(
+                compensationRequest.getRequestedBsq(),
+                compensationRequest.getIssuanceAddress(bsqWalletService),
+                preparedBurnFeeTx,
+                opReturnData);
+        compensationRequest.setTx(bsqWalletService.signTx(txWithBtcFee));
         return compensationRequest;
     }
 

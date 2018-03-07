@@ -19,8 +19,8 @@ package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestPayload;
-import io.bisq.core.dao.voterequest.compensation.Restrictions;
+import io.bisq.core.dao.request.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.request.compensation.Restrictions;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.gui.components.*;
 import io.bisq.gui.util.BsqFormatter;

@@ -19,7 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.dao.DaoManager;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;

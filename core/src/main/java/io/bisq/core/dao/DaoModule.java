@@ -26,10 +26,10 @@ import io.bisq.core.dao.blockchain.BsqLiteNode;
 import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.parse.*;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.dao.vote.VotingService;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;

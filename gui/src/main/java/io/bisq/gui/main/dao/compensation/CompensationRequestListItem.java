@@ -24,7 +24,7 @@ import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.beans.value.ChangeListener;

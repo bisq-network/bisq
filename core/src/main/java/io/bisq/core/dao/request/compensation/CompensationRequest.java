@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.voterequest.compensation;
+package io.bisq.core.dao.request.compensation;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.voterequest.VoteRequest;
+import io.bisq.core.dao.request.VoteRequest;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

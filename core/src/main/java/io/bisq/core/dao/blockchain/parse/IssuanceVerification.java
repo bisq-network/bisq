@@ -20,8 +20,8 @@ package io.bisq.core.dao.blockchain.parse;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequest;
-import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;

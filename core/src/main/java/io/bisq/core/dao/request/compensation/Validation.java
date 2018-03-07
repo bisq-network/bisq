@@ -15,10 +15,11 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.voterequest;
+package io.bisq.core.dao.request.compensation;
 
-public abstract class VoteRequest {
+/**
+ * Validation for compensation requests
+ */
+public class Validation {
 
-    public VoteRequest() {
-    }
 }

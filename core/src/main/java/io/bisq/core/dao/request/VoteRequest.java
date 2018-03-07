@@ -15,17 +15,13 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.voterequest.compensation;
+package io.bisq.core.dao.request;
 
-import org.bitcoinj.core.Coin;
+/**
+ * Base class for all vote requests like compensation request, general purpose request, remove altcoin request, change fee request, etc.
+ */
+public abstract class VoteRequest {
 
-public class Restrictions {
-
-    public static Coin getMinCompensationRequestAmount() {
-        return Coin.valueOf(5_000); // 50 BSQ
-    }
-
-    public static Coin getMaxCompensationRequestAmount() {
-        return Coin.valueOf(5_000_000); // 50 000 BSQ
+    public VoteRequest() {
     }
 }

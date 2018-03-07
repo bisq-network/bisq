@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.voterequest.compensation;
+package io.bisq.core.dao.request.compensation;
 
 import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
