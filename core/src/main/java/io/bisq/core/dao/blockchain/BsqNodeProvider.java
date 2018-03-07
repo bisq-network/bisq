@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Named;
 
 /**
- * Basic wiring of blockchain related services and event listeners
+ * Returns a bsqFullNode or bsqLiteNode based on the DaoOptionKeys.FULL_DAO_NODE option.
  */
 @Slf4j
 public class BsqNodeProvider {

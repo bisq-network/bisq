@@ -53,12 +53,12 @@ public class BsqLiteNodeExecutor {
         this.bsqBlockChain = bsqBlockChain;
     }
 
-    public void parseBsqBlocksForLiteNode(List<BsqBlock> bsqBlockList,
-                                          int genesisBlockHeight,
-                                          String genesisTxId,
-                                          Consumer<BsqBlock> newBlockHandler,
-                                          ResultHandler resultHandler,
-                                          Consumer<Throwable> errorHandler) {
+    public void parseBlocks(List<BsqBlock> bsqBlockList,
+                            int genesisBlockHeight,
+                            String genesisTxId,
+                            Consumer<BsqBlock> newBlockHandler,
+                            ResultHandler resultHandler,
+                            Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             bsqParser.parseBsqBlocks(bsqBlockList,
@@ -83,11 +83,11 @@ public class BsqLiteNodeExecutor {
     }
 
     // TODO check why it's not handled in the parser
-    public void parseBsqBlockForLiteNode(BsqBlock bsqBlock,
-                                         int genesisBlockHeight,
-                                         String genesisTxId,
-                                         ResultHandler resultHandler,
-                                         Consumer<Throwable> errorHandler) {
+    public void parseBlock(BsqBlock bsqBlock,
+                           int genesisBlockHeight,
+                           String genesisTxId,
+                           ResultHandler resultHandler,
+                           Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             bsqParser.parseBsqBlock(bsqBlock,

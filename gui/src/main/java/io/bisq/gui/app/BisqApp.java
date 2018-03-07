@@ -45,7 +45,7 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
+import io.bisq.core.dao.DaoManager;
 import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
@@ -453,7 +453,7 @@ public class BisqApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(JsonBlockChainExporter.class).shutDown();
+                injector.getInstance(DaoManager.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {

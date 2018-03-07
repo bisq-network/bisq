@@ -31,14 +31,17 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-// We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
+/**
+ * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes)
+ */
 @Slf4j
 public class BsqLiteNode extends BsqNode {
     private final BsqLiteNodeExecutor bsqLiteNodeExecutor;
@@ -55,12 +58,12 @@ public class BsqLiteNode extends BsqNode {
                        BsqLiteNodeExecutor bsqLiteNodeExecutor,
                        BsqBlockChain bsqBlockChain,
                        FeeService feeService,
-                       SeedNodesRepository seedNodesRepository) {
+                       RequestManager requestManager) {
         super(p2PService,
                 bsqParser,
                 bsqBlockChain,
                 feeService,
-                seedNodesRepository);
+                requestManager);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 
@@ -71,90 +74,86 @@ public class BsqLiteNode extends BsqNode {
 
     @Override
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        super.onAllServicesInitialized(errorMessageHandler);
+        super.onInitialized();
     }
 
     @Override
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
 
-        requestManager = new RequestManager(p2PService.getNetworkNode(),
-                p2PService.getPeerManager(),
-                p2PService.getBroadcaster(),
-                seedNodesRepository.getSeedNodeAddresses(),
-                bsqBlockChain,
-                new RequestManager.Listener() {
-                    @Override
-                    public void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
-                        List<BsqBlock> bsqBlockList = new ArrayList<>(getBsqBlocksResponse.getBsqBlocks());
-                        log.info("received msg with {} items", bsqBlockList.size());
-                        if (bsqBlockList.size() > 0)
-                            log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
-                        // Be safe and reset all mutable data in case the provider would not have done it
-                        bsqBlockList.stream().forEach(BsqBlock::reset);
-                        bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
-                                genesisBlockHeight,
-                                genesisTxId,
-                                BsqLiteNode.this::onNewBsqBlock,
-                                () -> onParseBlockchainComplete(genesisBlockHeight, genesisTxId), throwable -> {
-                                    if (throwable instanceof BlockNotConnectingException) {
-                                        startReOrgFromLastSnapshot();
-                                    } else {
-                                        log.error(throwable.toString());
-                                        throwable.printStackTrace();
-                                    }
-                                });
-                    }
+        requestManager.addListener(new RequestManager.Listener() {
+            @Override
+            public void onRequestedBlocksReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
+                BsqLiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBsqBlocksResponse.getBsqBlocks()));
+            }
 
-                    @Override
-                    public void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
-                        BsqBlock bsqBlock = newBsqBlockBroadcastMessage.getBsqBlock();
-                        // Be safe and reset all mutable data in case the provider would not have done it
-                        bsqBlock.reset();
-                        log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
-                        if (!bsqBlockChain.containsBlock(bsqBlock)) {
-                            bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
-                                    genesisBlockHeight,
-                                    genesisTxId,
-                                    () -> onNewBsqBlock(bsqBlock), throwable -> {
-                                        if (throwable instanceof BlockNotConnectingException) {
-                                            startReOrgFromLastSnapshot();
-                                        } else {
-                                            log.error(throwable.toString());
-                                            throwable.printStackTrace();
-                                        }
-                                    });
-                        }
-                    }
+            @Override
+            public void onNewBlockReceived(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
+                BsqLiteNode.this.onNewBlockReceived(newBsqBlockBroadcastMessage.getBsqBlock());
+            }
 
-                    @Override
-                    public void onNoSeedNodeAvailable() {
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
 
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage, @Nullable Connection connection) {
-
-                    }
-                });
+            @Override
+            public void onFault(String errorMessage, @Nullable Connection connection) {
+            }
+        });
 
         // delay a bit to not stress too much at startup
         UserThread.runAfter(this::startParseBlocks, 2);
     }
 
+    // First we request the blocks from a full node
     @Override
-    protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
-        parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, 0);
+    protected void startParseBlocks() {
+        requestManager.requestBlocks(getStartBlockHeight());
     }
 
-    @Override
-    protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
-        requestManager.requestBlocks(startBlockHeight);
+    // We received the missing blocks
+    private void onRequestedBlocksReceived(List<BsqBlock> bsqBlockList) {
+        log.info("onRequestedBlocksReceived: blocks with {} items", bsqBlockList.size());
+        if (bsqBlockList.size() > 0)
+            log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+        // We reset all mutable data in case the provider would not have done it.
+        bsqBlockList.forEach(BsqBlock::reset);
+        bsqLiteNodeExecutor.parseBlocks(bsqBlockList,
+                genesisBlockHeight,
+                genesisTxId,
+                BsqLiteNode.this::onNewBsqBlock,
+                this::onParseBlockchainComplete,
+                getErrorHandler());
     }
 
-    @Override
-    protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
+    // We received a new block
+    private void onNewBlockReceived(BsqBlock bsqBlock) {
+        // We reset all mutable data in case the provider would not have done it.
+        bsqBlock.reset();
+        log.info("onNewBlockReceived: bsqBlock={}", bsqBlock.getHeight());
+        if (!bsqBlockChain.containsBlock(bsqBlock)) {
+            bsqLiteNodeExecutor.parseBlock(bsqBlock,
+                    genesisBlockHeight,
+                    genesisTxId,
+                    () -> onNewBsqBlock(bsqBlock),
+                    getErrorHandler());
+        }
+    }
+
+    private void onParseBlockchainComplete() {
         parseBlockchainComplete = true;
-        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
+        bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
+    }
+
+    @NotNull
+    private Consumer<Throwable> getErrorHandler() {
+        return throwable -> {
+            if (throwable instanceof BlockNotConnectingException) {
+                startReOrgFromLastSnapshot();
+            } else {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
+            }
+        };
     }
 }

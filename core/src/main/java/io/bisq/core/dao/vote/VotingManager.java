@@ -91,6 +91,10 @@ public class VotingManager implements PersistedDataHost {
         this.votingDefaultValues = votingDefaultValues;
     }
 
+    public void shutDown() {
+
+    }
+
     @Override
     public void readPersisted() {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {

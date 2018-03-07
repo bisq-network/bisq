@@ -15,6 +15,7 @@ import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,12 +47,14 @@ public class RequestBlocksHandler implements MessageListener {
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
+    @Getter
+    private final NodeAddress nodeAddress;
+    @Getter
+    private final int startBlockHeight;
     private final Listener listener;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
     private boolean stopped;
-    private Connection connection;
-    private NodeAddress peersNodeAddress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,9 +63,13 @@ public class RequestBlocksHandler implements MessageListener {
 
     public RequestBlocksHandler(NetworkNode networkNode,
                                 PeerManager peerManager,
+                                NodeAddress nodeAddress,
+                                int startBlockHeight,
                                 Listener listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
+        this.nodeAddress = nodeAddress;
+        this.startBlockHeight = startBlockHeight;
         this.listener = listener;
     }
 
@@ -75,10 +82,7 @@ public class RequestBlocksHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestBlocks(NodeAddress nodeAddress, int startBlockHeight) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
-        this.peersNodeAddress = nodeAddress;
-
+    public void requestBlocks() {
         if (!stopped) {
             GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight, nonce);
             log.debug("getBsqBlocksRequest " + getBsqBlocksRequest);
@@ -86,9 +90,9 @@ public class RequestBlocksHandler implements MessageListener {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
                                 String errorMessage = "A timeout occurred at sending getBsqBlocksRequest:" + getBsqBlocksRequest +
-                                        " on peersNodeAddress:" + peersNodeAddress;
+                                        " on peersNodeAddress:" + nodeAddress;
                                 log.debug(errorMessage + " / RequestDataHandler=" + RequestBlocksHandler.this);
-                                handleFault(errorMessage, peersNodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                                handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
                                         "Might be caused by an previous networkNode.sendMessage.onFailure.");
@@ -97,15 +101,14 @@ public class RequestBlocksHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.debug("We send a {} to peer {}. ", getBsqBlocksRequest.getClass().getSimpleName(), peersNodeAddress);
+            log.debug("We send a {} to peer {}. ", getBsqBlocksRequest.getClass().getSimpleName(), nodeAddress);
             networkNode.addMessageListener(this);
-            SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, getBsqBlocksRequest);
+            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBsqBlocksRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        RequestBlocksHandler.this.connection = connection;
-                        log.trace("Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
+                        log.trace("Send " + getBsqBlocksRequest + " to " + nodeAddress + " succeeded.");
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -115,12 +118,12 @@ public class RequestBlocksHandler implements MessageListener {
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     if (!stopped) {
-                        String errorMessage = "Sending getBsqBlocksRequest to " + peersNodeAddress +
+                        String errorMessage = "Sending getBsqBlocksRequest to " + nodeAddress +
                                 " failed. That is expected if the peer is offline.\n\t" +
                                 "getBsqBlocksRequest=" + getBsqBlocksRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
                         log.error(errorMessage);
-                        handleFault(errorMessage, peersNodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
+                        handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
                                 "Might be caused by an previous timeout.");
@@ -140,7 +143,7 @@ public class RequestBlocksHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         if (networkEnvelop instanceof GetBsqBlocksResponse) {
-            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
+            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
                 Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;

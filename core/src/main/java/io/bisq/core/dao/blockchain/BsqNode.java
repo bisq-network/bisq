@@ -26,14 +26,17 @@ import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
+/**
+ * Base class for the lite and full node.
+ * <p>
+ * We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
+ */
 @Slf4j
 public abstract class BsqNode {
 
@@ -47,12 +50,11 @@ public abstract class BsqNode {
     protected final BsqParser bsqParser;
     @SuppressWarnings("WeakerAccess")
     protected final BsqBlockChain bsqBlockChain;
-    protected final SeedNodesRepository seedNodesRepository;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqBlockChainListener> bsqBlockChainListeners = new ArrayList<>();
     protected final String genesisTxId;
     protected final int genesisBlockHeight;
-    protected RequestManager requestManager;
+    protected final RequestManager requestManager;
 
     @Getter
     protected boolean parseBlockchainComplete;
@@ -69,12 +71,12 @@ public abstract class BsqNode {
                    BsqParser bsqParser,
                    BsqBlockChain bsqBlockChain,
                    FeeService feeService,
-                   SeedNodesRepository seedNodesRepository) {
+                   RequestManager requestManager) {
 
         this.p2PService = p2PService;
         this.bsqParser = bsqParser;
         this.bsqBlockChain = bsqBlockChain;
-        this.seedNodesRepository = seedNodesRepository;
+        this.requestManager = requestManager;
 
         genesisTxId = bsqBlockChain.getGenesisTxId();
         genesisBlockHeight = bsqBlockChain.getGenesisBlockHeight();
@@ -87,10 +89,16 @@ public abstract class BsqNode {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
+    public void shutDown() {
+        requestManager.shutDown();
+    }
+
+    public abstract void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler);
+
+    public void onInitialized() {
         applySnapshot();
         log.info("onAllServicesInitialized");
         if (p2PService.isBootstrapped()) {
@@ -139,7 +147,7 @@ public abstract class BsqNode {
 
     private void applySnapshot() {
         bsqBlockChain.applySnapshot();
-        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
+        bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -147,9 +155,8 @@ public abstract class BsqNode {
         p2pNetworkReady = true;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    protected void startParseBlocks() {
-        int startBlockHeight = Math.max(genesisBlockHeight, bsqBlockChain.getChainHeadHeight() + 1);
+    protected int getStartBlockHeight() {
+        final int startBlockHeight = Math.max(genesisBlockHeight, bsqBlockChain.getChainHeadHeight() + 1);
         log.info("Start parse blocks:\n" +
                         "   Start block height={}\n" +
                         "   Genesis txId={}\n" +
@@ -160,22 +167,14 @@ public abstract class BsqNode {
                 genesisBlockHeight,
                 bsqBlockChain.getChainHeadHeight());
 
-        parseBlocksWithChainHeadHeight(startBlockHeight,
-                genesisBlockHeight,
-                genesisTxId);
+        return startBlockHeight;
     }
 
-    abstract protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId);
-
-    abstract protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight);
-
-    abstract protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId);
+    abstract protected void startParseBlocks();
 
     @SuppressWarnings("WeakerAccess")
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
-        //TODO called at each block at startup parsing. cause a lot of cpu waste at listeners...
-        // -> make more fine grained callbacks so UI only listens on final results when parsing is complete
-        bsqBlockChainListeners.stream().forEach(BsqBlockChainListener::onBsqBlockChainChanged);
+        bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 
     @SuppressWarnings("WeakerAccess")

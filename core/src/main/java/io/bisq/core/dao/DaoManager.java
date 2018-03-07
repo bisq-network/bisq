@@ -58,4 +58,11 @@ public class DaoManager {
             bsqNode.onAllServicesInitialized(errorMessageHandler);
         }
     }
+
+    public void shutDown() {
+        daoPeriodService.shutDown();
+        voteManager.shutDown();
+        compensationRequestManager.shutDown();
+        bsqNode.shutDown();
+    }
 }

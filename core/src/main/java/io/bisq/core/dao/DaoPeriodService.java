@@ -112,6 +112,10 @@ public class DaoPeriodService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void shutDown() {
+
+    }
+
     public void onAllServicesInitialized() {
         btcWalletService.getChainHeightProperty().addListener((observable, oldValue, newValue) -> {
             onChainHeightChanged((int) newValue);

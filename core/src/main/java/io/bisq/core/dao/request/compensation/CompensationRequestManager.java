@@ -111,6 +111,10 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void shutDown() {
+
+    }
+
     public void onAllServicesInitialized() {
         p2PService.addHashSetChangedListener(this);
 

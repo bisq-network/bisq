@@ -15,9 +15,11 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.network.p2p.peers.PeerManager;
+import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
+import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,9 +42,9 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     public interface Listener {
         void onNoSeedNodeAvailable();
 
-        void onBlockReceived(GetBsqBlocksResponse getBsqBlocksResponse);
+        void onRequestedBlocksReceived(GetBsqBlocksResponse getBsqBlocksResponse);
 
-        void onNewBsqBlockBroadcastMessage(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage);
+        void onNewBlockReceived(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage);
 
         void onFault(String errorMessage, @Nullable Connection connection);
     }
@@ -57,7 +59,8 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     private final Broadcaster broadcaster;
     private final BsqBlockChain bsqBlockChain;
     private final Collection<NodeAddress> seedNodeAddresses;
-    private final Listener listener;
+
+    private final List<Listener> listeners = new ArrayList<>();
 
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
     private final Map<String, GetBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
@@ -69,25 +72,29 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Inject
     public RequestManager(NetworkNode networkNode,
                           PeerManager peerManager,
                           Broadcaster broadcaster,
-                          Set<NodeAddress> seedNodeAddresses,
-                          BsqBlockChain bsqBlockChain,
-                          Listener listener) {
+                          SeedNodesRepository seedNodesRepository,
+                          BsqBlockChain bsqBlockChain) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         this.bsqBlockChain = bsqBlockChain;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
-        this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
-        this.listener = listener;
+        this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
         peerManager.addListener(this);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @SuppressWarnings("Duplicates")
     public void shutDown() {
         Log.traceCall();
         stopped = true;
@@ -98,10 +105,9 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
         closeAllHandlers();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
 
     public void requestBlocks(int startBlockHeight) {
         Log.traceCall();
@@ -139,13 +145,10 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
         closeHandler(connection);
 
         if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
-            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-            seedNodeAddresses.remove(nodeAddress);
-            requestBlocksHandlerMap.entrySet().stream()
-                    .filter(e -> e.getKey().first.equals(nodeAddress))
-                    .findAny()
-                    .map(Map.Entry::getValue)
-                    .ifPresent(requestBlocksHandlerMap::remove);
+            connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
+                seedNodeAddresses.remove(nodeAddress);
+                removeFromRequestBlocksHandlerMap(nodeAddress);
+            });
         }
     }
 
@@ -239,7 +242,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }
         } else if (networkEnvelop instanceof NewBsqBlockBroadcastMessage) {
-            listener.onNewBsqBlockBroadcastMessage((NewBsqBlockBroadcastMessage) networkEnvelop);
+            listeners.forEach(listener -> listener.onNewBlockReceived((NewBsqBlockBroadcastMessage) networkEnvelop));
         }
     }
 
@@ -252,7 +255,10 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
             final Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
             if (!requestBlocksHandlerMap.containsKey(key)) {
                 if (startBlockHeight >= lastReceivedBlockHeight) {
-                    RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode, peerManager,
+                    RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
+                            peerManager,
+                            peersNodeAddress,
+                            startBlockHeight,
                             new RequestBlocksHandler.Listener() {
                                 @Override
                                 public void onComplete(GetBsqBlocksResponse getBsqBlocksResponse) {
@@ -265,7 +271,7 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                                     // we only notify if our request was latest
                                     if (startBlockHeight >= lastReceivedBlockHeight) {
                                         lastReceivedBlockHeight = startBlockHeight;
-                                        listener.onBlockReceived(getBsqBlocksResponse);
+                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBsqBlocksResponse));
                                     } else {
                                         log.warn("We got a response which is already obsolete because we receive a " +
                                                 "response from a request with a higher block height. " +
@@ -281,13 +287,13 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                                     peerManager.handleConnectionFault(peersNodeAddress);
                                     requestBlocksHandlerMap.remove(key);
 
-                                    listener.onFault(errorMessage, connection);
+                                    listeners.forEach(listener -> listener.onFault(errorMessage, connection));
 
                                     tryWithNewSeedNode(startBlockHeight);
                                 }
                             });
                     requestBlocksHandlerMap.put(key, requestBlocksHandler);
-                    requestBlocksHandler.requestBlocks(peersNodeAddress, startBlockHeight);
+                    requestBlocksHandler.requestBlocks();
                 } else {
                     //TODO check with re-orgs
                     // FIXME when a lot of blocks are created we get caught here. Seems to be a threading issue...
@@ -302,10 +308,10 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                         "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
 
                 UserThread.runAfter(() -> {
-                    if (requestBlocksHandlerMap.containsKey(peersNodeAddress)) {
-                        RequestBlocksHandler handler = requestBlocksHandlerMap.get(peersNodeAddress);
+                    if (requestBlocksHandlerMap.containsKey(key)) {
+                        RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
                         handler.stop();
-                        requestBlocksHandlerMap.remove(peersNodeAddress);
+                        requestBlocksHandlerMap.remove(key);
                     }
                 }, CLEANUP_TIMER);
             }
@@ -342,13 +348,13 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
                                 requestBlocks(nextCandidate, startBlockHeight);
                             } else {
                                 log.warn("No more seed nodes available we could try.");
-                                listener.onNoSeedNodeAvailable();
+                                listeners.forEach(Listener::onNoSeedNodeAvailable);
                             }
                         },
                         RETRY_DELAY_SEC);
             } else {
                 log.warn("We tried {} times but could not connect to a seed node.", retryCounter);
-                listener.onNoSeedNodeAvailable();
+                listeners.forEach(Listener::onNoSeedNodeAvailable);
             }
         } else {
             log.warn("We have a retry timer already running.");
@@ -366,17 +372,27 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
         Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
         if (peersNodeAddressOptional.isPresent()) {
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
-            if (requestBlocksHandlerMap.containsKey(nodeAddress)) {
-                requestBlocksHandlerMap.get(nodeAddress).cancel();
-                requestBlocksHandlerMap.remove(nodeAddress);
-            }
+            removeFromRequestBlocksHandlerMap(nodeAddress);
         } else {
             log.trace("closeHandler: nodeAddress not set in connection " + connection);
         }
     }
 
+    private void removeFromRequestBlocksHandlerMap(NodeAddress nodeAddress) {
+        requestBlocksHandlerMap.entrySet().stream()
+                .filter(e -> e.getKey().first.equals(nodeAddress))
+                .findAny()
+                .map(Map.Entry::getValue)
+                .ifPresent(handler -> {
+                    final Tuple2<NodeAddress, Integer> key = new Tuple2<>(handler.getNodeAddress(), handler.getStartBlockHeight());
+                    requestBlocksHandlerMap.get(key).cancel();
+                    requestBlocksHandlerMap.remove(key);
+                });
+    }
+
+
     private void closeAllHandlers() {
-        requestBlocksHandlerMap.values().stream().forEach(RequestBlocksHandler::cancel);
+        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);
         requestBlocksHandlerMap.clear();
     }
 }
