@@ -34,6 +34,8 @@ import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.request.compensation.consensus.OpReturnData;
+import io.bisq.core.dao.request.compensation.consensus.Restrictions;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
