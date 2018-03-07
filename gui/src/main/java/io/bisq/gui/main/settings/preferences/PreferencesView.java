@@ -454,6 +454,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void activateGeneralOptions() {
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
+        // We don't support Dash anymore due lack of activity but leave it in the code in case it will get
+        // re-activated some day
+        baseCurrencyNetworks = baseCurrencyNetworks.stream()
+                .filter(e -> !e.isDash())
+                .collect(Collectors.toList());
+
         // show ony mainnet in production version
         if (!DevEnv.isDevMode())
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
