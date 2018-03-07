@@ -17,6 +17,9 @@
 
 package io.bisq.core.dao;
 
+/**
+ * Provides byte constants for distinguishing the type of a DAO transaction used in the OP_RETURN data.
+ */
 public class OpReturnTypes {
     public static final byte COMPENSATION_REQUEST = (byte) 0x01;
     public static final byte VOTE = (byte) 0x02;

@@ -19,6 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.dao.voterequest.VoteRequest;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,12 +36,12 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// Represents the state of the CompensationRequest data
-// TODO cleanup
+// Represents the local and mutual state of the CompensationRequest data
+// TODO cleanup, not completed yet
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
-public final class CompensationRequest implements PersistablePayload {
+public final class CompensationRequest extends VoteRequest implements PersistablePayload {
 
     private final CompensationRequestPayload payload;
 

@@ -242,7 +242,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     private boolean isInPhaseOrUnconfirmed(CompensationRequestPayload payload) {
-        return bsqBlockChain.getTxMap().get(payload.getTxId()) == null || daoPeriodService.isInPhase(payload, DaoPeriodService.Phase.COMPENSATION_REQUESTS);
+        return bsqBlockChain.getTxMap().get(payload.getTxId()) == null || daoPeriodService.isTxInPhase(payload.getTxId(), DaoPeriodService.Phase.COMPENSATION_REQUESTS);
     }
 
     public boolean isMine(CompensationRequest compensationRequest) {
@@ -340,9 +340,9 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
 
     private void updateFilteredLists() {
         // TODO: Does this only need to be set once to keep the list updated?
-        pastRequests.setPredicate(daoPeriodService::isInPastCycle);
+        pastRequests.setPredicate(request -> daoPeriodService.isTxInPastCycle(request.getPayload().getTxId()));
         activeRequests.setPredicate(compensationRequest -> {
-            return daoPeriodService.isInCurrentCycle(compensationRequest) ||
+            return daoPeriodService.isTxInCurrentCycle(compensationRequest.getPayload().getTxId()) ||
                     (bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId()) == null &&
                             isMine(compensationRequest));
         });

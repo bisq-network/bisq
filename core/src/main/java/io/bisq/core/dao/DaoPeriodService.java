@@ -23,8 +23,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingService;
 import javafx.beans.property.ObjectProperty;
@@ -121,26 +119,26 @@ public class DaoPeriodService {
         onChainHeightChanged(btcWalletService.getChainHeightProperty().get());
     }
 
-    public boolean isInPhase(CompensationRequestPayload compensationRequestPayload, Phase phase) {
-        Tx tx = bsqBlockChain.getTxMap().get(compensationRequestPayload.getTxId());
-        return tx != null && isTxHeightInPhase(tx.getBlockHeight(),
+    public boolean isTxInPhase(String txId, Phase phase) {
+        Tx tx = bsqBlockChain.getTxMap().get(txId);
+        return tx != null && isTxInPhase(tx.getBlockHeight(),
                 chainHeight,
                 genesisBlockHeight,
                 phase.getDurationInBlocks(),
                 getNumBlocksOfCycle());
     }
 
-    public boolean isInCurrentCycle(CompensationRequest compensationRequest) {
-        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
-        return tx != null && isInCurrentCycle(tx.getBlockHeight(),
+    public boolean isTxInCurrentCycle(String txId) {
+        Tx tx = bsqBlockChain.getTxMap().get(txId);
+        return tx != null && isTxInCurrentCycle(tx.getBlockHeight(),
                 chainHeight,
                 genesisBlockHeight,
                 getNumBlocksOfCycle());
     }
 
-    public boolean isInPastCycle(CompensationRequest compensationRequest) {
-        Tx tx = bsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId());
-        return tx != null && isInPastCycle(tx.getBlockHeight(),
+    public boolean isTxInPastCycle(String txId) {
+        Tx tx = bsqBlockChain.getTxMap().get(txId);
+        return tx != null && isTxInPastCycle(tx.getBlockHeight(),
                 chainHeight,
                 genesisBlockHeight,
                 getNumBlocksOfCycle());
@@ -237,7 +235,7 @@ public class DaoPeriodService {
     }
 
     @VisibleForTesting
-    boolean isTxHeightInPhase(int txHeight, int chainHeight, int genesisHeight, int requestPhaseInBlocks, int numBlocksOfCycle) {
+    boolean isTxInPhase(int txHeight, int chainHeight, int genesisHeight, int requestPhaseInBlocks, int numBlocksOfCycle) {
         if (txHeight >= genesisHeight && chainHeight >= genesisHeight && chainHeight >= txHeight) {
             int numBlocksOfTxHeightSinceGenesis = txHeight - genesisHeight;
             int numBlocksOfChainHeightSinceGenesis = chainHeight - genesisHeight;
@@ -250,7 +248,7 @@ public class DaoPeriodService {
     }
 
     @VisibleForTesting
-    boolean isInCurrentCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
+    boolean isTxInCurrentCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
         final int numOfCompletedCycles = getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle);
         final int blockAtCycleStart = genesisHeight + numOfCompletedCycles * numBlocksOfCycle;
         final int blockAtCycleEnd = blockAtCycleStart + numBlocksOfCycle - 1;
@@ -261,7 +259,7 @@ public class DaoPeriodService {
     }
 
     @VisibleForTesting
-    boolean isInPastCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
+    boolean isTxInPastCycle(int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle) {
         final int numOfCompletedCycles = getNumOfCompletedCycles(chainHeight, genesisHeight, numBlocksOfCycle);
         final int blockAtCycleStart = genesisHeight + numOfCompletedCycles * numBlocksOfCycle;
         return txHeight <= chainHeight &&

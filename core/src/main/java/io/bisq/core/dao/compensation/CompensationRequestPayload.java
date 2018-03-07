@@ -37,6 +37,9 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Payload sent over wire as well as it gets persisted, containing all base data for a compensation request
+ */
 @Slf4j
 @Data
 public final class CompensationRequestPayload implements LazyProcessedPayload, PersistableProtectedPayload, CapabilityRequiringPayload {
@@ -180,7 +183,7 @@ public final class CompensationRequestPayload implements LazyProcessedPayload, P
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODo not needed?
+    //TODO not needed?
     @Override
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(30);

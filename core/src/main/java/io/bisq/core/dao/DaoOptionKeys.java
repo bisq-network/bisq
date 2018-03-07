@@ -1,5 +1,8 @@
 package io.bisq.core.dao;
 
+/**
+ * Provides program argument options used in the DAO domain.
+ */
 public class DaoOptionKeys {
     public static final String RPC_USER = "rpcUser";
     public static final String RPC_PASSWORD = "rpcPassword";
