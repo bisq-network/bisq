@@ -1,4 +1,14 @@
 language: java
+
 jdk: oraclejdk8
 
-install: mvn clean install -Dmaven.javadoc.skip=true -B -V
+sudo: required
+
+services:
+  - docker
+
+env:
+  - MVN_COMMAND="clean install -Dmaven.javadoc.skip=true -B -V"
+  - MVN_COMMAND="verify -P integration"
+
+script: "mvn $MVN_COMMAND"
