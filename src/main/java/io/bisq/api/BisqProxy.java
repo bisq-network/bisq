@@ -231,11 +231,8 @@ public class BisqProxy {
         return new Tuple2<>(result, error);
     }
 
-    public List<OfferDetail> getOfferList() {
-        List<OfferDetail> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferDetail(offer1)).collect(toList());
-        //List<OfferDetail> offer = openOfferManager.getObservableList().stream().map(offer1 -> new OfferDetail(offer1.getOffer())).collect(toList());
-        return offer;
-
+    public List<Offer> getOfferList() {
+        return offerBookService.getOffers();
     }
 
     public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
