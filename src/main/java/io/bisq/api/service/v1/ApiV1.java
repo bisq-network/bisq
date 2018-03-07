@@ -35,6 +35,11 @@ public class ApiV1 {
         return new OfferResource(bisqProxy);
     }
 
+    @Path("p2p")
+    public P2PResource getP2PResource() {
+        return new P2PResource(bisqProxy);
+    }
+
     @Path("payment-accounts")
     public PaymentAccountResource getPaymentAccountResource() {
         return new PaymentAccountResource(bisqProxy);
