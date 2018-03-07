@@ -15,17 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.request.general;
-
-import io.bisq.core.dao.request.VoteRequest;
+package io.bisq.core.dao.request.compensation.consensus;
 
 /**
- * Request for anything not covered by specific vote requests.
+ * Validation for compensation requests
  */
+// TODO move all validation code here...
+public class Validation {
 
-// TODO implement
-public class GeneralPurposeRequest extends VoteRequest {
-
-    public GeneralPurposeRequest() {
-    }
 }
