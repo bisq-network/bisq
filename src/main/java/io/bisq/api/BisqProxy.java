@@ -2,10 +2,9 @@ package io.bisq.api;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.inject.Injector;
 import io.bisq.api.model.*;
-import io.bisq.api.model.PaymentAccountList;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -13,7 +12,6 @@ import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.Arbitrator;
@@ -24,11 +22,10 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.*;
-import io.bisq.core.payment.*;
+import io.bisq.core.payment.AccountAgeWitnessService;
+import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.provider.price.MarketPrice;
-import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
@@ -45,16 +42,17 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -66,14 +64,15 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * This class is a proxy for all bitsquare features the model will use.
- * <p>
+ * <p/>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  * => this should be the common gateway to bisq used by all outward-facing API classes.
- * <p>
+ * <p/>
  * If the bisq code is refactored correctly, this class could become very light.
  */
 @Slf4j
 public class BisqProxy {
+    private final Injector injector;
     private AccountAgeWitnessService accountAgeWitnessService;
     private ArbitratorManager arbitratorManager;
     private BtcWalletService btcWalletService;
@@ -85,25 +84,21 @@ public class BisqProxy {
     private OfferBookService offerBookService;
     private P2PService p2PService;
     private KeyRing keyRing;
-    private PriceFeedService priceFeedService;
     private FeeService feeService;
     private Preferences preferences;
     private BsqWalletService bsqWalletService;
     private final boolean useDevPrivilegeKeys;
     private WalletsSetup walletsSetup;
-
-
-    private MarketPrice marketPrice;
-    private boolean marketPriceAvailable;
     @Getter
     private MarketList marketList;
     @Getter
     private CurrencyList currencyList;
 
-    public BisqProxy(AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
-                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user,
+    public BisqProxy(Injector injector, AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, User user,
                      FeeService feeService, Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
                      ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys) {
+        this.injector = injector;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
@@ -112,7 +107,6 @@ public class BisqProxy {
         this.offerBookService = offerBookService;
         this.p2PService = p2PService;
         this.keyRing = keyRing;
-        this.priceFeedService = priceFeedService;
         this.user = user;
         this.feeService = feeService;
         this.preferences = preferences;
@@ -125,7 +119,7 @@ public class BisqProxy {
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
-    protected CurrencyList calculateCurrencyList() {
+    public static CurrencyList calculateCurrencyList() {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
         CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getSymbol(), fiatCurrency.getName(), "fiat"));
@@ -133,7 +127,7 @@ public class BisqProxy {
         return currencyList;
     }
 
-    protected MarketList calculateMarketList() {
+    public static MarketList calculateMarketList() {
         MarketList marketList = new MarketList();
         CurrencyList currencyList = calculateCurrencyList(); // we calculate this twice but only at startup
         //currencyList.getCurrencies().stream().flatMap(currency -> marketList.getMarkets().forEach(currency1 -> cur))
@@ -144,7 +138,6 @@ public class BisqProxy {
         Collections.sort(currencyList.currencies, Comparator.comparing(p -> p.name));
         return marketList;
     }
-
 
     public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
         final PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
@@ -245,212 +238,46 @@ public class BisqProxy {
 
     }
 
-    public Optional<BisqProxyError> offerMake(String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, String fiatPrice) {
-
+    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) {
+//TODO add security deposit parameter
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
-        if (user.getAcceptedArbitratorAddresses().size() == 0) {
-            return BisqProxyError.getOptional("No arbitrator has been chosen");
-        }
+        final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
-        // Checked that if fixed we have a fixed price, if percentage we have a percentage
-        if (marketPriceMargin == null && useMarketBasedPrice) {
-            return BisqProxyError.getOptional("When choosing PERCENTAGE price, fill in percentage_from_market_price");
-        } else if ((Strings.isNullOrEmpty(fiatPrice) || "0".equals(fiatPrice) || Long.valueOf(fiatPrice) == 0) && !useMarketBasedPrice) {
-            return BisqProxyError.getOptional("When choosing FIXED price, fill in fixed_price with a price > 0");
-        }
-        // fix marketpair if it's lowercase
-        marketPair = marketPair.toUpperCase();
+        if (!fundUsingBisqWallet && null == offerId)
+            return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
 
-        // check that the market pair is valid
-        if (!checkValidMarket(marketPair)) {
-            return BisqProxyError.getOptional("There is no valid market pair called: " + marketPair + ". Note that market pairs are uppercase and are separated by an underscore: XMR_BTC");
-        }
-
-        Market market = new Market(marketPair);
-        // if right side is fiat, then left is base currency.
-        // else right side is base currency.
-        String baseCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getLsymbol() : market.getRsymbol();
-        String counterCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getRsymbol() : market.getLsymbol();
-
-        Optional<PaymentAccount> optionalAccount = getPaymentAccountList().stream()
-                .filter(account1 -> account1.getId().equals(accountId)).findFirst();
-        if (!optionalAccount.isPresent()) {
-            // return an error
-            String errorMessage = "Could not find payment account with id: " + accountId;
-            log.error(errorMessage);
-            return BisqProxyError.getOptional(errorMessage);
-        }
-        PaymentAccount paymentAccount = optionalAccount.get();
-
+        final OfferBuilder offerBuilder = injector.getInstance(OfferBuilder.class);
+        final Offer offer;
         try {
-
-            // COPIED from CreateDataOfferModel: TODO refactor uit of GUI module  /////////////////////////////
-            String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
-            ArrayList<String> acceptedCountryCodes = null;
-            if (paymentAccount instanceof SepaAccount) {
-                acceptedCountryCodes = new ArrayList<>();
-                acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-            } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-                acceptedCountryCodes = new ArrayList<>();
-                acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
-            }
-            String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
-            ArrayList<String> acceptedBanks = null;
-            if (paymentAccount instanceof SpecificBanksAccount) {
-                acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-            } else if (paymentAccount instanceof SameBankAccount) {
-                acceptedBanks = new ArrayList<>();
-                acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-            }
-            long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(baseCurrencyCode).value;
-            long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
-            boolean isPrivateOffer = false;
-            boolean useAutoClose = false;
-            boolean useReOpenAfterAutoClose = false;
-            long lowerClosePrice = 0;
-            long upperClosePrice = 0;
-            String hashOfChallenge = null;
-            HashMap<String, String> extraDataMap = null;
-
-            // COPIED from CreateDataOfferModel /////////////////////////////
-
-            updateMarketPriceAvailable(baseCurrencyCode);
-
-            // TODO dummy values in this constructor !!!
-            Coin coinAmount = Coin.valueOf(amount.longValueExact());
-            OfferPayload offerPayload = new OfferPayload(
-                    UUID.randomUUID().toString(),
-                    new Date().getTime(),
-                    p2PService.getAddress(),
-                    keyRing.getPubKeyRing(),
-                    direction,
-                    Long.valueOf(fiatPrice),
-                    marketPriceMargin,
-                    useMarketBasedPrice,
-                    amount.longValueExact(),
-                    minAmount.longValueExact(),
-                    baseCurrencyCode,
-                    counterCurrencyCode,
-                    (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
-                    (ArrayList<NodeAddress>) user.getAcceptedMediatorAddresses(),
-                    paymentAccount.getPaymentMethod().getId(),
-                    paymentAccount.getId(),
-                    null, // will be filled in by BroadcastMakerFeeTx class
-                    countryCode,
-                    acceptedCountryCodes,
-                    bankId,
-                    acceptedBanks,
-                    Version.VERSION,
-                    btcWalletService.getLastBlockSeenHeight(),
-                    feeService.getTxFee(600).value, // default also used in code CreateOfferDataModel
-                    getMakerFee(coinAmount, marketPriceMargin).value,
-                    preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
-                    preferences.getBuyerSecurityDepositAsCoin().value,
-                    Restrictions.getSellerSecurityDeposit().value,
-                    maxTradeLimit,
-                    maxTradePeriod,
-                    useAutoClose,
-                    useReOpenAfterAutoClose,
-                    upperClosePrice,
-                    lowerClosePrice,
-                    isPrivateOffer,
-                    hashOfChallenge,
-                    extraDataMap,
-                    Version.TRADE_PROTOCOL_VERSION
-            );
-
-            Offer offer = new Offer(offerPayload);
-            offer.setPriceFeedService(priceFeedService);
-
-            if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-                return BisqProxyError.getOptional("PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode());
-            }
-
-            // use countdownlatch to block this method until there's a success/error callback call
-            CountDownLatch placeOfferLatch = new CountDownLatch(1);
-
-            // TODO remove ugly workaround - probably implies refactoring the placeoffer code
-            String[] errorResult = new String[1];
-
-            checkNotNull(getMakerFee(false, Coin.valueOf(amount.longValue()), marketPriceMargin), "makerFee must not be null");
-
-            Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
-            if (!OfferUtil.isBuyOffer(direction))
-                reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
-
-            openOfferManager.placeOffer(offer, reservedFundsForOffer,
-                    true,
-                    (transaction) -> {
-                        log.info("Result is " + transaction);
-                        errorResult[0] = "";
-                        placeOfferLatch.countDown();
-                    },
-                    error -> {
-                        placeOfferLatch.countDown();
-                        errorResult[0] = error;
-                    }
-            );
-
-            // wait X seconds for a result or timeout
-            if (placeOfferLatch.await(10L, TimeUnit.SECONDS))
-                if (errorResult[0] == "")
-                    return Optional.empty();
-                else
-                    return BisqProxyError.getOptional("Error while placing offer:" + errorResult[0]);
-            else
-                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
-        } catch (Throwable e) {
-            return BisqProxyError.getOptional(e.getMessage(), e);
+            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice);
+        } catch (Exception e) {
+            return failFuture(futureResult, e);
         }
+        Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
+        if (!OfferUtil.isBuyOffer(direction))
+            reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
+
+//        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
+//        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
+        openOfferManager.placeOffer(offer, reservedFundsForOffer,
+                fundUsingBisqWallet,
+                transaction -> futureResult.complete(offer),
+                error -> {
+                    if (error.contains("Insufficient money")) {
+                        futureResult.completeExceptionally(new InsufficientMoneyException(error));
+                    } else
+                        futureResult.completeExceptionally(new RuntimeException(error));
+                });
+
+        return futureResult;
     }
 
-    /// START TODO OFFER_MAKE dependencies, refactor out of GUI module ///////
-
-    boolean isBsqForFeeAvailable(Coin amount, double marketPriceMargin) {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getMakerFee(false, amount, marketPriceMargin) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getMakerFee(false, amount, marketPriceMargin) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false, amount, marketPriceMargin)).isNegative();
+    @NotNull
+    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Exception ex) {
+        futureResult.completeExceptionally(ex);
+        return futureResult;
     }
-
-    boolean isCurrencyForMakerFeeBtc(Coin amount, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount, marketPriceMargin);
-    }
-
-    private void updateMarketPriceAvailable(String baseCurrencyCode) {
-        marketPrice = priceFeedService.getMarketPrice(baseCurrencyCode);
-        marketPriceAvailable = (marketPrice != null);
-    }
-
-    @Nullable
-    public Coin getMakerFee(Coin amount, double marketPriceMargin) {
-        return getMakerFee(isCurrencyForMakerFeeBtc(amount, marketPriceMargin), amount, marketPriceMargin);
-    }
-
-    @Nullable
-    Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount, double marketPriceMargin) {
-        if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            double makerFeeAsDouble = (double) feePerBtc.value;
-            if (marketPriceAvailable) {
-                if (marketPriceMargin > 0)
-                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
-                else
-                    makerFeeAsDouble = 0;
-                // For BTC we round so min value change is 100 satoshi
-                if (isCurrencyForMakerFeeBtc)
-                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
-            }
-
-            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
-
-    /// STOP TODO OFFER_MAKE dependencies, refactor out of GUI module ///////
 
     /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
@@ -772,17 +599,6 @@ public class BisqProxy {
         return true; // TODO better return value?
     }
 
-    private boolean checkValidMarket(String marketPair) {
-        boolean result = false;
-        if(StringUtils.isEmpty(marketPair)) {
-            log.error("marketPair cannot be empty:" + marketPair);
-        } else if(!marketPair.equals(marketPair.toUpperCase())) {
-            log.error("marketPair should be uppercase: " + marketPair);
-        } else {
-            result =  marketList.markets.stream().filter(market -> market.getPair().equals(marketPair)).count() == 1;
-        }
-        return result;
-    }
 
     public void registerArbitrator(List<String> languageCodes) {
 //        TODO most of this code is dupplication of ArbitratorRegistrationViewModel.onRegister
@@ -850,5 +666,12 @@ public class BisqProxy {
 
     private boolean arbitratorIsTrader(Arbitrator arbitrator) {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
+    }
+
+    public AddressEntry getOrCreateBtcWalletAddresses(AddressEntry.Context context, boolean unused) {
+        if (unused) {
+            return btcWalletService.getOrCreateUnusedAddressEntry(context);
+        }
+        return btcWalletService.getOrCreateAddressEntry(context);
     }
 }

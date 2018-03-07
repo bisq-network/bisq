@@ -1,11 +1,8 @@
 package io.bisq.api;
 
-import com.github.javafaker.Faker;
 import io.bisq.api.model.SepaAccountToCreate;
-import io.bisq.core.payment.payload.PaymentMethod;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuilder;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
@@ -13,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -23,23 +19,7 @@ import static org.hamcrest.Matchers.*;
 public class PaymentAccountIT {
 
     @DockerContainer
-    private Container alice = createApiContainer("alice", "8081->8080", 3333);
-
-    private ContainerBuilder.ContainerOptionsBuilder withRegtestEnv(ContainerBuilder.ContainerOptionsBuilder builder) {
-        return builder
-                .withEnvironment("USE_LOCALHOST_FOR_P2P", "true")
-                .withEnvironment("BASE_CURRENCY_NETWORK", "BTC_REGTEST")
-                .withEnvironment("BTC_NODES", "bisq-bitcoin:18332")
-                .withEnvironment("SEED_NODES", "bisq-seednode:8000")
-                .withEnvironment("LOG_LEVEL", "debug");
-    }
-
-    private Container createApiContainer(String nameSuffix, String portBinding, int nodePort) {
-        return withRegtestEnv(Container.withContainerName("bisq-api-" + nameSuffix).fromImage("bisq-api").withVolume("m2", "/root/.m2").withPortBinding(portBinding))
-                .withEnvironment("NODE_PORT", nodePort)
-                .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true)
-                .build();
-    }
+    private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);
 
     @InSequence
     @Test
@@ -56,7 +36,7 @@ public class PaymentAccountIT {
     public void create_validData_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
+        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
 
         given().
                 port(alicePort).
@@ -192,7 +172,7 @@ public class PaymentAccountIT {
     private void create_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = randomValidCreateSepaAccountPayload();
+        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         SepaAccountToCreate.class.getField(fieldName).set(accountToCreate, fieldValue);
 
         given().
@@ -213,18 +193,5 @@ public class PaymentAccountIT {
         return alice.getBindPort(8080);
     }
 
-    private SepaAccountToCreate randomValidCreateSepaAccountPayload() {
-        final Faker faker = new Faker();
-        final SepaAccountToCreate accountToCreate = new SepaAccountToCreate();
-        accountToCreate.paymentMethod = PaymentMethod.SEPA_ID;
-        accountToCreate.accountName = faker.commerce().productName();
-        accountToCreate.bic = faker.finance().bic();
-        accountToCreate.iban = faker.finance().iban();
-        accountToCreate.holderName = faker.name().fullName();
-        accountToCreate.countryCode = faker.address().countryCode();
-        accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
-        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
-        return accountToCreate;
-    }
 
 }

@@ -52,4 +52,8 @@ public class WalletResource {
         return bisqProxy.getWalletTransactions();
     }
 
+    @Path("btc")
+    public BtcWalletResource getBtcWalletResource() {
+        return new BtcWalletResource(bisqProxy);
+    }
 }

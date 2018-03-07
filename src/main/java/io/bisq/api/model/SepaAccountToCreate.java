@@ -25,4 +25,6 @@ public class SepaAccountToCreate extends AccountToCreate {
     @NotBlank
     public String iban;
 
+//    TODO add accepted countries and make sure that countryCode is on that list
+
 }

@@ -1,0 +1,4 @@
+language: java
+jdk: oraclejdk8
+
+install: mvn clean install -Dmaven.javadoc.skip=true -B -V

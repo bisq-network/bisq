@@ -1,6 +1,7 @@
 package io.bisq.api.service;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.health.CurrencyListHealthCheck;
@@ -16,7 +17,6 @@ import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
@@ -34,6 +34,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 public class BisqApiApplication extends Application<ApiConfiguration> {
+
+    @Inject
+    Injector injector;
 
     @Inject
     AccountAgeWitnessService accountAgeWitnessService;
@@ -69,9 +72,6 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     KeyRing keyRing;
 
     @Inject
-    PriceFeedService priceFeedService;
-
-    @Inject
     User user;
 
     @Inject
@@ -82,6 +82,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Inject
     private Preferences preferences;
+
     @Inject
     private BsqWalletService bsqWalletService;
 
@@ -118,8 +119,8 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
-        BisqProxy bisqProxy = new BisqProxy(accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
-                offerBookService, p2PService, keyRing, priceFeedService, user, feeService, preferences, bsqWalletService,
+        BisqProxy bisqProxy = new BisqProxy(injector, accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
+                offerBookService, p2PService, keyRing, user, feeService, preferences, bsqWalletService,
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
