@@ -12,7 +12,7 @@ import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.voterequest.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;

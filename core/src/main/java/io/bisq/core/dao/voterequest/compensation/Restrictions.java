@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.compensation;
+package io.bisq.core.dao.voterequest.compensation;
 
 import org.bitcoinj.core.Coin;
 

@@ -19,8 +19,8 @@ package io.bisq.gui.main.dao.compensation;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
-import io.bisq.core.dao.compensation.Restrictions;
+import io.bisq.core.dao.voterequest.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.voterequest.compensation.Restrictions;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.gui.components.*;
 import io.bisq.gui.util.BsqFormatter;
@@ -33,7 +33,10 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 
 import javax.annotation.Nullable;

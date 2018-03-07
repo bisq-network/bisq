@@ -1,4 +1,4 @@
-package io.bisq.core.dao.compensation;
+package io.bisq.core.dao.voterequest.compensation;
 
 import org.bitcoinj.core.Coin;
 

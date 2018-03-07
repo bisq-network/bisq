@@ -22,8 +22,8 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.BsqNode;
 import io.bisq.core.dao.blockchain.BsqNodeProvider;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
+import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
 
 /**
  * High level entry point for Dao domain

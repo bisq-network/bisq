@@ -22,7 +22,7 @@ import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
 import io.bisq.core.dao.blockchain.vo.TxType;
-import io.bisq.core.dao.compensation.CompensationRequest;
+import io.bisq.core.dao.voterequest.compensation.CompensationRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;

@@ -23,7 +23,7 @@ import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.voterequest.compensation.CompensationRequestManager;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;

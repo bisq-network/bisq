@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.compensation;
+package io.bisq.core.dao.voterequest.compensation;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
