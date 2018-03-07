@@ -90,7 +90,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsLabel, paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
-            waitingForFundsLabel, offerAvailabilityLabel, amountCurrency;
+            waitingForFundsLabel, offerAvailabilityLabel, amountCurrency, priceAsPercentageDescription;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField,
             volumeTextField, amountRangeTextField;
@@ -245,6 +245,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
+            priceAsPercentageDescription.setText(Res.get("shared.aboveInPercent"));
         } else {
             imageView.setId("image-sell-large");
             directionLabel.setId("direction-icon-label-sell");
@@ -252,6 +253,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
             takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
+            priceAsPercentageDescription.setText(Res.get("shared.belowInPercent"));
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -935,7 +937,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
                 Res.get("shared.distanceInPercent"));
-        priceAsPercentageInputBoxTuple.first.setPrefWidth(220);
+        priceAsPercentageDescription = priceAsPercentageInputBoxTuple.first;
+        priceAsPercentageDescription.setPrefWidth(220);
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageLabel.setText("%");
