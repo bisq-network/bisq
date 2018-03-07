@@ -107,7 +107,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
             priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, xLabel;
+            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
@@ -247,11 +247,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
+            percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             imageView.setId("image-sell-large");
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
+            percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
 
         updateMarketPriceAvailable();
@@ -1043,7 +1045,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(marketBasedPriceLabel);
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
                 Res.get("shared.distanceInPercent"));
-        priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
+        percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
+        percentagePriceDescription.setPrefWidth(200);
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
         // Fixed/Percentage toggle
