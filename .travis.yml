@@ -7,8 +7,12 @@ sudo: required
 services:
   - docker
 
+# These env variables start 2 parallel builds.
+#
+# The neat part about this setup is that the unit test suite is usually going to be done before
+# the integration test suite, giving you a faster visual feedback on the basic test coverage.
 env:
-  - MVN_COMMAND="clean install -Dmaven.javadoc.skip=true -B -V"
-  - MVN_COMMAND="verify -P integration"
+  - MVN_COMMAND="mvn clean install -Dmaven.javadoc.skip=true -B -V"
+  - MVN_COMMAND="docker-compose build && mvn verify -P integration"
 
-script: "mvn $MVN_COMMAND"
+script: "$MVN_COMMAND"
