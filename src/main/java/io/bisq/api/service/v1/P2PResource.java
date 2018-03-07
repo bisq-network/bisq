@@ -1,7 +1,7 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
-import io.bisq.api.model.Info;
+import io.bisq.api.model.P2PNetworkStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -11,20 +11,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 
-@Api("info")
+@Api("p2p")
 @Produces(MediaType.APPLICATION_JSON)
-public class InfoResource {
+public class P2PResource {
 
     private final BisqProxy bisqProxy;
 
-    public InfoResource(BisqProxy bisqProxy) {
+    public P2PResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 
-    @ApiOperation(value = "Get info")
+    @ApiOperation(value = "Get P2P network status")
     @GET
-    @Path("/")
-    public Info getInfo() {
-        return bisqProxy.getInfo();
+    @Path("/status")
+    public P2PNetworkStatus getP2PNetworkStatus() {
+        return bisqProxy.getP2PNetworkStatus();
     }
 }
