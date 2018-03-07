@@ -33,8 +33,8 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.ChangeBelowDustException;
-import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.DaoPeriodService;
+import io.bisq.core.dao.OpReturnTypes;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
@@ -172,7 +172,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
 
             String dataAndSig = payloadAsJson + signature;
             byte[] dataAndSigAsBytes = dataAndSig.getBytes();
-            outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
+            outputStream.write(OpReturnTypes.COMPENSATION_REQUEST);
             outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
             outputStream.write(Hash.getSha256Ripemd160hash(dataAndSigAsBytes));
             byte opReturnData[] = outputStream.toByteArray();

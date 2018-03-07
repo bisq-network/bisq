@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.blockchain.parse;
 
-import io.bisq.core.dao.DaoConstants;
+import io.bisq.core.dao.OpReturnTypes;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -52,10 +52,10 @@ public class OpReturnVerification {
             if (opReturnData != null && opReturnData.length > 1) {
                 txOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
                 switch (opReturnData[0]) {
-                    case DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST:
+                    case OpReturnTypes.COMPENSATION_REQUEST:
                         return compensationRequestVerification.processOpReturnData(tx, opReturnData, txOutput,
                                 bsqFee, blockHeight, btcOutput);
-                    case DaoConstants.OP_RETURN_TYPE_VOTE:
+                    case OpReturnTypes.VOTE:
                         // TODO: Handle missing bsqOutput, is it considered an invalid vote?
                         if (bsqOutput != null) {
                             return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
