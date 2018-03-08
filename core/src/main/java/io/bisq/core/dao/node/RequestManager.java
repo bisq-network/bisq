@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p;
+package io.bisq.core.dao.node;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -7,10 +7,10 @@ import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
-import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.messages.GetBsqBlocksRequest;
+import io.bisq.core.dao.node.messages.GetBsqBlocksResponse;
+import io.bisq.core.dao.node.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.Broadcaster;

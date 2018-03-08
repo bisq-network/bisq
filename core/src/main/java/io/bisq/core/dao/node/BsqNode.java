@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;

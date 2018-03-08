@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p.messages;
+package io.bisq.core.dao.node.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.network.NetworkEnvelope;

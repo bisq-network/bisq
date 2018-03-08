@@ -1,4 +1,4 @@
-package io.bisq.core.dao.blockchain.p2p;
+package io.bisq.core.dao.node;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -7,9 +7,9 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
-import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.messages.GetBsqBlocksRequest;
+import io.bisq.core.dao.node.messages.GetBsqBlocksResponse;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.NetworkNode;
@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class GetBlocksRequestHandler {
     private static final long TIMEOUT = 120;
