@@ -7,7 +7,6 @@ import io.bisq.common.GlobalSettings;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
@@ -35,7 +34,6 @@ import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.fee.FeeService;
@@ -49,15 +47,8 @@ import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
-import io.bisq.gui.components.BalanceWithConfirmationTextField;
-import io.bisq.gui.components.TxIdTextField;
 import io.bisq.gui.main.PriceFeedComboBoxItem;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
-import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
-import io.bisq.gui.main.overlays.windows.TorNetworkSettingsWindow;
-import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
-import io.bisq.gui.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.crypto.DecryptedDataTuple;
@@ -74,8 +65,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.SetChangeListener;
-import javafx.embed.swing.JFXPanel;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -87,19 +76,15 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
-import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.Security;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.bisq.common.Timer;
 
 /*
 
@@ -121,12 +106,12 @@ public class MainViewModelHeadless {
     private final PrivateNotificationManager privateNotificationManager;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private final FilterManager filterManager;
-    private final WalletPasswordWindow walletPasswordWindow;
+//    private final WalletPasswordWindow walletPasswordWindow;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final NotificationCenter notificationCenter;
+//    private final NotificationCenter notificationCenter;
     private final Clock clock;
     private final FeeService feeService;
-    private final DaoManager daoManager;
+//    private final DaoManager daoManager;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
@@ -186,7 +171,7 @@ public class MainViewModelHeadless {
     private MonadicBinding<String> marketPriceBinding;
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Subscription priceFeedAllLoadedSubscription;
-    private TorNetworkSettingsWindow torNetworkSettingsWindow;
+//    private TorNetworkSettingsWindow torNetworkSettingsWindow;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
@@ -203,7 +188,7 @@ public class MainViewModelHeadless {
                                  ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                                  OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                                  User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                                 FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, TradeStatisticsManager tradeStatisticsManager,
+                                 FilterManager filterManager, TradeStatisticsManager tradeStatisticsManager,
                                  NotificationCenter notificationCenter, Clock clock, FeeService feeService,
                                  DaoManager daoManager, EncryptionService encryptionService,
                                  KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
@@ -223,12 +208,12 @@ public class MainViewModelHeadless {
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager; // Reference so it's initialized and eventListener gets registered
-        this.walletPasswordWindow = walletPasswordWindow;
+//        this.walletPasswordWindow = walletPasswordWindow;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.notificationCenter = notificationCenter;
+//        this.notificationCenter = notificationCenter;
         this.clock = clock;
         this.feeService = feeService;
-        this.daoManager = daoManager;
+//        this.daoManager = daoManager;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
@@ -236,12 +221,6 @@ public class MainViewModelHeadless {
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
-
-        TxIdTextField.setPreferences(preferences);
-
-        // TODO
-        TxIdTextField.setWalletService(btcWalletService);
-        BalanceWithConfirmationTextField.setWalletService(btcWalletService);
     }
 
 
@@ -250,8 +229,6 @@ public class MainViewModelHeadless {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        initialiseJavaFxToolkit();
-
         //noinspection ConstantConditions,ConstantConditions
         bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
 
@@ -263,22 +240,6 @@ public class MainViewModelHeadless {
             checkIfLocalHostNodeIsRunning();
         } else {
             checkIfLocalHostNodeIsRunning();
-        }
-    }
-
-    /** javafx toolkit needs to be initialised because some bisq methods use e.g. javafx collections */
-    private void initialiseJavaFxToolkit() {
-        try {
-            final CountDownLatch latch = new CountDownLatch(1);
-            SwingUtilities.invokeLater(() -> {
-                new JFXPanel(); // initializes JavaFX environment
-                latch.countDown();
-            });
-
-            if (!latch.await(5L, TimeUnit.SECONDS))
-                throw new ExceptionInInitializerError();
-        } catch (InterruptedException e) {
-            log.error("Error initializing javafx toolxit",e);
         }
     }
 
@@ -548,20 +509,22 @@ public class MainViewModelHeadless {
                         if (p2pNetWorkReady.get())
                             splashP2PNetworkAnimationVisible.set(false);
 
-                        walletPasswordWindow
-                                .onAesKey(aesKey -> {
-                                    walletsManager.setAesKey(aesKey);
-                                    if (preferences.isResyncSpvRequested()) {
-                                        showFirstPopupIfResyncSPVRequested();
-                                    } else {
-                                        walletInitialized.set(true);
-                                    }
-                                })
-                                .hideCloseButton()
-                                .show();
+                        throw new IllegalStateException("Wallet password not supported yet in headless mode!");
+//                        walletPasswordWindow
+//                                .onAesKey(aesKey -> {
+//                                    walletsManager.setAesKey(aesKey);
+//                                    if (preferences.isResyncSpvRequested()) {
+//                                        showFirstPopupIfResyncSPVRequested();
+//                                    } else {
+//                                        walletInitialized.set(true);
+//                                    }
+//                                })
+//                                .hideCloseButton()
+//                                .show();
                     } else {
                         if (preferences.isResyncSpvRequested()) {
-                            showFirstPopupIfResyncSPVRequested();
+//                            TODO not sure how API should react to this
+//                            showFirstPopupIfResyncSPVRequested();
                         } else {
                             walletInitialized.set(true);
                         }
@@ -596,9 +559,9 @@ public class MainViewModelHeadless {
             if (newValue)
                 applyTradePeriodState();
         });
-        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
-                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
-                .show());
+//        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+//                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
+//                .show());
 
         // walletService
         btcWalletService.addBalanceListener(new BalanceListener() {
@@ -623,7 +586,7 @@ public class MainViewModelHeadless {
         feeService.onAllServicesInitialized();
         GUIUtil.setFeeService(feeService);
 
-        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
+//        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         tradeStatisticsManager.onAllServicesInitialized();
 
@@ -632,15 +595,15 @@ public class MainViewModelHeadless {
         priceFeedService.setCurrencyCodeOnInit();
 
         filterManager.onAllServicesInitialized();
-        filterManager.addListener(filter -> {
-            if (filter != null) {
-                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
-                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed"))).show();
-
-                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
-                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay"))).show();
-            }
-        });
+//        filterManager.addListener(filter -> {
+//            if (filter != null) {
+//                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
+//                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed"))).show();
+//
+//                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
+//                    new Popup<>().warning(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay"))).show();
+//            }
+//        });
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
@@ -656,15 +619,15 @@ public class MainViewModelHeadless {
 
         showAppScreen.set(true);
 
-        String key = "remindPasswordAndBackup";
-        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
-                        .information(Res.get("popup.securityRecommendation.msg"))
-                        .dontShowAgainId(key)
-                        .show();
-            }
-        });
+//        String key = "remindPasswordAndBackup";
+//        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
+//            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
+//                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+//                        .information(Res.get("popup.securityRecommendation.msg"))
+//                        .dontShowAgainId(key)
+//                        .show();
+//            }
+//        });
 
         checkIfOpenOffersMatchTradeProtocolVersion();
 
@@ -674,27 +637,27 @@ public class MainViewModelHeadless {
         allBasicServicesInitialized = true;
     }
 
-    private void showFirstPopupIfResyncSPVRequested() {
-        Popup firstPopup = new Popup<>();
-        firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
-        if (btcSyncProgress.get() == 1) {
-            showSecondPopupIfResyncSPVRequested(firstPopup);
-        } else {
-            btcSyncProgress.addListener((observable, oldValue, newValue) -> {
-                if ((double) newValue == 1)
-                    showSecondPopupIfResyncSPVRequested(firstPopup);
-            });
-        }
-    }
+//    private void showFirstPopupIfResyncSPVRequested() {
+//        Popup firstPopup = new Popup<>();
+//        firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
+//        if (btcSyncProgress.get() == 1) {
+//            showSecondPopupIfResyncSPVRequested(firstPopup);
+//        } else {
+//            btcSyncProgress.addListener((observable, oldValue, newValue) -> {
+//                if ((double) newValue == 1)
+//                    showSecondPopupIfResyncSPVRequested(firstPopup);
+//            });
+//        }
+//    }
 
-    private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
-        firstPopup.hide();
-        preferences.setResyncSpvRequested(false);
-        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
-                .hideCloseButton()
-                .useShutDownButton()
-                .show();
-    }
+//    private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
+//        firstPopup.hide();
+//        preferences.setResyncSpvRequested(false);
+//        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+//                .hideCloseButton()
+//                .useShutDownButton()
+//                .show();
+//    }
 
     private void checkIfLocalHostNodeIsRunning() {
         Thread checkIfLocalHostNodeIsRunningThread = new Thread() {
@@ -762,10 +725,11 @@ public class MainViewModelHeadless {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
-                    UserThread.execute(() -> new Popup<>().warning(msg)
-                            .useShutDownButton()
-                            .useReportBugButton()
-                            .show());
+//                    TODO API probably should quit on this error
+//                    UserThread.execute(() -> new Popup<>().warning(msg)
+//                            .useShutDownButton()
+//                            .useReportBugButton()
+//                            .show());
                 }
             }
         };
@@ -773,22 +737,22 @@ public class MainViewModelHeadless {
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
-        List<OpenOffer> outDatedOffers = openOfferManager.getObservableList()
-                .stream()
-                .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
-                .collect(Collectors.toList());
-        if (!outDatedOffers.isEmpty()) {
-            String offers = outDatedOffers.stream()
-                    .map(e -> e.getId() + "\n")
-                    .collect(Collectors.toList()).toString()
-                    .replace("[", "").replace("]", "");
-            new Popup<>()
-                    .warning(Res.get("popup.warning.oldOffers.msg", offers))
-                    .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
-                    .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
-                    .useShutDownButton()
-                    .show();
-        }
+//        List<OpenOffer> outDatedOffers = openOfferManager.getObservableList()
+//                .stream()
+//                .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
+//                .collect(Collectors.toList());
+//        if (!outDatedOffers.isEmpty()) {
+//            String offers = outDatedOffers.stream()
+//                    .map(e -> e.getId() + "\n")
+//                    .collect(Collectors.toList()).toString()
+//                    .replace("[", "").replace("]", "");
+//            new Popup<>()
+//                    .warning(Res.get("popup.warning.oldOffers.msg", offers))
+//                    .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
+//                    .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
+//                    .useShutDownButton()
+//                    .show();
+//        }
     }
 
 
@@ -836,20 +800,20 @@ public class MainViewModelHeadless {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
+//                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
+//                                        trade.getShortId(),
+//                                        formatter.formatDateTime(maxTradePeriodDate)))
+//                                        .show();
                             }
                             break;
                         case TRADE_PERIOD_OVER:
                             key = "displayTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
+//                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
+//                                        trade.getShortId(),
+//                                        formatter.formatDateTime(maxTradePeriodDate)))
+//                                        .show();
                             }
                             break;
                     }
@@ -990,21 +954,21 @@ public class MainViewModelHeadless {
         });
     }
 
-    public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (item != null) {
-            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeedService.currencyCodeProperty().get());
-            if (itemOptional.isPresent())
-                selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
-            else
-                findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
-                        .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
-
-            priceFeedService.setCurrencyCode(item.currencyCode);
-        } else {
-            findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
-                    .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
-        }
-    }
+//    public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
+//        if (item != null) {
+//            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeedService.currencyCodeProperty().get());
+//            if (itemOptional.isPresent())
+//                selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
+//            else
+//                findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
+//                        .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
+//
+//            priceFeedService.setCurrencyCode(item.currencyCode);
+//        } else {
+//            findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
+//                    .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
+//        }
+//    }
 
     private Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {
         return priceFeedComboBoxItems.stream()
@@ -1021,44 +985,44 @@ public class MainViewModelHeadless {
     }
 
     private void displayAlertIfPresent(Alert alert, boolean openNewVersionPopup) {
-        if (alert != null) {
-            if (alert.isUpdateInfo()) {
-                user.setDisplayedAlert(alert);
-                final boolean isNewVersion = alert.isNewVersion();
-                newVersionAvailableProperty.set(isNewVersion);
-                String key = "Update_" + alert.getVersion();
-                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup)) {
-                    new DisplayUpdateDownloadWindow(alert)
-                            .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
-                            .onAction(() -> {
-                                preferences.dontShowAgain(key, false); // update later
-                            })
-                            .closeButtonText(Res.get("shared.cancel"))
-                            .onClose(() -> {
-                                preferences.dontShowAgain(key, true); // ignore update
-                            })
-                            .show();
-                }
-            } else {
-                final Alert displayedAlert = user.getDisplayedAlert();
-                if (displayedAlert == null || !displayedAlert.equals(alert))
-                    new DisplayAlertMessageWindow()
-                            .alertMessage(alert)
-                            .onClose(() -> {
-                                user.setDisplayedAlert(alert);
-                            })
-                            .show();
-            }
-        }
+//        if (alert != null) {
+//            if (alert.isUpdateInfo()) {
+//                user.setDisplayedAlert(alert);
+//                final boolean isNewVersion = alert.isNewVersion();
+//                newVersionAvailableProperty.set(isNewVersion);
+//                String key = "Update_" + alert.getVersion();
+//                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup)) {
+//                    new DisplayUpdateDownloadWindow(alert)
+//                            .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
+//                            .onAction(() -> {
+//                                preferences.dontShowAgain(key, false); // update later
+//                            })
+//                            .closeButtonText(Res.get("shared.cancel"))
+//                            .onClose(() -> {
+//                                preferences.dontShowAgain(key, true); // ignore update
+//                            })
+//                            .show();
+//                }
+//            } else {
+//                final Alert displayedAlert = user.getDisplayedAlert();
+//                if (displayedAlert == null || !displayedAlert.equals(alert))
+//                    new DisplayAlertMessageWindow()
+//                            .alertMessage(alert)
+//                            .onClose(() -> {
+//                                user.setDisplayedAlert(alert);
+//                            })
+//                            .show();
+//            }
+//        }
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
-        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
-                .attention(privateNotification.getMessage())
-                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
-                .onClose(privateNotificationManager::removePrivateNotification)
-                .useIUnderstandButton()
-                .show();
+//        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
+//                .attention(privateNotification.getMessage())
+//                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+//                .onClose(privateNotificationManager::removePrivateNotification)
+//                .useIUnderstandButton()
+//                .show();
     }
 
     private void swapPendingOfferFundingEntries() {
@@ -1125,30 +1089,30 @@ public class MainViewModelHeadless {
     }
 
     private void checkForLockedUpFunds() {
-        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
-                .filter(Trade::hasFailed)
-                .map(Trade::getId)
-                .collect(Collectors.toSet());
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
-                .map(e -> {
-                    log.warn("We found a closed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
-                })
-                .collect(Collectors.toSet()));
-
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
-                .forEach(e -> {
-                    final Coin balance = e.getCoinLockedInMultiSig();
-                    final String message = Res.get("popup.warning.lockedUpFunds",
-                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                    log.warn(message);
-                    new Popup<>().warning(message).show();
-                });
+//        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
+//                .filter(Trade::hasFailed)
+//                .map(Trade::getId)
+//                .collect(Collectors.toSet());
+//        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
+//                .map(Trade::getId)
+//                .collect(Collectors.toSet()));
+//        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+//                .map(e -> {
+//                    log.warn("We found a closed trade with locked up funds. " +
+//                            "That should never happen. trade ID=" + e.getId());
+//                    return e.getId();
+//                })
+//                .collect(Collectors.toSet()));
+//
+//        btcWalletService.getAddressEntriesForTrade().stream()
+//                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
+//                .forEach(e -> {
+//                    final Coin balance = e.getCoinLockedInMultiSig();
+//                    final String message = Res.get("popup.warning.lockedUpFunds",
+//                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+//                    log.warn(message);
+//                    new Popup<>().warning(message).show();
+//                });
     }
 
 
@@ -1194,24 +1158,24 @@ public class MainViewModelHeadless {
     }
 
     private void removeOffersWithoutAccountAgeWitness() {
-        if (new Date().after(AccountAgeWitnessService.FULL_ACTIVATION)) {
-            openOfferManager.getObservableList().stream()
-                    .filter(e -> CurrencyUtil.isFiatCurrency(e.getOffer().getCurrencyCode()))
-                    .filter(e -> !e.getOffer().getAccountAgeWitnessHashAsHex().isPresent())
-                    .forEach(e -> {
-                        new Popup<>().warning(Res.get("popup.warning.offerWithoutAccountAgeWitness", e.getId()))
-                                .actionButtonText(Res.get("popup.warning.offerWithoutAccountAgeWitness.confirm"))
-                                .onAction(() -> {
-                                    openOfferManager.removeOffer(e.getOffer(),
-                                            () -> {
-                                                log.info("Offer with ID {} is removed", e.getId());
-                                            },
-                                            log::error);
-                                })
-                                .hideCloseButton()
-                                .show();
-                    });
-        }
+//        if (new Date().after(AccountAgeWitnessService.FULL_ACTIVATION)) {
+//            openOfferManager.getObservableList().stream()
+//                    .filter(e -> CurrencyUtil.isFiatCurrency(e.getOffer().getCurrencyCode()))
+//                    .filter(e -> !e.getOffer().getAccountAgeWitnessHashAsHex().isPresent())
+//                    .forEach(e -> {
+//                        new Popup<>().warning(Res.get("popup.warning.offerWithoutAccountAgeWitness", e.getId()))
+//                                .actionButtonText(Res.get("popup.warning.offerWithoutAccountAgeWitness.confirm"))
+//                                .onAction(() -> {
+//                                    openOfferManager.removeOffer(e.getOffer(),
+//                                            () -> {
+//                                                log.info("Offer with ID {} is removed", e.getId());
+//                                            },
+//                                            log::error);
+//                                })
+//                                .hideCloseButton()
+//                                .show();
+//                    });
+//        }
     }
 
     private void setupDevDummyPaymentAccounts() {
