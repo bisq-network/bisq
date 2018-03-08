@@ -1,4 +1,4 @@
-package io.bisq.core.dao.node;
+package io.bisq.core.dao.node.lite.network;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -24,6 +24,9 @@ import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Sends GetBsqBlocksRequest and listens on corresponding GetBsqBlocksResponse from full node.
+ */
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {
     private static final long TIMEOUT = 120;

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 
 //TODO outdated, ignore
+@SuppressWarnings("unused")
 @Slf4j
 public class VotingVerification {
     private final BsqBlockChain bsqBlockChain;

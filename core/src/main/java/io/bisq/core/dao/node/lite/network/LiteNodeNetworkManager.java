@@ -1,4 +1,4 @@
-package io.bisq.core.dao.node;
+package io.bisq.core.dao.node.lite.network;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -6,14 +6,10 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.vo.BsqBlock;
-import io.bisq.core.dao.node.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.node.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.node.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
-import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +19,11 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Responsible for requesting BSQ blocks from a full node and for listening to new blocks broadcasted by full nodes.
+ */
 @Slf4j
-public class BlocksRequestManager implements MessageListener, ConnectionListener, PeerManager.Listener {
+public class LiteNodeNetworkManager implements MessageListener, ConnectionListener, PeerManager.Listener {
 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
@@ -56,14 +55,12 @@ public class BlocksRequestManager implements MessageListener, ConnectionListener
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
-    private final Broadcaster broadcaster;
-    private final BsqBlockChain bsqBlockChain;
     private final Collection<NodeAddress> seedNodeAddresses;
 
     private final List<Listener> listeners = new ArrayList<>();
 
+    // Key is tuple of seedNode address and requested blockHeight
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
-    private final Map<String, GetBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
     private Timer retryTimer;
     private boolean stopped;
 
@@ -73,15 +70,11 @@ public class BlocksRequestManager implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BlocksRequestManager(NetworkNode networkNode,
-                                PeerManager peerManager,
-                                Broadcaster broadcaster,
-                                SeedNodesRepository seedNodesRepository,
-                                BsqBlockChain bsqBlockChain) {
+    public LiteNodeNetworkManager(NetworkNode networkNode,
+                                  PeerManager peerManager,
+                                  SeedNodesRepository seedNodesRepository) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
-        this.broadcaster = broadcaster;
-        this.bsqBlockChain = bsqBlockChain;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
 
@@ -112,21 +105,15 @@ public class BlocksRequestManager implements MessageListener, ConnectionListener
     public void requestBlocks(int startBlockHeight) {
         Log.traceCall();
         lastRequestedBlockHeight = startBlockHeight;
-        Optional<Connection> seedNodeAddressOptional = networkNode.getConfirmedConnections().stream()
+        Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()
                 .filter(peerManager::isSeedNode)
                 .findAny();
-        if (seedNodeAddressOptional.isPresent() &&
-                seedNodeAddressOptional.get().getPeersNodeAddressOptional().isPresent()) {
-            requestBlocks(seedNodeAddressOptional.get().getPeersNodeAddressOptional().get(), startBlockHeight);
+        if (connectionToSeedNodeOptional.isPresent() &&
+                connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().isPresent()) {
+            requestBlocks(connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get(), startBlockHeight);
         } else {
             tryWithNewSeedNode(startBlockHeight);
         }
-    }
-
-    public void publishNewBlock(BsqBlock bsqBlock) {
-        log.info("Publish new block at height={} and block hash={}", bsqBlock.getHeight(), bsqBlock.getHash());
-        final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlock);
-        broadcaster.broadcast(newBsqBlockBroadcastMessage, networkNode.getNodeAddress(), null, true);
     }
 
 
@@ -195,53 +182,7 @@ public class BlocksRequestManager implements MessageListener, ConnectionListener
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
-        if (networkEnvelop instanceof GetBsqBlocksRequest) {
-            Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
-            if (!stopped) {
-                if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
-
-                final String uid = connection.getUid();
-                if (!getBlocksRequestHandlers.containsKey(uid)) {
-                    GetBlocksRequestHandler getDataRequestHandler = new GetBlocksRequestHandler(networkNode,
-                            bsqBlockChain,
-                            new GetBlocksRequestHandler.Listener() {
-                                @Override
-                                public void onComplete() {
-                                    getBlocksRequestHandlers.remove(uid);
-                                    log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    getBlocksRequestHandlers.remove(uid);
-                                    if (!stopped) {
-                                        log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
-                                                "ErrorMessage={}", connection, errorMessage);
-                                        peerManager.handleConnectionFault(connection);
-                                    } else {
-                                        log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
-                                    }
-                                }
-                            });
-                    getBlocksRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetBsqBlocksRequest) networkEnvelop, connection);
-                } else {
-                    log.warn("We have already a GetDataRequestHandler for that connection started. " +
-                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
-
-                    UserThread.runAfter(() -> {
-                        if (getBlocksRequestHandlers.containsKey(uid)) {
-                            GetBlocksRequestHandler handler = getBlocksRequestHandlers.get(uid);
-                            handler.stop();
-                            getBlocksRequestHandlers.remove(uid);
-                        }
-                    }, CLEANUP_TIMER);
-                }
-            } else {
-                log.warn("We have stopped already. We ignore that onMessage call.");
-            }
-        } else if (networkEnvelop instanceof NewBsqBlockBroadcastMessage) {
+        if (networkEnvelop instanceof NewBsqBlockBroadcastMessage) {
             listeners.forEach(listener -> listener.onNewBlockReceived((NewBsqBlockBroadcastMessage) networkEnvelop));
         }
     }

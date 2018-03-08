@@ -107,8 +107,8 @@ public abstract class BsqParser {
                 "txsWithInputsFromSameBlock.size + txsWithoutInputsFromSameBlock.size != transactions.size");
 
         // Usual values is up to 25
-        // There are some blocks where it seems devs have tested graphs of many depending txs, but even
-        // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
+        // There are some blocks where it seems developers have tested graphs of many depending txs, but even
+        // those don't exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
         if (recursionCounter > 1000) {

@@ -1,4 +1,4 @@
-package io.bisq.core.dao.node;
+package io.bisq.core.dao.node.full.network;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -19,8 +19,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Takes a GetBsqBlocksRequest from a lite nodes and send back a corresponding GetBsqBlocksResponse.
+ */
 @Slf4j
-public class GetBlocksRequestHandler {
+class GetBsqBlocksRequestHandler {
     private static final long TIMEOUT = 120;
 
 
@@ -43,14 +46,14 @@ public class GetBlocksRequestHandler {
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
-    private BsqBlockChain bsqBlockChain;
+    private final BsqBlockChain bsqBlockChain;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBlocksRequestHandler(NetworkNode networkNode, BsqBlockChain bsqBlockChain, Listener listener) {
+    public GetBsqBlocksRequestHandler(NetworkNode networkNode, BsqBlockChain bsqBlockChain, Listener listener) {
         this.networkNode = networkNode;
         this.bsqBlockChain = bsqBlockChain;
         this.listener = listener;
@@ -61,7 +64,7 @@ public class GetBlocksRequestHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handle(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
+    public void onGetBsqBlocksRequest(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
         List<BsqBlock> bsqBlocks = bsqBlockChain.getResetBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
         final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());

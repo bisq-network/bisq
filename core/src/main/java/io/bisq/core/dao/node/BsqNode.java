@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
@@ -45,10 +44,8 @@ public abstract class BsqNode {
     protected final BsqBlockChain bsqBlockChain;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqBlockChainListener> bsqBlockChainListeners = new ArrayList<>();
-    protected final String genesisTxId;
-    protected final int genesisBlockHeight;
-    @SuppressWarnings("WeakerAccess")
-    protected final BlocksRequestManager requestManager;
+    private final String genesisTxId;
+    private final int genesisBlockHeight;
     @Getter
     protected boolean parseBlockchainComplete;
     @SuppressWarnings("WeakerAccess")
@@ -62,12 +59,10 @@ public abstract class BsqNode {
     @Inject
     public BsqNode(P2PService p2PService,
                    BsqBlockChain bsqBlockChain,
-                   FeeService feeService,
-                   BlocksRequestManager requestManager) {
+                   FeeService feeService) {
 
         this.p2PService = p2PService;
         this.bsqBlockChain = bsqBlockChain;
-        this.requestManager = requestManager;
 
         genesisTxId = bsqBlockChain.getGenesisTxId();
         genesisBlockHeight = bsqBlockChain.getGenesisBlockHeight();
@@ -85,10 +80,6 @@ public abstract class BsqNode {
 
     public abstract void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler);
 
-    public void shutDown() {
-        requestManager.shutDown();
-    }
-
     public void addBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
         bsqBlockChainListeners.add(bsqBlockChainListener);
     }
@@ -96,6 +87,8 @@ public abstract class BsqNode {
     public void removeBsqBlockChainListener(BsqBlockChainListener bsqBlockChainListener) {
         bsqBlockChainListeners.remove(bsqBlockChainListener);
     }
+
+    public abstract void shutDown();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -173,8 +166,7 @@ public abstract class BsqNode {
 
     abstract protected void startParseBlocks();
 
-    @SuppressWarnings("WeakerAccess")
-    protected void onNewBsqBlock(@SuppressWarnings("unused") BsqBlock bsqBlock) {
+    protected void notifyListenersOnNewBlock() {
         bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 
@@ -193,5 +185,4 @@ public abstract class BsqNode {
         bsqBlockChain.applySnapshot();
         bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
-
 }

@@ -33,13 +33,13 @@ import java.util.Set;
 //TODO outdated, ignore
 @Slf4j
 public class IssuanceVerification {
-    public static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
-    public static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
+    private static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
+    private static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
 
     private final BsqBlockChain bsqBlockChain;
     private final PeriodVerification periodVerification;
     private final VotingVerification votingVerification;
-    private CompensationRequestManager compensationRequestManager;
+    private final CompensationRequestManager compensationRequestManager;
 
     @Inject
     public IssuanceVerification(BsqBlockChain bsqBlockChain,
@@ -73,7 +73,7 @@ public class IssuanceVerification {
                 for (TxOutput txOutput : issuanceTxs) {
                     if (txOutput.getBlockHeight() < height ||
                             (txOutput.getBlockHeight() == height &&
-                                    txOutput.getId().compareTo(btcTxOutput.getId()) == 1)) {
+                                    txOutput.getId().compareTo(btcTxOutput.getId()) > 0)) {
                         alreadyFundedBtc += txOutput.getValue();
                     }
                 }

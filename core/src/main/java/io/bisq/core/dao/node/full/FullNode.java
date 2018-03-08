@@ -25,8 +25,8 @@ import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
-import io.bisq.core.dao.node.BlocksRequestManager;
 import io.bisq.core.dao.node.BsqNode;
+import io.bisq.core.dao.node.full.network.FullNodeNetworkManager;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FullNode extends BsqNode {
 
     private final FullNodeExecutor bsqFullNodeExecutor;
+    private final FullNodeNetworkManager fullNodeNetworkManager;
     private final JsonBlockChainExporter jsonBlockChainExporter;
 
 
@@ -53,13 +54,13 @@ public class FullNode extends BsqNode {
                     BsqBlockChain bsqBlockChain,
                     JsonBlockChainExporter jsonBlockChainExporter,
                     FeeService feeService,
-                    BlocksRequestManager requestManager) {
+                    FullNodeNetworkManager fullNodeNetworkManager) {
         super(p2PService,
                 bsqBlockChain,
-                feeService,
-                requestManager);
+                feeService);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonBlockChainExporter = jsonBlockChainExporter;
+        this.fullNodeNetworkManager = fullNodeNetworkManager;
     }
 
 
@@ -81,10 +82,9 @@ public class FullNode extends BsqNode {
     }
 
     public void shutDown() {
-        super.shutDown();
         jsonBlockChainExporter.shutDown();
+        fullNodeNetworkManager.shutDown();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -103,12 +103,11 @@ public class FullNode extends BsqNode {
             addBlockHandler();
     }
 
-    @Override
-    protected void onNewBsqBlock(BsqBlock bsqBlock) {
-        super.onNewBsqBlock(bsqBlock);
+    private void onNewBsqBlock(BsqBlock bsqBlock) {
+        notifyListenersOnNewBlock();
         jsonBlockChainExporter.maybeExport();
         if (parseBlockchainComplete && p2pNetworkReady)
-            requestManager.publishNewBlock(bsqBlock);
+            fullNodeNetworkManager.publishNewBlock(bsqBlock);
     }
 
 

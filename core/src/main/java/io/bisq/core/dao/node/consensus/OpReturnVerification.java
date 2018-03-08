@@ -64,7 +64,7 @@ public class OpReturnVerification {
                         if (bsqOutput != null) {
                             votingVerification.isOpReturn(tx, opReturnData, opReturnTxOutput, bsqFee, blockHeight, bsqOutput);
                         } else {
-                            log.warn("Voting tx is missing bsqOutput for vote base txid={}", tx.getId());
+                            log.warn("Voting tx is missing bsqOutput for vote base txId={}", tx.getId());
                         }
                     default:
                         log.warn("OP_RETURN version of the BSQ tx ={} does not match expected version bytes. opReturnData={}",

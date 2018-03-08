@@ -191,7 +191,7 @@ public class RpcService {
                                         }
                                     }
                                 }
-                                // We dont support raw MS which are the only case where scriptPubKey.getAddresses()>1
+                        // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                                 final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
@@ -218,11 +218,11 @@ public class RpcService {
         }
     }
 
-    public RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
+    private RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
     }
 
-    public Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
+    private Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
         return client.getTransaction(txId);
     }
 }

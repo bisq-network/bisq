@@ -43,7 +43,7 @@ public class FullNodeParser extends BsqParser {
 
     private final RpcService rpcService;
     // Maybe we want to request fee at some point, leave it for now and disable it
-    private boolean requestFee = false;
+    private final boolean requestFee = false;
     private final Map<Integer, Long> feesByBlock = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////

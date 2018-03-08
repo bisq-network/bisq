@@ -121,7 +121,7 @@ public class BsqTxVerification {
         long bsqFromInput = 0;
         TxInput input = tx.getInputs().get(inputIndex);
         // TODO check if Tuple indexes of inputs outputs are not messed up...
-        // Get spendable BSQ output for txidindextuple... (get output used as input in tx if it's spendable BSQ)
+        // Get spendable BSQ output for txIdIndexTuple... (get output used as input in tx if it's spendable BSQ)
         Optional<TxOutput> spendableTxOutput = bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
         if (spendableTxOutput.isPresent()) {
             // The output is BSQ, set it as spent, update bsqBlockChain and add to available BSQ for this tx
