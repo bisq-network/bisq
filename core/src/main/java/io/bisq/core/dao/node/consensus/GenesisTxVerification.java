@@ -20,6 +20,7 @@ package io.bisq.core.dao.node.consensus;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
 
 import javax.inject.Inject;
@@ -48,11 +49,17 @@ public class GenesisTxVerification {
     }
 
     public void applyStateChange(Tx tx) {
-        tx.getOutputs().forEach(txOutput -> {
-            txOutput.setUnspent(true);
-            txOutput.setVerified(true);
-            bsqBlockChain.addUnspentTxOutput(txOutput);
-        });
+        long totalOutput = 0;
+        for (int i = 0; i < tx.getOutputs().size(); ++i) {
+            TxOutput txOutput = tx.getOutputs().get(i);
+            totalOutput += txOutput.getValue();
+            // Handle change from genesis transaction, only count outputs below the issuance amount as BSQ outputs
+            if (totalOutput <= bsqBlockChain.getIssuedAmount().getValue()) {
+                txOutput.setUnspent(true);
+                txOutput.setVerified(true);
+                bsqBlockChain.addUnspentTxOutput(txOutput);
+            }
+        }
         tx.setTxType(TxType.GENESIS);
 
         bsqBlockChain.setGenesisTx(tx);
