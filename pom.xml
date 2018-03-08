@@ -404,6 +404,11 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <CUBE_LOGGER_ENABLE>${env.CUBE_LOGGER_ENABLE}</CUBE_LOGGER_ENABLE>
+                            </systemPropertyVariables>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

@@ -7,6 +7,9 @@ sudo: required
 services:
   - docker
 
+env:
+  - CUBE_LOGGER_ENABLE=true
+
 # These env variables start 2 parallel builds.
 #
 # The neat part about this setup is that the unit test suite is usually going to be done before
