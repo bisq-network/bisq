@@ -23,8 +23,8 @@ import io.bisq.common.app.AppModule;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
+import io.bisq.core.dao.node.BlocksRequestManager;
 import io.bisq.core.dao.node.BsqNodeProvider;
-import io.bisq.core.dao.node.RequestManager;
 import io.bisq.core.dao.node.consensus.*;
 import io.bisq.core.dao.node.full.FullNode;
 import io.bisq.core.dao.node.full.FullNodeExecutor;
@@ -51,7 +51,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoManager.class).in(Singleton.class);
 
-        bind(RequestManager.class).in(Singleton.class);
+        bind(BlocksRequestManager.class).in(Singleton.class);
         bind(RpcService.class).in(Singleton.class);
         bind(FullNodeExecutor.class).in(Singleton.class);
         bind(LiteNodeExecutor.class).in(Singleton.class);

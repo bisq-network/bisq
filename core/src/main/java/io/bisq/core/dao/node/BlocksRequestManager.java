@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class RequestManager implements MessageListener, ConnectionListener, PeerManager.Listener {
+public class BlocksRequestManager implements MessageListener, ConnectionListener, PeerManager.Listener {
 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
@@ -73,11 +73,11 @@ public class RequestManager implements MessageListener, ConnectionListener, Peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RequestManager(NetworkNode networkNode,
-                          PeerManager peerManager,
-                          Broadcaster broadcaster,
-                          SeedNodesRepository seedNodesRepository,
-                          BsqBlockChain bsqBlockChain) {
+    public BlocksRequestManager(NetworkNode networkNode,
+                                PeerManager peerManager,
+                                Broadcaster broadcaster,
+                                SeedNodesRepository seedNodesRepository,
+                                BsqBlockChain bsqBlockChain) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;

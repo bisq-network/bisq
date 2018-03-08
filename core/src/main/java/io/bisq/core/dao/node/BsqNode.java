@@ -48,7 +48,7 @@ public abstract class BsqNode {
     protected final String genesisTxId;
     protected final int genesisBlockHeight;
     @SuppressWarnings("WeakerAccess")
-    protected final RequestManager requestManager;
+    protected final BlocksRequestManager requestManager;
     @Getter
     protected boolean parseBlockchainComplete;
     @SuppressWarnings("WeakerAccess")
@@ -63,7 +63,7 @@ public abstract class BsqNode {
     public BsqNode(P2PService p2PService,
                    BsqBlockChain bsqBlockChain,
                    FeeService feeService,
-                   RequestManager requestManager) {
+                   BlocksRequestManager requestManager) {
 
         this.p2PService = p2PService;
         this.bsqBlockChain = bsqBlockChain;

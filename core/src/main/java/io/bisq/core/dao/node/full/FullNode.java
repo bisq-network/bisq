@@ -25,8 +25,8 @@ import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.BlocksRequestManager;
 import io.bisq.core.dao.node.BsqNode;
-import io.bisq.core.dao.node.RequestManager;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class FullNode extends BsqNode {
                     BsqBlockChain bsqBlockChain,
                     JsonBlockChainExporter jsonBlockChainExporter,
                     FeeService feeService,
-                    RequestManager requestManager) {
+                    BlocksRequestManager requestManager) {
         super(p2PService,
                 bsqBlockChain,
                 feeService,

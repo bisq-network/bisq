@@ -24,8 +24,8 @@ import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.BlocksRequestManager;
 import io.bisq.core.dao.node.BsqNode;
-import io.bisq.core.dao.node.RequestManager;
 import io.bisq.core.dao.node.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.node.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.core.provider.fee.FeeService;
@@ -57,7 +57,7 @@ public class LiteNode extends BsqNode {
                     LiteNodeExecutor bsqLiteNodeExecutor,
                     BsqBlockChain bsqBlockChain,
                     FeeService feeService,
-                    RequestManager requestManager) {
+                    BlocksRequestManager requestManager) {
         super(p2PService,
                 bsqBlockChain,
                 feeService,
@@ -84,7 +84,7 @@ public class LiteNode extends BsqNode {
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
 
-        requestManager.addListener(new RequestManager.Listener() {
+        requestManager.addListener(new BlocksRequestManager.Listener() {
             @Override
             public void onRequestedBlocksReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
                 LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBsqBlocksResponse.getBsqBlocks()));
