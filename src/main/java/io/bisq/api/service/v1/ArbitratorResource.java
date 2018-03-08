@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -32,7 +33,7 @@ public class ArbitratorResource {
 
     @ApiOperation("Register yourself as arbitrator")
     @POST
-    public void register(ArbitratorRegistration data) {
+    public void register(@Valid ArbitratorRegistration data) {
         bisqProxy.registerArbitrator(data.languageCodes);
     }
 
