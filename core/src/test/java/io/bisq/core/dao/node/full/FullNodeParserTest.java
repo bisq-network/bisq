@@ -45,7 +45,7 @@ public class FullNodeParserTest {
     @Injectable
     File storageDir;
     @Injectable
-    String manualBsqGenesisId;
+    String genesisId = "genesisId";
     @Injectable
     int genesisBlockHeight = 200;
 
@@ -116,7 +116,6 @@ public class FullNodeParserTest {
 
         // Genesis Block
         String cbId200 = "cbid200";
-        String genesisId = "genesisId";
         Tx cbTx200 = new Tx(new TxVo(cbId200, 200, bh200, time),
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId200, null, null, null, 200)));
@@ -164,11 +163,8 @@ public class FullNodeParserTest {
         fullNodeParser.parseBlocks(startHeight, headHeight, block -> {
         });
 
-        // Verify that the the genesis tx has been added to the bsq blockchain with the correct issuance amount
-
-        // TODO can be removed due refactoring we do not store the genesis tx anymore
-        // assertTrue(bsqBlockChain.getGenesisTx() == genesisTx);
-
+        // Verify that the genesis tx has been added to the bsq blockchain with the correct issuance amount
+        assertTrue(bsqBlockChain.getGenesisTx() == genesisTx);
         assertTrue(bsqBlockChain.getIssuedAmount().getValue() == issuance.getValue());
 
         // And that other txs are not added
@@ -177,9 +173,7 @@ public class FullNodeParserTest {
         assertFalse(bsqBlockChain.containsTx(cbId201));
 
         // But bsq txs are added
-
-        //FIXME tests are broken due refactoring. Maybe its related to changed handling of the genesis txId/height?
-        /*assertTrue(bsqBlockChain.containsTx(bsqTx1Id));
+        assertTrue(bsqBlockChain.containsTx(bsqTx1Id));
         TxOutput bsqOut1 = bsqBlockChain.getSpendableTxOutput(bsqTx1Id, 0).get();
         assertTrue(bsqOut1.isUnspent());
         assertTrue(bsqOut1.getValue() == bsqTx1Value1);
@@ -188,7 +182,7 @@ public class FullNodeParserTest {
         assertTrue(bsqOut2.getValue() == bsqTx1Value2);
         assertFalse(bsqBlockChain.isTxOutputSpendable(genesisId, 0));
         assertTrue(bsqBlockChain.isTxOutputSpendable(bsqTx1Id, 0));
-        assertTrue(bsqBlockChain.isTxOutputSpendable(bsqTx1Id, 1));*/
+        assertTrue(bsqBlockChain.isTxOutputSpendable(bsqTx1Id, 1));
 
     }
 }
