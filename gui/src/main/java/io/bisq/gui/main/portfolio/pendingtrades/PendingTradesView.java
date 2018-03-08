@@ -101,7 +101,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     public void initialize() {
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
-        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
         marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
         roleColumn.setGraphic(new AutoTooltipLabel(Res.get("portfolio.pending.role")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
@@ -343,7 +343,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatCoinWithCode(item.getTrade().getTradeAmount())));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getTradeAmount())));
                                 else
                                     setGraphic(null);
                             }

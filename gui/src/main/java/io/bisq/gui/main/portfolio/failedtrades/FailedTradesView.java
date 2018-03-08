@@ -56,7 +56,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     public void initialize() {
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
-        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
         marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
         directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
