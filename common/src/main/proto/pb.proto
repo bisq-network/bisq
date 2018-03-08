@@ -469,14 +469,6 @@ message TxOutput {
     SpentInfo spent_info = 11;
 }
 
-message TxVo {
-    string tx_version = 1;
-    string id = 2;
-    int32 block_height= 3;
-    string block_hash = 4;
-    int64 time = 5;
-}
-
 enum TxType {
     PB_ERROR_TX_TYPE = 0;
     UNDEFINED_TX_TYPE = 1;
@@ -493,11 +485,15 @@ enum TxType {
 }
 
 message Tx {
-    TxVo tx_vo = 1;
-    repeated TxInput inputs = 2;
-    repeated TxOutput outputs = 3;
-    int64 burnt_fee = 4;
-    TxType tx_type = 5;
+    string tx_version = 1;
+    string id = 2;
+    int32 block_height = 3;
+    string block_hash = 4;
+    int64 time = 5;
+    repeated TxInput inputs = 6;
+    repeated TxOutput outputs = 7;
+    int64 burnt_fee = 8;
+    TxType tx_type = 9;
 }
 
 message BsqBlock {

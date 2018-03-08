@@ -36,7 +36,6 @@ import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxVo;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -207,11 +206,10 @@ public class RpcService {
                     )
                     .collect(Collectors.toList());
 
-            final TxVo txVo = new TxVo(txId,
+            return new Tx(txId,
                     blockHeight,
                     rawTransaction.getBlockHash(),
-                    time);
-            return new Tx(txVo,
+                    time,
                     ImmutableList.copyOf(txInputs),
                     ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {

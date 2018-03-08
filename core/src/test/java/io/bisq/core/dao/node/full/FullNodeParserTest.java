@@ -7,7 +7,10 @@ import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
-import io.bisq.core.dao.blockchain.vo.*;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxIdIndexTuple;
+import io.bisq.core.dao.blockchain.vo.TxInput;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.node.consensus.BsqTxVerification;
 import io.bisq.core.dao.node.consensus.IssuanceVerification;
 import io.bisq.core.dao.node.consensus.OpReturnVerification;
@@ -62,7 +65,7 @@ public class FullNodeParserTest {
         int height = 200;
         String hash = "abc123";
         long time = new Date().getTime();
-        Tx tx = new Tx(new TxVo("vo", height, hash, time),
+        Tx tx = new Tx("vo", height, hash, time,
                 asList(new TxInput("tx1", 0),
                         new TxInput("tx1", 1)),
                 asList(new TxOutput(0, 101, "tx1", null, null, null, height)));
@@ -109,17 +112,17 @@ public class FullNodeParserTest {
 
         // Block 199
         String cbId199 = "cbid199";
-        Tx cbTx199 = new Tx(new TxVo(cbId199, 199, bh199, time),
+        Tx cbTx199 = new Tx(cbId199, 199, bh199, time,
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId199, null, null, null, 199)));
         Block block199 = new Block(bh199, 10, 10, 199, 2, "root", asList(cbId199), time, Long.parseLong("1234"), "bits", BigDecimal.valueOf(1), "chainwork", "previousBlockHash", bh200);
 
         // Genesis Block
         String cbId200 = "cbid200";
-        Tx cbTx200 = new Tx(new TxVo(cbId200, 200, bh200, time),
+        Tx cbTx200 = new Tx(cbId200, 200, bh200, time,
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId200, null, null, null, 200)));
-        Tx genesisTx = new Tx(new TxVo(genesisId, 200, bh200, time),
+        Tx genesisTx = new Tx(genesisId, 200, bh200, time,
                 asList(new TxInput("someoldtx", 0)),
                 asList(new TxOutput(0, issuance.getValue(), genesisId, null, null, null, 200)));
         Block block200 = new Block(bh200, 10, 10, 200, 2, "root", asList(cbId200, genesisId), time, Long.parseLong("1234"), "bits", BigDecimal.valueOf(1), "chainwork", bh199, bh201);
@@ -130,10 +133,10 @@ public class FullNodeParserTest {
         String bsqTx1Id = "bsqtx1";
         long bsqTx1Value1 = Coin.parseCoin("2.4").getValue();
         long bsqTx1Value2 = Coin.parseCoin("0.04").getValue();
-        Tx cbTx201 = new Tx(new TxVo(cbId201, 201, bh201, time),
+        Tx cbTx201 = new Tx(cbId201, 201, bh201, time,
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId201, null, null, null, 201)));
-        Tx bsqTx1 = new Tx(new TxVo(bsqTx1Id, 201, bh201, time),
+        Tx bsqTx1 = new Tx(bsqTx1Id, 201, bh201, time,
                 asList(new TxInput(genesisId, 0)),
                 asList(new TxOutput(0, bsqTx1Value1, bsqTx1Id, null, null, null, 201),
                         new TxOutput(1, bsqTx1Value2, bsqTx1Id, null, null, null, 201)));
