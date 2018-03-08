@@ -15,10 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.node;
 
 import com.google.inject.Inject;
 import io.bisq.core.dao.DaoOptionKeys;
+import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import io.bisq.core.dao.node.full.FullNode;
+import io.bisq.core.dao.node.lite.LiteNode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,8 +36,8 @@ public class BsqNodeProvider {
     private final BsqNode bsqNode;
 
     @Inject
-    public BsqNodeProvider(BsqLiteNode bsqLiteNode,
-                           BsqFullNode bsqFullNode,
+    public BsqNodeProvider(LiteNode bsqLiteNode,
+                           FullNode bsqFullNode,
                            BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) boolean fullDaoNode) {
         bsqNode = fullDaoNode ? bsqFullNode : bsqLiteNode;

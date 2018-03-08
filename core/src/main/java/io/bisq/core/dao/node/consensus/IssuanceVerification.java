@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.consensus;
 
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
@@ -51,7 +52,7 @@ public class IssuanceVerification {
         this.compensationRequestManager = compensationRequestManager;
     }
 
-    boolean maybeProcessData(Tx tx) {
+    public boolean maybeProcessData(Tx tx) {
         List<TxOutput> outputs = tx.getOutputs();
         if (outputs.size() >= 2) {
             TxOutput bsqTxOutput = outputs.get(0);

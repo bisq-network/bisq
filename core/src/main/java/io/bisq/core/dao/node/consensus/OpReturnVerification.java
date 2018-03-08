@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.consensus;
 
 import io.bisq.core.dao.OpReturnTypes;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -27,6 +27,9 @@ import org.bitcoinj.core.Utils;
 import javax.inject.Inject;
 import java.util.List;
 
+/**
+ * Verifies if a given transaction is a BSQ OP_RETURN transaction.
+ */
 @Slf4j
 public class OpReturnVerification {
     private final CompensationRequestVerification compensationRequestVerification;
@@ -40,25 +43,26 @@ public class OpReturnVerification {
     }
 
     // FIXME bsqOutput can be null in case there is no BSQ change output at comp requests tx
-    boolean processDaoOpReturnData(Tx tx, int index, long bsqFee,
-                                   int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
+    public void process(Tx tx, int index, long bsqFee,
+                        int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
         List<TxOutput> txOutputs = tx.getOutputs();
-        TxOutput txOutput = txOutputs.get(index);
-        final long txOutputValue = txOutput.getValue();
+        TxOutput opReturnTxOutput = txOutputs.get(index);
+        final long txOutputValue = opReturnTxOutput.getValue();
         // If we get an OP_RETURN it has to be the last output and the txOutputValue has to be 0 as well there have be at least one bsqOutput
         if (txOutputValue == 0 && index == txOutputs.size() - 1 && bsqFee > 0) {
-            byte[] opReturnData = txOutput.getOpReturnData();
+            byte[] opReturnData = opReturnTxOutput.getOpReturnData();
             // We expect at least the type byte
             if (opReturnData != null && opReturnData.length > 1) {
-                txOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
+                opReturnTxOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
                 switch (opReturnData[0]) {
                     case OpReturnTypes.COMPENSATION_REQUEST:
-                        return compensationRequestVerification.processOpReturnData(tx, opReturnData, txOutput,
-                                bsqFee, blockHeight, btcOutput);
+                        if (compensationRequestVerification.verify(opReturnData, bsqFee, blockHeight, btcOutput)) {
+                            compensationRequestVerification.apply(tx, opReturnTxOutput, btcOutput);
+                        }
                     case OpReturnTypes.VOTE:
                         // TODO: Handle missing bsqOutput, is it considered an invalid vote?
                         if (bsqOutput != null) {
-                            return votingVerification.processOpReturnData(tx, opReturnData, txOutput, bsqFee, blockHeight, bsqOutput);
+                            votingVerification.isOpReturn(tx, opReturnData, opReturnTxOutput, bsqFee, blockHeight, bsqOutput);
                         } else {
                             log.warn("Voting tx is missing bsqOutput for vote base txid={}", tx.getId());
                         }
@@ -74,6 +78,5 @@ public class OpReturnVerification {
             log.warn("opReturnData is not matching DAO rules txId={} outValue={} index={} #outputs={} hasBsqOut={} bsqFee={}",
                     tx.getId(), txOutputValue, index, txOutputs.size(), bsqOutput != null, bsqFee);
         }
-        return false;
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.full.rpc;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -86,7 +86,7 @@ public class RpcService {
         this.dumpBlockchainData = dumpBlockchainData;
     }
 
-    void setup() throws BsqBlockchainException {
+    public void setup() throws BsqBlockchainException {
         try {
             long startTs = System.currentTimeMillis();
             PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -120,7 +120,7 @@ public class RpcService {
         }
     }
 
-    void registerBlockHandler(Consumer<Block> blockHandler) {
+    public void registerBlockHandler(Consumer<Block> blockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
@@ -138,16 +138,16 @@ public class RpcService {
         });
     }
 
-    int requestChainHeadHeight() throws BitcoindException, CommunicationException {
+    public int requestChainHeadHeight() throws BitcoindException, CommunicationException {
         return client.getBlockCount();
     }
 
-    Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
+    public Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
         final String blockHash = client.getBlockHash(blockHeight);
         return client.getBlock(blockHash);
     }
 
-    void requestFees(String txId, int blockHeight, Map<Integer, Long> feesByBlock) throws BsqBlockchainException {
+    public void requestFees(String txId, int blockHeight, Map<Integer, Long> feesByBlock) throws BsqBlockchainException {
         try {
             Transaction transaction = requestTx(txId);
             final BigDecimal fee = transaction.getFee();
@@ -159,7 +159,7 @@ public class RpcService {
         }
     }
 
-    Tx requestTx(String txId, int blockHeight) throws BsqBlockchainException {
+    public Tx requestTx(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = requestRawTransaction(txId);
             // rawTransaction.getTime() is in seconds but we keep it in ms internally
@@ -185,7 +185,7 @@ public class RpcService {
                                         try {
                                             opReturnData = Utils.HEX.decode(chunks[1]);
                                         } catch (Throwable t) {
-                                            // We get sometimes exceptions, seems BitcoinJ 
+                                            // We get sometimes exceptions, seems BitcoinJ
                                             // cannot handle all existing OP_RETURN data, but we ignore them
                                             // anyway as our OP_RETURN data is valid in BitcoinJ
                                             log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
@@ -220,11 +220,11 @@ public class RpcService {
         }
     }
 
-    RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
+    public RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
     }
 
-    Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
+    public Transaction requestTx(String txId) throws BitcoindException, CommunicationException {
         return client.getTransaction(txId);
     }
 }

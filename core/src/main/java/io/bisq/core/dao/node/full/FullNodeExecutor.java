@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.full;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -26,23 +26,26 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.full.rpc.RpcService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.function.Consumer;
 
-// Used for non blocking access to BTC blockchain data and parsing. Encapsulate thread context, so caller
-// gets always called on UserThread
+/**
+ * Makes requests to btcdcli4j rpc services in separate threads and returns result mapped to user thread.
+ */
 @Slf4j
-public class BsqFullNodeExecutor {
+public class FullNodeExecutor {
 
-    private final BsqParser bsqParser;
+    private final FullNodeParser fullNodeParser;
     private final RpcService rpcService;
 
-    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
-    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
     private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcServiceSetup", 1, 1, 5);
+    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
+    private final ListeningExecutorService parseBlockExecutor = Utilities.getListeningExecutorService("ParseBlock", 1, 1, 60);
+    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,12 +54,17 @@ public class BsqFullNodeExecutor {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqFullNodeExecutor(RpcService rpcService, BsqParser bsqParser) {
+    public FullNodeExecutor(RpcService rpcService, FullNodeParser fullNodeParser) {
         this.rpcService = rpcService;
-        this.bsqParser = bsqParser;
+        this.fullNodeParser = fullNodeParser;
     }
 
-    public void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Package private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = setupExecutor.submit(() -> {
             rpcService.setup();
             return null;
@@ -73,7 +81,7 @@ public class BsqFullNodeExecutor {
         });
     }
 
-    public void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
+    void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Integer> future = getChainHeightExecutor.submit(rpcService::requestChainHeadHeight);
 
         Futures.addCallback(future, new FutureCallback<Integer>() {
@@ -87,19 +95,15 @@ public class BsqFullNodeExecutor {
         });
     }
 
-    public void parseBlocks(int startBlockHeight,
-                            int chainHeadHeight,
-                            int genesisBlockHeight,
-                            String genesisTxId,
-                            Consumer<BsqBlock> newBlockHandler,
-                            ResultHandler resultHandler,
-                            Consumer<Throwable> errorHandler) {
+    void parseBlocks(int startBlockHeight,
+                     int chainHeadHeight,
+                     Consumer<BsqBlock> newBlockHandler,
+                     ResultHandler resultHandler,
+                     Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
-            bsqParser.parseBlocks(startBlockHeight,
+            fullNodeParser.parseBlocks(startBlockHeight,
                     chainHeadHeight,
-                    genesisBlockHeight,
-                    genesisTxId,
                     newBsqBlock -> UserThread.execute(() -> newBlockHandler.accept(newBsqBlock)));
             log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, chainHeadHeight - startBlockHeight);
             return null;
@@ -118,14 +122,10 @@ public class BsqFullNodeExecutor {
         });
     }
 
-    public void parseBtcdBlock(Block btcdBlock,
-                               int genesisBlockHeight,
-                               String genesisTxId,
-                               Consumer<BsqBlock> resultHandler,
-                               Consumer<Throwable> errorHandler) {
-        ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> bsqParser.parseBlock(btcdBlock,
-                genesisBlockHeight,
-                genesisTxId));
+    void parseBtcdBlock(Block btcdBlock,
+                        Consumer<BsqBlock> resultHandler,
+                        Consumer<Throwable> errorHandler) {
+        ListenableFuture<BsqBlock> future = parseBlockExecutor.submit(() -> fullNodeParser.parseBlock(btcdBlock));
 
         Futures.addCallback(future, new FutureCallback<BsqBlock>() {
             @Override
@@ -140,7 +140,7 @@ public class BsqFullNodeExecutor {
         });
     }
 
-    public void addBlockHandler(Consumer<Block> blockHandler) {
+    void addBlockHandler(Consumer<Block> blockHandler) {
         rpcService.registerBlockHandler(blockHandler);
     }
 }

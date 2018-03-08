@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.blockchain;
 
 import org.junit.Test;
 

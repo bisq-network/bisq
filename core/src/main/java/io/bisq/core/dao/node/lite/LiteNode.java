@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.node.lite;
 
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.RequestManager;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.messages.NewBsqBlockBroadcastMessage;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
-import io.bisq.core.dao.blockchain.parse.BsqLiteNodeExecutor;
-import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.node.BsqNode;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
@@ -43,8 +43,8 @@ import java.util.function.Consumer;
  * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes)
  */
 @Slf4j
-public class BsqLiteNode extends BsqNode {
-    private final BsqLiteNodeExecutor bsqLiteNodeExecutor;
+public class LiteNode extends BsqNode {
+    private final LiteNodeExecutor bsqLiteNodeExecutor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,14 +53,12 @@ public class BsqLiteNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqLiteNode(P2PService p2PService,
-                       BsqParser bsqParser,
-                       BsqLiteNodeExecutor bsqLiteNodeExecutor,
-                       BsqBlockChain bsqBlockChain,
-                       FeeService feeService,
-                       RequestManager requestManager) {
+    public LiteNode(P2PService p2PService,
+                    LiteNodeExecutor bsqLiteNodeExecutor,
+                    BsqBlockChain bsqBlockChain,
+                    FeeService feeService,
+                    RequestManager requestManager) {
         super(p2PService,
-                bsqParser,
                 bsqBlockChain,
                 feeService,
                 requestManager);
@@ -77,6 +75,11 @@ public class BsqLiteNode extends BsqNode {
         super.onInitialized();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
@@ -84,12 +87,12 @@ public class BsqLiteNode extends BsqNode {
         requestManager.addListener(new RequestManager.Listener() {
             @Override
             public void onRequestedBlocksReceived(GetBsqBlocksResponse getBsqBlocksResponse) {
-                BsqLiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBsqBlocksResponse.getBsqBlocks()));
+                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBsqBlocksResponse.getBsqBlocks()));
             }
 
             @Override
             public void onNewBlockReceived(NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage) {
-                BsqLiteNode.this.onNewBlockReceived(newBsqBlockBroadcastMessage.getBsqBlock());
+                LiteNode.this.onNewBlockReceived(newBsqBlockBroadcastMessage.getBsqBlock());
             }
 
             @Override
@@ -111,6 +114,11 @@ public class BsqLiteNode extends BsqNode {
         requestManager.requestBlocks(getStartBlockHeight());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // We received the missing blocks
     private void onRequestedBlocksReceived(List<BsqBlock> bsqBlockList) {
         log.info("onRequestedBlocksReceived: blocks with {} items", bsqBlockList.size());
@@ -119,9 +127,7 @@ public class BsqLiteNode extends BsqNode {
         // We reset all mutable data in case the provider would not have done it.
         bsqBlockList.forEach(BsqBlock::reset);
         bsqLiteNodeExecutor.parseBlocks(bsqBlockList,
-                genesisBlockHeight,
-                genesisTxId,
-                BsqLiteNode.this::onNewBsqBlock,
+                LiteNode.this::onNewBsqBlock,
                 this::onParseBlockchainComplete,
                 getErrorHandler());
     }
@@ -133,8 +139,6 @@ public class BsqLiteNode extends BsqNode {
         log.info("onNewBlockReceived: bsqBlock={}", bsqBlock.getHeight());
         if (!bsqBlockChain.containsBlock(bsqBlock)) {
             bsqLiteNodeExecutor.parseBlock(bsqBlock,
-                    genesisBlockHeight,
-                    genesisTxId,
                     () -> onNewBsqBlock(bsqBlock),
                     getErrorHandler());
         }

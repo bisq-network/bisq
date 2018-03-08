@@ -20,8 +20,8 @@ package io.bisq.core.dao;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.dao.blockchain.BsqNode;
-import io.bisq.core.dao.blockchain.BsqNodeProvider;
+import io.bisq.core.dao.node.BsqNode;
+import io.bisq.core.dao.node.BsqNodeProvider;
 import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 

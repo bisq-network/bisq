@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.consensus;
+
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 
 import javax.inject.Inject;
 
@@ -28,7 +30,7 @@ public class PeriodVerification {
     }
 
     // TODO
-    boolean isInSponsorPeriod(int blockHeight) {
+    public boolean isInSponsorPeriod(int blockHeight) {
         return true;
     }
 }

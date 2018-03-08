@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.consensus;
 
 import io.bisq.common.app.Version;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -40,15 +41,15 @@ public class VotingVerification {
         this.periodVerification = periodVerification;
     }
 
-    boolean isCompensationRequestAccepted(CompensationRequest compensationRequest) {
+    public boolean isCompensationRequestAccepted(CompensationRequest compensationRequest) {
         return true;
     }
 
-    boolean isConversionRateValid(int blockHeight, long btcAmount, long bsqAmount) {
+    public boolean isConversionRateValid(int blockHeight, long btcAmount, long bsqAmount) {
         return false;
     }
 
-    boolean processOpReturnData(Tx tx, byte[] opReturnData, TxOutput txOutput, long bsqFee, int blockHeight, TxOutput bsqOutput) {
+    public boolean isOpReturn(Tx tx, byte[] opReturnData, TxOutput txOutput, long bsqFee, int blockHeight, TxOutput bsqOutput) {
         if (Version.VOTING_VERSION == opReturnData[1] && opReturnData.length > 22) {
             final int sizeOfCompRequestsVotes = (int) opReturnData[22];
             if (bsqOutput != null &&

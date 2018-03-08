@@ -10,7 +10,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.DisputeList;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.request.compensation.CompensationRequestList;
 import io.bisq.core.dao.vote.VoteItemsList;
 import io.bisq.core.payment.PaymentAccountList;

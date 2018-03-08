@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.parse;
+package io.bisq.core.dao.node.lite;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -34,12 +35,13 @@ import java.util.function.Consumer;
 
 // Used for non blocking parsing. Encapsulate thread context, so caller gets always called on UserThread
 @Slf4j
-public class BsqLiteNodeExecutor {
+public class LiteNodeExecutor {
 
-    private final BsqParser bsqParser;
+    private final LiteNodeParser liteNodeParser;
     private final BsqBlockChain bsqBlockChain;
 
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
+    private final ListeningExecutorService parseBlockExecutor = Utilities.getListeningExecutorService("ParseBlock", 1, 1, 60);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -48,22 +50,23 @@ public class BsqLiteNodeExecutor {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqLiteNodeExecutor(BsqParser bsqParser, BsqBlockChain bsqBlockChain) {
-        this.bsqParser = bsqParser;
+    public LiteNodeExecutor(LiteNodeParser liteNodeParser, BsqBlockChain bsqBlockChain) {
+        this.liteNodeParser = liteNodeParser;
         this.bsqBlockChain = bsqBlockChain;
     }
 
-    public void parseBlocks(List<BsqBlock> bsqBlockList,
-                            int genesisBlockHeight,
-                            String genesisTxId,
-                            Consumer<BsqBlock> newBlockHandler,
-                            ResultHandler resultHandler,
-                            Consumer<Throwable> errorHandler) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Package private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void parseBlocks(List<BsqBlock> bsqBlockList,
+                     Consumer<BsqBlock> newBlockHandler,
+                     ResultHandler resultHandler,
+                     Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
-            bsqParser.parseBsqBlocks(bsqBlockList,
-                    genesisBlockHeight,
-                    genesisTxId,
+            liteNodeParser.parseBsqBlocks(bsqBlockList,
                     newBsqBlock -> UserThread.execute(() -> newBlockHandler.accept(newBsqBlock)));
             log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, bsqBlockList.size());
             return null;
@@ -82,17 +85,12 @@ public class BsqLiteNodeExecutor {
         });
     }
 
-    // TODO check why it's not handled in the parser
-    public void parseBlock(BsqBlock bsqBlock,
-                           int genesisBlockHeight,
-                           String genesisTxId,
-                           ResultHandler resultHandler,
-                           Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
+    void parseBlock(BsqBlock bsqBlock,
+                    ResultHandler resultHandler,
+                    Consumer<Throwable> errorHandler) {
+        ListenableFuture<Void> future = parseBlockExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
-            bsqParser.parseBsqBlock(bsqBlock,
-                    genesisBlockHeight,
-                    genesisTxId);
+            liteNodeParser.parseBsqBlock(bsqBlock);
             log.info("parseBlocks took {} ms", System.currentTimeMillis() - startTs);
             bsqBlockChain.addBlock(bsqBlock);
             return null;

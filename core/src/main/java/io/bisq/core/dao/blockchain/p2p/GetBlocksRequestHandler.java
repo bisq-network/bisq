@@ -6,9 +6,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.messages.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -62,7 +62,7 @@ public class GetBlocksRequestHandler {
 
     public void handle(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
-        List<BsqBlock> bsqBlocks = bsqBlockChain.getResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+        List<BsqBlock> bsqBlocks = bsqBlockChain.getResetBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
         final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());
         log.debug("bsqBlocksResponse " + bsqBlocksResponse.getRequestNonce());
 

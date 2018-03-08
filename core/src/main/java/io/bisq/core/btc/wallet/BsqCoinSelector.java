@@ -17,7 +17,7 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.TransactionOutput;
 
