@@ -28,5 +28,3 @@ desktop.ini
 */target/*
 *.class
 /gui/deploy/*
-/seednode/hostname
-/seednode/private_key

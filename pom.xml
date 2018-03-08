@@ -43,7 +43,6 @@
         <module>network</module>
         <module>core</module>
         <module>gui</module>
-        <module>seednode</module>
         <module>statistics</module>
         <module>consensus</module>
         <module>monitor</module>
