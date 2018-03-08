@@ -21,6 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.vo.util.TxIdIndexTuple;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

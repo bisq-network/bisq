@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.core.dao.blockchain.vo.util.TxIdIndexTuple;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Data;
 
