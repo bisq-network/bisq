@@ -6,7 +6,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bisq.exchange</groupId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>-SNAPSHOT</version>
     </parent>
 
     <artifactId>core</artifactId>
