@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -53,9 +52,7 @@ public class TxOutputsVerification {
     @Getter
     @Setter
     static class MutableState {
-        @Nullable
         private TxOutput compRequestIssuanceOutputCandidate;
-        @Nullable
         private TxOutput bsqOutput;
 
         MutableState() {

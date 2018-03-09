@@ -17,11 +17,20 @@
 
 package io.bisq.core.dao.node.consensus;
 
+import io.bisq.core.dao.blockchain.BsqBlockChain;
+
 import javax.inject.Inject;
 
 public class PeriodVerification {
+    private final BsqBlockChain bsqBlockChain;
 
     @Inject
-    public PeriodVerification() {
+    public PeriodVerification(BsqBlockChain bsqBlockChain) {
+        this.bsqBlockChain = bsqBlockChain;
+    }
+
+    // TODO
+    public boolean isInSponsorPeriod(int blockHeight) {
+        return true;
     }
 }
