@@ -4,7 +4,9 @@ import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -12,20 +14,18 @@ import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.util.TxIdIndexTuple;
 import io.bisq.core.dao.node.consensus.BsqTxController;
-import io.bisq.core.dao.node.consensus.IssuanceController;
-import io.bisq.core.dao.node.consensus.OpReturnController;
-import io.bisq.core.dao.node.consensus.*;
+import io.bisq.core.dao.node.consensus.GenesisTxController;
+import io.bisq.core.dao.node.consensus.TxInputsController;
+import io.bisq.core.dao.node.consensus.TxOutputsController;
 import io.bisq.core.dao.node.full.rpc.RpcService;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Tested;
 import mockit.integration.junit4.JMockit;
 import org.bitcoinj.core.Coin;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Named;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -49,13 +49,13 @@ public class FullNodeParserTest {
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     BsqBlockChain bsqBlockChain;
     @Tested(availableDuringSetup = true)
-    ReadModel readModel;
+    BsqBlockChainReadModel readModel;
 
-    // Used by bsqTxVerification
+    // Used by bsqTxController
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    TxInputsVerification txInputsVerification;
+    TxInputsController txInputsController;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    TxOutputsVerification txOutputsVerification;
+    TxOutputsController txOutputsController;
 
     // @Injectable are mocked resources used to for injecting into @Tested classes
     // The naming of these resources doesn't matter, any resource that fits will be used for injection
@@ -74,11 +74,11 @@ public class FullNodeParserTest {
     @Injectable
     RpcService rpcService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    WriteModel writeModel;
+    BsqBlockChainWriteModel writeModel;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    GenesisTxVerification genesisTxVerification;
+    GenesisTxController genesisTxController;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    BsqTxVerification bsqTxVerification;
+    BsqTxController bsqTxController;
 
     @Test
     public void testIsBsqTx() {
@@ -113,11 +113,11 @@ public class FullNodeParserTest {
         }};
 
         // First time there is no BSQ value to spend so it's not a bsq transaction
-        assertFalse(bsqTxVerification.isBsqTx(height, tx));
+        assertFalse(bsqTxController.isBsqTx(height, tx));
         // Second time there is BSQ in the first txout
-        assertTrue(bsqTxVerification.isBsqTx(height, tx));
+        assertTrue(bsqTxController.isBsqTx(height, tx));
         // Third time there is BSQ in the second txout
-        assertTrue(bsqTxVerification.isBsqTx(height, tx));
+        assertTrue(bsqTxController.isBsqTx(height, tx));
     }
 
     @Test
