@@ -44,7 +44,6 @@
         <module>core</module>
         <module>gui</module>
         <module>consensus</module>
-        <module>monitor</module>
     </modules>
 
     <build>
