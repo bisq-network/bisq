@@ -4,26 +4,27 @@ import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
+import io.bisq.core.dao.DaoOptionKeys;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.ReadModel;
+import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.util.TxIdIndexTuple;
-import io.bisq.core.dao.node.consensus.BsqTxVerification;
-import io.bisq.core.dao.node.consensus.IssuanceVerification;
-import io.bisq.core.dao.node.consensus.OpReturnVerification;
+import io.bisq.core.dao.node.consensus.*;
 import io.bisq.core.dao.node.full.rpc.RpcService;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Tested;
 import mockit.integration.junit4.JMockit;
 import org.bitcoinj.core.Coin;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import javax.inject.Named;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,33 +35,49 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-// TODO seems the refactoring with read/write models has broken the unit test setup. @sqrmm Could you have a look?
-@Ignore
+// Intro to jmockit can be found at http://jmockit.github.io/tutorial/Mocking.html
+
 @RunWith(JMockit.class)
 public class FullNodeParserTest {
-    @Tested(availableDuringSetup = true)
-    ReadModel readModel;
+    // @Tested classes are instantiated automatically when needed in a test case,
+    // using injection where possible, see http://jmockit.github.io/tutorial/Mocking.html#tested
+    // To force instantiate earlier, use availableDuringSetup
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     FullNodeParser fullNodeParser;
 
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    BsqTxVerification bsqTxVerification;
+    BsqBlockChain bsqBlockChain;
+    @Tested(availableDuringSetup = true)
+    ReadModel readModel;
 
+    // Used by bsqTxVerification
+    @Tested(fullyInitialized = true, availableDuringSetup = true)
+    TxInputsVerification txInputsVerification;
+    @Tested(fullyInitialized = true, availableDuringSetup = true)
+    TxOutputsVerification txOutputsVerification;
+
+    // @Injectable are mocked resources used to for injecting into @Tested classes
+    // The naming of these resources doesn't matter, any resource that fits will be used for injection
+
+    // Used by bsqBlockChain
     @Injectable
     PersistenceProtoResolver persistenceProtoResolver;
     @Injectable
     File storageDir;
     @Injectable
-    String genesisId = "genesisId"; // TODO shouldn't it be genesisTxId
+    String genesisTxId = "genesisTxId";
     @Injectable
     int genesisBlockHeight = 200;
 
+    // Used by fullNodeParser
     @Injectable
     RpcService rpcService;
-    @Injectable
-    OpReturnVerification opReturnVerification;
-    @Injectable
-    IssuanceVerification issuanceVerification;
+    @Tested(fullyInitialized = true, availableDuringSetup = true)
+    WriteModel writeModel;
+    @Tested(fullyInitialized = true, availableDuringSetup = true)
+    GenesisTxVerification genesisTxVerification;
+    @Tested(fullyInitialized = true, availableDuringSetup = true)
+    BsqTxVerification bsqTxVerification;
 
     @Test
     public void testIsBsqTx() {
@@ -78,6 +95,11 @@ public class FullNodeParserTest {
         // 2) - 100, null   -> BSQ transaction
         // 3) - 0, 100      -> BSQ transaction
         new Expectations(readModel) {{
+            // Expectations can be recorded on mocked instances, either with specific matching arguments or catch all
+            // http://jmockit.github.io/tutorial/Mocking.html#results
+            // Results are returned in the order they're recorded, so in this case for the first call to
+            // getSpendableTxOutput("tx1", 0) the return value will be Optional.empty()
+            // for the second call the return is Optional.of(new TxOutput(0,... and so on
             readModel.getSpendableTxOutput(new TxIdIndexTuple("tx1", 0));
             result = Optional.empty();
             result = Optional.of(new TxOutput(0, 100, "txout1", null, null, null, height));
@@ -125,10 +147,10 @@ public class FullNodeParserTest {
         Tx cbTx200 = new Tx(cbId200, 200, bh200, time,
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId200, null, null, null, 200)));
-        Tx genesisTx = new Tx(genesisId, 200, bh200, time,
+        Tx genesisTx = new Tx(genesisTxId, 200, bh200, time,
                 asList(new TxInput("someoldtx", 0)),
-                asList(new TxOutput(0, issuance.getValue(), genesisId, null, null, null, 200)));
-        Block block200 = new Block(bh200, 10, 10, 200, 2, "root", asList(cbId200, genesisId), time, Long.parseLong("1234"), "bits", BigDecimal.valueOf(1), "chainwork", bh199, bh201);
+                asList(new TxOutput(0, issuance.getValue(), genesisTxId, null, null, null, 200)));
+        Block block200 = new Block(bh200, 10, 10, 200, 2, "root", asList(cbId200, genesisTxId), time, Long.parseLong("1234"), "bits", BigDecimal.valueOf(1), "chainwork", bh199, bh201);
 
         // Block 201
         // Make a bsq transaction
@@ -140,7 +162,7 @@ public class FullNodeParserTest {
                 new ArrayList<TxInput>(),
                 asList(new TxOutput(0, 25, cbId201, null, null, null, 201)));
         Tx bsqTx1 = new Tx(bsqTx1Id, 201, bh201, time,
-                asList(new TxInput(genesisId, 0)),
+                asList(new TxInput(genesisTxId, 0)),
                 asList(new TxOutput(0, bsqTx1Value1, bsqTx1Id, null, null, null, 201),
                         new TxOutput(1, bsqTx1Value2, bsqTx1Id, null, null, null, 201)));
         Block block201 = new Block(bh201, 10, 10, 201, 2, "root", asList(cbId201, bsqTx1Id), time, Long.parseLong("1234"), "bits", BigDecimal.valueOf(1), "chainwork", bh200, "nextBlockHash");
@@ -157,7 +179,7 @@ public class FullNodeParserTest {
             result = cbTx199;
             rpcService.requestTx(cbId200, genesisHeight);
             result = cbTx200;
-            rpcService.requestTx(genesisId, genesisHeight);
+            rpcService.requestTx(genesisTxId, genesisHeight);
             result = genesisTx;
             rpcService.requestTx(cbId201, 201);
             result = cbTx201;
@@ -186,7 +208,7 @@ public class FullNodeParserTest {
         TxOutput bsqOut2 = readModel.getSpendableTxOutput(bsqTx1Id, 1).get();
         assertTrue(bsqOut2.isUnspent());
         assertTrue(bsqOut2.getValue() == bsqTx1Value2);
-        assertFalse(readModel.isTxOutputSpendable(genesisId, 0));
+        assertFalse(readModel.isTxOutputSpendable(genesisTxId, 0));
         assertTrue(readModel.isTxOutputSpendable(bsqTx1Id, 0));
         assertTrue(readModel.isTxOutputSpendable(bsqTx1Id, 1));
 
