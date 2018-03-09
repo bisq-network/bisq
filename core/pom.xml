@@ -5,25 +5,25 @@
 
     <parent>
         <artifactId>parent</artifactId>
-        <groupId>io.bisq</groupId>
-        <version>0.6.7</version>
+        <groupId>io.bisq.exchange</groupId>
+        <version>0.7.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>core</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>io.bisq</groupId>
+            <groupId>io.bisq.exchange</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
+            <groupId>io.bisq.exchange</groupId>
             <artifactId>consensus</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.bisq</groupId>
+            <groupId>io.bisq.exchange</groupId>
             <artifactId>network</artifactId>
             <version>${project.version}</version>
         </dependency>
