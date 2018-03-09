@@ -44,19 +44,18 @@ public class GenesisTxVerification {
     }
 
     public boolean isGenesisTx(Tx tx, int blockHeight) {
-        if (tx.getId().equals(genesisTxId) && blockHeight == genesisBlockHeight) {
-            tx.getOutputs().forEach(txOutput -> {
-                txOutput.setUnspent(true);
-                txOutput.setVerified(true);
-                bsqBlockChain.addUnspentTxOutput(txOutput);
-            });
-            tx.setTxType(TxType.GENESIS);
+        return tx.getId().equals(genesisTxId) && blockHeight == genesisBlockHeight;
+    }
 
-            bsqBlockChain.setGenesisTx(tx);
-            bsqBlockChain.addTxToMap(tx);
-            return true;
-        } else {
-            return false;
-        }
+    public void applyStateChange(Tx tx) {
+        tx.getOutputs().forEach(txOutput -> {
+            txOutput.setUnspent(true);
+            txOutput.setVerified(true);
+            bsqBlockChain.addUnspentTxOutput(txOutput);
+        });
+        tx.setTxType(TxType.GENESIS);
+
+        bsqBlockChain.setGenesisTx(tx);
+        bsqBlockChain.addTxToMap(tx);
     }
 }

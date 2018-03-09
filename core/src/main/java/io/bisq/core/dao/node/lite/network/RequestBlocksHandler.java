@@ -25,7 +25,7 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Sends GetBsqBlocksRequest and listens on corresponding GetBsqBlocksResponse from full node.
+ * Sends a GetBsqBlocksRequest to a full node and listens on corresponding GetBsqBlocksResponse from the full node.
  */
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {

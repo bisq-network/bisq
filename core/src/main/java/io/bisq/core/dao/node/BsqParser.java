@@ -37,8 +37,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 
 /**
- * Parses blocks and transactions for finding BSQ relevant transactions.
- * <p/>
+ * Base class for lite node parser and full node parser. Iterates blocks to find BSQ relevant transactions.
+ *
  * We are in threaded context. Don't mix up with UserThread.
  */
 @Slf4j
@@ -71,6 +71,7 @@ public abstract class BsqParser {
                                      List<Tx> bsqTxsInBlock,
                                      Tx tx) {
         if (genesisTxVerification.isGenesisTx(tx, blockHeight)) {
+            genesisTxVerification.applyStateChange(tx);
             bsqTxsInBlock.add(tx);
         }
     }
@@ -121,7 +122,7 @@ public abstract class BsqParser {
 
         // we check if we have any valid BSQ from that tx set
         bsqTxsInBlock.addAll(txsWithoutInputsFromSameBlock.stream()
-                .filter(tx -> bsqTxVerification.verify(blockHeight, tx))
+                .filter(tx -> bsqTxVerification.isBsqTx(blockHeight, tx))
                 .collect(Collectors.toList()));
 
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");

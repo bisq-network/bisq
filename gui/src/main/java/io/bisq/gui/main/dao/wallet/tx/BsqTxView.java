@@ -501,7 +501,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.TINT;
+                                            awesomeIcon = AwesomeIcon.PAPERCLIP;
                                             style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:

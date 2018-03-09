@@ -29,6 +29,7 @@ public enum TxType {
     PAY_TRADE_FEE,
     COMPENSATION_REQUEST,
     VOTE,
+    VOTE_REVEAL,
     ISSUANCE,
     LOCK_UP,
     UN_LOCK;

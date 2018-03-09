@@ -45,7 +45,7 @@ public class CompensationRequestVerification {
                 bsqBlockChain.isCompensationRequestPeriodValid(blockHeight);
     }
 
-    public void apply(Tx tx, TxOutput opReturnTxOutput, TxOutput btcTxOutput) {
+    public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutput btcTxOutput) {
         opReturnTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_OP_RETURN_OUTPUT);
         btcTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT);
         tx.setTxType(TxType.COMPENSATION_REQUEST);

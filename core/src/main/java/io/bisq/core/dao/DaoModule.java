@@ -68,6 +68,10 @@ public class DaoModule extends AppModule {
 
         bind(GenesisTxVerification.class).in(Singleton.class);
         bind(BsqTxVerification.class).in(Singleton.class);
+        bind(TxInputsVerification.class).in(Singleton.class);
+        bind(TxInputVerification.class).in(Singleton.class);
+        bind(TxOutputsVerification.class).in(Singleton.class);
+        bind(TxOutputVerification.class).in(Singleton.class);
         bind(OpReturnVerification.class).in(Singleton.class);
         bind(CompensationRequestVerification.class).in(Singleton.class);
         bind(VotingVerification.class).in(Singleton.class);

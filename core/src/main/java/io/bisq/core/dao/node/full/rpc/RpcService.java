@@ -52,8 +52,11 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-// Blocking access to Bitcoin Core via RPC requests
-// See the rpc.md file in the doc directory for more info about the setup.
+/**
+ * Request blockchain data vai via RPC from Bitcoin Core.
+ * Running in custom threads.
+ * See the rpc.md file in the doc directory for more info about the setup.
+ */
 public class RpcService {
     private static final Logger log = LoggerFactory.getLogger(RpcService.class);
 

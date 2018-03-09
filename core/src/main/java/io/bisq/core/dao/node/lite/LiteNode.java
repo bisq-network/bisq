@@ -40,7 +40,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes)
+ * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes).
+ *
+ * Verification of BSQ transactions is done also by the lite node.
  */
 @Slf4j
 public class LiteNode extends BsqNode {

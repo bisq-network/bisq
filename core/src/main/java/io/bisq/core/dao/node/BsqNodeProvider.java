@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Named;
 
 /**
- * Returns a bsqFullNode or bsqLiteNode based on the DaoOptionKeys.FULL_DAO_NODE option.
+ * Returns a FullNode or LiteNode based on the DaoOptionKeys.FULL_DAO_NODE option.
  */
 @Slf4j
 public class BsqNodeProvider {

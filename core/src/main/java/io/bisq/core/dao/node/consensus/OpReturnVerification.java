@@ -30,6 +30,7 @@ import java.util.List;
 /**
  * Verifies if a given transaction is a BSQ OP_RETURN transaction.
  */
+//TODO refactor
 @Slf4j
 public class OpReturnVerification {
     private final CompensationRequestVerification compensationRequestVerification;
@@ -43,8 +44,7 @@ public class OpReturnVerification {
     }
 
     // FIXME bsqOutput can be null in case there is no BSQ change output at comp requests tx
-    public void process(Tx tx, int index, long bsqFee,
-                        int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
+    public void process(Tx tx, int index, long bsqFee, int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
         List<TxOutput> txOutputs = tx.getOutputs();
         TxOutput opReturnTxOutput = txOutputs.get(index);
         final long txOutputValue = opReturnTxOutput.getValue();
@@ -57,7 +57,7 @@ public class OpReturnVerification {
                 switch (opReturnData[0]) {
                     case OpReturnTypes.COMPENSATION_REQUEST:
                         if (compensationRequestVerification.verify(opReturnData, bsqFee, blockHeight, btcOutput)) {
-                            compensationRequestVerification.apply(tx, opReturnTxOutput, btcOutput);
+                            compensationRequestVerification.applyStateChange(tx, opReturnTxOutput, btcOutput);
                         }
                     case OpReturnTypes.VOTE:
                         // TODO: Handle missing bsqOutput, is it considered an invalid vote?

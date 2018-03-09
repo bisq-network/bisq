@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Main class for a full node which have Bitcoin Core with rpc running and does the blockchain lookup itself.
- * It also provides the BSQ transactions to lite nodes on request.
+ * It also provides the BSQ transactions to lite nodes on request and broadcasts new BSQ blocks.
  */
 @Slf4j
 public class FullNode extends BsqNode {

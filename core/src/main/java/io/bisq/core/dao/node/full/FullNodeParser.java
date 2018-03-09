@@ -38,6 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * Parser for full nodes. Request blockchain data via rpc from Bitcoin Core and iterates blocks to find BSQ relevant transactions.
+ * <p>
+ * We are in threaded context. Don't mix up with UserThread.
+ */
 @Slf4j
 public class FullNodeParser extends BsqParser {
 

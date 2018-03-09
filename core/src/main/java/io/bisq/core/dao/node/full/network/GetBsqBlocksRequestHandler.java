@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Takes a GetBsqBlocksRequest from a lite nodes and send back a corresponding GetBsqBlocksResponse.
+ * Accepts a GetBsqBlocksRequest from a lite nodes and send back a corresponding GetBsqBlocksResponse.
  */
 @Slf4j
 class GetBsqBlocksRequestHandler {

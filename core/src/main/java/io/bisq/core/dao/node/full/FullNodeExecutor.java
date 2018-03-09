@@ -34,7 +34,7 @@ import javax.inject.Inject;
 import java.util.function.Consumer;
 
 /**
- * Makes requests to btcdcli4j rpc services in separate threads and returns result mapped to user thread.
+ * Processes tasks in custom threads. Results are mapped back to user thread so client don't need to deal with threading.
  */
 @Slf4j
 public class FullNodeExecutor {

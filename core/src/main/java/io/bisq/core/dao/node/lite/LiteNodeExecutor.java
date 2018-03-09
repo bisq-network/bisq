@@ -33,7 +33,9 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Consumer;
 
-// Used for non blocking parsing. Encapsulate thread context, so caller gets always called on UserThread
+/**
+ * Processes tasks in custom threads. Results are mapped back to user thread so client don't need to deal with threading.
+ */
 @Slf4j
 public class LiteNodeExecutor {
 
