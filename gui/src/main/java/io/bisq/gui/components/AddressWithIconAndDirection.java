@@ -20,7 +20,6 @@ public class AddressWithIconAndDirection extends AnchorPane {
 
     public AddressWithIconAndDirection(String text, String address, AwesomeIcon awesomeIcon, boolean received) {
         Label directionIcon = new Label();
-        directionIcon.setLayoutY(3);
         directionIcon.getStyleClass().add("icon");
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
         AwesomeDude.setIcon(directionIcon, received ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT);
@@ -32,7 +31,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         hBox.setSpacing(-1);
         Label label = new AutoTooltipLabel(text);
         label.setMouseTransparent(true);
-        HBox.setMargin(label, new Insets(8, 0, 0, 0));
+        HBox.setMargin(label, new Insets(5, 0, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);
 
         hyperlink = new HyperlinkWithIcon(address, awesomeIcon);
@@ -46,7 +45,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         hBox.getChildren().addAll(label, hyperlink);
 
         AnchorPane.setLeftAnchor(directionIcon, 3.0);
-        AnchorPane.setTopAnchor(directionIcon, 6.0);
+        AnchorPane.setTopAnchor(directionIcon, 4.0);
         AnchorPane.setLeftAnchor(hBox, 22.0);
         AnchorPane.setRightAnchor(hBox, 15.0);
         getChildren().addAll(directionIcon, hBox);
