@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import lombok.Getter;
@@ -32,26 +31,17 @@ import javax.inject.Inject;
 @Slf4j
 public class BsqTxVerification {
 
-    private final BsqBlockChain bsqBlockChain;
     private final TxInputsVerification txInputsVerification;
     private final TxOutputsVerification txOutputsVerification;
 
     @Inject
-    public BsqTxVerification(BsqBlockChain bsqBlockChain,
-                             TxInputsVerification txInputsVerification,
+    public BsqTxVerification(TxInputsVerification txInputsVerification,
                              TxOutputsVerification txOutputsVerification) {
-        this.bsqBlockChain = bsqBlockChain;
         this.txInputsVerification = txInputsVerification;
         this.txOutputsVerification = txOutputsVerification;
     }
 
     public boolean isBsqTx(int blockHeight, Tx tx) {
-        return bsqBlockChain.<Boolean>callFunctionWithWriteLock(() -> execute(blockHeight, tx));
-    }
-
-    // Not thread safe wrt bsqBlockChain
-    // Check if any of the inputs are BSQ inputs and update BsqBlockChain state accordingly
-    private boolean execute(int blockHeight, Tx tx) {
         BsqInputBalance bsqInputBalance = txInputsVerification.getBsqInputBalance(tx, blockHeight);
 
         final boolean bsqInputBalancePositive = bsqInputBalance.isPositive();

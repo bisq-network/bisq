@@ -98,8 +98,8 @@ public class BsqBlockChain implements PersistableEnvelope {
     private Tx genesisTx;
 
     // not impl in PB yet
-    private Set<Tuple2<Long, Integer>> compensationRequestFees;
-    private Set<Tuple2<Long, Integer>> votingFees;
+    private final Set<Tuple2<Long, Integer>> compensationRequestFees;
+    private final Set<Tuple2<Long, Integer>> votingFees;
 
     // transient
     @Nullable
@@ -213,7 +213,7 @@ public class BsqBlockChain implements PersistableEnvelope {
     // Public write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applySnapshot() {
+    void applySnapshot() {
         lock.write(() -> {
             checkNotNull(storage, "storage must not be null");
             BsqBlockChain snapshot = storage.initAndGetPersistedWithFileName("BsqBlockChain", 100);
@@ -238,11 +238,11 @@ public class BsqBlockChain implements PersistableEnvelope {
         });
     }
 
-    public void setCreateCompensationRequestFee(long fee, int blockHeight) {
+    void setCreateCompensationRequestFee(long fee, int blockHeight) {
         lock.write(() -> compensationRequestFees.add(new Tuple2<>(fee, blockHeight)));
     }
 
-    public void setVotingFee(long fee, int blockHeight) {
+    void setVotingFee(long fee, int blockHeight) {
         lock.write(() -> votingFees.add(new Tuple2<>(fee, blockHeight)));
     }
 
@@ -251,7 +251,8 @@ public class BsqBlockChain implements PersistableEnvelope {
     // Package scope write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBlock(BsqBlock block) throws BlockNotConnectingException {
+    //TODO refactor logic out
+    void addBlock(BsqBlock block) throws BlockNotConnectingException {
         try {
             lock.write2(() -> {
                 if (!bsqBlocks.contains(block)) {
@@ -282,22 +283,22 @@ public class BsqBlockChain implements PersistableEnvelope {
         }
     }
 
-    public void addTxToMap(Tx tx) {
+    void addTxToMap(Tx tx) {
         lock.write(() -> txMap.put(tx.getId(), tx));
     }
 
-    public void addUnspentTxOutput(TxOutput txOutput) {
+    void addUnspentTxOutput(TxOutput txOutput) {
         lock.write(() -> {
             checkArgument(txOutput.isVerified(), "txOutput must be verified at addUnspentTxOutput");
             unspentTxOutputsMap.put(txOutput.getTxIdIndexTuple(), txOutput);
         });
     }
 
-    public void removeUnspentTxOutput(TxOutput txOutput) {
+    void removeUnspentTxOutput(TxOutput txOutput) {
         lock.write(() -> unspentTxOutputsMap.remove(txOutput.getTxIdIndexTuple()));
     }
 
-    public void setGenesisTx(Tx tx) {
+    void setGenesisTx(Tx tx) {
         lock.write(() -> genesisTx = tx);
     }
 
@@ -322,7 +323,7 @@ public class BsqBlockChain implements PersistableEnvelope {
         return lock.read(() -> (BsqBlockChain) BsqBlockChain.fromProto(bsqBlockChain.getBsqBlockChainBuilder().build()));
     }
 
-    public boolean containsBlock(BsqBlock bsqBlock) {
+    boolean containsBlock(BsqBlock bsqBlock) {
         return lock.read(() -> bsqBlocks.contains(bsqBlock));
     }
 
@@ -364,7 +365,7 @@ public class BsqBlockChain implements PersistableEnvelope {
         return lock.read(() -> txMap);
     }
 
-    public List<BsqBlock> getResetBlocksFrom(int fromBlockHeight) {
+    List<BsqBlock> getResetBlocksFrom(int fromBlockHeight) {
         return lock.read(() -> {
             BsqBlockChain clone = getClone();
             List<BsqBlock> filtered = clone.bsqBlocks.stream()
@@ -404,16 +405,16 @@ public class BsqBlockChain implements PersistableEnvelope {
     // Package scope read access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
+    Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
         return lock.read(() -> getSpendableTxOutput(new TxIdIndexTuple(txId, index)));
     }
 
-    public Optional<TxOutput> getSpendableTxOutput(TxIdIndexTuple txIdIndexTuple) {
+    Optional<TxOutput> getSpendableTxOutput(TxIdIndexTuple txIdIndexTuple) {
         return lock.read(() -> getUnspentTxOutput(txIdIndexTuple)
                 .filter(this::isTxOutputMature));
     }
 
-    public long getCreateCompensationRequestFee(int blockHeight) {
+    long getCreateCompensationRequestFee(int blockHeight) {
         return lock.read(() -> {
             long fee = -1;
             for (Tuple2<Long, Integer> feeAtHeight : compensationRequestFees) {
@@ -426,12 +427,12 @@ public class BsqBlockChain implements PersistableEnvelope {
     }
 
     //TODO not impl yet
-    public boolean isCompensationRequestPeriodValid(int blockHeight) {
+    boolean isCompensationRequestPeriodValid(int blockHeight) {
         return lock.read(() -> true);
 
     }
 
-    public long getVotingFee(int blockHeight) {
+    long getVotingFee(int blockHeight) {
         return lock.read(() -> {
             long fee = -1;
             for (Tuple2<Long, Integer> feeAtHeight : votingFees) {
@@ -444,17 +445,17 @@ public class BsqBlockChain implements PersistableEnvelope {
     }
 
     //TODO not impl yet
-    public boolean isVotingPeriodValid(int blockHeight) {
+    boolean isVotingPeriodValid(int blockHeight) {
         return lock.read(() -> true);
     }
 
-    public boolean existsCompensationRequestBtcAddress(String btcAddress) {
+    boolean existsCompensationRequestBtcAddress(String btcAddress) {
         return lock.read(() -> getAllTxOutputs().stream()
                 .anyMatch(txOutput -> txOutput.isCompensationRequestBtcOutput() &&
                         btcAddress.equals(txOutput.getAddress())));
     }
 
-    public Set<TxOutput> findSponsoringBtcOutputsWithSameBtcAddress(String btcAddress) {
+    Set<TxOutput> findSponsoringBtcOutputsWithSameBtcAddress(String btcAddress) {
         return lock.read(() -> getAllTxOutputs().stream()
                 .filter(txOutput -> txOutput.isSponsoringBtcOutput() &&
                         btcAddress.equals(txOutput.getAddress()))

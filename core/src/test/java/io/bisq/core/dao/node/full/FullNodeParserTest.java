@@ -4,7 +4,7 @@ import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.ReadModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JMockit.class)
 public class FullNodeParserTest {
     @Tested(availableDuringSetup = true)
-    BsqBlockChain bsqBlockChain;
+    ReadModel readModel;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     FullNodeParser fullNodeParser;
 
@@ -74,13 +74,13 @@ public class FullNodeParserTest {
         // 1) - null, 0     -> not BSQ transaction
         // 2) - 100, null   -> BSQ transaction
         // 3) - 0, 100      -> BSQ transaction
-        new Expectations(bsqBlockChain) {{
-            bsqBlockChain.getSpendableTxOutput(new TxIdIndexTuple("tx1", 0));
+        new Expectations(readModel) {{
+            readModel.getSpendableTxOutput(new TxIdIndexTuple("tx1", 0));
             result = Optional.empty();
             result = Optional.of(new TxOutput(0, 100, "txout1", null, null, null, height));
             result = Optional.of(new TxOutput(0, 0, "txout1", null, null, null, height));
 
-            bsqBlockChain.getSpendableTxOutput(new TxIdIndexTuple("tx1", 1));
+            readModel.getSpendableTxOutput(new TxIdIndexTuple("tx1", 1));
             result = Optional.of(new TxOutput(0, 0, "txout2", null, null, null, height));
             result = Optional.empty();
             result = Optional.of(new TxOutput(0, 100, "txout2", null, null, null, height));
@@ -167,25 +167,25 @@ public class FullNodeParserTest {
         });
 
         // Verify that the genesis tx has been added to the bsq blockchain with the correct issuance amount
-        assertTrue(bsqBlockChain.getGenesisTx() == genesisTx);
-        assertTrue(bsqBlockChain.getIssuedAmount().getValue() == issuance.getValue());
+        assertTrue(readModel.getGenesisTx() == genesisTx);
+        assertTrue(readModel.getIssuedAmount().getValue() == issuance.getValue());
 
         // And that other txs are not added
-        assertFalse(bsqBlockChain.containsTx(cbId199));
-        assertFalse(bsqBlockChain.containsTx(cbId200));
-        assertFalse(bsqBlockChain.containsTx(cbId201));
+        assertFalse(readModel.containsTx(cbId199));
+        assertFalse(readModel.containsTx(cbId200));
+        assertFalse(readModel.containsTx(cbId201));
 
         // But bsq txs are added
-        assertTrue(bsqBlockChain.containsTx(bsqTx1Id));
-        TxOutput bsqOut1 = bsqBlockChain.getSpendableTxOutput(bsqTx1Id, 0).get();
+        assertTrue(readModel.containsTx(bsqTx1Id));
+        TxOutput bsqOut1 = readModel.getSpendableTxOutput(bsqTx1Id, 0).get();
         assertTrue(bsqOut1.isUnspent());
         assertTrue(bsqOut1.getValue() == bsqTx1Value1);
-        TxOutput bsqOut2 = bsqBlockChain.getSpendableTxOutput(bsqTx1Id, 1).get();
+        TxOutput bsqOut2 = readModel.getSpendableTxOutput(bsqTx1Id, 1).get();
         assertTrue(bsqOut2.isUnspent());
         assertTrue(bsqOut2.getValue() == bsqTx1Value2);
-        assertFalse(bsqBlockChain.isTxOutputSpendable(genesisId, 0));
-        assertTrue(bsqBlockChain.isTxOutputSpendable(bsqTx1Id, 0));
-        assertTrue(bsqBlockChain.isTxOutputSpendable(bsqTx1Id, 1));
+        assertFalse(readModel.isTxOutputSpendable(genesisId, 0));
+        assertTrue(readModel.isTxOutputSpendable(bsqTx1Id, 0));
+        assertTrue(readModel.isTxOutputSpendable(bsqTx1Id, 1));
 
     }
 }
