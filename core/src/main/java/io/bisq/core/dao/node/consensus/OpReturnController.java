@@ -31,18 +31,18 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Verifies if a given transaction is a BSQ OP_RETURN transaction.
  */
 @Slf4j
-public class OpReturnVerification {
-    private final CompensationRequestVerification compensationRequestVerification;
-    private final VotingVerification votingVerification;
+public class OpReturnController {
+    private final CompensationRequestController compensationRequestController;
+    private final VotingController votingController;
 
     @Inject
-    public OpReturnVerification(CompensationRequestVerification compensationRequestVerification,
-                                VotingVerification votingVerification) {
-        this.compensationRequestVerification = compensationRequestVerification;
-        this.votingVerification = votingVerification;
+    public OpReturnController(CompensationRequestController compensationRequestController,
+                              VotingController votingController) {
+        this.compensationRequestController = compensationRequestController;
+        this.votingController = votingController;
     }
 
-    public void process(TxOutput txOutput, Tx tx, int index, long bsqFee, int blockHeight, TxOutputsVerification.MutableState mutableState) {
+    public void process(TxOutput txOutput, Tx tx, int index, long bsqFee, int blockHeight, TxOutputsController.MutableState mutableState) {
         final long txOutputValue = txOutput.getValue();
         // A BSQ OP_RETURN has to be the last output, the txOutputValue has to be 0 as well as there have to be a BSQ fee.
         if (txOutputValue == 0 && index == tx.getOutputs().size() - 1 && bsqFee > 0) {
@@ -53,8 +53,8 @@ public class OpReturnVerification {
                 // Check with the type byte which kind of OP_RETURN we have.
                 switch (opReturnData[0]) {
                     case OpReturnTypes.COMPENSATION_REQUEST:
-                        if (compensationRequestVerification.verify(opReturnData, bsqFee, blockHeight, mutableState)) {
-                            compensationRequestVerification.applyStateChange(tx, txOutput, mutableState);
+                        if (compensationRequestController.verify(opReturnData, bsqFee, blockHeight, mutableState)) {
+                            compensationRequestController.applyStateChange(tx, txOutput, mutableState);
                         }
                     case OpReturnTypes.VOTE:
                         // TODO

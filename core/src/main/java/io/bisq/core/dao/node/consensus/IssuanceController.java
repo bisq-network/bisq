@@ -22,12 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 
 @Slf4j
-public class IssuanceVerification {
+public class IssuanceController {
    /* private static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
     private static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;*/
 
     @Inject
-    public IssuanceVerification() {
+    public IssuanceController() {
     }
 
    /* public boolean maybeProcessData(Tx tx) {

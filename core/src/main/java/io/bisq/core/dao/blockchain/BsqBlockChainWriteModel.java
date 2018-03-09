@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.blockchain;
 
-import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -27,33 +26,53 @@ import javax.inject.Inject;
 /**
  * Encapsulates write access to BsqBlockChain.
  */
-public class WriteModel {
+public class BsqBlockChainWriteModel {
     private BsqBlockChain bsqBlockChain;
 
     @Inject
-    public WriteModel(BsqBlockChain bsqBlockChain) {
+    public BsqBlockChainWriteModel(BsqBlockChain bsqBlockChain) {
         this.bsqBlockChain = bsqBlockChain;
     }
 
-    public void removeUnspentTxOutput(TxOutput spendableTxOutput) {
-        bsqBlockChain.removeUnspentTxOutput(spendableTxOutput);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Block
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addBlock(BsqBlock bsqBlock) {
+        bsqBlockChain.addBlock(bsqBlock);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setGenesisTx(Tx tx) {
+        bsqBlockChain.setGenesisTx(tx);
     }
 
     public void addTxToMap(Tx tx) {
         bsqBlockChain.addTxToMap(tx);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TxOutput
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void addUnspentTxOutput(TxOutput txOutput) {
         bsqBlockChain.addUnspentTxOutput(txOutput);
     }
 
-    public void setGenesisTx(Tx tx) {
-        bsqBlockChain.setGenesisTx(tx);
+    public void removeUnspentTxOutput(TxOutput spendableTxOutput) {
+        bsqBlockChain.removeUnspentTxOutput(spendableTxOutput);
     }
 
-    public void addBlock(BsqBlock bsqBlock) throws BlockNotConnectingException {
-        bsqBlockChain.addBlock(bsqBlock);
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Misc
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setCreateCompensationRequestFee(long value, int genesisBlockHeight) {
         bsqBlockChain.setCreateCompensationRequestFee(value, genesisBlockHeight);

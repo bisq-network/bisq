@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.core.dao.blockchain.ReadModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.node.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.node.messages.GetBsqBlocksResponse;
@@ -43,7 +43,7 @@ class GetBsqBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final ReadModel readModel;
+    private final BsqBlockChainReadModel bsqBlockChainReadModel;
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
@@ -53,9 +53,9 @@ class GetBsqBlocksRequestHandler {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBsqBlocksRequestHandler(NetworkNode networkNode, ReadModel readModel, Listener listener) {
+    public GetBsqBlocksRequestHandler(NetworkNode networkNode, BsqBlockChainReadModel bsqBlockChainReadModel, Listener listener) {
         this.networkNode = networkNode;
-        this.readModel = readModel;
+        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
         this.listener = listener;
     }
 
@@ -66,7 +66,7 @@ class GetBsqBlocksRequestHandler {
 
     public void onGetBsqBlocksRequest(GetBsqBlocksRequest getBsqBlocksRequest, final Connection connection) {
         Log.traceCall(getBsqBlocksRequest + "\n\tconnection=" + connection);
-        List<BsqBlock> bsqBlocks = readModel.getResetBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+        List<BsqBlock> bsqBlocks = bsqBlockChainReadModel.getResetBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
         final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlocks, getBsqBlocksRequest.getNonce());
         log.debug("bsqBlocksResponse " + bsqBlocksResponse.getRequestNonce());
 

@@ -18,11 +18,11 @@
 package io.bisq.core.dao.node;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
-import io.bisq.core.dao.node.consensus.BsqTxVerification;
-import io.bisq.core.dao.node.consensus.GenesisTxVerification;
+import io.bisq.core.dao.node.consensus.BsqBlockController;
+import io.bisq.core.dao.node.consensus.BsqTxController;
+import io.bisq.core.dao.node.consensus.GenesisTxController;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
@@ -44,9 +44,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Immutable
 public abstract class BsqParser {
-    protected final WriteModel writeModel;
-    private final GenesisTxVerification genesisTxVerification;
-    private final BsqTxVerification bsqTxVerification;
+    protected final BsqBlockController bsqBlockController;
+    private final GenesisTxController genesisTxController;
+    private final BsqTxController bsqTxController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,12 +55,12 @@ public abstract class BsqParser {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqParser(WriteModel writeModel,
-                     GenesisTxVerification genesisTxVerification,
-                     BsqTxVerification bsqTxVerification) {
-        this.writeModel = writeModel;
-        this.genesisTxVerification = genesisTxVerification;
-        this.bsqTxVerification = bsqTxVerification;
+    public BsqParser(BsqBlockController bsqBlockController,
+                     GenesisTxController genesisTxController,
+                     BsqTxController bsqTxController) {
+        this.bsqBlockController = bsqBlockController;
+        this.genesisTxController = genesisTxController;
+        this.bsqTxController = bsqTxController;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,8 +70,8 @@ public abstract class BsqParser {
     protected void checkForGenesisTx(int blockHeight,
                                      List<Tx> bsqTxsInBlock,
                                      Tx tx) {
-        if (genesisTxVerification.isGenesisTx(tx, blockHeight)) {
-            genesisTxVerification.applyStateChange(tx);
+        if (genesisTxController.isGenesisTx(tx, blockHeight)) {
+            genesisTxController.applyStateChange(tx);
             bsqTxsInBlock.add(tx);
         }
     }
@@ -122,7 +122,7 @@ public abstract class BsqParser {
 
         // we check if we have any valid BSQ from that tx set
         bsqTxsInBlock.addAll(txsWithoutInputsFromSameBlock.stream()
-                .filter(tx -> bsqTxVerification.isBsqTx(blockHeight, tx))
+                .filter(tx -> bsqTxController.isBsqTx(blockHeight, tx))
                 .collect(Collectors.toList()));
 
         log.debug("Parsing of all txsWithoutInputsFromSameBlock is done.");

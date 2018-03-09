@@ -20,14 +20,14 @@ package io.bisq.core.dao.node.full;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.node.BsqParser;
-import io.bisq.core.dao.node.consensus.BsqTxVerification;
-import io.bisq.core.dao.node.consensus.GenesisTxVerification;
+import io.bisq.core.dao.node.consensus.BsqBlockController;
+import io.bisq.core.dao.node.consensus.BsqTxController;
+import io.bisq.core.dao.node.consensus.GenesisTxController;
 import io.bisq.core.dao.node.full.rpc.RpcService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,10 +57,10 @@ public class FullNodeParser extends BsqParser {
 
     @Inject
     public FullNodeParser(RpcService rpcService,
-                          WriteModel writeModel,
-                          GenesisTxVerification genesisTxVerification,
-                          BsqTxVerification bsqTxVerification) {
-        super(writeModel, genesisTxVerification, bsqTxVerification);
+                          BsqBlockController bsqBlockController,
+                          GenesisTxController genesisTxController,
+                          BsqTxController bsqTxController) {
+        super(bsqBlockController, genesisTxController, bsqTxController);
         this.rpcService = rpcService;
     }
 
@@ -95,7 +95,7 @@ public class FullNodeParser extends BsqParser {
                 btcdBlock.getHash(),
                 btcdBlock.getPreviousBlockHash(),
                 ImmutableList.copyOf(bsqTxsInBlock));
-        writeModel.addBlock(bsqBlock);
+        bsqBlockController.addBlockIfValid(bsqBlock);
         log.info("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
                 System.currentTimeMillis() - startTs, bsqBlock.getHeight(), bsqTxsInBlock.size());
         return bsqBlock;

@@ -17,14 +17,11 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import lombok.extern.slf4j.Slf4j;
-
 import javax.inject.Inject;
 
-@Slf4j
-public class VotingVerification {
+public class PeriodController {
 
     @Inject
-    public VotingVerification() {
+    public PeriodController() {
     }
 }

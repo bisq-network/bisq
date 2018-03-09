@@ -3,7 +3,7 @@ package io.bisq.core.dao.node.full.network;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.network.NetworkEnvelope;
-import io.bisq.core.dao.blockchain.ReadModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.node.messages.GetBsqBlocksRequest;
 import io.bisq.core.dao.node.messages.NewBsqBlockBroadcastMessage;
@@ -35,7 +35,7 @@ public class FullNodeNetworkManager implements MessageListener, PeerManager.List
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Broadcaster broadcaster;
-    private final ReadModel readModel;
+    private final BsqBlockChainReadModel bsqBlockChainReadModel;
 
     // Key is connection UID
     private final Map<String, GetBsqBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
@@ -50,11 +50,11 @@ public class FullNodeNetworkManager implements MessageListener, PeerManager.List
     public FullNodeNetworkManager(NetworkNode networkNode,
                                   PeerManager peerManager,
                                   Broadcaster broadcaster,
-                                  ReadModel readModel) {
+                                  BsqBlockChainReadModel bsqBlockChainReadModel) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
-        this.readModel = readModel;
+        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
 
         networkNode.addMessageListener(this);
@@ -113,7 +113,7 @@ public class FullNodeNetworkManager implements MessageListener, PeerManager.List
                 final String uid = connection.getUid();
                 if (!getBlocksRequestHandlers.containsKey(uid)) {
                     GetBsqBlocksRequestHandler requestHandler = new GetBsqBlocksRequestHandler(networkNode,
-                            readModel,
+                            bsqBlockChainReadModel,
                             new GetBsqBlocksRequestHandler.Listener() {
                                 @Override
                                 public void onComplete() {

@@ -32,21 +32,21 @@ import java.util.List;
  */
 
 @Slf4j
-public class TxOutputsVerification {
+public class TxOutputsController {
 
-    private final TxOutputVerification txOutputVerification;
+    private final TxOutputController txOutputController;
 
     @Inject
-    public TxOutputsVerification(TxOutputVerification txOutputVerification) {
-        this.txOutputVerification = txOutputVerification;
+    public TxOutputsController(TxOutputController txOutputController) {
+        this.txOutputController = txOutputController;
     }
 
-    void iterate(Tx tx, int blockHeight, BsqTxVerification.BsqInputBalance bsqInputBalance) {
+    void iterate(Tx tx, int blockHeight, BsqTxController.BsqInputBalance bsqInputBalance) {
         // We use order of output index. An output is a BSQ utxo as long there is enough input value
         final List<TxOutput> outputs = tx.getOutputs();
         MutableState mutableState = new MutableState();
         for (int index = 0; index < outputs.size(); index++) {
-            txOutputVerification.verify(tx, outputs.get(index), index, blockHeight, bsqInputBalance, mutableState);
+            txOutputController.verify(tx, outputs.get(index), index, blockHeight, bsqInputBalance, mutableState);
         }
     }
 

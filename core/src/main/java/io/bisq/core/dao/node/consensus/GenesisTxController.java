@@ -18,7 +18,7 @@
 package io.bisq.core.dao.node.consensus;
 
 import io.bisq.core.dao.DaoOptionKeys;
-import io.bisq.core.dao.blockchain.WriteModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxType;
 
@@ -28,17 +28,17 @@ import javax.inject.Named;
 /**
  * Verifies if a given transaction is a BSQ genesis transaction.
  */
-public class GenesisTxVerification {
+public class GenesisTxController {
 
-    private final WriteModel writeModel;
+    private final BsqBlockChainWriteModel bsqBlockChainWriteModel;
     private final String genesisTxId;
     private final int genesisBlockHeight;
 
     @Inject
-    public GenesisTxVerification(WriteModel writeModel,
-                                 @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
-                                 @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
-        this.writeModel = writeModel;
+    public GenesisTxController(BsqBlockChainWriteModel bsqBlockChainWriteModel,
+                               @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
+                               @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
+        this.bsqBlockChainWriteModel = bsqBlockChainWriteModel;
         this.genesisTxId = genesisTxId;
         this.genesisBlockHeight = genesisBlockHeight;
     }
@@ -51,11 +51,11 @@ public class GenesisTxVerification {
         tx.getOutputs().forEach(txOutput -> {
             txOutput.setUnspent(true);
             txOutput.setVerified(true);
-            writeModel.addUnspentTxOutput(txOutput);
+            bsqBlockChainWriteModel.addUnspentTxOutput(txOutput);
         });
         tx.setTxType(TxType.GENESIS);
 
-        writeModel.setGenesisTx(tx);
-        writeModel.addTxToMap(tx);
+        bsqBlockChainWriteModel.setGenesisTx(tx);
+        bsqBlockChainWriteModel.addTxToMap(tx);
     }
 }

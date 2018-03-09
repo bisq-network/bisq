@@ -17,8 +17,8 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.ReadModel;
-import io.bisq.core.dao.blockchain.WriteModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
+import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
 import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
@@ -33,27 +33,27 @@ import java.util.Optional;
  */
 
 @Slf4j
-public class TxInputVerification {
+public class TxInputController {
 
-    private final WriteModel writeModel;
-    private final ReadModel readModel;
+    private final BsqBlockChainWriteModel bsqBlockChainWriteModel;
+    private final BsqBlockChainReadModel bsqBlockChainReadModel;
 
     @Inject
-    public TxInputVerification(WriteModel writeModel, ReadModel readModel) {
-        this.writeModel = writeModel;
-        this.readModel = readModel;
+    public TxInputController(BsqBlockChainWriteModel bsqBlockChainWriteModel, BsqBlockChainReadModel bsqBlockChainReadModel) {
+        this.bsqBlockChainWriteModel = bsqBlockChainWriteModel;
+        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
     }
 
     Optional<TxOutput> getOptionalSpendableTxOutput(TxInput input) {
         // TODO check if Tuple indexes of inputs outputs are not messed up...
         // Get spendable BSQ output for txIdIndexTuple... (get output used as input in tx if it's spendable BSQ)
-        return readModel.getSpendableTxOutput(input.getTxIdIndexTuple());
+        return bsqBlockChainReadModel.getSpendableTxOutput(input.getTxIdIndexTuple());
     }
 
     void applyStateChange(TxInput input, TxOutput spendableTxOutput, int blockHeight, Tx tx, int inputIndex) {
         // The output is BSQ, set it as spent, update bsqBlockChain and add to available BSQ for this tx
         spendableTxOutput.setUnspent(false);
-        writeModel.removeUnspentTxOutput(spendableTxOutput);
+        bsqBlockChainWriteModel.removeUnspentTxOutput(spendableTxOutput);
         spendableTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
         input.setConnectedTxOutput(spendableTxOutput);
     }

@@ -29,25 +29,25 @@ import javax.inject.Inject;
  * Verifies if a given transaction is a BSQ transaction.
  */
 @Slf4j
-public class BsqTxVerification {
+public class BsqTxController {
 
-    private final TxInputsVerification txInputsVerification;
-    private final TxOutputsVerification txOutputsVerification;
+    private final TxInputsController txInputsController;
+    private final TxOutputsController txOutputsController;
 
     @Inject
-    public BsqTxVerification(TxInputsVerification txInputsVerification,
-                             TxOutputsVerification txOutputsVerification) {
-        this.txInputsVerification = txInputsVerification;
-        this.txOutputsVerification = txOutputsVerification;
+    public BsqTxController(TxInputsController txInputsController,
+                           TxOutputsController txOutputsController) {
+        this.txInputsController = txInputsController;
+        this.txOutputsController = txOutputsController;
     }
 
     public boolean isBsqTx(int blockHeight, Tx tx) {
-        BsqInputBalance bsqInputBalance = txInputsVerification.getBsqInputBalance(tx, blockHeight);
+        BsqInputBalance bsqInputBalance = txInputsController.getBsqInputBalance(tx, blockHeight);
 
         final boolean bsqInputBalancePositive = bsqInputBalance.isPositive();
         if (bsqInputBalancePositive) {
-            txInputsVerification.applyStateChange(tx);
-            txOutputsVerification.iterate(tx, blockHeight, bsqInputBalance);
+            txInputsController.applyStateChange(tx);
+            txOutputsController.iterate(tx, blockHeight, bsqInputBalance);
         }
 
         // Lets check if we have left over BSQ (burned fees)

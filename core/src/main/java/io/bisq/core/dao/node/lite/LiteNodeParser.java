@@ -17,13 +17,13 @@
 
 package io.bisq.core.dao.node.lite;
 
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.node.BsqParser;
-import io.bisq.core.dao.node.consensus.BsqTxVerification;
-import io.bisq.core.dao.node.consensus.GenesisTxVerification;
+import io.bisq.core.dao.node.consensus.BsqBlockController;
+import io.bisq.core.dao.node.consensus.BsqTxController;
+import io.bisq.core.dao.node.consensus.GenesisTxController;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -40,10 +40,10 @@ import java.util.function.Consumer;
 public class LiteNodeParser extends BsqParser {
 
     @Inject
-    public LiteNodeParser(WriteModel writeModel,
-                          GenesisTxVerification genesisTxVerification,
-                          BsqTxVerification bsqTxVerification) {
-        super(writeModel, genesisTxVerification, bsqTxVerification);
+    public LiteNodeParser(BsqBlockController bsqBlockController,
+                          GenesisTxController genesisTxController,
+                          BsqTxController bsqTxController) {
+        super(bsqBlockController, genesisTxController, bsqTxController);
     }
 
     void parseBsqBlocks(List<BsqBlock> bsqBlocks,
@@ -62,6 +62,6 @@ public class LiteNodeParser extends BsqParser {
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         bsqBlock.getTxs().forEach(tx -> checkForGenesisTx(blockHeight, bsqTxsInBlock, tx));
         recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
-        writeModel.addBlock(bsqBlock);
+        bsqBlockController.addBlockIfValid(bsqBlock);
     }
 }
