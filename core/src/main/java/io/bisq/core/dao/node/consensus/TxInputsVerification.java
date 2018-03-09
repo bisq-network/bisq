@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -32,12 +32,12 @@ import java.util.Optional;
 @Slf4j
 public class TxInputsVerification {
 
-    private final BsqBlockChain bsqBlockChain;
+    private final WriteModel writeModel;
     private final TxInputVerification txInputVerification;
 
     @Inject
-    public TxInputsVerification(BsqBlockChain bsqBlockChain, TxInputVerification txInputVerification) {
-        this.bsqBlockChain = bsqBlockChain;
+    public TxInputsVerification(WriteModel writeModel, TxInputVerification txInputVerification) {
+        this.writeModel = writeModel;
         this.txInputVerification = txInputVerification;
     }
 
@@ -55,6 +55,6 @@ public class TxInputsVerification {
     }
 
     void applyStateChange(Tx tx) {
-        bsqBlockChain.addTxToMap(tx);
+        writeModel.addTxToMap(tx);
     }
 }

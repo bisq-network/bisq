@@ -17,42 +17,20 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxType;
-import io.bisq.core.dao.request.compensation.CompensationRequest;
-import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
-//TODO outdated, ignore
 @Slf4j
 public class IssuanceVerification {
-    private static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
-    private static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
-
-    private final BsqBlockChain bsqBlockChain;
-    private final PeriodVerification periodVerification;
-    private final VotingVerification votingVerification;
-    private final CompensationRequestManager compensationRequestManager;
+   /* private static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
+    private static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;*/
 
     @Inject
-    public IssuanceVerification(BsqBlockChain bsqBlockChain,
-                                PeriodVerification periodVerification,
-                                VotingVerification votingVerification,
-                                CompensationRequestManager compensationRequestManager) {
-        this.bsqBlockChain = bsqBlockChain;
-        this.periodVerification = periodVerification;
-        this.votingVerification = votingVerification;
-        this.compensationRequestManager = compensationRequestManager;
+    public IssuanceVerification() {
     }
 
-    public boolean maybeProcessData(Tx tx) {
+   /* public boolean maybeProcessData(Tx tx) {
         List<TxOutput> outputs = tx.getOutputs();
         if (outputs.size() >= 2) {
             TxOutput bsqTxOutput = outputs.get(0);
@@ -91,5 +69,5 @@ public class IssuanceVerification {
             }
         }
         return false;
-    }
+    }*/
 }

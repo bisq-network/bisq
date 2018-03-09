@@ -17,54 +17,14 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.common.app.Version;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxOutputType;
-import io.bisq.core.dao.blockchain.vo.TxType;
-import io.bisq.core.dao.request.compensation.CompensationRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 
-//TODO outdated, ignore
-@SuppressWarnings("unused")
 @Slf4j
 public class VotingVerification {
-    private final BsqBlockChain bsqBlockChain;
-    private final PeriodVerification periodVerification;
 
     @Inject
-    public VotingVerification(BsqBlockChain bsqBlockChain,
-                              PeriodVerification periodVerification) {
-        this.bsqBlockChain = bsqBlockChain;
-        this.periodVerification = periodVerification;
-    }
-
-    public boolean isCompensationRequestAccepted(CompensationRequest compensationRequest) {
-        return true;
-    }
-
-    public boolean isConversionRateValid(int blockHeight, long btcAmount, long bsqAmount) {
-        return false;
-    }
-
-    public boolean isOpReturn(Tx tx, byte[] opReturnData, TxOutput txOutput, long bsqFee, int blockHeight, TxOutput bsqOutput) {
-        if (Version.VOTING_VERSION == opReturnData[1] && opReturnData.length > 22) {
-            final int sizeOfCompRequestsVotes = (int) opReturnData[22];
-            if (bsqOutput != null &&
-                    sizeOfCompRequestsVotes % 2 == 0 &&
-                    opReturnData.length % 2 == 1 &&
-                    opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
-                    bsqFee == bsqBlockChain.getVotingFee(blockHeight) &&
-                    bsqBlockChain.isVotingPeriodValid(blockHeight)) {
-                txOutput.setTxOutputType(TxOutputType.VOTE_OP_RETURN_OUTPUT);
-                tx.setTxType(TxType.VOTE);
-                // TODO use bsqOutput as weight
-                return true;
-            }
-        }
-        return false;
+    public VotingVerification() {
     }
 }

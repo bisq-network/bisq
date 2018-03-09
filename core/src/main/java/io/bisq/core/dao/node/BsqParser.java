@@ -18,7 +18,7 @@
 package io.bisq.core.dao.node;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.node.consensus.BsqTxVerification;
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Immutable
 public abstract class BsqParser {
-    protected final BsqBlockChain bsqBlockChain;
+    protected final WriteModel writeModel;
     private final GenesisTxVerification genesisTxVerification;
     private final BsqTxVerification bsqTxVerification;
 
@@ -55,10 +55,10 @@ public abstract class BsqParser {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqParser(BsqBlockChain bsqBlockChain,
+    public BsqParser(WriteModel writeModel,
                      GenesisTxVerification genesisTxVerification,
                      BsqTxVerification bsqTxVerification) {
-        this.bsqBlockChain = bsqBlockChain;
+        this.writeModel = writeModel;
         this.genesisTxVerification = genesisTxVerification;
         this.bsqTxVerification = bsqTxVerification;
     }

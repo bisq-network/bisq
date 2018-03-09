@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +39,6 @@ import java.util.function.Consumer;
 public class LiteNodeExecutor {
 
     private final LiteNodeParser liteNodeParser;
-    private final BsqBlockChain bsqBlockChain;
 
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
     private final ListeningExecutorService parseBlockExecutor = Utilities.getListeningExecutorService("ParseBlock", 1, 1, 60);
@@ -52,9 +50,8 @@ public class LiteNodeExecutor {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public LiteNodeExecutor(LiteNodeParser liteNodeParser, BsqBlockChain bsqBlockChain) {
+    public LiteNodeExecutor(LiteNodeParser liteNodeParser) {
         this.liteNodeParser = liteNodeParser;
-        this.bsqBlockChain = bsqBlockChain;
     }
 
 
@@ -94,7 +91,6 @@ public class LiteNodeExecutor {
             long startTs = System.currentTimeMillis();
             liteNodeParser.parseBsqBlock(bsqBlock);
             log.info("parseBlocks took {} ms", System.currentTimeMillis() - startTs);
-            bsqBlockChain.addBlock(bsqBlock);
             return null;
         });
 
