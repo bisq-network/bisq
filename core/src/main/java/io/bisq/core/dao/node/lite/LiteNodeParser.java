@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.lite;
 
-import io.bisq.core.dao.blockchain.WriteModel;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -40,10 +40,10 @@ import java.util.function.Consumer;
 public class LiteNodeParser extends BsqParser {
 
     @Inject
-    public LiteNodeParser(WriteModel writeModel,
+    public LiteNodeParser(BsqBlockChain bsqBlockChain,
                           GenesisTxVerification genesisTxVerification,
                           BsqTxVerification bsqTxVerification) {
-        super(writeModel, genesisTxVerification, bsqTxVerification);
+        super(bsqBlockChain, genesisTxVerification, bsqTxVerification);
     }
 
     void parseBsqBlocks(List<BsqBlock> bsqBlocks,
@@ -51,17 +51,17 @@ public class LiteNodeParser extends BsqParser {
             throws BlockNotConnectingException {
         for (BsqBlock bsqBlock : bsqBlocks) {
             parseBsqBlock(bsqBlock);
+            bsqBlockChain.addBlock(bsqBlock);
             newBlockHandler.accept(bsqBlock);
         }
     }
 
-    void parseBsqBlock(BsqBlock bsqBlock) throws BlockNotConnectingException {
+    void parseBsqBlock(BsqBlock bsqBlock) {
         int blockHeight = bsqBlock.getHeight();
         log.info("Parse block at height={} ", blockHeight);
         List<Tx> txList = new ArrayList<>(bsqBlock.getTxs());
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         bsqBlock.getTxs().forEach(tx -> checkForGenesisTx(blockHeight, bsqTxsInBlock, tx));
         recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
-        writeModel.addBlock(bsqBlock);
     }
 }

@@ -20,7 +20,7 @@ package io.bisq.core.dao.node.full;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
-import io.bisq.core.dao.blockchain.WriteModel;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
@@ -57,10 +57,10 @@ public class FullNodeParser extends BsqParser {
 
     @Inject
     public FullNodeParser(RpcService rpcService,
-                          WriteModel writeModel,
+                          BsqBlockChain bsqBlockChain,
                           GenesisTxVerification genesisTxVerification,
                           BsqTxVerification bsqTxVerification) {
-        super(writeModel, genesisTxVerification, bsqTxVerification);
+        super(bsqBlockChain, genesisTxVerification, bsqTxVerification);
         this.rpcService = rpcService;
     }
 
@@ -95,7 +95,7 @@ public class FullNodeParser extends BsqParser {
                 btcdBlock.getHash(),
                 btcdBlock.getPreviousBlockHash(),
                 ImmutableList.copyOf(bsqTxsInBlock));
-        writeModel.addBlock(bsqBlock);
+        bsqBlockChain.addBlock(bsqBlock);
         log.info("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
                 System.currentTimeMillis() - startTs, bsqBlock.getHeight(), bsqTxsInBlock.size());
         return bsqBlock;

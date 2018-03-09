@@ -19,10 +19,8 @@ package io.bisq.core.dao.node;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.ReadModel;
-import io.bisq.core.dao.blockchain.SnapshotManager;
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
@@ -42,13 +40,12 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected final P2PService p2PService;
-    protected final ReadModel readModel;
+    @SuppressWarnings("WeakerAccess")
+    protected final BsqBlockChain bsqBlockChain;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqBlockChainListener> bsqBlockChainListeners = new ArrayList<>();
     private final String genesisTxId;
     private final int genesisBlockHeight;
-    private final SnapshotManager snapshotManager;
-    @org.jetbrains.annotations.NotNull
     @Getter
     protected boolean parseBlockchainComplete;
     @SuppressWarnings("WeakerAccess")
@@ -60,22 +57,19 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqNode(WriteModel writeModel,
-                   ReadModel readModel,
-                   SnapshotManager snapshotManager,
-                   P2PService p2PService,
+    public BsqNode(P2PService p2PService,
+                   BsqBlockChain bsqBlockChain,
                    FeeService feeService) {
 
         this.p2PService = p2PService;
-        this.readModel = readModel;
+        this.bsqBlockChain = bsqBlockChain;
 
-        genesisTxId = readModel.getGenesisTxId();
-        genesisBlockHeight = readModel.getGenesisBlockHeight();
-        this.snapshotManager = snapshotManager;
+        genesisTxId = bsqBlockChain.getGenesisTxId();
+        genesisBlockHeight = bsqBlockChain.getGenesisBlockHeight();
 
-        writeModel.setCreateCompensationRequestFee(feeService.getCreateCompensationRequestFee().value,
+        bsqBlockChain.setCreateCompensationRequestFee(feeService.getCreateCompensationRequestFee().value,
                 genesisBlockHeight);
-        writeModel.setVotingFee(feeService.getVotingTxFee().value,
+        bsqBlockChain.setVotingFee(feeService.getVotingTxFee().value,
                 genesisBlockHeight);
     }
 
@@ -156,16 +150,16 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected int getStartBlockHeight() {
-        final int startBlockHeight = Math.max(genesisBlockHeight, readModel.getChainHeadHeight() + 1);
+        final int startBlockHeight = Math.max(genesisBlockHeight, bsqBlockChain.getChainHeadHeight() + 1);
         log.info("Start parse blocks:\n" +
                         "   Start block height={}\n" +
                         "   Genesis txId={}\n" +
                         "   Genesis block height={}\n" +
-                        "   Block height={}\n",
+                        "   BsqBlockChain block height={}\n",
                 startBlockHeight,
                 genesisTxId,
                 genesisBlockHeight,
-                readModel.getChainHeadHeight());
+                bsqBlockChain.getChainHeadHeight());
 
         return startBlockHeight;
     }
@@ -188,7 +182,7 @@ public abstract class BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applySnapshot() {
-        snapshotManager.applySnapshot();
+        bsqBlockChain.applySnapshot();
         bsqBlockChainListeners.forEach(BsqBlockChainListener::onBsqBlockChainChanged);
     }
 }

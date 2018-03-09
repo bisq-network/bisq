@@ -18,7 +18,7 @@ public class FunctionalReadWriteLock {
         this(new ReentrantReadWriteLock(isFair));
     }
 
-    private FunctionalReadWriteLock(ReadWriteLock lock) {
+    public FunctionalReadWriteLock(ReadWriteLock lock) {
         readLock = lock.readLock();
         writeLock = lock.writeLock();
     }

@@ -20,10 +20,8 @@ package io.bisq.core.dao.node.lite;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.ReadModel;
-import io.bisq.core.dao.blockchain.SnapshotManager;
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.node.BsqNode;
@@ -43,7 +41,7 @@ import java.util.function.Consumer;
 
 /**
  * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes).
- * <p>
+ *
  * Verification of BSQ transactions is done also by the lite node.
  */
 @Slf4j
@@ -58,17 +56,13 @@ public class LiteNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public LiteNode(WriteModel writeModel,
-                    ReadModel readModel,
-                    SnapshotManager snapshotManager,
-                    P2PService p2PService,
+    public LiteNode(P2PService p2PService,
                     LiteNodeExecutor bsqLiteNodeExecutor,
+                    BsqBlockChain bsqBlockChain,
                     FeeService feeService,
                     LiteNodeNetworkManager liteNodeNetworkManager) {
-        super(writeModel,
-                readModel,
-                snapshotManager,
-                p2PService,
+        super(p2PService,
+                bsqBlockChain,
                 feeService);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
         this.liteNodeNetworkManager = liteNodeNetworkManager;
@@ -150,7 +144,7 @@ public class LiteNode extends BsqNode {
         // We reset all mutable data in case the provider would not have done it.
         bsqBlock.reset();
         log.info("onNewBlockReceived: bsqBlock={}", bsqBlock.getHeight());
-        if (!readModel.containsBlock(bsqBlock)) {
+        if (!bsqBlockChain.containsBlock(bsqBlock)) {
             bsqLiteNodeExecutor.parseBlock(bsqBlock,
                     this::notifyListenersOnNewBlock,
                     getErrorHandler());

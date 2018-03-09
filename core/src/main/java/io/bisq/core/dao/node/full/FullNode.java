@@ -20,10 +20,8 @@ package io.bisq.core.dao.node.full;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.ReadModel;
-import io.bisq.core.dao.blockchain.SnapshotManager;
-import io.bisq.core.dao.blockchain.WriteModel;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
@@ -51,18 +49,14 @@ public class FullNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public FullNode(WriteModel writeModel,
-                    ReadModel readModel,
-                    SnapshotManager snapshotManager,
-                    P2PService p2PService,
+    public FullNode(P2PService p2PService,
                     FullNodeExecutor bsqFullNodeExecutor,
+                    BsqBlockChain bsqBlockChain,
                     JsonBlockChainExporter jsonBlockChainExporter,
                     FeeService feeService,
                     FullNodeNetworkManager fullNodeNetworkManager) {
-        super(writeModel,
-                readModel,
-                snapshotManager,
-                p2PService,
+        super(p2PService,
+                bsqBlockChain,
                 feeService);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonBlockChainExporter = jsonBlockChainExporter;
