@@ -87,9 +87,7 @@ public class TxOutputVerification {
                 }
             } else {
                 // We got a OP_RETURN output.
-                // We verify the output in a dedicated verifier class.
-                //TODO refactor opReturnVerification
-                opReturnVerification.process(tx, index, bsqInputBalanceValue, blockHeight, mutableState.getCompRequestIssuanceOutputCandidate(), mutableState.getBsqOutput());
+                opReturnVerification.process(txOutput, tx, index, bsqInputBalanceValue, blockHeight, mutableState);
             }
 
         } else {

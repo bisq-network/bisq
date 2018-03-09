@@ -20,17 +20,16 @@ package io.bisq.core.dao.node.consensus;
 import io.bisq.core.dao.OpReturnTypes;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
-import io.bisq.core.dao.blockchain.vo.TxOutputType;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
-import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Verifies if a given transaction is a BSQ OP_RETURN transaction.
  */
-//TODO refactor
 @Slf4j
 public class OpReturnVerification {
     private final CompensationRequestVerification compensationRequestVerification;
@@ -43,40 +42,39 @@ public class OpReturnVerification {
         this.votingVerification = votingVerification;
     }
 
-    // FIXME bsqOutput can be null in case there is no BSQ change output at comp requests tx
-    public void process(Tx tx, int index, long bsqFee, int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
-        List<TxOutput> txOutputs = tx.getOutputs();
-        TxOutput opReturnTxOutput = txOutputs.get(index);
-        final long txOutputValue = opReturnTxOutput.getValue();
-        // If we get an OP_RETURN it has to be the last output and the txOutputValue has to be 0 as well there have be at least one bsqOutput
-        if (txOutputValue == 0 && index == txOutputs.size() - 1 && bsqFee > 0) {
-            byte[] opReturnData = opReturnTxOutput.getOpReturnData();
-            // We expect at least the type byte
-            if (opReturnData != null && opReturnData.length > 1) {
-                opReturnTxOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
+    public void process(TxOutput txOutput, Tx tx, int index, long bsqFee, int blockHeight, TxOutputsVerification.MutableState mutableState) {
+        final long txOutputValue = txOutput.getValue();
+        // A BSQ OP_RETURN has to be the last output, the txOutputValue has to be 0 as well as there have to be a BSQ fee.
+        if (txOutputValue == 0 && index == tx.getOutputs().size() - 1 && bsqFee > 0) {
+            byte[] opReturnData = txOutput.getOpReturnData();
+            checkArgument(opReturnData != null, "opReturnData must not be null");
+            // All BSQ OP_RETURN txs have at least a type byte
+            if (opReturnData.length >= 1) {
+                // Check with the type byte which kind of OP_RETURN we have.
                 switch (opReturnData[0]) {
                     case OpReturnTypes.COMPENSATION_REQUEST:
-                        if (compensationRequestVerification.verify(opReturnData, bsqFee, blockHeight, btcOutput)) {
-                            compensationRequestVerification.applyStateChange(tx, opReturnTxOutput, btcOutput);
+                        if (compensationRequestVerification.verify(opReturnData, bsqFee, blockHeight, mutableState)) {
+                            compensationRequestVerification.applyStateChange(tx, txOutput, mutableState);
                         }
                     case OpReturnTypes.VOTE:
-                        // TODO: Handle missing bsqOutput, is it considered an invalid vote?
-                        if (bsqOutput != null) {
-                            votingVerification.isOpReturn(tx, opReturnData, opReturnTxOutput, bsqFee, blockHeight, bsqOutput);
-                        } else {
-                            log.warn("Voting tx is missing bsqOutput for vote base txId={}", tx.getId());
-                        }
+                        // TODO
+                    case OpReturnTypes.VOTE_RELEASE:
+                        // TODO
+                    case OpReturnTypes.LOCK_UP:
+                        // TODO
+                    case OpReturnTypes.UNLOCK:
+                        // TODO
                     default:
                         log.warn("OP_RETURN version of the BSQ tx ={} does not match expected version bytes. opReturnData={}",
                                 tx.getId(), Utils.HEX.encode(opReturnData));
                         break;
                 }
             } else {
-                log.warn("opReturnData is null or has no content. opReturnData={}", opReturnData != null ? Utils.HEX.encode(opReturnData) : "null");
+                log.warn("opReturnData is null or has no content. opReturnData={}", Utils.HEX.encode(opReturnData));
             }
         } else {
-            log.warn("opReturnData is not matching DAO rules txId={} outValue={} index={} #outputs={} hasBsqOut={} bsqFee={}",
-                    tx.getId(), txOutputValue, index, txOutputs.size(), bsqOutput != null, bsqFee);
+            log.warn("opReturnData is not matching DAO rules txId={} outValue={} index={} #outputs={} bsqFee={}",
+                    tx.getId(), txOutputValue, index, tx.getOutputs().size(), bsqFee);
         }
     }
 }

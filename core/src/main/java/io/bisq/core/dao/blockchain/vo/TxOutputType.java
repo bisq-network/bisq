@@ -24,10 +24,10 @@ public enum TxOutputType {
     UNDEFINED,
     BSQ_OUTPUT,
     BTC_OUTPUT,
-    OP_RETURN_OUTPUT,
     COMPENSATION_REQUEST_OP_RETURN_OUTPUT,
     COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT,
-    VOTING_OP_RETURN_OUTPUT;
+    VOTE_OP_RETURN_OUTPUT,
+    VOTE_REVEAL_OP_RETURN_OUTPUT;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -27,7 +27,7 @@ import io.bisq.core.dao.blockchain.vo.TxType;
 import javax.inject.Inject;
 
 /**
- * Verifies if a given transaction is a CompensationRequest OP_RETURN transaction.
+ * Verifies if OP_RETURN data matches rules for a compensation request tx and applies state change.
  */
 public class CompensationRequestVerification {
     private final BsqBlockChain bsqBlockChain;
@@ -37,17 +37,17 @@ public class CompensationRequestVerification {
         this.bsqBlockChain = bsqBlockChain;
     }
 
-    public boolean verify(byte[] opReturnData, long bsqFee, int blockHeight, TxOutput btcTxOutput) {
-        return btcTxOutput != null &&
+    public boolean verify(byte[] opReturnData, long bsqFee, int blockHeight, TxOutputsVerification.MutableState mutableState) {
+        return mutableState.getCompRequestIssuanceOutputCandidate() != null &&
                 opReturnData.length == 22 &&
                 Version.COMPENSATION_REQUEST_VERSION == opReturnData[1] &&
                 bsqFee == bsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
                 bsqBlockChain.isCompensationRequestPeriodValid(blockHeight);
     }
 
-    public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutput btcTxOutput) {
+    public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutputsVerification.MutableState mutableState) {
         opReturnTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_OP_RETURN_OUTPUT);
-        btcTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT);
+        mutableState.getCompRequestIssuanceOutputCandidate().setTxOutputType(TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT);
         tx.setTxType(TxType.COMPENSATION_REQUEST);
     }
 }

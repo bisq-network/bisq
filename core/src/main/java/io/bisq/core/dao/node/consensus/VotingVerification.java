@@ -59,7 +59,7 @@ public class VotingVerification {
                     opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
                     bsqFee == bsqBlockChain.getVotingFee(blockHeight) &&
                     bsqBlockChain.isVotingPeriodValid(blockHeight)) {
-                txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
+                txOutput.setTxOutputType(TxOutputType.VOTE_OP_RETURN_OUTPUT);
                 tx.setTxType(TxType.VOTE);
                 // TODO use bsqOutput as weight
                 return true;
