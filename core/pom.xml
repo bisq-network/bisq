@@ -19,11 +19,6 @@
         </dependency>
         <dependency>
             <groupId>io.bisq.exchange</groupId>
-            <artifactId>consensus</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.bisq.exchange</groupId>
             <artifactId>network</artifactId>
             <version>${project.version}</version>
         </dependency>
