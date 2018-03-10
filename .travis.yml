@@ -1,9 +1,5 @@
 language: java
 jdk: oraclejdk8
-
 notifications:
   slack:
-    rooms:
-      - secure: H82Q57T5nRNDfVnxzlWZ2WoeGt71oq2eJGHbqJ4wP2tIc8b02UO9bztPKFxbm9slMu0JjxZdJfnHSgNZKfPVXrTqwPYRVjKqm7m9TynIlkQabV+yCI/oRvy4Xi/Xj7/aPvZat4s/bxjrtw9KwVdpmqWvRNNSgiTqQ4teBJ1uQGs=
-    on_success: change
-    on_failure: always
+    secure: EzlqWTBuhb3FCfApjUXaShWgsWOVDwMXI7ISMiVBkcl2VFISYs/lc/7Qjr7rdy4iqQOQXMcUPHdwMUp0diX+GxiSjLARjUpKIvNOPswZWBL+3Z1h28jyOwtHRviZbM1EU0BZROrr+ODyTNz2lf+L1iXTkpSvk50o5JAnAkumsPw=
