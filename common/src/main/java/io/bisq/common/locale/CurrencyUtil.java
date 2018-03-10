@@ -139,7 +139,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PNC", "Pranacoin"));
         result.add(new CryptoCurrency("RDD", "ReddCoin"));
         result.add(new CryptoCurrency("REF", "RefToken", true));
-        result.add(new CryptoCurrency("ROI", "ROIcoin"));
         result.add(new CryptoCurrency("SFSC", "Safe FileSystem Coin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
@@ -175,6 +174,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ALC", "Angelcoin"));
         result.add(new CryptoCurrency("DIN", "Dinero"));
         result.add(new CryptoCurrency("NAH", "Strayacoin"));
+        result.add(new CryptoCurrency("ROI", "ROIcoin"));
 
         result.sort(TradeCurrency::compareTo);
 
