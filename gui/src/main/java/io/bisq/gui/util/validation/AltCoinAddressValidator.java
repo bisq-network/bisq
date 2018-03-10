@@ -498,6 +498,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "WMCC":
+                	return WMCCAddressValidator.ValidateAddress(WMCCParams.get(), input);
 
                     // Add new coins at the end...
                 default:

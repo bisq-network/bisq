@@ -268,6 +268,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("DIN");
         newlyAdded.add("NAH");
         newlyAdded.add("ROI");
+        newlyAdded.add("WMCC");
 
         coinsWithValidator.addAll(newlyAdded);
 
