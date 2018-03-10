@@ -357,9 +357,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.bisq.exchange</groupId>
-            <artifactId>core</artifactId>
-            <version>209fdff</version>
+            <groupId>io.bisq</groupId>
+            <artifactId>bisq-core</artifactId>
+            <version>975d446</version>
         </dependency>
 
         <dependency>
