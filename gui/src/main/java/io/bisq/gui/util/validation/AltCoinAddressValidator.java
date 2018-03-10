@@ -180,18 +180,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-                case "ALC":
-                    if (input.matches("^[A][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
-                        //noinspection ConstantConditions
-                        try {
-                            Address.fromBase58(AlcParams.get(), input);
-                            return new ValidationResult(true);
-                        } catch (AddressFormatException e) {
-                            return new ValidationResult(false, getErrorMessage(e));
-                        }
-                    } else {
-                        return regexTestFailed;
-                    }
                 case "IOP":
                     if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         //noinspection ConstantConditions
@@ -477,6 +465,18 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
 
+                case "ALC":
+                    if (input.matches("^[A][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
+                        try {
+                            Address.fromBase58(AlcParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
                     // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
