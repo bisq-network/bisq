@@ -265,6 +265,7 @@ public class TradeStatisticsManager {
         newlyAdded.add("VDN");
         // v0.7.0
         coinsWithValidator.add("ALC");
+        newlyAdded.add("DIN");
 
         coinsWithValidator.addAll(newlyAdded);
 

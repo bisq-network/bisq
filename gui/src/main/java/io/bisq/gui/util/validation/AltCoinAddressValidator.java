@@ -464,6 +464,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "DIN":
+                    if (!input.matches("^[D][0-9a-zA-Z]{33}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                 case "ALC":
                     if (input.matches("^[A][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
