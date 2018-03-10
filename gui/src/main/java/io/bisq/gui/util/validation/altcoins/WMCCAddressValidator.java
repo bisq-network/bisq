@@ -18,18 +18,16 @@
 package io.bisq.gui.util.validation.altcoins;
 
 import io.bisq.gui.util.validation.InputValidator.ValidationResult;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.VersionedChecksummedBytes;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.VersionedChecksummedBytes;
 import org.bitcoinj.params.Networks;
 
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.Locale;
-import java.io.ByteArrayOutputStream;
-
-import javax.annotation.Nullable;
 
 
 public class WMCCAddressValidator {
@@ -53,7 +51,7 @@ public class WMCCAddressValidator {
 
     private static boolean isLowerCase(String str) {
         char ch;
-        for (int i=0; i<str.length(); i++) {
+        for (int i = 0; i < str.length(); i++) {
             ch = str.charAt(i);
             if (Character.isDigit(ch))
                 continue;
@@ -116,7 +114,7 @@ class WitnessAddress extends VersionedChecksummedBytes {
      * Helper
      */
     private static byte[] convertBits(final byte[] in, final int inStart, final int inLen, final int fromBits,
-            final int toBits, final boolean pad) throws AddressFormatException {
+                                      final int toBits, final boolean pad) throws AddressFormatException {
         int acc = 0;
         int bits = 0;
         ByteArrayOutputStream out = new ByteArrayOutputStream(64);
@@ -148,10 +146,10 @@ class WitnessAddress extends VersionedChecksummedBytes {
 /* Bech32 decoder */
 class Bech32 {
     private static final byte[] CHARSET_REV = {
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30,  7,  5, -1, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1, 1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1, 1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7, 5, -1, -1, -1, -1, -1, -1,
+            -1, 29, -1, 24, 13, 25, 9, 8, 23, -1, 18, 22, 31, 27, 19, -1, 1, 0, 3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1,
+            -1, 29, -1, 24, 13, 25, 9, 8, 23, -1, 18, 22, 31, 27, 19, -1, 1, 0, 3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1
     };
 
     public static class Bech32Data {
@@ -166,13 +164,13 @@ class Bech32 {
 
     private static int polymod(final byte[] values) {
         int c = 1;
-        for (byte v_i: values) {
+        for (byte v_i : values) {
             int c0 = (c >>> 25) & 0xff;
             c = ((c & 0x1ffffff) << 5) ^ (v_i & 0xff);
-            if ((c0 &  1) != 0) c ^= 0x3b6a57b2;
-            if ((c0 &  2) != 0) c ^= 0x26508e6d;
-            if ((c0 &  4) != 0) c ^= 0x1ea119fa;
-            if ((c0 &  8) != 0) c ^= 0x3d4233dd;
+            if ((c0 & 1) != 0) c ^= 0x3b6a57b2;
+            if ((c0 & 2) != 0) c ^= 0x26508e6d;
+            if ((c0 & 4) != 0) c ^= 0x1ea119fa;
+            if ((c0 & 8) != 0) c ^= 0x3d4233dd;
             if ((c0 & 16) != 0) c ^= 0x2a1462b3;
         }
         return c;
@@ -236,5 +234,7 @@ class Bech32 {
 
     private static String invalidChar(char c, int i) {
         return "Invalid character '" + Character.toString(c) + "' at position " + i;
-    };
+    }
+
+    ;
 }

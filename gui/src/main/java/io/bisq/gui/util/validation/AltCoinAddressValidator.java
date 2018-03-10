@@ -499,9 +499,9 @@ public final class AltCoinAddressValidator extends InputValidator {
                     else
                         return new ValidationResult(true);
                 case "WMCC":
-                	return WMCCAddressValidator.ValidateAddress(WMCCParams.get(), input);
+                    return WMCCAddressValidator.ValidateAddress(WMCCParams.get(), input);
 
-                    // Add new coins at the end...
+                // Add new coins at the end...
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;

@@ -68,4 +68,4 @@ public class WMCCParams extends NetworkParameters {
     public int getProtocolVersionNum(ProtocolVersion version) {
         return 0;
     }
-    }
+}
