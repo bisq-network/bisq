@@ -18,8 +18,8 @@
 package io.bisq.core.dao.node.consensus;
 
 import io.bisq.core.dao.DaoOptionKeys;
-import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
