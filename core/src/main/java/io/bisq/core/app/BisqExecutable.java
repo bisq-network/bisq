@@ -124,6 +124,15 @@ public abstract class BisqExecutable {
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
+                description("If that is true all the privileged features which requires a private key to enable it are overridden by a dev key pair " +
+                        "(This is for developers only!)", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+        parser.accepts(AppOptionKeys.USE_DEV_MODE,
+                description("Enables dev mode which is used for convenience for developer testing", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
         parser.accepts(AppOptionKeys.DUMP_STATISTICS,
                 description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()
@@ -188,10 +197,12 @@ public abstract class BisqExecutable {
                         "set as well.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(DaoOptionKeys.REG_TEST_GENESIS_TX_ID,
-                description("Reg test BSQ genesis transaction id when not using the hard coded one", ""))
+        parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
+                description("Genesis transaction ID when not using the hard coded one", ""))
                 .withRequiredArg();
-
+        parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
+                description("Genesis transaction block height when not using the hard coded one", ""))
+                .withRequiredArg();
     }
 
     public static BisqEnvironment getBisqEnvironment(OptionSet options) {

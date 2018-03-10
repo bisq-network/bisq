@@ -21,6 +21,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Capabilities;
@@ -43,8 +45,8 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.DaoManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
@@ -77,7 +79,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -95,6 +96,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_HEIGHT;
+import static io.bisq.gui.util.Layout.INITIAL_SCENE_WIDTH;
 
 public class BisqApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
@@ -204,7 +208,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-            persistedDataHosts.stream().forEach(e -> {
+            persistedDataHosts.forEach(e -> {
                 try {
                     log.debug("call readPersisted at " + e.getClass().getSimpleName());
                     e.readPersisted();
@@ -212,6 +216,9 @@ public class BisqApp extends Application {
                     log.error("readPersisted error", e1);
                 }
             });
+
+            boolean useDevMode = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_MODE)));
+            DevEnv.setDevMode(useDevMode);
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
@@ -230,12 +237,8 @@ public class BisqApp extends Application {
             mainView = (MainView) viewLoader.load(MainView.class);
             mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
 
-            scene = new Scene(mainView.getRoot(), 1200, 710); //740
+            scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
 
-            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
                     "/io/bisq/gui/bisq.css",
                     "/io/bisq/gui/images.css",
@@ -271,7 +274,7 @@ public class BisqApp extends Application {
                             injector.getInstance(ManualPayoutTxWindow.class).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (DevEnv.DEV_MODE) {
+                    } else if (DevEnv.isDevMode()) {
                         // dev ode only
                         if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
                             // BSQ empty wallet not public yet
@@ -325,7 +328,8 @@ public class BisqApp extends Application {
 
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
-        new SendAlertMessageWindow()
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new SendAlertMessageWindow(useDevPrivilegeKeys)
                 .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
                 .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
@@ -333,7 +337,8 @@ public class BisqApp extends Application {
 
     private void showFilterPopup() {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
-        new FilterWindow(filterManager)
+        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+        new FilterWindow(filterManager, useDevPrivilegeKeys)
                 .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
                 .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();
@@ -448,7 +453,7 @@ public class BisqApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(JsonBlockChainExporter.class).shutDown();
+                injector.getInstance(DaoManager.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {

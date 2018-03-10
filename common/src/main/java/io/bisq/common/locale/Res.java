@@ -43,6 +43,8 @@ public class Res {
 
     static {
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> {
+            if ("en".equalsIgnoreCase(newValue.getLanguage()))
+                newValue = Locale.ROOT;
             resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", newValue, new UTF8Control());
         });
     }
@@ -101,7 +103,7 @@ public class Res {
                     .replace("bitcoin", baseCurrencyNameLowerCase);
         } catch (MissingResourceException e) {
             log.warn("Missing resource for key: " + key);
-            if (DevEnv.DEV_MODE)
+            if (DevEnv.isDevMode())
                 throw new RuntimeException("Missing resource for key: " + key);
 
             return key;

@@ -47,6 +47,7 @@ import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -327,20 +328,52 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    // Remove from my offers
-    public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void activateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
-        offerBookService.removeOffer(offer.getOfferPayload(),
+        openOffer.setStorage(openOfferTradableListStorage);
+        offerBookService.activateOffer(offer,
                 () -> {
-                    offer.setState(Offer.State.REMOVED);
-                    openOffer.setState(OpenOffer.State.CANCELED);
-                    openOffers.remove(openOffer);
-                    closedTradableManager.add(openOffer);
-                    log.debug("removeOpenOffer, offerId={}", offer.getId());
-                    btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+                    openOffer.setState(OpenOffer.State.AVAILABLE);
+                    log.debug("activateOpenOffer, offerId={}", offer.getId());
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);
+    }
+
+    public void deactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Offer offer = openOffer.getOffer();
+        openOffer.setStorage(openOfferTradableListStorage);
+        offerBookService.deactivateOffer(offer.getOfferPayload(),
+                () -> {
+                    openOffer.setState(OpenOffer.State.DEACTIVATED);
+                    log.debug("deactivateOpenOffer, offerId={}", offer.getId());
+                    resultHandler.handleResult();
+                },
+                errorMessageHandler);
+    }
+
+    public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Offer offer = openOffer.getOffer();
+        if (openOffer.isDeactivated()) {
+            openOffer.setStorage(openOfferTradableListStorage);
+            onRemoved(openOffer, resultHandler, offer);
+        } else {
+            offerBookService.removeOffer(offer.getOfferPayload(),
+                    () -> {
+                        onRemoved(openOffer, resultHandler, offer);
+                    },
+                    errorMessageHandler);
+        }
+    }
+
+    private void onRemoved(@NotNull OpenOffer openOffer, ResultHandler resultHandler, Offer offer) {
+        offer.setState(Offer.State.REMOVED);
+        openOffer.setState(OpenOffer.State.CANCELED);
+        openOffers.remove(openOffer);
+        closedTradableManager.add(openOffer);
+        log.debug("removeOpenOffer, offerId={}", offer.getId());
+        btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+        resultHandler.handleResult();
     }
 
     // Close openOffer after deposit published
@@ -483,13 +516,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
                     if (openOffers.contains(openOffer)) {
-                        // The openOffer.getId().contains("_") check is because there was once a version
-                        // where we encoded the version nr in the offer id with a "_" as separator.
-                        // That caused several issues and was reverted. So if there are still old offers out with that
-                        // special offer ID format those must not be published as they cause failed taker attempts
-                        // with lost taker fee.
                         String id = openOffer.getId();
-                        if (id != null && !id.contains("_"))
+                        if (id != null && !openOffer.isDeactivated())
                             republishOffer(openOffer);
                         else
                             log.warn("You have an offer with an invalid offer ID: offerID=" + id);
@@ -567,7 +595,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
                                     // we need to check if in the meantime the offer has been removed
-                                    if (openOffers.contains(openOffer))
+                                    if (openOffers.contains(openOffer) && !openOffer.isDeactivated())
                                         refreshOffer(openOffer);
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }

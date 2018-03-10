@@ -177,10 +177,10 @@ public class BisqEnvironment extends StandardEnvironment {
     @Getter
     protected List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, regTestBsqGenesisTxId;
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight;
 
 
     public BisqEnvironment(OptionSet options) {
@@ -211,6 +211,12 @@ public class BisqEnvironment extends StandardEnvironment {
 
         ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
+                "";
+        useDevPrivilegeKeys = commandLineProperties.containsProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) :
+                "";
+        useDevMode = commandLineProperties.containsProperty(AppOptionKeys.USE_DEV_MODE) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.USE_DEV_MODE) :
                 "";
         dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
@@ -259,8 +265,11 @@ public class BisqEnvironment extends StandardEnvironment {
         fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
                 "";
-        regTestBsqGenesisTxId = commandLineProperties.containsProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID) :
+        genesisTxId = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_TX_ID) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_TX_ID) :
+                "";
+        genesisBlockHeight = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) :
                 "";
 
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
@@ -403,6 +412,8 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, useDevPrivilegeKeys);
+                setProperty(AppOptionKeys.USE_DEV_MODE, useDevMode);
                 setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
@@ -415,7 +426,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
-                setProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID, regTestBsqGenesisTxId);
+                setProperty(DaoOptionKeys.GENESIS_TX_ID, genesisTxId);
+                setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

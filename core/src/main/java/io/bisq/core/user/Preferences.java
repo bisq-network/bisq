@@ -75,13 +75,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
     ));
 
-    private static final ArrayList<BlockChainExplorer> DOGE_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/doge/", "https://chain.so/address/doge/")
-    ));
-    private static final ArrayList<BlockChainExplorer> DOGE_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/DOGETEST/", "https://chain.so/address/DOGETEST/")
-    ));
-
     private static final ArrayList<BlockChainExplorer> DASH_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
     ));
@@ -194,10 +187,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 case "LTC":
                     setBlockChainExplorerMainNet(LTC_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(LTC_TEST_NET_EXPLORERS.get(0));
-                    break;
-                case "DOGE":
-                    setBlockChainExplorerMainNet(DOGE_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(DOGE_TEST_NET_EXPLORERS.get(0));
                     break;
                 case "DASH":
                     setBlockChainExplorerMainNet(DASH_MAIN_NET_EXPLORERS.get(0));
@@ -552,11 +541,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             case LTC_TESTNET:
             case LTC_REGTEST:
                 return LTC_TEST_NET_EXPLORERS;
-            case DOGE_MAINNET:
-                return DOGE_MAIN_NET_EXPLORERS;
-            case DOGE_TESTNET:
-            case DOGE_REGTEST:
-                return DOGE_TEST_NET_EXPLORERS;
             case DASH_MAINNET:
                 return DASH_MAIN_NET_EXPLORERS;
             case DASH_REGTEST:
@@ -602,6 +586,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Nullable
     public List<String> getBridgeAddresses() {
         return prefPayload.getBridgeAddresses();
+    }
+
+    public long getWithdrawalTxFeeInBytes() {
+        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte());
     }
 
 
@@ -688,8 +676,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setBridgeAddresses(List<String> bridgeAddresses);
 
-        List<String> getBridgeAddresses();
-
         void setBridgeOptionOrdinal(int bridgeOptionOrdinal);
 
         void setTorTransportOrdinal(int torTransportOrdinal);
@@ -697,5 +683,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setCustomBridges(String customBridges);
 
         void setBitcoinNodesOptionOrdinal(int bitcoinNodesOption);
+
+        List<String> getBridgeAddresses();
+
+        long getWithdrawalTxFeeInBytes();
     }
 }

@@ -81,6 +81,14 @@ import java.util.concurrent.TimeUnit;
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     public final static String EDIT_FLAG = "EDIT_FLAG";
+
+    public final static int FIAT_DECIMALS_WITH_ZEROS = 0;
+    public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
+    public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
+    public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
+    public final static int AMOUNT_DECIMALS = 4;
+    public final static String RANGE_SEPARATOR = " - ";
+
     private static FeeService feeService;
 
     public static void setFeeService(FeeService feeService) {
@@ -110,7 +118,7 @@ public class GUIUtil {
         //noinspection UnusedAssignment
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable::run)
                     .useIUnderstandButton()
@@ -139,7 +147,10 @@ public class GUIUtil {
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            fileChooser.setInitialDirectory(initDir);
+        }
         fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
@@ -202,7 +213,10 @@ public class GUIUtil {
 
     public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
+        File initDir = new File(preferences.getDirectoryChooserPath());
+        if (initDir.isDirectory()) {
+            directoryChooser.setInitialDirectory(initDir);
+        }
         directoryChooser.setTitle(Res.get("guiUtil.accountExport.selectExportPath"));
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
@@ -258,28 +272,6 @@ public class GUIUtil {
                 } else {
                     displayString = CurrencyUtil.getNameAndCode(code);
                 }
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ " + Res.get("list.currency.showAll");
-                else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ " + Res.get("list.currency.editList");
-                return tradeCurrency.getDisplayPrefix() + displayString;
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        };
-    }
-
-    @Deprecated
-    public static StringConverter<TradeCurrency> getTradeCurrencyConverter() {
-        return new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                String code = tradeCurrency.getCode();
-                final String displayString = CurrencyUtil.getNameAndCode(code);
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ " + Res.get("list.currency.showAll");
@@ -495,5 +487,26 @@ public class GUIUtil {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.show();
+    }
+
+    public static StringConverter<PaymentAccount> getPaymentAccountsComboBoxStringConverter() {
+        return new StringConverter<PaymentAccount>() {
+            @Override
+            public String toString(PaymentAccount paymentAccount) {
+                if (paymentAccount.hasMultipleCurrencies()) {
+                    return paymentAccount.getAccountName() + " (" + Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                } else {
+                    TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                    String prefix = singleTradeCurrency != null ? singleTradeCurrency.getCode() + ", " : "";
+                    return paymentAccount.getAccountName() + " (" + prefix +
+                            Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                }
+            }
+
+            @Override
+            public PaymentAccount fromString(String s) {
+                return null;
+            }
+        };
     }
 }

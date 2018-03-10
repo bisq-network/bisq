@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.app.Version;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Data;
@@ -30,15 +31,30 @@ import java.util.stream.Collectors;
 
 @Data
 public class Tx implements PersistablePayload {
-    private final TxVo txVo;
+    private final String txVersion;
+    private final String id;
+    private final int blockHeight;
+    private final String blockHash;
+    private final long time;
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;
-
     private long burntFee;
     private TxType txType;
 
-    public Tx(TxVo txVo, List<TxInput> inputs, List<TxOutput> outputs) {
-        this(txVo, inputs, outputs, 0, null);
+    public Tx(String id, int blockHeight,
+              String blockHash,
+              long time,
+              List<TxInput> inputs,
+              List<TxOutput> outputs) {
+        this(Version.BSQ_TX_VERSION,
+                id,
+                blockHeight,
+                blockHash,
+                time,
+                inputs,
+                outputs,
+                0,
+                TxType.UNDEFINED_TX_TYPE);
     }
 
 
@@ -46,8 +62,20 @@ public class Tx implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Tx(TxVo txVo, List<TxInput> inputs, List<TxOutput> outputs, long burntFee, @Nullable TxType txType) {
-        this.txVo = txVo;
+    private Tx(String txVersion,
+               String id,
+               int blockHeight,
+               String blockHash,
+               long time,
+               List<TxInput> inputs,
+               List<TxOutput> outputs,
+               long burntFee,
+               @Nullable TxType txType) {
+        this.txVersion = txVersion;
+        this.id = id;
+        this.blockHeight = blockHeight;
+        this.blockHash = blockHash;
+        this.time = time;
         this.inputs = inputs;
         this.outputs = outputs;
         this.burntFee = burntFee;
@@ -56,7 +84,11 @@ public class Tx implements PersistablePayload {
 
     public PB.Tx toProtoMessage() {
         final PB.Tx.Builder builder = PB.Tx.newBuilder()
-                .setTxVo(txVo.toProtoMessage())
+                .setTxVersion(txVersion)
+                .setId(id)
+                .setBlockHeight(blockHeight)
+                .setBlockHash(blockHash)
+                .setTime(time)
                 .addAllInputs(inputs.stream()
                         .map(TxInput::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -71,7 +103,11 @@ public class Tx implements PersistablePayload {
     }
 
     public static Tx fromProto(PB.Tx proto) {
-        return new Tx(TxVo.fromProto(proto.getTxVo()),
+        return new Tx(proto.getTxVersion(),
+                proto.getId(),
+                proto.getBlockHeight(),
+                proto.getBlockHash(),
+                proto.getTime(),
                 proto.getInputsList().isEmpty() ?
                         new ArrayList<>() :
                         proto.getInputsList().stream()
@@ -92,53 +128,28 @@ public class Tx implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<TxOutput> getTxOutput(int index) {
-        return outputs.size() > index ? Optional.of(outputs.get(index)) : Optional.<TxOutput>empty();
+        return outputs.size() > index ? Optional.of(outputs.get(index)) : Optional.empty();
     }
 
     public void reset() {
         burntFee = 0;
         txType = TxType.UNDEFINED_TX_TYPE;
-        inputs.stream().forEach(TxInput::reset);
-        outputs.stream().forEach(TxOutput::reset);
+        inputs.forEach(TxInput::reset);
+        outputs.forEach(TxOutput::reset);
     }
 
     @Override
     public String toString() {
         return "Tx{" +
-                "\ntxVersion='" + getTxVersion() + '\'' +
-                ",\nid='" + getId() + '\'' +
-                ",\nblockHeight=" + getBlockHeight() +
-                ",\nblockHash=" + getBlockHash() +
-                ",\ntime=" + new Date(getTime()) +
+                "\ntxVersion='" + txVersion + '\'' +
+                ",\nid='" + id + '\'' +
+                ",\nblockHeight=" + blockHeight +
+                ",\nblockHash=" + blockHash +
+                ",\ntime=" + new Date(time) +
                 ",\ninputs=" + inputs +
                 ",\noutputs=" + outputs +
                 ",\nburntFee=" + burntFee +
                 ",\ntxType=" + txType +
                 "}\n";
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegates
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getTxVersion() {
-        return txVo.getTxVersion();
-    }
-
-    public String getId() {
-        return txVo.getId();
-    }
-
-    public int getBlockHeight() {
-        return txVo.getBlockHeight();
-    }
-
-    public String getBlockHash() {
-        return txVo.getBlockHash();
-    }
-
-    public long getTime() {
-        return txVo.getTime();
     }
 }

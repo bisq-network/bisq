@@ -48,6 +48,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private SendFilterMessageHandler sendFilterMessageHandler;
     private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
+    private final boolean useDevPrivilegeKeys;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,8 +67,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FilterWindow(FilterManager filterManager) {
+    public FilterWindow(FilterManager filterManager, boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
 
@@ -113,7 +115,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;

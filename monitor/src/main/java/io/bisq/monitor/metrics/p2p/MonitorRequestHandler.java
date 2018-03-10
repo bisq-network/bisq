@@ -96,7 +96,7 @@ class MonitorRequestHandler implements MessageListener {
                 log.warn("timeoutTimer was already set. That must not happen.");
                 timeoutTimer.stop();
 
-                if (DevEnv.DEV_MODE)
+                if (DevEnv.isDevMode())
                     throw new RuntimeException("timeoutTimer was already set. That must not happen.");
             }
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

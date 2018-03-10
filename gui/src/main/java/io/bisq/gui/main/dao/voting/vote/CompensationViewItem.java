@@ -20,8 +20,8 @@ package io.bisq.gui.main.dao.voting.vote;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequestPayload;
 import io.bisq.core.dao.vote.CompensationRequestVoteItem;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipCheckBox;
@@ -64,15 +64,13 @@ public class CompensationViewItem {
     }
 
     public static void cleanupAllInstances() {
-        instances.stream().forEach(CompensationViewItem::cleanupInstance);
+        instances.forEach(CompensationViewItem::cleanupInstance);
     }
 
     public static boolean contains(CompensationRequestVoteItem selectedItem) {
         return instances.stream()
-                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
-                        selectedItem.compensationRequest.getPayload().getUid()))
-                .findAny()
-                .isPresent();
+                .anyMatch(e -> e.compensationRequestVoteItem.compensationRequest.getPayload().getUid().equals(
+                        selectedItem.compensationRequest.getPayload().getUid()));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -118,7 +116,7 @@ public class CompensationViewItem {
             AnchorPane.setLeftAnchor(gridPane, 25d);
             AnchorPane.setTopAnchor(gridPane, -20d);
 
-            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService);
+            CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane, bsqFormatter, bsqWalletService, null);
             compensationRequestDisplay.createAllFields(Res.get("dao.voting.item.title"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
             compensationRequestDisplay.fillWithData(compensationRequestPayload);

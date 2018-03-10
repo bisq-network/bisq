@@ -18,14 +18,23 @@
 package io.bisq.core.dao;
 
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import io.bisq.core.dao.blockchain.BsqFullNode;
-import io.bisq.core.dao.blockchain.BsqLiteNode;
-import io.bisq.core.dao.blockchain.BsqNodeProvider;
 import io.bisq.core.dao.blockchain.json.JsonBlockChainExporter;
-import io.bisq.core.dao.blockchain.parse.*;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.node.BsqNodeProvider;
+import io.bisq.core.dao.node.consensus.*;
+import io.bisq.core.dao.node.full.FullNode;
+import io.bisq.core.dao.node.full.FullNodeExecutor;
+import io.bisq.core.dao.node.full.FullNodeParser;
+import io.bisq.core.dao.node.full.network.FullNodeNetworkManager;
+import io.bisq.core.dao.node.full.rpc.RpcService;
+import io.bisq.core.dao.node.lite.LiteNode;
+import io.bisq.core.dao.node.lite.LiteNodeExecutor;
+import io.bisq.core.dao.node.lite.LiteNodeParser;
+import io.bisq.core.dao.node.lite.network.LiteNodeNetworkManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.dao.vote.VotingService;
@@ -43,16 +52,26 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoManager.class).in(Singleton.class);
 
-        bind(BsqLiteNode.class).in(Singleton.class);
-        bind(BsqFullNode.class).in(Singleton.class);
+        bind(LiteNodeNetworkManager.class).in(Singleton.class);
+        bind(FullNodeNetworkManager.class).in(Singleton.class);
+
+        bind(RpcService.class).in(Singleton.class);
+        bind(FullNodeExecutor.class).in(Singleton.class);
+        bind(LiteNodeExecutor.class).in(Singleton.class);
+        bind(LiteNodeParser.class).in(Singleton.class);
+        bind(FullNodeParser.class).in(Singleton.class);
+        bind(LiteNode.class).in(Singleton.class);
+        bind(FullNode.class).in(Singleton.class);
         bind(BsqNodeProvider.class).in(Singleton.class);
         bind(BsqBlockChain.class).in(Singleton.class);
-        bind(BsqFullNodeExecutor.class).in(Singleton.class);
-        bind(BsqLiteNodeExecutor.class).in(Singleton.class);
         bind(BsqBlockChainChangeDispatcher.class).in(Singleton.class);
-        bind(BsqParser.class).in(Singleton.class);
-        bind(RpcService.class).in(Singleton.class);
 
+        bind(GenesisTxVerification.class).in(Singleton.class);
+        bind(BsqTxVerification.class).in(Singleton.class);
+        bind(TxInputsVerification.class).in(Singleton.class);
+        bind(TxInputVerification.class).in(Singleton.class);
+        bind(TxOutputsVerification.class).in(Singleton.class);
+        bind(TxOutputVerification.class).in(Singleton.class);
         bind(OpReturnVerification.class).in(Singleton.class);
         bind(CompensationRequestVerification.class).in(Singleton.class);
         bind(VotingVerification.class).in(Singleton.class);
@@ -75,8 +94,12 @@ public class DaoModule extends AppModule {
                 .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
                 .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
-        bindConstant().annotatedWith(named(DaoOptionKeys.REG_TEST_GENESIS_TX_ID))
-                .to(environment.getRequiredProperty(DaoOptionKeys.REG_TEST_GENESIS_TX_ID));
+
+        String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, BsqBlockChain.BTC_GENESIS_TX_ID);
+        bind(String.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TX_ID)).toInstance(genesisTxId);
+
+        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, BsqBlockChain.BTC_GENESIS_BLOCK_HEIGHT);
+        bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
     }
 }
 

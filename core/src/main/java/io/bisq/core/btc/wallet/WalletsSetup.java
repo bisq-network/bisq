@@ -196,9 +196,18 @@ public class WalletsSetup {
         };
 
         if (params == RegTestParams.get()) {
-            configPeerNodesForRegTest();
+            walletConfig.setMinBroadcastConnections(1);
+            if (regTestHost == RegTestHost.LOCALHOST) {
+                walletConfig.setPeerNodesForLocalHost();
+            } else if (regTestHost == RegTestHost.REG_TEST_SERVER) {
+                walletConfig.setMinBroadcastConnections(1);
+                configPeerNodesForRegTestServer();
+            } else {
+                configPeerNodes(socks5Proxy);
+            }
         } else if (bisqEnvironment.isBitcoinLocalhostNodeRunning()) {
-            configPeerNodesForLocalHostBitcoinNode();
+            walletConfig.setMinBroadcastConnections(1);
+            walletConfig.setPeerNodesForLocalHost();
         } else {
             configPeerNodes(socks5Proxy);
         }
@@ -268,24 +277,14 @@ public class WalletsSetup {
         return mode;
     }
 
-    private void configPeerNodesForRegTest() {
-        walletConfig.setMinBroadcastConnections(1);
-        if (regTestHost == RegTestHost.REG_TEST_SERVER) {
-            try {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
-            } catch (UnknownHostException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        } else if (regTestHost == RegTestHost.LOCALHOST) {
-            walletConfig.setPeerNodesForLocalHost();
+    private void configPeerNodesForRegTestServer() {
+        try {
+            walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
+        } catch (UnknownHostException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-    }
-
-    private void configPeerNodesForLocalHostBitcoinNode() {
-        walletConfig.setMinBroadcastConnections(1);
-        walletConfig.setPeerNodesForLocalHost();
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {

@@ -38,6 +38,7 @@ import javafx.scene.layout.HBox;
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
+    private final boolean useDevPrivilegeKeys;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
 
@@ -58,7 +59,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendAlertMessageWindow() {
+    public SendAlertMessageWindow(boolean useDevPrivilegeKeys) {
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
 
@@ -105,7 +107,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10).second;
-        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+        if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,

@@ -24,7 +24,6 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple4;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;

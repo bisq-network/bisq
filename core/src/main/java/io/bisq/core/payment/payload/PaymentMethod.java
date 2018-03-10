@@ -28,7 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
@@ -44,6 +47,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
     public static final String OK_PAY_ID = "OK_PAY";
+    public static final String UPHOLD_ID = "UPHOLD";
+    public static final String CASH_APP_ID = "CASH_APP";
+    public static final String MONEY_BEAM_ID = "MONEY_BEAM";
+    public static final String VENMO_ID = "VENMO";
+    public static final String POPMONEY_ID = "POPMONEY";
+    public static final String REVOLUT_ID = "REVOLUT";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
@@ -62,6 +71,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
+    public static PaymentMethod UPHOLD;
+    public static PaymentMethod CASH_APP;
+    public static PaymentMethod MONEY_BEAM;
+    public static PaymentMethod VENMO;
+    public static PaymentMethod POPMONEY;
+    public static PaymentMethod REVOLUT;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
     public static PaymentMethod SEPA_INSTANT;
@@ -117,31 +132,27 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static List<PaymentMethod> getAllValues() {
         if (ALL_VALUES == null) {
+            Coin maxTradeLimitHighRisk;
             Coin maxTradeLimitMidRisk;
             Coin maxTradeLimitLowRisk;
             Coin maxTradeLimitVeryLowRisk;
             switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                 case "BTC":
-                    // av. price June 2017: 2500 EUR/BTC
-                    // av. price Oct 2017: 4700 EUR/BTC
+                    // we want to avoid more then 4 decimal places (0.125 / 4 = 0.03125), so we use a bit higher value to get 0.04 for first month
+                    maxTradeLimitHighRisk = Coin.parseCoin("0.16");
+
                     maxTradeLimitMidRisk = Coin.parseCoin("0.25");
                     maxTradeLimitLowRisk = Coin.parseCoin("0.5");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
                     break;
                 case "LTC":
-                    // av. price June 2017: 40 EUR/LTC
+                    maxTradeLimitHighRisk = Coin.parseCoin("12.5");
                     maxTradeLimitMidRisk = Coin.parseCoin("25");
                     maxTradeLimitLowRisk = Coin.parseCoin("50");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("100");
                     break;
-                case "DOGE":
-                    // av. price June 2017: 0.002850 EUR/DOGE
-                    maxTradeLimitMidRisk = Coin.parseCoin("250000");
-                    maxTradeLimitLowRisk = Coin.parseCoin("500000");
-                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1000000");
-                    break;
                 case "DASH":
-                    // av. price June 2017: 150 EUR/DASH
+                    maxTradeLimitHighRisk = Coin.parseCoin("5");
                     maxTradeLimitMidRisk = Coin.parseCoin("10");
                     maxTradeLimitLowRisk = Coin.parseCoin("20");
                     maxTradeLimitVeryLowRisk = Coin.parseCoin("40");
@@ -156,6 +167,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // EUR
                     SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
                     SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, maxTradeLimitMidRisk),
+                    MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, maxTradeLimitHighRisk),
 
                     // UK
                     FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
@@ -165,6 +177,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // US
                     CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
+                    CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitHighRisk),
+
+                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitHighRisk),
+
+                    POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, maxTradeLimitHighRisk),
                     CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
                     US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
 
@@ -180,6 +197,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
                     // Trans national
                     OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
+                    UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitHighRisk),
+                    REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, maxTradeLimitHighRisk),
                     PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
 
                     // China
@@ -233,10 +252,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static PaymentMethod getPaymentMethodById(String id) {
         Optional<PaymentMethod> paymentMethodOptional = getAllValues().stream().filter(e -> e.getId().equals(id)).findFirst();
-        if (paymentMethodOptional.isPresent())
-            return paymentMethodOptional.get();
-        else
-            return new PaymentMethod(Res.get("shared.na"));
+        return paymentMethodOptional.orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
 
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!

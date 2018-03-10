@@ -1,5 +1,6 @@
 package io.bisq.gui.util;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import javafx.util.StringConverter;
@@ -23,21 +24,22 @@ public class GUIUtilTest {
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
+        GlobalSettings.setLocale(new Locale("en", "US"));
     }
 
     @Test
     public void testTradeCurrencyConverter() {
-        Res.setBaseCurrencyCode("EUR");
-        Res.setBaseCurrencyName("Euro");
         Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
+            put("BTC", 11);
             put("EUR", 10);
         }};
         StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter(
-                Res.get("shared.offer"),
-                Res.get("shared.offers"),
+                Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 offerCounts
         );
 
+        assertEquals("✦ BTC (BTC) - 11 offers", tradeCurrencyConverter.toString(bitcoin));
         assertEquals("★ Euro (EUR) - 10 offers", tradeCurrencyConverter.toString(euro));
     }
 
@@ -45,8 +47,8 @@ public class GUIUtilTest {
     public void testCurrencyListWithOffersConverter() {
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
-        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.offer"),
-                Res.get("shared.offers"),
+        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 empty);
 
         assertEquals("✦ BTC (BTC) - 10 offers", currencyListItemConverter.toString(make(bitcoinItem.but(with(numberOfTrades,10)))));

@@ -17,11 +17,13 @@
 
 package io.bisq.gui.main.portfolio.closedtrades;
 
+import com.google.inject.name.Named;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -48,12 +50,13 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
-import sun.security.krb5.internal.rcache.AuthList;
 
 import javax.inject.Inject;
+import java.util.Comparator;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
+    private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -76,7 +79,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
                             Stage stage,
-                            BSFormatter formatter) {
+                            BSFormatter formatter,
+                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
@@ -85,13 +89,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.stage = stage;
         this.preferences = preferences;
         this.formatter = formatter;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
     public void initialize() {
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
-        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.volume")));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
         marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
         directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
@@ -112,11 +117,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
-        dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
-        directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection()
-                .compareTo(o2.getTradable().getOffer().getDirection()));
-        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getTradable().getDate()));
+        directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
         priceColumn.setComparator((o1, o2) -> {
             final Tradable tradable1 = o1.getTradable();
@@ -328,7 +332,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             offer,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

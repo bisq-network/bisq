@@ -24,10 +24,9 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.*;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.util.CoinUtil;
@@ -269,7 +268,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                     })
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .show();
-                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException e) {
+                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
                             log.error(e.toString());
                             e.printStackTrace();
                             new Popup<>().warning(e.toString()).show();

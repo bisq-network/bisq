@@ -18,6 +18,7 @@
 package io.bisq.statistics;
 
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
 import io.bisq.common.crypto.KeyRing;
@@ -26,6 +27,7 @@ import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
@@ -79,6 +81,11 @@ class StatisticsModule extends AppModule {
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
+        Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
+
+        Boolean useDevMode = environment.getProperty(AppOptionKeys.USE_DEV_MODE, Boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_MODE)).toInstance(useDevMode);
 
         // ordering is used for shut down sequence
         install(tradeModule());

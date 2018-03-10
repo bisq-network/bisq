@@ -75,9 +75,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case LTC_MAINNET:
                             case LTC_TESTNET:
                             case LTC_REGTEST:
-                            case DOGE_MAINNET:
-                            case DOGE_TESTNET:
-                            case DOGE_REGTEST:
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
@@ -118,9 +115,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case BTC_MAINNET:
                             case BTC_TESTNET:
                             case BTC_REGTEST:
-                            case DOGE_MAINNET:
-                            case DOGE_TESTNET:
-                            case DOGE_REGTEST:
                             case DASH_MAINNET:
                             case DASH_TESTNET:
                             case DASH_REGTEST:
@@ -140,26 +134,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "DOGE":
                     try {
-                        switch (BisqEnvironment.getBaseCurrencyNetwork()) {
-                            case BTC_MAINNET:
-                            case BTC_TESTNET:
-                            case BTC_REGTEST:
-                            case LTC_MAINNET:
-                            case LTC_TESTNET:
-                            case LTC_REGTEST:
-                            case DASH_MAINNET:
-                            case DASH_TESTNET:
-                            case DASH_REGTEST:
-                            case DOGE_MAINNET:
-                                Address.fromBase58(DogecoinMainNetParams.get(), input);
-                                break;
-                            case DOGE_TESTNET:
-                                Address.fromBase58(DogecoinTestNet3Params.get(), input);
-                                break;
-                            case DOGE_REGTEST:
-                                Address.fromBase58(DogecoinRegTestParams.get(), input);
-                                break;
-                        }
+                        Address.fromBase58(DogecoinMainNetParams.get(), input);
                         return new ValidationResult(true);
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
@@ -173,9 +148,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                             case LTC_MAINNET:
                             case LTC_TESTNET:
                             case LTC_REGTEST:
-                            case DOGE_MAINNET:
-                            case DOGE_TESTNET:
-                            case DOGE_REGTEST:
                             case DASH_MAINNET:
                                 Address.fromBase58(DashMainNetParams.get(), input);
                                 break;
@@ -458,6 +430,40 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } catch (AddressFormatException e) {
                         return new ValidationResult(false, getErrorMessage(e));
                     }
+                case "CDT":
+                    if (input.startsWith("D"))
+                        return new ValidationResult(true);
+                    else
+                        return new ValidationResult(false);
+                case "DGM":
+                    if (input.matches("^[D-E][a-zA-Z0-9]{33}$"))
+                        return new ValidationResult(true);
+                    else
+                        return regexTestFailed;
+                case "SCS":
+                    try {
+                        Address.fromBase58(SpeedCashParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "SOS":
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
+                case "ACH":
+                    try {
+                        Address.fromBase58(ACHParams.get(), input);
+                        return new ValidationResult(true);
+                    } catch (AddressFormatException e) {
+                        return new ValidationResult(false, getErrorMessage(e));
+                    }
+                case "VDN":
+                    if (!input.matches("^[D][0-9a-zA-Z]{33}$"))
+                        return regexTestFailed;
+                    else
+                        return new ValidationResult(true);
 
                     // Add new coins at the end...
                 default:

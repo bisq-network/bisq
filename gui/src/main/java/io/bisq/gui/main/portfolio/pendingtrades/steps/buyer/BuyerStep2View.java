@@ -157,6 +157,24 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.OK_PAY_ID:
                 gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.UPHOLD_ID:
+                gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.CASH_APP_ID:
+                gridRow = CashAppForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.MONEY_BEAM_ID:
+                gridRow = MoneyBeamForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.VENMO_ID:
+                gridRow = VenmoForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.POPMONEY_ID:
+                gridRow = PopmoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.REVOLUT_ID:
+                gridRow = RevolutForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.PERFECT_MONEY_ID:
                 gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -262,7 +280,7 @@ public class BuyerStep2View extends TradeStepView {
                 //noinspection UnusedAssignment
                 String key = "confirmPaperReceiptSent";
                 //noinspection ConstantConditions
-                if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
@@ -278,7 +296,7 @@ public class BuyerStep2View extends TradeStepView {
                 //noinspection UnusedAssignment
                 //noinspection ConstantConditions
                 String key = "westernUnionMTCNSent";
-                if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String email = ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
@@ -305,7 +323,7 @@ public class BuyerStep2View extends TradeStepView {
         //noinspection UnusedAssignment
         String key = "confirmPaymentStarted";
         //noinspection ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup<>();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
@@ -409,7 +427,7 @@ public class BuyerStep2View extends TradeStepView {
             //noinspection ConstantConditions,UnusedAssignment
             String key = "startPayment" + trade.getId();
             //noinspection ConstantConditions,ConstantConditions
-            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
                 new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
                         .attention(message)

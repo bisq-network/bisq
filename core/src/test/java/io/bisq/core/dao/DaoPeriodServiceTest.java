@@ -28,7 +28,7 @@ public class DaoPeriodServiceTest {
 
     @Before
     public void startup() {
-        service = new DaoPeriodService(null, null, null, null);
+        service = new DaoPeriodService(null, null, null, null, 0);
     }
 
     @Test
@@ -68,61 +68,61 @@ public class DaoPeriodServiceTest {
     @Test
     public void isTxHeightInPhaseTest() {
         // int height, int chainHeight, int genesisHeight, int numBlocksOfCycle, int totalPeriodInBlocks
-        assertFalse(service.isTxHeightInPhase(1, 0, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(0, 0, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(0, 1, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1, 1, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1, 99, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1, 100, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(99, 100, 0, 100, 300));
-        assertTrue(service.isTxHeightInPhase(100, 100, 0, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1, 101, 0, 100, 300));
-        assertFalse(service.isTxHeightInPhase(101, 100, 0, 100, 300));
-        assertFalse(service.isTxHeightInPhase(101, 101, 0, 100, 300));
+        assertFalse(service.isTxInPhase(1, 0, 0, 100, 300));
+        assertTrue(service.isTxInPhase(0, 0, 0, 100, 300));
+        assertTrue(service.isTxInPhase(0, 1, 0, 100, 300));
+        assertTrue(service.isTxInPhase(1, 1, 0, 100, 300));
+        assertTrue(service.isTxInPhase(1, 99, 0, 100, 300));
+        assertTrue(service.isTxInPhase(1, 100, 0, 100, 300));
+        assertTrue(service.isTxInPhase(99, 100, 0, 100, 300));
+        assertTrue(service.isTxInPhase(100, 100, 0, 100, 300));
+        assertFalse(service.isTxInPhase(1, 101, 0, 100, 300));
+        assertFalse(service.isTxInPhase(101, 100, 0, 100, 300));
+        assertFalse(service.isTxInPhase(101, 101, 0, 100, 300));
 
-        assertFalse(service.isTxHeightInPhase(0, 0, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1, 0, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(0, 1, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(9, 10, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(10, 9, 10, 100, 300));
-        assertTrue(service.isTxHeightInPhase(10, 10, 10, 100, 300));
-        assertTrue(service.isTxHeightInPhase(10, 109, 10, 100, 300));
-        assertTrue(service.isTxHeightInPhase(10, 110, 10, 100, 300));
-        assertTrue(service.isTxHeightInPhase(109, 110, 10, 100, 300));
-        assertTrue(service.isTxHeightInPhase(110, 110, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(10, 111, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(111, 110, 10, 100, 300));
-        assertFalse(service.isTxHeightInPhase(111, 111, 10, 100, 300));
+        assertFalse(service.isTxInPhase(0, 0, 10, 100, 300));
+        assertFalse(service.isTxInPhase(1, 0, 10, 100, 300));
+        assertFalse(service.isTxInPhase(0, 1, 10, 100, 300));
+        assertFalse(service.isTxInPhase(9, 10, 10, 100, 300));
+        assertFalse(service.isTxInPhase(10, 9, 10, 100, 300));
+        assertTrue(service.isTxInPhase(10, 10, 10, 100, 300));
+        assertTrue(service.isTxInPhase(10, 109, 10, 100, 300));
+        assertTrue(service.isTxInPhase(10, 110, 10, 100, 300));
+        assertTrue(service.isTxInPhase(109, 110, 10, 100, 300));
+        assertTrue(service.isTxInPhase(110, 110, 10, 100, 300));
+        assertFalse(service.isTxInPhase(10, 111, 10, 100, 300));
+        assertFalse(service.isTxInPhase(111, 110, 10, 100, 300));
+        assertFalse(service.isTxInPhase(111, 111, 10, 100, 300));
 
-        assertFalse(service.isTxHeightInPhase(0, 0, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1000, 0, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(0, 1000, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(999, 10, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1000, 999, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1000, 1000, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1000, 1099, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1000, 1100, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1099, 1100, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1100, 1100, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1000, 1101, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1101, 1100, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1100, 1101, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1101, 1101, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(0, 0, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1000, 0, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(0, 1000, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(999, 10, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1000, 999, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1000, 1000, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1000, 1099, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1000, 1100, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1099, 1100, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1100, 1100, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1000, 1101, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1101, 1100, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1100, 1101, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1101, 1101, 1000, 100, 300));
 
-        assertFalse(service.isTxHeightInPhase(0, 0, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1300, 0, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(0, 1300, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1299, 10, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1300, 1299, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1300, 1300, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1300, 1399, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1300, 1400, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1399, 1400, 1000, 100, 300));
-        assertTrue(service.isTxHeightInPhase(1400, 1400, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1300, 1401, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1401, 1400, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1400, 1401, 1000, 100, 300));
-        assertFalse(service.isTxHeightInPhase(1401, 1401, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(0, 0, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1300, 0, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(0, 1300, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1299, 10, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1300, 1299, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1300, 1300, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1300, 1399, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1300, 1400, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1399, 1400, 1000, 100, 300));
+        assertTrue(service.isTxInPhase(1400, 1400, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1300, 1401, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1401, 1400, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1400, 1401, 1000, 100, 300));
+        assertFalse(service.isTxInPhase(1401, 1401, 1000, 100, 300));
     }
 
     @Test
@@ -163,14 +163,14 @@ public class DaoPeriodServiceTest {
         final int first = gen; // 1
         final int second = first + numBlocksOfCycle; //
         final int third = first + numBlocksOfCycle + numBlocksOfCycle; //
-        assertEquals(gen, service.getAbsoluteStartBlockOfPhase(0, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(gen, service.getAbsoluteStartBlockOfPhase(gen, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(first, service.getAbsoluteStartBlockOfPhase(gen + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(first, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(third, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
+        assertEquals(gen, service.getAbsoluteStartBlockOfPhase(0, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(gen, service.getAbsoluteStartBlockOfPhase(gen, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(first, service.getAbsoluteStartBlockOfPhase(gen + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(first, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(third, service.getAbsoluteStartBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
     }
 
     @Test
@@ -183,13 +183,13 @@ public class DaoPeriodServiceTest {
         final int second = first + numBlocksOfCycle; // 30
         final int third = first + numBlocksOfCycle + numBlocksOfCycle; //40
         assertEquals(first, service.getAbsoluteEndBlockOfPhase(0, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
-        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
-        assertEquals(third, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS,numBlocksOfCycle));
+        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(first, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(second, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle - 1, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
+        assertEquals(third, service.getAbsoluteEndBlockOfPhase(gen + numBlocksOfCycle + numBlocksOfCycle, gen, DaoPeriodService.Phase.COMPENSATION_REQUESTS, numBlocksOfCycle));
     }
 
     @Test
@@ -204,18 +204,18 @@ public class DaoPeriodServiceTest {
         //int txHeight, int chainHeight, int genesisHeight, int numBlocksOfCycle
         int gen = 1;
         int numBlocksOfCycle = 20;
-        assertFalse(service.isInCurrentCycle(gen, gen + numBlocksOfCycle, gen, numBlocksOfCycle));
+        assertFalse(service.isTxInCurrentCycle(gen, gen + numBlocksOfCycle, gen, numBlocksOfCycle));
 
-        assertFalse(service.isInCurrentCycle(gen - 1, gen - 1, gen, numBlocksOfCycle));
-        assertFalse(service.isInCurrentCycle(gen, gen - 1, gen, numBlocksOfCycle));
-        assertFalse(service.isInCurrentCycle(gen - 1, gen, gen, numBlocksOfCycle));
-        assertTrue(service.isInCurrentCycle(gen, gen, gen, numBlocksOfCycle));
-        assertTrue(service.isInCurrentCycle(gen, gen + 1, gen, numBlocksOfCycle));
-        assertTrue(service.isInCurrentCycle(gen, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
+        assertFalse(service.isTxInCurrentCycle(gen - 1, gen - 1, gen, numBlocksOfCycle));
+        assertFalse(service.isTxInCurrentCycle(gen, gen - 1, gen, numBlocksOfCycle));
+        assertFalse(service.isTxInCurrentCycle(gen - 1, gen, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen, gen, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen, gen + 1, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
 
-        assertTrue(service.isInCurrentCycle(gen, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
-        assertTrue(service.isInCurrentCycle(gen + 1, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
-        assertTrue(service.isInCurrentCycle(gen + numBlocksOfCycle - 1, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
-        assertFalse(service.isInCurrentCycle(gen + numBlocksOfCycle, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen + 1, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
+        assertTrue(service.isTxInCurrentCycle(gen + numBlocksOfCycle - 1, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
+        assertFalse(service.isTxInCurrentCycle(gen + numBlocksOfCycle, gen + numBlocksOfCycle - 1, gen, numBlocksOfCycle));
     }
 }

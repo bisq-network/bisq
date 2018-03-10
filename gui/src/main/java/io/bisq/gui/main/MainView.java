@@ -233,8 +233,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         root.widthProperty().addListener((observable, oldValue, newValue) -> {
             double w = (double) newValue;
             if (w > 0) {
-                leftNavPane.setSpacing(w >= 1080 ? 10 : 5);
-                rightNavPane.setSpacing(w >= 1080 ? 10 : 5);
+                leftNavPane.setSpacing(w >= 1080 ? 12 : 6);
+                rightNavPane.setSpacing(w >= 1080 ? 12 : 6);
             }
         });
 
@@ -675,7 +675,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         label.setId("nav-alert-label");
 
         ImageView icon = new ImageView();
-        icon.setLayoutX(0.5);
         icon.setId("image-alert-round");
 
         Pane notification = new Pane();
@@ -694,7 +693,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         label.setId("nav-alert-label");
 
         ImageView icon = new ImageView();
-        icon.setLayoutX(0.5);
         icon.setId("image-alert-round");
 
         Pane notification = new Pane();

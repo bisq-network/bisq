@@ -29,6 +29,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -44,6 +45,7 @@ import io.bisq.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.withdrawal.WithdrawalView;
 import io.bisq.gui.main.offer.OfferView;
+import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.FeeOptionWindow;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
@@ -84,6 +86,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
+    private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter btcFormatter;
@@ -104,7 +107,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
             priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, xLabel;
+            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
@@ -124,6 +127,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
+    private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,11 +135,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Transitions transitions,
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
+        this.preferences = preferences;
         this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
         this.btcFormatter = btcFormatter;
@@ -155,20 +160,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         balanceTextField.setFormatter(model.getBtcFormatter());
 
-        paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
-            @Override
-            public String toString(PaymentAccount paymentAccount) {
-                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
-                return paymentAccount.getAccountName() + " (" + code + ", " +
-                        Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
-            }
-
-            @Override
-            public PaymentAccount fromString(String s) {
-                return null;
-            }
-        });
+        paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
 
         GUIUtil.focusWhenAddedToScene(amountTextField);
     }
@@ -255,11 +247,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
+            percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             imageView.setId("image-sell-large");
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
+            percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
 
         updateMarketPriceAvailable();
@@ -274,7 +268,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
-            if (model.dataModel.preferences.showAgain(key)) {
+            if (preferences.showAgain(key)) {
                 //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
@@ -300,7 +294,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 if (model.hasAcceptedArbitrators()) {
                     Offer offer = model.createAndGetOffer();
                     //noinspection PointlessBooleanExpression
-                    if (!DevEnv.DEV_MODE) {
+                    if (!DevEnv.isDevMode()) {
                         offerDetailsWindow.onPlaceOffer(() ->
                                 model.onPlaceOffer(offer, offerDetailsWindow::hide))
                                 .show(offer);
@@ -372,7 +366,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoinProperty().get());
 
         //noinspection PointlessBooleanExpression
-        if (!DevEnv.DEV_MODE) {
+        if (!DevEnv.isDevMode()) {
             String key = "securityDepositInfo";
             new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -433,6 +427,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void onPaymentAccountsComboBoxSelected() {
+        // Temporary deactivate handler as the payment account change can populate a new currency list and causes
+        // unwanted selection events (item 0)
+        currencyComboBox.setOnAction(null);
+
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
@@ -441,11 +439,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
-
-                // we select comboBox following the user currency, if user currency not available in account, we select first
-                TradeCurrency tradeCurrency = model.getTradeCurrency();
-                if (tradeCurrencies.contains(tradeCurrency))
-                    currencyComboBox.getSelectionModel().select(tradeCurrency);
+                if (paymentAccount.getSelectedTradeCurrency() != null)
+                    currencyComboBox.getSelectionModel().select(paymentAccount.getSelectedTradeCurrency());
+                else if (tradeCurrencies.contains(model.getTradeCurrency()))
+                    currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
                 else
                     currencyComboBox.getSelectionModel().select(tradeCurrencies.get(0));
 
@@ -461,6 +458,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             currencyComboBox.setVisible(false);
             currencyTextField.setText("");
         }
+
+        currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
     }
 
     private void onCurrencyComboBoxSelected() {
@@ -496,7 +495,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceTextField.textProperty().bindBidirectional(model.marketPriceMargin);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
-        totalToPayTextField.amountProperty().bind(model.totalToPay);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         buyerSecurityDepositInputTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
 
@@ -544,7 +543,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
-        totalToPayTextField.amountProperty().unbind();
+        totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         buyerSecurityDepositInputTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
 
@@ -636,7 +635,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
-            if (DevEnv.DEV_MODE) {
+            if (DevEnv.isDevMode()) {
                 close();
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
@@ -663,8 +662,18 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         };
 
-
         marketPriceAvailableListener = (observable, oldValue, newValue) -> updateMarketPriceAvailable();
+
+        getShowWalletFundedNotificationListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                Notification walletFundedNotification = new Notification()
+                        .headLine(Res.get("notification.walletUpdate.headline"))
+                        .notification(Res.get("notification.walletUpdate.msg", btcFormatter.formatCoinWithCode(model.dataModel.getTotalToPayAsCoin().get())))
+                        .autoClose();
+
+                walletFundedNotification.show();
+            }
+        };
     }
 
     private void updateMarketPriceAvailable() {
@@ -692,6 +701,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().addListener(buyerSecurityDepositFocusedListener);
 
+        // notifications
+        model.dataModel.getShowWalletFundedNotification().addListener(getShowWalletFundedNotificationListener);
+
         // warnings
         model.errorMessage.addListener(errorMessageListener);
         // model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
@@ -714,6 +726,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceTextField.focusedProperty().removeListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().removeListener(buyerSecurityDepositFocusedListener);
+
+        // notifications
+        model.dataModel.getShowWalletFundedNotification().removeListener(getShowWalletFundedNotificationListener);
 
         // warnings
         model.errorMessage.removeListener(errorMessageListener);
@@ -1030,7 +1045,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(marketBasedPriceLabel);
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
                 Res.get("shared.distanceInPercent"));
-        priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
+        percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
+        percentagePriceDescription.setPrefWidth(200);
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
         // Fixed/Percentage toggle
@@ -1099,8 +1115,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        fixedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
-        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active","toggle-button-inactive");
+        fixedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
+        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
 
         fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
                 "toggle-button-active" : "toggle-button-inactive");

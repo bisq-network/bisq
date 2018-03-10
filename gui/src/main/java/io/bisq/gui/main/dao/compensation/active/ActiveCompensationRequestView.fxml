@@ -18,11 +18,10 @@
   -->
 
 
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<SplitPane fx:id="root" fx:controller="io.bisq.gui.main.dao.compensation.active.ActiveCompensationRequestView"
-           AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="-10.0"
-           AnchorPane.rightAnchor="-10.0" AnchorPane.topAnchor="-20.0"
-           orientation="VERTICAL"
-           xmlns:fx="http://javafx.com/fxml">
-</SplitPane>
+<?import javafx.scene.layout.GridPane?>
+<GridPane fx:id="root" fx:controller="io.bisq.gui.main.dao.compensation.active.ActiveCompensationRequestView"
+          AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="-10.0"
+          AnchorPane.rightAnchor="-10.0" AnchorPane.topAnchor="-20.0"
+          xmlns:fx="http://javafx.com/fxml">
+</GridPane>

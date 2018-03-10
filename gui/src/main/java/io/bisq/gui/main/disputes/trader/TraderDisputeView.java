@@ -19,6 +19,7 @@ package io.bisq.gui.main.disputes.trader;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
+import com.google.inject.name.Named;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Timer;
@@ -29,6 +30,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.Attachment;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
@@ -103,6 +105,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
+    private final boolean useDevPrivilegeKeys;
 
     private TableView<Dispute> tableView;
     private SortedList<Dispute> sortedList;
@@ -147,7 +150,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
-                             P2PService p2PService) {
+                             P2PService p2PService,
+                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
@@ -158,6 +162,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.p2PService = p2PService;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -315,7 +320,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress)
+                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, useDevPrivilegeKeys)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }

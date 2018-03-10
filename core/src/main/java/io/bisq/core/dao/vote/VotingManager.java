@@ -29,9 +29,9 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
-import io.bisq.core.dao.compensation.CompensationRequest;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
-import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.dao.request.compensation.CompensationRequest;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +89,10 @@ public class VotingManager implements PersistedDataHost {
         this.compensationRequestManager = null;
         this.daoPeriodService = null;
         this.votingDefaultValues = votingDefaultValues;
+    }
+
+    public void shutDown() {
+
     }
 
     @Override

@@ -162,7 +162,7 @@ public class BuyerStep4View extends TradeStepView {
 
         String key = "tradeCompleted" + trade.getId();
         //noinspection ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                     .notification(Res.get("notification.tradeCompleted.msg"))
@@ -281,7 +281,7 @@ public class BuyerStep4View extends TradeStepView {
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void handleTradeCompleted() {
-        if (!DevEnv.DEV_MODE) {
+        if (!DevEnv.isDevMode()) {
             String key = "tradeCompleteWithdrawCompletedInfo";
             //noinspection unchecked
             new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))

@@ -1,5 +1,6 @@
 package io.bisq.core.payment;
 
+import com.google.common.base.Preconditions;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -38,6 +39,25 @@ class ReceiptPredicates {
         return (account instanceof BankAccount) && isSameOrSpecificBank;
     }
 
+    boolean isMatchingBankId(Offer offer, PaymentAccount account) {
+        final List<String> acceptedBanksForOffer = offer.getAcceptedBankIds();
+        Preconditions.checkNotNull(acceptedBanksForOffer, "offer.getAcceptedBankIds() must not be null");
+
+        final String accountBankId = ((BankAccount) account).getBankId();
+
+        if (account instanceof SpecificBanksAccount) {
+            // check if we have a matching bank
+            boolean offerSideMatchesBank = (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
+            List<String> acceptedBanksForAccount = ((SpecificBanksAccount) account).getAcceptedBanks();
+            boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+
+            return offerSideMatchesBank && paymentAccountSideMatchesBank;
+        } else {
+            // national or same bank
+            return (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
+        }
+    }
+
     boolean isMatchingCountryCodes(Offer offer, PaymentAccount account) {
         List<String> acceptedCodes = Optional.ofNullable(offer.getAcceptedCountryCodes())
                 .orElse(Collections.emptyList());
@@ -63,9 +83,9 @@ class ReceiptPredicates {
 
     boolean isSepaRelated(Offer offer, PaymentAccount account) {
         PaymentMethod offerPaymentMethod = offer.getPaymentMethod();
-        return account instanceof SepaAccount
-                || account instanceof SepaInstantAccount
-                || offerPaymentMethod.equals(PaymentMethod.SEPA)
-                || offerPaymentMethod.equals(PaymentMethod.SEPA_INSTANT);
+        return (account instanceof SepaAccount
+                || account instanceof SepaInstantAccount)
+                && (offerPaymentMethod.equals(PaymentMethod.SEPA)
+                || offerPaymentMethod.equals(PaymentMethod.SEPA_INSTANT));
     }
 }

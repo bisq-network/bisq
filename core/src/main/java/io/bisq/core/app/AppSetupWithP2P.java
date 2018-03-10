@@ -42,6 +42,7 @@ public class AppSetupWithP2P extends AppSetup {
     protected final FilterManager filterManager;
     protected BooleanProperty p2pNetWorkReady;
     protected final TradeStatisticsManager tradeStatisticsManager;
+    protected ArrayList<PersistedDataHost> persistedDataHosts;
 
     @Inject
     public AppSetupWithP2P(EncryptionService encryptionService,
@@ -50,16 +51,16 @@ public class AppSetupWithP2P extends AppSetup {
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            FilterManager filterManager) {
-        super(encryptionService,keyRing);
+        super(encryptionService, keyRing);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.filterManager = filterManager;
+        this.persistedDataHosts = new ArrayList<>();
     }
 
     @Override
     public void initPersistedDataHosts() {
-        ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor

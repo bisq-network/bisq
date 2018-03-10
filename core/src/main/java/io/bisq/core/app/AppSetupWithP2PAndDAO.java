@@ -19,6 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.dao.DaoManager;
+import io.bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -39,7 +40,8 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  FilterManager filterManager,
-                                 DaoManager daoManager) {
+                                 DaoManager daoManager,
+                                 CompensationRequestManager compensationRequestManager) {
         super(encryptionService,
                 keyRing,
                 p2PService,
@@ -47,6 +49,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 accountAgeWitnessService,
                 filterManager);
         this.daoManager = daoManager;
+        this.persistedDataHosts.add(compensationRequestManager);
     }
 
     @Override

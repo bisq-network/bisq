@@ -24,11 +24,11 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.BsqNode;
-import io.bisq.core.dao.blockchain.BsqNodeProvider;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.TxType;
+import io.bisq.core.dao.node.BsqNode;
+import io.bisq.core.dao.node.BsqNodeProvider;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -501,7 +501,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.TINT;
+                                            awesomeIcon = AwesomeIcon.PAPERCLIP;
                                             style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:

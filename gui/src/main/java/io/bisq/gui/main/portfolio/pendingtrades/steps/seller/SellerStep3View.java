@@ -254,7 +254,7 @@ public class SellerStep3View extends TradeStepView {
             //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
             //noinspection ConstantConditions
-            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
@@ -316,7 +316,7 @@ public class SellerStep3View extends TradeStepView {
             }
         }
         //noinspection ConstantConditions
-        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)

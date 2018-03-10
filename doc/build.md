@@ -1,4 +1,4 @@
-﻿﻿Building From Source
+Building From Source
 ====================
 
 This guide will walk you through the process of building bisq from source.
@@ -60,7 +60,7 @@ If `$JAVA_HOME` is not present, open your `.bashrc` file:
 
 * For OpenJDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
 * For Oracle JDK add: `export JAVA_HOME=/usr/lib/jvm/java-8-oracle`
-* For your current *alternative* JDK add: `export JAVA_HOME=/usr/lib/jvm/default-java`  
+* For your current *alternative* JDK add: `export JAVA_HOME=/usr/lib/jvm/default-java`
   (or `/usr/lib/jvm/default` for Arch or `/usr/lib/jvm/java` for Fedora)
 
 Save and close the file.
@@ -126,12 +126,10 @@ See https://github.com/bisq-network/exchange/blob/master/doc/rpc.md for more det
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/Testing-bisq-with-Mainnet)
-and how to use [regtest](https://github.com/bisq-network/exchange/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/4.3.-Testing-Bisq-with-Testnet)
+and how to use [regtest](https://github.com/bisq-network/exchange/wiki/4.2.1.-How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
-
-    $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=bisq_seed_node_localhost_2002
 
     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
@@ -143,28 +141,7 @@ Here are example program arguments for using regtest with localhost environment 
 Running local seed node with Tor and RegTest
 -----------------
 
-If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
-You can find the hidden service address after you started once a seed node. Start it with a placeholder address like:
-
-    $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --nodePort=8002 --myAddress=xxxxxxxx.onion:8002 --appName=bisq_seed_node_xxxxxxxx.onion_8000
-
-Once the hidden service is published (check console output) quit the seed node and copy the hidden service address from the console output.
-Alternatively you can navigate to the application directory and open bisq_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
-use that hidden service address also to rename the xxxxxxx placeholder of your bisq_seed_node_xxxxxxx.onion_8002 directory.
-Start again the SeedNode.jar now with the correct hidden service address.
-Instructions are also at the SeedNodesRepository class.
-
-Here are example program arguments for using regtest and using the Tor network (example onion address is ewdkppp3vicnbgqt):
-
-     $ java -jar seednode/target/SeedNode.jar ewdkppp3vicnbgqt.onion:8002 2 50
-
-     $ java -jar seednode/target/SeedNode.jar --baseCurrencyNetwork=BTC_REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=bisq_seed_node_ewdkppp3vicnbgqt.oinion_8002
-
-     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
-
-     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
-
-     $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+See the documentation at https://github.com/bisq-network/bisq-seednode
 
 
 Problems?

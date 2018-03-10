@@ -33,9 +33,9 @@ import java.text.DecimalFormat;
 @Slf4j
 public class BsqFormatter extends BSFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
-    private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
+    private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
-    private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.###");
+    private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.##");
     private final DecimalFormat marketCapFormat = new DecimalFormat("###,###,###");
 
     @Inject
@@ -45,14 +45,10 @@ public class BsqFormatter extends BSFormatter {
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
             case "BTC":
-                coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
+                coinFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
                 break;
             case "LTC":
                 coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
-                break;
-            case "DOGE":
-                // BSQ for DOGE not used/supported
-                coinFormat = new MonetaryFormat().shift(3).code(3, "???").minDecimals(5);
                 break;
             case "DASH":
                 // BSQ for DASH not used/supported
@@ -62,7 +58,7 @@ public class BsqFormatter extends BSFormatter {
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
         }
 
-        amountFormat.setMinimumFractionDigits(3);
+        amountFormat.setMinimumFractionDigits(2);
     }
 
     /**
@@ -90,12 +86,12 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatAmountWithGroupSeparatorAndCode(Coin amount) {
-        return amountFormat.format(MathUtils.scaleDownByPowerOf10(amount.value, 3)) + " BSQ";
+        return amountFormat.format(MathUtils.scaleDownByPowerOf10(amount.value, 2)) + " BSQ";
     }
 
     public String formatMarketCap(MarketPrice bsqPriceMarketPrice, MarketPrice fiatMarketPrice, Coin issuedAmount) {
         if (bsqPriceMarketPrice != null && fiatMarketPrice != null) {
-            double marketCap = bsqPriceMarketPrice.getPrice() * fiatMarketPrice.getPrice() * (MathUtils.scaleDownByPowerOf10(issuedAmount.value, 3));
+            double marketCap = bsqPriceMarketPrice.getPrice() * fiatMarketPrice.getPrice() * (MathUtils.scaleDownByPowerOf10(issuedAmount.value, 2));
             return marketCapFormat.format(MathUtils.doubleToLong(marketCap)) + " " + fiatMarketPrice.getCurrencyCode();
         } else {
             return "";

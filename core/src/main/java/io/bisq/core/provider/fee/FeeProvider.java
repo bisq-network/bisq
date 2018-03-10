@@ -52,12 +52,10 @@ public class FeeProvider extends HttpClientProvider {
             LinkedTreeMap<String, Double> dataMap = (LinkedTreeMap<String, Double>) linkedTreeMap.get("dataMap");
             Long btcTxFee = dataMap.get("btcTxFee").longValue();
             Long ltcTxFee = dataMap.get("ltcTxFee").longValue();
-            Long dogeTxFee = dataMap.get("dogeTxFee").longValue();
             Long dashTxFee = dataMap.get("dashTxFee").longValue();
 
             map.put("BTC", btcTxFee);
             map.put("LTC", ltcTxFee);
-            map.put("DOGE", dogeTxFee);
             map.put("DASH", dashTxFee);
         } catch (Throwable t) {
             log.error(t.toString());

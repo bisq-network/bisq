@@ -59,6 +59,8 @@ import javafx.scene.control.TableColumn;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
+import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,6 +86,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
     private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
+    private final ListChangeListener<OfferBookListItem> filterItemsListener;
     private TradeCurrency selectedTradeCurrency;
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
@@ -97,6 +100,10 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
+    final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
+    final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
 
 
@@ -139,10 +146,50 @@ class OfferBookViewModel extends ActivatableViewModel {
         tradeCurrencyListChangeListener = c -> {
             fillAllTradeCurrencies();
         };
+
+        filterItemsListener = c -> {
+            final Optional<OfferBookListItem> highestAmountOffer = filteredItems.stream()
+                    .max(Comparator.comparingLong(o -> o.getOffer().getAmount().getValue()));
+
+            final boolean containsRangeAmount = filteredItems.stream().anyMatch(o -> o.getOffer().isRange());
+
+            if (highestAmountOffer.isPresent()) {
+                final OfferBookListItem item = highestAmountOffer.get();
+                if (!item.getOffer().isRange() && containsRangeAmount) {
+                    maxPlacesForAmount.set(formatAmount(item.getOffer(),false)
+                            .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false)
+                            .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
+                } else {
+                    maxPlacesForAmount.set(formatAmount(item.getOffer(),false).length());
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false).length());
+                }
+
+            }
+
+            final Optional<OfferBookListItem> highestPriceOffer = filteredItems.stream()
+                    .filter(o -> o.getOffer().getPrice() != null)
+                    .max(Comparator.comparingLong(o -> o.getOffer().getPrice().getValue()));
+
+            if (highestPriceOffer.isPresent()) {
+                maxPlacesForPrice.set(formatPrice(highestPriceOffer.get().getOffer(), false).length());
+            }
+
+            final Optional<OfferBookListItem> highestMarketPriceMarginOffer = filteredItems.stream()
+                    .filter(o -> o.getOffer().isUseMarketBasedPrice())
+                    .max(Comparator.comparing(o -> new DecimalFormat("#0.00").format(o.getOffer().getMarketPriceMargin() * 100).length()));
+
+            if (highestMarketPriceMarginOffer.isPresent()) {
+                maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(highestMarketPriceMarginOffer.get().getOffer(), false).length());
+            }
+        };
     }
 
     @Override
     protected void activate() {
+
+        filteredItems.addListener(filterItemsListener);
+
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
@@ -165,6 +212,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Override
     protected void deactivate() {
+        filteredItems.removeListener(filterItemsListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
@@ -276,48 +324,63 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getAmount(OfferBookListItem item) {
-        Offer offer = item.getOffer();
-        Coin amount = offer.getAmount();
-        Coin minAmount = offer.getMinAmount();
-        if (amount.equals(minAmount))
-            return formatter.formatAmount(offer);
-        else
-            return formatter.formatAmountWithMinAmount(offer);
+        return formatAmount(item.getOffer(), true);
     }
+
+    private String formatAmount(Offer offer, boolean decimalAligned) {
+        return formatter.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get());
+    }
+
 
     String getPrice(OfferBookListItem item) {
         if ((item == null))
             return "";
 
-        Offer offer = item.getOffer();
-        Price price = offer.getPrice();
+        final Offer offer = item.getOffer();
+        final Price price = offer.getPrice();
         if (price != null) {
-            String postFix = "";
-            if (offer.isUseMarketBasedPrice()) {
-                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            }
-            if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatPrice(price) + postFix;
-            else
-                return formatter.formatPrice(price) + postFix;
+            return formatPrice(offer, true) + formatMarketPriceMargin(offer, true);
         } else {
             return Res.get("shared.na");
         }
     }
 
+    private String formatPrice(Offer offer, boolean decimalAligned) {
+        return formatter.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
+    }
+
+    private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
+        String postFix = "";
+        if (offer.isUseMarketBasedPrice()) {
+            postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+
+        }
+
+        if (decimalAligned) {
+            postFix = formatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
+        }
+
+        return postFix;
+    }
+
     String getVolume(OfferBookListItem item) {
-        Offer offer = item.getOffer();
+        return formatVolume(item.getOffer(), true);
+    }
+
+    private String formatVolume(Offer offer, boolean decimalAligned) {
         Volume offerVolume = offer.getVolume();
         Volume minOfferVolume = offer.getMinVolume();
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
-            if (offerVolume.equals(minOfferVolume))
-                return formatter.formatVolume(offerVolume) + postFix;
-            else
-                return formatter.formatMinVolumeAndVolume(offer) + postFix;
+            decimalAligned = decimalAligned && !showAllTradeCurrenciesProperty.get();
+            return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
         } else {
             return Res.get("shared.na");
         }
+    }
+
+    int getNumberOfDecimalsForVolume(OfferBookListItem item) {
+        return CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
     }
 
     String getPaymentMethod(OfferBookListItem item) {

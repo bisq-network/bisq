@@ -17,12 +17,14 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
+import com.google.inject.name.Named;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
@@ -67,6 +69,7 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
+import java.util.Comparator;
 import java.util.Optional;
 
 import static io.bisq.gui.util.FormBuilder.*;
@@ -78,14 +81,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final boolean useDevPrivilegeKeys;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> volumeColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> marketColumn;
-    private TableColumn<OfferBookListItem, OfferBookListItem> priceColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -101,14 +102,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter,
-                  PrivateNotificationManager privateNotificationManager) {
+    OfferBookView(OfferBookViewModel model,
+                  Navigation navigation,
+                  OfferDetailsWindow offerDetailsWindow,
+                  BSFormatter formatter,
+                  PrivateNotificationManager privateNotificationManager,
+                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -168,7 +174,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
+        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.multipleOffers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -182,14 +188,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             Price price2 = o2.getOffer().getPrice();
             return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
         });
-        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) -> {
             Volume offerVolume1 = o1.getOffer().getVolume();
             Volume offerVolume2 = o2.getOffer().getVolume();
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
-        paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
-        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getFullAddress().compareTo(o2.getOffer().getOwnerNodeAddress().getFullAddress()));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
+        avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
 
         nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
@@ -222,8 +228,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter(
-                Res.get("shared.offer"),
-                Res.get("shared.offers"),
+                Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
@@ -491,7 +497,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax"));
-        column.setMinWidth(150);
+        column.setMinWidth(100);
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -504,9 +511,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(model.getAmount(item));
+                                    setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -517,8 +524,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
-                setMinWidth(120);
-                // setMaxWidth(130);
+                setMinWidth(40);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -548,9 +554,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(120);
+                setMinWidth(100);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -620,6 +627,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(125);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -633,7 +641,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
-                                        setText(model.getVolume(offerBookListItem));
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
+                                                model.getNumberOfDecimalsForVolume(offerBookListItem)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     }
                                 }
@@ -647,14 +656,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         this.offerBookListItem = item;
                                         model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
+                                        setGraphic(null);
                                     } else {
-                                        setText(model.getVolume(item));
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(item),
+                                                model.getNumberOfDecimalsForVolume(item)));
                                     }
                                 } else {
                                     if (listener != null)
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -666,7 +679,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
             {
-                setMinWidth(125);
+                setMinWidth(80);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -685,7 +698,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
-                                    setPadding(new Insets(4, 0, 0, 0));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -858,7 +870,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter);
+                                            formatter,
+                                            useDevPrivilegeKeys);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

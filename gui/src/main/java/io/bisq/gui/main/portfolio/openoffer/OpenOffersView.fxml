@@ -28,14 +28,15 @@
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="offerIdColumn" minWidth="120" maxWidth="130"/>
-            <TableColumn fx:id="dateColumn" minWidth="200"/>
-            <TableColumn fx:id="marketColumn" minWidth="100"/>
-            <TableColumn fx:id="priceColumn" minWidth="160"/>
-            <TableColumn fx:id="amountColumn" minWidth="160"/>
-            <TableColumn fx:id="volumeColumn" minWidth="180"/>
-            <TableColumn fx:id="directionColumn" minWidth="100"/>
-            <TableColumn fx:id="removeItemColumn" minWidth="120" maxWidth="120" sortable="false"/>
+            <TableColumn fx:id="offerIdColumn" minWidth="110" maxWidth="130"/>
+            <TableColumn fx:id="dateColumn" minWidth="180"/>
+            <TableColumn fx:id="marketColumn" minWidth="90"/>
+            <TableColumn fx:id="priceColumn" minWidth="150"/>
+            <TableColumn fx:id="amountColumn" minWidth="150"/>
+            <TableColumn fx:id="volumeColumn" minWidth="170"/>
+            <TableColumn fx:id="directionColumn" minWidth="80"/>
+            <TableColumn fx:id="deactivateItemColumn" minWidth="120" maxWidth="120" sortable="false"/>
+            <TableColumn fx:id="removeItemColumn" minWidth="110" maxWidth="120" sortable="false"/>
         </columns>
     </TableView>
 

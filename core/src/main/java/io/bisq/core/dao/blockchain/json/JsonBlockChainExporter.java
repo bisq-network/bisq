@@ -27,7 +27,7 @@ import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.DaoOptionKeys;
-import io.bisq.core.dao.blockchain.parse.BsqBlockChain;
+import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
