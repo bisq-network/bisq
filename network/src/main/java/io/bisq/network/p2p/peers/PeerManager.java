@@ -13,7 +13,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,13 +92,13 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
 
     @Inject
     public PeerManager(NetworkNode networkNode,
-                       SeedNodesRepository seedNodesRepository,
+                       SeedNodeRepository seedNodeRepository,
                        Clock clock,
                        PersistenceProtoResolver persistenceProtoResolver,
                        @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
                        @Named(Storage.STORAGE_DIR) File storageDir) {
         this.networkNode = networkNode;
-        this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
+        this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clock = clock;
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 

@@ -23,7 +23,7 @@ import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.getdata.RequestDataManager;
 import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.messages.AddDataMessage;
@@ -53,7 +53,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
     public static final int MAX_CONNECTIONS_DEFAULT = 12;
 
-    private final SeedNodesRepository seedNodesRepository;
+    private final SeedNodeRepository seedNodeRepository;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
 
@@ -97,7 +97,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       PeerExchangeManager peerExchangeManager,
                       KeepAliveManager keepAliveManager,
                       Broadcaster broadcaster,
-                      SeedNodesRepository seedNodesRepository,
+                      SeedNodeRepository seedNodeRepository,
                       Socks5ProxyProvider socks5ProxyProvider,
                       EncryptionService encryptionService,
                       KeyRing keyRing) {
@@ -108,7 +108,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.peerExchangeManager = peerExchangeManager;
         this.keepAliveManager = keepAliveManager;
         this.broadcaster = broadcaster;
-        this.seedNodesRepository = seedNodesRepository;
+        this.seedNodeRepository = seedNodeRepository;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
@@ -468,7 +468,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         final NodeAddress nodeAddress = networkNode.getNodeAddress();
         // Seed nodes don't receive mailbox network_messages
-        if (nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {
+        if (nodeAddress != null && !seedNodeRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
             MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.getPrefixedSealedAndSignedMessage();

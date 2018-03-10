@@ -11,7 +11,7 @@ import io.bisq.core.dao.node.messages.NewBsqBlockBroadcastMessage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +72,7 @@ public class LiteNodeNetworkManager implements MessageListener, ConnectionListen
     @Inject
     public LiteNodeNetworkManager(NetworkNode networkNode,
                                   PeerManager peerManager,
-                                  SeedNodesRepository seedNodesRepository) {
+                                  SeedNodeRepository seedNodesRepository) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)

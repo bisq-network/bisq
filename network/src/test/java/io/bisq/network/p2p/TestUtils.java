@@ -95,7 +95,7 @@ public class TestUtils {
                                                             boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
               throws InterruptedException {
           CountDownLatch latch = new CountDownLatch(1);
-          SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+          SeedNodeRepository seedNodesRepository = new SeedNodeRepository();
           if (seedNodes != null && !seedNodes.isEmpty()) {
               if (useLocalhostForP2P)
                   seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);

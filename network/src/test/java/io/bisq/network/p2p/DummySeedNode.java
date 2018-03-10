@@ -168,7 +168,7 @@ public class DummySeedNode {
         Utilities.printSysInfo();
         Log.setLevel(logLevel);
 
-       /* SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+       /* SeedNodeRepository seedNodesRepository = new SeedNodeRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
             if (useLocalhostForP2P)
                 seedNodesRepository.setLocalhostSeedNodeAddresses(progArgSeedNodes);
