@@ -169,6 +169,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SOS", "SOS Coin", true));
         result.add(new CryptoCurrency("ACH", "AchieveCoin"));
         result.add(new CryptoCurrency("VDN", "vDinar"));
+		
+		result.add(new CryptoCurrency("NAH", "Strayacoin"));
 
         // Added 0.7.0
         result.add(new CryptoCurrency("ALC", "Angelcoin"));
