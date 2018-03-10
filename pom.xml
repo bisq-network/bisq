@@ -43,9 +43,7 @@
         <module>network</module>
         <module>core</module>
         <module>gui</module>
-        <module>statistics</module>
         <module>consensus</module>
-        <module>monitor</module>
     </modules>
 
     <build>
