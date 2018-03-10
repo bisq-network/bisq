@@ -17,7 +17,8 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
@@ -32,25 +33,27 @@ import java.util.Optional;
  */
 
 @Slf4j
-public class TxInputVerification {
+public class TxInputController {
 
-    private final BsqBlockChain bsqBlockChain;
+    private final WritableBsqBlockChain writableBsqBlockChain;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
 
     @Inject
-    public TxInputVerification(BsqBlockChain bsqBlockChain) {
-        this.bsqBlockChain = bsqBlockChain;
+    public TxInputController(WritableBsqBlockChain writableBsqBlockChain, ReadableBsqBlockChain readableBsqBlockChain) {
+        this.writableBsqBlockChain = writableBsqBlockChain;
+        this.readableBsqBlockChain = readableBsqBlockChain;
     }
 
     Optional<TxOutput> getOptionalSpendableTxOutput(TxInput input) {
         // TODO check if Tuple indexes of inputs outputs are not messed up...
         // Get spendable BSQ output for txIdIndexTuple... (get output used as input in tx if it's spendable BSQ)
-        return bsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
+        return readableBsqBlockChain.getSpendableTxOutput(input.getTxIdIndexTuple());
     }
 
     void applyStateChange(TxInput input, TxOutput spendableTxOutput, int blockHeight, Tx tx, int inputIndex) {
         // The output is BSQ, set it as spent, update bsqBlockChain and add to available BSQ for this tx
         spendableTxOutput.setUnspent(false);
-        bsqBlockChain.removeUnspentTxOutput(spendableTxOutput);
+        writableBsqBlockChain.removeUnspentTxOutput(spendableTxOutput);
         spendableTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
         input.setConnectedTxOutput(spendableTxOutput);
     }

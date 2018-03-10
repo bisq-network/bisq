@@ -63,6 +63,18 @@ public class Utilities {
         return gson.toJson(object);
     }
 
+    public static ListeningExecutorService getListeningSingleThreadExecutor(String name) {
+        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
+    }
+
+    public static ExecutorService getSingleThreadExecutor(String name) {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
     public static ListeningExecutorService getListeningExecutorService(String name,
                                                                        int corePoolSize,
                                                                        int maximumPoolSize,

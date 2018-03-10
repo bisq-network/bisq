@@ -18,7 +18,7 @@
 package io.bisq.core.dao.node.consensus;
 
 import io.bisq.common.app.Version;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -26,27 +26,30 @@ import io.bisq.core.dao.blockchain.vo.TxType;
 
 import javax.inject.Inject;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Verifies if OP_RETURN data matches rules for a compensation request tx and applies state change.
  */
-public class CompensationRequestVerification {
-    private final BsqBlockChain bsqBlockChain;
+public class CompensationRequestController {
+    private final ReadableBsqBlockChain readableBsqBlockChain;
 
     @Inject
-    public CompensationRequestVerification(BsqBlockChain bsqBlockChain) {
-        this.bsqBlockChain = bsqBlockChain;
+    public CompensationRequestController(ReadableBsqBlockChain readableBsqBlockChain) {
+        this.readableBsqBlockChain = readableBsqBlockChain;
     }
 
-    public boolean verify(byte[] opReturnData, long bsqFee, int blockHeight, TxOutputsVerification.MutableState mutableState) {
+    public boolean verify(byte[] opReturnData, long bsqFee, int blockHeight, TxOutputsController.MutableState mutableState) {
         return mutableState.getCompRequestIssuanceOutputCandidate() != null &&
                 opReturnData.length == 22 &&
                 Version.COMPENSATION_REQUEST_VERSION == opReturnData[1] &&
-                bsqFee == bsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
-                bsqBlockChain.isCompensationRequestPeriodValid(blockHeight);
+                bsqFee == readableBsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
+                readableBsqBlockChain.isCompensationRequestPeriodValid(blockHeight);
     }
 
-    public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutputsVerification.MutableState mutableState) {
+    public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutputsController.MutableState mutableState) {
         opReturnTxOutput.setTxOutputType(TxOutputType.COMPENSATION_REQUEST_OP_RETURN_OUTPUT);
+        checkArgument(mutableState.getCompRequestIssuanceOutputCandidate() != null, "mutableState.getCompRequestIssuanceOutputCandidate() must nto be null");
         mutableState.getCompRequestIssuanceOutputCandidate().setTxOutputType(TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT);
         tx.setTxType(TxType.COMPENSATION_REQUEST);
     }

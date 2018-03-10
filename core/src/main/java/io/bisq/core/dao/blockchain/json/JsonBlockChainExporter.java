@@ -28,6 +28,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
@@ -45,18 +46,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class JsonBlockChainExporter {
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final boolean dumpBlockchainData;
-    private final BsqBlockChain bsqBlockChain;
 
     private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
     private File txDir, txOutputDir, bsqBlockChainDir;
     private JsonFileManager txFileManager, txOutputFileManager, bsqBlockChainFileManager;
 
     @Inject
-    public JsonBlockChainExporter(BsqBlockChain bsqBlockChain,
+    public JsonBlockChainExporter(ReadableBsqBlockChain readableBsqBlockChain,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.bsqBlockChain = bsqBlockChain;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.dumpBlockchainData = dumpBlockchainData;
 
         init(storageDir, dumpBlockchainData);
@@ -104,7 +105,7 @@ public class JsonBlockChainExporter {
     public void maybeExport() {
         if (dumpBlockchainData) {
             ListenableFuture<Void> future = executor.submit(() -> {
-                final BsqBlockChain bsqBlockChainClone = bsqBlockChain.getClone();
+                final BsqBlockChain bsqBlockChainClone = readableBsqBlockChain.getClone();
                 for (Tx tx : bsqBlockChainClone.getTxMap().values()) {
                     String txId = tx.getId();
                     JsonTxType txType = tx.getTxType() != TxType.UNDEFINED_TX_TYPE ? JsonTxType.valueOf(tx.getTxType().name()) : null;

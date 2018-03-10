@@ -119,7 +119,7 @@ public class CompensationRequestListItem implements BsqBlockChainListener {
                 int depth = bsqWalletService.getChainHeightProperty().get() - tx.getBlockHeight() + 1;
                 if (depth > 0)
                     updateConfidence(TransactionConfidence.ConfidenceType.BUILDING, depth, -1);
-                log.error("name={}, id ={}, depth={}", compensationRequest.getPayload().getName(), compensationRequest.getPayload().getUid(), depth);
+                //log.error("name={}, id ={}, depth={}", compensationRequest.getPayload().getName(), compensationRequest.getPayload().getUid(), depth);
             }
 
             final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);

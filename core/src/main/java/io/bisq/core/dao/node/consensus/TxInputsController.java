@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -30,31 +30,31 @@ import java.util.Optional;
  * Calculate the available BSQ balance from all inputs and apply state change.
  */
 @Slf4j
-public class TxInputsVerification {
+public class TxInputsController {
 
-    private final BsqBlockChain bsqBlockChain;
-    private final TxInputVerification txInputVerification;
+    private final WritableBsqBlockChain writableBsqBlockChain;
+    private final TxInputController txInputController;
 
     @Inject
-    public TxInputsVerification(BsqBlockChain bsqBlockChain, TxInputVerification txInputVerification) {
-        this.bsqBlockChain = bsqBlockChain;
-        this.txInputVerification = txInputVerification;
+    public TxInputsController(WritableBsqBlockChain writableBsqBlockChain, TxInputController txInputController) {
+        this.writableBsqBlockChain = writableBsqBlockChain;
+        this.txInputController = txInputController;
     }
 
-    BsqTxVerification.BsqInputBalance getBsqInputBalance(Tx tx, int blockHeight) {
-        BsqTxVerification.BsqInputBalance bsqInputBalance = new BsqTxVerification.BsqInputBalance();
+    BsqTxController.BsqInputBalance getBsqInputBalance(Tx tx, int blockHeight) {
+        BsqTxController.BsqInputBalance bsqInputBalance = new BsqTxController.BsqInputBalance();
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
             TxInput input = tx.getInputs().get(inputIndex);
-            final Optional<TxOutput> optionalSpendableTxOutput = txInputVerification.getOptionalSpendableTxOutput(input);
+            final Optional<TxOutput> optionalSpendableTxOutput = txInputController.getOptionalSpendableTxOutput(input);
             if (optionalSpendableTxOutput.isPresent()) {
                 bsqInputBalance.add(optionalSpendableTxOutput.get().getValue());
-                txInputVerification.applyStateChange(input, optionalSpendableTxOutput.get(), blockHeight, tx, inputIndex);
+                txInputController.applyStateChange(input, optionalSpendableTxOutput.get(), blockHeight, tx, inputIndex);
             }
         }
         return bsqInputBalance;
     }
 
     void applyStateChange(Tx tx) {
-        bsqBlockChain.addTxToMap(tx);
+        writableBsqBlockChain.addTxToMap(tx);
     }
 }

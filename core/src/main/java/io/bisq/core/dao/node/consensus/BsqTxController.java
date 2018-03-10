@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxType;
 import lombok.Getter;
@@ -30,34 +29,25 @@ import javax.inject.Inject;
  * Verifies if a given transaction is a BSQ transaction.
  */
 @Slf4j
-public class BsqTxVerification {
+public class BsqTxController {
 
-    private final BsqBlockChain bsqBlockChain;
-    private final TxInputsVerification txInputsVerification;
-    private final TxOutputsVerification txOutputsVerification;
+    private final TxInputsController txInputsController;
+    private final TxOutputsController txOutputsController;
 
     @Inject
-    public BsqTxVerification(BsqBlockChain bsqBlockChain,
-                             TxInputsVerification txInputsVerification,
-                             TxOutputsVerification txOutputsVerification) {
-        this.bsqBlockChain = bsqBlockChain;
-        this.txInputsVerification = txInputsVerification;
-        this.txOutputsVerification = txOutputsVerification;
+    public BsqTxController(TxInputsController txInputsController,
+                           TxOutputsController txOutputsController) {
+        this.txInputsController = txInputsController;
+        this.txOutputsController = txOutputsController;
     }
 
     public boolean isBsqTx(int blockHeight, Tx tx) {
-        return bsqBlockChain.<Boolean>callFunctionWithWriteLock(() -> execute(blockHeight, tx));
-    }
-
-    // Not thread safe wrt bsqBlockChain
-    // Check if any of the inputs are BSQ inputs and update BsqBlockChain state accordingly
-    private boolean execute(int blockHeight, Tx tx) {
-        BsqInputBalance bsqInputBalance = txInputsVerification.getBsqInputBalance(tx, blockHeight);
+        BsqInputBalance bsqInputBalance = txInputsController.getBsqInputBalance(tx, blockHeight);
 
         final boolean bsqInputBalancePositive = bsqInputBalance.isPositive();
         if (bsqInputBalancePositive) {
-            txInputsVerification.applyStateChange(tx);
-            txOutputsVerification.iterate(tx, blockHeight, bsqInputBalance);
+            txInputsController.applyStateChange(tx);
+            txOutputsController.iterate(tx, blockHeight, bsqInputBalance);
         }
 
         // Lets check if we have left over BSQ (burned fees)

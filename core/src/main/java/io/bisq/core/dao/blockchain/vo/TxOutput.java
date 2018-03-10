@@ -149,10 +149,6 @@ public class TxOutput implements PersistablePayload {
         return txOutputType == TxOutputType.COMPENSATION_REQUEST_ISSUANCE_CANDIDATE_OUTPUT;
     }
 
-    public boolean isSponsoringBtcOutput() {
-        return false; //txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
-    }
-
     public String getId() {
         return txId + ":" + index;
     }

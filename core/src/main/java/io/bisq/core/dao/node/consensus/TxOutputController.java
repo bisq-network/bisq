@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChain;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -33,23 +33,22 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 
 @Slf4j
-public class TxOutputVerification {
-    private final BsqBlockChain bsqBlockChain;
-    private final OpReturnVerification opReturnVerification;
+public class TxOutputController {
+    private final WritableBsqBlockChain writableBsqBlockChain;
+    private final OpReturnController opReturnController;
 
     @Inject
-    public TxOutputVerification(BsqBlockChain bsqBlockChain,
-                                OpReturnVerification opReturnVerification) {
-        this.bsqBlockChain = bsqBlockChain;
-        this.opReturnVerification = opReturnVerification;
+    public TxOutputController(WritableBsqBlockChain writableBsqBlockChain, OpReturnController opReturnController) {
+        this.writableBsqBlockChain = writableBsqBlockChain;
+        this.opReturnController = opReturnController;
     }
 
     void verify(Tx tx,
                 TxOutput txOutput,
                 int index,
                 int blockHeight,
-                BsqTxVerification.BsqInputBalance bsqInputBalance,
-                TxOutputsVerification.MutableState mutableState) {
+                BsqTxController.BsqInputBalance bsqInputBalance,
+                TxOutputsController.MutableState mutableState) {
 
         final long txOutputValue = txOutput.getValue();
         final long bsqInputBalanceValue = bsqInputBalance.getValue();
@@ -87,7 +86,7 @@ public class TxOutputVerification {
                 }
             } else {
                 // We got a OP_RETURN output.
-                opReturnVerification.process(txOutput, tx, index, bsqInputBalanceValue, blockHeight, mutableState);
+                opReturnController.process(txOutput, tx, index, bsqInputBalanceValue, blockHeight, mutableState);
             }
 
         } else {
@@ -100,7 +99,7 @@ public class TxOutputVerification {
         txOutput.setVerified(true);
         txOutput.setUnspent(true);
         txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
-        bsqBlockChain.addUnspentTxOutput(txOutput);
+        writableBsqBlockChain.addUnspentTxOutput(txOutput);
     }
 
     private void applyStateChangeForBtcOutput(TxOutput txOutput) {

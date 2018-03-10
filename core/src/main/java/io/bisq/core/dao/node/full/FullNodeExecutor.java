@@ -34,18 +34,16 @@ import javax.inject.Inject;
 import java.util.function.Consumer;
 
 /**
- * Processes tasks in custom threads. Results are mapped back to user thread so client don't need to deal with threading.
+ * Processes tasks in custom thread. Results are mapped back to user thread so client don't need to deal with threading.
+ * We use a SingleThreadExecutor to guarantee that the parser is only running from one thread at a time to avoid
+ * risks with concurrent write to the BsqBlockChain.
  */
 @Slf4j
 public class FullNodeExecutor {
 
     private final FullNodeParser fullNodeParser;
     private final RpcService rpcService;
-
-    private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcServiceSetup", 1, 1, 5);
-    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
-    private final ListeningExecutorService parseBlockExecutor = Utilities.getListeningExecutorService("ParseBlock", 1, 1, 60);
-    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
+    private final ListeningExecutorService executor = Utilities.getListeningSingleThreadExecutor("FullNodeExecutor");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +63,7 @@ public class FullNodeExecutor {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = setupExecutor.submit(() -> {
+        ListenableFuture<Void> future = executor.submit(() -> {
             rpcService.setup();
             return null;
         });
@@ -82,8 +80,7 @@ public class FullNodeExecutor {
     }
 
     void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Integer> future = getChainHeightExecutor.submit(rpcService::requestChainHeadHeight);
-
+        ListenableFuture<Integer> future = executor.submit(rpcService::requestChainHeadHeight);
         Futures.addCallback(future, new FutureCallback<Integer>() {
             public void onSuccess(Integer chainHeadHeight) {
                 UserThread.execute(() -> resultHandler.accept(chainHeadHeight));
@@ -100,7 +97,7 @@ public class FullNodeExecutor {
                      Consumer<BsqBlock> newBlockHandler,
                      ResultHandler resultHandler,
                      Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
+        ListenableFuture<Void> future = executor.submit(() -> {
             long startTs = System.currentTimeMillis();
             fullNodeParser.parseBlocks(startBlockHeight,
                     chainHeadHeight,
@@ -125,7 +122,7 @@ public class FullNodeExecutor {
     void parseBtcdBlock(Block btcdBlock,
                         Consumer<BsqBlock> resultHandler,
                         Consumer<Throwable> errorHandler) {
-        ListenableFuture<BsqBlock> future = parseBlockExecutor.submit(() -> fullNodeParser.parseBlock(btcdBlock));
+        ListenableFuture<BsqBlock> future = executor.submit(() -> fullNodeParser.parseBlock(btcdBlock));
 
         Futures.addCallback(future, new FutureCallback<BsqBlock>() {
             @Override
