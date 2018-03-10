@@ -95,8 +95,8 @@ class DefaultSeedNodeAddresses {
             new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
 
             // DASH mainnet
-            new NodeAddress("toeu5ikb27ydscxt.onion:8009"),
-            new NodeAddress("ae4yvaivhnekkhqf.onion:8009")
+            new NodeAddress("toeu5ikb27ydscxt.onion:8006"),
+            new NodeAddress("ae4yvaivhnekkhqf.onion:8006")
     );
 
     private DefaultSeedNodeAddresses() {
