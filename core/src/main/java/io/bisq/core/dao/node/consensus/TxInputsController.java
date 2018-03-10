@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxInput;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
@@ -32,12 +32,12 @@ import java.util.Optional;
 @Slf4j
 public class TxInputsController {
 
-    private final BsqBlockChainWriteModel bsqBlockChainWriteModel;
+    private final WritableBsqBlockChain writableBsqBlockChain;
     private final TxInputController txInputController;
 
     @Inject
-    public TxInputsController(BsqBlockChainWriteModel bsqBlockChainWriteModel, TxInputController txInputController) {
-        this.bsqBlockChainWriteModel = bsqBlockChainWriteModel;
+    public TxInputsController(WritableBsqBlockChain writableBsqBlockChain, TxInputController txInputController) {
+        this.writableBsqBlockChain = writableBsqBlockChain;
         this.txInputController = txInputController;
     }
 
@@ -55,6 +55,6 @@ public class TxInputsController {
     }
 
     void applyStateChange(Tx tx) {
-        bsqBlockChainWriteModel.addTxToMap(tx);
+        writableBsqBlockChain.addTxToMap(tx);
     }
 }

@@ -17,39 +17,56 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.io.File;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ReadableBsqBlockChain.class, WritableBsqBlockChain.class, PersistenceProtoResolver.class, File.class})
 public class BsqBlockChainTest {
+
+    private SnapshotManager snapshotManager;
+
+    @Before
+    public void setup() {
+        snapshotManager = new SnapshotManager(mock(ReadableBsqBlockChain.class), mock(WritableBsqBlockChain.class), mock(PersistenceProtoResolver.class), mock(File.class));
+    }
 
     @Test
     public void testGetSnapshotHeight() {
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 0, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 100, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 102, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 119, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 120, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 121, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 130, 10));
-        assertEquals(120, BsqBlockChain.getSnapshotHeight(102, 139, 10));
-        assertEquals(130, BsqBlockChain.getSnapshotHeight(102, 140, 10));
-        assertEquals(130, BsqBlockChain.getSnapshotHeight(102, 141, 10));
-        assertEquals(990, BsqBlockChain.getSnapshotHeight(102, 1000, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 0, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 100, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 102, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 119, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 120, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 121, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 130, 10));
+        assertEquals(120, snapshotManager.getSnapshotHeight(102, 139, 10));
+        assertEquals(130, snapshotManager.getSnapshotHeight(102, 140, 10));
+        assertEquals(130, snapshotManager.getSnapshotHeight(102, 141, 10));
+        assertEquals(990, snapshotManager.getSnapshotHeight(102, 1000, 10));
     }
 
     @Test
     public void testSnapshotHeight() {
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 0, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 80, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 90, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 100, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 119, 10));
-        assertTrue(BsqBlockChain.isSnapshotHeight(102, 120, 10));
-        assertTrue(BsqBlockChain.isSnapshotHeight(102, 130, 10));
-        assertTrue(BsqBlockChain.isSnapshotHeight(102, 140, 10));
-        assertTrue(BsqBlockChain.isSnapshotHeight(102, 200, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 201, 10));
-        assertFalse(BsqBlockChain.isSnapshotHeight(102, 199, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 0, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 80, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 90, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 100, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 119, 10));
+        assertTrue(snapshotManager.isSnapshotHeight(102, 120, 10));
+        assertTrue(snapshotManager.isSnapshotHeight(102, 130, 10));
+        assertTrue(snapshotManager.isSnapshotHeight(102, 140, 10));
+        assertTrue(snapshotManager.isSnapshotHeight(102, 200, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 201, 10));
+        assertFalse(snapshotManager.isSnapshotHeight(102, 199, 10));
     }
 }

@@ -33,7 +33,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.request.compensation.consensus.OpReturnData;
 import io.bisq.core.dao.request.compensation.consensus.Restrictions;
 import io.bisq.core.provider.fee.FeeService;
@@ -68,7 +68,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final BsqBlockChainReadModel bsqBlockChainReadModel;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final Storage<CompensationRequestList> compensationRequestsStorage;
     private final PublicKey signaturePubKey;
     private final FeeService feeService;
@@ -90,7 +90,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
                                       BsqWalletService bsqWalletService,
                                       BtcWalletService btcWalletService,
                                       DaoPeriodService daoPeriodService,
-                                      BsqBlockChainReadModel bsqBlockChainReadModel,
+                                      ReadableBsqBlockChain readableBsqBlockChain,
                                       BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                       KeyRing keyRing,
                                       Storage<CompensationRequestList> compensationRequestsStorage,
@@ -99,7 +99,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.daoPeriodService = daoPeriodService;
-        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.compensationRequestsStorage = compensationRequestsStorage;
         this.feeService = feeService;
 
@@ -235,7 +235,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
     }
 
     private boolean isInPhaseOrUnconfirmed(CompensationRequestPayload payload) {
-        return bsqBlockChainReadModel.getTxMap().get(payload.getTxId()) == null || daoPeriodService.isTxInPhase(payload.getTxId(), DaoPeriodService.Phase.COMPENSATION_REQUESTS);
+        return readableBsqBlockChain.getTxMap().get(payload.getTxId()) == null || daoPeriodService.isTxInPhase(payload.getTxId(), DaoPeriodService.Phase.COMPENSATION_REQUESTS);
     }
 
     public boolean isMine(CompensationRequest compensationRequest) {
@@ -336,7 +336,7 @@ public class CompensationRequestManager implements PersistedDataHost, BsqBlockCh
         pastRequests.setPredicate(request -> daoPeriodService.isTxInPastCycle(request.getPayload().getTxId()));
         activeRequests.setPredicate(compensationRequest -> {
             return daoPeriodService.isTxInCurrentCycle(compensationRequest.getPayload().getTxId()) ||
-                    (bsqBlockChainReadModel.getTxMap().get(compensationRequest.getPayload().getTxId()) == null &&
+                    (readableBsqBlockChain.getTxMap().get(compensationRequest.getPayload().getTxId()) == null &&
                             isMine(compensationRequest));
         });
     }

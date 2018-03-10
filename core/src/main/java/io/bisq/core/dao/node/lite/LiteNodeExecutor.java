@@ -33,15 +33,15 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Processes tasks in custom threads. Results are mapped back to user thread so client don't need to deal with threading.
+ * Processes tasks in custom thread. Results are mapped back to user thread so client don't need to deal with threading.
+ * We use a SingleThreadExecutor to guarantee that the parser is only running from one thread at a time to avoid
+ * risks with concurrent write to the BsqBlockChain.
  */
 @Slf4j
 public class LiteNodeExecutor {
 
     private final LiteNodeParser liteNodeParser;
-
-    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
-    private final ListeningExecutorService parseBlockExecutor = Utilities.getListeningExecutorService("ParseBlock", 1, 1, 60);
+    private final ListeningExecutorService executor = Utilities.getListeningSingleThreadExecutor("LiteNodeExecutor");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ public class LiteNodeExecutor {
                      Consumer<BsqBlock> newBlockHandler,
                      ResultHandler resultHandler,
                      Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
+        ListenableFuture<Void> future = executor.submit(() -> {
             long startTs = System.currentTimeMillis();
             liteNodeParser.parseBsqBlocks(bsqBlockList,
                     newBsqBlock -> UserThread.execute(() -> newBlockHandler.accept(newBsqBlock)));
@@ -87,7 +87,7 @@ public class LiteNodeExecutor {
     void parseBlock(BsqBlock bsqBlock,
                     ResultHandler resultHandler,
                     Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = parseBlockExecutor.submit(() -> {
+        ListenableFuture<Void> future = executor.submit(() -> {
             long startTs = System.currentTimeMillis();
             liteNodeParser.parseBsqBlock(bsqBlock);
             log.info("parseBlocks took {} ms", System.currentTimeMillis() - startTs);

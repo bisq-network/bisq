@@ -256,7 +256,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
                     if (isConfirmed) {
                         // We lookup if we have a BSQ tx matching the parent tx
                         // We cannot make that findTx call outside of the loop as the parent tx can change at each iteration
-                        Optional<Tx> txOptional = bsqBlockChain.findTx(parentTransaction.getHash().toString());
+                        Optional<Tx> txOptional = bsqBlockChain.getOptionalTx(parentTransaction.getHash().toString());
                         if (txOptional.isPresent()) {
                             // BSQ tx and BitcoinJ tx have same outputs (mirrored data structure)
                             TxOutput txOutput = txOptional.get().getOutputs().get(connectedOutput.getIndex());
@@ -288,7 +288,7 @@ public class BsqWalletService extends WalletService implements BsqBlockChainList
         Coin result = Coin.ZERO;
         final String txId = transaction.getHashAsString();
         // We check if we have a matching BSQ tx. We do that call here to avoid repeated calls in the loop.
-        Optional<Tx> txOptional = bsqBlockChain.findTx(txId);
+        Optional<Tx> txOptional = bsqBlockChain.getOptionalTx(txId);
         // We check all the outputs of our tx
         for (int i = 0; i < transaction.getOutputs().size(); i++) {
             TransactionOutput output = transaction.getOutputs().get(i);

@@ -18,7 +18,7 @@
 package io.bisq.core.dao.node.consensus;
 
 import io.bisq.common.app.Version;
-import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -32,19 +32,19 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Verifies if OP_RETURN data matches rules for a compensation request tx and applies state change.
  */
 public class CompensationRequestController {
-    private final BsqBlockChainReadModel bsqBlockChainReadModel;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
 
     @Inject
-    public CompensationRequestController(BsqBlockChainReadModel bsqBlockChainReadModel) {
-        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
+    public CompensationRequestController(ReadableBsqBlockChain readableBsqBlockChain) {
+        this.readableBsqBlockChain = readableBsqBlockChain;
     }
 
     public boolean verify(byte[] opReturnData, long bsqFee, int blockHeight, TxOutputsController.MutableState mutableState) {
         return mutableState.getCompRequestIssuanceOutputCandidate() != null &&
                 opReturnData.length == 22 &&
                 Version.COMPENSATION_REQUEST_VERSION == opReturnData[1] &&
-                bsqFee == bsqBlockChainReadModel.getCreateCompensationRequestFee(blockHeight) &&
-                bsqBlockChainReadModel.isCompensationRequestPeriodValid(blockHeight);
+                bsqFee == readableBsqBlockChain.getCreateCompensationRequestFee(blockHeight) &&
+                readableBsqBlockChain.isCompensationRequestPeriodValid(blockHeight);
     }
 
     public void applyStateChange(Tx tx, TxOutput opReturnTxOutput, TxOutputsController.MutableState mutableState) {

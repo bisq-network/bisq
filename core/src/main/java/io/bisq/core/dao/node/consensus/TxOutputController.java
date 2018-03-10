@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.node.consensus;
 
-import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxOutputType;
@@ -34,12 +34,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TxOutputController {
-    private final BsqBlockChainWriteModel bsqBlockChainWriteModel;
+    private final WritableBsqBlockChain writableBsqBlockChain;
     private final OpReturnController opReturnController;
 
     @Inject
-    public TxOutputController(BsqBlockChainWriteModel bsqBlockChainWriteModel, OpReturnController opReturnController) {
-        this.bsqBlockChainWriteModel = bsqBlockChainWriteModel;
+    public TxOutputController(WritableBsqBlockChain writableBsqBlockChain, OpReturnController opReturnController) {
+        this.writableBsqBlockChain = writableBsqBlockChain;
         this.opReturnController = opReturnController;
     }
 
@@ -99,7 +99,7 @@ public class TxOutputController {
         txOutput.setVerified(true);
         txOutput.setUnspent(true);
         txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
-        bsqBlockChainWriteModel.addUnspentTxOutput(txOutput);
+        writableBsqBlockChain.addUnspentTxOutput(txOutput);
     }
 
     private void applyStateChangeForBtcOutput(TxOutput txOutput) {

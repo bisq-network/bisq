@@ -28,7 +28,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import io.bisq.core.dao.blockchain.vo.TxType;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class JsonBlockChainExporter {
-    private final BsqBlockChainReadModel bsqBlockChainReadModel;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final boolean dumpBlockchainData;
 
     private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
@@ -54,10 +54,10 @@ public class JsonBlockChainExporter {
     private JsonFileManager txFileManager, txOutputFileManager, bsqBlockChainFileManager;
 
     @Inject
-    public JsonBlockChainExporter(BsqBlockChainReadModel bsqBlockChainReadModel,
+    public JsonBlockChainExporter(ReadableBsqBlockChain readableBsqBlockChain,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.bsqBlockChainReadModel = bsqBlockChainReadModel;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.dumpBlockchainData = dumpBlockchainData;
 
         init(storageDir, dumpBlockchainData);
@@ -105,7 +105,7 @@ public class JsonBlockChainExporter {
     public void maybeExport() {
         if (dumpBlockchainData) {
             ListenableFuture<Void> future = executor.submit(() -> {
-                final BsqBlockChain bsqBlockChainClone = bsqBlockChainReadModel.getClone();
+                final BsqBlockChain bsqBlockChainClone = readableBsqBlockChain.getClone();
                 for (Tx tx : bsqBlockChainClone.getTxMap().values()) {
                     String txId = tx.getId();
                     JsonTxType txType = tx.getTxType() != TxType.UNDEFINED_TX_TYPE ? JsonTxType.valueOf(tx.getTxType().name()) : null;

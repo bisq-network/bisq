@@ -21,9 +21,9 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.BsqBlockChainReadModel;
-import io.bisq.core.dao.blockchain.BsqBlockChainWriteModel;
+import io.bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import io.bisq.core.dao.blockchain.SnapshotManager;
+import io.bisq.core.dao.blockchain.WritableBsqBlockChain;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.core.dao.node.BsqNode;
@@ -58,15 +58,15 @@ public class LiteNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public LiteNode(BsqBlockChainWriteModel bsqBlockChainWriteModel,
-                    BsqBlockChainReadModel bsqBlockChainReadModel,
+    public LiteNode(WritableBsqBlockChain writableBsqBlockChain,
+                    ReadableBsqBlockChain readableBsqBlockChain,
                     SnapshotManager snapshotManager,
                     P2PService p2PService,
                     LiteNodeExecutor bsqLiteNodeExecutor,
                     FeeService feeService,
                     LiteNodeNetworkManager liteNodeNetworkManager) {
-        super(bsqBlockChainWriteModel,
-                bsqBlockChainReadModel,
+        super(writableBsqBlockChain,
+                readableBsqBlockChain,
                 snapshotManager,
                 p2PService,
                 feeService);
@@ -150,7 +150,7 @@ public class LiteNode extends BsqNode {
         // We reset all mutable data in case the provider would not have done it.
         bsqBlock.reset();
         log.info("onNewBlockReceived: bsqBlock={}", bsqBlock.getHeight());
-        if (!bsqBlockChainReadModel.containsBlock(bsqBlock)) {
+        if (!readableBsqBlockChain.containsBsqBlock(bsqBlock)) {
             bsqLiteNodeExecutor.parseBlock(bsqBlock,
                     this::notifyListenersOnNewBlock,
                     getErrorHandler());
