@@ -22,7 +22,7 @@ cp "$target_dir/../29CDFD3B.asc" "$target_dir/"
 cp "$target_dir/../signingkey.asc" "$target_dir/"
 
 mac="Bisq-$version.dmg"
-cp "$src_dir/gui/deploy/$mac" "$target_dir/"
+cp "$src_dir/deploy/$mac" "$target_dir/"
 
 deb32="Bisq-32bit-$version.deb"
 cp "/Users/dev/vm_shared_ubuntu14_32bit/$deb32" "$target_dir/"

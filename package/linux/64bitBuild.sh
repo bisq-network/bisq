@@ -1,7 +1,7 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 cd ../../
-mkdir -p gui/deploy
+mkdir -p deploy
 
 set -e
 
@@ -24,7 +24,7 @@ $JAVA_HOME/bin/javapackager \
     -name Bisq \
     -title Bisq \
     -vendor Bisq \
-    -outdir gui/deploy \
+    -outdir deploy \
     -srcfiles "$dir/Bisq-$version.jar" \
     -srcfiles "$dir/bcpg-jdk15on.jar" \
     -srcfiles "$dir/bcprov-jdk15on.jar" \
@@ -42,11 +42,11 @@ $JAVA_HOME/bin/javapackager \
 
 
 # uncomment because the build VM does not support alien
-#sudo alien -r -c -k gui/deploy/bundles/bisq-$version.deb
+#sudo alien -r -c -k deploy/bundles/bisq-$version.deb
 
-cp "gui/deploy/bundles/bisq-$version.deb" "/home/mk/Desktop/Bisq-64bit-$version.deb"
-mv "gui/deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
+cp "deploy/bundles/bisq-$version.deb" "/home/mk/Desktop/Bisq-64bit-$version.deb"
+mv "deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
 #mv "bisq-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.rpm"
-rm -r gui/deploy/
+rm -r deploy/
 
 cd package/linux

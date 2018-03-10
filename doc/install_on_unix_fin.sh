@@ -18,6 +18,6 @@ mkdir .local
 mkdir .local/share
 
 echo "Start bisq"
-java -jar ~/bisq/gui/target/shaded.jar
+java -jar ~/bisq/target/shaded.jar
 
 
