@@ -266,6 +266,7 @@ public class TradeStatisticsManager {
         // v0.7.0
         newlyAdded.add("ALC");
         newlyAdded.add("DIN");
+        newlyAdded.add("NAH");
 
         coinsWithValidator.addAll(newlyAdded);
 

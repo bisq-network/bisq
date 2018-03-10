@@ -351,18 +351,6 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-				case "NAH":
-                    if (input.matches("^[S][a-zA-Z0-9]{26,34}$")) {
-                        //noinspection ConstantConditions
-                        try {
-                            Address.fromBase58(StrayaParams.get(), input);
-                            return new ValidationResult(true);
-                        } catch (AddressFormatException e) {
-                            return new ValidationResult(false, getErrorMessage(e));
-                        }
-                    } else {
-                        return regexTestFailed;
-                    }
                 case "CRED":
                     if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
@@ -493,6 +481,18 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     else
                         return new ValidationResult(true);
+                case "NAH":
+                    if (input.matches("^[S][a-zA-Z0-9]{26,34}$")) {
+                        //noinspection ConstantConditions
+                        try {
+                            Address.fromBase58(StrayaParams.get(), input);
+                            return new ValidationResult(true);
+                        } catch (AddressFormatException e) {
+                            return new ValidationResult(false, getErrorMessage(e));
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
 
                     // Add new coins at the end...
                 default:

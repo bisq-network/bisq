@@ -772,7 +772,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("").isValid);
     }
 
-	@Test
+    @Test
     public void testStraya() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
         validator.setCurrencyCode("NAH");
