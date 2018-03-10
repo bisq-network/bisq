@@ -27,4 +27,3 @@ build
 desktop.ini
 */target/*
 *.class
-/gui/deploy/*

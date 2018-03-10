@@ -105,10 +105,10 @@ Now we have all prepared to build the correct bisq jar.
     $ cd exchange
     $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
-When the build completes, you will find an executable jar: `gui/target/shaded.jar` and a ./lib directory.
+When the build completes, you will find an executable jar: `target/shaded.jar` and a ./lib directory.
 To run it use:
 
-    $ java -jar gui/target/shaded.jar
+    $ java -jar target/shaded.jar
 
 Build binaries
 -----------------
@@ -131,11 +131,11 @@ and how to use [regtest](https://github.com/bisq-network/exchange/wiki/4.2.1.-Ho
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
-    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
+    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
+    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-    $ java -jar gui/target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Running local seed node with Tor and RegTest
