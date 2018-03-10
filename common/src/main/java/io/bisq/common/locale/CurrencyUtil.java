@@ -108,7 +108,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DCT", "DECENT"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ONION", "DeepOnion"));
-        result.add(new CryptoCurrency("DIN", "Dinero"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("DMC", "DynamicCoin"));
         result.add(new CryptoCurrency("ELLA", "Ellaism"));
@@ -173,6 +172,7 @@ public class CurrencyUtil {
 
         // Added 0.7.0
         result.add(new CryptoCurrency("ALC", "Angelcoin"));
+        result.add(new CryptoCurrency("DIN", "Dinero"));
 
         result.sort(TradeCurrency::compareTo);
 
