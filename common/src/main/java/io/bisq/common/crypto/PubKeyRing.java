@@ -19,9 +19,9 @@ package io.bisq.common.crypto;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
+import io.bisq.common.consensus.UsedForTradeContractJson;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.Utilities;
-import io.bisq.consensus.UsedForTradeContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

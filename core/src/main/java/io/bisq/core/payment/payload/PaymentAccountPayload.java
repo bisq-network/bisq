@@ -17,11 +17,11 @@
 
 package io.bisq.core.payment.payload;
 
+import io.bisq.common.consensus.UsedForTradeContractJson;
 import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.Utilities;
-import io.bisq.consensus.UsedForTradeContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
