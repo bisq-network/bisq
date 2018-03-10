@@ -9,7 +9,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Inject
     public PeerExchangeManager(NetworkNode networkNode,
-                               SeedNodesRepository seedNodesRepository,
+                               SeedNodeRepository seedNodeRepository,
                                PeerManager peerManager) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
@@ -49,7 +49,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         this.networkNode.addConnectionListener(this);
         this.peerManager.addListener(this);
 
-        this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
+        this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
     }
 
     public void shutDown() {

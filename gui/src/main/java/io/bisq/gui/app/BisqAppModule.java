@@ -33,7 +33,8 @@ import io.bisq.core.arbitration.ArbitratorModule;
 import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
-import io.bisq.core.network.CoreSeedNodesRepository;
+import io.bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
+import io.bisq.core.network.p2p.seed.SeedNodeAddressLookup;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.network.CoreNetworkProtoResolver;
 import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -46,7 +47,7 @@ import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
 import io.bisq.network.p2p.network.BridgeAddressProvider;
-import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.seed.SeedNodeRepository;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
@@ -76,7 +77,8 @@ public class BisqAppModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
-        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
+        bind(SeedNodeAddressLookup.class).in(Singleton.class);
+        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
