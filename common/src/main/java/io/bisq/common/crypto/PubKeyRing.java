@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.Utilities;
-import io.bisq.consensus.RestrictedByContractJson;
+import io.bisq.consensus.UsedForTradeContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,7 +38,7 @@ import java.security.PublicKey;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class PubKeyRing implements NetworkPayload, RestrictedByContractJson {
+public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJson {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
     @Nullable

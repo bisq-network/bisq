@@ -4,7 +4,7 @@ import io.bisq.common.crypto.Hash;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.consensus.RestrictedByContractJson;
+import io.bisq.consensus.UsedForTradeContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class NodeAddress implements PersistablePayload, NetworkPayload, RestrictedByContractJson {
+public final class NodeAddress implements PersistablePayload, NetworkPayload, UsedForTradeContractJson {
     private final String hostName;
     private final int port;
 

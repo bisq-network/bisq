@@ -21,7 +21,7 @@ import io.bisq.common.crypto.CryptoUtils;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.Utilities;
-import io.bisq.consensus.RestrictedByContractJson;
+import io.bisq.consensus.UsedForTradeContractJson;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @ToString
 @Slf4j
-public abstract class PaymentAccountPayload implements NetworkPayload, RestrictedByContractJson {
+public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTradeContractJson {
 
     // Keys for excludeFromJsonDataMap
     public static final String SALT = "salt";
