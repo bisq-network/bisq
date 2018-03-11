@@ -738,4 +738,18 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("DG1KpSsSXd3uitgwHaA1i6T1Bj1hWLONGER").isValid);
         assertFalse(validator.validate("HG1KpSsSXd3uitgwHaA1i6T1Bj1hWEwAxB").isValid);
     }
+
+    @Test
+    public void testRTO() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("RTO");
+
+        assertTrue(validator.validate("AHT1tiauD1GKvLnSL2RVuug1arn3cvFYw7PX5cUmCkM9MHuBn8yrGoHGHXP8ZV9FUR5Y5ntvhanwCMp8FK5bmLrqKxq7BRj").isValid);
+        assertTrue(validator.validate("AKQqctWaaX3gdtQ54kUZAFhGimquK83i2VEKPituFyZiJnwB5RqRrvtSK24yN8AizhhDvHX8CvkJkRrZtUAYScgRJsDE1jH").isValid);
+
+        assertFalse(validator.validate("AHT1tiauD1GKvLnSL2RVuug1arn3cvFYw7PX5cUmCkM9MHuBn8yrGoHGHXP8ZV9FUR5Y5ntvhanwCMp8FK5bmLrqKxq7BR").isValid);
+        assertFalse(validator.validate("BKQqctWaaX3gdtQ54kUZAFhGimquK83i2VEKPituFyZiJnwB5RqRrvtSK24yN8AizhhDvHX8CvkJkRrZtUAYScgRJsDE1jH").isValid);
+        assertFalse(validator.validate("AHT1tiauD1GKvLnSL2RVuug1arn3cvFYw7PX5cUmCkM9MHuBn8yrGoHGHXP8ZV9FUR5Y5ntvhanwCMp8FK5bmLrqKxq7BRjy").isValid);
+        assertFalse(validator.validate("").isValid);
+    }
 }
