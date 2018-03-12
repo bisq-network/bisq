@@ -49,7 +49,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.main.offer.OfferDataModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

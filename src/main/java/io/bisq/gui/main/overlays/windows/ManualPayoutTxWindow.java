@@ -27,7 +27,7 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PService;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import org.bitcoinj.core.AddressFormatException;

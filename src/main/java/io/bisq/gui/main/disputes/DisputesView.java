@@ -30,7 +30,7 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;

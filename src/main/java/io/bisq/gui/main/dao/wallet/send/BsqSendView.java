@@ -40,7 +40,7 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BsqAddressValidator;
 import io.bisq.gui.util.validation.BsqValidator;
-import io.bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PService;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;

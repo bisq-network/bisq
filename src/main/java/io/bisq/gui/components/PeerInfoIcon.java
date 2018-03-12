@@ -8,7 +8,7 @@ import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.NodeAddress;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;

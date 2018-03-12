@@ -29,7 +29,7 @@ import io.bisq.gui.main.overlays.windows.ContractWindow;
 import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PService;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;

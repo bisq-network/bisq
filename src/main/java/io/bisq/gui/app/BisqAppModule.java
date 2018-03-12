@@ -44,10 +44,10 @@ import io.bisq.core.user.User;
 import io.bisq.gui.GuiModule;
 import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
-import io.bisq.network.crypto.EncryptionServiceModule;
-import io.bisq.network.p2p.P2PModule;
-import io.bisq.network.p2p.network.BridgeAddressProvider;
-import io.bisq.network.p2p.seed.SeedNodeRepository;
+import bisq.network.crypto.EncryptionServiceModule;
+import bisq.network.p2p.P2PModule;
+import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.seed.SeedNodeRepository;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
