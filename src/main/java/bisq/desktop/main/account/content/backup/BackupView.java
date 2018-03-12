@@ -17,35 +17,44 @@
 
 package bisq.desktop.main.account.content.backup;
 
-import bisq.common.locale.Res;
-import bisq.common.storage.FileUtil;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.user.Preferences;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
+
+import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.user.Preferences;
+
+import bisq.common.locale.Res;
+import bisq.common.storage.FileUtil;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
+
+import javax.inject.Inject;
+
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
+
+import javax.annotation.Nullable;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {

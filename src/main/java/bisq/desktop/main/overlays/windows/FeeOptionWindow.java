@@ -17,9 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple3;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
@@ -27,20 +24,35 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.HPos;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple3;
+
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import javafx.geometry.HPos;
+
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static bisq.desktop.util.FormBuilder.*;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addLabelRadioButtonRadioButton;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 @Slf4j
 public class FeeOptionWindow extends Overlay<FeeOptionWindow> {

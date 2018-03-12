@@ -17,10 +17,17 @@
 
 package bisq.desktop.main.funds.withdrawal;
 
-import com.google.common.util.concurrent.FutureCallback;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipCheckBox;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.validation.BtcAddressValidator;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.InsufficientFundsException;
@@ -35,41 +42,64 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.CoinUtil;
-import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipCheckBox;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.BtcAddressValidator;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import org.apache.commons.lang3.StringUtils;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
-import org.jetbrains.annotations.NotNull;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
-import java.util.*;
+
+import com.google.common.util.concurrent.FutureCallback;
+
+import org.apache.commons.lang3.StringUtils;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.fxml.FXML;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
+import org.spongycastle.crypto.params.KeyParameter;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.NotNull;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

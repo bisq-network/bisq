@@ -17,20 +17,26 @@
 
 package bisq.desktop.components;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.user.Preferences;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.GUIUtil;
+
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.TransactionConfidence;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
-import org.bitcoinj.core.TransactionConfidence;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

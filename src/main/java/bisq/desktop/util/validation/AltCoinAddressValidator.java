@@ -17,28 +17,60 @@
 
 package bisq.desktop.util.validation;
 
-
-import bisq.common.locale.Res;
-import bisq.core.app.BisqEnvironment;
-import bisq.desktop.util.validation.altcoins.*;
-import bisq.desktop.util.validation.params.*;
+import bisq.desktop.util.validation.altcoins.ByteballAddressValidator;
+import bisq.desktop.util.validation.altcoins.NxtReedSolomonValidator;
+import bisq.desktop.util.validation.altcoins.OctocoinAddressValidator;
+import bisq.desktop.util.validation.altcoins.PNCAddressValidator;
+import bisq.desktop.util.validation.altcoins.WMCCAddressValidator;
+import bisq.desktop.util.validation.altcoins.XCNAddressValidator;
+import bisq.desktop.util.validation.altcoins.YTNAddressValidator;
+import bisq.desktop.util.validation.params.ACHParams;
+import bisq.desktop.util.validation.params.AlcParams;
+import bisq.desktop.util.validation.params.CageParams;
+import bisq.desktop.util.validation.params.CreaParams;
+import bisq.desktop.util.validation.params.IOPParams;
+import bisq.desktop.util.validation.params.ODNParams;
+import bisq.desktop.util.validation.params.OctocoinParams;
+import bisq.desktop.util.validation.params.OnionParams;
+import bisq.desktop.util.validation.params.PARTParams;
+import bisq.desktop.util.validation.params.PNCParams;
+import bisq.desktop.util.validation.params.PivxParams;
+import bisq.desktop.util.validation.params.SpeedCashParams;
+import bisq.desktop.util.validation.params.StrayaParams;
+import bisq.desktop.util.validation.params.TerracoinParams;
+import bisq.desktop.util.validation.params.WACoinsParams;
+import bisq.desktop.util.validation.params.WMCCParams;
+import bisq.desktop.util.validation.params.XspecParams;
 import bisq.desktop.util.validation.params.btc.BTGParams;
 import bisq.desktop.util.validation.params.btc.BtcMainNetParamsForValidation;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.core.app.BisqEnvironment;
+
+import bisq.common.locale.Res;
+
+import org.libdohj.params.DashMainNetParams;
+import org.libdohj.params.DashRegTestParams;
+import org.libdohj.params.DashTestNet3Params;
+import org.libdohj.params.DogecoinMainNetParams;
+import org.libdohj.params.LitecoinMainNetParams;
+import org.libdohj.params.LitecoinRegTestParams;
+import org.libdohj.params.LitecoinTestNet3Params;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.jetbrains.annotations.NotNull;
-import org.libdohj.params.*;
 
 @Slf4j
 public final class AltCoinAddressValidator extends InputValidator {
 
     private String currencyCode;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods

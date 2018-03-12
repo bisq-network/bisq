@@ -26,14 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
-import com.google.inject.Inject;
-import bisq.common.app.Log;
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.PubKeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.FaultHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.Res;
+
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeAlreadyOpenException;
 import bisq.core.arbitration.DisputeManager;
@@ -47,32 +40,39 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-import bisq.desktop.Navigation;
-import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.DisputesView;
-import bisq.desktop.main.overlays.notifications.NotificationCenter;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
-import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.util.GUIUtil;
+
 import bisq.network.p2p.P2PService;
+
+import bisq.common.app.Log;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.FaultHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+
+import com.google.inject.Inject;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+
 import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -98,7 +98,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private boolean activated;
     private ChangeListener<Trade.State> tradeStateChangeListener;
     private Trade selectedTrade;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -146,7 +145,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         notificationCenter.setSelectedTradeId(null);
         activated = false;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -207,7 +205,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onMoveToFailedTrades() {
         tradeManager.addTradeToFailedTrades(getTrade());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

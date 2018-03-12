@@ -17,15 +17,19 @@
 
 package bisq.desktop.main.portfolio.closedtrades;
 
-import com.google.inject.Inject;
-import bisq.common.locale.Res;
+import bisq.desktop.common.model.ActivatableWithDataModel;
+import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-import bisq.desktop.common.model.ActivatableWithDataModel;
-import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.BSFormatter;
+
+import bisq.common.locale.Res;
+
+import com.google.inject.Inject;
+
 import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;

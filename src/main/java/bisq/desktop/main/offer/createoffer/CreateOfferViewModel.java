@@ -17,25 +17,6 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.common.util.MathUtils;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.provider.price.MarketPrice;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
@@ -48,15 +29,54 @@ import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.*;
+import bisq.desktop.util.validation.AltcoinValidator;
+import bisq.desktop.util.validation.BsqValidator;
+import bisq.desktop.util.validation.BtcValidator;
+import bisq.desktop.util.validation.FiatPriceValidator;
+import bisq.desktop.util.validation.FiatVolumeValidator;
+import bisq.desktop.util.validation.InputValidator;
+import bisq.desktop.util.validation.MonetaryValidator;
+import bisq.desktop.util.validation.SecurityDepositValidator;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+import bisq.common.util.MathUtils;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+
 import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -149,7 +169,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
     private ChangeListener<Number> currenciesUpdateListener;
     private boolean syncMinAmountWithAmount = true;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -788,7 +807,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         ignoreSecurityDepositStringListener = false;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -921,7 +939,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     void showNotReadyForTxBroadcastPopups() {
         GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

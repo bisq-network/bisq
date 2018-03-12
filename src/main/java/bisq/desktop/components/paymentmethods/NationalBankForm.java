@@ -17,11 +17,13 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.validation.InputValidator;
+
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.validation.InputValidator;
+
 import javafx.scene.layout.GridPane;
 
 public class NationalBankForm extends BankForm {

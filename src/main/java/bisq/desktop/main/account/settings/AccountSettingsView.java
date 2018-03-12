@@ -17,12 +17,13 @@
 
 package bisq.desktop.main.account.settings;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.*;
-import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
+import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -33,10 +34,16 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.util.Colors;
-import javafx.beans.value.ChangeListener;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
@@ -44,7 +51,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import javafx.beans.value.ChangeListener;
 
 @FxmlView
 public class AccountSettingsView extends ActivatableViewAndModel {

@@ -17,18 +17,22 @@
 
 package bisq.desktop.util;
 
-import bisq.common.app.DevEnv;
-import bisq.common.util.MathUtils;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.provider.price.MarketPrice;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.app.DevEnv;
+import bisq.common.util.MathUtils;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
+
 import java.text.DecimalFormat;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BsqFormatter extends BSFormatter {

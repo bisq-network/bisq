@@ -18,21 +18,25 @@
 package bisq.desktop.components;
 
 import bisq.desktop.main.overlays.notifications.Notification;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
-import bisq.desktop.main.overlays.notifications.Notification;
-import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+import org.bitcoinj.core.Coin;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
-import org.bitcoinj.core.Coin;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class BsqAddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();

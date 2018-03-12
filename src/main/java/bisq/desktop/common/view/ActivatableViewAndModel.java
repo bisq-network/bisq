@@ -18,6 +18,7 @@
 package bisq.desktop.common.view;
 
 import bisq.desktop.common.model.Activatable;
+
 import javafx.scene.Node;
 
 import static com.google.common.base.Preconditions.checkNotNull;

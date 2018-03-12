@@ -17,9 +17,11 @@
 
 package bisq.desktop.common.view.guice;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Injector;
 import bisq.desktop.common.view.ViewFactory;
+
+import com.google.inject.Injector;
+
+import com.google.common.base.Preconditions;
 
 public class InjectorViewFactory implements ViewFactory {
 

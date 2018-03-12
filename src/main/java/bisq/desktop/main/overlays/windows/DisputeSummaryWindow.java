@@ -17,9 +17,15 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
+import bisq.desktop.components.AutoTooltipCheckBox;
+import bisq.desktop.components.AutoTooltipRadioButton;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.Layout;
+import bisq.desktop.util.Transitions;
+
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.DisputeResult;
@@ -29,34 +35,42 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
-import bisq.desktop.components.AutoTooltipCheckBox;
-import bisq.desktop.components.AutoTooltipRadioButton;
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.Layout;
-import bisq.desktop.util.Transitions;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.*;
 

@@ -17,19 +17,23 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import bisq.common.app.Log;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.trade.TradeManager;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.app.Log;
 
 import javax.inject.Inject;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 

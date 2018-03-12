@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.common.base.Joiner;
-import bisq.common.crypto.KeyRing;
-import bisq.common.locale.BankUtil;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.util.Tuple3;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.User;
 import bisq.desktop.Navigation;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
@@ -39,19 +27,39 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
-import javafx.geometry.Insets;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.user.User;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.util.Tuple3;
+
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
+import com.google.common.base.Joiner;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.*;
 

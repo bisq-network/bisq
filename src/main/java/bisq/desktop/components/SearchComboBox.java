@@ -18,10 +18,12 @@
 package bisq.desktop.components;
 
 import bisq.common.UserThread;
+
+import javafx.scene.control.ComboBox;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.control.ComboBox;
 
 public class SearchComboBox<T> extends ComboBox<T> {
     @SuppressWarnings("CanBeFinal")

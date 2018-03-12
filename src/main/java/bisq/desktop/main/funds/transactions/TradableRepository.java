@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import com.google.common.collect.ImmutableSet;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradeManager;
@@ -25,6 +24,9 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 
 import javax.inject.Inject;
+
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Set;
 
 public class TradableRepository {

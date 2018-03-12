@@ -17,41 +17,56 @@
 
 package bisq.desktop.main.market.trades;
 
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.KeyStorage;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.monetary.Price;
+import bisq.desktop.Navigation;
+import bisq.desktop.main.market.trades.charts.CandleData;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.desktop.Navigation;
-import bisq.desktop.main.market.trades.charts.CandleData;
-import bisq.desktop.util.BSFormatter;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.KeyStorage;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.monetary.Price;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.security.Security;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.Security;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.Tested;
+import mockit.integration.junit4.JMockit;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 

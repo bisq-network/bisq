@@ -17,6 +17,10 @@
 
 package bisq.desktop.util.validation;
 
+import bisq.common.locale.Res;
+
+import org.apache.commons.lang3.StringUtils;
+
 /*
  * Interac e-Transfer requires a mail address or Canadian (mobile) phone number
  *
@@ -28,15 +32,10 @@ package bisq.desktop.util.validation;
  * Valid (as of 2017-06-27) NPAs are hardcoded here
  * They are to change in some future (according to the linked document around 2019/2020)
  */
-
-import bisq.common.locale.Res;
-import org.apache.commons.lang3.StringUtils;
-
 public final class InteracETransferValidator extends InputValidator {
 
     private static final String[] NPAS = {"204", "226", "236", "249", "250", "289", "306", "343", "365", "403", "416", "418", "431", "437", "438", "450", "506", "514", "519", "548", "579", "581", "587", "604", "613", "639", "647", "705", "709", "778", "780", "782", "807", "819", "825", "867", "873", "902", "905"};
     private final EmailValidator emailValidator;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -59,7 +58,6 @@ public final class InteracETransferValidator extends InputValidator {
                 return validatePhoneNumber(input);
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods

@@ -17,21 +17,25 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+
+import javafx.geometry.Insets;
+
+import javafx.beans.value.ChangeListener;
 
 public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrationRegistrationWindow> {
     private final boolean useDevPrivilegeKeys;

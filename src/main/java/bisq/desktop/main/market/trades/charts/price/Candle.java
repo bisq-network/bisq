@@ -49,11 +49,14 @@
 package bisq.desktop.main.market.trades.charts.price;
 
 import bisq.desktop.main.market.trades.charts.CandleData;
+
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Line;
+
 import javafx.util.StringConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

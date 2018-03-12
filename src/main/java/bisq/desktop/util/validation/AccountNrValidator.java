@@ -17,9 +17,9 @@
 
 package bisq.desktop.util.validation;
 
-
 import bisq.common.locale.BankUtil;
 import bisq.common.locale.Res;
+
 import org.apache.commons.lang3.StringUtils;
 
 public final class AccountNrValidator extends BankValidator {

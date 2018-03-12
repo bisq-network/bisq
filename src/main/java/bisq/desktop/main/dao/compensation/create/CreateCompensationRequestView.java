@@ -17,10 +17,14 @@
 
 package bisq.desktop.main.dao.compensation.create;
 
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.dao.compensation.CompensationRequestDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
-import com.google.common.util.concurrent.FutureCallback;
-import bisq.common.crypto.KeyRing;
-import bisq.common.locale.Res;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -33,30 +37,35 @@ import bisq.core.dao.request.compensation.CompensationRequestManager;
 import bisq.core.dao.request.compensation.CompensationRequestPayload;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.CoinUtil;
-import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.compensation.CompensationRequestDisplay;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
-import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
+
+import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
+
 import java.security.PublicKey;
+
 import java.util.Date;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class CreateCompensationRequestView extends ActivatableView<GridPane, Void> {

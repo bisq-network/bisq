@@ -19,15 +19,19 @@ package bisq.desktop.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
+
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+
+import javafx.geometry.Insets;
+
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

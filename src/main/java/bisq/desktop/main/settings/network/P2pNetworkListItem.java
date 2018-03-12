@@ -17,17 +17,23 @@
 
 package bisq.desktop.main.settings.network;
 
-import bisq.common.Clock;
-import bisq.common.locale.Res;
 import bisq.desktop.util.BSFormatter;
+
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.network.Statistic;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+import bisq.common.Clock;
+import bisq.common.locale.Res;
+
 import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

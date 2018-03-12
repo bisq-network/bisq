@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.offerbook;
 
 import bisq.core.offer.Offer;
+
 import lombok.Value;
 
 @Value

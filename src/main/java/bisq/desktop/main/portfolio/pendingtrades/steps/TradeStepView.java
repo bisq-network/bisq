@@ -17,14 +17,6 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.Clock;
-import bisq.common.app.Log;
-import bisq.common.locale.Res;
-import bisq.core.arbitration.Dispute;
-import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
@@ -32,24 +24,40 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.core.arbitration.Dispute;
+import bisq.core.trade.Trade;
+import bisq.core.user.Preferences;
+
+import bisq.common.Clock;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+
+import javafx.geometry.Insets;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javafx.beans.value.ChangeListener;
 
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static bisq.desktop.components.paymentmethods.PaymentMethodForm.addOpenTradeDuration;
 import static bisq.desktop.util.FormBuilder.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class TradeStepView extends AnchorPane {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -70,7 +78,6 @@ public abstract class TradeStepView extends AnchorPane {
     private Subscription txIdSubscription;
     private Clock.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -313,7 +320,6 @@ public abstract class TradeStepView extends AnchorPane {
 
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -332,7 +338,6 @@ public abstract class TradeStepView extends AnchorPane {
     protected String getWarningText() {
         return "";
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute

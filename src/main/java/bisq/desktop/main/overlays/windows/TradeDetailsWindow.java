@@ -17,36 +17,44 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.TextFieldWithCopyIcon;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.Layout;
+
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.desktop.components.TextFieldWithCopyIcon;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.Layout;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Utils;
+
+import javax.inject.Inject;
+
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import org.bitcoinj.core.Utils;
+
+import javafx.geometry.Insets;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 import static bisq.desktop.util.FormBuilder.*;
 

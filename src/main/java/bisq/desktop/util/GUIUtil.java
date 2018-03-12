@@ -17,11 +17,22 @@
 
 package bisq.desktop.util;
 
-import com.google.common.base.Charsets;
-import com.googlecode.jcsv.CSVStrategy;
-import com.googlecode.jcsv.writer.CSVEntryConverter;
-import com.googlecode.jcsv.writer.CSVWriter;
-import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
+import bisq.desktop.app.BisqApp;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.main.overlays.popups.Popup;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountList;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+
+import bisq.network.p2p.P2PService;
+
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.locale.CurrencyUtil;
@@ -32,21 +43,26 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountList;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.user.DontShowAgainLookup;
-import bisq.core.user.Preferences;
-import bisq.core.user.User;
-import bisq.desktop.app.BisqApp;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.network.p2p.P2PService;
-import javafx.beans.property.DoubleProperty;
-import javafx.geometry.Orientation;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.wallet.DeterministicSeed;
+
+import com.googlecode.jcsv.CSVStrategy;
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+import com.googlecode.jcsv.writer.CSVWriter;
+import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
+
+import com.google.common.base.Charsets;
+
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollBar;
@@ -54,28 +70,31 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.stage.*;
+
+import javafx.geometry.Orientation;
+
+import javafx.beans.property.DoubleProperty;
+
 import javafx.util.StringConverter;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.uri.BitcoinURI;
-import org.bitcoinj.wallet.DeterministicSeed;
+
+import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.nio.file.Paths;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GUIUtil {

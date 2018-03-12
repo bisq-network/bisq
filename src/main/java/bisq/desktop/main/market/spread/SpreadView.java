@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.market.spread;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -26,20 +24,29 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.ListChangeListener;
-import javafx.collections.transformation.SortedList;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import javafx.util.Callback;
-import org.bitcoinj.core.Coin;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
 
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
@@ -49,7 +56,6 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private SortedList<SpreadItem> sortedList;
     private ListChangeListener<SpreadItem> itemListChangeListener;
     private TableColumn<SpreadItem, SpreadItem> totalAmountColumn, numberOfOffersColumn, numberOfBuyOffersColumn, numberOfSellOffersColumn;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -129,7 +135,6 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfSellOffersColumn.setGraphic(new AutoTooltipLabel((Res.get("market.spread.numberOfSellOffersColumn", numberOfSellOffers))));
         totalAmountColumn.setGraphic(new AutoTooltipLabel(Res.get("market.spread.totalAmountColumn", total)));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Columns

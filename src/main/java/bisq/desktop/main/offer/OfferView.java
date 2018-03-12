@@ -17,14 +17,6 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.common.GlobalSettings;
-import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
@@ -34,11 +26,24 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.user.Preferences;
+
+import bisq.common.GlobalSettings;
+import bisq.common.UserThread;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
 
 import java.util.List;
 import java.util.Optional;

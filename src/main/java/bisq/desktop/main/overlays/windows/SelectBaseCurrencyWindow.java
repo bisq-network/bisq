@@ -17,20 +17,27 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.main.overlays.Overlay;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
+
 import bisq.common.app.DevEnv;
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.desktop.main.overlays.Overlay;
-import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+
+import javafx.geometry.Insets;
+
+import javafx.collections.FXCollections;
+
 import javafx.util.StringConverter;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;

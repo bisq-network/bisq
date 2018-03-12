@@ -17,32 +17,41 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.OKPayAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.OKPayAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.OKPayValidator;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.OKPayAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.OKPayAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
+
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class OKPayForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(OKPayForm.class);

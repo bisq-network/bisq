@@ -17,15 +17,6 @@
 
 package bisq.desktop.main.dao.compensation.active;
 
-import bisq.common.locale.Res;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoPeriodService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
-import bisq.core.dao.request.compensation.CompensationRequest;
-import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.core.provider.fee.FeeService;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
@@ -39,16 +30,32 @@ import bisq.desktop.main.dao.voting.vote.VoteView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoPeriodService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.request.compensation.CompensationRequest;
+import bisq.core.dao.request.compensation.CompensationRequestManager;
+import bisq.core.provider.fee.FeeService;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+
+import javafx.geometry.Insets;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
 import java.util.Arrays;
 import java.util.List;
 

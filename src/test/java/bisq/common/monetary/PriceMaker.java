@@ -17,10 +17,11 @@
 
 package bisq.common.monetary;
 
+import org.bitcoinj.utils.Fiat;
+
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
-import org.bitcoinj.utils.Fiat;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 

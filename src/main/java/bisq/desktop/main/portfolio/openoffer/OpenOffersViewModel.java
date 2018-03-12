@@ -17,17 +17,22 @@
 
 package bisq.desktop.main.portfolio.openoffer;
 
-import com.google.inject.Inject;
+import bisq.desktop.common.model.ActivatableWithDataModel;
+import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.BSFormatter;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
+
+import bisq.network.p2p.P2PService;
+
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.locale.Res;
 import bisq.common.monetary.Price;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OpenOffer;
-import bisq.desktop.common.model.ActivatableWithDataModel;
-import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.BSFormatter;
-import bisq.network.p2p.P2PService;
+
+import com.google.inject.Inject;
+
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {

@@ -17,9 +17,10 @@
 
 package bisq.desktop.components;
 
-import com.sun.javafx.scene.control.skin.LabelSkin;
 import javafx.scene.control.Label;
 import javafx.scene.control.Skin;
+
+import com.sun.javafx.scene.control.skin.LabelSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 

@@ -17,11 +17,6 @@
 
 package bisq.desktop.main.portfolio.openoffer;
 
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.core.offer.OpenOffer;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
@@ -33,16 +28,33 @@ import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import org.jetbrains.annotations.NotNull;
+
+import bisq.core.offer.OpenOffer;
+import bisq.core.user.DontShowAgainLookup;
+
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
 
 import javax.inject.Inject;
+
+import javafx.fxml.FXML;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
+import org.jetbrains.annotations.NotNull;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {

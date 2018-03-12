@@ -17,10 +17,12 @@
 
 package bisq.desktop.app;
 
-import bisq.common.util.Utilities;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
+
+import bisq.common.util.Utilities;
+
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;

@@ -18,10 +18,11 @@
 package bisq.desktop.main.funds.transactions;
 
 import com.google.common.collect.Lists;
-import org.junit.Test;
 
 import java.util.Collection;
 import java.util.function.Supplier;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;

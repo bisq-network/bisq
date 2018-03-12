@@ -22,7 +22,6 @@ import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class OfferMaker {
 

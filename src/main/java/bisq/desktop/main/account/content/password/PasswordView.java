@@ -17,13 +17,6 @@
 
 package bisq.desktop.main.account.content.password;
 
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.crypto.ScryptUtil;
-import bisq.desktop.main.account.settings.AccountSettingsView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -39,13 +32,23 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.PasswordValidator;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
+
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.crypto.ScryptUtil;
+
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+
+import javafx.beans.value.ChangeListener;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

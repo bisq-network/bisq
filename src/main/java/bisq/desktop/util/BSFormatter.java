@@ -17,6 +17,12 @@
 
 package bisq.desktop.util;
 
+import bisq.core.app.BisqEnvironment;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.GlobalSettings;
 import bisq.common.locale.CurrencyUtil;
 import bisq.common.locale.LanguageUtil;
@@ -25,29 +31,32 @@ import bisq.common.monetary.Altcoin;
 import bisq.common.monetary.Price;
 import bisq.common.monetary.Volume;
 import bisq.common.util.MathUtils;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.network.p2p.NodeAddress;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.math.BigDecimal;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+
+import java.math.BigDecimal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.jetbrains.annotations.NotNull;
 
 public class BSFormatter {
     protected static final Logger log = LoggerFactory.getLogger(BSFormatter.class);

@@ -17,15 +17,14 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import com.google.common.base.Joiner;
-import com.google.inject.Inject;
-import bisq.common.GlobalSettings;
-import bisq.common.app.Version;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.*;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
+import bisq.desktop.Navigation;
+import bisq.desktop.common.model.ActivatableViewModel;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.main.settings.preferences.PreferencesView;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
@@ -40,31 +39,55 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.desktop.Navigation;
-import bisq.desktop.common.model.ActivatableViewModel;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.main.settings.preferences.PreferencesView;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.*;
+
+import bisq.common.GlobalSettings;
+import bisq.common.app.Version;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+
+import org.bitcoinj.core.Coin;
+
+import com.google.inject.Inject;
+
+import com.google.common.base.Joiner;
+
+import javafx.scene.control.TableColumn;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.TableColumn;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 
 import java.text.DecimalFormat;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class OfferBookViewModel extends ActivatableViewModel {
@@ -105,7 +128,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -216,7 +238,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +250,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.isTabSelected = isSelected;
         setMarketPriceFeedCurrency();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -279,7 +299,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         openOfferManager.removeOffer(offer, resultHandler, errorMessageHandler);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -468,7 +487,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
         allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks

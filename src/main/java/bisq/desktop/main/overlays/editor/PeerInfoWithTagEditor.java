@@ -17,26 +17,27 @@
 
 package bisq.desktop.main.overlays.editor;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
-import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.offer.Offer;
-import bisq.core.user.Preferences;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.util.FormBuilder;
+
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.offer.Offer;
+import bisq.core.user.Preferences;
+
+import bisq.common.GlobalSettings;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
+
+import javafx.stage.Modality;
+import javafx.stage.Window;
+
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
@@ -44,14 +45,25 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.transform.Rotate;
-import javafx.stage.Modality;
-import javafx.stage.Window;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
+
+import javafx.collections.ObservableList;
+
 import javafx.util.Duration;
+
+import java.util.Map;
+import java.util.function.Consumer;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.function.Consumer;
 
 @Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {

@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.overlays.popups;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PopupManager {
     private static final Logger log = LoggerFactory.getLogger(PopupManager.class);

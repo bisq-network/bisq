@@ -17,23 +17,31 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.main.overlays.Overlay;
+
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
-import bisq.desktop.main.overlays.Overlay;
-import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
+
+import org.bitcoinj.core.Transaction;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
-import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;

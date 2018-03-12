@@ -17,18 +17,21 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.app.DevEnv;
-import bisq.common.crypto.PubKeyRing;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.alert.PrivateNotificationPayload;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+
+import bisq.core.alert.PrivateNotificationPayload;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;
-import javafx.geometry.Insets;
+
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -36,6 +39,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+
+import javafx.geometry.Insets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

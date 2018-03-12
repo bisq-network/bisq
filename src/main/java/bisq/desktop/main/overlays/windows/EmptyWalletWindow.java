@@ -17,13 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.WalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.offer.OpenOfferManager;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
@@ -31,8 +24,24 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
+
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.OpenOfferManager;
+
 import bisq.network.p2p.P2PService;
-import javafx.geometry.Insets;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+
+import javax.inject.Inject;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,17 +49,19 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javafx.geometry.Insets;
+
 import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);

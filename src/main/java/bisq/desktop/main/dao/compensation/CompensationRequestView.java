@@ -17,31 +17,38 @@
 
 package bisq.desktop.main.dao.compensation;
 
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.Layout;
+
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.request.compensation.CompensationRequest;
 import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.Layout;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.GridPane;
+
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
 import javafx.beans.value.ChangeListener;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.GridPane;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-import javax.inject.Inject;
 import java.util.stream.Collectors;
 
 @FxmlView

@@ -17,12 +17,49 @@
 
 package bisq.desktop.app;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import bisq.desktop.Navigation;
+import bisq.desktop.SystemTray;
+import bisq.desktop.common.UITimer;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
+import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.debug.DebugView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.EmptyWalletWindow;
+import bisq.desktop.main.overlays.windows.FilterWindow;
+import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
+import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
+import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
+import bisq.desktop.util.ImageUtil;
+
+import bisq.core.alert.AlertManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.AddressEntryList;
+import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.DaoManager;
+import bisq.core.dao.request.compensation.CompensationRequestManager;
+import bisq.core.dao.vote.VotingManager;
+import bisq.core.filter.FilterManager;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+
+import bisq.network.p2p.P2PService;
+
 import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -37,40 +74,25 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
-import bisq.core.alert.AlertManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.AddressEntryList;
-import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.core.btc.wallet.*;
-import bisq.core.dao.DaoManager;
-import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.core.dao.vote.VotingManager;
-import bisq.core.filter.FilterManager;
-import bisq.core.offer.OpenOfferManager;
-import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.user.Preferences;
-import bisq.core.user.User;
-import bisq.desktop.Navigation;
-import bisq.desktop.SystemTray;
-import bisq.desktop.common.UITimer;
-import bisq.desktop.common.view.CachingViewLoader;
-import bisq.desktop.common.view.View;
-import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.common.view.guice.InjectorViewFactory;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.debug.DebugView;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.*;
-import bisq.desktop.util.ImageUtil;
-import bisq.network.p2p.P2PService;
+
+import org.bitcoinj.store.BlockStoreException;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import org.reactfx.EventStreams;
+
 import javafx.application.Application;
 import javafx.application.Platform;
+
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -79,23 +101,25 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.bitcoinj.store.BlockStoreException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.reactfx.EventStreams;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Paths;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+
+import java.nio.file.Paths;
+
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 import static bisq.desktop.util.Layout.INITIAL_SCENE_WIDTH;

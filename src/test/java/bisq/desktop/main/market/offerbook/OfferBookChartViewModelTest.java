@@ -17,28 +17,34 @@
 
 package bisq.desktop.main.market.offerbook;
 
-import bisq.common.GlobalSettings;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.core.provider.price.PriceFeedService;
+
+import bisq.common.GlobalSettings;
+
 import javafx.beans.property.SimpleIntegerProperty;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static bisq.common.locale.TradeCurrencyMakers.usd;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.useMarketBasedPrice;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;

@@ -17,11 +17,6 @@
 
 package bisq.desktop;
 
-import com.google.inject.Singleton;
-import com.google.inject.name.Names;
-import bisq.common.app.AppModule;
-import bisq.common.locale.Res;
-import bisq.core.app.AppOptionKeys;
 import bisq.desktop.common.fxml.FxmlViewLoader;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewFactory;
@@ -36,8 +31,18 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
-import javafx.stage.Stage;
+
+import bisq.core.app.AppOptionKeys;
+
+import bisq.common.app.AppModule;
+import bisq.common.locale.Res;
+
 import org.springframework.core.env.Environment;
+
+import com.google.inject.Singleton;
+import com.google.inject.name.Names;
+
+import javafx.stage.Stage;
 
 import java.util.ResourceBundle;
 

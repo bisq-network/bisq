@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.market.offerbook;
 
-import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.main.settings.preferences.PreferencesView;
-import com.google.common.math.LongMath;
-import com.google.inject.Inject;
-import bisq.common.GlobalSettings;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Price;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
@@ -40,16 +28,33 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
+
+import com.google.inject.Inject;
+
+import com.google.common.math.LongMath;
+
+import javafx.scene.chart.XYChart;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.chart.XYChart;
 
 import java.util.ArrayList;
 import java.util.Comparator;

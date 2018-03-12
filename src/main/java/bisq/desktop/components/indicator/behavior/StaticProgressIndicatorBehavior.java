@@ -42,8 +42,9 @@
 
 package bisq.desktop.components.indicator.behavior;
 
-import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+
+import com.sun.javafx.scene.control.behavior.BehaviorBase;
 
 import java.util.Collections;
 

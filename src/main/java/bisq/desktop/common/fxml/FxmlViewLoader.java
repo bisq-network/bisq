@@ -17,17 +17,22 @@
 
 package bisq.desktop.common.fxml;
 
+import bisq.desktop.common.ViewfxException;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
-import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.common.ViewfxException;
 import bisq.desktop.common.view.ViewFactory;
-import javafx.fxml.FXMLLoader;
+import bisq.desktop.common.view.ViewLoader;
+
 import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.inject.Inject;
+
+import javafx.fxml.FXMLLoader;
+
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
 
 import static com.google.common.base.Preconditions.checkNotNull;

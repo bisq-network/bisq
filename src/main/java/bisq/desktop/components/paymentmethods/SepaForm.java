@@ -17,13 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.*;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CountryBasedPaymentAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.SepaAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
@@ -32,17 +25,39 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InputValidator;
-import javafx.collections.FXCollections;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.*;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SepaAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.SepaAccountPayload;
+
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
+import org.apache.commons.lang3.StringUtils;
+
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import javafx.collections.FXCollections;
+
 import javafx.util.StringConverter;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;

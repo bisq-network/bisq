@@ -17,16 +17,17 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import com.natpryce.makeiteasy.Instantiator;
-import com.natpryce.makeiteasy.Maker;
-import com.natpryce.makeiteasy.Property;
 import bisq.core.offer.OfferMaker;
 import bisq.core.offer.OfferPayload;
 
+import com.natpryce.makeiteasy.Instantiator;
+import com.natpryce.makeiteasy.Maker;
+import com.natpryce.makeiteasy.Property;
+
+import static bisq.core.offer.OfferMaker.btcUsdOffer;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static bisq.core.offer.OfferMaker.btcUsdOffer;
 
 public class OfferBookListItemMaker {
 

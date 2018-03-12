@@ -20,20 +20,24 @@ package bisq.desktop.util;
 import bisq.common.GlobalSettings;
 import bisq.common.locale.Res;
 import bisq.common.locale.TradeCurrency;
+
 import javafx.util.StringConverter;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
+import org.junit.Before;
+import org.junit.Test;
+
 import static bisq.common.locale.TradeCurrencyMakers.bitcoin;
 import static bisq.common.locale.TradeCurrencyMakers.euro;
 import static bisq.core.user.PreferenceMakers.empty;
-import static bisq.desktop.util.CurrencyListItemMakers.*;
+import static bisq.desktop.util.CurrencyListItemMakers.bitcoinItem;
+import static bisq.desktop.util.CurrencyListItemMakers.euroItem;
+import static bisq.desktop.util.CurrencyListItemMakers.numberOfTrades;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
 
 public class GUIUtilTest {

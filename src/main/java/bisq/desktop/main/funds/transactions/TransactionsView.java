@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import com.googlecode.jcsv.writer.CSVEntryConverter;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple4;
-import bisq.common.util.Utilities;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
@@ -40,19 +28,21 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.OpenOffer;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.Trade;
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.util.Callback;
+
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple4;
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
@@ -61,11 +51,47 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletEventListener;
 
-import javax.annotation.Nullable;
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+
 import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.fxml.FXML;
+
+import javafx.stage.Stage;
+
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.event.EventHandler;
+
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
 import java.text.DateFormat;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {

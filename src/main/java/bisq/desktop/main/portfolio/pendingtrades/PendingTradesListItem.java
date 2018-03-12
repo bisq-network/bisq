@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.core.trade.Trade;
+
 import bisq.common.monetary.Price;
 import bisq.common.monetary.Volume;
-import bisq.core.trade.Trade;
-import javafx.beans.property.ReadOnlyObjectProperty;
+
 import org.bitcoinj.core.Coin;
+
+import javafx.beans.property.ReadOnlyObjectProperty;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.

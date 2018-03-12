@@ -17,17 +17,6 @@
 
 package bisq.desktop.main.account.content.altcoinaccounts;
 
-import bisq.common.UserThread;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountFactory;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -42,8 +31,21 @@ import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AltCoinAddressValidator;
 import bisq.desktop.util.validation.InputValidator;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.VPos;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountFactory;
+import bisq.core.payment.payload.PaymentMethod;
+
+import bisq.common.UserThread;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -51,12 +53,19 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+
+import javafx.geometry.VPos;
+
+import javafx.beans.value.ChangeListener;
+
 import javafx.util.Callback;
 
-import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelListView;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCoinAccountsViewModel> {

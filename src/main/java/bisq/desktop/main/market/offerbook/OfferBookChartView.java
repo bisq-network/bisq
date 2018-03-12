@@ -17,12 +17,6 @@
 
 package bisq.desktop.main.market.offerbook;
 
-import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple4;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
@@ -37,34 +31,58 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+
+import bisq.common.UserThread;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple4;
+
+import javax.inject.Inject;
+
+import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.chart.AreaChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.Collections;
 import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 

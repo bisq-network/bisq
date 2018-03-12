@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.portfolio.closedtrades;
 
-import com.google.inject.name.Named;
-import com.googlecode.jcsv.writer.CSVEntryConverter;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -38,20 +26,50 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.Trade;
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.NodeAddress;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.util.Callback;
+
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+
 import org.bitcoinj.core.Coin;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+
+import com.google.inject.name.Named;
+
 import javax.inject.Inject;
+
+import javafx.fxml.FXML;
+
+import javafx.stage.Stage;
+
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
 import java.util.Comparator;
 
 @FxmlView

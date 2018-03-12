@@ -17,22 +17,27 @@
 
 package bisq.desktop.main.disputes.arbitrator;
 
-import com.google.inject.name.Named;
-import bisq.common.crypto.KeyRing;
-import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.trade.TradeManager;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.trade.TradeManager;
+
 import bisq.network.p2p.P2PService;
-import javafx.stage.Stage;
+
+import bisq.common.crypto.KeyRing;
+
+import com.google.inject.name.Named;
 
 import javax.inject.Inject;
+
+import javafx.stage.Stage;
 
 @FxmlView
 public class ArbitratorDisputeView extends TraderDisputeView {

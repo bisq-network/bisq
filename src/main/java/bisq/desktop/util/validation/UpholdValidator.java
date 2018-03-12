@@ -17,7 +17,6 @@
 
 package bisq.desktop.util.validation;
 
-
 public final class UpholdValidator extends InputValidator {
 
     @Override

@@ -17,8 +17,10 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.Res;
 import bisq.core.app.BisqEnvironment;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 

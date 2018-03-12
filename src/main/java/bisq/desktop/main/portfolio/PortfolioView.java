@@ -17,24 +17,34 @@
 
 package bisq.desktop.main.portfolio;
 
-import bisq.common.locale.Res;
-import bisq.core.trade.Trade;
-import bisq.core.trade.failed.FailedTradesManager;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.failedtrades.FailedTradesView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
+
+import bisq.core.trade.Trade;
+import bisq.core.trade.failed.FailedTradesManager;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
 
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {

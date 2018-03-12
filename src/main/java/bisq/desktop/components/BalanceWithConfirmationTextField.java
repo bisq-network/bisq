@@ -17,12 +17,19 @@
 
 package bisq.desktop.components;
 
-import bisq.core.btc.listeners.AddressConfidenceListener;
-import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.btc.listeners.AddressConfidenceListener;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.wallet.BtcWalletService;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
@@ -30,10 +37,6 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 
 public class BalanceWithConfirmationTextField extends AnchorPane {
 

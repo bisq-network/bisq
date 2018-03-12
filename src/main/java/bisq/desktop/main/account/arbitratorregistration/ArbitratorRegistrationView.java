@@ -18,13 +18,6 @@
 package bisq.desktop.main.account.arbitratorregistration;
 
 
-import com.google.inject.name.Named;
-import bisq.common.UserThread;
-import bisq.common.locale.LanguageUtil;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.Arbitrator;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -34,18 +27,42 @@ import bisq.desktop.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
+
+import bisq.core.app.AppOptionKeys;
+import bisq.core.arbitration.Arbitrator;
+
+import bisq.common.UserThread;
+import bisq.common.locale.LanguageUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
+
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-
-import javax.inject.Inject;
 
 import static bisq.desktop.util.FormBuilder.*;
 

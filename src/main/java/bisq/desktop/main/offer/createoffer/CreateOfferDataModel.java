@@ -17,16 +17,9 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import bisq.common.app.Version;
-import bisq.common.crypto.KeyRing;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.common.util.Utilities;
+import bisq.desktop.main.offer.OfferDataModel;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.AddressEntry;
@@ -41,25 +34,61 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.*;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.BankAccount;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.SepaAccount;
+import bisq.core.payment.SepaInstantAccount;
+import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.desktop.main.offer.OfferDataModel;
-import bisq.desktop.util.BSFormatter;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.SetChangeListener;
+
+import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
-import java.util.*;
+import com.google.inject.Inject;
+
+import com.google.common.collect.Lists;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -112,7 +141,6 @@ class CreateOfferDataModel extends OfferDataModel {
     private boolean marketPriceAvailable;
     private int feeTxSize = 260; // size of typical tx with 1 input
     private int feeTxSizeEstimationRecursionCounter;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -212,7 +240,6 @@ class CreateOfferDataModel extends OfferDataModel {
             bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

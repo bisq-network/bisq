@@ -17,20 +17,19 @@
 
 package bisq.desktop.main;
 
-import com.google.common.net.InetAddresses;
-import com.google.inject.Inject;
-import bisq.common.Clock;
-import bisq.common.GlobalSettings;
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.app.Version;
-import bisq.common.crypto.CryptoException;
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.SealedAndSigned;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
+import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.components.BalanceWithConfirmationTextField;
+import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.overlays.notifications.NotificationCenter;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
+import bisq.desktop.main.overlays.windows.TacWindow;
+import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
+import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
+import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
 import bisq.core.alert.PrivateNotificationManager;
@@ -66,18 +65,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.components.BalanceWithConfirmationTextField;
-import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.main.overlays.notifications.NotificationCenter;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
-import bisq.desktop.main.overlays.windows.TacWindow;
-import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
-import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
+
 import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.BootstrapListener;
@@ -87,32 +75,73 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.SetChangeListener;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.Clock;
+import bisq.common.GlobalSettings;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.SealedAndSigned;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
+
+import com.google.inject.Inject;
+
+import com.google.common.net.InetAddresses;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import javax.annotation.Nullable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
+
+import java.security.Security;
+
 import java.io.IOException;
+
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.security.Security;
-import java.util.*;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class MainViewModel implements ViewModel {

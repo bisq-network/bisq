@@ -17,22 +17,27 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.ChaseQuickPayAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.InputValidator;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.ChaseQuickPayAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

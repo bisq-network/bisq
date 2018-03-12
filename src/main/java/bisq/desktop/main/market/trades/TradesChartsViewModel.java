@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.market.trades;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import bisq.common.GlobalSettings;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Altcoin;
-import bisq.common.util.MathUtils;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.TradeStatistics2;
-import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
@@ -39,27 +27,56 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.Preferences;
+
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Altcoin;
+import bisq.common.util.MathUtils;
+
+import org.bitcoinj.core.Coin;
+
+import com.google.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import javafx.scene.chart.XYChart;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
-import javafx.scene.chart.XYChart;
+
 import javafx.util.Pair;
-import org.bitcoinj.core.Coin;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
 
 class TradesChartsViewModel extends ActivatableViewModel {
-    private static final int TAB_INDEX = 2;
 
+    private static final int TAB_INDEX = 2;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -93,7 +110,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     TickUnit tickUnit = TickUnit.DAY;
     final int maxTicks = 30;
     private int selectedTabIndex;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -155,7 +171,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +212,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         setMarketPriceFeedCurrency();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +227,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
         return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

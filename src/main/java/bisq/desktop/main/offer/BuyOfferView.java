@@ -17,10 +17,11 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.ViewLoader;
+
+import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
 

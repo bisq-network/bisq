@@ -19,13 +19,13 @@ package bisq.desktop.main.dao.voting.history;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import javafx.scene.layout.GridPane;
 
 import javax.inject.Inject;
 
+import javafx.scene.layout.GridPane;
+
 @FxmlView
 public class VotingHistoryView extends ActivatableView<GridPane, Void> {
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle

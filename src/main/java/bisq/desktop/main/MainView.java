@@ -17,17 +17,12 @@
 
 package bisq.desktop.main;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.app.Version;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.exceptions.BisqException;
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.InitializableView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipToggleButton;
@@ -45,23 +40,57 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.exceptions.BisqException;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
+
+import javax.inject.Inject;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import javafx.beans.value.ChangeListener;
+
 import java.util.List;
 
-import static javafx.scene.layout.AnchorPane.*;
+import lombok.extern.slf4j.Slf4j;
+
+import static javafx.scene.layout.AnchorPane.setBottomAnchor;
+import static javafx.scene.layout.AnchorPane.setLeftAnchor;
+import static javafx.scene.layout.AnchorPane.setRightAnchor;
+import static javafx.scene.layout.AnchorPane.setTopAnchor;
 
 @FxmlView
 @Slf4j

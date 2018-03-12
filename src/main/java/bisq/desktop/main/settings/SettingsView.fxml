@@ -17,8 +17,10 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
 <TabPane fx:id="root" fx:controller="bisq.desktop.main.settings.SettingsView"
          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"

@@ -18,6 +18,7 @@
 package bisq.desktop.main.market.offerbook;
 
 import bisq.core.offer.Offer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

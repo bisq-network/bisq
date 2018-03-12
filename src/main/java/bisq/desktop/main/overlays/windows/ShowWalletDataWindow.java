@@ -17,16 +17,20 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.main.overlays.Overlay;
+
+import bisq.core.btc.wallet.WalletsManager;
+
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
-import bisq.core.btc.wallet.WalletsManager;
-import bisq.desktop.main.overlays.Overlay;
+
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

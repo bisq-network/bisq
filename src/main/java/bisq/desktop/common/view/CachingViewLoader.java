@@ -18,6 +18,7 @@
 package bisq.desktop.common.view;
 
 import javax.inject.Inject;
+
 import java.util.HashMap;
 
 public class CachingViewLoader implements ViewLoader {

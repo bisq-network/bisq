@@ -48,15 +48,19 @@
  */
 package bisq.desktop.main.market.trades.charts.price;
 
-import bisq.common.locale.Res;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.util.Layout;
-import javafx.geometry.HPos;
+
+import bisq.common.locale.Res;
+
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+
+import javafx.geometry.HPos;
+
 import javafx.util.StringConverter;
 
 /**

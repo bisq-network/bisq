@@ -17,34 +17,43 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.common.base.Joiner;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.Res;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.Layout;
+
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.Layout;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Utils;
+
+import javax.inject.Inject;
+
+import com.google.common.base.Joiner;
+
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Utils;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.*;
 

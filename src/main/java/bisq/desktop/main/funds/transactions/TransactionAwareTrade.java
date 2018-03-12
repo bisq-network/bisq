@@ -22,8 +22,10 @@ import bisq.core.arbitration.DisputeManager;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-import javafx.collections.ObservableList;
+
 import org.bitcoinj.core.Transaction;
+
+import javafx.collections.ObservableList;
 
 import java.util.Optional;
 

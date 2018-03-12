@@ -17,31 +17,38 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.util.Tuple3;
-import bisq.common.util.Utilities;
-import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.validation.InputValidator;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.FXCollections;
+
+import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.PaymentAccount;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
+import javafx.collections.FXCollections;
+
 import javafx.util.StringConverter;
+
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 
 import static bisq.desktop.util.FormBuilder.*;
 

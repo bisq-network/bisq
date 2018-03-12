@@ -17,23 +17,29 @@
 
 package bisq.desktop.main.portfolio.failedtrades;
 
-import bisq.common.locale.Res;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 
-import javax.inject.Inject;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
 
 @FxmlView
 public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {

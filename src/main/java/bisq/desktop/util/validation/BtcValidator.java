@@ -17,15 +17,21 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.Res;
-import bisq.core.btc.Restrictions;
 import bisq.desktop.util.BSFormatter;
-import lombok.Setter;
+
+import bisq.core.btc.Restrictions;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+
 import java.math.BigDecimal;
+
+import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 public class BtcValidator extends NumberValidator {
 

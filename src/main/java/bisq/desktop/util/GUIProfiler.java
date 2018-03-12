@@ -18,11 +18,13 @@
 package bisq.desktop.util;
 
 import com.google.common.base.Stopwatch;
+
 import javafx.animation.AnimationTimer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GUIProfiler {
     private static final Logger log = LoggerFactory.getLogger(GUIProfiler.class);

@@ -17,43 +17,64 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import com.natpryce.makeiteasy.Maker;
+import bisq.desktop.util.BSFormatter;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.NationalBankAccount;
+import bisq.core.payment.OKPayAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.SepaAccount;
+import bisq.core.payment.SpecificBanksAccount;
+import bisq.core.payment.payload.NationalBankAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SameBankAccountPayload;
+import bisq.core.payment.payload.SepaAccountPayload;
+import bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+
 import bisq.common.GlobalSettings;
 import bisq.common.locale.Country;
 import bisq.common.locale.CryptoCurrency;
 import bisq.common.locale.FiatCurrency;
 import bisq.common.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.*;
-import bisq.core.payment.payload.*;
-import bisq.core.provider.price.MarketPrice;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.desktop.util.BSFormatter;
+
 import javafx.beans.property.SimpleIntegerProperty;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
+import java.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.natpryce.makeiteasy.Maker;
+
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static bisq.common.locale.TradeCurrencyMakers.usd;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.*;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

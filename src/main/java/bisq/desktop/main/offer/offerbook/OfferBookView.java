@@ -17,23 +17,15 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import com.google.inject.name.Named;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.*;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -47,32 +39,66 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.user.DontShowAgainLookup;
+
 import bisq.network.p2p.NodeAddress;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+
+import org.bitcoinj.core.Coin;
+
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
-import org.bitcoinj.core.Coin;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import javax.inject.Inject;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+
+import javafx.collections.ListChangeListener;
+
+import javafx.util.Callback;
+import javafx.util.StringConverter;
+
 import java.util.Comparator;
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
@@ -95,7 +121,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ListChangeListener<OfferBookListItem> offerListListener;
     private ChangeListener<Number> priceFeedUpdateCounterListener;
     private Subscription currencySelectionSubscriber;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -305,7 +330,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencySelectionSubscriber.unsubscribe();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -351,7 +375,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void onTabSelected(boolean isSelected) {
         model.onTabSelected(isSelected);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions

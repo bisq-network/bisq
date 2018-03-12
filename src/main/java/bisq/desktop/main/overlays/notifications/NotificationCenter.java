@@ -17,35 +17,45 @@
 
 package bisq.desktop.main.overlays.notifications;
 
-import com.google.inject.Inject;
-import bisq.common.UserThread;
-import bisq.common.app.Log;
-import bisq.common.locale.Res;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.trade.*;
-import bisq.core.user.DontShowAgainLookup;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
-import javafx.collections.ListChangeListener;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.trade.BuyerTrade;
+import bisq.core.trade.MakerTrade;
+import bisq.core.trade.SellerTrade;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
+
+import com.google.inject.Inject;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
+import javafx.collections.ListChangeListener;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
 @Slf4j
 public class NotificationCenter {
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -61,7 +71,6 @@ public class NotificationCenter {
 
     static boolean useAnimations;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +83,6 @@ public class NotificationCenter {
     private final Map<String, Subscription> tradePhaseSubscriptionsMap = new HashMap<>();
     @Nullable
     private String selectedTradeId;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -142,7 +150,6 @@ public class NotificationCenter {
             );
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -160,11 +167,9 @@ public class NotificationCenter {
         this.selectItemByTradeIdConsumer = selectItemByTradeIdConsumer;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void onTradePhaseChanged(Trade trade, Trade.Phase phase) {
         String message = null;

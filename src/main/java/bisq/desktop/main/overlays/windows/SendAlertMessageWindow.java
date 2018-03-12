@@ -17,16 +17,17 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.alert.Alert;
-import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import javafx.geometry.Insets;
+
+import bisq.core.alert.Alert;
+
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -36,7 +37,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.geometry.Insets;
+
+import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private final boolean useDevPrivilegeKeys;

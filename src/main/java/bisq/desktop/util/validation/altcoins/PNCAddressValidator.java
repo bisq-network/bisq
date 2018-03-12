@@ -19,6 +19,7 @@ package bisq.desktop.util.validation.altcoins;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import java.util.Arrays;
 
 public class PNCAddressValidator {

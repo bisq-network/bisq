@@ -17,14 +17,19 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.locale.Res;
-import bisq.core.alert.Alert;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
-import javafx.geometry.Insets;
+
+import bisq.core.alert.Alert;
+
+import bisq.common.locale.Res;
+
 import javafx.scene.layout.GridPane;
+
+import javafx.geometry.Insets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

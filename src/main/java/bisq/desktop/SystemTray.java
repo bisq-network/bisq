@@ -17,21 +17,32 @@
 
 package bisq.desktop;
 
+import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.ImageUtil;
+
+import bisq.core.exceptions.BisqException;
+
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
-import bisq.core.exceptions.BisqException;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.ImageUtil;
+
 import javafx.application.Platform;
+
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.awt.AWTException;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.TrayIcon;
+import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
+
 import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.

@@ -17,36 +17,42 @@
 
 package bisq.desktop.main.market.spread;
 
-import bisq.desktop.main.overlays.popups.Popup;
-import com.google.inject.Inject;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.provider.price.MarketPrice;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import com.google.inject.Inject;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 class SpreadViewModel extends ActivatableViewModel {
 

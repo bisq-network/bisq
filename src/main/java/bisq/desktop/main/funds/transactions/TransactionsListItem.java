@@ -17,7 +17,10 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -29,19 +32,22 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
-import javafx.scene.control.Tooltip;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 
-import javax.annotation.Nullable;
+import javafx.scene.control.Tooltip;
+
 import java.util.Date;
 import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 class TransactionsListItem {

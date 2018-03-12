@@ -23,7 +23,6 @@
 
 package bisq.desktop.util.validation.altcoins;
 
-
 public final class NxtReedSolomonValidator {
 
     private static final int[] initial_codeword = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};

@@ -17,7 +17,6 @@
 
 package bisq.desktop.util.validation;
 
-
 public final class VenmoValidator extends InputValidator {
 
     @Override

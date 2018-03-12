@@ -17,17 +17,24 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.Res;
+import bisq.desktop.util.BsqFormatter;
+
 import bisq.core.btc.Restrictions;
 import bisq.core.util.CoinUtil;
-import bisq.desktop.util.BsqFormatter;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
+import java.math.BigDecimal;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import java.math.BigDecimal;
 
 @Slf4j
 public class BsqValidator extends AltcoinValidator {

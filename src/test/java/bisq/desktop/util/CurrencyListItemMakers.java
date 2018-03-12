@@ -17,15 +17,16 @@
 
 package bisq.desktop.util;
 
+import bisq.common.locale.TradeCurrency;
+
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
-import bisq.common.locale.TradeCurrency;
 
-import static com.natpryce.makeiteasy.MakeItEasy.a;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static bisq.common.locale.TradeCurrencyMakers.bitcoin;
 import static bisq.common.locale.TradeCurrencyMakers.euro;
+import static com.natpryce.makeiteasy.MakeItEasy.a;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class CurrencyListItemMakers {
 

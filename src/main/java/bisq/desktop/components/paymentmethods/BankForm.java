@@ -17,16 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.*;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.common.util.Tuple4;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CountryBasedPaymentAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.BankAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
@@ -35,13 +25,36 @@ import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
 import bisq.desktop.util.validation.InputValidator;
-import javafx.collections.FXCollections;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.Region;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+
+import javafx.collections.FXCollections;
+
 import javafx.util.StringConverter;
-import org.apache.commons.lang3.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

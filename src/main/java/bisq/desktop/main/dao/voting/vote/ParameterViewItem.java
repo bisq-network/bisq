@@ -17,28 +17,35 @@
 
 package bisq.desktop.main.dao.voting.vote;
 
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.core.dao.vote.VoteItem;
-import bisq.core.dao.vote.VotingDefaultValues;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.core.dao.vote.VoteItem;
+import bisq.core.dao.vote.VotingDefaultValues;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.value.ChangeListener;
+
 import javafx.util.StringConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ParameterViewItem {
     private static final Logger log = LoggerFactory.getLogger(ParameterViewItem.class);

@@ -17,15 +17,6 @@
 
 package bisq.desktop.main.offer.takeoffer;
 
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Trade;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
@@ -38,17 +29,37 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.InputValidator;
+
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.Trade;
+
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
+
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ObservableList;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -105,7 +116,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private Runnable takeOfferSucceededHandler;
     String marketPriceMargin;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +166,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         removeListeners();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +201,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         btcValidator.setMaxTradeLimit(Coin.valueOf(Math.min(dataModel.getMaxTradeLimit(), offer.getAmount().value)));
         btcValidator.setMinValue(offer.getMinAmount());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -287,7 +295,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             }
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
@@ -402,7 +409,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
         isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.getIsBtcWalletFunded().get());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
@@ -521,7 +527,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         //isFeeSufficientSubscription.unsubscribe();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -534,7 +539,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void setAmountToModel() {
         dataModel.applyAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

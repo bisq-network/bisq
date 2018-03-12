@@ -17,9 +17,10 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
-import bisq.common.locale.Res;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+
+import bisq.common.locale.Res;
 
 public class SellerStep2View extends TradeStepView {
 
@@ -30,7 +31,6 @@ public class SellerStep2View extends TradeStepView {
     public SellerStep2View(PendingTradesViewModel model) {
         super(model);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
@@ -45,7 +45,6 @@ public class SellerStep2View extends TradeStepView {
     protected String getInfoText() {
         return Res.get("portfolio.pending.step2_seller.waitPayment.msg", model.dataModel.getCurrencyCode());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning

@@ -17,20 +17,6 @@
 
 package bisq.desktop.main.dao.voting.vote;
 
-import bisq.desktop.main.overlays.popups.Popup;
-import com.google.common.util.concurrent.FutureCallback;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.request.compensation.CompensationRequest;
-import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.core.dao.vote.*;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.util.CoinUtil;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
@@ -39,31 +25,64 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.request.compensation.CompensationRequest;
+import bisq.core.dao.request.compensation.CompensationRequestManager;
+import bisq.core.dao.vote.CompensationRequestVoteItem;
+import bisq.core.dao.vote.CompensationRequestVoteItemCollection;
+import bisq.core.dao.vote.VoteItem;
+import bisq.core.dao.vote.VoteItemsList;
+import bisq.core.dao.vote.VotingManager;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.util.CoinUtil;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
+
+import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import javafx.util.StringConverter;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
+
+import java.io.IOException;
+
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.List;
 
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView

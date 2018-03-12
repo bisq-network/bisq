@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
-import bisq.common.locale.Res;
-import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
+
+import bisq.common.locale.Res;
 
 public class SellerStep4View extends BuyerStep4View {
 

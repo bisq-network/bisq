@@ -33,11 +33,12 @@
 
 package bisq.desktop.util.validation.params.btc;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.Set;

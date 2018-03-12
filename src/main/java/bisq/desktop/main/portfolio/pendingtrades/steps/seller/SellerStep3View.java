@@ -17,16 +17,6 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple3;
-import bisq.core.payment.payload.*;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -34,16 +24,39 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
+
+import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.SepaAccountPayload;
+import bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
+import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.trade.Contract;
+import bisq.core.trade.Trade;
+import bisq.core.user.DontShowAgainLookup;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple3;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class SellerStep3View extends TradeStepView {
 
@@ -52,7 +65,6 @@ public class SellerStep3View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -135,7 +147,6 @@ public class SellerStep3View extends TradeStepView {
             timeoutTimer.stop();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +205,6 @@ public class SellerStep3View extends TradeStepView {
         statusLabel = tuple.third;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +219,6 @@ public class SellerStep3View extends TradeStepView {
             return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.fiat", currencyCode));
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning
@@ -226,7 +235,6 @@ public class SellerStep3View extends TradeStepView {
 
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +248,6 @@ public class SellerStep3View extends TradeStepView {
     protected void applyOnDisputeOpened() {
         confirmButton.setDisable(true);
     }
-
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers

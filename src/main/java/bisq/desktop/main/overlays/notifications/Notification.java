@@ -17,22 +17,30 @@
 
 package bisq.desktop.main.overlays.notifications;
 
+import bisq.desktop.main.overlays.Overlay;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
-import bisq.desktop.main.overlays.Overlay;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+
+import javafx.stage.Modality;
+import javafx.stage.Window;
+
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.transform.Rotate;
-import javafx.stage.Modality;
-import javafx.stage.Window;
+
+import javafx.geometry.Insets;
+
+import javafx.collections.ObservableList;
+
 import javafx.util.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

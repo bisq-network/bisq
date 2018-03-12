@@ -17,21 +17,25 @@
 
 package bisq.desktop.components;
 
+import bisq.common.UserThread;
+
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+import org.controlsfx.control.PopOver;
+
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import org.controlsfx.control.PopOver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InfoTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(InfoTextField.class);

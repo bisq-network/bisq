@@ -34,16 +34,26 @@
 
 package bisq.desktop.util.validation.params.btc;
 
-import com.google.common.base.Stopwatch;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.BitcoinSerializer;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.utils.MonetaryFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
+
+import java.util.concurrent.TimeUnit;
 
 import java.math.BigInteger;
-import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parameters for Bitcoin-like networks.

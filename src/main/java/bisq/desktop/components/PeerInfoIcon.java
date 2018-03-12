@@ -17,16 +17,19 @@
 
 package bisq.desktop.components;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.user.Preferences;
-import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
-import bisq.desktop.util.BSFormatter;
+
 import bisq.network.p2p.NodeAddress;
-import javafx.geometry.Point2D;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -35,12 +38,16 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import lombok.extern.slf4j.Slf4j;
+
+import javafx.geometry.Point2D;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import java.util.Date;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PeerInfoIcon extends Group {

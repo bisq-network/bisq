@@ -17,29 +17,37 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.UpholdAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.UpholdValidator;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.UpholdAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.UpholdAccountPayload;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class UpholdForm extends PaymentMethodForm {
     private final UpholdAccount upholdAccount;

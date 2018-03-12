@@ -17,22 +17,25 @@
 
 package bisq.desktop;
 
-import com.google.inject.Inject;
-import bisq.common.proto.persistable.NavigationPath;
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.MarketView;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.proto.persistable.NavigationPath;
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.Storage;
+
+import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class Navigation implements PersistedDataHost {

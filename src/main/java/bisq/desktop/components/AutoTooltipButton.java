@@ -17,10 +17,11 @@
 
 package bisq.desktop.components;
 
-import com.sun.javafx.scene.control.skin.ButtonSkin;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Skin;
+
+import com.sun.javafx.scene.control.skin.ButtonSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 

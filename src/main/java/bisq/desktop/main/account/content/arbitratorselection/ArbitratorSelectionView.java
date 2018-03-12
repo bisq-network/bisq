@@ -17,34 +17,56 @@
 
 package bisq.desktop.main.account.content.arbitratorselection;
 
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipCheckBox;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.ImageUtil;
+import bisq.desktop.util.Layout;
+
 import bisq.common.UserThread;
 import bisq.common.locale.LanguageUtil;
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.common.view.ActivatableViewAndModel;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.*;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.ImageUtil;
-import bisq.desktop.util.Layout;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
+
+import javafx.util.Callback;
+import javafx.util.StringConverter;
+
+import static bisq.desktop.util.FormBuilder.addCheckBox;
+import static bisq.desktop.util.FormBuilder.addLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addLabelListView;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, ArbitratorSelectionViewModel> {

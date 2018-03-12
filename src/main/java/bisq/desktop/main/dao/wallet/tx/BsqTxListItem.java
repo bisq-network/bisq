@@ -17,28 +17,33 @@
 
 package bisq.desktop.main.dao.wallet.tx;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.vo.TxType;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
-import javafx.scene.control.Tooltip;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 
+import javafx.scene.control.Tooltip;
+
 import java.util.Date;
 import java.util.Optional;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

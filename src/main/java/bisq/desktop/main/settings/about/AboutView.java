@@ -17,21 +17,27 @@
 
 package bisq.desktop.main.settings.about;
 
-import bisq.common.app.Version;
-import bisq.common.locale.Res;
 import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.Layout;
-import javafx.geometry.HPos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
+
+import bisq.common.app.Version;
+import bisq.common.locale.Res;
 
 import javax.inject.Inject;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+
+import javafx.geometry.HPos;
+
+import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
+import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {

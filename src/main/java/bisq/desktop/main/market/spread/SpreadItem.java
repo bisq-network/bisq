@@ -18,7 +18,9 @@
 package bisq.desktop.main.market.spread;
 
 import bisq.common.monetary.Price;
+
 import org.bitcoinj.core.Coin;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -42,19 +42,9 @@
 
 package bisq.desktop.components.indicator.skin;
 
-import com.sun.javafx.css.converters.BooleanConverter;
-import com.sun.javafx.css.converters.PaintConverter;
-import com.sun.javafx.css.converters.SizeConverter;
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.components.indicator.behavior.StaticProgressIndicatorBehavior;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.css.*;
-import javafx.geometry.Insets;
-import javafx.geometry.NodeOrientation;
+
 import javafx.scene.Node;
 import javafx.scene.control.SkinBase;
 import javafx.scene.layout.Pane;
@@ -66,6 +56,28 @@ import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
 import javafx.scene.transform.Scale;
+
+import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+
+import javafx.css.CssMetaData;
+import javafx.css.StyleOrigin;
+import javafx.css.Styleable;
+import javafx.css.StyleableBooleanProperty;
+import javafx.css.StyleableIntegerProperty;
+import javafx.css.StyleableObjectProperty;
+import javafx.css.StyleableProperty;
+
+import com.sun.javafx.css.converters.BooleanConverter;
+import com.sun.javafx.css.converters.PaintConverter;
+import com.sun.javafx.css.converters.SizeConverter;
+
+import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
+
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;

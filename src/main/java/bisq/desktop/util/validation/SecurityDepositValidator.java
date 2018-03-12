@@ -17,9 +17,12 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.Res;
-import bisq.core.btc.Restrictions;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.core.btc.Restrictions;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;

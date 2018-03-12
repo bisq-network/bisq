@@ -35,43 +35,61 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.inject.name.Named;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.Layout;
+
+import bisq.core.user.Preferences;
+
+import bisq.network.NetworkOptionKeys;
+import bisq.network.p2p.network.DefaultPluggableTransports;
+import bisq.network.p2p.network.NetworkNode;
+
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
 import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
-import bisq.core.user.Preferences;
-import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.Layout;
-import bisq.network.NetworkOptionKeys;
-import bisq.network.p2p.network.DefaultPluggableTransports;
-import bisq.network.p2p.network.NetworkNode;
-import javafx.collections.FXCollections;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.util.StringConverter;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.inject.Inject;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
+
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.IOException;
+
 import java.net.URI;
-import java.nio.file.Paths;
+
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.*;
 

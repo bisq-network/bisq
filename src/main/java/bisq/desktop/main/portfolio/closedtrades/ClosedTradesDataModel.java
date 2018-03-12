@@ -17,12 +17,15 @@
 
 package bisq.desktop.main.portfolio.closedtrades;
 
-import com.google.inject.Inject;
+import bisq.desktop.common.model.ActivatableDataModel;
+
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.desktop.common.model.ActivatableDataModel;
+
+import com.google.inject.Inject;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

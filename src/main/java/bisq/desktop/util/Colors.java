@@ -24,5 +24,4 @@ public class Colors {
     public static final Paint BLUE = Color.valueOf("#0f87c3");
     public static final Paint LIGHT_GREY = Color.valueOf("#CCCCCC");
     public static final Paint GREEN = Color.valueOf("#00aa33");
-
 }

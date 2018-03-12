@@ -17,15 +17,21 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.inject.Inject;
-import bisq.common.locale.Res;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.Overlay;
+
+import bisq.common.locale.Res;
+
+import com.google.inject.Inject;
+
+import javafx.stage.Screen;
+
+import javafx.scene.layout.GridPane;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.layout.GridPane;
-import javafx.stage.Screen;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;

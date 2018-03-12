@@ -18,15 +18,21 @@
 package bisq.desktop.common.fxml;
 
 import bisq.desktop.common.ViewfxException;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.AbstractView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewFactory;
+import bisq.desktop.common.view.ViewLoader;
+
 import javafx.fxml.LoadException;
+
+import java.util.ResourceBundle;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.util.ResourceBundle;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;

@@ -17,25 +17,60 @@
 
 package bisq.desktop.util;
 
-import bisq.desktop.components.*;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.desktop.components.AddressTextField;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipCheckBox;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipRadioButton;
+import bisq.desktop.components.BalanceTextField;
+import bisq.desktop.components.BsqAddressTextField;
+import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InfoTextField;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.PasswordTextField;
+import bisq.desktop.components.SearchComboBox;
+import bisq.desktop.components.TextFieldWithCopyIcon;
+import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.TxIdTextField;
+
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
-import bisq.desktop.components.*;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);

@@ -18,13 +18,16 @@
 package bisq.desktop.components;
 
 import bisq.desktop.util.BSFormatter;
+
+import org.bitcoinj.core.Coin;
+
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
-import org.bitcoinj.core.Coin;
+
 import javax.annotation.Nullable;
 
 public class BalanceTextField extends AnchorPane {

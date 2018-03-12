@@ -17,13 +17,16 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import com.google.common.collect.Sets;
 import bisq.core.btc.wallet.BtcWalletService;
+
 import org.bitcoinj.core.Transaction;
-import org.junit.Test;
+
+import com.google.common.collect.Sets;
 
 import java.util.Collections;
 import java.util.Set;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;

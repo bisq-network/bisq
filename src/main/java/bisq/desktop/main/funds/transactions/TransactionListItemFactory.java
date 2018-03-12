@@ -17,16 +17,20 @@
 
 package bisq.desktop.main.funds.transactions;
 
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.trade.Tradable;
-import bisq.desktop.util.BSFormatter;
+
 import org.bitcoinj.core.Transaction;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;

@@ -17,27 +17,33 @@
 
 package bisq.desktop.util;
 
-import bisq.common.locale.Res;
-import bisq.common.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+
+import bisq.common.locale.Res;
+import bisq.common.monetary.Volume;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static com.natpryce.makeiteasy.MakeItEasy.*;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static bisq.common.monetary.PriceMaker.priceString;
 import static bisq.common.monetary.PriceMaker.usdPrice;
 import static bisq.common.monetary.VolumeMaker.usdVolume;
 import static bisq.common.monetary.VolumeMaker.volumeString;
 import static bisq.core.offer.OfferMaker.btcUsdOffer;
+import static com.natpryce.makeiteasy.MakeItEasy.a;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;

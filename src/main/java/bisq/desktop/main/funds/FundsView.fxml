@@ -16,7 +16,8 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <TabPane fx:id="root" fx:controller="bisq.desktop.main.funds.FundsView"
          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"

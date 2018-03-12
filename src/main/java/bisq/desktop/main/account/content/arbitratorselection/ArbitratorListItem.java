@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.account.content.arbitratorselection;
 
-import bisq.core.arbitration.Arbitrator;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.core.arbitration.Arbitrator;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 

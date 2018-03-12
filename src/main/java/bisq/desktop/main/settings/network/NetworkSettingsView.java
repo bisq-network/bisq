@@ -17,15 +17,6 @@
 
 package bisq.desktop.main.settings.network;
 
-import bisq.common.Clock;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.filter.Filter;
-import bisq.core.filter.FilterManager;
-import bisq.core.user.Preferences;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
@@ -37,29 +28,57 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BitcoinNodes;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.filter.Filter;
+import bisq.core.filter.FilterManager;
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+
+import bisq.common.Clock;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Peer;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.GridPane;
+
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.Peer;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
-
 
     @FXML
     TitledGroupBg p2pHeader, btcHeader;

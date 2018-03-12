@@ -17,28 +17,37 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.common.util.concurrent.FutureCallback;
-import bisq.common.UserThread;
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
-import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
+
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+
 import bisq.network.p2p.P2PService;
-import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
+
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.jetbrains.annotations.NotNull;
+
+import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
+
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 

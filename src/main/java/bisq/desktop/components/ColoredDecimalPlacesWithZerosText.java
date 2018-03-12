@@ -17,16 +17,15 @@
 
 package bisq.desktop.components;
 
-import bisq.common.util.Tuple2;
 import bisq.desktop.util.GUIUtil;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
+import bisq.common.util.Tuple2;
+
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.text.TextBoundsType;
-import javafx.scene.text.TextFlow;
+
+import javafx.geometry.Pos;
 
 public class ColoredDecimalPlacesWithZerosText extends HBox {
 

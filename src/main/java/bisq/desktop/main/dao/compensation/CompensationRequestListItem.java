@@ -17,7 +17,9 @@
 
 package bisq.desktop.main.dao.compensation;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.BsqFormatter;
+
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
@@ -25,19 +27,22 @@ import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.request.compensation.CompensationRequest;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BsqFormatter;
-import javafx.beans.value.ChangeListener;
+
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+
 import javafx.scene.control.Tooltip;
+
+import javafx.beans.value.ChangeListener;
+
+import java.util.Optional;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-
-import java.util.Optional;
-
 
 @ToString
 @Slf4j

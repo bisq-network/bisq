@@ -17,20 +17,24 @@
 
 package bisq.desktop.util;
 
-import com.google.common.collect.Lists;
+import bisq.core.user.Preferences;
+
 import bisq.common.locale.CryptoCurrency;
 import bisq.common.locale.FiatCurrency;
 import bisq.common.locale.TradeCurrency;
-import bisq.core.user.Preferences;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;

@@ -17,12 +17,9 @@
 
 package bisq.desktop.main.account.content.fiataccounts;
 
-import com.google.inject.Inject;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.desktop.common.model.ActivatableDataModel;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
@@ -31,12 +28,20 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.util.GUIUtil;
+
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.proto.persistable.PersistenceProtoResolver;
+
+import com.google.inject.Inject;
+
+import javafx.stage.Stage;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
-import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;

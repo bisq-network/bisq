@@ -17,13 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import com.google.common.base.Splitter;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.storage.Storage;
-import bisq.common.util.Tuple2;
-import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.crypto.ScryptUtil;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
@@ -33,39 +26,64 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 import bisq.desktop.util.validation.PasswordValidator;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.crypto.ScryptUtil;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.crypto.MnemonicCode;
+import org.bitcoinj.crypto.MnemonicException;
+import org.bitcoinj.wallet.DeterministicSeed;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import com.google.common.base.Splitter;
+
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.crypto.MnemonicCode;
-import org.bitcoinj.crypto.MnemonicException;
-import org.bitcoinj.wallet.DeterministicSeed;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+
 import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
+
+import java.util.concurrent.TimeUnit;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addLabelDatePicker;
+import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 import static com.google.common.base.Preconditions.checkArgument;
-import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @Slf4j

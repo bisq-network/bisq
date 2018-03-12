@@ -17,13 +17,15 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
-import bisq.common.app.Log;
-import bisq.common.locale.Res;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep1View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep2View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep3View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep4View;
+
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
+
 import org.fxmisc.easybind.EasyBind;
 
 public class SellerSubView extends TradeSubView {
@@ -31,7 +33,6 @@ public class SellerSubView extends TradeSubView {
     private TradeWizardItem step2;
     private TradeWizardItem step3;
     private TradeWizardItem step4;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -59,7 +60,6 @@ public class SellerSubView extends TradeSubView {
         addWizardsToGridPane(step3);
         addWizardsToGridPane(step4);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // State

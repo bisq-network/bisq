@@ -19,10 +19,12 @@ package bisq.desktop.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.geometry.Insets;
+
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+
+import javafx.geometry.Insets;
 
 public class HyperlinkWithIcon extends Hyperlink {
 

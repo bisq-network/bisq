@@ -17,12 +17,13 @@
 
 package bisq.desktop.main.dao.wallet;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.core.app.BisqEnvironment;
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
+import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
@@ -31,17 +32,28 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 import bisq.desktop.util.Colors;
-import javafx.beans.value.ChangeListener;
+
+import bisq.core.app.BisqEnvironment;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import javafx.beans.value.ChangeListener;
 
 @FxmlView
 public class BsqWalletView extends ActivatableViewAndModel {

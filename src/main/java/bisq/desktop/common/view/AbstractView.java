@@ -18,7 +18,9 @@
 package bisq.desktop.common.view;
 
 import javafx.fxml.FXML;
+
 import javafx.scene.Node;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

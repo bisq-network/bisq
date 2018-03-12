@@ -17,11 +17,9 @@
 
 package bisq.desktop.util.validation;
 
-
 public final class ClearXchangeValidator extends InputValidator {
 
     private final EmailValidator emailValidator;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -44,7 +42,6 @@ public final class ClearXchangeValidator extends InputValidator {
                 return validatePhoneNumber(input);
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods

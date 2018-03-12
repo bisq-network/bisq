@@ -17,16 +17,21 @@
 
 package bisq.desktop.main.portfolio.openoffer;
 
-import com.google.inject.Inject;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
+import bisq.desktop.common.model.ActivatableDataModel;
+
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.desktop.common.model.ActivatableDataModel;
+
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
+import com.google.inject.Inject;
+
 import javafx.beans.value.ChangeListener;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

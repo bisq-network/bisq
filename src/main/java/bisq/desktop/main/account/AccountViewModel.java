@@ -17,8 +17,9 @@
 
 package bisq.desktop.main.account;
 
-import com.google.inject.Inject;
 import bisq.desktop.common.model.ViewModel;
+
+import com.google.inject.Inject;
 
 class AccountViewModel implements ViewModel {
 

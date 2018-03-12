@@ -17,15 +17,6 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
-import com.google.inject.name.Named;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
-import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.offer.Offer;
-import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -34,12 +25,25 @@ import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.offer.Offer;
+import bisq.core.trade.Trade;
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.NodeAddress;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
-import javafx.event.EventHandler;
+
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
@@ -50,11 +54,19 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
+
+import javafx.geometry.Insets;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.inject.Inject;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.event.EventHandler;
+
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {

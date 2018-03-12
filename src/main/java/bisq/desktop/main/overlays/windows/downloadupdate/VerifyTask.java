@@ -21,20 +21,26 @@ package bisq.desktop.main.overlays.windows.downloadupdate;
  * A Task to verify the downloaded bisq installer against the available keys/signatures.
  */
 
-import com.google.common.collect.Lists;
 import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.DownloadType;
 import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.VerifyDescriptor;
-import javafx.concurrent.Task;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+
+import com.google.common.collect.Lists;
 
 import java.io.FileReader;
 import java.io.IOException;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+
+
+import javafx.concurrent.Task;
 
 @Slf4j
 @Getter

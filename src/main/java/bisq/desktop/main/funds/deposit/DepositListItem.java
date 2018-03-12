@@ -17,21 +17,27 @@
 
 package bisq.desktop.main.funds.deposit;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.Tooltip;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+
+import javafx.scene.control.Tooltip;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

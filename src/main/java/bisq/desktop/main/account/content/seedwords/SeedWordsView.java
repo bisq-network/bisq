@@ -17,41 +17,48 @@
 
 package bisq.desktop.main.account.content.seedwords;
 
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import bisq.common.locale.Res;
-import bisq.common.storage.Storage;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.GridPane;
+
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.user.DontShowAgainLookup;
+
+import bisq.common.locale.Res;
+import bisq.common.storage.Storage;
+
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+
 import java.io.File;
 import java.io.IOException;
+
+import java.util.List;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;

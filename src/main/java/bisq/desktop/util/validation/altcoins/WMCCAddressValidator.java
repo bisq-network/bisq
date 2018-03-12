@@ -18,17 +18,19 @@
 package bisq.desktop.util.validation.altcoins;
 
 import bisq.desktop.util.validation.InputValidator.ValidationResult;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.VersionedChecksummedBytes;
 import org.bitcoinj.params.Networks;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
+
 import java.util.Arrays;
 import java.util.Locale;
 
+import javax.annotation.Nullable;
 
 public class WMCCAddressValidator {
     public static ValidationResult ValidateAddress(NetworkParameters params, String address) {

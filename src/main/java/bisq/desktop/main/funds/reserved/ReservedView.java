@@ -17,8 +17,15 @@
 
 package bisq.desktop.main.funds.reserved;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -28,27 +35,33 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.fxml.FXML;
+
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
 import java.util.Optional;
 import java.util.stream.Collectors;
 

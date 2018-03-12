@@ -49,9 +49,9 @@
 package bisq.desktop.main.market.trades.charts.price;
 
 import bisq.desktop.main.market.trades.charts.CandleData;
-import bisq.desktop.main.market.trades.charts.CandleData;
+
 import javafx.animation.FadeTransition;
-import javafx.event.ActionEvent;
+
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.NumberAxis;
@@ -59,14 +59,18 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+
+import javafx.event.ActionEvent;
+
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A candlestick chart is a style of bar-chart used primarily to describe price movements of a security, derivative,

@@ -20,18 +20,24 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.trade.Trade;
-import javafx.collections.FXCollections;
+
 import org.bitcoinj.core.Transaction;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
+import javafx.collections.FXCollections;
 
 import java.util.Collections;
 
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Dispute.class)

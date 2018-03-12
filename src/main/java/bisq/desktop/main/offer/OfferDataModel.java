@@ -17,15 +17,19 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.desktop.common.model.ActivatableDataModel;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.desktop.common.model.ActivatableDataModel;
+
+import org.bitcoinj.core.Coin;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+
 import lombok.Getter;
-import org.bitcoinj.core.Coin;
 
 /**
  * Domain for that UI element.

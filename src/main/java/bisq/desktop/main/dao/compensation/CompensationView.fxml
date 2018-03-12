@@ -18,7 +18,8 @@
   -->
 
 
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 <AnchorPane fx:id="root" fx:controller="bisq.desktop.main.dao.compensation.CompensationView"
             prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">

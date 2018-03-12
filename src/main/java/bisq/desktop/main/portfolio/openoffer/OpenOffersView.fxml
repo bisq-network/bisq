@@ -17,9 +17,10 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.openoffer.OpenOffersView"
       spacing="10" xmlns:fx="http://javafx.com/fxml">
     <padding>

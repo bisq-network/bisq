@@ -22,16 +22,19 @@ import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 import bisq.desktop.util.BSFormatter;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

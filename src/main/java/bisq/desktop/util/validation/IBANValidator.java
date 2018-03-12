@@ -19,12 +19,11 @@ package bisq.desktop.util.validation;
 
 import bisq.common.locale.Res;
 
-import java.math.BigInteger;
 import java.util.Locale;
 
+import java.math.BigInteger;
 
 // TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters
-
 public final class IBANValidator extends InputValidator {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +74,7 @@ public final class IBANValidator extends InputValidator {
                     charArray[i++] = s.charAt(1); // letters into char array
                 } else charArray[i++] = ch; // transfer digits directly to char array
             }
-// System.out.print(Arrays.toString(charArray) + '\t');
+            // System.out.print(Arrays.toString(charArray) + '\t');
             BigInteger bigInt = new BigInteger(new String(charArray));
             int result = bigInt.mod(new BigInteger(Integer.toString(97))).intValue();
             if (result == 1)
@@ -83,14 +82,11 @@ public final class IBANValidator extends InputValidator {
             else
                 return new ValidationResult(false, Res.get("validation.iban.checkSumInvalid"));
         }
-//	return new ValidationResult(false, BSResources.get("validation.accountNrChars", "15 - 34"));
+        // return new ValidationResult(false, BSResources.get("validation.accountNrChars", "15 - 34"));
         return new ValidationResult(false, Res.get("validation.iban.invalidLength"));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }

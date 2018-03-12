@@ -17,8 +17,8 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 <AnchorPane fx:id="root" fx:controller="bisq.desktop.main.dao.voting.VotingView"
             prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">

@@ -17,7 +17,11 @@
 
 package bisq.desktop.main.debug;
 
-import bisq.common.taskrunner.Task;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.InitializableView;
+import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.util.FormBuilder;
+
 import bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
@@ -31,7 +35,15 @@ import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSigns
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
-import bisq.core.trade.protocol.tasks.maker.*;
+import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
+import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
+import bisq.core.trade.protocol.tasks.maker.MakerVerifyArbitratorSelection;
+import bisq.core.trade.protocol.tasks.maker.MakerVerifyMediatorSelection;
+import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
+import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -39,19 +51,30 @@ import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
-import bisq.core.trade.protocol.tasks.taker.*;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.common.view.InitializableView;
-import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.util.FormBuilder;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
+import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
+import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerSelectArbitrator;
+import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
+import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
+import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
+import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
+
+import bisq.common.taskrunner.Task;
 
 import javax.inject.Inject;
+
+import javafx.fxml.FXML;
+
+import javafx.scene.control.ComboBox;
+import javafx.scene.layout.GridPane;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import javafx.util.StringConverter;
+
 import java.util.Arrays;
 
 @FxmlView

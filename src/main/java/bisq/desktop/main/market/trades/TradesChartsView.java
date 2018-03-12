@@ -17,14 +17,6 @@
 
 package bisq.desktop.main.market.trades;
 
-import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
-import bisq.common.util.MathUtils;
-import bisq.core.offer.OfferPayload;
-import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -36,35 +28,65 @@ import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.transformation.SortedList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
+import bisq.core.offer.OfferPayload;
+import bisq.core.trade.statistics.TradeStatistics2;
+
+import bisq.common.UserThread;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+import bisq.common.util.MathUtils;
+
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
-import org.bitcoinj.core.Coin;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
-import org.jetbrains.annotations.NotNull;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+import javafx.util.StringConverter;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.NotNull;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {

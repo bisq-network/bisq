@@ -17,24 +17,31 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import com.google.common.base.Joiner;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple3;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.validation.InputValidator;
+
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.validation.InputValidator;
-import javafx.beans.binding.Bindings;
+
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple3;
+
+import com.google.common.base.Joiner;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.beans.binding.Bindings;
+
+import static bisq.desktop.util.FormBuilder.addLabelInputTextFieldButton;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldButton;
 
 public class SpecificBankForm extends BankForm {
     private final SpecificBanksAccountPayload specificBanksAccountPayload;

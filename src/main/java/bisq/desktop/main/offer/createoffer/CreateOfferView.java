@@ -17,23 +17,18 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.common.util.Utilities;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.DontShowAgainLookup;
-import bisq.core.user.Preferences;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.*;
+import bisq.desktop.components.AddressTextField;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipToggleButton;
+import bisq.desktop.components.BalanceTextField;
+import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -52,32 +47,81 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
-import bisq.desktop.util.*;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.*;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.util.StringConverter;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.Layout;
+import bisq.desktop.util.Transitions;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
+
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.Coin;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
+
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
+
 import java.io.ByteArrayInputStream;
+
 import java.net.URI;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -128,7 +172,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -212,7 +255,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -282,7 +324,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
         this.closeHandler = closeHandler;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -466,7 +507,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.onCurrencySelected(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -475,7 +515,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (closeHandler != null)
             closeHandler.close();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, Listeners
@@ -1188,7 +1227,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setColumnSpan(secondRowHBox, 2);
         gridPane.getChildren().add(secondRowHBox);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PayInfo

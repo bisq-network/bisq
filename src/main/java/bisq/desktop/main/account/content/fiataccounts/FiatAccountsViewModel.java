@@ -17,10 +17,13 @@
 
 package bisq.desktop.main.account.content.fiataccounts;
 
-import com.google.inject.Inject;
-import bisq.core.payment.PaymentAccount;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+
+import bisq.core.payment.PaymentAccount;
+
+import com.google.inject.Inject;
+
 import javafx.collections.ObservableList;
 
 class FiatAccountsViewModel extends ActivatableWithDataModel<FiatAccountsDataModel> implements ViewModel {

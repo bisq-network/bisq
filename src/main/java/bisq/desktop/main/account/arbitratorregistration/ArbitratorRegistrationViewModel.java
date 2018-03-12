@@ -17,25 +17,37 @@
 
 package bisq.desktop.main.account.arbitratorregistration;
 
-import com.google.inject.Inject;
-import bisq.common.crypto.KeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.LanguageUtil;
+import bisq.desktop.common.model.ActivatableViewModel;
+
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.user.User;
-import bisq.desktop.common.model.ActivatableViewModel;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.*;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.LanguageUtil;
+
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
+
+import com.google.inject.Inject;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Utils;
 
 import java.util.ArrayList;
 import java.util.Date;

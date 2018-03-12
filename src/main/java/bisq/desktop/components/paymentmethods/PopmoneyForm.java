@@ -17,23 +17,29 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PopmoneyAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PopmoneyAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PopmoneyAccountPayload;
+
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
 import org.apache.commons.lang3.StringUtils;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class PopmoneyForm extends PaymentMethodForm {
     private final PopmoneyAccount account;

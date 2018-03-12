@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.portfolio.failedtrades;
 
-import com.google.inject.Inject;
-import bisq.common.locale.Res;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.BSFormatter;
+
+import bisq.common.locale.Res;
+
+import com.google.inject.Inject;
+
 import javafx.collections.ObservableList;
 
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {

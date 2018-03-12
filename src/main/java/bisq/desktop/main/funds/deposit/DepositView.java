@@ -17,51 +17,79 @@
 
 package bisq.desktop.main.funds.deposit;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.*;
+import bisq.desktop.components.AddressTextField;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
+
+import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.fxml.FXML;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.scene.control.*;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.jetbrains.annotations.NotNull;
 
-import javax.inject.Inject;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
 import java.io.ByteArrayInputStream;
+
 import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.*;
+import org.jetbrains.annotations.NotNull;
+
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addLabelAddressTextField;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class DepositView extends ActivatableView<VBox, Void> {

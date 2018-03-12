@@ -17,16 +17,6 @@
 
 package bisq.desktop.main.settings.preferences;
 
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.locale.*;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
@@ -39,21 +29,53 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
-import org.apache.commons.lang3.StringUtils;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.user.BlockChainExplorer;
+import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.LanguageUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import javafx.util.Callback;
+import javafx.util.StringConverter;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -100,7 +122,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -150,7 +171,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Initialize

@@ -17,27 +17,32 @@
 
 package bisq.desktop.main.dao;
 
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.core.app.BisqEnvironment;
-import bisq.desktop.main.dao.compensation.CompensationView;
-import bisq.desktop.main.dao.voting.VotingView;
-import bisq.desktop.main.dao.wallet.BsqWalletView;
-import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.compensation.CompensationView;
 import bisq.desktop.main.dao.voting.VotingView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
-import javafx.beans.value.ChangeListener;
+
+import bisq.core.app.BisqEnvironment;
+
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
 
 @FxmlView
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {

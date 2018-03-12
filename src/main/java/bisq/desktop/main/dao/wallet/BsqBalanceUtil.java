@@ -17,18 +17,24 @@
 
 package bisq.desktop.main.dao.wallet;
 
-import bisq.common.locale.Res;
-import bisq.core.btc.wallet.BsqBalanceListener;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
-import javafx.geometry.Pos;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import lombok.extern.slf4j.Slf4j;
+
+import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+
+import javafx.geometry.Pos;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;

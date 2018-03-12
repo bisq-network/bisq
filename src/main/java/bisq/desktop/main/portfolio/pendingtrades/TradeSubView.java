@@ -17,17 +17,26 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
-import bisq.common.locale.Res;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.Res;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+
 import org.fxmisc.easybind.Subscription;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +53,6 @@ public abstract class TradeSubView extends HBox {
     protected TitledGroupBg tradeProcessTitledGroupBg;
     protected int leftGridPaneRowIndex = 0;
     protected Subscription viewStateSubscription;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation

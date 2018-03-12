@@ -17,22 +17,40 @@
 
 package bisq.desktop.main.overlays.windows.downloadupdate;
 
-import com.google.common.collect.Lists;
 import bisq.common.util.Utilities;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.openpgp.*;
+
+import com.google.common.collect.Lists;
+
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
 import java.security.SignatureException;
+
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

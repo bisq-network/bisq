@@ -17,12 +17,6 @@
 
 package bisq.desktop.main.dao.voting.vote;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.request.compensation.CompensationRequest;
-import bisq.core.dao.request.compensation.CompensationRequestPayload;
-import bisq.core.dao.vote.CompensationRequestVoteItem;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -30,17 +24,36 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.compensation.CompensationRequestDisplay;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
-import javafx.beans.property.DoubleProperty;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.layout.*;
+
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.request.compensation.CompensationRequest;
+import bisq.core.dao.request.compensation.CompensationRequestPayload;
+import bisq.core.dao.vote.CompensationRequestVoteItem;
+
+import bisq.common.locale.Res;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+
+import javafx.beans.property.DoubleProperty;
 
 import java.util.ArrayList;
 import java.util.List;

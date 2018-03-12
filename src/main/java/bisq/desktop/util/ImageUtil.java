@@ -17,13 +17,15 @@
 
 package bisq.desktop.util;
 
-import com.sun.javafx.tk.quantum.QuantumToolkit;
 import bisq.common.locale.Country;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+
+import com.sun.javafx.tk.quantum.QuantumToolkit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);

@@ -19,6 +19,7 @@ package bisq.desktop.main;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 

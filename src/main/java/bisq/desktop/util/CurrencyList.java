@@ -17,14 +17,27 @@
 
 package bisq.desktop.util;
 
-import com.google.common.collect.Lists;
-import com.sun.javafx.collections.ObservableListWrapper;
-import bisq.common.locale.TradeCurrency;
 import bisq.core.user.Preferences;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import bisq.common.locale.TradeCurrency;
+
+import com.google.common.collect.Lists;
+
+import com.sun.javafx.collections.ObservableListWrapper;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.BiFunction;
+
+import javax.annotation.Nullable;
 
 public class CurrencyList extends ObservableListWrapper<CurrencyListItem> {
     private final CurrencyPredicates predicates;

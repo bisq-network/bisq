@@ -17,12 +17,16 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.desktop.util.BSFormatter;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,6 +34,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class BtcValidatorTest {
+
     @Before
     public void setup() {
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();

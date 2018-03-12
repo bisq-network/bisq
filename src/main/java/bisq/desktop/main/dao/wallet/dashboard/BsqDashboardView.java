@@ -17,18 +17,6 @@
 
 package bisq.desktop.main.dao.wallet.dashboard;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
-import bisq.common.util.MathUtils;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
-import bisq.core.dao.node.BsqNode;
-import bisq.core.dao.node.BsqNodeProvider;
-import bisq.core.provider.price.MarketPrice;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -37,15 +25,34 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
+
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+
+import bisq.common.locale.Res;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
+import bisq.common.util.MathUtils;
+
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.Coin;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
+import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;

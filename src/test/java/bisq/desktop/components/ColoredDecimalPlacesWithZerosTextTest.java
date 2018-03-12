@@ -19,6 +19,7 @@ package bisq.desktop.components;
 
 import javafx.scene.control.Label;
 import javafx.scene.text.Text;
+
 import org.junit.Ignore;
 import org.junit.Test;
 

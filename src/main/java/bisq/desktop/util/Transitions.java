@@ -17,18 +17,27 @@
 
 package bisq.desktop.util;
 
-import bisq.common.UserThread;
 import bisq.core.user.Preferences;
-import javafx.animation.*;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+
+import bisq.common.UserThread;
+
+import javax.inject.Inject;
+
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 
-import javax.inject.Inject;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
+import javafx.util.Duration;
 
 public class Transitions {
 

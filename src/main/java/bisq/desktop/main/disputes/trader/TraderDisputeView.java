@@ -17,18 +17,24 @@
 
 package bisq.desktop.main.disputes.trader;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.inject.name.Named;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.Version;
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.PubKeyRing;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.ContractWindow;
+import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
+import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
+import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.Attachment;
@@ -38,56 +44,92 @@ import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.desktop.common.view.ActivatableView;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.*;
-import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.ContractWindow;
-import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
-import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
-import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.GUIUtil;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.TextAlignment;
+
+import javafx.geometry.Insets;
+
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
+
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.util.Callback;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
+import javafx.util.Callback;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView

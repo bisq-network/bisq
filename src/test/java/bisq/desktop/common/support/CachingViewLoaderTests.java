@@ -20,6 +20,7 @@ package bisq.desktop.common.support;
 import bisq.desktop.common.view.AbstractView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewLoader;
+
 import org.junit.Test;
 
 import static org.mockito.BDDMockito.then;

@@ -17,26 +17,35 @@
 
 package bisq.desktop.main.account;
 
-import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.arbitratorregistration.ArbitratorRegistrationView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.popups.Popup;
-import javafx.beans.value.ChangeListener;
-import javafx.event.EventHandler;
+
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
 
 @FxmlView
 public class AccountView extends ActivatableView<TabPane, AccountViewModel> {

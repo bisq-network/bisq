@@ -17,21 +17,20 @@
 
 package bisq.desktop.main.overlays.windows.downloadupdate;
 
-import com.google.common.base.Joiner;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
-import bisq.core.alert.Alert;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.VerifyDescriptor;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+
+import bisq.core.alert.Alert;
+
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import com.google.common.base.Joiner;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,17 +39,26 @@ import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import lombok.extern.slf4j.Slf4j;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+
+import javafx.beans.value.ChangeListener;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.desktop.util.FormBuilder.addLabel;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {

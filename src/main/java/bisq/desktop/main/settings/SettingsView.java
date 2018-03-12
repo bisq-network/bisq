@@ -17,21 +17,29 @@
 
 package bisq.desktop.main.settings;
 
-import bisq.common.locale.Res;
-import bisq.desktop.main.settings.network.NetworkSettingsView;
-import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.settings.about.AboutView;
-import javafx.beans.value.ChangeListener;
+import bisq.desktop.main.settings.network.NetworkSettingsView;
+import bisq.desktop.main.settings.preferences.PreferencesView;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
 
 @FxmlView
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {

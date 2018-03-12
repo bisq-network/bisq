@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.overlays.notifications;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NotificationManager {
     private static final Logger log = LoggerFactory.getLogger(NotificationManager.class);

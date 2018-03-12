@@ -19,11 +19,9 @@ package bisq.desktop.main.overlays.windows.downloadupdate;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class VerifyTaskTest {
+
     @Test
     public void call() throws Exception {
     }
-
 }

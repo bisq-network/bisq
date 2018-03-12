@@ -17,30 +17,38 @@
 
 package bisq.desktop.main.disputes;
 
-import bisq.common.app.DevEnv;
-import bisq.common.crypto.KeyRing;
-import bisq.common.locale.Res;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
-import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
+
+import bisq.core.arbitration.Arbitrator;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.arbitration.DisputeManager;
+
 import bisq.network.p2p.NodeAddress;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.MapChangeListener;
+
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-import javax.inject.Inject;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.MapChangeListener;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView

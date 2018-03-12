@@ -20,12 +20,9 @@ package bisq.desktop.main.funds.transactions;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.AbstractCollection;
 import java.util.AbstractList;
 import java.util.Collection;
-import java.util.Iterator;
 
 class ObservableListDecorator<T> extends AbstractList<T> {
     private final ObservableList<T> delegate = FXCollections.observableArrayList();

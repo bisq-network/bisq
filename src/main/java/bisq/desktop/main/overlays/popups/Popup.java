@@ -18,7 +18,7 @@
 package bisq.desktop.main.overlays.popups;
 
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.Overlay;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

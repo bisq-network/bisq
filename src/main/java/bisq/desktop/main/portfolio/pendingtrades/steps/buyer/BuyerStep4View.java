@@ -17,20 +17,6 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
-import bisq.common.handlers.FaultHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.Res;
-import bisq.common.util.Tuple2;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.InsufficientFundsException;
-import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.CoinUtil;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
@@ -45,19 +31,41 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BtcAddressValidator;
-import javafx.geometry.Insets;
+
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.AddressEntryException;
+import bisq.core.btc.InsufficientFundsException;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.util.CoinUtil;
+
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.handlers.FaultHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+
+import javafx.geometry.Insets;
+
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class BuyerStep4View extends TradeStepView {
     // private final ChangeListener<Boolean> focusedPropertyListener;
@@ -66,7 +74,6 @@ public class BuyerStep4View extends TradeStepView {
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
     private TitledGroupBg withdrawTitledGroupBg;
     private Label withdrawAddressLabel;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -111,7 +118,6 @@ public class BuyerStep4View extends TradeStepView {
         //withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
         // withdrawButton.disableProperty().unbind();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content

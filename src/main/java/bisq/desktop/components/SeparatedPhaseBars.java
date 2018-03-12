@@ -17,25 +17,30 @@
 
 package bisq.desktop.components;
 
+import bisq.core.dao.DaoPeriodService;
+
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
-import bisq.core.dao.DaoPeriodService;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 public class SeparatedPhaseBars extends HBox {

@@ -17,11 +17,9 @@
 
 package bisq.desktop.main.offer.takeoffer;
 
-import com.google.inject.Inject;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
+import bisq.desktop.main.offer.OfferDataModel;
+import bisq.desktop.main.overlays.popups.Popup;
+
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.AddressEntry;
@@ -44,20 +42,29 @@ import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
-import bisq.desktop.main.offer.OfferDataModel;
-import bisq.desktop.main.overlays.popups.Popup;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ObservableList;
+
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 
-import javax.annotation.Nullable;
+import com.google.inject.Inject;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
+import javafx.collections.ObservableList;
+
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -156,7 +163,6 @@ class TakeOfferDataModel extends OfferDataModel {
         if (offer != null)
             tradeManager.onCancelAvailabilityRequest(offer);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -269,7 +275,6 @@ class TakeOfferDataModel extends OfferDataModel {
     public void onClose() {
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -422,7 +427,6 @@ class TakeOfferDataModel extends OfferDataModel {
         preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +471,6 @@ class TakeOfferDataModel extends OfferDataModel {
             return 0;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -479,7 +482,6 @@ class TakeOfferDataModel extends OfferDataModel {
     private void removeListeners() {
         btcWalletService.removeBalanceListener(balanceListener);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

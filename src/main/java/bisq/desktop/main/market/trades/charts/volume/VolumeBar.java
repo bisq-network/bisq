@@ -16,12 +16,16 @@
  */
 package bisq.desktop.main.market.trades.charts.volume;
 
-import bisq.common.locale.Res;
 import bisq.desktop.main.market.trades.charts.CandleData;
+
+import bisq.common.locale.Res;
+
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
+
 import javafx.util.StringConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

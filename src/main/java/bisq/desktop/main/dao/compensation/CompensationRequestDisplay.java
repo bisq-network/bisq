@@ -17,30 +17,47 @@
 
 package bisq.desktop.main.dao.compensation;
 
-import bisq.common.locale.Res;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.request.compensation.CompensationRequestPayload;
-import bisq.core.dao.request.compensation.consensus.Restrictions;
-import bisq.core.provider.fee.FeeService;
-import bisq.desktop.components.*;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.scene.control.*;
+
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.request.compensation.CompensationRequestPayload;
+import bisq.core.dao.request.compensation.consensus.Restrictions;
+import bisq.core.provider.fee.FeeService;
+
+import bisq.common.locale.Res;
+
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
 import javafx.util.Callback;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
 

@@ -17,67 +17,60 @@
 
 package bisq.desktop.util.validation.altcoins;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-
 import bisq.desktop.util.validation.InputValidator.ValidationResult;
 
-public class XCNAddressValidator
-{
-	private final static String ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
-	public static ValidationResult ValidateAddress(String addr)
-	{
-		if (addr.length() != 34)
-			return new ValidationResult(false, "XCN_Addr_Invalid: Length must be 34!");
-		if (!addr.startsWith("C"))
-			return new ValidationResult(false, "XCN_Addr_Invalid: must start with 'C'!");
-		byte[] decoded = decodeBase58(addr, 58, 25);
-		if (decoded == null)
-			return new ValidationResult(false, "XCN_Addr_Invalid: Base58 decoder error!");
+import java.util.Arrays;
 
-		byte[] hash = getSha256(decoded, 0, 21, 2);
-		if(hash == null || !Arrays.equals(Arrays.copyOfRange(hash, 0, 4), Arrays.copyOfRange(decoded, 21, 25)))
-			return new ValidationResult(false, "XCN_Addr_Invalid: Checksum error!");
-		return new ValidationResult(true);
-	}
+public class XCNAddressValidator {
+    private final static String ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-	private static byte[] decodeBase58(String input, int base, int len)
-	{
-		byte[] output = new byte[len];
-		for (int i = 0; i < input.length(); i++)
-		{
-			char t = input.charAt(i);
+    public static ValidationResult ValidateAddress(String addr) {
+        if (addr.length() != 34)
+            return new ValidationResult(false, "XCN_Addr_Invalid: Length must be 34!");
+        if (!addr.startsWith("C"))
+            return new ValidationResult(false, "XCN_Addr_Invalid: must start with 'C'!");
+        byte[] decoded = decodeBase58(addr, 58, 25);
+        if (decoded == null)
+            return new ValidationResult(false, "XCN_Addr_Invalid: Base58 decoder error!");
 
-			int p = ALPHABET.indexOf(t);
-			if (p == -1)
-				return null;
-			for (int j = len - 1; j >= 0; j--, p /= 256)
-			{
-				p += base * (output[j] & 0xFF);
-				output[j] = (byte) (p % 256);
-			}
-			if (p != 0)
-				return null;
-		}
+        byte[] hash = getSha256(decoded, 0, 21, 2);
+        if (hash == null || !Arrays.equals(Arrays.copyOfRange(hash, 0, 4), Arrays.copyOfRange(decoded, 21, 25)))
+            return new ValidationResult(false, "XCN_Addr_Invalid: Checksum error!");
+        return new ValidationResult(true);
+    }
 
-		return output;
-	}
+    private static byte[] decodeBase58(String input, int base, int len) {
+        byte[] output = new byte[len];
+        for (int i = 0; i < input.length(); i++) {
+            char t = input.charAt(i);
 
-	private static byte[] getSha256(byte[] data, int start, int len, int recursion)
-	{
-		if (recursion == 0)
-			return data;
+            int p = ALPHABET.indexOf(t);
+            if (p == -1)
+                return null;
+            for (int j = len - 1; j >= 0; j--, p /= 256) {
+                p += base * (output[j] & 0xFF);
+                output[j] = (byte) (p % 256);
+            }
+            if (p != 0)
+                return null;
+        }
 
-		try
-		{
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			md.update(Arrays.copyOfRange(data, start, start + len));
-			return getSha256(md.digest(), 0, 32, recursion - 1);
-		} catch (NoSuchAlgorithmException e)
-		{
-			return null;
-		}
-	}
+        return output;
+    }
+
+    private static byte[] getSha256(byte[] data, int start, int len, int recursion) {
+        if (recursion == 0)
+            return data;
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(Arrays.copyOfRange(data, start, start + len));
+            return getSha256(md.digest(), 0, 32, recursion - 1);
+        } catch (NoSuchAlgorithmException e) {
+            return null;
+        }
+    }
 }

@@ -19,9 +19,11 @@ package bisq.desktop.components;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+
+import javafx.scene.image.ImageView;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.scene.image.ImageView;
 
 import java.util.concurrent.TimeUnit;
 

@@ -17,14 +17,6 @@
 
 package bisq.desktop.main.dao.wallet.send;
 
-import com.google.common.util.concurrent.FutureCallback;
-import bisq.common.locale.Res;
-import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.BsqBalanceListener;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.util.CoinUtil;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -40,19 +32,38 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
+
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.util.CoinUtil;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+
+import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
+
+import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
+
+import javafx.beans.value.ChangeListener;
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class BsqSendView extends ActivatableView<GridPane, Void> {
@@ -73,7 +84,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private InputTextField receiversAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
     private BsqBalanceListener balanceListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle

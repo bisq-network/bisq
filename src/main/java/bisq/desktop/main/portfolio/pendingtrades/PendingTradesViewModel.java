@@ -17,34 +17,42 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
-import com.google.inject.Inject;
-import bisq.common.Clock;
-import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
-import bisq.common.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
-import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcAddressValidator;
+
+import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.Contract;
+import bisq.core.trade.Trade;
+import bisq.core.trade.closed.ClosedTradableManager;
+
 import bisq.network.p2p.P2PService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+
+import bisq.common.Clock;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
+
+import com.google.inject.Inject;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import java.util.Date;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
 
@@ -82,7 +90,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -132,7 +139,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             tradeStateSubscription = null;
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

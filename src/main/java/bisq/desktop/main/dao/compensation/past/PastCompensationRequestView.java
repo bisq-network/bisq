@@ -17,24 +17,29 @@
 
 package bisq.desktop.main.dao.compensation.past;
 
-import bisq.common.locale.Res;
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.SeparatedPhaseBars;
+import bisq.desktop.main.dao.compensation.CompensationRequestDisplay;
+import bisq.desktop.main.dao.compensation.CompensationRequestView;
+import bisq.desktop.util.BsqFormatter;
+
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.SeparatedPhaseBars;
-import bisq.desktop.main.dao.compensation.CompensationRequestDisplay;
-import bisq.desktop.main.dao.compensation.CompensationRequestView;
-import bisq.desktop.util.BsqFormatter;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.Res;
+
+import javax.inject.Inject;
+
 import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
 import java.util.List;
 
 @FxmlView

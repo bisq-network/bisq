@@ -17,7 +17,6 @@
 
 package bisq.desktop.util.validation;
 
-
 import bisq.common.locale.BankUtil;
 import bisq.common.locale.Res;
 

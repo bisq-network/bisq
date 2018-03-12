@@ -17,22 +17,27 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.common.locale.Res;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.overlays.Overlay;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
+
+import bisq.common.locale.Res;
+
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
+
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 
 import java.io.ByteArrayInputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QRCodeWindow extends Overlay<QRCodeWindow> {
     private static final Logger log = LoggerFactory.getLogger(QRCodeWindow.class);

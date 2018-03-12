@@ -17,15 +17,16 @@
 
 package bisq.core.user;
 
+import bisq.core.app.BisqEnvironment;
+
+import bisq.common.storage.Storage;
+
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Property;
 import com.natpryce.makeiteasy.SameValueDonor;
-import bisq.common.storage.Storage;
-import bisq.core.app.BisqEnvironment;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.withNull;
 
 public class PreferenceMakers {
 

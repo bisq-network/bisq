@@ -21,7 +21,9 @@ import bisq.core.arbitration.DisputeManager;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+
 import org.bitcoinj.core.Transaction;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

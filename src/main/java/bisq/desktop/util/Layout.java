@@ -29,6 +29,4 @@ public class Layout {
     public static final double SPACING_V_BOX = 5d;
     public static final double GRID_GAP = 5d;
     public static final double LIST_ROW_HEIGHT = 34;
-
-
 }

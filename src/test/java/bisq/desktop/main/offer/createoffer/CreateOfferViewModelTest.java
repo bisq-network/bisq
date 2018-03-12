@@ -17,9 +17,13 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.Res;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.validation.AltcoinValidator;
+import bisq.desktop.util.validation.BtcValidator;
+import bisq.desktop.util.validation.FiatPriceValidator;
+import bisq.desktop.util.validation.InputValidator;
+import bisq.desktop.util.validation.SecurityDepositValidator;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -29,23 +33,32 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.validation.*;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.FXCollections;
+
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Coin;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import javafx.beans.property.SimpleIntegerProperty;
+
+import javafx.collections.FXCollections;
+
+import java.time.Instant;
+
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.time.Instant;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static bisq.core.user.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

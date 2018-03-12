@@ -17,13 +17,6 @@
 
 package bisq.desktop.main.overlays;
 
-import bisq.common.GlobalSettings;
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-import bisq.common.util.Utilities;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -31,15 +24,28 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.user.DontShowAgainLookup;
+
+import bisq.common.GlobalSettings;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
+
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -47,22 +53,33 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ObservableList;
+
 import javafx.util.Duration;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
+import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addCheckBox;
 

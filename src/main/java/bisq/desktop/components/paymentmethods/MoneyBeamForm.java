@@ -17,23 +17,29 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.MoneyBeamAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.MoneyBeamAccountPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
+
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.MoneyBeamAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.MoneyBeamAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+
 import org.apache.commons.lang3.StringUtils;
 
-import static bisq.desktop.util.FormBuilder.*;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class MoneyBeamForm extends PaymentMethodForm {
     private final MoneyBeamAccount account;

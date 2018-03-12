@@ -17,18 +17,23 @@
 
 package bisq.desktop.main.funds.withdrawal;
 
-import bisq.common.locale.Res;
+import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.util.BSFormatter;
+
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.util.BSFormatter;
-import javafx.scene.control.Label;
-import lombok.Getter;
-import lombok.Setter;
+
+import bisq.common.locale.Res;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+
+import javafx.scene.control.Label;
+
+import lombok.Getter;
+import lombok.Setter;
 
 class WithdrawalListItem {
     private final BalanceListener balanceListener;

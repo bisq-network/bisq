@@ -17,13 +17,16 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps;
 
+import bisq.desktop.util.Colors;
+
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.desktop.util.Colors;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 public class TradeWizardItem extends Button {
     public Class<? extends TradeStepView> getViewClass() {

@@ -17,19 +17,6 @@
 
 package bisq.desktop.main.dao.wallet.tx;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import bisq.common.locale.Res;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.wallet.BsqBalanceListener;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
-import bisq.core.dao.blockchain.vo.TxType;
-import bisq.core.dao.node.BsqNode;
-import bisq.core.dao.node.BsqNodeProvider;
-import bisq.core.user.Preferences;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
@@ -40,24 +27,52 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.geometry.Insets;
-import javafx.scene.control.*;
+
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.user.Preferences;
+
+import bisq.common.locale.Res;
+
+import org.bitcoinj.core.Transaction;
+
+import javax.inject.Inject;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import org.bitcoinj.core.Transaction;
 
-import javax.inject.Inject;
+import javafx.geometry.Insets;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+
+import javafx.util.Callback;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

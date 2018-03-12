@@ -17,10 +17,11 @@
 
 package bisq.desktop.components;
 
-import com.sun.javafx.scene.control.skin.ToggleButtonSkin;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.control.ToggleButton;
+
+import com.sun.javafx.scene.control.skin.ToggleButtonSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
