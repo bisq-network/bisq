@@ -144,6 +144,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("XSPEC", "Spectrecoin"));
+        result.add(new CryptoCurrency("BTN", "Bitcoin Nova"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
 
         result.add(new CryptoCurrency("TRC", "Terracoin"));

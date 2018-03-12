@@ -585,6 +585,20 @@ public class AltCoinAddressValidatorTest {
     }
 
     @Test
+    public void testBTN() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("BTN");
+
+        assertTrue(validator.validate("E7f2oSCFBb17o1B3toyf8ufE3LeZGGpx1P7rE7rD2n4xA31wqMZYXua2oen7jbvP4LaCns43FQLUeAbkoykrvpvYCbNwpno").isValid);
+        assertTrue(validator.validate("E5rWnKYFMiUJKMLnCfKP4j8ibUdUoLMbXG2rDxKpduFDcgTzjmrFZLcGZEfLRphFUhXUNXwWfMN9EWFxQUR4ZS4E2eBowhc").isValid);
+
+        assertFalse(validator.validate("E7f2oSCFBb17o1B3toyf8ufE3LeZGGpx1P7rE7rD2n4xA31wqMZYXua2oen7jbvP4LaCns43FQLUeAbkoykrvpvYCbNwpno").isValid); //Only 95 charecter, expected is 97.
+        assertFalse(validator.validate("EA6vC14DorV5SW9mZr9nUbMsBCtCeAwXUKXddUdhedjK8QTPkggdPt4gzoAqLy7E9cNzxsNrAxkBfKfjDN3oeEQjLbc8TRE111").isValid); //Address prefix is Se and not SX and not 99 chars.
+        assertFalse(validator.validate("E5rWnKYFMiUJKMLnCfKP4j8ibUdUoLMbXG2rDxKpduFDcgTzjmrFZLcGZEfLRphFUhXUNXwWfMN9EWFxQUR4ZS4E2eBowhcII").isValid); //99 Charecters, expected is 97
+        assertFalse(validator.validate("").isValid);
+    }
+
+    @Test
     public void testDAI() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();
         validator.setCurrencyCode("DAI");
