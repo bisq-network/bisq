@@ -18,7 +18,7 @@
 package io.bisq.gui.util.validation;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.Restrictions;
+import bisq.core.btc.Restrictions;
 import io.bisq.gui.util.BSFormatter;
 import org.bitcoinj.core.Coin;
 

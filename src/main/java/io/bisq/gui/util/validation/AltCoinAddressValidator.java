@@ -19,7 +19,7 @@ package io.bisq.gui.util.validation;
 
 
 import bisq.common.locale.Res;
-import io.bisq.core.app.BisqEnvironment;
+import bisq.core.app.BisqEnvironment;
 import io.bisq.gui.util.validation.altcoins.*;
 import io.bisq.gui.util.validation.params.*;
 import io.bisq.gui.util.validation.params.btc.BTGParams;

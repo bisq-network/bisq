@@ -20,7 +20,7 @@ package io.bisq.gui.main.dao.wallet;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import bisq.common.locale.Res;
-import io.bisq.core.app.BisqEnvironment;
+import bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.AutoTooltipLabel;

@@ -18,12 +18,12 @@
 package io.bisq.gui.main.dao.compensation.past;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.DaoPeriodService;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.request.compensation.CompensationRequestManager;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoPeriodService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.request.compensation.CompensationRequestManager;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.SeparatedPhaseBars;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;

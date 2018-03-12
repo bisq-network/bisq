@@ -18,15 +18,15 @@
 package io.bisq.gui.app;
 
 import bisq.common.util.Utilities;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.app.BisqExecutable;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
-import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
+import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BisqAppMain extends BisqExecutable {
 

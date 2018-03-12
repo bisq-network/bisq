@@ -19,10 +19,10 @@ package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
 import bisq.common.locale.Res;
-import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.Trade;
+import bisq.core.offer.OpenOffer;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.Trade;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;

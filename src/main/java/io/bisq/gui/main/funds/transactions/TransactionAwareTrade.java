@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.arbitration.Dispute;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.Trade;
+import bisq.core.arbitration.Dispute;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.offer.Offer;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.Trade;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Transaction;
 

@@ -18,9 +18,9 @@
 package io.bisq.gui.main.funds.withdrawal;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.listeners.BalanceListener;
-import io.bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.util.BSFormatter;
 import javafx.scene.control.Label;

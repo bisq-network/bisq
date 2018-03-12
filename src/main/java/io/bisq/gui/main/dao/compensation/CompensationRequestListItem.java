@@ -18,13 +18,13 @@
 package io.bisq.gui.main.dao.compensation;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.listeners.TxConfidenceListener;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import io.bisq.core.dao.blockchain.BsqBlockChainListener;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.request.compensation.CompensationRequest;
+import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.request.compensation.CompensationRequest;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.beans.value.ChangeListener;

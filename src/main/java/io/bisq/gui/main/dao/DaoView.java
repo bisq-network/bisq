@@ -19,7 +19,7 @@ package io.bisq.gui.main.dao;
 
 import bisq.common.app.DevEnv;
 import bisq.common.locale.Res;
-import io.bisq.core.app.BisqEnvironment;
+import bisq.core.app.BisqEnvironment;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;

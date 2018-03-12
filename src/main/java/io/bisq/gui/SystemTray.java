@@ -20,7 +20,7 @@ package io.bisq.gui;
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
-import io.bisq.core.exceptions.BisqException;
+import bisq.core.exceptions.BisqException;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.ImageUtil;
 import javafx.application.Platform;

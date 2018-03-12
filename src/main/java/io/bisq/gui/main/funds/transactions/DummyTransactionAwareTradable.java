@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.trade.Tradable;
+import bisq.core.trade.Tradable;
 import org.bitcoinj.core.Transaction;
 
 class DummyTransactionAwareTradable implements TransactionAwareTradable {

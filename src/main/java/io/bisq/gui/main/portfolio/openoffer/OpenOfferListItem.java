@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.portfolio.openoffer;
 
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OpenOffer;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.

@@ -19,10 +19,10 @@ package io.bisq.gui.main.disputes.arbitrator;
 
 import com.google.inject.name.Named;
 import bisq.common.crypto.KeyRing;
-import io.bisq.core.alert.PrivateNotificationManager;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.trade.TradeManager;
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.windows.ContractWindow;

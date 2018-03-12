@@ -42,7 +42,7 @@ import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
-import io.bisq.core.user.Preferences;
+import bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.main.overlays.Overlay;

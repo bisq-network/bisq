@@ -19,9 +19,9 @@ package io.bisq.gui.main.overlays.windows;
 
 import bisq.common.app.DevEnv;
 import bisq.common.locale.Res;
-import io.bisq.core.filter.Filter;
-import io.bisq.core.filter.FilterManager;
-import io.bisq.core.filter.PaymentAccountFilter;
+import bisq.core.filter.Filter;
+import bisq.core.filter.FilterManager;
+import bisq.core.filter.PaymentAccountFilter;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;

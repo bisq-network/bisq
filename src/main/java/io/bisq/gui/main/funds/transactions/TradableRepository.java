@@ -18,11 +18,11 @@
 package io.bisq.gui.main.funds.transactions;
 
 import com.google.common.collect.ImmutableSet;
-import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
 
 import javax.inject.Inject;
 import java.util.Set;

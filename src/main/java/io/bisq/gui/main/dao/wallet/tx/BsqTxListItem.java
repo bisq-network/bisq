@@ -18,12 +18,12 @@
 package io.bisq.gui.main.dao.wallet.tx;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.listeners.TxConfidenceListener;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletService;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;

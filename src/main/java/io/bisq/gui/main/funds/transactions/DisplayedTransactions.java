@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.trade.Tradable;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.trade.Tradable;
 import org.bitcoinj.core.Transaction;
 
 import java.util.List;

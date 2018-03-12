@@ -18,12 +18,12 @@
 package io.bisq.gui.main.overlays.windows;
 
 import bisq.common.locale.Res;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.trade.Contract;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.TradeManager;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.Contract;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;

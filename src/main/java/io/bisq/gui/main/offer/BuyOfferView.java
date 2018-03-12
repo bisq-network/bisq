@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.offer;
 
-import io.bisq.core.user.Preferences;
+import bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.ViewLoader;

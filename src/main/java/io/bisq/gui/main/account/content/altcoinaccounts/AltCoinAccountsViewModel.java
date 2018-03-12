@@ -18,7 +18,7 @@
 package io.bisq.gui.main.account.content.altcoinaccounts;
 
 import com.google.inject.Inject;
-import io.bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccount;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import javafx.collections.ObservableList;

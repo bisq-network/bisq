@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 
 import javax.inject.Inject;
 

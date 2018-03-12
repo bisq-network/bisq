@@ -17,9 +17,9 @@
 
 package io.bisq.gui.components.paymentmethods;
 
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.layout.GridPane;

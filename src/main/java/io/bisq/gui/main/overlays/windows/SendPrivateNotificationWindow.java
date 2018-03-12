@@ -21,7 +21,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
-import io.bisq.core.alert.PrivateNotificationPayload;
+import bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;

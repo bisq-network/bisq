@@ -18,8 +18,8 @@
 package io.bisq.gui.util.validation;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.Restrictions;
-import io.bisq.core.util.CoinUtil;
+import bisq.core.btc.Restrictions;
+import bisq.core.util.CoinUtil;
 import io.bisq.gui.util.BsqFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;

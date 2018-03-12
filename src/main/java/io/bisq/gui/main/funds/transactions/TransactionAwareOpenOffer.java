@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.trade.Tradable;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
+import bisq.core.trade.Tradable;
 import org.bitcoinj.core.Transaction;
 
 class TransactionAwareOpenOffer implements TransactionAwareTradable {

@@ -18,12 +18,12 @@
 package io.bisq.gui.components.paymentmethods;
 
 import bisq.common.locale.*;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.CountryBasedPaymentAccount;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.SepaInstantAccount;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SepaInstantAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.SepaInstantAccountPayload;
 import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;

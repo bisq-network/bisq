@@ -1,8 +1,8 @@
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.arbitration.Dispute;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.trade.Trade;
+import bisq.core.arbitration.Dispute;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.trade.Trade;
 import javafx.collections.FXCollections;
 import org.bitcoinj.core.Transaction;
 import org.junit.Before;

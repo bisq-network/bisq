@@ -2,10 +2,10 @@ package io.bisq.gui.components;
 
 import bisq.common.locale.CurrencyUtil;
 import bisq.common.locale.Res;
-import io.bisq.core.alert.PrivateNotificationManager;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.user.Preferences;
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
 import io.bisq.gui.util.BSFormatter;
 import bisq.network.p2p.NodeAddress;

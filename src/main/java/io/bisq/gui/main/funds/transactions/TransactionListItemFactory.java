@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockChain;
-import io.bisq.core.trade.Tradable;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.trade.Tradable;
 import io.bisq.gui.util.BSFormatter;
 import org.bitcoinj.core.Transaction;
 

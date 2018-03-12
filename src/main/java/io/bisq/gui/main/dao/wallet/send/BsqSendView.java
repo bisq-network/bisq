@@ -19,12 +19,12 @@ package io.bisq.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
 import bisq.common.locale.Res;
-import io.bisq.core.btc.Restrictions;
-import io.bisq.core.btc.wallet.BsqBalanceListener;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.util.CoinUtil;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.util.CoinUtil;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;

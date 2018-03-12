@@ -18,8 +18,8 @@
 package io.bisq.gui.main.portfolio;
 
 import bisq.common.locale.Res;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.Trade;
+import bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;

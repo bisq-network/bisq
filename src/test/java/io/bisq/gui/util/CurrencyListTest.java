@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import bisq.common.locale.CryptoCurrency;
 import bisq.common.locale.FiatCurrency;
 import bisq.common.locale.TradeCurrency;
-import io.bisq.core.user.Preferences;
+import bisq.core.user.Preferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

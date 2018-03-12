@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.core.offer.Offer;
+import bisq.core.offer.Offer;
 import lombok.Value;
 
 @Value

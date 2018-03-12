@@ -18,8 +18,8 @@
 package io.bisq.gui.main.dao.wallet;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.BsqBalanceListener;
-import io.bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import javafx.geometry.Pos;

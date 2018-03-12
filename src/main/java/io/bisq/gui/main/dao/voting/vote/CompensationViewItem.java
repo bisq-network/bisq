@@ -19,10 +19,10 @@ package io.bisq.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.request.compensation.CompensationRequest;
-import io.bisq.core.dao.request.compensation.CompensationRequestPayload;
-import io.bisq.core.dao.vote.CompensationRequestVoteItem;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.request.compensation.CompensationRequest;
+import bisq.core.dao.request.compensation.CompensationRequestPayload;
+import bisq.core.dao.vote.CompensationRequestVoteItem;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipCheckBox;
 import io.bisq.gui.components.HyperlinkWithIcon;

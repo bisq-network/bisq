@@ -1,7 +1,7 @@
 package io.bisq.gui.main.funds.transactions;
 
 import com.google.common.collect.Sets;
-import io.bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import org.bitcoinj.core.Transaction;
 import org.junit.Test;
 

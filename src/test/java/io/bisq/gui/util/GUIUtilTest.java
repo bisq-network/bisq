@@ -15,7 +15,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static bisq.common.locale.TradeCurrencyMakers.bitcoin;
 import static bisq.common.locale.TradeCurrencyMakers.euro;
-import static io.bisq.core.user.PreferenceMakers.empty;
+import static bisq.core.user.PreferenceMakers.empty;
 import static io.bisq.gui.util.CurrencyListItemMakers.*;
 import static org.junit.Assert.assertEquals;
 

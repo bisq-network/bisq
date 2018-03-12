@@ -20,7 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import bisq.common.app.DevEnv;
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
-import io.bisq.core.alert.Alert;
+import bisq.core.alert.Alert;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;

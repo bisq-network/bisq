@@ -19,8 +19,8 @@ package io.bisq.gui.main.dao.voting.vote;
 
 import bisq.common.UserThread;
 import bisq.common.locale.Res;
-import io.bisq.core.dao.vote.VoteItem;
-import io.bisq.core.dao.vote.VotingDefaultValues;
+import bisq.core.dao.vote.VoteItem;
+import bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;

@@ -19,12 +19,12 @@ package io.bisq.gui.main.offer.takeoffer;
 
 import bisq.common.app.DevEnv;
 import bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.trade.Trade;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.Trade;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;

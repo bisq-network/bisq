@@ -18,10 +18,10 @@
 package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.trade.Trade;
+import bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;

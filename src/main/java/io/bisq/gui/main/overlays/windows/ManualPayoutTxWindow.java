@@ -19,10 +19,10 @@ package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.util.concurrent.FutureCallback;
 import bisq.common.UserThread;
-import io.bisq.core.btc.exceptions.TransactionVerificationException;
-import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.btc.wallet.TradeWalletService;
-import io.bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;

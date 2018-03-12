@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.offer;
 
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

@@ -3,13 +3,13 @@ package io.bisq.gui.main.offer.offerbook;
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
-import io.bisq.core.offer.OfferMaker;
-import io.bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferMaker;
+import bisq.core.offer.OfferPayload;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.core.offer.OfferMaker.btcUsdOffer;
+import static bisq.core.offer.OfferMaker.btcUsdOffer;
 
 public class OfferBookListItemMaker {
 

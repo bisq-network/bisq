@@ -19,11 +19,11 @@ package io.bisq.gui.components.paymentmethods;
 
 import bisq.common.locale.CurrencyUtil;
 import bisq.common.locale.Res;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.UpholdAccount;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.UpholdAccountPayload;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.UpholdAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.UpholdAccountPayload;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;

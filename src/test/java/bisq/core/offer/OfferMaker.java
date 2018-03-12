@@ -1,4 +1,4 @@
-package io.bisq.core.offer;
+package bisq.core.offer;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;

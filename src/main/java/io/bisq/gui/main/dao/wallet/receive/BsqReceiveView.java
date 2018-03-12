@@ -18,7 +18,7 @@
 package io.bisq.gui.main.dao.wallet.receive;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BsqAddressTextField;

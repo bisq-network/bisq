@@ -18,10 +18,10 @@
 package io.bisq.gui.main.funds.deposit;
 
 import bisq.common.locale.Res;
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.listeners.BalanceListener;
-import io.bisq.core.btc.listeners.TxConfidenceListener;
-import io.bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;

@@ -17,12 +17,12 @@
 
 package io.bisq.gui.main.funds.locked;
 
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.listeners.BalanceListener;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletService;
-import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.Trade;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.Trade;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.util.BSFormatter;
 import javafx.scene.control.Label;

@@ -18,9 +18,9 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import bisq.common.app.Log;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferBookService;
-import io.bisq.core.trade.TradeManager;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferBookService;
+import bisq.core.trade.TradeManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferPayload.Direction.BUY;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.

@@ -20,7 +20,7 @@ package io.bisq.gui.main.overlays.windows;
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
-import io.bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.WalletsManager;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
