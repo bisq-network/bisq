@@ -20,7 +20,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.bisq</groupId>
+    <groupId>network.bisq</groupId>
     <artifactId>bisq-desktop</artifactId>
     <version>-SNAPSHOT</version>
 
@@ -111,7 +111,7 @@
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
-                                <Main-Class>io.bisq.gui.app.BisqAppMain</Main-Class>
+                                <Main-Class>bisq.desktop.app.BisqAppMain</Main-Class>
                                 <!-- the specified bouncy castle jar classes  -->
                                 <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
                             </manifestEntries>
@@ -357,9 +357,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.bisq</groupId>
+            <groupId>network.bisq</groupId>
             <artifactId>bisq-core</artifactId>
-            <version>975d446</version>
+            <version>-SNAPSHOT</version>
         </dependency>
 
         <dependency>

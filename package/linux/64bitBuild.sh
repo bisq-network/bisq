@@ -29,7 +29,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "$dir/bcpg-jdk15on.jar" \
     -srcfiles "$dir/bcprov-jdk15on.jar" \
     -srcfiles package/linux/LICENSE \
-    -appclass io.bisq.gui.app.BisqAppMain \
+    -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
     -outfile Bisq
 
