@@ -1,0 +1,303 @@
+/* splash screen */
+/*noinspection CssUnknownTarget*/
+#image-splash-logo {
+    -fx-image: url("../../images/logo_splash.png");
+}
+
+/* shared*/
+#image-info {
+    -fx-image: url("../../images/info.png");
+}
+
+#light_close {
+    -fx-image: url("../../images/light_close.png");
+}
+
+#image-alert-round {
+    -fx-image: url("../../images/alert_round.png");
+}
+
+#image-green_circle {
+    -fx-image: url("../../images/green_circle.png");
+}
+
+#image-blue_circle {
+    -fx-image: url("../../images/blue_circle.png");
+}
+
+#image-remove {
+    -fx-image: url("../../images/remove.png");
+}
+
+#image-buy {
+    -fx-image: url("../../images/buy.png");
+}
+
+#image-buy-white {
+    -fx-image: url("../../images/buy_white.png");
+}
+
+#image-sell {
+    -fx-image: url("../../images/sell.png");
+}
+
+#image-sell-white {
+    -fx-image: url("../../images/sell_white.png");
+}
+
+#image-expand {
+    -fx-image: url("../../images/expand.png");
+}
+
+#image-collapse {
+    -fx-image: url("../../images/collapse.png");
+}
+
+#image-buy-large {
+    -fx-image: url("../../images/buy_large.png");
+}
+
+#image-sell-large {
+    -fx-image: url("../../images/sell_large.png");
+}
+
+/* navigation buttons */
+#image-nav-market {
+    -fx-image: url("../../images/nav/market.png");
+}
+
+#image-nav-market-active {
+    -fx-image: url("../../images/nav/market_active.png");
+}
+
+#image-nav-buyoffer {
+    -fx-image: url("../../images/nav/buyoffer.png");
+}
+
+#image-nav-buyoffer-active {
+    -fx-image: url("../../images/nav/buyoffer_active.png");
+}
+
+#image-nav-selloffer {
+    -fx-image: url("../../images/nav/selloffer.png");
+}
+
+#image-nav-selloffer-active {
+    -fx-image: url("../../images/nav/selloffer_active.png");
+}
+
+#image-nav-portfolio {
+    -fx-image: url("../../images/nav/portfolio.png");
+}
+
+#image-nav-portfolio-active {
+    -fx-image: url("../../images/nav/portfolio_active.png");
+}
+
+#image-nav-funds {
+    -fx-image: url("../../images/nav/funds.png");
+}
+
+#image-nav-funds-active {
+    -fx-image: url("../../images/nav/funds_active.png");
+}
+
+#image-nav-disputes {
+    -fx-image: url("../../images/nav/disputes.png");
+}
+
+#image-nav-disputes-active {
+    -fx-image: url("../../images/nav/disputes_active.png");
+}
+
+#image-nav-settings {
+    -fx-image: url("../../images/nav/settings.png");
+}
+
+#image-nav-settings-active {
+    -fx-image: url("../../images/nav/settings_active.png");
+}
+
+#image-nav-account {
+    -fx-image: url("../../images/nav/account.png");
+}
+
+#image-nav-account-active {
+    -fx-image: url("../../images/nav/account_active.png");
+}
+
+#image-nav-dao {
+    -fx-image: url("../../images/nav/dao.png");
+}
+
+#image-nav-dao-active {
+    -fx-image: url("../../images/nav/dao_active.png");
+}
+
+/* account*/
+#image-tick {
+    -fx-image: url("../../images/tick.png");
+}
+
+#image-arrow-blue {
+    -fx-image: url("../../images/arrow_blue.png");
+}
+
+#image-arrow-grey {
+    -fx-image: url("../../images/arrow_grey.png");
+}
+
+/* connection state*/
+#image-connection-tor {
+    -fx-image: url("../../images/connection/tor.png");
+}
+
+#image-connection-direct {
+    -fx-image: url("../../images/connection/direct.png");
+}
+
+#image-connection-nat {
+    -fx-image: url("../../images/connection/nat.png");
+}
+
+#image-connection-relay {
+    -fx-image: url("../../images/connection/relay.png");
+}
+
+#image-connection-synced {
+    -fx-image: url("../../images/connection/synced.png");
+}
+
+/* software update*/
+
+#image-update-in-progress {
+    -fx-image: url("../../images/update/update_in_progress.png");
+}
+
+#image-update-up-to-date {
+    -fx-image: url("../../images/update/update_up_to_date.png");
+}
+
+#image-update-available {
+    -fx-image: url("../../images/update/update_available.png");
+}
+
+#image-update-failed {
+    -fx-image: url("../../images/update/update_failed.png");
+}
+
+/* offer state */
+#image-offer_state_unknown {
+    -fx-image: url("../../images/offer/offer_state_unknown.png");
+}
+
+#image-offer_state_available {
+    -fx-image: url("../../images/offer/offer_state_available.png");
+}
+
+#image-offer_state_not_available {
+    -fx-image: url("../../images/offer/offer_state_not_available.png");
+}
+
+#image-attachment {
+    -fx-image: url("../../images/attachment.png");
+}
+
+#bubble_arrow_grey_left {
+    -fx-image: url("../../images/bubble_arrow_grey_left.png");
+}
+
+#bubble_arrow_blue_left {
+    -fx-image: url("../../images/bubble_arrow_blue_left.png");
+}
+
+#bubble_arrow_grey_right {
+    -fx-image: url("../../images/bubble_arrow_grey_right.png");
+}
+
+#bubble_arrow_blue_right {
+    -fx-image: url("../../images/bubble_arrow_blue_right.png");
+}
+
+#link {
+    -fx-image: url("../../images/link.png");
+}
+
+#invert {
+    -fx-image: url("../../images/invert.png");
+}
+
+#avatar_1 {
+    -fx-image: url("../../images/avatars/avatar_1.png");
+}
+
+#avatar_2 {
+    -fx-image: url("../../images/avatars/avatar_2.png");
+}
+
+#avatar_3 {
+    -fx-image: url("../../images/avatars/avatar_3.png");
+}
+
+#avatar_4 {
+    -fx-image: url("../../images/avatars/avatar_4.png");
+}
+
+#avatar_5 {
+    -fx-image: url("../../images/avatars/avatar_5.png");
+}
+
+#avatar_6 {
+    -fx-image: url("../../images/avatars/avatar_6.png");
+}
+
+#avatar_7 {
+    -fx-image: url("../../images/avatars/avatar_7.png");
+}
+
+#avatar_8 {
+    -fx-image: url("../../images/avatars/avatar_8.png");
+}
+
+#avatar_9 {
+    -fx-image: url("../../images/avatars/avatar_9.png");
+}
+
+#avatar_10 {
+    -fx-image: url("../../images/avatars/avatar_10.png");
+}
+
+#avatar_11 {
+    -fx-image: url("../../images/avatars/avatar_11.png");
+}
+
+#avatar_12 {
+    -fx-image: url("../../images/avatars/avatar_12.png");
+}
+
+#avatar_13 {
+    -fx-image: url("../../images/avatars/avatar_13.png");
+}
+
+#avatar_14 {
+    -fx-image: url("../../images/avatars/avatar_14.png");
+}
+
+#avatar_15 {
+    -fx-image: url("../../images/avatars/avatar_15.png");
+}
+
+#poloniex {
+    -fx-image: url("../../images/poloniex.png");
+}
+
+#btcaverage {
+    -fx-image: url("../../images/btcaverage.png");
+}
+
+#spinner {
+    -fx-image: url("../../images/spinner.png");
+}
+
+
+

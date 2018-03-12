@@ -41,7 +41,7 @@ echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
-    -Bmac.CFBundleIdentifier=io.bisq \
+    -Bmac.CFBundleIdentifier=bisq \
     -Bmac.CFBundleName=Bisq \
     -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
@@ -53,7 +53,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "deploy/Bisq-$version.jar" \
     -srcfiles "target/lib/bcpg-jdk15on.jar" \
     -srcfiles "target/lib/bcprov-jdk15on.jar" \
-    -appclass io.bisq.gui.app.BisqAppMain \
+    -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
 

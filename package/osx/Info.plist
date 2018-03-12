@@ -15,7 +15,7 @@
         <key>CFBundleName</key>
         <string>Bisq</string>
         <key>CFBundleIdentifier</key>
-        <string>io.bisq.Bisq</string>
+        <string>bisq.Bisq</string>
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundlePackageType</key>
@@ -36,7 +36,7 @@
         <key>JVMRuntime</key>
         <string>..</string>
         <key>JVMMainClassName</key>
-        <string>io.bisq.app.core.BisqAppMain</string>
+        <string>bisq.desktop.app.BisqAppMain</string>
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
@@ -49,6 +49,6 @@
         <key>JVMUserOptions</key>
         <dict>
         </dict>
-        
+
     </dict>
 </plist>

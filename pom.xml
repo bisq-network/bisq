@@ -111,7 +111,7 @@
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
-                                <Main-Class>io.bisq.gui.app.BisqAppMain</Main-Class>
+                                <Main-Class>bisq.desktop.app.BisqAppMain</Main-Class>
                                 <!-- the specified bouncy castle jar classes  -->
                                 <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path>
                             </manifestEntries>

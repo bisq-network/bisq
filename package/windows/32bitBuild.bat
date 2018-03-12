@@ -19,7 +19,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -title Bisq ^
 -vendor Bisq ^
 -outdir %outdir% ^
--appclass io.bisq.gui.app.BisqAppMain ^
+-appclass bisq.desktop.app.BisqAppMain ^
 -srcfiles %outdir%\Bisq.jar ^
 -srcfiles %outdir%\bcpg-jdk15on.jar ^
 -srcfiles %outdir%\bcprov-jdk15on.jar ^

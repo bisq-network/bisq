@@ -11,7 +11,7 @@ That interpretation is also confirmed by the Java FX reference: "A controller is
  
 
 The described pattern is only applied yet to that package:  
-io.bisq.gui.main.offer.createoffer;  
+bisq.desktop.main.offer.createoffer;  
 For prototyping the UI we stick first with a more rapid development style approach.  
 
 
