@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
 import io.bisq.core.trade.Trade;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import org.bitcoinj.core.Coin;

@@ -17,8 +17,8 @@
 
 package io.bisq.gui.util;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.util.MathUtils;
+import bisq.common.app.DevEnv;
+import bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.provider.price.MarketPrice;
 import lombok.extern.slf4j.Slf4j;

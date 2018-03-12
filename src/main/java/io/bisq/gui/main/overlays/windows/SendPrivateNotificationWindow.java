@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.InputTextField;

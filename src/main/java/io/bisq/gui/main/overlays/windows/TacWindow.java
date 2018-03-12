@@ -1,7 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;

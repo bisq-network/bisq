@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.disputes;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.locale.Res;
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.Res;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;

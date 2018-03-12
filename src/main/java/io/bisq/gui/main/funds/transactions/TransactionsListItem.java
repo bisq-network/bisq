@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;

@@ -31,7 +31,7 @@
  */
 package io.bisq.gui.main.market.trades.charts.price;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.util.Layout;

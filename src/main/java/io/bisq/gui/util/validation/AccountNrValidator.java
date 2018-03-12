@@ -18,8 +18,8 @@
 package io.bisq.gui.util.validation;
 
 
-import io.bisq.common.locale.BankUtil;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.Res;
 import org.apache.commons.lang3.StringUtils;
 
 public final class AccountNrValidator extends BankValidator {

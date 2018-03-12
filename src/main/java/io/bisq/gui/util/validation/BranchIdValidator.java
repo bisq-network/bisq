@@ -18,8 +18,8 @@
 package io.bisq.gui.util.validation;
 
 
-import io.bisq.common.locale.BankUtil;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.Res;
 
 public final class BranchIdValidator extends BankValidator {
 

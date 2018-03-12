@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.dao.compensation;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;

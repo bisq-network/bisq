@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.funds.deposit;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.listeners.TxConfidenceListener;

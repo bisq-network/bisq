@@ -17,9 +17,9 @@
 
 package io.bisq.gui.components.paymentmethods;
 
-import io.bisq.common.locale.BankUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;

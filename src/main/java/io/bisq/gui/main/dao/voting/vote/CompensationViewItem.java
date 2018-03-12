@@ -18,7 +18,7 @@
 package io.bisq.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.request.compensation.CompensationRequest;
 import io.bisq.core.dao.request.compensation.CompensationRequestPayload;

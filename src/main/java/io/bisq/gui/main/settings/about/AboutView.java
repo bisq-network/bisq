@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.settings.about;
 
-import io.bisq.common.app.Version;
-import io.bisq.common.locale.Res;
+import bisq.common.app.Version;
+import bisq.common.locale.Res;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;

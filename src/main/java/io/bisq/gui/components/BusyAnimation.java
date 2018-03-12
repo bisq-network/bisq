@@ -1,7 +1,7 @@
 package io.bisq.gui.components;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.image.ImageView;

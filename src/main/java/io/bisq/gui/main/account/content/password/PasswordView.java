@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.account.content.password;
 
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
 import io.bisq.gui.Navigation;

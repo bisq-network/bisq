@@ -1,11 +1,11 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import com.natpryce.makeiteasy.Maker;
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.locale.Country;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.Res;
+import bisq.common.GlobalSettings;
+import bisq.common.locale.Country;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOfferManager;
@@ -35,7 +35,7 @@ import java.util.Collections;
 
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.common.locale.TradeCurrencyMakers.usd;
+import static bisq.common.locale.TradeCurrencyMakers.usd;
 import static io.bisq.core.user.PreferenceMakers.empty;
 import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.*;
 import static org.junit.Assert.assertEquals;

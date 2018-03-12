@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.failedtrades;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;

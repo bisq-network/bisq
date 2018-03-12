@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.overlays;
 
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.GlobalSettings;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;

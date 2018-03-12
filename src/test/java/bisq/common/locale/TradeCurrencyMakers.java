@@ -1,4 +1,4 @@
-package io.bisq.common.locale;
+package bisq.common.locale;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Property;

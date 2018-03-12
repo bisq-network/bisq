@@ -18,12 +18,12 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.locale.BankUtil;
-import io.bisq.common.locale.CountryUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.util.Tuple3;
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.BankUtil;
+import bisq.common.locale.CountryUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.util.Tuple3;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;

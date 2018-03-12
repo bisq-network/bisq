@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.market.offerbook;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple4;
+import bisq.common.UserThread;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple4;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.gui.Navigation;

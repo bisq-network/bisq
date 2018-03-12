@@ -17,7 +17,7 @@
 
 package io.bisq.gui.app;
 
-import io.bisq.common.util.Utilities;
+import bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.app.BisqExecutable;

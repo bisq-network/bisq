@@ -19,9 +19,9 @@ package io.bisq.gui.main.portfolio.pendingtrades.steps;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.Clock;
-import io.bisq.common.app.Log;
-import io.bisq.common.locale.Res;
+import bisq.common.Clock;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;

@@ -36,12 +36,12 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.inject.name.Named;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.storage.FileUtil;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
-import io.bisq.common.util.Utilities;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.storage.FileUtil;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.AutoTooltipButton;

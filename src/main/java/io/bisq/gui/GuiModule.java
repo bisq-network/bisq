@@ -19,8 +19,8 @@ package io.bisq.gui;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-import io.bisq.common.app.AppModule;
-import io.bisq.common.locale.Res;
+import bisq.common.app.AppModule;
+import bisq.common.locale.Res;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.gui.common.fxml.FxmlViewLoader;
 import io.bisq.gui.common.view.CachingViewLoader;

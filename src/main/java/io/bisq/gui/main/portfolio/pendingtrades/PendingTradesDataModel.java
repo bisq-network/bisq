@@ -18,13 +18,13 @@
 package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
-import io.bisq.common.app.Log;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.FaultHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.Res;
+import bisq.common.app.Log;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.FaultHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.Res;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeAlreadyOpenException;
 import io.bisq.core.arbitration.DisputeManager;

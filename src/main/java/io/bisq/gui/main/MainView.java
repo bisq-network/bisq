@@ -17,13 +17,13 @@
 
 package io.bisq.gui.main;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Version;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Utilities;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.Navigation;

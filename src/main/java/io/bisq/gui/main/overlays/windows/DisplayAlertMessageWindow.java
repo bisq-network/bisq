@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.alert.Alert;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.HyperlinkWithIcon;

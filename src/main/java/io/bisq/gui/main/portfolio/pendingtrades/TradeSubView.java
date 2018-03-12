@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;

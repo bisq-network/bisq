@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.account.content.arbitratorselection;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.LanguageUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.UserThread;
+import bisq.common.locale.LanguageUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.*;

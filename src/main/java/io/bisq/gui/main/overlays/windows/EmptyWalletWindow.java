@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;

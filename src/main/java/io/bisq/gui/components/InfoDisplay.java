@@ -19,8 +19,8 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;

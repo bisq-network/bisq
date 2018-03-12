@@ -18,10 +18,10 @@
 package io.bisq.gui.main.funds.deposit;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;

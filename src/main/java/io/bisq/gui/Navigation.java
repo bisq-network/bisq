@@ -18,9 +18,9 @@
 package io.bisq.gui;
 
 import com.google.inject.Inject;
-import io.bisq.common.proto.persistable.NavigationPath;
-import io.bisq.common.proto.persistable.PersistedDataHost;
-import io.bisq.common.storage.Storage;
+import bisq.common.proto.persistable.NavigationPath;
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.Storage;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
 import io.bisq.gui.main.MainView;

@@ -18,10 +18,10 @@
 package io.bisq.gui.main.portfolio.openoffer;
 
 import com.google.inject.Inject;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Price;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.gui.common.model.ActivatableWithDataModel;

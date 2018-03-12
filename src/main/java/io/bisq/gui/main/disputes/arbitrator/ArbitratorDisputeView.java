@@ -18,7 +18,7 @@
 package io.bisq.gui.main.disputes.arbitrator;
 
 import com.google.inject.name.Named;
-import io.bisq.common.crypto.KeyRing;
+import bisq.common.crypto.KeyRing;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.arbitration.DisputeManager;

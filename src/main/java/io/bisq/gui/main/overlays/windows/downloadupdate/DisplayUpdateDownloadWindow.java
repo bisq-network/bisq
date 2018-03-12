@@ -18,8 +18,8 @@
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.base.Joiner;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.core.alert.Alert;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;

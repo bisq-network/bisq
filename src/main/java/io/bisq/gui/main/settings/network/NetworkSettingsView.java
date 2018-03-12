@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.settings.network;
 
-import io.bisq.common.Clock;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.Clock;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNodes;
 import io.bisq.core.btc.wallet.WalletsSetup;

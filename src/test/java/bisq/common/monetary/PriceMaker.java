@@ -1,4 +1,4 @@
-package io.bisq.common.monetary;
+package bisq.common.monetary;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;

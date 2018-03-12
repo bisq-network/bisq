@@ -18,10 +18,10 @@
 package io.bisq.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.btc.AddressEntry;

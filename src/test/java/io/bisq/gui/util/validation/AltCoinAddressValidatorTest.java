@@ -17,8 +17,8 @@
 
 package io.bisq.gui.util.validation;
 
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import org.junit.Before;

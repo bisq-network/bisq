@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.settings.preferences;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.*;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.*;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.provider.fee.FeeService;

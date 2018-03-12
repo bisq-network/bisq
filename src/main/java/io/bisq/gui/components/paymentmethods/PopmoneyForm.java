@@ -17,8 +17,8 @@
 
 package io.bisq.gui.components.paymentmethods;
 
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PopmoneyAccount;

@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.offer.takeoffer;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;

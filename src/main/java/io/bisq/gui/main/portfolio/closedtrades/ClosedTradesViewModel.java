@@ -18,7 +18,7 @@
 package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.trade.Tradable;

@@ -19,8 +19,8 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.user.Preferences;

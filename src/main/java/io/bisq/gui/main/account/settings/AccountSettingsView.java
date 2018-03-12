@@ -19,7 +19,7 @@ package io.bisq.gui.main.account.settings;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.AutoTooltipLabel;

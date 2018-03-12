@@ -17,12 +17,12 @@
 
 package io.bisq.gui.main.account.content.altcoinaccounts;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
+import bisq.common.UserThread;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;

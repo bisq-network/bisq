@@ -1,6 +1,6 @@
 package io.bisq.gui.components;
 
-import io.bisq.common.UserThread;
+import bisq.common.UserThread;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;

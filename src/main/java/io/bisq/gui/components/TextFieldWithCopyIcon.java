@@ -19,8 +19,8 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;

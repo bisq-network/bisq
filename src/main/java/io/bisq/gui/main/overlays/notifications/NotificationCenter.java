@@ -1,9 +1,9 @@
 package io.bisq.gui.main.overlays.notifications;
 
 import com.google.inject.Inject;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.Log;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.*;
 import io.bisq.core.user.DontShowAgainLookup;

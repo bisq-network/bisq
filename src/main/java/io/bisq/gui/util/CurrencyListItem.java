@@ -17,7 +17,7 @@
 
 package io.bisq.gui.util;
 
-import io.bisq.common.locale.TradeCurrency;
+import bisq.common.locale.TradeCurrency;
 
 public class CurrencyListItem {
     public final TradeCurrency tradeCurrency;

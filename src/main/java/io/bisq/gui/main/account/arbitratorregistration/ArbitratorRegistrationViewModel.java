@@ -18,10 +18,10 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 import com.google.inject.Inject;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.LanguageUtil;
+import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.LanguageUtil;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;

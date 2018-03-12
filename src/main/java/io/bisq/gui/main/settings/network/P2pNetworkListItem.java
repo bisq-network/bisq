@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.settings.network;
 
-import io.bisq.common.Clock;
-import io.bisq.common.locale.Res;
+import bisq.common.Clock;
+import bisq.common.locale.Res;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.OutboundConnection;

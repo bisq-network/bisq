@@ -17,12 +17,12 @@
 
 package io.bisq.gui.main.market.trades;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
-import io.bisq.common.util.MathUtils;
+import bisq.common.UserThread;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+import bisq.common.util.MathUtils;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;

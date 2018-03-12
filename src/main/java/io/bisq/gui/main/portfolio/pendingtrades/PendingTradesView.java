@@ -18,9 +18,9 @@
 package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.name.Named;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;

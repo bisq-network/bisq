@@ -19,8 +19,8 @@ package io.bisq.gui.main.funds.withdrawal;
 
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;

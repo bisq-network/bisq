@@ -19,10 +19,10 @@ package io.bisq.gui.main.market.offerbook;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.monetary.Price;
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.PriceFeedService;

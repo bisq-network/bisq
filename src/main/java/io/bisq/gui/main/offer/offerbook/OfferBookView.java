@@ -18,11 +18,11 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import com.google.inject.name.Named;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;

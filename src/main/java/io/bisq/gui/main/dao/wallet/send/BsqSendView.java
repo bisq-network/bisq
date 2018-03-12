@@ -18,7 +18,7 @@
 package io.bisq.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;

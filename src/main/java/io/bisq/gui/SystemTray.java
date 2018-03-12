@@ -17,9 +17,9 @@
 
 package io.bisq.gui;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.ImageUtil;

@@ -18,7 +18,7 @@
 package io.bisq.gui.main.overlays.windows.downloadupdate;
 
 import com.google.common.collect.Lists;
-import io.bisq.common.storage.FileUtil;
+import bisq.common.storage.FileUtil;
 import io.bisq.gui.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
 import javafx.concurrent.Task;
 import lombok.Getter;

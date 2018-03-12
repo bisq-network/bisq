@@ -17,7 +17,7 @@
 
 package io.bisq.gui.util.validation;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.gui.util.BSFormatter;
 import lombok.Setter;

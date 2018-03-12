@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.gui.Navigation;

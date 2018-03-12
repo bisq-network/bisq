@@ -1,8 +1,8 @@
 package io.bisq.gui.main.overlays.notifications;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;

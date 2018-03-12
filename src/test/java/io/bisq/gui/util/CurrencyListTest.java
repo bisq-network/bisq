@@ -1,9 +1,9 @@
 package io.bisq.gui.util;
 
 import com.google.common.collect.Lists;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.TradeCurrency;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.TradeCurrency;
 import io.bisq.core.user.Preferences;
 import org.junit.Before;
 import org.junit.Test;

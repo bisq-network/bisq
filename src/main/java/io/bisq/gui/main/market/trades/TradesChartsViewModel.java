@@ -19,12 +19,12 @@ package io.bisq.gui.main.market.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.monetary.Altcoin;
-import io.bisq.common.util.MathUtils;
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Altcoin;
+import bisq.common.util.MathUtils;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatistics2;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;

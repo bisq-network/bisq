@@ -18,7 +18,7 @@
 package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;

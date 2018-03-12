@@ -1,8 +1,8 @@
 package io.bisq.gui.main.offer.createoffer;
 
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.Res;
+import bisq.common.GlobalSettings;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;

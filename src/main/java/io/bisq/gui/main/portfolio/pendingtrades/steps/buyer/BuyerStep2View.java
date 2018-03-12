@@ -17,12 +17,12 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple3;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.user.DontShowAgainLookup;

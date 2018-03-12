@@ -1,8 +1,8 @@
 package io.bisq.gui.util;
 
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
+import bisq.common.GlobalSettings;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
 import javafx.util.StringConverter;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,8 +13,8 @@ import java.util.Map;
 
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.common.locale.TradeCurrencyMakers.bitcoin;
-import static io.bisq.common.locale.TradeCurrencyMakers.euro;
+import static bisq.common.locale.TradeCurrencyMakers.bitcoin;
+import static bisq.common.locale.TradeCurrencyMakers.euro;
 import static io.bisq.core.user.PreferenceMakers.empty;
 import static io.bisq.gui.util.CurrencyListItemMakers.*;
 import static org.junit.Assert.assertEquals;

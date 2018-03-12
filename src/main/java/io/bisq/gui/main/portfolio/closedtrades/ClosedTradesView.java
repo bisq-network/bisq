@@ -19,9 +19,9 @@ package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.name.Named;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.offer.Offer;

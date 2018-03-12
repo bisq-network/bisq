@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.settings;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;

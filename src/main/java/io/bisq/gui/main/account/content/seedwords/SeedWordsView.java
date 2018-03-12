@@ -19,8 +19,8 @@ package io.bisq.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bisq.common.locale.Res;
-import io.bisq.common.storage.Storage;
+import bisq.common.locale.Res;
+import bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.user.DontShowAgainLookup;

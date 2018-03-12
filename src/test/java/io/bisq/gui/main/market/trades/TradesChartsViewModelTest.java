@@ -1,9 +1,9 @@
 package io.bisq.gui.main.market.trades;
 
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.monetary.Price;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.KeyStorage;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.monetary.Price;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatistics2;

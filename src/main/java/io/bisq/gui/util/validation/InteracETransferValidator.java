@@ -29,7 +29,7 @@ package io.bisq.gui.util.validation;
  * They are to change in some future (according to the linked document around 2019/2020)
  */
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import org.apache.commons.lang3.StringUtils;
 
 public final class InteracETransferValidator extends InputValidator {

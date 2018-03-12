@@ -19,10 +19,10 @@ package io.bisq.gui.main.funds.transactions;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple4;
-import io.bisq.common.util.Utilities;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple4;
+import bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOffer;

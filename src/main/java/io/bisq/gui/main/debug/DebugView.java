@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.debug;
 
-import io.bisq.common.taskrunner.Task;
+import bisq.common.taskrunner.Task;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import io.bisq.core.offer.placeoffer.tasks.AddToOfferBook;

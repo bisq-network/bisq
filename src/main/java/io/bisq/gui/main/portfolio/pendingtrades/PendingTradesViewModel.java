@@ -18,10 +18,10 @@
 package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
-import io.bisq.common.Clock;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Log;
-import io.bisq.common.locale.Res;
+import bisq.common.Clock;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.payload.PaymentMethod;

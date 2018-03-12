@@ -17,8 +17,8 @@
 
 package io.bisq.gui.util;
 
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Volume;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Volume;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
@@ -33,10 +33,10 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static com.natpryce.makeiteasy.MakeItEasy.*;
-import static io.bisq.common.monetary.PriceMaker.priceString;
-import static io.bisq.common.monetary.PriceMaker.usdPrice;
-import static io.bisq.common.monetary.VolumeMaker.usdVolume;
-import static io.bisq.common.monetary.VolumeMaker.volumeString;
+import static bisq.common.monetary.PriceMaker.priceString;
+import static bisq.common.monetary.PriceMaker.usdPrice;
+import static bisq.common.monetary.VolumeMaker.usdVolume;
+import static bisq.common.monetary.VolumeMaker.volumeString;
 import static io.bisq.core.offer.OfferMaker.btcUsdOffer;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;

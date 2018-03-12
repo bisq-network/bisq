@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.common.app.Log;
+import bisq.common.app.Log;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.trade.TradeManager;

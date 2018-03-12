@@ -18,10 +18,10 @@
 package io.bisq.gui.util;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
-import io.bisq.common.util.Tuple4;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 import io.bisq.gui.components.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

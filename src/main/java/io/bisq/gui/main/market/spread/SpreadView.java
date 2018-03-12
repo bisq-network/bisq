@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.market.spread;
 
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AutoTooltipLabel;

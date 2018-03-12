@@ -18,10 +18,10 @@
 package io.bisq.gui.main.account.content.altcoinaccounts;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.locale.CryptoCurrency;
+import bisq.common.locale.FiatCurrency;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.AccountAgeWitnessService;
 import io.bisq.core.payment.CryptoCurrencyAccount;

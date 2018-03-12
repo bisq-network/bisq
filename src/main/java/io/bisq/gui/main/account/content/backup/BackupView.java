@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.account.content.backup;
 
-import io.bisq.common.locale.Res;
-import io.bisq.common.storage.FileUtil;
-import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Utilities;
+import bisq.common.locale.Res;
+import bisq.common.storage.FileUtil;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.user.Preferences;

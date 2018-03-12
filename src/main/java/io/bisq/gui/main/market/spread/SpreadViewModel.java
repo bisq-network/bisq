@@ -18,9 +18,9 @@
 package io.bisq.gui.main.market.spread;
 
 import com.google.inject.Inject;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.monetary.Altcoin;
-import io.bisq.common.monetary.Price;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.MarketPrice;

@@ -18,7 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.UserThread;
+import bisq.common.UserThread;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.TradeWalletService;

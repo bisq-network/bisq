@@ -17,16 +17,16 @@
 
 package io.bisq.gui.main.offer.createoffer;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.monetary.Altcoin;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.monetary.Volume;
-import io.bisq.common.util.MathUtils;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.CurrencyUtil;
+import bisq.common.locale.Res;
+import bisq.common.locale.TradeCurrency;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
+import bisq.common.monetary.Volume;
+import bisq.common.util.MathUtils;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletsSetup;

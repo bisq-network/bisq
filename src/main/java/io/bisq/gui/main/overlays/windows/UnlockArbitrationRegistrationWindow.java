@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
 import io.bisq.gui.components.AutoTooltipButton;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.components.InputTextField;

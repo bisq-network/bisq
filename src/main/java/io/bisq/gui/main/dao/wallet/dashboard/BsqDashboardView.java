@@ -18,10 +18,10 @@
 package io.bisq.gui.main.dao.wallet.dashboard;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.common.locale.Res;
-import io.bisq.common.monetary.Altcoin;
-import io.bisq.common.monetary.Price;
-import io.bisq.common.util.MathUtils;
+import bisq.common.locale.Res;
+import bisq.common.monetary.Altcoin;
+import bisq.common.monetary.Price;
+import bisq.common.util.MathUtils;
 import io.bisq.core.dao.blockchain.BsqBlockChain;
 import io.bisq.core.dao.blockchain.BsqBlockChainListener;
 import io.bisq.core.dao.node.BsqNode;

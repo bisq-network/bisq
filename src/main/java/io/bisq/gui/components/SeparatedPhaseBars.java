@@ -1,7 +1,7 @@
 package io.bisq.gui.components;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.core.dao.DaoPeriodService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;

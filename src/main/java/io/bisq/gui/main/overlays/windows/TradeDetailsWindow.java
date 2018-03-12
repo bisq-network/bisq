@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;

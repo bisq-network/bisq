@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.account;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Utilities;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Utilities;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;

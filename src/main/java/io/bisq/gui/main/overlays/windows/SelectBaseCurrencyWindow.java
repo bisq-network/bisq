@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.gui.main.overlays.Overlay;

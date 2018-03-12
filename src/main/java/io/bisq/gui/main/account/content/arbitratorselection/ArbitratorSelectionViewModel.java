@@ -18,8 +18,8 @@
 package io.bisq.gui.main.account.content.arbitratorselection;
 
 import com.google.inject.Inject;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.locale.LanguageUtil;
+import bisq.common.crypto.KeyRing;
+import bisq.common.locale.LanguageUtil;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.user.Preferences;

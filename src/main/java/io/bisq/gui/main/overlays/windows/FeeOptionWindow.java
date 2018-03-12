@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple3;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple3;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.DaoView;

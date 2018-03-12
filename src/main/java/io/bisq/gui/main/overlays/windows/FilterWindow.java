@@ -17,8 +17,8 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.locale.Res;
+import bisq.common.app.DevEnv;
+import bisq.common.locale.Res;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.filter.PaymentAccountFilter;

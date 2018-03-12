@@ -19,7 +19,7 @@ package io.bisq.gui.util;
 
 import com.google.common.collect.Lists;
 import com.sun.javafx.collections.ObservableListWrapper;
-import io.bisq.common.locale.TradeCurrency;
+import bisq.common.locale.TradeCurrency;
 import io.bisq.core.user.Preferences;
 
 import javax.annotation.Nullable;

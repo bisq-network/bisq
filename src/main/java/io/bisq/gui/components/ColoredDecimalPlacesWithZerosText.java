@@ -1,6 +1,6 @@
 package io.bisq.gui.components;
 
-import io.bisq.common.util.Tuple2;
+import bisq.common.util.Tuple2;
 import io.bisq.gui.util.GUIUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

@@ -1,6 +1,6 @@
 package io.bisq.gui.common;
 
-import io.bisq.common.Timer;
+import bisq.common.Timer;
 import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

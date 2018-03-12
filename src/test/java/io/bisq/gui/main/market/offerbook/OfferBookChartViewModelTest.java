@@ -1,7 +1,7 @@
 package io.bisq.gui.main.market.offerbook;
 
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.monetary.Price;
+import bisq.common.GlobalSettings;
+import bisq.common.monetary.Price;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
@@ -18,7 +18,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static io.bisq.common.locale.TradeCurrencyMakers.usd;
+import static bisq.common.locale.TradeCurrencyMakers.usd;
 import static io.bisq.core.user.PreferenceMakers.empty;
 import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static io.bisq.gui.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;

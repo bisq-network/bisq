@@ -17,13 +17,13 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Log;
-import io.bisq.common.handlers.FaultHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.Res;
-import io.bisq.common.util.Tuple2;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.handlers.FaultHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.locale.Res;
+import bisq.common.util.Tuple2;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;

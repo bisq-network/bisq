@@ -1,6 +1,6 @@
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.common.locale.Res;
+import bisq.common.locale.Res;
 import io.bisq.gui.components.AutoTooltipLabel;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.geometry.HPos;

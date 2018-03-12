@@ -18,8 +18,8 @@
 package io.bisq.gui.main.dao.voting.vote;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.UserThread;
-import io.bisq.common.locale.Res;
+import bisq.common.UserThread;
+import bisq.common.locale.Res;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
