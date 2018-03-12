@@ -1,16 +1,3 @@
-package bisq.desktop.main.overlays.windows.downloadupdate;
-
-import com.google.common.collect.Lists;
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-
-import java.io.File;
-import java.net.URL;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
 /*
  * This file is part of Bisq.
  *
@@ -27,6 +14,20 @@ import static org.junit.Assert.assertEquals;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
+package bisq.desktop.main.overlays.windows.downloadupdate;
+
+import com.google.common.collect.Lists;
+import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+
+import java.io.File;
+import java.net.URL;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
 @Slf4j
 public class BisqInstallerTest {
     @Test

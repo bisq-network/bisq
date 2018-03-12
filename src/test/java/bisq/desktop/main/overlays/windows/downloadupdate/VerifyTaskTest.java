@@ -1,9 +1,3 @@
-package bisq.desktop.main.overlays.windows.downloadupdate;
-
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
 /*
  * This file is part of Bisq.
  *
@@ -20,6 +14,13 @@ import static org.junit.Assert.*;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
+package bisq.desktop.main.overlays.windows.downloadupdate;
+
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
 public class VerifyTaskTest {
     @Test
     public void call() throws Exception {
