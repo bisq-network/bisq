@@ -862,10 +862,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.trader")) {
             {
-                setMinWidth(40);
-                setMaxWidth(40);
+                setMinWidth(80);
+                setMaxWidth(80);
                 setSortable(true);
             }
         };
