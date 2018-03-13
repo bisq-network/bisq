@@ -34,8 +34,7 @@ import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 import bisq.desktop.util.Colors;
 
 import bisq.core.app.BisqEnvironment;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

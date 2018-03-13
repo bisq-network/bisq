@@ -30,10 +30,10 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.Arbitrator;
+import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.locale.LanguageUtil;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import com.google.inject.name.Named;

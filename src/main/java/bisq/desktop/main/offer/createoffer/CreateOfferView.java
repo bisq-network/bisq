@@ -53,6 +53,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -62,8 +64,6 @@ import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;

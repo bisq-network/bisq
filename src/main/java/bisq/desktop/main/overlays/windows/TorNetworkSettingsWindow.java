@@ -41,6 +41,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.network.NetworkOptionKeys;
@@ -48,7 +49,6 @@ import bisq.network.p2p.network.DefaultPluggableTransports;
 import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;

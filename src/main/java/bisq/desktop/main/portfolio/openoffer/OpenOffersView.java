@@ -29,12 +29,11 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
-
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 
 import javax.inject.Inject;
 

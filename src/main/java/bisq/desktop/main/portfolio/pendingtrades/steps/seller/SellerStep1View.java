@@ -20,7 +20,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 public class SellerStep1View extends TradeStepView {
 

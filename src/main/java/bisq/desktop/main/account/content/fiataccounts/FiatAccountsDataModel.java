@@ -20,6 +20,10 @@ package bisq.desktop.main.account.content.fiataccounts;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
@@ -29,10 +33,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import com.google.inject.Inject;

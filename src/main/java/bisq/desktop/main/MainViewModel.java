@@ -47,6 +47,10 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoManager;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -77,7 +81,6 @@ import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
 
 import bisq.common.Clock;
-import bisq.common.GlobalSettings;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -85,9 +88,6 @@ import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

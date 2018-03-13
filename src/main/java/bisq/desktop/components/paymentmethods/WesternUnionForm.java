@@ -24,6 +24,14 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
 
+import bisq.core.locale.BankUtil;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.Region;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
@@ -31,14 +39,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.locale.BankUtil;
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.Region;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 

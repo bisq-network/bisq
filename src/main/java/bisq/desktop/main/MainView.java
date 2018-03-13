@@ -43,12 +43,12 @@ import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.exceptions.BisqException;
+import bisq.core.locale.Res;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 

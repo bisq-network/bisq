@@ -26,9 +26,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.locale.Res;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.crypto.MnemonicCode;

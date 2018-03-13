@@ -29,6 +29,9 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
@@ -36,10 +39,6 @@ import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 
 import org.bitcoinj.core.Coin;
 

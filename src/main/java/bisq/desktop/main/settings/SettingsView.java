@@ -29,7 +29,7 @@ import bisq.desktop.main.settings.about.AboutView;
 import bisq.desktop.main.settings.network.NetworkSettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

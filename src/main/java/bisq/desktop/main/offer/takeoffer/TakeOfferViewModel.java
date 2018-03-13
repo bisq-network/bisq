@@ -30,6 +30,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -43,7 +44,6 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

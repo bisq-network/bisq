@@ -37,6 +37,7 @@ import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.InsufficientFundsException;
 import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.CoinUtil;
 
@@ -45,7 +46,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;

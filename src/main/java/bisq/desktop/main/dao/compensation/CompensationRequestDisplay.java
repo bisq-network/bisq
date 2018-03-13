@@ -32,9 +32,8 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.request.compensation.CompensationRequestPayload;
 import bisq.core.dao.request.compensation.consensus.Restrictions;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
-
-import bisq.common.locale.Res;
 
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;

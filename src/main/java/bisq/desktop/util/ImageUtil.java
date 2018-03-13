@@ -17,7 +17,7 @@
 
 package bisq.desktop.util;
 
-import bisq.common.locale.Country;
+import bisq.core.locale.Country;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

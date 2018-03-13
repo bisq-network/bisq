@@ -25,8 +25,9 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.locale.Res;
+
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple3;
 
 import javafx.scene.Scene;

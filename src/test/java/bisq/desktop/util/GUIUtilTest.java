@@ -17,9 +17,9 @@
 
 package bisq.desktop.util;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 
 import javafx.util.StringConverter;
 
@@ -30,8 +30,8 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.common.locale.TradeCurrencyMakers.bitcoin;
-import static bisq.common.locale.TradeCurrencyMakers.euro;
+import static bisq.core.locale.TradeCurrencyMakers.bitcoin;
+import static bisq.core.locale.TradeCurrencyMakers.euro;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.util.CurrencyListItemMakers.bitcoinItem;
 import static bisq.desktop.util.CurrencyListItemMakers.euroItem;

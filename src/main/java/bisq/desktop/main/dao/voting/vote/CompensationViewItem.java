@@ -29,8 +29,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.request.compensation.CompensationRequest;
 import bisq.core.dao.request.compensation.CompensationRequestPayload;
 import bisq.core.dao.vote.CompensationRequestVoteItem;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 

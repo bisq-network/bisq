@@ -17,11 +17,10 @@
 
 package bisq.desktop.util;
 
+import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-
-import bisq.common.locale.Res;
-import bisq.common.monetary.Volume;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
@@ -36,10 +35,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.common.monetary.PriceMaker.priceString;
-import static bisq.common.monetary.PriceMaker.usdPrice;
-import static bisq.common.monetary.VolumeMaker.usdVolume;
-import static bisq.common.monetary.VolumeMaker.volumeString;
+import static bisq.core.monetary.PriceMaker.priceString;
+import static bisq.core.monetary.PriceMaker.usdPrice;
+import static bisq.core.monetary.VolumeMaker.usdVolume;
+import static bisq.core.monetary.VolumeMaker.volumeString;
 import static bisq.core.offer.OfferMaker.btcUsdOffer;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;

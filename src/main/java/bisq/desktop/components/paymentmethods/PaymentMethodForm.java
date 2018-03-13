@@ -22,15 +22,15 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 

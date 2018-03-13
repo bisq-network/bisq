@@ -17,11 +17,10 @@
 
 package bisq.desktop.util;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.user.Preferences;
-
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.TradeCurrency;
 
 import com.google.common.collect.Lists;
 

@@ -30,10 +30,9 @@ import bisq.desktop.main.portfolio.failedtrades.FailedTradesView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
+import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.failed.FailedTradesManager;
-
-import bisq.common.locale.Res;
 
 import javax.inject.Inject;
 

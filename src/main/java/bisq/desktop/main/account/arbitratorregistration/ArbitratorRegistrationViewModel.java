@@ -23,6 +23,7 @@ import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.LanguageUtil;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -31,7 +32,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.LanguageUtil;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;

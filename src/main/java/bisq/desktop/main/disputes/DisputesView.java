@@ -32,12 +32,12 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
-import bisq.common.locale.Res;
 
 import javax.inject.Inject;
 

@@ -22,9 +22,8 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.GlobalSettings;
 import bisq.core.provider.price.PriceFeedService;
-
-import bisq.common.GlobalSettings;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -38,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.common.locale.TradeCurrencyMakers.usd;
+import static bisq.core.locale.TradeCurrencyMakers.usd;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;

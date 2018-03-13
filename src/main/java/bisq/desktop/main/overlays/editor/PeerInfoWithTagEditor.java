@@ -23,11 +23,11 @@ import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.user.Preferences;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
 
 import javafx.animation.Interpolator;

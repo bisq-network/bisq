@@ -28,12 +28,12 @@ import bisq.desktop.util.Transitions;
 import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;

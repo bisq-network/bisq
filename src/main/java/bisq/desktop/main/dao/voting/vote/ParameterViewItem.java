@@ -23,9 +23,9 @@ import bisq.desktop.components.InputTextField;
 
 import bisq.core.dao.vote.VoteItem;
 import bisq.core.dao.vote.VotingDefaultValues;
+import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

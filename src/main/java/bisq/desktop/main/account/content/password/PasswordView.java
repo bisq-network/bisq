@@ -34,9 +34,9 @@ import bisq.desktop.util.validation.PasswordValidator;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
+import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 

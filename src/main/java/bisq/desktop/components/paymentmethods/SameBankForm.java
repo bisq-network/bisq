@@ -20,14 +20,14 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.BankUtil;
+import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.locale.BankUtil;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import javafx.scene.control.Label;

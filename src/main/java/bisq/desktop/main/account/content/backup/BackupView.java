@@ -26,9 +26,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.locale.Res;
 import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;

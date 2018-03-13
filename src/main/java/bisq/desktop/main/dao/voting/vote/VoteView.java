@@ -38,13 +38,13 @@ import bisq.core.dao.vote.CompensationRequestVoteItemCollection;
 import bisq.core.dao.vote.VoteItem;
 import bisq.core.dao.vote.VoteItemsList;
 import bisq.core.dao.vote.VotingManager;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;

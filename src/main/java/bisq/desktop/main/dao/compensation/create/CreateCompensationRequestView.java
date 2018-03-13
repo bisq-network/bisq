@@ -35,6 +35,7 @@ import bisq.core.dao.request.compensation.CompensationAmountException;
 import bisq.core.dao.request.compensation.CompensationRequest;
 import bisq.core.dao.request.compensation.CompensationRequestManager;
 import bisq.core.dao.request.compensation.CompensationRequestPayload;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.CoinUtil;
 
@@ -42,7 +43,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.KeyRing;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;

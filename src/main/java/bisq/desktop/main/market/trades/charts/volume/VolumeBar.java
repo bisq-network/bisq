@@ -18,7 +18,7 @@ package bisq.desktop.main.market.trades.charts.volume;
 
 import bisq.desktop.main.market.trades.charts.CandleData;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;

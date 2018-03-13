@@ -25,6 +25,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
@@ -35,7 +36,6 @@ import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.Log;
-import bisq.common.locale.Res;
 
 import com.google.inject.Inject;
 

@@ -34,6 +34,7 @@ import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
@@ -41,7 +42,6 @@ import bisq.network.p2p.network.Statistic;
 
 import bisq.common.Clock;
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Peer;
 

@@ -29,7 +29,7 @@ import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.market.spread.SpreadView;
 import bisq.desktop.main.market.trades.TradesChartsView;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

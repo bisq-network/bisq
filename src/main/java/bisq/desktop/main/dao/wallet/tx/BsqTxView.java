@@ -37,9 +37,8 @@ import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Transaction;
 

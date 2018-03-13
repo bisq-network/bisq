@@ -28,9 +28,10 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
+
 import bisq.common.UserThread;
-import bisq.common.locale.LanguageUtil;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;

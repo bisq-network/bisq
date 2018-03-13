@@ -22,15 +22,14 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.util.validation.InputValidator;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
 
 import org.apache.commons.lang3.StringUtils;
 

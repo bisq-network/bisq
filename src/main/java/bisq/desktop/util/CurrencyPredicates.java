@@ -17,8 +17,8 @@
 
 package bisq.desktop.util;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.TradeCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 
 class CurrencyPredicates {
     boolean isCryptoCurrency(TradeCurrency currency) {

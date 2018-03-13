@@ -25,8 +25,7 @@ import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

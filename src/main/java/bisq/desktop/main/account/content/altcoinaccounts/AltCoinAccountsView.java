@@ -30,6 +30,9 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
@@ -38,9 +41,6 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 

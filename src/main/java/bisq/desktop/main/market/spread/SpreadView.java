@@ -25,8 +25,8 @@ import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

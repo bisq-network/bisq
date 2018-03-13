@@ -31,7 +31,7 @@ import bisq.desktop.main.funds.reserved.ReservedView;
 import bisq.desktop.main.funds.transactions.TransactionsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

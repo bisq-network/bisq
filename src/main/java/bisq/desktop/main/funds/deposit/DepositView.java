@@ -34,12 +34,12 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;

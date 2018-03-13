@@ -28,6 +28,7 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
@@ -35,7 +36,6 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
 
 import com.google.inject.name.Named;

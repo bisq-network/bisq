@@ -29,9 +29,9 @@ import bisq.desktop.util.validation.PasswordValidator;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
+import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 

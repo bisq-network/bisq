@@ -20,8 +20,8 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.locale.Res;
 
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 

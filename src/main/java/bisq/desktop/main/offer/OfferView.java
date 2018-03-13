@@ -27,15 +27,15 @@ import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
 
-import bisq.common.GlobalSettings;
 import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;

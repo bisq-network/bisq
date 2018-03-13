@@ -29,8 +29,9 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.locale.Res;
+
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;

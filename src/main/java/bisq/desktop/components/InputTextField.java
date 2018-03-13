@@ -17,9 +17,8 @@
 
 package bisq.desktop.components;
 
+import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
-
-import bisq.common.locale.Res;
 
 import org.controlsfx.control.PopOver;
 

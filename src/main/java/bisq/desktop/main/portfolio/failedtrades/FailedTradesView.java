@@ -23,7 +23,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

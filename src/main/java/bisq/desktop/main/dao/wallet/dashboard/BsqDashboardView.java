@@ -30,13 +30,13 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 
-import bisq.common.locale.Res;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;

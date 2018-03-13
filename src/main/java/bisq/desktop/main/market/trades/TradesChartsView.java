@@ -29,14 +29,14 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;

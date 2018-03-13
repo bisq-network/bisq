@@ -23,8 +23,9 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.locale.Res;
+
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

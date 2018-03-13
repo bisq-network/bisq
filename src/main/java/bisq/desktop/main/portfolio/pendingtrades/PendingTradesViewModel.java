@@ -24,6 +24,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcAddressValidator;
 
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentMethod;
@@ -36,7 +37,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Clock;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

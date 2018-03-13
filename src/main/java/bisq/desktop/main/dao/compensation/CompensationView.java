@@ -32,7 +32,7 @@ import bisq.desktop.main.dao.compensation.create.CreateCompensationRequestView;
 import bisq.desktop.main.dao.compensation.past.PastCompensationRequestView;
 import bisq.desktop.util.Colors;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
