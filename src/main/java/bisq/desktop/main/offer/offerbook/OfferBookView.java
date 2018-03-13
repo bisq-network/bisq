@@ -192,9 +192,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
-        tableView.getColumns().add(getActionColumn());
         TableColumn<OfferBookListItem, OfferBookListItem> avatarColumn = getAvatarColumn();
         tableView.getColumns().add(avatarColumn);
+        tableView.getColumns().add(getActionColumn());
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
