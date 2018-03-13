@@ -22,13 +22,13 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Res;
 import bisq.common.locale.TradeCurrency;

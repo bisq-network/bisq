@@ -19,12 +19,12 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple3;

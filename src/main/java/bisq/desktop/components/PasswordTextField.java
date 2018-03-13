@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.util.validation.InputValidator;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Res;
 

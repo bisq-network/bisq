@@ -17,6 +17,8 @@
 
 package bisq.desktop.util.validation;
 
+import bisq.core.util.validation.InputValidator;
+
 public final class MoneyBeamValidator extends InputValidator {
 
     @Override

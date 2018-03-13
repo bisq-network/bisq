@@ -18,6 +18,8 @@
 package bisq.desktop.util.validation;
 
 
+import bisq.core.util.validation.InputValidator;
+
 public final class CashAppValidator extends InputValidator {
 
     @Override

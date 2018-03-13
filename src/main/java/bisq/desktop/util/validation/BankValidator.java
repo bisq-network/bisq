@@ -18,6 +18,8 @@
 package bisq.desktop.util.validation;
 
 
+import bisq.core.util.validation.InputValidator;
+
 public abstract class BankValidator extends InputValidator {
     protected String countryCode = "";
 

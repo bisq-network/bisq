@@ -21,7 +21,6 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
-import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.btc.AddressEntry;
@@ -33,6 +32,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.GlobalSettings;
 import bisq.common.locale.CryptoCurrency;

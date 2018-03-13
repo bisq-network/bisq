@@ -56,7 +56,6 @@ import bisq.desktop.util.validation.CashAppValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
 import bisq.desktop.util.validation.IBANValidator;
-import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.OKPayValidator;
@@ -75,6 +74,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
 import bisq.common.locale.Res;

@@ -24,7 +24,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.IBANValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
@@ -32,6 +31,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SepaAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryUtil;

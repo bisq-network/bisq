@@ -26,13 +26,13 @@ import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
 import bisq.desktop.util.validation.EmailValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.BankUtil;
 import bisq.common.locale.Country;

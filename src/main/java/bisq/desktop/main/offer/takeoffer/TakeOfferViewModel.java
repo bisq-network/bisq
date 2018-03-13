@@ -28,7 +28,6 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.offer.Offer;
@@ -36,6 +35,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.CloseConnectionReason;

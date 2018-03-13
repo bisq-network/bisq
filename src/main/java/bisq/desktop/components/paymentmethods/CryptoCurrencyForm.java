@@ -20,14 +20,14 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.AltCoinAddressValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.validation.AltCoinAddressValidator;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.CurrencyUtil;
 import bisq.common.locale.Res;

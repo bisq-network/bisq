@@ -30,11 +30,11 @@ import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.PasswordValidator;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;

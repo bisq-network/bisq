@@ -29,13 +29,13 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.AltCoinAddressValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.validation.AltCoinAddressValidator;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
 import bisq.common.locale.CryptoCurrency;

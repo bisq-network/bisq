@@ -21,13 +21,13 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.CashAppValidator;
-import bisq.desktop.util.validation.InputValidator;
 
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CashAppAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.locale.Res;
 import bisq.common.locale.TradeCurrency;
