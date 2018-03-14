@@ -19,316 +19,32 @@ package bisq.desktop.main.dao.voting.vote;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
-
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.request.compensation.CompensationRequest;
-import bisq.core.dao.request.compensation.CompensationRequestManager;
-import bisq.core.dao.vote.CompensationRequestVoteItem;
-import bisq.core.dao.vote.CompensationRequestVoteItemCollection;
-import bisq.core.dao.vote.VoteItem;
-import bisq.core.dao.vote.VoteItemsList;
-import bisq.core.dao.vote.VotingManager;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.util.CoinUtil;
-
-import bisq.network.p2p.P2PService;
-
-import bisq.common.UserThread;
-import bisq.common.locale.Res;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import com.google.common.util.concurrent.FutureCallback;
-
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-
-import javafx.geometry.Insets;
-
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
-import javafx.util.StringConverter;
-
-import java.io.IOException;
-
-import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
-
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView
 public class VoteView extends ActivatableView<GridPane, Void> {
 
-    private ComboBox<VoteItem> parametersComboBox;
-    private ComboBox<CompensationRequestVoteItem> compensationRequestsComboBox;
-
-    private int gridRow = 0;
-    private final CompensationRequestManager compensationRequestManager;
-    private final BsqWalletService bsqWalletService;
-    private final BtcWalletService btcWalletService;
-    private final WalletsSetup walletsSetup;
-    private final P2PService p2PService;
-    private final FeeService feeService;
-    private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
-    private final VotingManager voteManager;
-    private Button voteButton;
-    private List<CompensationRequest> compensationRequests;
-    private TitledGroupBg compensationRequestsTitledGroupBg, parametersTitledGroupBg;
-    private VoteItemsList voteItemsList;
-    private VBox parametersVBox, compensationRequestsVBox;
-    private final DoubleProperty parametersLabelWidth = new SimpleDoubleProperty();
-    private final DoubleProperty compensationRequestsLabelWidth = new SimpleDoubleProperty();
-    private ChangeListener<Number> numberChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VoteView(CompensationRequestManager compensationRequestManager,
-                     BsqWalletService bsqWalletService,
-                     BtcWalletService btcWalletService,
-                     WalletsSetup walletsSetup,
-                     P2PService p2PService,
-                     FeeService feeService,
-                     BsqFormatter bsqFormatter,
-                     BSFormatter btcFormatter,
-                     VotingManager voteManager) {
-        this.compensationRequestManager = compensationRequestManager;
-        this.bsqWalletService = bsqWalletService;
-        this.btcWalletService = btcWalletService;
-        this.walletsSetup = walletsSetup;
-        this.p2PService = p2PService;
-        this.feeService = feeService;
-        this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
-        this.voteManager = voteManager;
+    private VoteView() {
     }
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 2, Res.get("dao.voting.addItems"));
-
-        //noinspection unchecked
-        compensationRequestsComboBox = addLabelComboBox(root, gridRow, "", Layout.FIRST_ROW_DISTANCE).second;
-        compensationRequestsComboBox.setPromptText(Res.get("dao.voting.addRequest"));
-        compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
-            @Override
-            public String toString(CompensationRequestVoteItem item) {
-                return item.compensationRequest.getPayload().getUid();
-            }
-
-            @Override
-            public CompensationRequestVoteItem fromString(String s) {
-                return null;
-            }
-        });
-        compensationRequestsComboBox.setOnAction(event -> {
-            SingleSelectionModel<CompensationRequestVoteItem> selectionModel = compensationRequestsComboBox.getSelectionModel();
-            CompensationRequestVoteItem selectedItem = selectionModel.getSelectedItem();
-            if (selectedItem != null) {
-                if (!CompensationViewItem.contains(selectedItem)) {
-                    CompensationViewItem.attach(selectedItem,
-                            bsqWalletService,
-                            compensationRequestsVBox,
-                            compensationRequestsLabelWidth,
-                            bsqFormatter,
-                            () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
-                    UserThread.execute(selectionModel::clearSelection);
-                } else {
-                    new Popup<>().warning(Res.get("dao.voting.requestAlreadyAdded")).show();
-                }
-            }
-
-            compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty());
-        });
-
-        //noinspection unchecked
-        parametersComboBox = addLabelComboBox(root, ++gridRow, "").second;
-        parametersComboBox.setPromptText(Res.get("dao.voting.addParameter"));
-        parametersComboBox.setConverter(new StringConverter<VoteItem>() {
-            @Override
-            public String toString(VoteItem item) {
-                return item.getName();
-            }
-
-            @Override
-            public VoteItem fromString(String s) {
-                return null;
-            }
-        });
-        parametersComboBox.setOnAction(event -> {
-            SingleSelectionModel<VoteItem> selectionModel = parametersComboBox.getSelectionModel();
-            VoteItem selectedItem = selectionModel.getSelectedItem();
-            if (selectedItem != null) {
-                if (!ParameterViewItem.contains(selectedItem)) {
-                    ParameterViewItem.attach(selectedItem, parametersVBox, parametersLabelWidth, voteManager.getVotingDefaultValues(),
-                            () -> parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty()));
-                    UserThread.execute(selectionModel::clearSelection);
-                } else {
-                    new Popup<>().warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
-                }
-            }
-            parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty());
-
-        });
-
-        compensationRequestsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.voting.compensationRequests"), Layout.GROUP_DISTANCE);
-        compensationRequestsTitledGroupBg.setManaged(false);
-        compensationRequestsTitledGroupBg.visibleProperty().bind(compensationRequestsTitledGroupBg.managedProperty());
-
-        compensationRequestsVBox = new VBox();
-        compensationRequestsVBox.setSpacing(5);
-        GridPane.setRowIndex(compensationRequestsVBox, gridRow);
-        GridPane.setColumnSpan(compensationRequestsVBox, 2);
-        GridPane.setMargin(compensationRequestsVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        root.getChildren().add(compensationRequestsVBox);
-        compensationRequestsVBox.managedProperty().bind(compensationRequestsTitledGroupBg.managedProperty());
-        compensationRequestsVBox.visibleProperty().bind(compensationRequestsVBox.managedProperty());
-
-
-        parametersTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.parameters"), Layout.GROUP_DISTANCE);
-        parametersTitledGroupBg.setManaged(false);
-        parametersTitledGroupBg.visibleProperty().bind(parametersTitledGroupBg.managedProperty());
-
-        parametersVBox = new VBox();
-        parametersVBox.setSpacing(5);
-        GridPane.setRowIndex(parametersVBox, gridRow);
-        GridPane.setColumnSpan(parametersVBox, 2);
-        GridPane.setMargin(parametersVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        root.getChildren().add(parametersVBox);
-        parametersVBox.managedProperty().bind(parametersTitledGroupBg.managedProperty());
-        parametersVBox.visibleProperty().bind(parametersVBox.managedProperty());
-
-        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("shared.vote"));
-        voteButton.managedProperty().bind(createBooleanBinding(() -> compensationRequestsTitledGroupBg.isManaged() || parametersTitledGroupBg.isManaged(),
-                compensationRequestsTitledGroupBg.managedProperty(), parametersTitledGroupBg.managedProperty()));
-        voteButton.visibleProperty().bind(voteButton.managedProperty());
-
-        voteButton.setOnAction(event -> {
-            // TODO break up in methods
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                log.info(voteItemsList.toString());
-                //TODO
-                if (voteItemsList.isMyVote()) {
-                    new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
-                } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::isHasVoted).findAny().isPresent() &&
-                        !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
-                                .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
-                    new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
-                } else {
-                    try {
-                        byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
-                        try {
-                            Coin votingTxFee = feeService.getVotingTxFee();
-                            Transaction preparedVotingTx = bsqWalletService.getPreparedBurnFeeTx(votingTxFee);
-                            Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedVotingTx, false, opReturnData);
-                            Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                            Coin miningFee = signedTx.getFee();
-                            int txSize = signedTx.bitcoinSerialize().length;
-                            new Popup<>().headLine(Res.get("dao.voting.confirmTx"))
-                                    .confirmation(Res.get("dao.tx.summary",
-                                            btcFormatter.formatCoinWithCode(votingTxFee),
-                                            btcFormatter.formatCoinWithCode(miningFee),
-                                            CoinUtil.getFeePerByte(miningFee, txSize),
-                                            (txSize / 1000d)))
-                                    .actionButtonText(Res.get("shared.yes"))
-                                    .onAction(() -> {
-                                        bsqWalletService.commitTx(txWithBtcFee);
-                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                        // if it gets committed 2 times
-                                        btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-
-                                        bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                            @Override
-                                            public void onSuccess(@Nullable Transaction transaction) {
-                                                checkNotNull(transaction, "Transaction must not be null at doSend callback.");
-                                                log.error("tx successful published" + transaction.getHashAsString());
-                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                                voteItemsList.setIsMyVote(true);
-
-                                                //TODO send to P2P network
-                                            }
-
-                                            @Override
-                                            public void onFailure(@NotNull Throwable t) {
-                                                new Popup<>().warning(t.toString()).show();
-                                            }
-                                        }, 15);
-                                    })
-                                    .closeButtonText(Res.get("shared.cancel"))
-                                    .show();
-                        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
-                            log.error(e.toString());
-                            e.printStackTrace();
-                            new Popup<>().warning(e.toString()).show();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        new Popup<>().error(e.toString()).show();
-                    }
-                }
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-            }
-        });
     }
 
     @Override
     protected void activate() {
-        //TODO rename
-        voteItemsList = voteManager.getActiveVoteItemsList();
-        //noinspection StatementWithEmptyBody
-        if (voteItemsList != null) {
-            CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItemsList.getCompensationRequestVoteItemCollection();
-            ObservableList<CompensationRequestVoteItem> compensationRequestVoteItems = FXCollections.observableArrayList(compensationRequestVoteItemCollection.getCompensationRequestVoteItems());
-            compensationRequestsComboBox.setItems(compensationRequestVoteItems);
-
-            //TODO move to voteManager.getCurrentVoteItemsList()?
-            compensationRequestManager.getActiveRequests().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
-
-            parametersComboBox.setItems(FXCollections.observableArrayList(voteItemsList.getVoteItemList()));
-        } else {
-            //TODO add listener
-        }
     }
 
     @Override
     protected void deactivate() {
-        compensationRequestsComboBox.setOnAction(null);
-        parametersComboBox.setOnAction(null);
-        voteButton.setOnAction(null);
-        ParameterViewItem.cleanupAllInstances();
-        CompensationViewItem.cleanupAllInstances();
     }
 }

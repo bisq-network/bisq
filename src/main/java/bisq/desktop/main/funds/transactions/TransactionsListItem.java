@@ -133,7 +133,7 @@ class TransactionsListItem {
                             //
                             final Optional<TxType> txTypeOptional = bsqBlockChain.getTxType(txId);
                             if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
-                                details = Res.get("funds.tx.compRequest");
+                                details = Res.get("funds.tx.proposal");
                         } else {
                             outgoing = true;
                         }

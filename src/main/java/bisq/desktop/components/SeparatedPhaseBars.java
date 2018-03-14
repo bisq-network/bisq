@@ -100,14 +100,14 @@ public class SeparatedPhaseBars extends HBox {
     }
 
     private void addLabels() {
-        Label titleLabel = new Label(Res.get("dao.compensation.active.phase"));
+        Label titleLabel = new Label(Res.get("dao.proposal.active.phase"));
 
-        Label startLabel = new Label(Res.get("dao.compensation.active.startBlock"));
+        Label startLabel = new Label(Res.get("dao.proposal.active.startBlock"));
         AnchorPane startLabelPane = new AnchorPane();
         AnchorPane.setLeftAnchor(startLabel, 0d);
         startLabelPane.getChildren().add(startLabel);
 
-        Label endLabel = new Label(Res.get("dao.compensation.active.endBlock"));
+        Label endLabel = new Label(Res.get("dao.proposal.active.endBlock"));
         AnchorPane endLabelPane = new AnchorPane();
         AnchorPane.setRightAnchor(endLabel, 0d);
         endLabelPane.getChildren().add(endLabel);
