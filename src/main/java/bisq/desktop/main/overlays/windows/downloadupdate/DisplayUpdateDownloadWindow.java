@@ -22,7 +22,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.VerifyDescriptor;
 
 import bisq.core.alert.Alert;
 
@@ -237,9 +236,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 statusLabel.setText("");
                                 stopAnimations();
 
-                                List<VerifyDescriptor> verifyResults = verifyTask.getValue();
+                                List<BisqInstaller.VerifyDescriptor> verifyResults = verifyTask.getValue();
                                 // check that there are no failed verifications
-                                Optional<VerifyDescriptor> verifyFailed = verifyResults.stream()
+                                Optional<BisqInstaller.VerifyDescriptor> verifyFailed = verifyResults.stream()
                                         .filter(verifyDescriptor -> !BisqInstaller.VerifyStatusEnum.OK.equals(verifyDescriptor.getVerifyStatusEnum())).findFirst();
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));

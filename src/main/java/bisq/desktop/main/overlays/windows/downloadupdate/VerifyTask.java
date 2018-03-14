@@ -21,10 +21,6 @@ package bisq.desktop.main.overlays.windows.downloadupdate;
  * A Task to verify the downloaded bisq installer against the available keys/signatures.
  */
 
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.DownloadType;
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.VerifyDescriptor;
-
 import com.google.common.collect.Lists;
 
 import java.io.FileReader;
@@ -44,15 +40,15 @@ import javafx.concurrent.Task;
 
 @Slf4j
 @Getter
-public class VerifyTask extends Task<List<VerifyDescriptor>> {
-    private final List<FileDescriptor> fileDescriptors;
+public class VerifyTask extends Task<List<BisqInstaller.VerifyDescriptor>> {
+    private final List<BisqInstaller.FileDescriptor> fileDescriptors;
 
     /**
      * Prepares a task to download a file from {@code fileDescriptors} to {@code saveDir}.
      *
      * @param fileDescriptors HTTP URL of the file to be downloaded
      */
-    public VerifyTask(final List<FileDescriptor> fileDescriptors) {
+    public VerifyTask(final List<BisqInstaller.FileDescriptor> fileDescriptors) {
         super();
         this.fileDescriptors = fileDescriptors;
         log.info("Starting VerifyTask with files:{}", fileDescriptors);
@@ -65,23 +61,23 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
      * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
      */
     @Override
-    protected List<VerifyDescriptor> call() throws IOException {
+    protected List<BisqInstaller.VerifyDescriptor> call() throws IOException {
         log.debug("VerifyTask started...");
-        Optional<FileDescriptor> installer = fileDescriptors.stream()
-                .filter(fileDescriptor -> DownloadType.INSTALLER.equals(fileDescriptor.getType()))
+        Optional<BisqInstaller.FileDescriptor> installer = fileDescriptors.stream()
+                .filter(fileDescriptor -> BisqInstaller.DownloadType.INSTALLER.equals(fileDescriptor.getType()))
                 .findFirst();
         if (!installer.isPresent()) {
             log.error("No installer file found.");
             return Lists.newArrayList();
         }
 
-        Optional<FileDescriptor> signingKeyOptional = fileDescriptors.stream()
-                .filter(fileDescriptor -> DownloadType.SIGNING_KEY.equals(fileDescriptor.getType()))
+        Optional<BisqInstaller.FileDescriptor> signingKeyOptional = fileDescriptors.stream()
+                .filter(fileDescriptor -> BisqInstaller.DownloadType.SIGNING_KEY.equals(fileDescriptor.getType()))
                 .findAny();
 
-        List<VerifyDescriptor> verifyDescriptors = Lists.newArrayList();
+        List<BisqInstaller.VerifyDescriptor> verifyDescriptors = Lists.newArrayList();
         if (signingKeyOptional.isPresent()) {
-            final FileDescriptor signingKeyFD = signingKeyOptional.get();
+            final BisqInstaller.FileDescriptor signingKeyFD = signingKeyOptional.get();
             StringBuilder sb = new StringBuilder();
             try {
                 Scanner scanner = new Scanner(new FileReader(signingKeyFD.getSaveFile()));
@@ -92,27 +88,27 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
             } catch (Exception e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder();
+                BisqInstaller.VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = BisqInstaller.VerifyDescriptor.builder();
                 verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
                 verifyDescriptors.add(verifyDescriptorBuilder.build());
                 return verifyDescriptors;
             }
             String signingKey = sb.toString();
 
-            List<FileDescriptor> sigs = fileDescriptors.stream()
-                    .filter(fileDescriptor -> DownloadType.SIG.equals(fileDescriptor.getType()))
+            List<BisqInstaller.FileDescriptor> sigs = fileDescriptors.stream()
+                    .filter(fileDescriptor -> BisqInstaller.DownloadType.SIG.equals(fileDescriptor.getType()))
                     .collect(Collectors.toList());
 
             // iterate all signatures available to us
-            for (FileDescriptor sig : sigs) {
-                VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder().sigFile(sig.getSaveFile());
+            for (BisqInstaller.FileDescriptor sig : sigs) {
+                BisqInstaller.VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = BisqInstaller.VerifyDescriptor.builder().sigFile(sig.getSaveFile());
                 // Sigs are linked to keys, extract all keys which have the same id
-                List<FileDescriptor> keys = fileDescriptors.stream()
-                        .filter(keyDescriptor -> DownloadType.KEY.equals(keyDescriptor.getType()))
+                List<BisqInstaller.FileDescriptor> keys = fileDescriptors.stream()
+                        .filter(keyDescriptor -> BisqInstaller.DownloadType.KEY.equals(keyDescriptor.getType()))
                         .filter(keyDescriptor -> sig.getId().equals(keyDescriptor.getId()))
                         .collect(Collectors.toList());
                 // iterate all keys which have the same id
-                for (FileDescriptor key : keys) {
+                for (BisqInstaller.FileDescriptor key : keys) {
                     if (signingKey.equals(key.getId())) {
                         verifyDescriptorBuilder.keyFile(key.getSaveFile());
                         try {
@@ -133,7 +129,7 @@ public class VerifyTask extends Task<List<VerifyDescriptor>> {
             }
         } else {
             log.error("signingKey is not found");
-            VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = VerifyDescriptor.builder();
+            BisqInstaller.VerifyDescriptor.VerifyDescriptorBuilder verifyDescriptorBuilder = BisqInstaller.VerifyDescriptor.builder();
             verifyDescriptorBuilder.verifyStatusEnum(BisqInstaller.VerifyStatusEnum.FAIL);
             verifyDescriptors.add(verifyDescriptorBuilder.build());
         }

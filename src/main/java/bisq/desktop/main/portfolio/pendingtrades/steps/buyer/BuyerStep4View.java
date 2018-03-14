@@ -29,6 +29,7 @@ import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BtcAddressValidator;
 
@@ -62,10 +63,6 @@ import javafx.geometry.Insets;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
-
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class BuyerStep4View extends TradeStepView {
     // private final ChangeListener<Boolean> focusedPropertyListener;
@@ -126,19 +123,19 @@ public class BuyerStep4View extends TradeStepView {
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void addContent() {
-        addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
-        addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        FormBuilder.addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
+        FormBuilder.addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
 
-        addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
-        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
-        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
         final String miningFee = model.dataModel.isMaker() ?
                 Res.get("portfolio.pending.step5_buyer.makersMiningFee") :
                 Res.get("portfolio.pending.step5_buyer.takersMiningFee");
-        addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
-        withdrawTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
+        FormBuilder.addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
+        withdrawTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
+        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        final Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressLabel = tuple2.first;
         withdrawAddressLabel.setManaged(false);
         withdrawAddressLabel.setVisible(false);

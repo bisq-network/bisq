@@ -432,7 +432,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        iconView.setId("image-remove");
                                         button = new AutoTooltipButton(Res.get("shared.remove"));
                                         button.setMinWidth(70);
                                         iconView.setId("image-remove");

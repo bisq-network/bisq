@@ -17,14 +17,18 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="bisq.desktop.main.account.AccountView"
-         prefHeight="630.0" prefWidth="1000.0"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
-    <Tab fx:id="accountSettingsTab" closable="false"/>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.proposal.make.MakeProposalView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
+          xmlns:fx="http://javafx.com/fxml">
 
-</TabPane>
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+</GridPane>

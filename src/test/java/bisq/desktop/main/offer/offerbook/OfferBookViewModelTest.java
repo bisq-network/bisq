@@ -243,7 +243,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -262,7 +262,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItemWithRange));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItemWithRange));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -297,7 +297,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -316,7 +316,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItemWithRange));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItemWithRange));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -351,7 +351,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 

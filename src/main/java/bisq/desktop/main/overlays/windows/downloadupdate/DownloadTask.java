@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.overlays.windows.downloadupdate;
 
-import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescriptor;
-
 import bisq.common.storage.FileUtil;
 
 import com.google.common.collect.Lists;
@@ -46,25 +44,25 @@ import javafx.concurrent.Task;
 
 @Slf4j
 @Getter
-public class DownloadTask extends Task<List<FileDescriptor>> {
+public class DownloadTask extends Task<List<BisqInstaller.FileDescriptor>> {
     private static final int EOF = -1;
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private String fileName = null;
-    private final List<FileDescriptor> fileDescriptors;
+    private final List<BisqInstaller.FileDescriptor> fileDescriptors;
     private final String saveDir;
 
     /**
      * Prepares a task to download a file from {@code fileDescriptors} to the system's download dir.
      */
-    public DownloadTask(final FileDescriptor fileDescriptor) {
+    public DownloadTask(final BisqInstaller.FileDescriptor fileDescriptor) {
         this(Lists.newArrayList(fileDescriptor));
     }
 
-    public DownloadTask(final FileDescriptor fileDescriptor, final String saveDir) {
+    public DownloadTask(final BisqInstaller.FileDescriptor fileDescriptor, final String saveDir) {
         this(Lists.newArrayList(fileDescriptor), saveDir);
     }
 
-    public DownloadTask(final List<FileDescriptor> fileDescriptors) {
+    public DownloadTask(final List<BisqInstaller.FileDescriptor> fileDescriptors) {
         this(Lists.newArrayList(fileDescriptors), System.getProperty("java.io.tmpdir"));
     }
 
@@ -74,7 +72,7 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
      * @param fileDescriptors HTTP URL of the file to be downloaded
      * @param saveDir         path of the directory to save the file
      */
-    public DownloadTask(final List<FileDescriptor> fileDescriptors, final String saveDir) {
+    public DownloadTask(final List<BisqInstaller.FileDescriptor> fileDescriptors, final String saveDir) {
         super();
         this.fileDescriptors = fileDescriptors;
         this.saveDir = saveDir;
@@ -88,7 +86,7 @@ public class DownloadTask extends Task<List<FileDescriptor>> {
      * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
      */
     @Override
-    protected List<FileDescriptor> call() throws IOException {
+    protected List<BisqInstaller.FileDescriptor> call() throws IOException {
         log.debug("DownloadTask started...");
 
         String partialSaveFilePath = saveDir + (saveDir.endsWith(File.separator) ? "" : File.separator);

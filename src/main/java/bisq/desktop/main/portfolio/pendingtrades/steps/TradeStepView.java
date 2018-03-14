@@ -20,9 +20,11 @@ package bisq.desktop.main.portfolio.pendingtrades.steps;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -55,8 +57,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.components.paymentmethods.PaymentMethodForm.addOpenTradeDuration;
-import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class TradeStepView extends AnchorPane {
@@ -89,7 +89,7 @@ public abstract class TradeStepView extends AnchorPane {
         trade = model.dataModel.getTrade();
         checkNotNull(trade, "trade must not be null at TradeStepView");
 
-        gridPane = addGridPane(this);
+        gridPane = FormBuilder.addGridPane(this);
 
         AnchorPane.setLeftAnchor(this, 0d);
         AnchorPane.setRightAnchor(this, 0d);
@@ -180,8 +180,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.tradeInformation"));
-        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
+        tradeInfoTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.tradeInformation"));
+        txIdTextField = FormBuilder.addLabelTxIdTextField(gridPane, gridRow, Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -189,11 +189,11 @@ public abstract class TradeStepView extends AnchorPane {
             txIdTextField.cleanup();
 
         if (model.dataModel.getTrade() != null) {
-            InfoTextField infoTextField = addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+            InfoTextField infoTextField = PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
             infoTextField.setContentForInfoPopOver(createInfoPopover());
         }
 
-        timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
+        timeLeftTextField = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
@@ -210,8 +210,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addInfoBlock() {
-        addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
-        addMultilineLabel(gridPane, gridRow, getInfoText(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
+        FormBuilder.addMultilineLabel(gridPane, gridRow, getInfoText(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 
     protected String getInfoText() {
@@ -446,7 +446,7 @@ public abstract class TradeStepView extends AnchorPane {
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(10);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
-        Label label = addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
+        Label label = FormBuilder.addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
         label.setMaxWidth(450);
 
         HBox warningBox = new HBox();
