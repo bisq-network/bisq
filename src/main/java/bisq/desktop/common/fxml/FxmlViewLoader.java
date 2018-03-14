@@ -29,9 +29,9 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXMLLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
+
+import java.io.IOException;
 
 import java.util.ResourceBundle;
 

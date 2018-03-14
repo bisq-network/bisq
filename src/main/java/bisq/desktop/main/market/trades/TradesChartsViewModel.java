@@ -59,6 +59,11 @@ import javafx.collections.SetChangeListener;
 
 import javafx.util.Pair;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -68,11 +73,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 
 class TradesChartsViewModel extends ActivatableViewModel {
 

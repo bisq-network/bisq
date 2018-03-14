@@ -77,16 +77,16 @@ import javafx.beans.property.DoubleProperty;
 
 import javafx.util.StringConverter;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+
 import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.List;

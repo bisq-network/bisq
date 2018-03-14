@@ -100,9 +100,9 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 
-import java.io.ByteArrayInputStream;
-
 import java.net.URI;
+
+import java.io.ByteArrayInputStream;
 
 import java.util.concurrent.TimeUnit;
 

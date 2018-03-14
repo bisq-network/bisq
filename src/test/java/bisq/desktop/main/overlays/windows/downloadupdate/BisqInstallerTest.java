@@ -21,9 +21,9 @@ import bisq.desktop.main.overlays.windows.downloadupdate.BisqInstaller.FileDescr
 
 import com.google.common.collect.Lists;
 
-import java.io.File;
-
 import java.net.URL;
+
+import java.io.File;
 
 import java.util.List;
 

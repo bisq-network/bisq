@@ -122,10 +122,10 @@ import javafx.collections.SetChangeListener;
 
 import java.security.Security;
 
-import java.io.IOException;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import java.io.IOException;
 
 import java.util.Date;
 import java.util.HashMap;

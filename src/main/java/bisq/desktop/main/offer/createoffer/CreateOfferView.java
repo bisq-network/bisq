@@ -113,9 +113,9 @@ import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
-import java.io.ByteArrayInputStream;
-
 import java.net.URI;
+
+import java.io.ByteArrayInputStream;
 
 import java.util.ArrayList;
 import java.util.List;

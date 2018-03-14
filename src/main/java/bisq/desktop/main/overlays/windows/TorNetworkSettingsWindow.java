@@ -62,12 +62,12 @@ import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
+import java.net.URI;
+
 import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
-
-import java.net.URI;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

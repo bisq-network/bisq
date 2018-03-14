@@ -20,9 +20,9 @@ package bisq.desktop.util.validation;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
-import java.util.Locale;
-
 import java.math.BigInteger;
+
+import java.util.Locale;
 
 // TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters
 public final class IBANValidator extends InputValidator {

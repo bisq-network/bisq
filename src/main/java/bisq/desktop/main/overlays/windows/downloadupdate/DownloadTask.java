@@ -24,13 +24,13 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.net.URL;
+import java.net.URLConnection;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import java.net.URL;
-import java.net.URLConnection;
 
 import java.util.List;
 import java.util.stream.Collectors;

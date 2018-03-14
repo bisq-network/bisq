@@ -50,15 +50,15 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 
-import java.io.File;
-import java.io.IOException;
-
-import java.util.List;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
