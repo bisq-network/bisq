@@ -259,7 +259,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             Pair<Date, Set<TradeStatistics2>> pair = new Pair<>((Date) time.clone(), set);
             itemsPerInterval.put(i, pair);
             time.setTime(time.getTime() - 1);
-            time = roundToTick(time,  tickUnit);
+            time = roundToTick(time, tickUnit);
         }
 
         // Get all entries for the defined time interval

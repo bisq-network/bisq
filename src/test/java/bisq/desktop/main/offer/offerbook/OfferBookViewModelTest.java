@@ -275,7 +275,7 @@ public class OfferBookViewModelTest {
         offerBookListItems.addAll(make(btcItemWithRange.but(with(amount, 2000000000L))));
         assertEquals(16, model.maxPlacesForAmount.intValue());
         offerBookListItems.addAll(make(btcItemWithRange.but(with(minAmount, 30000000000L),
-                with(amount,30000000000L))));
+                with(amount, 30000000000L))));
         assertEquals(19, model.maxPlacesForAmount.intValue());
     }
 
@@ -329,7 +329,7 @@ public class OfferBookViewModelTest {
         offerBookListItems.addAll(make(btcItemWithRange.but(with(amount, 2000000000L))));
         assertEquals(17, model.maxPlacesForVolume.intValue());
         offerBookListItems.addAll(make(btcItemWithRange.but(with(minAmount, 30000000000L),
-                with(amount,30000000000L))));
+                with(amount, 30000000000L))));
         assertEquals(25, model.maxPlacesForVolume.intValue());
     }
 

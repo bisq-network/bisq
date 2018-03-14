@@ -652,7 +652,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
         setBottomAnchor(versionLabel, 7d);
         model.newVersionAvailableProperty.addListener((observable, oldValue, newValue) -> {
-            versionLabel.getStyleClass().removeAll("version-new","version");
+            versionLabel.getStyleClass().removeAll("version-new", "version");
             if (newValue) {
                 versionLabel.getStyleClass().add("version-new");
                 versionLabel.setOnMouseClicked(e -> model.openDownloadWindow());

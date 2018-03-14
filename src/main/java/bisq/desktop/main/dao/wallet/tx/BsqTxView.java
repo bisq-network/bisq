@@ -239,12 +239,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         Set<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> new BsqTxListItem(transaction,
-                                bsqWalletService,
-                                btcWalletService,
-                                bsqBlockChain.getTxType(transaction.getHashAsString()),
-                                bsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
-                                bsqBlockChain,
-                                bsqFormatter)
+                        bsqWalletService,
+                        btcWalletService,
+                        bsqBlockChain.getTxType(transaction.getHashAsString()),
+                        bsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
+                        bsqBlockChain,
+                        bsqFormatter)
                 )
                 .collect(Collectors.toSet());
         observableList.setAll(items);

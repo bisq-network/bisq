@@ -285,9 +285,9 @@ public class BSFormatter {
     }
 
     public String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
-        String formattedVolume =  offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+        String formattedVolume = offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + GUIUtil.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
 
-        if(decimalAligned) {
+        if (decimalAligned) {
             formattedVolume = fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
         }
         return formattedVolume;
@@ -363,7 +363,7 @@ public class BSFormatter {
 
     public String formatAmount(Offer offer, boolean decimalAligned) {
         String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount()) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount()) : formatCoin(offer.getAmount());
-        if(decimalAligned) {
+        if (decimalAligned) {
             formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, 15);
         }
         return formattedAmount;
@@ -372,7 +372,7 @@ public class BSFormatter {
     public String formatAmount(Offer offer, int decimalPlaces, boolean decimalAligned, int maxPlaces) {
         String formattedAmount = offer.isRange() ? formatCoin(offer.getMinAmount(), decimalPlaces) + GUIUtil.RANGE_SEPARATOR + formatCoin(offer.getAmount(), decimalPlaces) : formatCoin(offer.getAmount(), decimalPlaces);
 
-        if(decimalAligned) {
+        if (decimalAligned) {
             formattedAmount = fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
         }
         return formattedAmount;
@@ -403,7 +403,7 @@ public class BSFormatter {
     public String formatPrice(Price price, Boolean decimalAligned, int maxPlaces) {
         String formattedPrice = formatPrice(price);
 
-        if(decimalAligned) {
+        if (decimalAligned) {
             formattedPrice = fillUpPlacesWithEmptyStrings(formattedPrice, maxPlaces);
         }
         return formattedPrice;

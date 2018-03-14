@@ -87,7 +87,7 @@
                                     <artifactId>bcpg-jdk15on</artifactId>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                 </artifactItem>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -109,7 +109,8 @@
                     <!-- broken with Java 8 (MSHADE-174), using ProGuard instead. -->
                     <minimizeJar>false</minimizeJar>
                     <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
                                 <Main-Class>bisq.desktop.app.BisqAppMain</Main-Class>
                                 <!-- the specified bouncy castle jar classes  -->

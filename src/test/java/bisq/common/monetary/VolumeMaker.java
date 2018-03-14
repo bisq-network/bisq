@@ -31,7 +31,7 @@ public class VolumeMaker {
     public static final Property<Volume, String> volumeString = new Property<>();
 
     public static final Instantiator<Volume> FiatVolume = lookup ->
-            new Volume(Fiat.parseFiat(lookup.valueOf(currencyCode, "USD"), lookup.valueOf(volumeString,"100")));
+            new Volume(Fiat.parseFiat(lookup.valueOf(currencyCode, "USD"), lookup.valueOf(volumeString, "100")));
 
     public static final Instantiator<Volume> AltcoinVolume = lookup ->
             new Volume(Altcoin.parseAltcoin(lookup.valueOf(currencyCode, "LTC"), lookup.valueOf(volumeString, "100")));

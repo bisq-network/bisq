@@ -798,7 +798,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
                                 if (item.isSystemMessage()) {
-                                    headerLabel.getStyleClass().addAll("message-header","success-text");
+                                    headerLabel.getStyleClass().addAll("message-header", "success-text");
                                     bg.setId("message-bubble-green");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
@@ -973,7 +973,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute,Dispute>(Res.get("shared.select"));
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.select"));
         column.setMinWidth(80);
         column.setMaxWidth(80);
         column.setSortable(false);

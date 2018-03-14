@@ -19,7 +19,7 @@ package bisq.desktop.components;
 
 import javafx.scene.control.TableColumn;
 
-public class AutoTooltipTableColumn<S,T> extends TableColumn<S,T> {
+public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
 
     public AutoTooltipTableColumn(String text) {
         super();

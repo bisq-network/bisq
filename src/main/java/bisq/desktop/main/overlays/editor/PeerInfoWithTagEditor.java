@@ -182,8 +182,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private void addContent() {
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++rowIndex,
-            Res.get("peerInfo.nrOfTrades"),
-            numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
+                Res.get("peerInfo.nrOfTrades"),
+                numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
         if (accountAge != null)
             FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
 
@@ -195,8 +195,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
                 new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), useDevPrivilegeKeys)
-                    .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                    .show();
+                        .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
+                        .show();
             }
         };
     }
@@ -233,12 +233,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                new KeyValue(gridPane.rotateProperty(), 0, interpolator),
-                new KeyValue(gridPane.opacityProperty(), 1, interpolator)
+                    new KeyValue(gridPane.rotateProperty(), 0, interpolator),
+                    new KeyValue(gridPane.opacityProperty(), 1, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                new KeyValue(gridPane.rotateProperty(), -90, interpolator),
-                new KeyValue(gridPane.opacityProperty(), 0, interpolator)
+                    new KeyValue(gridPane.rotateProperty(), -90, interpolator),
+                    new KeyValue(gridPane.opacityProperty(), 0, interpolator)
             ));
             timeline.setOnFinished(event -> {
                 gridPane.setRotate(0);
@@ -261,13 +261,13 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                new KeyValue(gridPane.translateYProperty(), startY, interpolator)
+                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
+                    new KeyValue(gridPane.translateYProperty(), startY, interpolator)
             ));
 
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                new KeyValue(gridPane.translateYProperty(), 0, interpolator)
+                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
+                    new KeyValue(gridPane.translateYProperty(), 0, interpolator)
             ));
 
             timeline.play();

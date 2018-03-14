@@ -121,7 +121,7 @@ public class NotificationCenter {
                         log.debug("We have already an entry in disputeStateSubscriptionsMap.");
                     } else {
                         Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                            disputeState -> onDisputeStateChanged(trade, disputeState));
+                                disputeState -> onDisputeStateChanged(trade, disputeState));
                         disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
                     }
 
@@ -129,7 +129,7 @@ public class NotificationCenter {
                         log.debug("We have already an entry in tradePhaseSubscriptionsMap.");
                     } else {
                         Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
-                            phase -> onTradePhaseChanged(trade, phase));
+                                phase -> onTradePhaseChanged(trade, phase));
                         tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
                     }
                 });
@@ -137,17 +137,17 @@ public class NotificationCenter {
         });
 
         tradeManager.getTradableList().stream()
-            .forEach(trade -> {
-                    String tradeId = trade.getId();
-                    Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                        disputeState -> onDisputeStateChanged(trade, disputeState));
-                    disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+                .forEach(trade -> {
+                            String tradeId = trade.getId();
+                            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                    disputeState -> onDisputeStateChanged(trade, disputeState));
+                            disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
 
-                    Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
-                        phase -> onTradePhaseChanged(trade, phase));
-                    tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
-                }
-            );
+                            Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                                    phase -> onTradePhaseChanged(trade, phase));
+                            tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
+                        }
+                );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ public class NotificationCenter {
             message = Res.get("notification.trade.completed");
         } else {
             if (trade instanceof MakerTrade &&
-                phase.ordinal() == Trade.Phase.DEPOSIT_PUBLISHED.ordinal()) {
+                    phase.ordinal() == Trade.Phase.DEPOSIT_PUBLISHED.ordinal()) {
                 final String role = trade instanceof BuyerTrade ? Res.get("shared.seller") : Res.get("shared.buyer");
                 message = Res.get("notification.trade.accepted", role);
             }
@@ -194,24 +194,24 @@ public class NotificationCenter {
                 Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
-                        .onAction(() -> {
-                            DontShowAgainLookup.dontShowAgain(key, true);
-                            //noinspection unchecked
-                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-                            if (selectItemByTradeIdConsumer != null)
-                                UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(trade.getId()), 1);
-                        })
-                        .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
-                        .show();
+                            .onAction(() -> {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                //noinspection unchecked
+                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                                if (selectItemByTradeIdConsumer != null)
+                                    UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(trade.getId()), 1);
+                            })
+                            .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
+                            .show();
                 } else if (selectedTradeId != null && !trade.getId().equals(selectedTradeId)) {
                     notification.actionButtonText(Res.get("notification.trade.selectTrade"))
-                        .onAction(() -> {
-                            DontShowAgainLookup.dontShowAgain(key, true);
-                            if (selectItemByTradeIdConsumer != null)
-                                selectItemByTradeIdConsumer.accept(trade.getId());
-                        })
-                        .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
-                        .show();
+                            .onAction(() -> {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                if (selectItemByTradeIdConsumer != null)
+                                    selectItemByTradeIdConsumer.accept(trade.getId());
+                            })
+                            .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
+                            .show();
                 }
             }
         }
@@ -222,8 +222,8 @@ public class NotificationCenter {
         String message = null;
         if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
             String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
-                Res.get("shared.supportTicket") :
-                Res.get("shared.dispute");
+                    Res.get("shared.supportTicket") :
+                    Res.get("shared.dispute");
             switch (disputeState) {
                 case NO_DISPUTE:
                     break;
@@ -241,8 +241,8 @@ public class NotificationCenter {
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
                     //noinspection unchecked
                     notification.actionButtonTextWithGoTo("navigation.support")
-                        .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
-                        .show();
+                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
+                            .show();
                 } else {
                     notification.show();
                 }

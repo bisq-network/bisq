@@ -832,7 +832,7 @@ public class FormBuilder {
         FundsTextField fundsTextField = new FundsTextField();
         GridPane.setRowIndex(fundsTextField, rowIndex);
         GridPane.setColumnIndex(fundsTextField, 1);
-        GridPane.setMargin(fundsTextField, new Insets(top, 0,0,0));
+        GridPane.setMargin(fundsTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(fundsTextField);
 
         return new Tuple2<>(label, fundsTextField);
@@ -854,7 +854,7 @@ public class FormBuilder {
         infoTextField.setText(fieldText);
         GridPane.setRowIndex(infoTextField, rowIndex);
         GridPane.setColumnIndex(infoTextField, 1);
-        GridPane.setMargin(infoTextField, new Insets(top, 0,0,0));
+        GridPane.setMargin(infoTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(infoTextField);
 
         return new Tuple2<>(label, infoTextField);

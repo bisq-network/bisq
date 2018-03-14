@@ -279,7 +279,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
             double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
-            if(buyOfferTableView.getHeight() != newTableViewHeight) {
+            if (buyOfferTableView.getHeight() != newTableViewHeight) {
                 buyOfferTableView.setMinHeight(newTableViewHeight);
                 sellOfferTableView.setMinHeight(newTableViewHeight);
             }

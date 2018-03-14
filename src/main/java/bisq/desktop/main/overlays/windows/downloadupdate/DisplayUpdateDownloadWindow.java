@@ -215,7 +215,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                         List<BisqInstaller.FileDescriptor> downloadResults = downloadTask.getValue();
                         Optional<BisqInstaller.FileDescriptor> downloadFailed = downloadResults.stream()
                                 .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus())).findFirst();
-                        downloadedFilesLabel.getStyleClass().removeAll("error-text","success-text");
+                        downloadedFilesLabel.getStyleClass().removeAll("error-text", "success-text");
                         if (downloadResults == null || downloadResults.isEmpty() || downloadFailed.isPresent()) {
                             showErrorMessage(downloadButton, statusLabel, downloadFailedString);
                             downloadedFilesLabel.getStyleClass().add("error-text");

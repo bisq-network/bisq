@@ -39,16 +39,16 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey: #dddddd; /* 25 usages */
     -bs-bg-grey2: #bbb; /* 1 usages */
     -bs-bg-grey3: #d3d3d3; /* 1 usages */
-    -bs-dark-grey:#999; /* 8 usages */
+    -bs-dark-grey: #999; /* 8 usages */
     -bs-light-grey: #cccccc; /* derive(-bs-white, -20%); 13 usages */
     -bs-content-bg-grey: #f4f4f4; /* 14 usages */
     -bs-very-light-grey: #f8f8f8; /* 10 usages */
     -bs-bg-light: #FAFAFA; /* derive(-bs-white, -2%) 4 usages */
-    -bs-very-light-grey:#F0F0F0; /* derive(-bs-white, -6%) 10 usages */
+    -bs-very-light-grey: #F0F0F0; /* derive(-bs-white, -6%) 10 usages */
     -bs-very-dark-grey: #3c3c3c; /* 8 usages */
     -bs-very-dark-grey2: #111; /* 1 usages */
     -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
-    -bs-light-grey2: #cfcfcf;/* 2 usages */
+    -bs-light-grey2: #cfcfcf; /* 2 usages */
     -bs-light-grey3: #b5b5b5; /* 1 usages */
     -bs-bg-grey4: #f6f6f6; /* 1 usages */
     -bs-black: #000000; /* 13 usages */
@@ -70,8 +70,8 @@ bg color of non edit textFields: fafafa
     -bs-yellow: #ffb60f; /* 2 usages */
     -bs-yellow-light: derive(-bs-yellow, 81%);
     -bs-bg-grey8: #E1E9E1; /* 1 usages */
-    -bs-bg-green2:#619865; /* 2 usages */
-    -bs-bg-green:#99ba9c; /* 4 usages */
+    -bs-bg-green2: #619865; /* 2 usages */
+    -bs-bg-green: #99ba9c; /* 4 usages */
     -bs-green: #00aa33; /* 6 usages */
     -bs-turquoise: #2cacaf; /* 1 usages */
     -bs-bg-grey5: #f1f6f7; /* 4 usages */
@@ -207,7 +207,6 @@ bg color of non edit textFields: fafafa
 .default-text {
     -fx-font-size: 13;
 }
-
 
 /* Splash */
 
@@ -346,7 +345,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -fx-accent;
 }
 
-
 .dao-tx-type-received-funds-icon,
 .dao-tx-type-received-funds-icon:hover {
     -fx-text-fill: -bs-green-soft;
@@ -378,7 +376,6 @@ bg color of non edit textFields: fafafa
     -fx-underline: true;
     -fx-cursor: hand;
 }
-
 
 /*******************************************************************************
  *                                                                             *
@@ -413,8 +410,7 @@ textfield */
 .hyperlink:hover,
 .hyperlink:visited,
 .hyperlink:hover:visited,
-.hyperlink:focused
-{
+.hyperlink:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -1294,8 +1290,8 @@ textfield */
 }
 
 .message-header {
-     -fx-text-fill: -bs-light-grey;
-     -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-light-grey;
+    -fx-font-size: 0.846em;
 }
 
 /********************************************************************************************************************

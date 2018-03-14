@@ -63,7 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({BtcWalletService .class, AddressEntry.class, PriceFeedService.class, User.class,
+@PrepareForTest({BtcWalletService.class, AddressEntry.class, PriceFeedService.class, User.class,
         FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class,
         SecurityDepositValidator.class})
 public class CreateOfferViewModelTest {
@@ -100,7 +100,7 @@ public class CreateOfferViewModelTest {
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null,null, priceFeedService,null, null, null, feeService, bsFormatter);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, null, null, feeService, bsFormatter);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 

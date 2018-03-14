@@ -55,7 +55,7 @@ public class DisplayedTransactionsTest {
     }
 
     @Test
-    public void testUpdateWhenRepositoryIsEmpty(){
+    public void testUpdateWhenRepositoryIsEmpty() {
         BtcWalletService walletService = mock(BtcWalletService.class);
         when(walletService.getTransactions(false))
                 .thenReturn(Collections.singleton(mock(Transaction.class)));

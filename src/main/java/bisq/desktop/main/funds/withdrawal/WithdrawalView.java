@@ -609,7 +609,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     checkBox.setSelected(item.isSelected());
                                 } else {
                                     checkBox.setOnAction(null);
-                                    setGraphic(null);                                }
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }

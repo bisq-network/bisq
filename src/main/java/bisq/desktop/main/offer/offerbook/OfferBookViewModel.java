@@ -178,13 +178,13 @@ class OfferBookViewModel extends ActivatableViewModel {
             if (highestAmountOffer.isPresent()) {
                 final OfferBookListItem item = highestAmountOffer.get();
                 if (!item.getOffer().isRange() && containsRangeAmount) {
-                    maxPlacesForAmount.set(formatAmount(item.getOffer(),false)
+                    maxPlacesForAmount.set(formatAmount(item.getOffer(), false)
                             .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
-                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false)
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(), false)
                             .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
                 } else {
-                    maxPlacesForAmount.set(formatAmount(item.getOffer(),false).length());
-                    maxPlacesForVolume.set(formatVolume(item.getOffer(),false).length());
+                    maxPlacesForAmount.set(formatAmount(item.getOffer(), false).length());
+                    maxPlacesForVolume.set(formatVolume(item.getOffer(), false).length());
                 }
 
             }

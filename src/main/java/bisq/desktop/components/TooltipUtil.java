@@ -33,7 +33,7 @@ public class TooltipUtil {
                     if (labeled.getTooltip() != null) {
                         labeled.setTooltip(null);
                     }
-                } else if (untruncatedText != null && !untruncatedText.trim().isEmpty()){
+                } else if (untruncatedText != null && !untruncatedText.trim().isEmpty()) {
                     labeled.setTooltip(new Tooltip(untruncatedText));
                 }
             }

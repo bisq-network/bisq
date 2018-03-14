@@ -29,9 +29,9 @@ import org.bitcoinj.utils.MonetaryFormat;
 
 public class PNCParams extends NetworkParameters {
 
-    private static  PNCParams instance;
+    private static PNCParams instance;
 
-    public static synchronized  PNCParams get() {
+    public static synchronized PNCParams get() {
         if (instance == null) {
             instance = new PNCParams();
         }
@@ -42,7 +42,7 @@ public class PNCParams extends NetworkParameters {
         super();
         addressHeader = 55;
         p2shHeader = 5;
-        acceptableAddressCodes = new int[] {addressHeader, p2shHeader};
+        acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
     }
 
     @Override

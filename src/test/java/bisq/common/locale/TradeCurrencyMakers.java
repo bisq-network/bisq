@@ -37,6 +37,6 @@ public class TradeCurrencyMakers {
 
     public static final CryptoCurrency bitcoin = make(a(CryptoCurrency));
     public static final FiatCurrency euro = make(a(FiatCurrency));
-    public static final FiatCurrency usd = make(a(FiatCurrency).but(with(currencyCode,"USD")));
+    public static final FiatCurrency usd = make(a(FiatCurrency).but(with(currencyCode, "USD")));
 }
 

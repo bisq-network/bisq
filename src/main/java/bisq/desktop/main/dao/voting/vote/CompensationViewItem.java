@@ -73,7 +73,7 @@ public class CompensationViewItem {
                               DoubleProperty labelWidth,
                               BsqFormatter bsqFormatter,
                               Runnable removeHandler) {
-        instances.add(new CompensationViewItem(compensationRequestVoteItem,bsqWalletService, vBox, bsqFormatter, removeHandler));
+        instances.add(new CompensationViewItem(compensationRequestVoteItem, bsqWalletService, vBox, bsqFormatter, removeHandler));
     }
 
     public static void cleanupAllInstances() {

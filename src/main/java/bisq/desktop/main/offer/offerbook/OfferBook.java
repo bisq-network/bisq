@@ -82,7 +82,7 @@ public class OfferBook {
 
                     offerBookListItems.add(offerBookListItem);
                     Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
-                }else{
+                } else {
                     log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
                 }
             }

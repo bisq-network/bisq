@@ -441,8 +441,8 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
             final double bottom = snapSize(controlInsets.getBottom());
 
             /*
-            ** use the min of width, or height, keep it a circle
-            */
+             ** use the min of width, or height, keep it a circle
+             */
             final double areaW = control.getWidth() - left - right;
             final double areaH = control.getHeight() - top - bottom /*- textGap - doneTextHeight*/;
             final double radiusW = areaW / 2;

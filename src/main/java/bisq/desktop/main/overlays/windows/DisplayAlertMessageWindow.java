@@ -74,7 +74,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
         if (alert.isUpdateInfo()) {
             headLine = Res.get("displayAlertMessageWindow.update.headline");
-            headLineLabel.getStyleClass().addAll("headline-label","highlight");
+            headLineLabel.getStyleClass().addAll("headline-label", "highlight");
             String url = "https://bisq.network/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     Res.get("displayAlertMessageWindow.update.download"), url, url).second;

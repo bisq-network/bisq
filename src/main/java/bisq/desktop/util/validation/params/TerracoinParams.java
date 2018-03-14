@@ -90,4 +90,4 @@ public class TerracoinParams extends NetworkParameters {
     public int getProtocolVersionNum(ProtocolVersion version) {
         return 0;
     }
-    }
+}

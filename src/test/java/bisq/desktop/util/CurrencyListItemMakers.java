@@ -34,7 +34,7 @@ public class CurrencyListItemMakers {
     public static final Property<CurrencyListItem, Integer> numberOfTrades = new Property<>();
 
     public static final Instantiator<CurrencyListItem> CurrencyListItem = lookup ->
-         new CurrencyListItem(lookup.valueOf(tradeCurrency, bitcoin), lookup.valueOf(numberOfTrades, 0));
+            new CurrencyListItem(lookup.valueOf(tradeCurrency, bitcoin), lookup.valueOf(numberOfTrades, 0));
 
     public static final Maker<CurrencyListItem> bitcoinItem = a(CurrencyListItem);
     public static final Maker<CurrencyListItem> euroItem = a(CurrencyListItem, with(tradeCurrency, euro));
