@@ -243,9 +243,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         // Fixes incorrect ordering of Available offers:
         // https://github.com/bisq-network/exchange/issues/588
-        priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> {
-            tableView.sort();
-        };
+        priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> tableView.sort();
     }
 
     @Override
@@ -266,9 +264,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
-        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> {
-            priceColumn.setSortType(newValue);
-        });
+        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> priceColumn.setSortType(newValue));
         priceColumn.setSortType(model.priceSortTypeProperty.get());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
