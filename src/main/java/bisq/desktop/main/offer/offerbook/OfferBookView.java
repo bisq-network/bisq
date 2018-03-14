@@ -55,6 +55,8 @@ import bisq.core.user.DontShowAgainLookup;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.name.Named;
@@ -73,6 +75,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
@@ -96,6 +99,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -147,12 +151,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
-        //noinspection unchecked
-        currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
+        final Tuple3<HBox, Label, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
+        final HBox filterBox = filterBoxTuple.first;
+        currencyComboBox = filterBoxTuple.third;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
 
         //noinspection unchecked
-        paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.getWithCol("offerbook.filterByPaymentMethod")).second;
+        paymentMethodComboBox = new ComboBox<>();
+        final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
+        paymentMethodLabel.setPadding(new Insets(0,0,0,10));
+        filterBox.getChildren().addAll(paymentMethodLabel, paymentMethodComboBox);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
