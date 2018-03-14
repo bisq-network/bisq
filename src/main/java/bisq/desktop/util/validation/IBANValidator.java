@@ -85,8 +85,4 @@ public final class IBANValidator extends InputValidator {
         // return new ValidationResult(false, BSResources.get("validation.accountNrChars", "15 - 34"));
         return new ValidationResult(false, Res.get("validation.iban.invalidLength"));
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 }
