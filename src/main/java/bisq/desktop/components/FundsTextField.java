@@ -25,7 +25,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
@@ -68,9 +67,9 @@ public class FundsTextField extends InfoTextField {
             }
         });
 
-        AnchorPane.setRightAnchor(copyIcon, 30.0);
-        AnchorPane.setRightAnchor(infoIcon, 62.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
+        setRightAnchor(copyIcon, 30.0);
+        setRightAnchor(infoIcon, 62.0);
+        setRightAnchor(textField, 55.0);
 
         getChildren().add(copyIcon);
     }

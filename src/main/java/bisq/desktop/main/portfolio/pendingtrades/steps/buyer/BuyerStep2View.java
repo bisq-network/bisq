@@ -45,6 +45,7 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.payment.payload.CashDepositAccountPayload;
@@ -69,10 +70,6 @@ import javafx.scene.layout.GridPane;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class BuyerStep2View extends TradeStepView {
 
@@ -175,10 +172,10 @@ public class BuyerStep2View extends TradeStepView {
 
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
-        TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
+        TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.GROUP_DISTANCE);
-        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
+        TextFieldWithCopyIcon field = FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
@@ -257,12 +254,12 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
+        Tuple3<Button, BusyAnimation, Label> tuple3 = FormBuilder.addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"));
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());

@@ -58,7 +58,7 @@ public class SpreadViewModelTest {
     public void testMaxCharactersForAmount() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 

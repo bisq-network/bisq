@@ -42,7 +42,6 @@ import static bisq.common.locale.TradeCurrencyMakers.usd;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
-import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.useMarketBasedPrice;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
@@ -77,7 +76,7 @@ public class OfferBookChartViewModelTest {
 
 
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        final OfferBookListItem item = make(btcItem.but(with(useMarketBasedPrice, true)));
+        final OfferBookListItem item = make(OfferBookListItemMaker.btcItem.but(with(OfferBookListItemMaker.useMarketBasedPrice, true)));
         item.getOffer().setPriceFeedService(priceFeedService);
         offerBookListItems.addAll(item);
 
@@ -95,7 +94,7 @@ public class OfferBookChartViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -124,7 +123,7 @@ public class OfferBookChartViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -155,7 +154,7 @@ public class OfferBookChartViewModelTest {
 
 
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        final OfferBookListItem item = make(btcSellItem.but(with(useMarketBasedPrice, true)));
+        final OfferBookListItem item = make(OfferBookListItemMaker.btcSellItem.but(with(OfferBookListItemMaker.useMarketBasedPrice, true)));
         item.getOffer().setPriceFeedService(priceFeedService);
         offerBookListItems.addAll(item);
 
@@ -173,7 +172,7 @@ public class OfferBookChartViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcSellItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcSellItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -202,7 +201,7 @@ public class OfferBookChartViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(btcSellItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcSellItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 

@@ -15,6 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
