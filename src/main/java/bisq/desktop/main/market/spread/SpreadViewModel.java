@@ -24,14 +24,13 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

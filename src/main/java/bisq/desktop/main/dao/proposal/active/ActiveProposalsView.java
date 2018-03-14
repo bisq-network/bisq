@@ -35,8 +35,7 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsManager;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

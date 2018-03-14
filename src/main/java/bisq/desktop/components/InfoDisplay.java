@@ -17,8 +17,9 @@
 
 package bisq.desktop.components;
 
+import bisq.core.locale.Res;
+
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;

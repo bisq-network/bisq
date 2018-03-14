@@ -53,7 +53,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.util.Layout;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;

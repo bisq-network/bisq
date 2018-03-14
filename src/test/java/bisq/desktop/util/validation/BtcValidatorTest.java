@@ -21,9 +21,8 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

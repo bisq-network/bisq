@@ -17,10 +17,9 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.trade.Trade;
-
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 
 import org.bitcoinj.core.Coin;
 

@@ -21,17 +21,16 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.InteracETransferAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
+import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 

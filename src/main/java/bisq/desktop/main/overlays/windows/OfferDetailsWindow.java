@@ -28,6 +28,10 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.BankUtil;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -35,10 +39,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 
 import bisq.common.crypto.KeyRing;
-import bisq.common.locale.BankUtil;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;

@@ -24,8 +24,8 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.Alert;
+import bisq.core.locale.Res;
 
-import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
 
 import com.google.common.base.Joiner;

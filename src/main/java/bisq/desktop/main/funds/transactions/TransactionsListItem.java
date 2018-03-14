@@ -28,12 +28,11 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

@@ -19,6 +19,11 @@ package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.Country;
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
@@ -38,12 +43,6 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-
-import bisq.common.GlobalSettings;
-import bisq.common.locale.Country;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.Res;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -70,7 +69,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.common.locale.TradeCurrencyMakers.usd;
+import static bisq.core.locale.TradeCurrencyMakers.usd;
 import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.*;
 import static com.natpryce.makeiteasy.MakeItEasy.make;

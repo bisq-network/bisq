@@ -18,9 +18,9 @@
 package bisq.desktop.components;
 
 import bisq.core.dao.DaoPeriodService;
+import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;

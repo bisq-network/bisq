@@ -20,7 +20,7 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.overlays.Overlay;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;

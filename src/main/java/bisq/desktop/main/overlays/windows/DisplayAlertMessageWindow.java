@@ -23,8 +23,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.Alert;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javafx.scene.layout.GridPane;
 

@@ -25,6 +25,8 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
@@ -40,8 +42,6 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple3;
 
 import javafx.scene.control.Button;

@@ -21,9 +21,9 @@ import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;

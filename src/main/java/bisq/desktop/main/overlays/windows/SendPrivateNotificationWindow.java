@@ -23,13 +23,13 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.PrivateNotificationPayload;
+import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import javafx.scene.Scene;

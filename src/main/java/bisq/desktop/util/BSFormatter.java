@@ -18,18 +18,18 @@
 package bisq.desktop.util;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.LanguageUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Altcoin;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;

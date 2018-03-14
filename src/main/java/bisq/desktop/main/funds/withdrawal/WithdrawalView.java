@@ -35,6 +35,7 @@ import bisq.core.btc.Restrictions;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -46,7 +47,6 @@ import bisq.core.util.CoinUtil;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;

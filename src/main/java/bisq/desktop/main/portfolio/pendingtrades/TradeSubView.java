@@ -23,7 +23,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

@@ -19,12 +19,13 @@ package bisq.desktop.main.settings.network;
 
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.Res;
+
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.network.Statistic;
 
 import bisq.common.Clock;
-import bisq.common.locale.Res;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 

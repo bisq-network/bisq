@@ -32,20 +32,20 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.LanguageUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 

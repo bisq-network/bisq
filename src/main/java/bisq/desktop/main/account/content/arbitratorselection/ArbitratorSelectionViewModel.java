@@ -22,13 +22,13 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.locale.LanguageUtil;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
-import bisq.common.locale.LanguageUtil;
 
 import com.google.inject.Inject;
 

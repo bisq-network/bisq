@@ -17,6 +17,8 @@
 
 package bisq.desktop.util.validation;
 
+import bisq.core.util.validation.InputValidator;
+
 public final class ChaseQuickPayValidator extends InputValidator {
 
     private final EmailValidator emailValidator;

@@ -26,12 +26,12 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.GlobalSettings;
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.StringUtils;

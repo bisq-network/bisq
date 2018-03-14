@@ -29,14 +29,13 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

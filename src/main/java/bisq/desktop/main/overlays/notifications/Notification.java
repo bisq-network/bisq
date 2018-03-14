@@ -19,9 +19,10 @@ package bisq.desktop.main.overlays.notifications;
 
 import bisq.desktop.main.overlays.Overlay;
 
+import bisq.core.locale.Res;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;

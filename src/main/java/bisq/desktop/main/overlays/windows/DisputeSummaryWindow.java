@@ -33,11 +33,11 @@ import bisq.core.btc.AddressEntry;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
 
 import bisq.common.UserThread;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;

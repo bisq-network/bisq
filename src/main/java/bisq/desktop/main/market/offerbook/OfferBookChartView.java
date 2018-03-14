@@ -32,12 +32,12 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 
 import bisq.common.UserThread;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple4;
 
 import javax.inject.Inject;

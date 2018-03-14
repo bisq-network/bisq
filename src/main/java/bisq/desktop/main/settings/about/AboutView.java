@@ -24,8 +24,9 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.Res;
+
 import bisq.common.app.Version;
-import bisq.common.locale.Res;
 
 import javax.inject.Inject;
 

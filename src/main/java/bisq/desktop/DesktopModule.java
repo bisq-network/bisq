@@ -33,9 +33,9 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.AppOptionKeys;
+import bisq.core.locale.Res;
 
 import bisq.common.app.AppModule;
-import bisq.common.locale.Res;
 
 import org.springframework.core.env.Environment;
 

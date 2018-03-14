@@ -24,8 +24,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoPeriodService;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

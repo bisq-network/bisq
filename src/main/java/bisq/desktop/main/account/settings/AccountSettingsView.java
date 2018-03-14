@@ -35,7 +35,7 @@ import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.util.Colors;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

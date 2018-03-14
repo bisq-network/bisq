@@ -23,8 +23,9 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep2View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep3View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.seller.SellerStep4View;
 
+import bisq.core.locale.Res;
+
 import bisq.common.app.Log;
-import bisq.common.locale.Res;
 
 import org.fxmisc.easybind.EasyBind;
 

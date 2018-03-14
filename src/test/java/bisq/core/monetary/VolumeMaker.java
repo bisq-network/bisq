@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.monetary;
+package bisq.core.monetary;
 
 import org.bitcoinj.utils.Fiat;
 

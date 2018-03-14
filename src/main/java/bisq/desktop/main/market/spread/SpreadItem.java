@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.market.spread;
 
-import bisq.common.monetary.Price;
+import bisq.core.monetary.Price;
 
 import org.bitcoinj.core.Coin;
 

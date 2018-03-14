@@ -29,6 +29,10 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -42,11 +46,6 @@ import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

@@ -28,16 +28,16 @@ import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Altcoin;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
-import bisq.common.GlobalSettings;
-import bisq.common.locale.CryptoCurrency;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Altcoin;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;

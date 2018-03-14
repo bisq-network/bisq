@@ -21,7 +21,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.BSFormatter;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import com.google.inject.Inject;
 

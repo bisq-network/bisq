@@ -21,6 +21,8 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 
@@ -28,8 +30,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.Res;
-import bisq.common.monetary.Price;
 
 import com.google.inject.Inject;
 

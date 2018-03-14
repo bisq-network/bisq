@@ -32,6 +32,7 @@ import bisq.core.arbitration.DisputeAlreadyOpenException;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -49,7 +50,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

@@ -42,6 +42,11 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -49,12 +54,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.locale.FiatCurrency;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
-import bisq.common.monetary.Price;
-import bisq.common.monetary.Volume;
 
 import org.bitcoinj.core.Coin;
 

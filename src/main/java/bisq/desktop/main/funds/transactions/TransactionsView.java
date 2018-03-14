@@ -31,6 +31,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -38,7 +39,6 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;

@@ -20,8 +20,7 @@ package bisq.desktop.util.validation;
 import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.Restrictions;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

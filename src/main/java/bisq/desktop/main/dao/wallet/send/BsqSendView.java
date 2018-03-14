@@ -38,11 +38,10 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
-
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;

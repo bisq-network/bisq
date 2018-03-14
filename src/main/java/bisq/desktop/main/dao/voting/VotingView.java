@@ -32,7 +32,7 @@ import bisq.desktop.main.dao.voting.history.VotingHistoryView;
 import bisq.desktop.main.dao.voting.vote.VoteView;
 import bisq.desktop.util.Colors;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 

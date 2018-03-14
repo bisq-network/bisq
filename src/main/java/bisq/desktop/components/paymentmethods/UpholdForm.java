@@ -20,17 +20,16 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.InputValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.UpholdAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 

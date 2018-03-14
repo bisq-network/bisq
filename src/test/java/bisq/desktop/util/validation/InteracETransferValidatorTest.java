@@ -19,9 +19,8 @@ package bisq.desktop.util.validation;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
-
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 
 import org.junit.Before;
 import org.junit.Test;

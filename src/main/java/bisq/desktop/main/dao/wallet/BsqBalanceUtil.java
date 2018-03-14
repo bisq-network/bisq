@@ -22,8 +22,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
 

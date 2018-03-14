@@ -24,13 +24,12 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
-
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Utils;
 

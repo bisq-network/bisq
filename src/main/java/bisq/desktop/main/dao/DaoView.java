@@ -31,9 +31,9 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 
 import javax.inject.Inject;
 

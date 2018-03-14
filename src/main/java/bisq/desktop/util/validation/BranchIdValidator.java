@@ -17,8 +17,8 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.locale.BankUtil;
-import bisq.common.locale.Res;
+import bisq.core.locale.BankUtil;
+import bisq.core.locale.Res;
 
 public final class BranchIdValidator extends BankValidator {
 

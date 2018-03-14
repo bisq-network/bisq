@@ -40,13 +40,13 @@ import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.proposal.generic.GenericProposal;
 import bisq.core.dao.proposal.generic.GenericProposalManager;
 import bisq.core.dao.proposal.generic.GenericProposalPayload;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
-import bisq.common.locale.Res;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;

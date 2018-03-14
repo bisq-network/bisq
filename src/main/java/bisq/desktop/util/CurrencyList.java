@@ -17,9 +17,8 @@
 
 package bisq.desktop.util;
 
+import bisq.core.locale.TradeCurrency;
 import bisq.core.user.Preferences;
-
-import bisq.common.locale.TradeCurrency;
 
 import com.google.common.collect.Lists;
 

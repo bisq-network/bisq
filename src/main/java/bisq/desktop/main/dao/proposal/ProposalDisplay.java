@@ -32,9 +32,8 @@ import bisq.core.dao.proposal.ProposalRestrictions;
 import bisq.core.dao.proposal.ProposalType;
 import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.proposal.compensation.consensus.Restrictions;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
-
-import bisq.common.locale.Res;
 
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;

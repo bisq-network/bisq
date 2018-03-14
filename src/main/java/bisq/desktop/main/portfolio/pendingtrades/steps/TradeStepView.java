@@ -28,12 +28,12 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
+import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.common.Clock;
 import bisq.common.app.Log;
-import bisq.common.locale.Res;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;

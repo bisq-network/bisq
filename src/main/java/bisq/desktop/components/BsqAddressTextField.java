@@ -20,7 +20,8 @@ package bisq.desktop.components;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.common.locale.Res;
+import bisq.core.locale.Res;
+
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;

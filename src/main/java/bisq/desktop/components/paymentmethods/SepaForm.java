@@ -24,20 +24,19 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.IBANValidator;
-import bisq.desktop.util.validation.InputValidator;
 
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SepaAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
-
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryUtil;
-import bisq.common.locale.CurrencyUtil;
-import bisq.common.locale.Res;
-import bisq.common.locale.TradeCurrency;
+import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
