@@ -171,7 +171,9 @@
       <option name="KEEP_BLANK_LINES" value="true" />
     </Properties>
     <codeStyleSettings language="JAVA">
+      <option name="RIGHT_MARGIN" value="120" />
       <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
+      <option name="WRAP_ON_TYPING" value="1" />
     </codeStyleSettings>
   </code_scheme>
 </component>
