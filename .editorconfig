@@ -11,3 +11,4 @@ insert_final_newline = true
 
 [.idea/codeStyles/*.xml]
 indent_size = 2
+insert_final_newline = false
