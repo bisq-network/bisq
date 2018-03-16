@@ -167,6 +167,9 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
+    <Properties>
+      <option name="KEEP_BLANK_LINES" value="true" />
+    </Properties>
     <codeStyleSettings language="JAVA">
       <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
     </codeStyleSettings>
