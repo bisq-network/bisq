@@ -803,7 +803,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
                                 } else if (isMyMsg) {
-                                    headerLabel.getStyleClass().add("highlight");
+                                    headerLabel.getStyleClass().add("highlight-static");
                                     bg.setId("message-bubble-blue");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");

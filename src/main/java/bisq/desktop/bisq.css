@@ -131,7 +131,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-green;
 }
 
-.highlight {
+.highlight, .highlight-static {
     -fx-text-fill: -fx-accent;
 }
 
