@@ -277,6 +277,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                                     setGraphic(new ColoredDecimalPlacesWithZerosText(model.getAmount(item.totalAmount), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
                                     setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
