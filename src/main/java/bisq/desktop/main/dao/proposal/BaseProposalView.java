@@ -210,7 +210,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         if (item != null) {
             final Proposal proposal = item.getProposal();
             proposalDisplay.removeAllFields();
-            proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, item.getProposal().getType(), false);
+            proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(), false);
             proposalDisplay.setAllFieldsEditable(false);
             proposalDisplay.fillWithData(proposal.getProposalPayload());
         }

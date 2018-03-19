@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.proposal;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -28,10 +29,10 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.proposal.ProposalPayload;
-import bisq.core.dao.proposal.ProposalRestrictions;
 import bisq.core.dao.proposal.ProposalType;
 import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.proposal.compensation.consensus.Restrictions;
+import bisq.core.dao.proposal.consensus.ProposalRestrictions;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -43,6 +44,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
+
+import javafx.beans.value.ChangeListener;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -56,6 +59,7 @@ import static bisq.desktop.util.FormBuilder.*;
 // use ProposalRestrictions.getMaxLengthDescriptionText()
 public class ProposalDisplay {
     private final GridPane gridPane;
+    private final int maxLengthDescriptionText;
     private BsqFormatter bsqFormatter;
     private BsqWalletService bsqWalletService;
     public InputTextField uidTextField, nameTextField, titleTextField, linkInputTextField;
@@ -67,12 +71,22 @@ public class ProposalDisplay {
     @Nullable
     private TxIdTextField txIdTextField;
     private FeeService feeService;
+    private ChangeListener<String> descriptionTextAreaListener;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, @Nullable FeeService feeService) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.feeService = feeService;
+
+        maxLengthDescriptionText = ProposalRestrictions.getMaxLengthDescriptionText();
+
+        descriptionTextAreaListener = (observable, oldValue, newValue) -> {
+            if (!ProposalRestrictions.isDescriptionSizeValid(newValue)) {
+                new Popup<>().warning(Res.get("dao.proposal.display.description.tooLong", maxLengthDescriptionText)).show();
+                descriptionTextArea.setText(newValue.substring(0, maxLengthDescriptionText));
+            }
+        };
     }
 
     public void createAllFields(String title, int index, double top, ProposalType proposalType, boolean isMakeProposalScreen) {
@@ -88,7 +102,10 @@ public class ProposalDisplay {
         uidTextField.setEditable(false);
         nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.title")).second;
-        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"), Res.get("dao.proposal.display.description.prompt", ProposalRestrictions.getMaxLengthDescriptionText())).second;
+
+        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"), Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
+        descriptionTextArea.setPrefColumnCount(2);
+        descriptionTextArea.textProperty().addListener(descriptionTextAreaListener);
         linkInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.link")).second;
         linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow, Res.get("dao.proposal.display.link"), "", "").second;
         linkHyperlinkWithIcon.setVisible(false);
@@ -150,6 +167,8 @@ public class ProposalDisplay {
             bsqAddressTextField.clear();
         if (txIdTextField != null)
             txIdTextField.cleanup();
+
+        descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
     }
 
     public void fillWithMock() {
