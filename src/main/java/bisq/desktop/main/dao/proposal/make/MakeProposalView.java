@@ -31,13 +31,13 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsManager;
 import bisq.core.dao.proposal.ProposalType;
 import bisq.core.dao.proposal.compensation.CompensationAmountException;
-import bisq.core.dao.proposal.compensation.CompensationRequest;
 import bisq.core.dao.proposal.compensation.CompensationRequestManager;
 import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
-import bisq.core.dao.proposal.generic.GenericProposal;
+import bisq.core.dao.proposal.consensus.ProposalRestrictions;
 import bisq.core.dao.proposal.generic.GenericProposalManager;
 import bisq.core.dao.proposal.generic.GenericProposalPayload;
 import bisq.core.locale.Res;
@@ -76,6 +76,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> {
@@ -150,6 +151,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().addListener(proposalTypeChangeListener);
+
+        if (createButton != null)
+            setCreateButtonHandler();
     }
 
     @Override
@@ -159,31 +163,29 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             createButton.setOnAction(null);
     }
 
-    private void createCompensationRequest() {
-        CompensationRequestPayload compensationRequestPayload = compensationRequestManager.getNewCompensationRequestPayload(
-                proposalDisplay.nameTextField.getText(),
-                proposalDisplay.titleTextField.getText(),
-                proposalDisplay.descriptionTextArea.getText(),
-                proposalDisplay.linkInputTextField.getText(),
-                bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
-                Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
+    private void createCompensationRequest(ProposalType type) {
         try {
-            CompensationRequest compensationRequest = compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
-            Coin miningFee = compensationRequest.getTx().getFee();
-            int txSize = compensationRequest.getTx().bitcoinSerialize().length;
+            Proposal proposal = createProposal(type);
+            Coin miningFee = Objects.requireNonNull(proposal).getTx().getFee();
+            int txSize = proposal.getTx().bitcoinSerialize().length;
+
+            validateInputs();
+
             new Popup<>().headLine(Res.get("dao.proposal.create.confirm"))
                     .confirmation(Res.get("dao.proposal.create.confirm.info",
-                            bsqFormatter.formatCoinWithCode(compensationRequest.getRequestedBsq()),
-                            bsqFormatter.formatCoinWithCode(compensationRequest.getFeeAsCoin()),
+                            bsqFormatter.formatCoinWithCode(proposal.getFeeAsCoin()),
                             btcFormatter.formatCoinWithCode(miningFee),
                             CoinUtil.getFeePerByte(miningFee, txSize),
                             (txSize / 1000d)))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
-                        proposalCollectionsManager.publishProposal(compensationRequest, new FutureCallback<Transaction>() {
+                        proposalCollectionsManager.publishProposal(proposal, new FutureCallback<Transaction>() {
                             @Override
                             public void onSuccess(@Nullable Transaction transaction) {
                                 proposalDisplay.clearForm();
+
+                                proposalTypeComboBox.getSelectionModel().clearSelection();
+
                                 new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
                             }
 
@@ -208,50 +210,36 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void createGenericProposal() {
-        GenericProposalPayload genericProposalPayload = genericProposalManager.getNewGenericProposalPayload(
-                proposalDisplay.nameTextField.getText(),
-                proposalDisplay.titleTextField.getText(),
-                proposalDisplay.descriptionTextArea.getText(),
-                proposalDisplay.linkInputTextField.getText());
-        try {
-            GenericProposal genericProposal = genericProposalManager.prepareGenericProposal(genericProposalPayload);
-            Coin miningFee = genericProposal.getTx().getFee();
-            int txSize = genericProposal.getTx().bitcoinSerialize().length;
-            new Popup<>().headLine(Res.get("dao.proposal.create.confirm"))
-                    .confirmation(Res.get("dao.proposal.create.confirm.info",
-                            bsqFormatter.formatCoinWithCode(Coin.valueOf(10000)), // TODO dummy
-                            bsqFormatter.formatCoinWithCode(genericProposal.getFeeAsCoin()),
-                            btcFormatter.formatCoinWithCode(miningFee),
-                            CoinUtil.getFeePerByte(miningFee, txSize),
-                            (txSize / 1000d)))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        proposalCollectionsManager.publishProposal(genericProposal, new FutureCallback<Transaction>() {
-                            @Override
-                            public void onSuccess(@Nullable Transaction transaction) {
-                                proposalDisplay.clearForm();
-                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                            }
-
-                            @Override
-                            public void onFailure(@NotNull Throwable t) {
-                                log.error(t.toString());
-                                new Popup<>().warning(t.toString()).show();
-                            }
-                        });
-                    })
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .show();
-        } catch (InsufficientMoneyException e) {
-            BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
-            new Popup<>().warning(Res.get("dao.proposal.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
-        } catch (CompensationAmountException e) {
-            new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount", bsqFormatter.formatCoinWithCode(e.required))).show();
-        } catch (TransactionVerificationException | WalletException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            new Popup<>().warning(e.toString()).show();
+    private Proposal createProposal(ProposalType type) throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException, WalletException {
+        switch (type) {
+            case COMPENSATION_REQUEST:
+                CompensationRequestPayload compensationRequestPayload = compensationRequestManager.getNewCompensationRequestPayload(
+                        proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.titleTextField.getText(),
+                        proposalDisplay.descriptionTextArea.getText(),
+                        proposalDisplay.linkInputTextField.getText(),
+                        bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
+                        Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
+                return compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
+            case GENERIC:
+                GenericProposalPayload genericProposalPayload = genericProposalManager.getNewGenericProposalPayload(
+                        proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.titleTextField.getText(),
+                        proposalDisplay.descriptionTextArea.getText(),
+                        proposalDisplay.linkInputTextField.getText());
+                return genericProposalManager.prepareGenericProposal(genericProposalPayload);
+            case CHANGE_PARAM:
+                //TODO
+                return null;
+            case REMOVE_ALTCOIN:
+                //TODO
+                return null;
+            default:
+                final String msg = "Undefined ProposalType " + selectedProposalType;
+                log.error(msg);
+                if (DevEnv.isDevMode())
+                    throw new RuntimeException(msg);
+                return null;
         }
     }
 
@@ -259,40 +247,36 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         // TODO need to update removed fields when switching.
         if (proposalDisplay != null) {
             root.getChildren().remove(3, root.getChildren().size());
+            proposalDisplay = null;
         }
-        proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, feeService);
-        proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE, selectedProposalType, true);
-        proposalDisplay.fillWithMock();
+        if (selectedProposalType != null) {
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, feeService);
+            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE, selectedProposalType, true);
+            proposalDisplay.fillWithMock();
 
-        createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
+            createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
+            setCreateButtonHandler();
+        }
+    }
+
+    private void setCreateButtonHandler() {
         createButton.setOnAction(event -> {
             // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                switch (selectedProposalType) {
-                    case COMPENSATION_REQUEST:
-                        createCompensationRequest();
-                        break;
-                    case GENERIC:
-                        createGenericProposal();
-                        break;
-                    case CHANGE_PARAM:
-                        //TODO
-                        break;
-                    case REMOVE_ALTCOIN:
-                        //TODO
-                        break;
-                    default:
-                        final String msg = "Undefined ProposalType " + selectedProposalType;
-                        log.error(msg);
-                        if (DevEnv.isDevMode())
-                            throw new RuntimeException(msg);
-                        break;
-
-                }
+                createCompensationRequest(selectedProposalType);
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }
+
+    private void validateInputs() {
+        // We check in proposalDisplay that no invalid input as allowed
+        checkArgument(ProposalRestrictions.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()), "descriptionText must not be longer than " +
+                ProposalRestrictions.getMaxLengthDescriptionText() + " chars");
+
+        // TODO add more checks for all input fields
+    }
+
 }
 
