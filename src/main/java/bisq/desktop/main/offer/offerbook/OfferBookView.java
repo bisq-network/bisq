@@ -55,6 +55,8 @@ import bisq.core.user.DontShowAgainLookup;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.util.Tuple3;
+
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.name.Named;
@@ -73,6 +75,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
@@ -96,6 +99,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -111,7 +115,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -147,12 +151,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
-        //noinspection unchecked
-        currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
+        final Tuple3<HBox, Label, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
+        final HBox filterBox = filterBoxTuple.first;
+        currencyComboBox = filterBoxTuple.third;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
 
         //noinspection unchecked
-        paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.getWithCol("offerbook.filterByPaymentMethod")).second;
+        paymentMethodComboBox = new ComboBox<>();
+        final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
+        paymentMethodLabel.setPadding(new Insets(0,0,0,10));
+        filterBox.getChildren().addAll(paymentMethodLabel, paymentMethodComboBox);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
@@ -192,9 +200,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
-        tableView.getColumns().add(getActionColumn());
         TableColumn<OfferBookListItem, OfferBookListItem> avatarColumn = getAvatarColumn();
         tableView.getColumns().add(avatarColumn);
+        tableView.getColumns().add(getActionColumn());
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -243,9 +251,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         // Fixes incorrect ordering of Available offers:
         // https://github.com/bisq-network/exchange/issues/588
-        priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> {
-            tableView.sort();
-        };
+        priceFeedUpdateCounterListener = (observable, oldValue, newValue) -> tableView.sort();
     }
 
     @Override
@@ -266,9 +272,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
-        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> {
-            priceColumn.setSortType(newValue);
-        });
+        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> priceColumn.setSortType(newValue));
         priceColumn.setSortType(model.priceSortTypeProperty.get());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
@@ -285,14 +289,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 (showAll, code) -> {
                     setDirectionTitles();
                     if (showAll) {
-                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
-                        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+                        volumeColumn.setTitleWithHelpText(Res.get("shared.amountMinMax"), Res.get("shared.amountHelp"));
+                        priceColumn.setTitle(Res.get("shared.price"));
 
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("offerbook.volume", code)));
-                        priceColumn.setGraphic(new AutoTooltipLabel(formatter.getPriceWithCurrencyCode(code)));
+                        volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code),Res.get("shared.amountHelp"));
+                        priceColumn.setTitle(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().remove(marketColumn);
@@ -517,8 +521,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax"));
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.BTCMinMax"), Res.get("shared.amountHelp"));
         column.setMinWidth(100);
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -543,8 +547,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
                 setMinWidth(40);
             }
@@ -573,8 +577,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
                 setMinWidth(100);
             }
@@ -643,8 +647,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
                 setMinWidth(125);
             }
@@ -734,7 +738,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.wantTo")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -862,10 +866,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.trader")) {
             {
-                setMinWidth(40);
-                setMaxWidth(40);
+                setMinWidth(80);
+                setMaxWidth(80);
                 setSortable(true);
             }
         };

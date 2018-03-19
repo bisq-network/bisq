@@ -657,6 +657,26 @@ public class FormBuilder {
         return new Tuple2<>(label, comboBox);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // HBox  + Label + ComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<HBox, Label, ComboBox> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.setSpacing(4);
+
+        final AutoTooltipLabel label = new AutoTooltipLabel(title);
+        final ComboBox<Object> comboBox = new ComboBox<>();
+        hBox.getChildren().addAll(label, comboBox);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnSpan(hBox, 2);
+        GridPane.setMargin(hBox, new Insets(top, 0,0,24));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(hBox, label, comboBox);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + ComboBox + ComboBox
