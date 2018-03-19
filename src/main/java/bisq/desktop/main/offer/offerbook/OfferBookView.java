@@ -158,7 +158,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         //noinspection unchecked
         paymentMethodComboBox = new ComboBox<>();
         final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
-        paymentMethodLabel.setPadding(new Insets(0,0,0,10));
+        paymentMethodLabel.setPadding(new Insets(0, 0, 0, 10));
         filterBox.getChildren().addAll(paymentMethodLabel, paymentMethodComboBox);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
@@ -294,7 +294,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code),Res.get("shared.amountHelp"));
+                        volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code), Res.get("shared.amountHelp"));
                         priceColumn.setTitle(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
@@ -829,7 +829,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
-                                        title = model.getDirectionLabel(offer);
+                                        title = Res.get("offerbook.takeOffer");
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
