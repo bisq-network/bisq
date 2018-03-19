@@ -72,10 +72,14 @@ public final class ApiTestHelper {
                         statusCode(204);
 
         /* Wait for arbiter registration message to be broadcast across peers*/
-        final int P2P_MSG_RELAY_DELAY = 1000;
-        Thread.sleep(P2P_MSG_RELAY_DELAY);
+        waitForP2PMsgPropagation();
 
         return validatableResponse;
+    }
+
+    public static void waitForP2PMsgPropagation() throws InterruptedException {
+        final int P2P_MSG_RELAY_DELAY = 1000;
+        Thread.sleep(P2P_MSG_RELAY_DELAY);
     }
 
     public static void waitForAllServicesToBeReady() throws InterruptedException {

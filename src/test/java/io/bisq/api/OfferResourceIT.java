@@ -427,12 +427,10 @@ public class OfferResourceIT {
     }
 
     private int getAlicePort() {
-//        return 8080;
         return alice.getBindPort(8080);
     }
 
     private int getBobPort() {
-//        return 8081;
         return bob.getBindPort(8080);
     }
 

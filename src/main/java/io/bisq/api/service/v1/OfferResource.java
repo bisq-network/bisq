@@ -23,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.concurrent.CompletableFuture;
 
+import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 import static java.util.stream.Collectors.toList;
 
 //        TODO use more standard error handling than ResourceHelper.handleBisqProxyError
@@ -81,15 +82,15 @@ public class OfferResource {
                     final Response.ResponseBuilder responseBuilder;
                     if (cause instanceof ValidationException) {
                         final int status = 422;
-                        responseBuilder = toResponse(cause, status);
+                        responseBuilder = toValidationErrorResponse(cause, status);
                     } else if (cause instanceof IncompatiblePaymentAccountException) {
-                        responseBuilder = toResponse(cause, 423);
+                        responseBuilder = toValidationErrorResponse(cause, 423);
                     } else if (cause instanceof NoAcceptedArbitratorException) {
-                        responseBuilder = toResponse(cause, 424);
+                        responseBuilder = toValidationErrorResponse(cause, 424);
                     } else if (cause instanceof PaymentAccountNotFoundException) {
-                        responseBuilder = toResponse(cause, 425);
+                        responseBuilder = toValidationErrorResponse(cause, 425);
                     } else if (cause instanceof InsufficientMoneyException) {
-                        responseBuilder = toResponse(cause, 427);
+                        responseBuilder = toValidationErrorResponse(cause, 427);
                     } else {
                         final String message = cause.getMessage();
                         responseBuilder = Response.status(500);
@@ -99,10 +100,6 @@ public class OfferResource {
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });
-    }
-
-    private static Response.ResponseBuilder toResponse(Throwable cause, int status) {
-        return Response.status(status).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
     }
 
     @ApiOperation(value = "Take offer", response = TradeDetails.class)
@@ -117,17 +114,17 @@ public class OfferResource {
                     final Response.ResponseBuilder responseBuilder;
                     if (cause instanceof ValidationException) {
                         final int status = 422;
-                        responseBuilder = toResponse(cause, status);
+                        responseBuilder = toValidationErrorResponse(cause, status);
                     } else if (cause instanceof IncompatiblePaymentAccountException) {
-                        responseBuilder = toResponse(cause, 423);
+                        responseBuilder = toValidationErrorResponse(cause, 423);
                     } else if (cause instanceof NoAcceptedArbitratorException) {
-                        responseBuilder = toResponse(cause, 424);
+                        responseBuilder = toValidationErrorResponse(cause, 424);
                     } else if (cause instanceof PaymentAccountNotFoundException) {
-                        responseBuilder = toResponse(cause, 425);
+                        responseBuilder = toValidationErrorResponse(cause, 425);
                     } else if (cause instanceof InsufficientMoneyException) {
-                        responseBuilder = toResponse(cause, 427);
+                        responseBuilder = toValidationErrorResponse(cause, 427);
                     } else if (cause instanceof NotFoundException) {
-                        responseBuilder = toResponse(cause, 404);
+                        responseBuilder = toValidationErrorResponse(cause, 404);
                     } else {
                         final String message = cause.getMessage();
                         responseBuilder = Response.status(500);
