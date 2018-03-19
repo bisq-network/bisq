@@ -797,6 +797,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setVisible(!item.isSystemMessage());
                                 arrow.setManaged(!item.isSystemMessage());
                                 statusIcon.setVisible(false);
+
+                                headerLabel.getStyleClass().removeAll("message-header", "success-text",
+                                        "highlight-static");
+                                messageLabel.getStyleClass().removeAll("my-message", "message");
+                                copyIcon.getStyleClass().removeAll("my-message", "message");
+
                                 if (item.isSystemMessage()) {
                                     headerLabel.getStyleClass().addAll("message-header", "success-text");
                                     bg.setId("message-bubble-green");
