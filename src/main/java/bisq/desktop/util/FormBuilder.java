@@ -658,10 +658,10 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // HBox  + Label + ComboBox
+    // HBox  + AutoTooltipLabel + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<HBox, Label, ComboBox> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+    public static Tuple3<HBox, AutoTooltipLabel, ComboBox> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setSpacing(4);

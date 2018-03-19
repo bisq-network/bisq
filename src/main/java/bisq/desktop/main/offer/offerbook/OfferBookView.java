@@ -100,7 +100,6 @@ import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -151,7 +150,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
-        final Tuple3<HBox, Label, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
+        final Tuple3<HBox, AutoTooltipLabel, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
         final HBox filterBox = filterBoxTuple.first;
         currencyComboBox = filterBoxTuple.third;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
