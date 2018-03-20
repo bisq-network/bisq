@@ -8,9 +8,6 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonTypeName(PaymentMethod.SEPA_ID)
 public class SepaPaymentAccount extends PaymentAccount {
 
-    @NotBlank
-    public String accountName;
-
     @CountryCode
     @NotBlank
     public String countryCode;
