@@ -59,7 +59,7 @@ public class OfferResourceIT {
         final int alicePort = getAlicePort();
         final int bobPort = getBobPort();
 
-        SepaAccountToCreate sepaAccountToCreate;
+        SepaPaymentAccount sepaAccountToCreate;
 
         sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         tradeCurrency = sepaAccountToCreate.selectedTradeCurrency;
@@ -331,7 +331,7 @@ public class OfferResourceIT {
         final int alicePort = getAlicePort();
         final int bobPort = getBobPort();
 
-        final SepaAccountToCreate sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency);
+        final SepaPaymentAccount sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency);
         sepaAccountToCreate.selectedTradeCurrency = tradeCurrency;
         sepaAccountToCreate.tradeCurrencies = Collections.singletonList(sepaAccountToCreate.selectedTradeCurrency);
         final String bobPaymentAccountId = ApiTestHelper.createPaymentAccount(bobPort, sepaAccountToCreate).extract().body().jsonPath().get("id");

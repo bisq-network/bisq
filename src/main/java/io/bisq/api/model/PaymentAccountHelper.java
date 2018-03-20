@@ -13,15 +13,15 @@ import java.util.List;
 
 public final class PaymentAccountHelper {
 
-    public static PaymentAccount toBusinessModel(AccountToCreate account) {
+    public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount account) {
         if (PaymentMethod.SEPA_ID.equals(account.paymentMethod)) {
-            return toBusinessModel((SepaAccountToCreate) account);
+            return toBusinessModel((SepaPaymentAccount) account);
         }
         throw new WebApplicationException("Unsupported paymentMethod:" + account.paymentMethod, 400);
     }
 
 
-    public static SepaAccount toBusinessModel(SepaAccountToCreate account) {
+    public static SepaAccount toBusinessModel(SepaPaymentAccount account) {
         final SepaAccount paymentAccount = new SepaAccount();
         paymentAccount.init();
         paymentAccount.setBic(account.bic);

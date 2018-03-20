@@ -1,7 +1,6 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
-import io.bisq.api.model.AccountToCreate;
 import io.bisq.api.model.PaymentAccount;
 import io.bisq.api.model.PaymentAccountList;
 import io.swagger.annotations.Api;
@@ -31,7 +30,7 @@ public class PaymentAccountResource {
     @ApiOperation("Create payment account")
     @POST
     @Path("/")
-    public PaymentAccount create(@Valid AccountToCreate account) {
+    public PaymentAccount create(@Valid PaymentAccount account) {
         return bisqProxy.addPaymentAccount(account);
     }
 

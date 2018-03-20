@@ -135,7 +135,7 @@ public class BisqProxy {
         return marketList;
     }
 
-    public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
+    public io.bisq.api.model.PaymentAccount addPaymentAccount(io.bisq.api.model.PaymentAccount account) {
         final PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
         user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();

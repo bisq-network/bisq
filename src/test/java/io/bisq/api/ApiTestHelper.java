@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 public final class ApiTestHelper {
 
-    public static ValidatableResponse createPaymentAccount(int apiPort, AccountToCreate accountToCreate) {
+    public static ValidatableResponse createPaymentAccount(int apiPort, PaymentAccount accountToCreate) {
         return given().
                 port(apiPort).
                 contentType(ContentType.JSON).
@@ -91,9 +91,9 @@ public final class ApiTestHelper {
         Thread.sleep(ALL_SERVICES_INITIALIZED_DELAY);
     }
 
-    public static SepaAccountToCreate randomValidCreateSepaAccountPayload(String tradeCurrency) {
+    public static SepaPaymentAccount randomValidCreateSepaAccountPayload(String tradeCurrency) {
         final Faker faker = new Faker();
-        final SepaAccountToCreate accountToCreate = new SepaAccountToCreate();
+        final SepaPaymentAccount accountToCreate = new SepaPaymentAccount();
         final String countryCode = faker.options().nextElement(CountryUtil.getAllSepaCountries()).code;
         accountToCreate.paymentMethod = PaymentMethod.SEPA_ID;
         accountToCreate.accountName = faker.commerce().productName();
@@ -108,7 +108,7 @@ public final class ApiTestHelper {
         return accountToCreate;
     }
 
-    public static SepaAccountToCreate randomValidCreateSepaAccountPayload() {
+    public static SepaPaymentAccount randomValidCreateSepaAccountPayload() {
         return randomValidCreateSepaAccountPayload(null);
     }
 

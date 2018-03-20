@@ -1,6 +1,6 @@
 package io.bisq.api;
 
-import io.bisq.api.model.SepaAccountToCreate;
+import io.bisq.api.model.SepaPaymentAccount;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
@@ -36,7 +36,7 @@ public class PaymentAccountIT {
     public void create_validData_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
+        final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
 
         given().
                 port(alicePort).
@@ -172,8 +172,8 @@ public class PaymentAccountIT {
     private void create_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
-        final SepaAccountToCreate accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
-        SepaAccountToCreate.class.getField(fieldName).set(accountToCreate, fieldValue);
+        final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
+        SepaPaymentAccount.class.getField(fieldName).set(accountToCreate, fieldValue);
 
         given().
                 port(alicePort).
