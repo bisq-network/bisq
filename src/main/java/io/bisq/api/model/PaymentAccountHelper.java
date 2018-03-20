@@ -1,9 +1,6 @@
 package io.bisq.api.model;
 
-import io.bisq.api.model.payment.AliPayPaymentAccountConverter;
-import io.bisq.api.model.payment.PaymentAccountConverter;
-import io.bisq.api.model.payment.RevolutPaymentAccountConverter;
-import io.bisq.api.model.payment.SepaPaymentAccountConverter;
+import io.bisq.api.model.payment.*;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 
@@ -17,6 +14,7 @@ public final class PaymentAccountHelper {
 
     static {
         converters.put(PaymentMethod.ALI_PAY_ID, new AliPayPaymentAccountConverter());
+        converters.put(PaymentMethod.CASH_APP_ID, new CashAppPaymentAccountConverter());
         converters.put(PaymentMethod.REVOLUT_ID, new RevolutPaymentAccountConverter());
         converters.put(PaymentMethod.SEPA_ID, new SepaPaymentAccountConverter());
     }
