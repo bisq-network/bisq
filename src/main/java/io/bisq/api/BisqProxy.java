@@ -483,6 +483,7 @@ public class BisqProxy {
         ResultHandler resultHandler = () -> futureResult.complete(null);
         ErrorMessageHandler errorResultHandler = message -> futureResult.completeExceptionally(new RuntimeException(message));
 
+//        TODO I think we should check instance of tradeProtocol here instead of trade
         if (trade instanceof SellerAsMakerTrade) {
             ((SellerAsMakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
         } else {
@@ -491,23 +492,12 @@ public class BisqProxy {
         return futureResult;
     }
 
-    public boolean moveFundsToBisqWallet(String tradeId) {
-        Trade trade;
-        try {
-            trade = getTrade(tradeId);
-        } catch (NotFoundException e) {
-            return false;
-        }
-
-        Platform.runLater(() -> {
-            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
-            // TODO do we need to handle this ui stuff? --> handleTradeCompleted();
-            tradeManager.addTradeToClosedTrades(trade);
-        });
-
-        return true; // TODO better return value?
+    public void moveFundsToBisqWallet(String tradeId) {
+        final Trade trade = getTrade(tradeId);
+        btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+        // TODO do we need to handle this ui stuff? --> handleTradeCompleted();
+        tradeManager.addTradeToClosedTrades(trade);
     }
-
 
     public void registerArbitrator(List<String> languageCodes) {
 //        TODO most of this code is dupplication of ArbitratorRegistrationViewModel.onRegister

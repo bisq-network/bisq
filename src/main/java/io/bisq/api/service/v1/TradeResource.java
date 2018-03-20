@@ -65,6 +65,13 @@ public class TradeResource {
         handlePaymentStatusChange(id, asyncResponse, completableFuture);
     }
 
+    @ApiOperation("Move funds to Bisq wallet")
+    @POST
+    @Path("/{id}/move-funds-to-bisq-wallet")
+    public void moveFundsToBisqWallet(@PathParam("id") String id) {
+        bisqProxy.moveFundsToBisqWallet(id);
+    }
+
     private void handlePaymentStatusChange(String tradeId, AsyncResponse asyncResponse, CompletableFuture<Void> completableFuture) {
         completableFuture.thenApply(response -> asyncResponse.resume(Response.status(Response.Status.OK).build()))
                 .exceptionally(e -> {
@@ -83,16 +90,6 @@ public class TradeResource {
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });
-    }
-
-
-    @ApiOperation("Move funds to Bisq wallet")
-    @POST
-    @Path("/{id}/move-funds-to-bisq-wallet")
-    public void moveFundsToBisqWallet(@PathParam("id") String id) {
-        if (!bisqProxy.moveFundsToBisqWallet(id)) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
     }
 
 }
