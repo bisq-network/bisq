@@ -1,6 +1,6 @@
 package io.bisq.api;
 
-import io.bisq.api.model.SepaPaymentAccount;
+import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;

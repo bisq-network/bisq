@@ -2,6 +2,7 @@ package io.bisq.api;
 
 import com.github.javafaker.Faker;
 import io.bisq.api.model.*;
+import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.payment.payload.PaymentMethod;

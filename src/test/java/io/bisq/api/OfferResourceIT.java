@@ -1,6 +1,7 @@
 package io.bisq.api;
 
 import io.bisq.api.model.*;
+import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
