@@ -12,6 +12,6 @@ public class AliPayPaymentAccount extends PaymentAccount {
     public String accountNr;
 
     public AliPayPaymentAccount() {
-        paymentMethod = PaymentMethod.ALI_PAY_ID;
+        super(PaymentMethod.ALI_PAY_ID);
     }
 }

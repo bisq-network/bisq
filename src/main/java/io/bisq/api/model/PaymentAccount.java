@@ -20,7 +20,7 @@ import java.util.List;
         @JsonSubTypes.Type(value = RevolutPaymentAccount.class, name = PaymentMethod.REVOLUT_ID),
         @JsonSubTypes.Type(value = SepaPaymentAccount.class, name = PaymentMethod.SEPA_ID)
 })
-public class PaymentAccount {
+public abstract class PaymentAccount {
 
     public String id;
 
@@ -36,4 +36,7 @@ public class PaymentAccount {
     @NotEmpty
     public List<String> tradeCurrencies = new ArrayList<>();
 
+    public PaymentAccount(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
 }

@@ -29,9 +29,7 @@ public class SepaPaymentAccount extends PaymentAccount {
     @NotEmpty
     public List<String> acceptedCountries = new ArrayList<>();
 
-    //    TODO add accepted countries and make sure that countryCode is on that list
-
     public SepaPaymentAccount() {
-        paymentMethod = PaymentMethod.SEPA_ID;
+        super(PaymentMethod.SEPA_ID);
     }
 }

@@ -12,6 +12,6 @@ public class RevolutPaymentAccount extends PaymentAccount {
     public String accountId;
 
     public RevolutPaymentAccount() {
-        paymentMethod = PaymentMethod.REVOLUT_ID;
+        super(PaymentMethod.REVOLUT_ID);
     }
 }

@@ -12,6 +12,6 @@ public class CashAppPaymentAccount extends PaymentAccount {
     public String cashTag;
 
     public CashAppPaymentAccount() {
-        paymentMethod = PaymentMethod.CASH_APP_ID;
+        super(PaymentMethod.CASH_APP_ID);
     }
 }
