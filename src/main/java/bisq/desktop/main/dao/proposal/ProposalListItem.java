@@ -17,22 +17,29 @@
 
 package bisq.desktop.main.dao.proposal;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.proposal.Proposal;
+import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.vote.BooleanVoteResult;
+import bisq.core.dao.vote.VoteResult;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
+import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 
 import javafx.beans.value.ChangeListener;
 
@@ -40,6 +47,7 @@ import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,11 +57,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BsqBlockChainListener {
     @Getter
     private final Proposal proposal;
+    private final ProposalCollectionsManager proposalCollectionsManager;
+    private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final BsqBlockChain bsqBlockChain;
     private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
+    private final ChangeListener<VoteResult> voteResultChangeListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
     @Getter
@@ -62,13 +73,23 @@ public class ProposalListItem implements BsqBlockChainListener {
     private TxConfidenceListener txConfidenceListener;
     private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     private Transaction walletTransaction;
+    private ChangeListener<DaoPeriodService.Phase> phaseChangeListener;
+    private AutoTooltipButton actionButton;
+    private ImageView actionButtonIconView;
+    @Setter
+    private Runnable onRemoveHandler;
+    private Node actionNode;
 
-    public ProposalListItem(Proposal proposal,
-                            BsqWalletService bsqWalletService,
-                            BsqBlockChain bsqBlockChain,
-                            BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
-                            BsqFormatter bsqFormatter) {
+    ProposalListItem(Proposal proposal,
+                     ProposalCollectionsManager proposalCollectionsManager,
+                     DaoPeriodService daoPeriodService,
+                     BsqWalletService bsqWalletService,
+                     BsqBlockChain bsqBlockChain,
+                     BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
+                     BsqFormatter bsqFormatter) {
         this.proposal = proposal;
+        this.proposalCollectionsManager = proposalCollectionsManager;
+        this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockChain = bsqBlockChain;
         this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
@@ -82,11 +103,83 @@ public class ProposalListItem implements BsqBlockChainListener {
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
+        actionButton = new AutoTooltipButton();
+        actionButton.setMinWidth(70);
+        actionButtonIconView = new ImageView();
+
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
         bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
+
+        phaseChangeListener = (observable, oldValue, newValue) -> {
+            applyState(newValue, proposal.getVoteResult());
+        };
+
+        voteResultChangeListener = (observable, oldValue, newValue) -> {
+            applyState(daoPeriodService.getPhaseProperty().get(), newValue);
+        };
+
+        daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
+        proposal.getVoteResultProperty().addListener(voteResultChangeListener);
+        applyState(daoPeriodService.getPhaseProperty().get(), proposal.getVoteResult());
+    }
+
+    private void applyState(DaoPeriodService.Phase newValue, VoteResult voteResult) {
+        actionButton.setText("");
+        actionButton.setVisible(false);
+        actionButton.setOnAction(null);
+
+        switch (newValue) {
+            case UNDEFINED:
+                break;
+            case COMPENSATION_REQUESTS:
+                if (proposalCollectionsManager.isMine(proposal)) {
+                    actionButton.setVisible(!proposal.isClosed());
+                    actionButtonIconView.setVisible(actionButton.isVisible());
+                    actionButton.setText(Res.get("shared.remove"));
+                    actionButton.setGraphic(actionButtonIconView);
+                    actionButtonIconView.setId("image-remove");
+                    actionButton.setOnAction(e -> onRemoveHandler.run());
+                    actionNode = actionButton;
+                }
+                break;
+            case BREAK1:
+                break;
+            case OPEN_FOR_VOTING:
+                if (!proposal.isClosed()) {
+                    actionNode = actionButtonIconView;
+                    actionButton.setVisible(false);
+                    if (proposal.getVoteResult() != null) {
+                        actionButtonIconView.setVisible(true);
+                        if (voteResult instanceof BooleanVoteResult) {
+                            if (((BooleanVoteResult) voteResult).isAccepted()) {
+                                actionButtonIconView.setId("accepted");
+                            } else {
+                                actionButtonIconView.setId("rejected");
+                            }
+                        } else {
+                            //TODO
+                        }
+                    } else {
+                        log.error("actionButtonIconView.setVisible(false);");
+                        actionButtonIconView.setVisible(false);
+                    }
+                }
+                break;
+            case BREAK2:
+                break;
+            case VOTE_REVEAL:
+                break;
+            case BREAK3:
+                break;
+        }
+        actionButton.setManaged(actionButton.isVisible());
+
+        // Don't set managed as otherwise the update does not work (not sure why but probably table
+        // cell item issue)
+        //actionButtonIconView.setManaged(actionButtonIconView.isVisible());
     }
 
     @Override
@@ -143,9 +236,12 @@ public class ProposalListItem implements BsqBlockChainListener {
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
+
+        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
+        proposal.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 
-    public void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
+    private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
         switch (confidenceType) {
             case UNKNOWN:
                 tooltip.setText(Res.get("confidence.unknown"));
@@ -166,6 +262,10 @@ public class ProposalListItem implements BsqBlockChainListener {
         }
 
         txConfidenceIndicator.setPrefSize(24, 24);
+    }
+
+    public Node getActionNode() {
+        return actionNode;
     }
 }
 

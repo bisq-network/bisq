@@ -50,6 +50,10 @@ public class ClosedProposalsView extends BaseProposalView {
     @Override
     public void initialize() {
         super.initialize();
+
+        createTableView();
+
+        createProposalDisplay();
     }
 
     @Override

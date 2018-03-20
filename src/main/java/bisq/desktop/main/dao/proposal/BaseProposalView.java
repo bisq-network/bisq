@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.util.BsqFormatter;
 
@@ -31,9 +32,8 @@ import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalPayload;
 import bisq.core.locale.Res;
-
-import bisq.common.UserThread;
 
 import javax.inject.Inject;
 
@@ -41,7 +41,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.geometry.Insets;
 
@@ -109,34 +111,42 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         super.initialize();
         root.getStyleClass().add("vote-root");
 
-        TableGroupHeadline headline = new TableGroupHeadline(Res.get("dao.proposal.active.header"));
-        GridPane.setRowIndex(headline, ++gridRow);
-        GridPane.setMargin(headline, new Insets(-10, -10, -10, -10));
-        root.getChildren().add(headline);
+        proposalListChangeListener = c -> updateList();
+        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
+    }
+
+    protected void createTableView() {
+        TableGroupHeadline proposalsHeadline = new TableGroupHeadline(Res.get("dao.proposal.active.header"));
+        GridPane.setRowIndex(proposalsHeadline, ++gridRow);
+        GridPane.setMargin(proposalsHeadline, new Insets(-10, -10, -10, -10));
+        GridPane.setColumnSpan(proposalsHeadline, 2);
+        root.getChildren().add(proposalsHeadline);
 
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setMinHeight(90);
+
         createColumns(tableView);
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setMargin(tableView, new Insets(10, -10, 5, -10));
+        GridPane.setColumnSpan(tableView, 2);
+        GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
-
-        detailsGridPane = new GridPane();
-        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
-
-        final ScrollPane proposalDisplayView = proposalDisplay.getView();
-        GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
-        GridPane.setRowIndex(proposalDisplayView, ++gridRow);
-        root.getChildren().add(proposalDisplayView);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
-
-        proposalListChangeListener = c -> updateList();
-        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
+
+    protected void createProposalDisplay() {
+        detailsGridPane = new GridPane();
+        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
+        final ScrollPane proposalDisplayView = proposalDisplay.getView();
+        GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
+        GridPane.setRowIndex(proposalDisplayView, ++gridRow);
+        GridPane.setColumnSpan(proposalDisplayView, 2);
+        root.getChildren().add(proposalDisplayView);
+    }
+
 
     @Override
     protected void activate() {
@@ -172,6 +182,10 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         proposalCollectionsManager.getAllProposals().removeListener(proposalListChangeListener);
 
         proposalListItems.forEach(ProposalListItem::cleanup);
+
+        tableView.getSelectionModel().clearSelection();
+        removeProposalDisplay();
+        selectedProposalListItem = null;
     }
 
 
@@ -182,7 +196,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     @Override
     public void onBsqBlockChainChanged() {
         // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
-        UserThread.execute(this::updateList);
+        //UserThread.execute(this::updateList);
     }
 
     abstract protected void updateList();
@@ -198,7 +212,13 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         proposalListItems.forEach(ProposalListItem::cleanup);
 
         proposalListItems.setAll(list.stream()
-                .map(e -> new ProposalListItem(e, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, bsqFormatter))
+                .map(proposal -> new ProposalListItem(proposal,
+                        proposalCollectionsManager,
+                        daoPeriodService,
+                        bsqWalletService,
+                        bsqBlockChain,
+                        bsqBlockChainChangeDispatcher,
+                        bsqFormatter))
                 .collect(Collectors.toSet()));
 
         if (list.isEmpty() && proposalDisplay != null)
@@ -209,10 +229,22 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         selectedProposalListItem = item;
         if (item != null) {
             final Proposal proposal = item.getProposal();
-            proposalDisplay.removeAllFields();
-            proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(), false);
+
+            removeProposalDisplay();
+
+            //TODO
+            proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
+            proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
+                    false, false);
             proposalDisplay.setAllFieldsEditable(false);
             proposalDisplay.fillWithData(proposal.getProposalPayload());
+        }
+    }
+
+    protected void removeProposalDisplay() {
+        if (proposalDisplay != null) {
+            proposalDisplay.removeAllFields();
+            proposalDisplay = null;
         }
     }
 
@@ -223,7 +255,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
                 setMaxWidth(190);
             }
         };
-        dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        dateColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         dateColumn.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
                         ProposalListItem>>() {
@@ -248,7 +280,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         tableView.getSortOrder().add(dateColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
-        nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        nameColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         nameColumn.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
                         ProposalListItem>>() {
@@ -271,21 +303,35 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         tableView.getColumns().add(nameColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
-        uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+
+        uidColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         uidColumn.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
                         ProposalListItem>>() {
+
                     @Override
-                    public TableCell<ProposalListItem, ProposalListItem> call(
-                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                    public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
+                            ProposalListItem> column) {
                         return new TableCell<ProposalListItem, ProposalListItem>() {
+                            private HyperlinkWithIcon field;
+
                             @Override
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getProposal().getProposalPayload().getUid());
-                                else
-                                    setText("");
+                                if (item != null && !empty) {
+                                    final Proposal proposal = item.getProposal();
+                                    final ProposalPayload proposalPayload = proposal.getProposalPayload();
+                                    field = new HyperlinkWithIcon(proposalPayload.getShortId());
+                                    field.setOnAction(event -> {
+                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposalPayload).show();
+                                    });
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    setGraphic(field);
+                                } else {
+                                    setGraphic(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
+                                }
                             }
                         };
                     }

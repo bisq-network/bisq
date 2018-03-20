@@ -68,6 +68,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 
@@ -89,6 +90,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -527,5 +529,18 @@ public class GUIUtil {
                 return null;
             }
         };
+    }
+
+    public static void removeChildrenFromGridPaneRows(GridPane gridPane, int start, int end) {
+        Map<Integer, List<Node>> childByRowMap = new HashMap<>();
+        gridPane.getChildren().forEach(child -> {
+            final Integer rowIndex = GridPane.getRowIndex(child);
+            childByRowMap.computeIfAbsent(rowIndex, key -> new ArrayList<>());
+            childByRowMap.get(rowIndex).add(child);
+        });
+
+        for (int i = start; i < end; i++) {
+            childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
+        }
     }
 }
