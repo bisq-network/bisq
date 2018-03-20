@@ -50,13 +50,13 @@ import javafx.beans.value.ChangeListener;
 import java.util.Objects;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
 
-// TODO add listener for descriptionTextArea and restrict size of 100 chars. show popup if exceeds.
-// we store data locally so we want to keep it small. external link is intended for more info....
-// use ProposalRestrictions.getMaxLengthDescriptionText()
+@Slf4j
 public class ProposalDisplay {
     private final GridPane gridPane;
     private final int maxLengthDescriptionText;
@@ -72,6 +72,7 @@ public class ProposalDisplay {
     private TxIdTextField txIdTextField;
     private FeeService feeService;
     private ChangeListener<String> descriptionTextAreaListener;
+    private int gridRowStartIndex;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, @Nullable FeeService feeService) {
         this.gridPane = gridPane;
@@ -89,23 +90,38 @@ public class ProposalDisplay {
         };
     }
 
-    public void createAllFields(String title, int index, double top, ProposalType proposalType, boolean isMakeProposalScreen) {
-        this.gridRow = index;
-        int rowSpan = 5;
-        if (proposalType == ProposalType.COMPENSATION_REQUEST)
-            rowSpan += 2;
-        if (!isMakeProposalScreen)
-            rowSpan += 1;
+    public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
+                                boolean isMakeProposalScreen, boolean showDetails) {
+        this.gridRowStartIndex = gridRowStartIndex;
+        this.gridRow = gridRowStartIndex;
+        int rowSpan;
+        if (isMakeProposalScreen) {
+            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 7 : 5;
+        } else if (showDetails) {
+            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 8 : 6;
+        } else {
+            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 5 : 4;
+        }
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
-        uidTextField = addLabelInputTextField(gridPane, gridRow, Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
-        uidTextField.setEditable(false);
-        nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
+        if (showDetails) {
+            uidTextField = addLabelInputTextField(gridPane, gridRow,
+                    Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
+            uidTextField.setEditable(false);
+            nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
+        } else {
+            nameTextField = addLabelInputTextField(gridPane, gridRow, Res.get("dao.proposal.display.name"),
+                    top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
+        }
+
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.title")).second;
 
         descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"), Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
-        descriptionTextArea.setPrefColumnCount(2);
-        descriptionTextArea.textProperty().addListener(descriptionTextAreaListener);
+        descriptionTextArea.setMaxHeight(42); // for 2 lines
+        descriptionTextArea.setMinHeight(descriptionTextArea.getMaxHeight());
+        if (isMakeProposalScreen)
+            descriptionTextArea.textProperty().addListener(descriptionTextAreaListener);
+
         linkInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.link")).second;
         linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow, Res.get("dao.proposal.display.link"), "", "").second;
         linkHyperlinkWithIcon.setVisible(false);
@@ -123,19 +139,22 @@ public class ProposalDisplay {
                 Objects.requireNonNull(requestedBsqTextField).setValidator(bsqValidator);
             }
             // TODO validator, addressTF
-            bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
-                    Res.get("dao.proposal.display.bsqAddress")).second;
-            Objects.requireNonNull(bsqAddressTextField).setText("B" + bsqWalletService.getUnusedAddress().toBase58());
-            bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
+            if (showDetails) {
+                bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.bsqAddress")).second;
+                Objects.requireNonNull(bsqAddressTextField).setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+                bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
+            }
         }
 
-        if (!isMakeProposalScreen)
+        if (!isMakeProposalScreen && showDetails)
             txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "").second;
     }
 
     public void fillWithData(ProposalPayload proposalPayload) {
-        uidTextField.setText(proposalPayload.getUid());
+        if (uidTextField != null)
+            uidTextField.setText(proposalPayload.getUid());
         nameTextField.setText(proposalPayload.getName());
         titleTextField.setText(proposalPayload.getTitle());
         descriptionTextArea.setText(proposalPayload.getDescription());
@@ -148,14 +167,16 @@ public class ProposalDisplay {
         if (proposalPayload instanceof CompensationRequestPayload) {
             CompensationRequestPayload compensationRequestPayload = (CompensationRequestPayload) proposalPayload;
             Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationRequestPayload.getRequestedBsq()));
-            Objects.requireNonNull(bsqAddressTextField).setText(compensationRequestPayload.getBsqAddress());
+            if (bsqAddressTextField != null)
+                bsqAddressTextField.setText(compensationRequestPayload.getBsqAddress());
         }
         if (txIdTextField != null)
             txIdTextField.setup(proposalPayload.getTxId());
     }
 
     public void clearForm() {
-        uidTextField.clear();
+        if (uidTextField != null)
+            uidTextField.clear();
         nameTextField.clear();
         titleTextField.clear();
         descriptionTextArea.clear();
@@ -201,8 +222,13 @@ public class ProposalDisplay {
     }
 
     public void removeAllFields() {
-        gridPane.getChildren().clear();
-        gridRow = 0;
+        if (gridRow > 0) {
+            clearForm();
+
+            GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow + 1);
+
+            gridRow = gridRowStartIndex;
+        }
     }
 
     public int incrementAndGetGridRow() {
@@ -214,7 +240,7 @@ public class ProposalDisplay {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setMinHeight(100);
+        scrollPane.setMinHeight(280); // just enough to display overview at voting without scroller
 
         AnchorPane anchorPane = new AnchorPane();
         scrollPane.setContent(anchorPane);

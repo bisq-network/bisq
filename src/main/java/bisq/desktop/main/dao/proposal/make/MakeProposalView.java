@@ -246,12 +246,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private void addProposalDisplay() {
         // TODO need to update removed fields when switching.
         if (proposalDisplay != null) {
-            root.getChildren().remove(3, root.getChildren().size());
+            proposalDisplay.removeAllFields();
             proposalDisplay = null;
         }
         if (selectedProposalType != null) {
             proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, feeService);
-            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE, selectedProposalType, true);
+            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE,
+                    selectedProposalType, true, true);
             proposalDisplay.fillWithMock();
 
             createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));

@@ -299,5 +299,13 @@
     -fx-image: url("../../images/spinner.png");
 }
 
+#accepted {
+    -fx-image: url("../../images/accepted.png");
+}
+
+#rejected {
+    -fx-image: url("../../images/rejected.png");
+}
+
 
 
