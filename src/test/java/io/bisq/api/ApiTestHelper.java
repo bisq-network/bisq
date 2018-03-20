@@ -11,6 +11,7 @@ import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.spi.CubeOutput;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -102,6 +103,7 @@ public final class ApiTestHelper {
         accountToCreate.iban = faker.finance().iban();
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.countryCode = countryCode;
+        accountToCreate.acceptedCountries = Arrays.asList("PL", "GB");
         accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
         if (null != tradeCurrency)
             accountToCreate.selectedTradeCurrency = tradeCurrency;

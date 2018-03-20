@@ -57,7 +57,8 @@ public class PaymentAccountIT {
                 and().body("iban", equalTo(accountToCreate.iban)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
-                and().body("size()", equalTo(9))
+                and().body("acceptedCountries", equalTo(accountToCreate.acceptedCountries)).
+                and().body("size()", equalTo(10))
         ;
 
         given().
@@ -78,7 +79,8 @@ public class PaymentAccountIT {
                 and().body("paymentAccounts[0].iban", equalTo(accountToCreate.iban)).
                 and().body("paymentAccounts[0].selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("paymentAccounts[0].tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
-                and().body("paymentAccounts[0].size()", equalTo(9))
+                and().body("paymentAccounts[0].acceptedCountries", equalTo(accountToCreate.acceptedCountries)).
+                and().body("paymentAccounts[0].size()", equalTo(10))
         ;
     }
 

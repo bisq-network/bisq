@@ -4,6 +4,8 @@ import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.SepaAccount;
 
+import java.util.List;
+
 public class SepaPaymentAccountConverter extends AbstractPaymentAccountConverter<SepaAccount, SepaPaymentAccount> {
 
     @Override
@@ -14,6 +16,9 @@ public class SepaPaymentAccountConverter extends AbstractPaymentAccountConverter
         business.setIban(rest.iban);
         business.setHolderName(rest.holderName);
         business.setCountry(CountryUtil.findCountryByCode(rest.countryCode).get());
+        business.getAcceptedCountryCodes().clear();
+        if (null != rest.acceptedCountries)
+            rest.acceptedCountries.stream().forEach(business::addAcceptedCountry);
         toBusinessModel(business, rest);
         return business;
     }
@@ -27,6 +32,9 @@ public class SepaPaymentAccountConverter extends AbstractPaymentAccountConverter
         if (null != country)
             rest.countryCode = country.code;
         rest.holderName = business.getHolderName();
+        final List<String> tradeCurrencies = business.getAcceptedCountryCodes();
+        if (null != tradeCurrencies)
+            rest.acceptedCountries.addAll(tradeCurrencies);
         toRestModel(rest, business);
         return rest;
     }
