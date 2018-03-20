@@ -193,7 +193,7 @@ public class ActiveProposalsView extends BaseProposalView {
         if (selectedProposalListItem != null && proposalDisplay != null && !selectedProposalListItem.getProposal().isClosed()) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
-                case COMPENSATION_REQUESTS:
+                case PROPOSAL:
                     if (proposalCollectionsManager.isMine(proposal)) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));

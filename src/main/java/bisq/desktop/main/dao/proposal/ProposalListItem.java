@@ -24,9 +24,9 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoPeriodService;
-import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.BsqBlockChainListener;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsManager;
@@ -60,7 +60,7 @@ public class ProposalListItem implements BsqBlockChainListener {
     private final ProposalCollectionsManager proposalCollectionsManager;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
-    private final BsqBlockChain bsqBlockChain;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
@@ -84,14 +84,14 @@ public class ProposalListItem implements BsqBlockChainListener {
                      ProposalCollectionsManager proposalCollectionsManager,
                      DaoPeriodService daoPeriodService,
                      BsqWalletService bsqWalletService,
-                     BsqBlockChain bsqBlockChain,
+                     ReadableBsqBlockChain readableBsqBlockChain,
                      BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.proposalCollectionsManager = proposalCollectionsManager;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
-        this.bsqBlockChain = bsqBlockChain;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.bsqFormatter = bsqFormatter;
 
@@ -134,7 +134,7 @@ public class ProposalListItem implements BsqBlockChainListener {
         switch (newValue) {
             case UNDEFINED:
                 break;
-            case COMPENSATION_REQUESTS:
+            case PROPOSAL:
                 if (proposalCollectionsManager.isMine(proposal)) {
                     actionButton.setVisible(!proposal.isClosed());
                     actionButtonIconView.setVisible(actionButton.isVisible());
@@ -188,7 +188,7 @@ public class ProposalListItem implements BsqBlockChainListener {
     }
 
     private void setupConfidence() {
-        final Tx tx = bsqBlockChain.getTxMap().get(proposal.getProposalPayload().getTxId());
+        final Tx tx = readableBsqBlockChain.getTxMap().get(proposal.getProposalPayload().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
