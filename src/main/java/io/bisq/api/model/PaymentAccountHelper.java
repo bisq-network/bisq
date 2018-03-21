@@ -17,6 +17,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.CASH_APP_ID, new CashAppPaymentAccountConverter());
         converters.put(PaymentMethod.CASH_DEPOSIT_ID, new CashDepositPaymentAccountConverter());
         converters.put(PaymentMethod.CHASE_QUICK_PAY_ID, new ChaseQuickPayPaymentAccountConverter());
+        converters.put(PaymentMethod.CLEAR_X_CHANGE_ID, new ClearXchangePaymentAccountConverter());
         converters.put(PaymentMethod.FASTER_PAYMENTS_ID, new FasterPaymentsPaymentAccountConverter());
         converters.put(PaymentMethod.REVOLUT_ID, new RevolutPaymentAccountConverter());
         converters.put(PaymentMethod.SEPA_ID, new SepaPaymentAccountConverter());
