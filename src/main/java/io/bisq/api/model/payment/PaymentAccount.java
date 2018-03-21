@@ -1,4 +1,4 @@
-package io.bisq.api.model;
+package io.bisq.api.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

@@ -1,7 +1,7 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
-import io.bisq.api.model.PaymentAccount;
+import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.PaymentAccountList;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

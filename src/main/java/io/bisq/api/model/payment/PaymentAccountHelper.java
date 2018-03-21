@@ -1,6 +1,5 @@
-package io.bisq.api.model;
+package io.bisq.api.model.payment;
 
-import io.bisq.api.model.payment.*;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 
@@ -37,7 +36,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.WESTERN_UNION_ID, new WesternUnionPaymentAccountConverter());
     }
 
-    public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
+    public static PaymentAccount toBusinessModel(io.bisq.api.model.payment.PaymentAccount rest) {
         final PaymentAccountConverter converter = converters.get(rest.paymentMethod);
         if (null != converter) {
             return converter.toBusinessModel(rest);
@@ -45,7 +44,7 @@ public final class PaymentAccountHelper {
         throw new WebApplicationException("Unsupported paymentMethod:" + rest.paymentMethod, 400);
     }
 
-    public static io.bisq.api.model.PaymentAccount toRestModel(PaymentAccount business) {
+    public static io.bisq.api.model.payment.PaymentAccount toRestModel(PaymentAccount business) {
         final PaymentMethod paymentMethod = business.getPaymentMethod();
         final PaymentAccountConverter converter = converters.get(paymentMethod.getId());
         if (null != converter) {

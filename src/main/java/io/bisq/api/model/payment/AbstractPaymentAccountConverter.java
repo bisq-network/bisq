@@ -6,7 +6,7 @@ import io.bisq.core.payment.PaymentAccount;
 
 import java.util.List;
 
-public abstract class AbstractPaymentAccountConverter<B extends PaymentAccount, R extends io.bisq.api.model.PaymentAccount> implements PaymentAccountConverter<B, R> {
+public abstract class AbstractPaymentAccountConverter<B extends PaymentAccount, R extends io.bisq.api.model.payment.PaymentAccount> implements PaymentAccountConverter<B, R> {
 
     protected void toBusinessModel(B business, R rest) {
         if (null != rest.accountName)
