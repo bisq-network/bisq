@@ -6,11 +6,11 @@ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 # or: /usr/lib/jvm/jdk1.8.0_112
 echo 'export JAVA_HOME=$(/usr/libexec/java_home)' >> ~/.bashrc
 
-echo "Install Oracle Java 8, git, maven, unzip"
+echo "Install Oracle Java 8, Git, unzip"
 apt-get update
 add-apt-repository ppa:webupd8team/java
 apt-get update
-apt-get -y install oracle-java8-installer git maven unzip
+apt-get -y install oracle-java8-installer git unzip
 
 # Alternatively you can download the latest jdk and extract it to $JAVA_HOME
 # wget http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
@@ -44,19 +44,13 @@ rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
     $ sudo ./configure
     $ sudo make
     $ sudo make check
-    $ sudo make install 
+    $ sudo make install
     $ sudo ldconfig
     $ protoc --version
-    
 
-echo "Install and resolve dependencies for bisq"
+
+echo "Install and resolve dependencies for Bisq"
 cd ~
-git clone -b DAO https://github.com/bisq-network/exchange.git
-cd bisq
-mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
-
-echo "Add BountyCastle.jar"
-cd ~
-sudo cp .m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/bcprov-jdk15on-1.53.jar
-
-
+git clone -b DAO https://github.com/bisq-network/bisq-desktop.git
+cd bisq-desktop
+./gradlew build
