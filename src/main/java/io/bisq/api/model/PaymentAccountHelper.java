@@ -24,6 +24,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.NATIONAL_BANK_ID, new NationalBankAccountPaymentAccountConverter());
         converters.put(PaymentMethod.OK_PAY_ID, new OKPayPaymentAccountConverter());
         converters.put(PaymentMethod.PERFECT_MONEY_ID, new PerfectMoneyPaymentAccountConverter());
+        converters.put(PaymentMethod.POPMONEY_ID, new PopmoneyPaymentAccountConverter());
         converters.put(PaymentMethod.REVOLUT_ID, new RevolutPaymentAccountConverter());
         converters.put(PaymentMethod.SEPA_ID, new SepaPaymentAccountConverter());
     }
