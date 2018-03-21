@@ -31,6 +31,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.SEPA_INSTANT_ID, new SepaInstantPaymentAccountConverter());
         converters.put(PaymentMethod.SPECIFIC_BANKS_ID, new SpecificBanksAccountPaymentAccountConverter());
         converters.put(PaymentMethod.SWISH_ID, new SwishPaymentAccountConverter());
+        converters.put(PaymentMethod.UPHOLD_ID, new UpholdPaymentAccountConverter());
     }
 
     public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
