@@ -32,7 +32,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = SwishPaymentAccount.class, name = PaymentMethod.SWISH_ID),
         @JsonSubTypes.Type(value = UpholdPaymentAccount.class, name = PaymentMethod.UPHOLD_ID),
         @JsonSubTypes.Type(value = USPostalMoneyOrderPaymentAccount.class, name = PaymentMethod.US_POSTAL_MONEY_ORDER_ID),
-        @JsonSubTypes.Type(value = VenmoPaymentAccount.class, name = PaymentMethod.VENMO_ID)
+        @JsonSubTypes.Type(value = VenmoPaymentAccount.class, name = PaymentMethod.VENMO_ID),
+        @JsonSubTypes.Type(value = WesternUnionPaymentAccount.class, name = PaymentMethod.WESTERN_UNION_ID)
 })
 public abstract class PaymentAccount {
 

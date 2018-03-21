@@ -34,6 +34,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.UPHOLD_ID, new UpholdPaymentAccountConverter());
         converters.put(PaymentMethod.US_POSTAL_MONEY_ORDER_ID, new USPostalMoneyOrderPaymentAccountConverter());
         converters.put(PaymentMethod.VENMO_ID, new VenmoPaymentAccountConverter());
+        converters.put(PaymentMethod.WESTERN_UNION_ID, new WesternUnionPaymentAccountConverter());
     }
 
     public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
