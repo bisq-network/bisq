@@ -21,6 +21,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.FASTER_PAYMENTS_ID, new FasterPaymentsPaymentAccountConverter());
         converters.put(PaymentMethod.INTERAC_E_TRANSFER_ID, new InteracETransferPaymentAccountConverter());
         converters.put(PaymentMethod.MONEY_BEAM_ID, new MoneyBeamPaymentAccountConverter());
+        converters.put(PaymentMethod.NATIONAL_BANK_ID, new NationalBankAccountPaymentAccountConverter());
         converters.put(PaymentMethod.REVOLUT_ID, new RevolutPaymentAccountConverter());
         converters.put(PaymentMethod.SEPA_ID, new SepaPaymentAccountConverter());
     }
