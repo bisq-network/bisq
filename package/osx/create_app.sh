@@ -7,35 +7,27 @@ set -e
 
 version="0.6.7"
 
-mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
+./gradlew build
 
-linux32=/Users/dev/vm_shared_ubuntu14_32bit
-linux64=/Users/dev/vm_shared_ubuntu
-win32=/Users/dev/vm_shared_windows_32bit
-win64=/Users/dev/vm_shared_windows
+linux32=build/vm/vm_shared_ubuntu14_32bit
+linux64=build/vm/vm_shared_ubuntu
+win32=build/vm/vm_shared_windows_32bit
+win64=build/vm/vm_shared_windows
 
-cp target/shaded.jar "deploy/Bisq-$version.jar"
+mkdir -p $linux32 $linux64 $win32 $win64
+
+cp build/libs/bisq-desktop.jar "deploy/Bisq-$version.jar"
 
 # copy app jar to VM shared folders
-cp target/shaded.jar "$linux32/Bisq-$version.jar"
-cp target/shaded.jar "$linux64/Bisq-$version.jar"
+cp build/libs/bisq-desktop.jar "$linux32/Bisq-$version.jar"
+cp build/libs/bisq-desktop.jar "$linux64/Bisq-$version.jar"
 # At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
-cp target/shaded.jar "$win32/Bisq.jar"
-cp target/shaded.jar "$win64/Bisq.jar"
+cp build/libs/bisq-desktop.jar "$win32/Bisq.jar"
+cp build/libs/bisq-desktop.jar "$win64/Bisq.jar"
 
-# copy bouncycastle jars to VM shared folders
-lib1=bcpg-jdk15on.jar
-cp target/lib/$lib1 "$linux32/$lib1"
-cp target/lib/$lib1 "$linux64/$lib1"
-cp target/lib/$lib1 "$win32/$lib1"
-cp target/lib/$lib1 "$win64/$lib1"
-
-lib2=bcprov-jdk15on.jar
-cp target/lib/$lib2 "$linux32/$lib2"
-cp target/lib/$lib2 "$linux64/$lib2"
-cp target/lib/$lib2 "$win32/$lib2"
-cp target/lib/$lib2 "$win64/$lib2"
-
+if [ -z "$JAVA_HOME" ]; then
+    JAVA_HOME=$(/usr/libexec/java_home)
+fi
 
 echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
@@ -51,8 +43,6 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "deploy/Bisq-$version.jar" \
-    -srcfiles "target/lib/bcpg-jdk15on.jar" \
-    -srcfiles "target/lib/bcprov-jdk15on.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
