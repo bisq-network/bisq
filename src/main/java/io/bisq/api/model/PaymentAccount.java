@@ -27,7 +27,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = RevolutPaymentAccount.class, name = PaymentMethod.REVOLUT_ID),
         @JsonSubTypes.Type(value = SameBankAccountPaymentAccount.class, name = PaymentMethod.SAME_BANK_ID),
         @JsonSubTypes.Type(value = SepaPaymentAccount.class, name = PaymentMethod.SEPA_ID),
-        @JsonSubTypes.Type(value = SepaInstantPaymentAccount.class, name = PaymentMethod.SEPA_INSTANT_ID)
+        @JsonSubTypes.Type(value = SepaInstantPaymentAccount.class, name = PaymentMethod.SEPA_INSTANT_ID),
+        @JsonSubTypes.Type(value = SpecificBanksAccountPaymentAccount.class, name = PaymentMethod.SPECIFIC_BANKS_ID)
 })
 public abstract class PaymentAccount {
 
