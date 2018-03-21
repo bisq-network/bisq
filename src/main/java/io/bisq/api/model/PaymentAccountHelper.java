@@ -32,6 +32,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.SPECIFIC_BANKS_ID, new SpecificBanksAccountPaymentAccountConverter());
         converters.put(PaymentMethod.SWISH_ID, new SwishPaymentAccountConverter());
         converters.put(PaymentMethod.UPHOLD_ID, new UpholdPaymentAccountConverter());
+        converters.put(PaymentMethod.US_POSTAL_MONEY_ORDER_ID, new USPostalMoneyOrderPaymentAccountConverter());
     }
 
     public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
