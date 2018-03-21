@@ -15,9 +15,7 @@ public abstract class AbstractPaymentAccountConverter<B extends PaymentAccount, 
         if (null != rest.selectedTradeCurrency)
             business.setSelectedTradeCurrency(new FiatCurrency(rest.selectedTradeCurrency));
         if (null != rest.tradeCurrencies) {
-            rest.tradeCurrencies.stream().forEach(currencyCode -> {
-                business.addCurrency(new FiatCurrency(currencyCode));
-            });
+            rest.tradeCurrencies.stream().forEach(currencyCode -> business.addCurrency(new FiatCurrency(currencyCode)));
         }
     }
 
