@@ -29,17 +29,19 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.ChangeBelowDustException;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.proposal.ProposalType;
 import bisq.core.dao.proposal.compensation.CompensationAmountException;
-import bisq.core.dao.proposal.compensation.CompensationRequestManager;
 import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
-import bisq.core.dao.proposal.consensus.ProposalRestrictions;
-import bisq.core.dao.proposal.generic.GenericProposalManager;
+import bisq.core.dao.proposal.compensation.CompensationRequestService;
+import bisq.core.dao.proposal.consensus.ProposalConsensus;
 import bisq.core.dao.proposal.generic.GenericProposalPayload;
+import bisq.core.dao.proposal.generic.GenericProposalService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.CoinUtil;
@@ -88,9 +90,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final FeeService feeService;
-    private final ProposalCollectionsManager proposalCollectionsManager;
-    private final CompensationRequestManager compensationRequestManager;
-    private final GenericProposalManager genericProposalManager;
+    private final ProposalCollectionsService proposalCollectionsService;
+    private final CompensationRequestService compensationRequestService;
+    private final GenericProposalService genericProposalService;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private ComboBox<ProposalType> proposalTypeComboBox;
@@ -107,18 +110,20 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              FeeService feeService,
-                             ProposalCollectionsManager proposalCollectionsManager,
-                             CompensationRequestManager compensationRequestManager,
-                             GenericProposalManager genericProposalManager,
+                             ProposalCollectionsService proposalCollectionsService,
+                             CompensationRequestService compensationRequestService,
+                             GenericProposalService genericProposalService,
+                             ReadableBsqBlockChain readableBsqBlockChain,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.feeService = feeService;
-        this.proposalCollectionsManager = proposalCollectionsManager;
-        this.compensationRequestManager = compensationRequestManager;
-        this.genericProposalManager = genericProposalManager;
+        this.proposalCollectionsService = proposalCollectionsService;
+        this.compensationRequestService = compensationRequestService;
+        this.genericProposalService = genericProposalService;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -127,7 +132,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         addTitledGroupBg(root, 0, 1, Res.get("dao.proposal.create.selectProposalType"));
-        proposalTypeComboBox = addLabelComboBox(root, 0, Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_DISTANCE).second;
+        proposalTypeComboBox = addLabelComboBox(root, 0,
+                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_DISTANCE).second;
         proposalTypeComboBox.setConverter(new StringConverter<ProposalType>() {
             @Override
             public String toString(ProposalType object) {
@@ -163,23 +169,25 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             createButton.setOnAction(null);
     }
 
-    private void createCompensationRequest(ProposalType type) {
+    private void publishProposal(ProposalType type) {
         try {
             Proposal proposal = createProposal(type);
-            Coin miningFee = Objects.requireNonNull(proposal).getTx().getFee();
-            int txSize = proposal.getTx().bitcoinSerialize().length;
+            Transaction tx = Objects.requireNonNull(proposal).getTx();
+            Coin miningFee = Objects.requireNonNull(tx).getFee();
+            int txSize = tx.bitcoinSerialize().length;
 
             validateInputs();
 
             new Popup<>().headLine(Res.get("dao.proposal.create.confirm"))
                     .confirmation(Res.get("dao.proposal.create.confirm.info",
-                            bsqFormatter.formatCoinWithCode(proposal.getFeeAsCoin()),
+                            bsqFormatter.formatCoinWithCode(
+                                    ProposalConsensus.getCreateCompensationRequestFee(readableBsqBlockChain)),
                             btcFormatter.formatCoinWithCode(miningFee),
                             CoinUtil.getFeePerByte(miningFee, txSize),
                             (txSize / 1000d)))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
-                        proposalCollectionsManager.publishProposal(proposal, new FutureCallback<Transaction>() {
+                        proposalCollectionsService.publishProposal(proposal, new FutureCallback<Transaction>() {
                             @Override
                             public void onSuccess(@Nullable Transaction transaction) {
                                 proposalDisplay.clearForm();
@@ -200,34 +208,39 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                     .show();
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
-            new Popup<>().warning(Res.get("dao.proposal.create.missingFunds", formatter.formatCoinWithCode(e.missing))).show();
+            new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
+                    formatter.formatCoinWithCode(e.missing))).show();
         } catch (CompensationAmountException e) {
-            new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount", bsqFormatter.formatCoinWithCode(e.required))).show();
+            new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount",
+                    bsqFormatter.formatCoinWithCode(e.required))).show();
         } catch (TransactionVerificationException | WalletException e) {
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
+        } catch (ChangeBelowDustException e) {
+            //TODO
+            e.printStackTrace();
         }
     }
 
-    private Proposal createProposal(ProposalType type) throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException, WalletException {
+    private Proposal createProposal(ProposalType type) throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException, WalletException, ChangeBelowDustException {
         switch (type) {
             case COMPENSATION_REQUEST:
-                CompensationRequestPayload compensationRequestPayload = compensationRequestManager.getNewCompensationRequestPayload(
+                CompensationRequestPayload compensationRequestPayload = compensationRequestService.getNewCompensationRequestPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
                         Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
-                return compensationRequestManager.prepareCompensationRequest(compensationRequestPayload);
+                return compensationRequestService.prepareCompensationRequest(compensationRequestPayload);
             case GENERIC:
-                GenericProposalPayload genericProposalPayload = genericProposalManager.getNewGenericProposalPayload(
+                GenericProposalPayload genericProposalPayload = genericProposalService.getNewGenericProposalPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());
-                return genericProposalManager.prepareGenericProposal(genericProposalPayload);
+                return genericProposalService.prepareGenericProposal(genericProposalPayload);
             case CHANGE_PARAM:
                 //TODO
                 return null;
@@ -264,7 +277,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         createButton.setOnAction(event -> {
             // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                createCompensationRequest(selectedProposalType);
+                publishProposal(selectedProposalType);
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
@@ -273,8 +286,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     private void validateInputs() {
         // We check in proposalDisplay that no invalid input as allowed
-        checkArgument(ProposalRestrictions.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()), "descriptionText must not be longer than " +
-                ProposalRestrictions.getMaxLengthDescriptionText() + " chars");
+        checkArgument(ProposalConsensus.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()), "descriptionText must not be longer than " +
+                ProposalConsensus.getMaxLengthDescriptionText() + " chars");
 
         // TODO add more checks for all input fields
     }

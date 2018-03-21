@@ -32,7 +32,7 @@ import bisq.core.dao.proposal.ProposalPayload;
 import bisq.core.dao.proposal.ProposalType;
 import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.proposal.compensation.consensus.Restrictions;
-import bisq.core.dao.proposal.consensus.ProposalRestrictions;
+import bisq.core.dao.proposal.consensus.ProposalConsensus;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -80,10 +80,10 @@ public class ProposalDisplay {
         this.bsqWalletService = bsqWalletService;
         this.feeService = feeService;
 
-        maxLengthDescriptionText = ProposalRestrictions.getMaxLengthDescriptionText();
+        maxLengthDescriptionText = ProposalConsensus.getMaxLengthDescriptionText();
 
         descriptionTextAreaListener = (observable, oldValue, newValue) -> {
-            if (!ProposalRestrictions.isDescriptionSizeValid(newValue)) {
+            if (!ProposalConsensus.isDescriptionSizeValid(newValue)) {
                 new Popup<>().warning(Res.get("dao.proposal.display.description.tooLong", maxLengthDescriptionText)).show();
                 descriptionTextArea.setText(newValue.substring(0, maxLengthDescriptionText));
             }

@@ -25,7 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalCollectionsService;
 
 import javax.inject.Inject;
 
@@ -37,13 +37,13 @@ public class ClosedProposalsView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedProposalsView(ProposalCollectionsManager proposalCollectionsManager,
+    private ClosedProposalsView(ProposalCollectionsService proposalCollectionsService,
                                 DaoPeriodService daoPeriodService,
                                 BsqWalletService bsqWalletService,
                                 BsqBlockChain bsqBlockChain,
                                 BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                 BsqFormatter bsqFormatter) {
-        super(proposalCollectionsManager, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
+        super(proposalCollectionsService, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
                 bsqFormatter);
     }
 
@@ -68,7 +68,7 @@ public class ClosedProposalsView extends BaseProposalView {
 
     @Override
     protected void updateList() {
-        doUpdateList(proposalCollectionsManager.getClosedProposals());
+        doUpdateList(proposalCollectionsService.getClosedProposals());
     }
 }
 

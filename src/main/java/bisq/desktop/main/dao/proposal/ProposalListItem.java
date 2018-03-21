@@ -29,7 +29,7 @@ import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.VoteResult;
 import bisq.core.locale.Res;
@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BsqBlockChainListener {
     @Getter
     private final Proposal proposal;
-    private final ProposalCollectionsManager proposalCollectionsManager;
+    private final ProposalCollectionsService proposalCollectionsService;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
@@ -81,14 +81,14 @@ public class ProposalListItem implements BsqBlockChainListener {
     private Node actionNode;
 
     ProposalListItem(Proposal proposal,
-                     ProposalCollectionsManager proposalCollectionsManager,
+                     ProposalCollectionsService proposalCollectionsService,
                      DaoPeriodService daoPeriodService,
                      BsqWalletService bsqWalletService,
                      ReadableBsqBlockChain readableBsqBlockChain,
                      BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
-        this.proposalCollectionsManager = proposalCollectionsManager;
+        this.proposalCollectionsService = proposalCollectionsService;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
@@ -130,13 +130,13 @@ public class ProposalListItem implements BsqBlockChainListener {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-
+        final boolean isTxInPastCycle = daoPeriodService.isTxInPastCycle(proposal.getTxId());
         switch (newValue) {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalCollectionsManager.isMine(proposal)) {
-                    actionButton.setVisible(!proposal.isClosed());
+                if (proposalCollectionsService.isMine(proposal)) {
+                    actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));
                     actionButton.setGraphic(actionButtonIconView);
@@ -148,7 +148,7 @@ public class ProposalListItem implements BsqBlockChainListener {
             case BREAK1:
                 break;
             case OPEN_FOR_VOTING:
-                if (!proposal.isClosed()) {
+                if (!isTxInPastCycle) {
                     actionNode = actionButtonIconView;
                     actionButton.setVisible(false);
                     if (proposal.getVoteResult() != null) {

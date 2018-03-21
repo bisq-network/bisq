@@ -25,20 +25,31 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.ChangeBelowDustException;
+import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.BooleanVoteResult;
-import bisq.core.dao.vote.VoteManager;
+import bisq.core.dao.vote.VoteService;
 import bisq.core.locale.Res;
 
+import bisq.common.crypto.CryptoException;
 import bisq.common.util.Tuple3;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
+
 import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -52,6 +63,8 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
@@ -60,7 +73,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView {
 
-    private final VoteManager voteManager;
+    private final VoteService voteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
@@ -71,16 +84,16 @@ public class ActiveProposalsView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(ProposalCollectionsManager voteRequestManger,
+    private ActiveProposalsView(ProposalCollectionsService voteRequestManger,
                                 DaoPeriodService daoPeriodService,
-                                VoteManager voteManager,
+                                VoteService voteService,
                                 BsqWalletService bsqWalletService,
                                 BsqBlockChain bsqBlockChain,
                                 BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                 BsqFormatter bsqFormatter) {
         super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
                 bsqFormatter);
-        this.voteManager = voteManager;
+        this.voteService = voteService;
     }
 
     @Override
@@ -108,7 +121,35 @@ public class ActiveProposalsView extends BaseProposalView {
                 (bsqWalletService.getAvailableBalance())));
 
         voteButton.setOnAction(e -> {
-            voteManager.vote();
+            Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
+            // TODO verify stake
+            //TODO show popup
+            try {
+                voteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
+                    @Override
+                    public void onSuccess(@Nullable Transaction result) {
+                        //TODO
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        //TODO
+                    }
+                });
+            } catch (CryptoException e1) {
+                //TODO show error popup
+                e1.printStackTrace();
+            } catch (InsufficientBsqException e1) {
+                e1.printStackTrace();
+            } catch (WalletException e1) {
+                e1.printStackTrace();
+            } catch (TransactionVerificationException e1) {
+                e1.printStackTrace();
+            } catch (InsufficientMoneyException e1) {
+                e1.printStackTrace();
+            } catch (ChangeBelowDustException e1) {
+                e1.printStackTrace();
+            }
         });
     }
 
@@ -122,7 +163,7 @@ public class ActiveProposalsView extends BaseProposalView {
 
     @Override
     protected void updateList() {
-        doUpdateList(proposalCollectionsManager.getActiveProposals());
+        doUpdateList(proposalCollectionsService.getActiveProposals());
     }
 
     protected void onSelectProposal(ProposalListItem item) {
@@ -170,12 +211,12 @@ public class ActiveProposalsView extends BaseProposalView {
 
     private void updateStateAfterVote() {
         removeProposalDisplay();
-        proposalCollectionsManager.queueUpForSave();
+        proposalCollectionsService.queueUpForSave();
         tableView.getSelectionModel().clearSelection();
     }
 
     private void onRemove() {
-        if (proposalCollectionsManager.removeProposal(selectedProposalListItem.getProposal()))
+        if (proposalCollectionsService.removeProposal(selectedProposalListItem.getProposal()))
             removeProposalDisplay();
         else
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
@@ -190,11 +231,13 @@ public class ActiveProposalsView extends BaseProposalView {
             removeButton.setVisible(false);
             removeButton = null;
         }
-        if (selectedProposalListItem != null && proposalDisplay != null && !selectedProposalListItem.getProposal().isClosed()) {
+        if (selectedProposalListItem != null &&
+                proposalDisplay != null &&
+                !daoPeriodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId())) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
-                    if (proposalCollectionsManager.isMine(proposal)) {
+                    if (proposalCollectionsService.isMine(proposal)) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
                             removeButton.setOnAction(event -> onRemove());
