@@ -211,7 +211,7 @@ public class ActiveProposalsView extends BaseProposalView {
 
     private void updateStateAfterVote() {
         removeProposalDisplay();
-        proposalCollectionsService.queueUpForSave();
+        proposalCollectionsService.persist();
         tableView.getSelectionModel().clearSelection();
     }
 
