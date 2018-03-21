@@ -21,6 +21,11 @@ sourceCompatibility = 1.8
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 
+shadowJar {
+    classifier = null
+    version = null
+}
+
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
