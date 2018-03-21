@@ -1,17 +1,25 @@
 package io.bisq.api.service.v1;
 
+import com.google.common.collect.ImmutableList;
 import io.bisq.api.BisqProxy;
+import io.bisq.api.NotFoundException;
 import io.bisq.api.model.TradeDetails;
 import io.bisq.api.model.TradeList;
-import io.bisq.api.service.ResourceHelper;
+import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.ValidationException;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.concurrent.CompletableFuture;
 
+import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -44,15 +52,37 @@ public class TradeResource {
     @ApiOperation("Confirm payment has started")
     @POST
     @Path("/{id}/payment-started")
-    public void paymentStarted(@PathParam("id") String id) {
-        ResourceHelper.handleBisqProxyError(bisqProxy.paymentStarted(id), Response.Status.NOT_FOUND);
+    public void paymentStarted(@Suspended final AsyncResponse asyncResponse, @NotEmpty @PathParam("id") String id) {
+        final CompletableFuture<Void> completableFuture = bisqProxy.paymentStarted(id);
+        handlePaymentStatusChange(id, asyncResponse, completableFuture);
     }
 
     @ApiOperation("Confirm payment has been received")
     @POST
     @Path("/{id}/payment-received")
-    public void paymentReceived(@PathParam("id") String id) {
-        ResourceHelper.handleBisqProxyError(bisqProxy.paymentReceived(id), Response.Status.NOT_FOUND);
+    public void paymentReceived(@Suspended final AsyncResponse asyncResponse, @NotEmpty @PathParam("id") String id) {
+        final CompletableFuture<Void> completableFuture = bisqProxy.paymentReceived(id);
+        handlePaymentStatusChange(id, asyncResponse, completableFuture);
+    }
+
+    private void handlePaymentStatusChange(String tradeId, AsyncResponse asyncResponse, CompletableFuture<Void> completableFuture) {
+        completableFuture.thenApply(response -> asyncResponse.resume(Response.status(Response.Status.OK).build()))
+                .exceptionally(e -> {
+                    final Throwable cause = e.getCause();
+                    final Response.ResponseBuilder responseBuilder;
+                    if (cause instanceof ValidationException) {
+                        responseBuilder = toValidationErrorResponse(cause, 422);
+                    } else if (cause instanceof NotFoundException) {
+                        responseBuilder = toValidationErrorResponse(cause, 404);
+                    } else {
+                        final String message = cause.getMessage();
+                        responseBuilder = Response.status(500);
+                        if (null != message)
+                            responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
+                        log.error("Unable to confirm payment started for trade: " + tradeId, cause);
+                    }
+                    return asyncResponse.resume(responseBuilder.build());
+                });
     }
 
 

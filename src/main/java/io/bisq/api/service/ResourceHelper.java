@@ -1,7 +1,9 @@
 package io.bisq.api.service;
 
 
+import com.google.common.collect.ImmutableList;
 import io.bisq.api.BisqProxyError;
+import io.dropwizard.jersey.validation.ValidationErrorMessage;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -30,5 +32,9 @@ public final class ResourceHelper {
 
     public static boolean handleBisqProxyError(Optional<BisqProxyError> optionalBisqProxyError) {
         return handleBisqProxyError(optionalBisqProxyError, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+
+    public static Response.ResponseBuilder toValidationErrorResponse(Throwable cause, int status) {
+        return Response.status(status).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
     }
 }

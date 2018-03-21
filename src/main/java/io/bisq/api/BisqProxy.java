@@ -51,8 +51,6 @@ import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -365,11 +363,12 @@ public class BisqProxy {
     }
 
     public Trade getTrade(String tradeId) {
-        final Trade trade = getTradeList().stream().filter(item -> item.getId().equals(tradeId)).findAny().get();
-        if (null == trade) {
+        final String safeTradeId = (null == tradeId) ? "" : tradeId;
+        final Optional<Trade> tradeOptional = getTradeList().stream().filter(item -> safeTradeId.equals(item.getId())).findAny();
+        if (!tradeOptional.isPresent()) {
             throw new NotFoundException("Trade not found: " + tradeId);
         }
-        return trade;
+        return tradeOptional.get();
     }
 
     public BisqProxyResult<WalletDetails> getWalletDetails() {
@@ -439,118 +438,57 @@ public class BisqProxy {
                 .collect(toList());
     }
 
-    public Optional<BisqProxyError> paymentStarted(String tradeId) {
+    public CompletableFuture<Void> paymentStarted(String tradeId) {
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+        Trade trade;
         try {
-            Trade trade;
-            try {
-                trade = getTrade(tradeId);
-            } catch(NotFoundException e) {
-                return BisqProxyError.getOptional(e.getMessage());
-            }
-
-            if (!Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.equals(trade.getState())) {
-                return BisqProxyError.getOptional("Trade is not in the correct state to start payment: " + trade.getState());
-            }
-            TradeProtocol tradeProtocol = trade.getTradeProtocol();
-
-            // use countdownlatch to block this method until there's a success/error callback call
-            CountDownLatch startPaymentLatch = new CountDownLatch(1);
-            // TODO remove ugly workaround - probably implies refactoring
-            String[] errorResult = new String[1];
-
-            // common resulthandler
-            ResultHandler resultHandler = () -> {
-                log.info("Fiat payment started.");
-                errorResult[0] = "";
-                startPaymentLatch.countDown();
-
-            };
-            // comon errorhandler
-            ErrorMessageHandler errorResultHandler = (error) -> {
-                log.error("Error onFiatPaymentStarted", error);
-                startPaymentLatch.countDown();
-                errorResult[0] = error;
-            };
-
-            Runnable buyerAsMakerStartFiatPayment = () -> {
-                ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
-            };
-
-            Runnable buyerAsTakerStartFiatPayment = () -> {
-                ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
-            };
-
-            Platform.runLater(trade instanceof BuyerAsMakerTrade ? buyerAsMakerStartFiatPayment : buyerAsTakerStartFiatPayment);
-            // wait X seconds for a result or timeout
-            if (startPaymentLatch.await(5L, TimeUnit.SECONDS))
-                if (errorResult[0] == "")
-                    return Optional.empty();
-                else
-                    return BisqProxyError.getOptional("Error while starting payment:" + errorResult[0]);
-            else
-                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
-        } catch (Throwable e) {
-            return BisqProxyError.getOptional(e.getMessage(), e);
+            trade = getTrade(tradeId);
+        } catch (NotFoundException e) {
+            return failFuture(futureResult, e);
         }
+
+        if (!Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.equals(trade.getState())) {
+            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to start payment: " + trade.getState()));
+        }
+        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        ResultHandler resultHandler = () -> futureResult.complete(null);
+        ErrorMessageHandler errorResultHandler = message -> futureResult.completeExceptionally(new RuntimeException(message));
+
+        if (trade instanceof BuyerAsMakerTrade) {
+            ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
+        } else {
+            ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
+        }
+        return futureResult;
     }
 
-    public Optional<BisqProxyError> paymentReceived(String tradeId) {
+    public CompletableFuture<Void> paymentReceived(String tradeId) {
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+        Trade trade;
         try {
-            Trade trade;
-            try {
-                trade = getTrade(tradeId);
-            } catch (NotFoundException e) {
-                return BisqProxyError.getOptional(e.getMessage());
-            }
-
-            if (!Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG.equals(trade.getState())) {
-                return BisqProxyError.getOptional("Trade is not in the correct state to start payment: " + trade.getState());
-            }
-            TradeProtocol tradeProtocol = trade.getTradeProtocol();
-
-            if (!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
-                return BisqProxyError.getOptional("Trade is not in the correct state to start payment received: " + tradeProtocol.getClass().getSimpleName());
-            }
-
-            // use countdownlatch to block this method until there's a success/error callback call
-            CountDownLatch startPaymentLatch = new CountDownLatch(1);
-            // TODO remove ugly workaround - probably implies refactoring
-            String[] errorResult = new String[1];
-
-            // common resulthandler
-            ResultHandler resultHandler = () -> {
-                log.info("Fiat payment received.");
-                errorResult[0] = "";
-                startPaymentLatch.countDown();
-
-            };
-            // comon errorhandler
-            ErrorMessageHandler errorResultHandler = (error) -> {
-                log.error("Error onFiatPaymentReceived", error);
-                startPaymentLatch.countDown();
-                errorResult[0] = error;
-            };
-
-            Runnable sellerAsMakerStartFiatPayment = () -> {
-                ((SellerAsMakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
-            };
-
-            Runnable sellerAsTakerStartFiatPayment = () -> {
-                ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
-            };
-
-            Platform.runLater(trade instanceof SellerAsMakerTrade ? sellerAsMakerStartFiatPayment : sellerAsTakerStartFiatPayment);
-            // wait X seconds for a result or timeout
-            if (startPaymentLatch.await(5L, TimeUnit.SECONDS))
-                if (errorResult[0] == "")
-                    return Optional.empty();
-                else
-                    return BisqProxyError.getOptional("Error while executing payment received:" + errorResult[0]);
-            else
-                return BisqProxyError.getOptional("Timeout exceeded, check the logs for errors."); // Timeout exceeded
-        } catch (Throwable e) {
-            return BisqProxyError.getOptional(e.getMessage(), e);
+            trade = getTrade(tradeId);
+        } catch (NotFoundException e) {
+            return failFuture(futureResult, e);
         }
+
+        if (!Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG.equals(trade.getState())) {
+            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to receive payment: " + trade.getState()));
+        }
+        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+
+        if (!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
+            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to receive payment: " + trade.getState()));
+        }
+
+        ResultHandler resultHandler = () -> futureResult.complete(null);
+        ErrorMessageHandler errorResultHandler = message -> futureResult.completeExceptionally(new RuntimeException(message));
+
+        if (trade instanceof SellerAsMakerTrade) {
+            ((SellerAsMakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
+        } else {
+            ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
+        }
+        return futureResult;
     }
 
     public boolean moveFundsToBisqWallet(String tradeId) {
