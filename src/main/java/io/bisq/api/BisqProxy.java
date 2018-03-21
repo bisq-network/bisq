@@ -161,7 +161,7 @@ public class BisqProxy {
         }
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
-        return PaymentAccountHelper.toRestModel(user.currentPaymentAccountProperty().get());
+        return PaymentAccountHelper.toRestModel(paymentAccount);
     }
 
 

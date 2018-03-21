@@ -1,6 +1,9 @@
 package io.bisq.api;
 
-import io.bisq.api.model.*;
+import io.bisq.api.model.OfferDetail;
+import io.bisq.api.model.OfferToCreate;
+import io.bisq.api.model.PriceType;
+import io.bisq.api.model.TakeOffer;
 import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -47,6 +50,7 @@ public class OfferResourceIT {
     private static String bobPaymentAccountId;
     private static String bobIncompatiblePaymentAccountId;
     private static String tradeCurrency;
+    private static String tradePaymentMethodCountry;
     private static String createdOfferId;
 
     @InSequence
@@ -64,13 +68,14 @@ public class OfferResourceIT {
 
         sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         tradeCurrency = sepaAccountToCreate.selectedTradeCurrency;
+        tradePaymentMethodCountry = sepaAccountToCreate.countryCode;
         alicePaymentAccountId = ApiTestHelper.createPaymentAccount(alicePort, sepaAccountToCreate).extract().body().jsonPath().get("id");
 
-        sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency);
+        sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency, tradePaymentMethodCountry);
         bobPaymentAccountId = ApiTestHelper.createPaymentAccount(bobPort, sepaAccountToCreate).extract().body().jsonPath().get("id");
 
         final String incompatibleCurrency = "EUR".equals(tradeCurrency) ? "PLN" : "EUR";
-        sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(incompatibleCurrency);
+        sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(incompatibleCurrency, tradePaymentMethodCountry);
         bobIncompatiblePaymentAccountId = ApiTestHelper.createPaymentAccount(bobPort, sepaAccountToCreate).extract().body().jsonPath().get("id");
     }
 
@@ -332,7 +337,7 @@ public class OfferResourceIT {
         final int alicePort = getAlicePort();
         final int bobPort = getBobPort();
 
-        final SepaPaymentAccount sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency);
+        final SepaPaymentAccount sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency, tradePaymentMethodCountry);
         sepaAccountToCreate.selectedTradeCurrency = tradeCurrency;
         sepaAccountToCreate.tradeCurrencies = Collections.singletonList(sepaAccountToCreate.selectedTradeCurrency);
         final String bobPaymentAccountId = ApiTestHelper.createPaymentAccount(bobPort, sepaAccountToCreate).extract().body().jsonPath().get("id");
