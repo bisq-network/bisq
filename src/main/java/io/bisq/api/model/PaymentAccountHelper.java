@@ -33,6 +33,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.SWISH_ID, new SwishPaymentAccountConverter());
         converters.put(PaymentMethod.UPHOLD_ID, new UpholdPaymentAccountConverter());
         converters.put(PaymentMethod.US_POSTAL_MONEY_ORDER_ID, new USPostalMoneyOrderPaymentAccountConverter());
+        converters.put(PaymentMethod.VENMO_ID, new VenmoPaymentAccountConverter());
     }
 
     public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
