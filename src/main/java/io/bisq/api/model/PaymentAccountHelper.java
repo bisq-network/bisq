@@ -28,6 +28,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.REVOLUT_ID, new RevolutPaymentAccountConverter());
         converters.put(PaymentMethod.SAME_BANK_ID, new SameBankAccountPaymentAccountConverter());
         converters.put(PaymentMethod.SEPA_ID, new SepaPaymentAccountConverter());
+        converters.put(PaymentMethod.SEPA_INSTANT_ID, new SepaInstantPaymentAccountConverter());
     }
 
     public static PaymentAccount toBusinessModel(io.bisq.api.model.PaymentAccount rest) {
