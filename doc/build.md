@@ -86,18 +86,13 @@ https://plugins.jetbrains.com/plugin/6317-lombok-plugin
 Build Bisq
 -----------------
 
-### 1. Build final Bisq jar
-
-Now we have all prepared to build the correct Bisq jar.
-
     $ git clone https://github.com/bisq-network/bisq-desktop.git
     $ cd bisq-desktop
     $ ./gradlew build
 
-When the build completes, you will find an executable jar: `build/libs/bisq-desktop.jar`.
-To run it use:
+When the build completes, run Bisq with the following script:
 
-    $ java -jar build/libs/bisq-desktop.jar
+    $ ./build/app/bin/bisq-desktop
 
 Build binaries
 -----------------
@@ -120,11 +115,11 @@ and how to use [regtest](https://github.com/bisq-network/bisq-desktop/wiki/4.2.1
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
-    $ java -jar build/libs/bisq-desktop.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-    $ java -jar build/libs/bisq-desktop.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-    $ java -jar build/libs/bisq-desktop.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Running local seed node with Tor and RegTest

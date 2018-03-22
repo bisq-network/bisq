@@ -18,6 +18,4 @@ mkdir .local
 mkdir .local/share
 
 echo "Start Bisq"
-java -jar ~/bisq/build/libs/bisq-desktop.jar
-
-
+./build/app/bin/bisq-desktop

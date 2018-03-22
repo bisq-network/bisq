@@ -12,7 +12,7 @@ delay=40
 for i in `seq 0 0`;
   do
 	echo $i
-	nohup java -jar libs/bisq-desktop.jar --app.name=BS_$i --maxConnections=12 >/dev/null 2>$logpath/ST_$i.log &
+	nohup build/app/bin/bisq-desktop --app.name=BS_$i --maxConnections=12 >/dev/null 2>$logpath/ST_$i.log &
 	sleep $delay
   done
 
