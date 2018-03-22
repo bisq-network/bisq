@@ -47,9 +47,6 @@ dependencies {
     compile 'net.glxn:qrgen:1.3'
     compile 'de.jensd:fontawesomefx:8.0.0'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
-    compile 'org.bouncycastle:bcprov-jdk15on:1.56'
-    compile 'org.bouncycastle:bcpg-jdk15on:1.56'
-    compile 'org.bouncycastle:bcpg-jdk16:1.46'
     compileOnly 'org.projectlombok:lombok:1.16.16'
     annotationProcessor 'org.projectlombok:lombok:1.16.16'
     testCompile('org.mockito:mockito-core:2.8.9') {
@@ -72,9 +69,7 @@ dependencyVerification {
         'net.glxn:qrgen:c85d9d8512d91e8ad11fe56259a7825bd50ce0245447e236cf168d1b17591882',
         'de.jensd:fontawesomefx:73bacc991a0a6f5cf0f911767c8db161e0949dbca61e8371eb4342e3da96887b',
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
-        'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
-        'org.bouncycastle:bcpg-jdk16:4da048d7338677f87331d215a59382f77a5afc10cd82127aa9c550a227afb09b',
         'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
         'network.bisq.btcd-cli4j:btcd-cli4j-daemon:300e2fb9500398f4c5cec6ae07d16d07570dbe0eb9944061eb67ab7db18fa72c',
         'network.bisq.btcd-cli4j:btcd-cli4j-core:63baeecea21940670e054bba6b041959e49fa094a496c141b9da55401ee4a8e7',
@@ -104,7 +99,6 @@ dependencyVerification {
         'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
         'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
         'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
-        'org.bouncycastle:bcprov-jdk16:10ef7403392d4cda22b200a7a9a620dc258b5aa6a56d24a2fea468e324dab2c9',
         'com.cedricwalter:tor-binary-macos:87790e9eade1e44eeadc81f92670f338cd47ef1b39b46a4b022c75d0cf6465fd',
         'com.cedricwalter:tor-binary-linux32:814f6da3b662c96490bcb09781764dd31dfe497ea9c25c73fe61170d2a78086f',
         'com.cedricwalter:tor-binary-linux64:9da7f8a166ad0a767a5373ca67c68971c9c0cac17964eed2e0850bfecc228312',
