@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.UpholdAccount;
+import io.bisq.core.payment.payload.UpholdAccountPayload;
 
-public class UpholdPaymentAccountConverter extends AbstractPaymentAccountConverter<UpholdAccount, UpholdPaymentAccount> {
+public class UpholdPaymentAccountConverter extends AbstractPaymentAccountConverter<UpholdAccount, UpholdAccountPayload, UpholdPaymentAccount> {
 
     @Override
     public UpholdAccount toBusinessModel(UpholdPaymentAccount rest) {
@@ -15,10 +16,18 @@ public class UpholdPaymentAccountConverter extends AbstractPaymentAccountConvert
 
     @Override
     public UpholdPaymentAccount toRestModel(UpholdAccount business) {
+        final UpholdPaymentAccount rest = toRestModel((UpholdAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public UpholdPaymentAccount toRestModel(UpholdAccountPayload business) {
         final UpholdPaymentAccount rest = new UpholdPaymentAccount();
         rest.accountId = business.getAccountId();
         toRestModel(rest, business);
         return rest;
+
     }
 
 }

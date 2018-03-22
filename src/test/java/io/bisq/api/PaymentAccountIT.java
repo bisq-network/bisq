@@ -2,6 +2,7 @@ package io.bisq.api;
 
 import com.github.javafaker.Faker;
 import io.bisq.api.model.payment.*;
+import io.bisq.common.locale.CountryUtil;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
@@ -41,6 +42,8 @@ public class PaymentAccountIT {
 
         final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
 
+        final String expectedPaymentDetails = String.format("SEPA - Holder name: %s, IBAN: %s, BIC: %s, Country code: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -54,6 +57,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("bic", equalTo(accountToCreate.bic)).
@@ -61,7 +65,7 @@ public class PaymentAccountIT {
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("acceptedCountries", equalTo(accountToCreate.acceptedCountries)).
-                and().body("size()", equalTo(10))
+                and().body("size()", equalTo(11))
         ;
 
         given().
@@ -76,6 +80,7 @@ public class PaymentAccountIT {
                 and().body("paymentAccounts[0].id", isA(String.class)).
                 and().body("paymentAccounts[0].paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("paymentAccounts[0].accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentAccounts[0].paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("paymentAccounts[0].holderName", equalTo(accountToCreate.holderName)).
                 and().body("paymentAccounts[0].countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("paymentAccounts[0].bic", equalTo(accountToCreate.bic)).
@@ -83,7 +88,7 @@ public class PaymentAccountIT {
                 and().body("paymentAccounts[0].selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("paymentAccounts[0].tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("paymentAccounts[0].acceptedCountries", equalTo(accountToCreate.acceptedCountries)).
-                and().body("paymentAccounts[0].size()", equalTo(10))
+                and().body("paymentAccounts[0].size()", equalTo(11))
         ;
     }
 
@@ -97,6 +102,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountNr = faker.finance().iban();
 
+        final String expectedPaymentDetails = String.format("AliPay - Account no.: %s", accountToCreate.accountNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -110,10 +117,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -127,6 +135,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.cashTag = faker.commerce().promotionCode();
 
+        final String expectedPaymentDetails = String.format("CashApp - Account: %s", accountToCreate.cashTag);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -140,10 +150,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("cashTag", equalTo(accountToCreate.cashTag)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -179,6 +190,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", isA(String.class)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
@@ -191,7 +203,7 @@ public class PaymentAccountIT {
                 and().body("holderEmail", equalTo(accountToCreate.holderEmail)).
                 and().body("holderTaxId", equalTo(accountToCreate.holderTaxId)).
                 and().body("requirements", equalTo(accountToCreate.requirements)).
-                and().body("size()", equalTo(15))
+                and().body("size()", equalTo(16))
         ;
     }
 
@@ -206,6 +218,8 @@ public class PaymentAccountIT {
         accountToCreate.email = faker.internet().emailAddress();
         accountToCreate.holderName = faker.name().fullName();
 
+        final String expectedPaymentDetails = String.format("Chase QuickPay - Holder name: %s, email: %s", accountToCreate.holderName, accountToCreate.email);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -219,11 +233,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("email", equalTo(accountToCreate.email)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -238,6 +253,8 @@ public class PaymentAccountIT {
         accountToCreate.emailOrMobileNr = faker.internet().emailAddress();
         accountToCreate.holderName = faker.name().fullName();
 
+        final String expectedPaymentDetails = String.format("Zelle (ClearXchange) - Holder name: %s, Email or mobile no.: %s", accountToCreate.holderName, accountToCreate.emailOrMobileNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -251,11 +268,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("emailOrMobileNr", equalTo(accountToCreate.emailOrMobileNr)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -270,6 +288,8 @@ public class PaymentAccountIT {
         accountToCreate.accountNr = faker.finance().iban();
         accountToCreate.sortCode = faker.address().zipCode();
 
+        final String expectedPaymentDetails = String.format("FasterPayments - UK Sort code: %s, Account number: %s", accountToCreate.sortCode, accountToCreate.accountNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -283,11 +303,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
                 and().body("sortCode", equalTo(accountToCreate.sortCode)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -304,6 +325,8 @@ public class PaymentAccountIT {
         accountToCreate.question = faker.witcher().quote();
         accountToCreate.answer = faker.witcher().character();
 
+        final String expectedPaymentDetails = String.format("Interac e-Transfer - Holder name: %s, email: %s, secret question: %s, answer: %s", accountToCreate.holderName, accountToCreate.emailOrMobileNr, accountToCreate.question, accountToCreate.answer);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -317,13 +340,14 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("emailOrMobileNr", equalTo(accountToCreate.emailOrMobileNr)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("question", equalTo(accountToCreate.question)).
                 and().body("answer", equalTo(accountToCreate.answer)).
-                and().body("size()", equalTo(9))
+                and().body("size()", equalTo(10))
         ;
     }
 
@@ -337,6 +361,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountId = faker.idNumber().valid();
 
+        final String expectedPaymentDetails = String.format("MoneyBeam - Account: %s", accountToCreate.accountId);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -350,10 +376,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -374,6 +401,8 @@ public class PaymentAccountIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
+        final String expectedPaymentDetails = String.format("National Bank transfer - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -387,6 +416,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
@@ -397,7 +427,7 @@ public class PaymentAccountIT {
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("holderTaxId", equalTo(accountToCreate.holderTaxId)).
-                and().body("size()", equalTo(13))
+                and().body("size()", equalTo(14))
         ;
     }
 
@@ -411,6 +441,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountNr = faker.idNumber().valid();
 
+        final String expectedPaymentDetails = String.format("OKPay - Account no.: %s", accountToCreate.accountNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -424,10 +456,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -441,6 +474,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountNr = faker.idNumber().valid();
 
+        final String expectedPaymentDetails = String.format("PerfectMoney - Account no.: %s", accountToCreate.accountNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -454,10 +489,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -472,6 +508,8 @@ public class PaymentAccountIT {
         accountToCreate.accountId = faker.idNumber().valid();
         accountToCreate.holderName = faker.name().fullName();
 
+        final String expectedPaymentDetails = String.format("Popmoney - Holder name: %s, email or phone no.: %s", accountToCreate.holderName, accountToCreate.accountId);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -485,11 +523,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -503,6 +542,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountId = faker.idNumber().valid();
 
+        final String expectedPaymentDetails = String.format("Revolut - Account:%s", accountToCreate.accountId);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -516,10 +557,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -540,6 +582,8 @@ public class PaymentAccountIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
+        final String expectedPaymentDetails = String.format("Transfer with same Bank - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -553,6 +597,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
@@ -563,7 +608,7 @@ public class PaymentAccountIT {
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("holderTaxId", equalTo(accountToCreate.holderTaxId)).
-                and().body("size()", equalTo(13))
+                and().body("size()", equalTo(14))
         ;
     }
 
@@ -584,6 +629,7 @@ public class PaymentAccountIT {
         accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
         accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
 
+        final String expectedPaymentDetails = String.format("SEPA Instant - Holder name: %s, IBAN: %s, BIC: %s, Country code: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
 
         given().
                 port(alicePort).
@@ -598,6 +644,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("bic", equalTo(accountToCreate.bic)).
@@ -605,7 +652,7 @@ public class PaymentAccountIT {
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("acceptedCountries", equalTo(accountToCreate.acceptedCountries)).
-                and().body("size()", equalTo(10))
+                and().body("size()", equalTo(11))
         ;
     }
 
@@ -627,6 +674,9 @@ public class PaymentAccountIT {
         accountToCreate.holderTaxId = faker.finance().creditCard();
         accountToCreate.acceptedBanks = Arrays.asList(faker.finance().bic(), faker.finance().bic());
 
+        final String acceptedBanks = accountToCreate.acceptedBanks.stream().reduce((i, a) -> a.length() > 0 ? i + ", " + a : i).orElse("");
+        final String expectedPaymentDetails = String.format("Transfers with specific banks - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s, Accepted banks: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode), acceptedBanks);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -640,6 +690,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
@@ -651,7 +702,7 @@ public class PaymentAccountIT {
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("holderTaxId", equalTo(accountToCreate.holderTaxId)).
                 and().body("acceptedBanks", equalTo(accountToCreate.acceptedBanks)).
-                and().body("size()", equalTo(14))
+                and().body("size()", equalTo(15))
         ;
     }
 
@@ -666,6 +717,8 @@ public class PaymentAccountIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.mobileNr = faker.phoneNumber().cellPhone();
 
+        final String expectedPaymentDetails = String.format("Swish - Holder name: %s, mobile no.: %s", accountToCreate.holderName, accountToCreate.mobileNr);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -679,11 +732,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("mobileNr", equalTo(accountToCreate.mobileNr)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -697,6 +751,8 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountId = faker.idNumber().valid();
 
+        final String expectedPaymentDetails = String.format("Uphold - Account: %s", accountToCreate.accountId);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -710,10 +766,11 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
-                and().body("size()", equalTo(6))
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -728,6 +785,8 @@ public class PaymentAccountIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.postalAddress = faker.address().fullAddress();
 
+        final String expectedPaymentDetails = String.format("US Postal Money Order - Holder name: %s, postal address: %s", accountToCreate.holderName, accountToCreate.postalAddress);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -741,11 +800,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("postalAddress", equalTo(accountToCreate.postalAddress)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -760,6 +820,8 @@ public class PaymentAccountIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.venmoUserName = faker.name().username();
 
+        final String expectedPaymentDetails = String.format("Venmo - Holder name: %s, Venmo username: %s", accountToCreate.holderName, accountToCreate.venmoUserName);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -773,11 +835,12 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
                 and().body("venmoUserName", equalTo(accountToCreate.venmoUserName)).
-                and().body("size()", equalTo(7))
+                and().body("size()", equalTo(8))
         ;
     }
 
@@ -795,6 +858,8 @@ public class PaymentAccountIT {
         accountToCreate.email = faker.internet().emailAddress();
         accountToCreate.state = faker.address().state();
 
+        final String expectedPaymentDetails = String.format("Western Union - Full name: %s, City: %s, County: %s, Email: %s", accountToCreate.holderName, accountToCreate.city, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
+
         given().
                 port(alicePort).
                 contentType(ContentType.JSON).
@@ -808,6 +873,7 @@ public class PaymentAccountIT {
                 and().body("id", isA(String.class)).
                 and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
                 and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("holderName", equalTo(accountToCreate.holderName)).
@@ -815,7 +881,7 @@ public class PaymentAccountIT {
                 and().body("countryCode", equalTo(accountToCreate.countryCode)).
                 and().body("email", equalTo(accountToCreate.email)).
                 and().body("state", equalTo(accountToCreate.state)).
-                and().body("size()", equalTo(10))
+                and().body("size()", equalTo(11))
         ;
     }
 
@@ -899,7 +965,23 @@ public class PaymentAccountIT {
 
     @Test
     public void create_invalidPaymentMethod_returnsError() throws Exception {
-        create_missingAttributeTemplate("paymentMethod", "");
+        final int alicePort = getAlicePort();
+
+        final PaymentAccount accountToCreate = new PaymentAccount("") {
+        };
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(400)
+        ;
     }
 
     private void create_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {

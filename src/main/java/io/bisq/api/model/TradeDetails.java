@@ -1,13 +1,20 @@
 package io.bisq.api.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.bisq.api.model.payment.PaymentAccount;
+import io.bisq.api.model.payment.PaymentAccountHelper;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.network.p2p.NodeAddress;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDetails {
 
+    public PaymentAccount buyerPaymentAccount;
+    public PaymentAccount sellerPaymentAccount;
     public String id;
-    public String offerId;
+    public OfferDetail offer;
     public boolean isCurrencyForTakerFeeBtc;
     public long txFee;
     public long takerFee;
@@ -31,14 +38,16 @@ public class TradeDetails {
     public String errorMessage;
     public String counterCurrencyTxId;
 
-    public TradeDetails() {
-    }
-
     public TradeDetails(Trade trade) {
         this.id = trade.getId();
         final Offer offer = trade.getOffer();
         if (null != offer)
-            this.offerId = offer.getId();
+            this.offer = new OfferDetail(offer);
+        final Contract contract = trade.getContract();
+        if (null != contract) {
+            this.buyerPaymentAccount = PaymentAccountHelper.toRestModel(contract.getBuyerPaymentAccountPayload());
+            this.sellerPaymentAccount = PaymentAccountHelper.toRestModel(contract.getSellerPaymentAccountPayload());
+        }
         this.isCurrencyForTakerFeeBtc = trade.isCurrencyForTakerFeeBtc();
         this.txFee = trade.getTxFeeAsLong();
         this.takerFee = trade.getTakerFeeAsLong();

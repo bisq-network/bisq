@@ -1,10 +1,10 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.WesternUnionAccount;
+import io.bisq.core.payment.payload.WesternUnionAccountPayload;
 
-public class WesternUnionPaymentAccountConverter extends AbstractPaymentAccountConverter<WesternUnionAccount, WesternUnionPaymentAccount> {
+public class WesternUnionPaymentAccountConverter extends AbstractPaymentAccountConverter<WesternUnionAccount, WesternUnionAccountPayload, WesternUnionPaymentAccount> {
 
     @Override
     public WesternUnionAccount toBusinessModel(WesternUnionPaymentAccount rest) {
@@ -21,16 +21,22 @@ public class WesternUnionPaymentAccountConverter extends AbstractPaymentAccountC
 
     @Override
     public WesternUnionPaymentAccount toRestModel(WesternUnionAccount business) {
+        final WesternUnionPaymentAccount rest = toRestModel((WesternUnionAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public WesternUnionPaymentAccount toRestModel(WesternUnionAccountPayload business) {
         final WesternUnionPaymentAccount rest = new WesternUnionPaymentAccount();
-        rest.holderName = business.getFullName();
+        rest.holderName = business.getHolderName();
         rest.city = business.getCity();
-        final Country country = business.getCountry();
-        if (null != country)
-            rest.countryCode = country.code;
+        rest.countryCode = business.getCountryCode();
         rest.email = business.getEmail();
         rest.state = business.getState();
         toRestModel(rest, business);
         return rest;
+
     }
 
 }

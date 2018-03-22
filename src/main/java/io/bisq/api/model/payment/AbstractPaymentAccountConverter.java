@@ -2,11 +2,11 @@ package io.bisq.api.model.payment;
 
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 
 import java.util.List;
 
-public abstract class AbstractPaymentAccountConverter<B extends PaymentAccount, R extends io.bisq.api.model.payment.PaymentAccount> implements PaymentAccountConverter<B, R> {
+public abstract class AbstractPaymentAccountConverter<B extends io.bisq.core.payment.PaymentAccount, BP extends PaymentAccountPayload, R extends PaymentAccount> implements PaymentAccountConverter<B, BP, R> {
 
     protected void toBusinessModel(B business, R rest) {
         if (null != rest.accountName)
@@ -28,6 +28,10 @@ public abstract class AbstractPaymentAccountConverter<B extends PaymentAccount, 
         final List<TradeCurrency> tradeCurrencies = business.getTradeCurrencies();
         if (null != tradeCurrencies)
             tradeCurrencies.stream().forEach(currency -> rest.tradeCurrencies.add(currency.getCode()));
+    }
+
+    protected void toRestModel(R rest, BP business) {
+        rest.paymentDetails = business.getPaymentDetails();
     }
 
 }

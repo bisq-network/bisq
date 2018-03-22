@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
 
-public class ClearXchangePaymentAccountConverter extends AbstractPaymentAccountConverter<ClearXchangeAccount, ClearXchangePaymentAccount> {
+public class ClearXchangePaymentAccountConverter extends AbstractPaymentAccountConverter<ClearXchangeAccount, ClearXchangeAccountPayload, ClearXchangePaymentAccount> {
 
     @Override
     public ClearXchangeAccount toBusinessModel(ClearXchangePaymentAccount rest) {
@@ -17,10 +17,16 @@ public class ClearXchangePaymentAccountConverter extends AbstractPaymentAccountC
 
     @Override
     public ClearXchangePaymentAccount toRestModel(ClearXchangeAccount business) {
+        final ClearXchangePaymentAccount rest = toRestModel((ClearXchangeAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public ClearXchangePaymentAccount toRestModel(ClearXchangeAccountPayload business) {
         final ClearXchangePaymentAccount rest = new ClearXchangePaymentAccount();
-        final ClearXchangeAccountPayload payload = (ClearXchangeAccountPayload) business.getPaymentAccountPayload();
-        rest.emailOrMobileNr = payload.getEmailOrMobileNr();
-        rest.holderName = payload.getHolderName();
+        rest.emailOrMobileNr = business.getEmailOrMobileNr();
+        rest.holderName = business.getHolderName();
         toRestModel(rest, business);
         return rest;
     }

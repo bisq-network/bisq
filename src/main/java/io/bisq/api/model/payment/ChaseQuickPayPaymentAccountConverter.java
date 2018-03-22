@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import io.bisq.core.payment.ChaseQuickPayAccount;
 import io.bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 
-public class ChaseQuickPayPaymentAccountConverter extends AbstractPaymentAccountConverter<ChaseQuickPayAccount, ChaseQuickPayPaymentAccount> {
+public class ChaseQuickPayPaymentAccountConverter extends AbstractPaymentAccountConverter<ChaseQuickPayAccount, ChaseQuickPayAccountPayload, ChaseQuickPayPaymentAccount> {
 
     @Override
     public ChaseQuickPayAccount toBusinessModel(ChaseQuickPayPaymentAccount rest) {
@@ -17,10 +17,16 @@ public class ChaseQuickPayPaymentAccountConverter extends AbstractPaymentAccount
 
     @Override
     public ChaseQuickPayPaymentAccount toRestModel(ChaseQuickPayAccount business) {
+        final ChaseQuickPayPaymentAccount rest = toRestModel((ChaseQuickPayAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public ChaseQuickPayPaymentAccount toRestModel(ChaseQuickPayAccountPayload business) {
         final ChaseQuickPayPaymentAccount rest = new ChaseQuickPayPaymentAccount();
-        final ChaseQuickPayAccountPayload payload = (ChaseQuickPayAccountPayload) business.getPaymentAccountPayload();
-        rest.email = payload.getEmail();
-        rest.holderName = payload.getHolderName();
+        rest.email = business.getEmail();
+        rest.holderName = business.getHolderName();
         toRestModel(rest, business);
         return rest;
     }

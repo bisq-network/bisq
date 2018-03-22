@@ -1,8 +1,8 @@
 package io.bisq.api.model.payment;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.bisq.api.model.payment.*;
 import io.bisq.core.payment.payload.PaymentMethod;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "paymentMethod", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AliPayPaymentAccount.class, name = PaymentMethod.ALI_PAY_ID),
@@ -41,6 +42,8 @@ public abstract class PaymentAccount {
 
     @NotBlank
     public String accountName;
+
+    public String paymentDetails;
 
     @NotBlank
     public String paymentMethod;

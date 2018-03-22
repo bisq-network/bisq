@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.CashAppAccount;
+import io.bisq.core.payment.payload.CashAppAccountPayload;
 
-public class CashAppPaymentAccountConverter extends AbstractPaymentAccountConverter<CashAppAccount, CashAppPaymentAccount> {
+public class CashAppPaymentAccountConverter extends AbstractPaymentAccountConverter<CashAppAccount, CashAppAccountPayload, CashAppPaymentAccount> {
 
     @Override
     public CashAppAccount toBusinessModel(CashAppPaymentAccount rest) {
@@ -15,10 +16,18 @@ public class CashAppPaymentAccountConverter extends AbstractPaymentAccountConver
 
     @Override
     public CashAppPaymentAccount toRestModel(CashAppAccount business) {
+        final CashAppPaymentAccount rest = toRestModel((CashAppAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public CashAppPaymentAccount toRestModel(CashAppAccountPayload business) {
         final CashAppPaymentAccount rest = new CashAppPaymentAccount();
         rest.cashTag = business.getCashTag();
         toRestModel(rest, business);
         return rest;
+
     }
 
 }
