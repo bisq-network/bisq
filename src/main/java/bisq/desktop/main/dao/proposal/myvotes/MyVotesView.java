@@ -33,6 +33,7 @@ import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.proposal.ProposalList;
 import bisq.core.dao.vote.BooleanVoteResult;
@@ -76,6 +77,7 @@ public class MyVotesView extends BaseProposalView {
 
     private final VoteService voteService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
+    private final BsqNodeProvider bsqNodeProvider;
     private final Preferences preferences;
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
@@ -97,12 +99,14 @@ public class MyVotesView extends BaseProposalView {
                         BsqBlockChain bsqBlockChain,
                         BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                         ReadableBsqBlockChain readableBsqBlockChain,
+                        BsqNodeProvider bsqNodeProvider,
                         Preferences preferences,
                         BsqFormatter bsqFormatter) {
         super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
                 bsqFormatter);
         this.voteService = voteService;
         this.readableBsqBlockChain = readableBsqBlockChain;
+        this.bsqNodeProvider = bsqNodeProvider;
         this.preferences = preferences;
     }
 
@@ -128,7 +132,7 @@ public class MyVotesView extends BaseProposalView {
 
         voteListItems.clear();
         List<VoteListItem> items = voteService.getVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain))
+                .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqNodeProvider, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }
@@ -262,6 +266,30 @@ public class MyVotesView extends BaseProposalView {
         proposalListColumn.setSortable(false);
         tableView.getColumns().add(proposalListColumn);
 
+        TableColumn<VoteListItem, VoteListItem> stakeColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.votes.stake"));
+        stakeColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        stakeColumn.setCellFactory(
+                new Callback<TableColumn<VoteListItem, VoteListItem>, TableCell<VoteListItem,
+                        VoteListItem>>() {
+                    @Override
+                    public TableCell<VoteListItem, VoteListItem> call(
+                            TableColumn<VoteListItem, VoteListItem> column) {
+                        return new TableCell<VoteListItem, VoteListItem>() {
+                            @Override
+                            public void updateItem(final VoteListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    textProperty().bind(item.getStakeAsStringProperty());
+                                } else {
+                                    textProperty().unbind();
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+        stakeColumn.setComparator(Comparator.comparing(VoteListItem::getStake));
+        tableView.getColumns().add(stakeColumn);
 
         TableColumn<VoteListItem, VoteListItem> txColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.myVotes.tx"));
         txColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

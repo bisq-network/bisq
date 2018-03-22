@@ -33,7 +33,6 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
@@ -99,7 +98,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
-    private BsqBlockChainListener bsqBlockChainListener;
+    private BsqNode.BsqBlockChainListener bsqBlockChainListener;
     private ProgressBar chainSyncIndicator;
     private ChangeListener<Number> chainHeightChangedListener;
 

@@ -25,9 +25,9 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.BooleanVoteResult;
@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalListItem implements BsqBlockChainListener {
+public class ProposalListItem implements BsqNode.BsqBlockChainListener {
     @Getter
     private final Proposal proposal;
     private final ProposalCollectionsService proposalCollectionsService;

@@ -18,20 +18,26 @@
 package bisq.desktop.main.dao.proposal.myvotes;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.blockchain.vo.TxOutput;
+import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.vote.Vote;
 import bisq.core.locale.Res;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import javafx.scene.control.Tooltip;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
 import java.util.Optional;
@@ -45,11 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class VoteListItem implements BsqBlockChainListener {
+public class VoteListItem implements BsqNode.BsqBlockChainListener {
     @Getter
     private final Vote vote;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
+    private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
@@ -61,11 +68,20 @@ public class VoteListItem implements BsqBlockChainListener {
     private Transaction walletTransaction;
     @Setter
     private Runnable onRemoveHandler;
+    @Getter
+    private long stake = 0;
+    @Getter
+    private StringProperty stakeAsStringProperty = new SimpleStringProperty("");
 
-    VoteListItem(Vote vote, BsqWalletService bsqWalletService, ReadableBsqBlockChain readableBsqBlockChain) {
+    VoteListItem(Vote vote,
+                 BsqWalletService bsqWalletService,
+                 ReadableBsqBlockChain readableBsqBlockChain,
+                 BsqNodeProvider bsqNodeProvider,
+                 BsqFormatter bsqFormatter) {
         this.vote = vote;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
+        this.bsqFormatter = bsqFormatter;
 
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setId("funds-confidence");
@@ -73,19 +89,22 @@ public class VoteListItem implements BsqBlockChainListener {
         txConfidenceIndicator.setProgress(-1);
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
-
+        bsqNodeProvider.getBsqNode().addBsqBlockChainListener(this);
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
+        calculateStake();
     }
 
     @Override
     public void onBsqBlockChainChanged() {
         setupConfidence();
+        calculateStake();
     }
 
     private void setupConfidence() {
+        calculateStake();
         final Tx tx = readableBsqBlockChain.getTxMap().get(vote.getBlindVote().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
@@ -119,6 +138,18 @@ public class VoteListItem implements BsqBlockChainListener {
             final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
             if (confidence != null)
                 updateConfidence(confidence, confidence.getDepthInBlocks());
+        }
+    }
+
+    private void calculateStake() {
+        if (stake == 0) {
+            String txId = vote.getBlindVote().getTxId();
+            stake = readableBsqBlockChain.getLockedForVoteTxOutputs().stream()
+                    .filter(txOutput -> txOutput.getTxId().equals(txId))
+                    .filter(txOutput -> txOutput.getIndex() == 0)
+                    .mapToLong(TxOutput::getValue)
+                    .sum();
+            stakeAsStringProperty.set(bsqFormatter.formatCoin(Coin.valueOf(stake)));
         }
     }
 
