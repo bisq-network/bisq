@@ -3,6 +3,7 @@ package io.bisq.api;
 import com.google.common.base.Strings;
 import com.google.inject.Injector;
 import io.bisq.api.model.*;
+import io.bisq.api.model.payment.PaymentAccountHelper;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -135,8 +136,7 @@ public class BisqProxy {
         return marketList;
     }
 
-    public io.bisq.api.model.PaymentAccount addPaymentAccount(AccountToCreate account) {
-        final PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+    public PaymentAccount addPaymentAccount(PaymentAccount paymentAccount) {
         user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
@@ -160,7 +160,7 @@ public class BisqProxy {
         }
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
-        return PaymentAccountHelper.toRestModel(user.currentPaymentAccountProperty().get());
+        return paymentAccount;
     }
 
 

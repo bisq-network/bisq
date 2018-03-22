@@ -1,7 +1,12 @@
 package io.bisq.api;
 
 import com.github.javafaker.Faker;
-import io.bisq.api.model.*;
+import io.bisq.api.model.ArbitratorList;
+import io.bisq.api.model.CreateBtcWalletAddress;
+import io.bisq.api.model.OfferDetail;
+import io.bisq.api.model.P2PNetworkStatus;
+import io.bisq.api.model.payment.PaymentAccount;
+import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -10,8 +15,7 @@ import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.spi.CubeOutput;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
@@ -19,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 public final class ApiTestHelper {
 
-    public static ValidatableResponse createPaymentAccount(int apiPort, AccountToCreate accountToCreate) {
+    public static ValidatableResponse createPaymentAccount(int apiPort, PaymentAccount accountToCreate) {
         return given().
                 port(apiPort).
                 contentType(ContentType.JSON).
@@ -91,16 +95,18 @@ public final class ApiTestHelper {
         Thread.sleep(ALL_SERVICES_INITIALIZED_DELAY);
     }
 
-    public static SepaAccountToCreate randomValidCreateSepaAccountPayload(String tradeCurrency) {
+    public static SepaPaymentAccount randomValidCreateSepaAccountPayload(String tradeCurrency, String countryCode) {
         final Faker faker = new Faker();
-        final SepaAccountToCreate accountToCreate = new SepaAccountToCreate();
-        final String countryCode = faker.options().nextElement(CountryUtil.getAllSepaCountries()).code;
+        final SepaPaymentAccount accountToCreate = new SepaPaymentAccount();
+        if (null == countryCode)
+            countryCode = faker.options().nextElement(CountryUtil.getAllSepaCountries()).code;
         accountToCreate.paymentMethod = PaymentMethod.SEPA_ID;
         accountToCreate.accountName = faker.commerce().productName();
         accountToCreate.bic = faker.finance().bic();
         accountToCreate.iban = faker.finance().iban();
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.countryCode = countryCode;
+        accountToCreate.acceptedCountries = new ArrayList<>(new HashSet<>(Arrays.asList("PL", "GB", countryCode)));
         accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
         if (null != tradeCurrency)
             accountToCreate.selectedTradeCurrency = tradeCurrency;
@@ -108,8 +114,15 @@ public final class ApiTestHelper {
         return accountToCreate;
     }
 
-    public static SepaAccountToCreate randomValidCreateSepaAccountPayload() {
-        return randomValidCreateSepaAccountPayload(null);
+    public static void randomizeAccountPayload(PaymentAccount accountToCreate) {
+        final Faker faker = new Faker();
+        accountToCreate.accountName = faker.commerce().productName();
+        accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
+        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
+    }
+
+    public static SepaPaymentAccount randomValidCreateSepaAccountPayload() {
+        return randomValidCreateSepaAccountPayload(null, null);
     }
 
     public static void generateBlocks(Container bitcoin, int numberOfBlocks) {

@@ -1,16 +1,16 @@
-package io.bisq.api.model;
-
+package io.bisq.api.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.bisq.api.model.validation.CountryCode;
 import io.bisq.core.payment.payload.PaymentMethod;
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonTypeName(PaymentMethod.SEPA_ID)
-public class SepaAccountToCreate extends AccountToCreate {
-
-    @NotBlank
-    public String accountName;
+public class SepaPaymentAccount extends PaymentAccount {
 
     @CountryCode
     @NotBlank
@@ -25,6 +25,10 @@ public class SepaAccountToCreate extends AccountToCreate {
     @NotBlank
     public String iban;
 
-//    TODO add accepted countries and make sure that countryCode is on that list
+    @NotEmpty
+    public List<String> acceptedCountries = new ArrayList<>();
 
+    public SepaPaymentAccount() {
+        super(PaymentMethod.SEPA_ID);
+    }
 }
