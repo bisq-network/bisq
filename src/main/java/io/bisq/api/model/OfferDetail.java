@@ -1,87 +1,97 @@
 package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import io.bisq.network.p2p.NodeAddress;
 
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * "contractData": {
- * "paymentMethodName": "SEPA",
- * "id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
- * "maxTradePeriod": 691200000,
- * "countryCode": "BE",
- * "holderName": "Mike Rosseel",
- * "iban": "BE82063500018968",
- * "bic": "GKCCBEBB",
- * "acceptedCountryCodes": ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "IE", "IT", "LT", "LU", "LV", "MC", "MT", "NL", "PT", "SI", "SK"],
- * "paymentDetails": "SEPA - Holder name: Mike Rosseel, IBAN: BE82063500018968, BIC: GKCCBEBB, country code: BE",
- * "paymentDetailsForTradePopup": "Holder name: Mike Rosseel\nIBAN: BE82063500018968\nBIC: GKCCBEBB\nCountry of bank: Belgium (BE)"
- * },
- */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class OfferDetail {
-    @JsonProperty
-    public String offer_id;
-    @JsonProperty
+    public List<String> acceptedBankIds;
+    public List<String> acceptedCountryCodes;
+    public long amount;
+    public List<String> arbitratorNodeAddresses;
+    public String bankId;
+    public String baseCurrencyCode;
+    public long blockHeightAtOfferCreation;
+    public long buyerSecurityDeposit;
+    public String counterCurrencyCode;
+    public String countryCode;
+    public String currencyCode;
+    public Date date;
     public OfferPayload.Direction direction;
-    @JsonProperty
+    public String hashOfChallenge;
+    public String id;
+    public boolean isCurrencyForMakerFeeBtc;
+    public boolean isPrivateOffer;
+    public long lowerClosePrice;
+    public long makerFee;
+    public String makerPaymentAccountId;
+    public double marketPriceMargin;
+    public long maxTradeLimit;
+    public long maxTradePeriod;
+    public long minAmount;
+    public String offerFeePaymentTxId;
+    public String ownerNodeAddress;
+    public String paymentMethodId;
+    public long price;
+    public int protocolVersion;
+    public long sellerSecurityDeposit;
     public Offer.State state;
-    @JsonProperty
-    public Date created;
-    @JsonProperty
-    public List<String> arbitrators;
-    @JsonProperty
-    public String offerer;
-    @JsonProperty
-    public String btc_amount;
-    @JsonProperty
-    public String min_btc_amount;
-    @JsonProperty
-    public String other_amount;
-    @JsonProperty
-    public String other_currency;
-    @JsonProperty
-    public PriceDetail price_detail;
-    // paymentmethod - important for automating
-    // offerfeepaymenttxid ???
+    public long txFee;
+    public long upperClosePrice;
+    public boolean useAutoClose;
+    public boolean useMarketBasedPrice;
+    public boolean useReOpenAfterAutoClose;
+    public String versionNr;
 
 
     public OfferDetail() {
     }
 
     public OfferDetail(Offer offer) {
-        this.offer_id = offer.getId();
+        final OfferPayload offerPayload = offer.getOfferPayload();
+        this.id = offer.getId();
         this.direction = offer.getDirection();
         this.state = offer.getState();
-        this.created = offer.getDate();
-        this.arbitrators = offer.getArbitratorNodeAddresses().stream()
-                .map(nodeAddress -> nodeAddress.toString()).collect(Collectors.toList());
-        this.offerer = offer.getMakerNodeAddress().toString();
-        this.btc_amount = offer.getAmount().toPlainString();
-        this.min_btc_amount = offer.getMinAmount().toPlainString();
-        if (offer.getPrice() != null) {
-            this.other_amount = offer.getPrice().toPlainString();
-            this.other_currency = offer.getPrice().getCurrencyCode();
-        }
-
-        this.price_detail = new PriceDetail(offer.isUseMarketBasedPrice(),
-                offer.getMarketPriceMargin());
-    }
-
-    @Data
-    @AllArgsConstructor
-    public static class PriceDetail {
-        @JsonProperty
-        boolean use_market_price;
-        @JsonProperty
-        double market_price_margin;
+        this.date = offer.getDate();
+        this.arbitratorNodeAddresses = offerPayload.getArbitratorNodeAddresses().stream().map(NodeAddress::toString).collect(Collectors.toList());
+        this.ownerNodeAddress = offerPayload.getOwnerNodeAddress().toString();
+        this.price = offerPayload.getPrice();
+        this.currencyCode = offerPayload.getCurrencyCode();
+        this.marketPriceMargin = offerPayload.getMarketPriceMargin();
+        this.useMarketBasedPrice = offerPayload.isUseMarketBasedPrice();
+        this.amount = offerPayload.getAmount();
+        this.minAmount = offerPayload.getMinAmount();
+        this.baseCurrencyCode = offerPayload.getBaseCurrencyCode();
+        this.counterCurrencyCode = offerPayload.getCounterCurrencyCode();
+        this.paymentMethodId = offerPayload.getPaymentMethodId();
+        this.makerPaymentAccountId = offerPayload.getMakerPaymentAccountId();
+        this.offerFeePaymentTxId = offerPayload.getOfferFeePaymentTxId();
+        this.countryCode = offerPayload.getCountryCode();
+        this.acceptedCountryCodes = offerPayload.getAcceptedCountryCodes();
+        this.bankId = offerPayload.getBankId();
+        this.acceptedBankIds = offerPayload.getAcceptedBankIds();
+        this.versionNr = offerPayload.getVersionNr();
+        this.blockHeightAtOfferCreation = offerPayload.getBlockHeightAtOfferCreation();
+        this.txFee = offerPayload.getTxFee();
+        this.makerFee = offerPayload.getMakerFee();
+        this.isCurrencyForMakerFeeBtc = offerPayload.isCurrencyForMakerFeeBtc();
+        this.buyerSecurityDeposit = offerPayload.getBuyerSecurityDeposit();
+        this.sellerSecurityDeposit = offerPayload.getSellerSecurityDeposit();
+        this.maxTradeLimit = offerPayload.getMaxTradeLimit();
+        this.maxTradePeriod = offerPayload.getMaxTradePeriod();
+        this.useAutoClose = offerPayload.isUseAutoClose();
+        this.useReOpenAfterAutoClose = offerPayload.isUseReOpenAfterAutoClose();
+        this.lowerClosePrice = offerPayload.getLowerClosePrice();
+        this.upperClosePrice = offerPayload.getUpperClosePrice();
+        this.isPrivateOffer = offerPayload.isPrivateOffer();
+        this.hashOfChallenge = offerPayload.getHashOfChallenge();
+        this.protocolVersion = offerPayload.getProtocolVersion();
     }
 }
 
