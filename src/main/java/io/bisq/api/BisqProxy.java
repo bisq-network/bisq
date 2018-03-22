@@ -136,8 +136,7 @@ public class BisqProxy {
         return marketList;
     }
 
-    public io.bisq.api.model.payment.PaymentAccount addPaymentAccount(io.bisq.api.model.payment.PaymentAccount account) {
-        final PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+    public PaymentAccount addPaymentAccount(PaymentAccount paymentAccount) {
         user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
@@ -161,7 +160,7 @@ public class BisqProxy {
         }
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
-        return PaymentAccountHelper.toRestModel(paymentAccount);
+        return paymentAccount;
     }
 
 

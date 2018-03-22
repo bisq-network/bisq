@@ -3,6 +3,7 @@ package io.bisq.api.service.v1;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.PaymentAccountList;
+import io.bisq.api.model.payment.PaymentAccountHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -31,7 +32,8 @@ public class PaymentAccountResource {
     @POST
     @Path("/")
     public PaymentAccount create(@Valid PaymentAccount account) {
-        return bisqProxy.addPaymentAccount(account);
+        final io.bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+        return PaymentAccountHelper.toRestModel(bisqProxy.addPaymentAccount(paymentAccount));
     }
 
     @ApiOperation("Get existing payment accounts")
