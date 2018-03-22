@@ -98,7 +98,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferDataModel extends OfferDataModel {
+class CreateOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     private final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
@@ -114,7 +114,6 @@ class CreateOfferDataModel extends OfferDataModel {
     private final BSFormatter formatter;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
-    private final BsqBalanceListener bsqBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
     private OfferPayload.Direction direction;
@@ -206,8 +205,6 @@ class CreateOfferDataModel extends OfferDataModel {
             }
         };
 
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateBalance();
-
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
     }
 
@@ -229,7 +226,7 @@ class CreateOfferDataModel extends OfferDataModel {
     private void addListeners() {
         btcWalletService.addBalanceListener(btcBalanceListener);
         if (BisqEnvironment.isBaseCurrencySupportingBsq())
-            bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
+            bsqWalletService.addBsqBalanceListener(this);
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
@@ -237,7 +234,7 @@ class CreateOfferDataModel extends OfferDataModel {
     private void removeListeners() {
         btcWalletService.removeBalanceListener(btcBalanceListener);
         if (BisqEnvironment.isBaseCurrencySupportingBsq())
-            bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
+            bsqWalletService.removeBsqBalanceListener(this);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
@@ -542,6 +539,14 @@ class CreateOfferDataModel extends OfferDataModel {
                 }
             }
         }
+    }
+
+    @Override
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockedInBondsBalance) {
+        updateBalance();
     }
 
     void fundFromSavingsWallet() {

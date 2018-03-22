@@ -65,7 +65,7 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqSendView extends ActivatableView<GridPane, Void> {
+public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final WalletsSetup walletsSetup;
@@ -82,7 +82,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private Button sendButton;
     private InputTextField receiversAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
-    private BsqBalanceListener balanceListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -128,7 +128,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
-                verifyInputs();
+                onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
+                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
         };
 
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
@@ -198,8 +199,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
-
-        balanceListener = (availableBalance, unverifiedBalance) -> verifyInputs();
     }
 
     @Override
@@ -207,8 +206,9 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.activate();
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
-        bsqWalletService.addBsqBalanceListener(balanceListener);
-        verifyInputs();
+        bsqWalletService.addBsqBalanceListener(this);
+        onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
     }
 
     @Override
@@ -216,11 +216,15 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.deactivate();
         receiversAddressInputTextField.focusedProperty().removeListener(focusOutListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
-        bsqWalletService.removeBsqBalanceListener(balanceListener);
+        bsqWalletService.removeBsqBalanceListener(this);
     }
 
-    private void verifyInputs() {
-        bsqValidator.setAvailableBalance(bsqWalletService.getAvailableBalance());
+    @Override
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockedInBondsBalance) {
+        bsqValidator.setAvailableBalance(confirmedBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendButton.setDisable(!isValid);

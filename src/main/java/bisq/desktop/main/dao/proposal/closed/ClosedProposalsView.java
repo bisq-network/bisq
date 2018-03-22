@@ -51,8 +51,7 @@ public class ClosedProposalsView extends BaseProposalView {
     public void initialize() {
         super.initialize();
 
-        createTableView();
-
+        createProposalsTableView();
         createProposalDisplay();
     }
 
@@ -67,8 +66,8 @@ public class ClosedProposalsView extends BaseProposalView {
     }
 
     @Override
-    protected void updateList() {
-        doUpdateList(proposalCollectionsService.getClosedProposals());
+    protected void updateProposalList() {
+        doUpdateProposalList(proposalCollectionsService.getClosedProposals());
     }
 }
 

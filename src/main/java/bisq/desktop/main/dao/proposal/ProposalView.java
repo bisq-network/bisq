@@ -30,6 +30,8 @@ import bisq.desktop.main.dao.proposal.active.ActiveProposalsView;
 import bisq.desktop.main.dao.proposal.closed.ClosedProposalsView;
 import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
 import bisq.desktop.main.dao.proposal.make.MakeProposalView;
+import bisq.desktop.main.dao.proposal.myvotes.MyVotesView;
+import bisq.desktop.main.dao.proposal.votes.VotesView;
 
 import bisq.core.locale.Res;
 
@@ -49,7 +51,7 @@ public class ProposalView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, create, proposed, past;
+    private MenuItem dashboard, make, active, myVotes, votes, closed;
     private Navigation.Listener listener;
 
     @FXML
@@ -77,18 +79,24 @@ public class ProposalView extends ActivatableViewAndModel {
 
         ToggleGroup toggleGroup = new ToggleGroup();
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), ProposalDashboardView.class, AwesomeIcon.DASHBOARD);
-        create = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"), MakeProposalView.class, AwesomeIcon.EDIT);
-        proposed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"), ActiveProposalsView.class, AwesomeIcon.STACKEXCHANGE);
-        past = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"), ClosedProposalsView.class, AwesomeIcon.LIST);
-        leftVBox.getChildren().addAll(dashboard, create, proposed, past);
+        make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"), MakeProposalView.class, AwesomeIcon.EDIT);
+        active = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"), ActiveProposalsView.class, AwesomeIcon.STACKEXCHANGE);
+        myVotes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.myVotes"), MyVotesView.class,
+                AwesomeIcon.LIST);
+        votes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.votes"), VotesView.class, AwesomeIcon
+                .LIST);
+        closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"), ClosedProposalsView.class, AwesomeIcon.LIST);
+        leftVBox.getChildren().addAll(dashboard, make, active, myVotes, votes, closed);
     }
 
     @Override
     protected void activate() {
         dashboard.activate();
-        create.activate();
-        proposed.activate();
-        past.activate();
+        make.activate();
+        active.activate();
+        myVotes.activate();
+        votes.activate();
+        closed.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -110,9 +118,11 @@ public class ProposalView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
 
         dashboard.deactivate();
-        create.deactivate();
-        proposed.deactivate();
-        past.deactivate();
+        make.deactivate();
+        active.deactivate();
+        myVotes.deactivate();
+        votes.deactivate();
+        closed.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -120,9 +130,11 @@ public class ProposalView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof ProposalDashboardView) dashboard.setSelected(true);
-        else if (view instanceof MakeProposalView) create.setSelected(true);
-        else if (view instanceof ActiveProposalsView) proposed.setSelected(true);
-        else if (view instanceof ClosedProposalsView) past.setSelected(true);
+        else if (view instanceof MakeProposalView) make.setSelected(true);
+        else if (view instanceof ActiveProposalsView) active.setSelected(true);
+        else if (view instanceof MyVotesView) myVotes.setSelected(true);
+        else if (view instanceof VotesView) votes.setSelected(true);
+        else if (view instanceof ClosedProposalsView) closed.setSelected(true);
     }
 
     public Class<? extends View> getSelectedViewClass() {

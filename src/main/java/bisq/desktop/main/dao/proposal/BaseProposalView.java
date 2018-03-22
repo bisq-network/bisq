@@ -37,6 +37,7 @@ import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -56,12 +57,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -69,12 +71,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
     protected final ProposalCollectionsService proposalCollectionsService;
     protected final BsqBlockChain bsqBlockChain;
-    protected final ObservableList<ProposalListItem> proposalListItems = FXCollections.observableArrayList();
-    protected TableView<ProposalListItem> tableView;
     protected final BsqWalletService bsqWalletService;
     protected final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     protected final BsqFormatter bsqFormatter;
-    protected SortedList<ProposalListItem> sortedList = new SortedList<>(proposalListItems);
+
+    protected final ObservableList<ProposalListItem> proposalListItems = FXCollections.observableArrayList();
+    protected final SortedList<ProposalListItem> sortedList = new SortedList<>(proposalListItems);
+    protected final List<Node> proposalViewItems = new ArrayList<>();
+    protected TableView<ProposalListItem> proposalTableView;
     protected Subscription selectedProposalSubscription;
     protected ProposalDisplay proposalDisplay;
     protected int gridRow = 0;
@@ -85,6 +89,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     protected final DaoPeriodService daoPeriodService;
     protected DaoPeriodService.Phase currentPhase;
     protected Subscription phaseSubscription;
+    private ScrollPane proposalDisplayView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,80 +116,41 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         super.initialize();
         root.getStyleClass().add("vote-root");
 
-        proposalListChangeListener = c -> updateList();
+        detailsGridPane = new GridPane();
+
+        proposalListChangeListener = c -> updateProposalList();
         phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
-    protected void createTableView() {
-        TableGroupHeadline proposalsHeadline = new TableGroupHeadline(Res.get("dao.proposal.active.header"));
-        GridPane.setRowIndex(proposalsHeadline, ++gridRow);
-        GridPane.setMargin(proposalsHeadline, new Insets(-10, -10, -10, -10));
-        GridPane.setColumnSpan(proposalsHeadline, 2);
-        root.getChildren().add(proposalsHeadline);
-
-        tableView = new TableView<>();
-        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        createColumns(tableView);
-        GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(10, -10, 5, -10));
-        GridPane.setColumnSpan(tableView, 2);
-        GridPane.setHgrow(tableView, Priority.ALWAYS);
-        root.getChildren().add(tableView);
-
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-    }
-
-    protected void createProposalDisplay() {
-        detailsGridPane = new GridPane();
-        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
-        final ScrollPane proposalDisplayView = proposalDisplay.getView();
-        GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
-        GridPane.setRowIndex(proposalDisplayView, ++gridRow);
-        GridPane.setColumnSpan(proposalDisplayView, 2);
-        root.getChildren().add(proposalDisplayView);
-    }
-
-
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
-            if (!phase.equals(this.currentPhase)) {
-                this.currentPhase = phase;
-                onSelectProposal(selectedProposalListItem);
-            }
-        });
+        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), this::onPhaseChanged);
+        selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
         daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
-        onPhaseChanged(daoPeriodService.getPhaseProperty().get());
-
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-
-        selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
-
         bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
         proposalCollectionsService.getAllProposals().addListener(proposalListChangeListener);
-        updateList();
+
+        onPhaseChanged(daoPeriodService.getPhaseProperty().get());
+
+        sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
+
+        updateProposalList();
     }
 
     @Override
     protected void deactivate() {
         phaseSubscription.unsubscribe();
-        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
-
-        sortedList.comparatorProperty().unbind();
-
         selectedProposalSubscription.unsubscribe();
 
+        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
         bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
         proposalCollectionsService.getAllProposals().removeListener(proposalListChangeListener);
 
-        proposalListItems.forEach(ProposalListItem::cleanup);
+        sortedList.comparatorProperty().unbind();
 
-        tableView.getSelectionModel().clearSelection();
-        removeProposalDisplay();
+        proposalListItems.forEach(ProposalListItem::cleanup);
+        proposalTableView.getSelectionModel().clearSelection();
         selectedProposalListItem = null;
     }
 
@@ -199,16 +165,93 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         //UserThread.execute(this::updateList);
     }
 
-    abstract protected void updateList();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Create views
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    protected void createProposalsTableView() {
+        createProposalsTableView(Res.get("dao.proposal.active.header"), -10);
+    }
+
+    protected void createProposalsTableView(String header, double top) {
+        TableGroupHeadline proposalsHeadline = new TableGroupHeadline(header);
+        GridPane.setRowIndex(proposalsHeadline, ++gridRow);
+        GridPane.setMargin(proposalsHeadline, new Insets(top, -10, -10, -10));
+        GridPane.setColumnSpan(proposalsHeadline, 2);
+        root.getChildren().add(proposalsHeadline);
+
+        proposalTableView = new TableView<>();
+        proposalTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
+        proposalTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        createProposalColumns(proposalTableView);
+        GridPane.setRowIndex(proposalTableView, gridRow);
+        GridPane.setMargin(proposalTableView, new Insets(top + 20, -10, 5, -10));
+        GridPane.setColumnSpan(proposalTableView, 2);
+        GridPane.setHgrow(proposalTableView, Priority.ALWAYS);
+        root.getChildren().add(proposalTableView);
+
+        proposalTableView.setItems(sortedList);
+
+        proposalViewItems.add(proposalsHeadline);
+        proposalViewItems.add(proposalTableView);
+    }
+
+    protected void createProposalDisplay() {
+        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
+        proposalDisplayView = proposalDisplay.getView();
+        GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
+        GridPane.setRowIndex(proposalDisplayView, ++gridRow);
+        GridPane.setColumnSpan(proposalDisplayView, 2);
+        root.getChildren().add(proposalDisplayView);
+    }
+
+    protected void hideProposalDisplay() {
+        proposalDisplay.removeAllFields();
+        proposalDisplayView.setVisible(false);
+        proposalDisplayView.setManaged(false);
+    }
+
+    protected void showProposalDisplay(Proposal proposal) {
+        proposalDisplayView.setVisible(true);
+        proposalDisplayView.setManaged(true);
+
+        proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
+                false, false);
+        proposalDisplay.setEditable(false);
+        proposalDisplay.applyProposalPayload(proposal.getProposalPayload());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void onSelectProposal(ProposalListItem item) {
+        selectedProposalListItem = item;
+        if (item != null)
+            showProposalDisplay(item.getProposal());
+        else
+            hideProposalDisplay();
+    }
 
     protected void onPhaseChanged(DaoPeriodService.Phase phase) {
+        if (!phase.equals(this.currentPhase)) {
+            this.currentPhase = phase;
+            onSelectProposal(selectedProposalListItem);
+        }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void doUpdateList(FilteredList<Proposal> list) {
+    abstract protected void updateProposalList();
+
+    protected void doUpdateProposalList(List<Proposal> list) {
         proposalListItems.forEach(ProposalListItem::cleanup);
 
         proposalListItems.setAll(list.stream()
@@ -221,34 +264,23 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
                         bsqFormatter))
                 .collect(Collectors.toSet()));
 
-        if (list.isEmpty() && proposalDisplay != null)
-            proposalDisplay.removeAllFields();
+        if (list.isEmpty())
+            hideProposalDisplay();
     }
 
-    protected void onSelectProposal(ProposalListItem item) {
-        selectedProposalListItem = item;
-        if (item != null) {
-            final Proposal proposal = item.getProposal();
-
-            removeProposalDisplay();
-
-            //TODO
-            proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
-            proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
-                    false, false);
-            proposalDisplay.setAllFieldsEditable(false);
-            proposalDisplay.fillWithData(proposal.getProposalPayload());
-        }
+    protected void changeProposalViewItemsVisibility(boolean value) {
+        proposalViewItems.forEach(node -> {
+            node.setVisible(value);
+            node.setManaged(value);
+        });
     }
 
-    protected void removeProposalDisplay() {
-        if (proposalDisplay != null) {
-            proposalDisplay.removeAllFields();
-            proposalDisplay = null;
-        }
-    }
 
-    protected void createColumns(TableView<ProposalListItem> tableView) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TableColumns
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void createProposalColumns(TableView<ProposalListItem> tableView) {
         TableColumn<ProposalListItem, ProposalListItem> dateColumn = new AutoTooltipTableColumn<ProposalListItem, ProposalListItem>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
@@ -302,8 +334,31 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getProposalPayload().getName()));
         tableView.getColumns().add(nameColumn);
 
-        TableColumn<ProposalListItem, ProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
+        TableColumn<ProposalListItem, ProposalListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
+        titleColumn.setPrefWidth(100);
+        titleColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        titleColumn.setCellFactory(
+                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
+                        ProposalListItem>>() {
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(
+                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getProposal().getProposalPayload().getTitle());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getProposalPayload().getTitle()));
+        tableView.getColumns().add(titleColumn);
 
+        TableColumn<ProposalListItem, ProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         uidColumn.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
@@ -338,7 +393,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
                 });
         uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getProposalPayload().getUid()));
         tableView.getColumns().add(uidColumn);
+    }
 
+    protected void createConfidenceColumn(TableView<ProposalListItem> tableView) {
         TableColumn<ProposalListItem, ProposalListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
         confidenceColumn.setMinWidth(130);
         confidenceColumn.setMaxWidth(confidenceColumn.getMinWidth());

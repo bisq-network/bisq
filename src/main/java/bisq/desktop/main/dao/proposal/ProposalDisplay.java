@@ -92,6 +92,7 @@ public class ProposalDisplay {
 
     public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
                                 boolean isMakeProposalScreen, boolean showDetails) {
+        removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
         int rowSpan;
@@ -114,7 +115,7 @@ public class ProposalDisplay {
                     top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
         }
 
-        titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.title")).second;
+        titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("dao.proposal.title")).second;
 
         descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"), Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
         descriptionTextArea.setMaxHeight(42); // for 2 lines
@@ -152,7 +153,7 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.display.txId"), "").second;
     }
 
-    public void fillWithData(ProposalPayload proposalPayload) {
+    public void applyProposalPayload(ProposalPayload proposalPayload) {
         if (uidTextField != null)
             uidTextField.setText(proposalPayload.getUid());
         nameTextField.setText(proposalPayload.getName());
@@ -204,7 +205,7 @@ public class ProposalDisplay {
             bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
     }
 
-    public void setAllFieldsEditable(boolean isEditable) {
+    public void setEditable(boolean isEditable) {
         nameTextField.setEditable(isEditable);
         titleTextField.setEditable(isEditable);
         descriptionTextArea.setEditable(isEditable);
@@ -224,9 +225,7 @@ public class ProposalDisplay {
     public void removeAllFields() {
         if (gridRow > 0) {
             clearForm();
-
             GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow + 1);
-
             gridRow = gridRowStartIndex;
         }
     }

@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.proposal.active;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -41,6 +42,7 @@ import bisq.core.dao.vote.VoteService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -53,6 +55,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -61,7 +64,9 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -71,13 +76,14 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ActiveProposalsView extends BaseProposalView {
+public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
     private final VoteService voteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
-    private BsqBalanceListener bsqBalanceListener;
+    private List<Node> voteViewItems = new ArrayList<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -100,70 +106,100 @@ public class ActiveProposalsView extends BaseProposalView {
     public void initialize() {
         super.initialize();
 
-        createTableView();
-
-        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.vote.header"), Layout.GROUP_DISTANCE - 20);
-        stakeInputTextField = addLabelInputTextField(root, gridRow, Res.getWithCol("dao.proposal.vote.stake"), Layout
-                .FIRST_ROW_AND_GROUP_DISTANCE - 20).second;
-        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proposal.vote.button"));
-
+        createProposalsTableView();
+        createVoteView();
         createProposalDisplay();
-
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> stakeInputTextField.setPromptText(Res.get("dao.proposal.vote.stake.prompt", bsqFormatter.formatCoinWithCode(availableBalance)));
     }
+
 
     @Override
     protected void activate() {
         super.activate();
 
-        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
-        stakeInputTextField.setPromptText(Res.get("dao.proposal.vote.stake.prompt", bsqFormatter.formatCoinWithCode
-                (bsqWalletService.getAvailableBalance())));
+        bsqWalletService.addBsqBalanceListener(this);
 
-        voteButton.setOnAction(e -> {
-            Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-            // TODO verify stake
-            //TODO show popup
-            try {
-                voteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(@Nullable Transaction result) {
-                        //TODO
-                    }
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockedInBondsBalance());
 
-                    @Override
-                    public void onFailure(Throwable t) {
-                        //TODO
-                    }
-                });
-            } catch (CryptoException e1) {
-                //TODO show error popup
-                e1.printStackTrace();
-            } catch (InsufficientBsqException e1) {
-                e1.printStackTrace();
-            } catch (WalletException e1) {
-                e1.printStackTrace();
-            } catch (TransactionVerificationException e1) {
-                e1.printStackTrace();
-            } catch (InsufficientMoneyException e1) {
-                e1.printStackTrace();
-            } catch (ChangeBelowDustException e1) {
-                e1.printStackTrace();
-            }
-        });
+        if (voteButton != null) {
+            voteButton.setOnAction(e -> {
+                Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
+                // TODO verify stake
+                //TODO show popup
+                try {
+                    voteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
+                        @Override
+                        public void onSuccess(@Nullable Transaction result) {
+                            //TODO
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            //TODO
+                        }
+                    });
+                } catch (CryptoException e1) {
+                    //TODO show error popup
+                    e1.printStackTrace();
+                } catch (InsufficientBsqException e1) {
+                    e1.printStackTrace();
+                } catch (WalletException e1) {
+                    e1.printStackTrace();
+                } catch (TransactionVerificationException e1) {
+                    e1.printStackTrace();
+                } catch (InsufficientMoneyException e1) {
+                    e1.printStackTrace();
+                } catch (ChangeBelowDustException e1) {
+                    e1.printStackTrace();
+                }
+            });
+        }
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
 
-        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
-        voteButton.setOnAction(null);
+        bsqWalletService.removeBsqBalanceListener(this);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Create views
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private void createVoteView() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.vote.header"),
+                Layout.GROUP_DISTANCE - 20);
+        final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, gridRow,
+                Res.getWithCol("dao.proposal.vote.stake"), Layout
+                        .FIRST_ROW_AND_GROUP_DISTANCE - 20);
+        stakeInputTextField = tuple2.second;
+        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proposal.vote.button"));
+
+        voteViewItems.add(titledGroupBg);
+        voteViewItems.add(tuple2.first);
+        voteViewItems.add(stakeInputTextField);
+        voteViewItems.add(voteButton);
+
+        changeVoteViewItemsVisibility(false);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    protected void updateList() {
-        doUpdateList(proposalCollectionsService.getActiveProposals());
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockedInBondsBalance) {
+        stakeInputTextField.setPromptText(Res.get("dao.proposal.vote.stake.prompt",
+                bsqFormatter.formatCoinWithCode(confirmedBalance)));
     }
 
     protected void onSelectProposal(ProposalListItem item) {
@@ -209,23 +245,12 @@ public class ActiveProposalsView extends BaseProposalView {
         updateStateAfterVote();
     }
 
-    private void updateStateAfterVote() {
-        removeProposalDisplay();
-        proposalCollectionsService.persist();
-        tableView.getSelectionModel().clearSelection();
-    }
-
-    private void onRemove() {
-        if (proposalCollectionsService.removeProposal(selectedProposalListItem.getProposal()))
-            removeProposalDisplay();
-        else
-            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
-
-        tableView.getSelectionModel().clearSelection();
-    }
-
     @Override
     protected void onPhaseChanged(DaoPeriodService.Phase phase) {
+        super.onPhaseChanged(phase);
+
+        changeVoteViewItemsVisibility(phase == DaoPeriodService.Phase.OPEN_FOR_VOTING);
+
         if (removeButton != null) {
             removeButton.setManaged(false);
             removeButton.setVisible(false);
@@ -286,9 +311,46 @@ public class ActiveProposalsView extends BaseProposalView {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    protected void createColumns(TableView<ProposalListItem> tableView) {
-        super.createColumns(tableView);
+    protected void updateProposalList() {
+        doUpdateProposalList(proposalCollectionsService.getActiveProposals());
+    }
+
+    private void updateStateAfterVote() {
+        hideProposalDisplay();
+        proposalCollectionsService.persist();
+        proposalTableView.getSelectionModel().clearSelection();
+    }
+
+    private void changeVoteViewItemsVisibility(boolean value) {
+        voteViewItems.forEach(node -> {
+            node.setVisible(value);
+            node.setManaged(value);
+        });
+    }
+
+    private void onRemove() {
+        if (proposalCollectionsService.removeProposal(selectedProposalListItem.getProposal()))
+            hideProposalDisplay();
+        else
+            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
+
+        proposalTableView.getSelectionModel().clearSelection();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TableColumns
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void createProposalColumns(TableView<ProposalListItem> tableView) {
+        super.createProposalColumns(tableView);
+        createConfidenceColumn(tableView);
 
         TableColumn<ProposalListItem, ProposalListItem> actionColumn = new TableColumn<>();
         actionColumn.setMinWidth(130);
@@ -313,7 +375,11 @@ public class ActiveProposalsView extends BaseProposalView {
                             if (node == null) {
                                 node = item.getActionNode();
                                 setGraphic(node);
-                                item.setOnRemoveHandler(ActiveProposalsView.this::onRemove);
+                                item.setOnRemoveHandler(() -> {
+                                    ActiveProposalsView.this.selectedProposalListItem = item;
+                                    ActiveProposalsView.this.onRemove();
+                                });
+                                item.applyState(currentPhase, item.getProposal().getVoteResultProperty().get());
                             }
                         } else {
                             setGraphic(null);
