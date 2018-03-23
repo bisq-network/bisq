@@ -305,7 +305,7 @@ public class MyVotesView extends BaseProposalView {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String txId = item.getVote().getBlindVote().getTxId();
+                                    String txId = item.getVote().getTxId();
                                     HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(txId, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> {
                                         if (txId != null)

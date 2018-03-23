@@ -143,7 +143,7 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
 
     private void calculateStake() {
         if (stake == 0) {
-            String txId = vote.getBlindVote().getTxId();
+            String txId = vote.getTxId();
             stake = readableBsqBlockChain.getLockedForVoteTxOutputs().stream()
                     .filter(txOutput -> txOutput.getTxId().equals(txId))
                     .filter(txOutput -> txOutput.getIndex() == 0)

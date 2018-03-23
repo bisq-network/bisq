@@ -521,12 +521,16 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.PAPERCLIP;
+                                            awesomeIcon = AwesomeIcon.FILE;
                                             style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
-                                            style = "dao-tx-type-default-icon";
+                                            style = "dao-tx-type-vote-icon";
+                                            break;
+                                        case VOTE_REVEAL:
+                                            awesomeIcon = AwesomeIcon.LIGHTBULB;
+                                            style = "dao-tx-type-vote-reveal-icon";
                                             break;
                                         case ISSUANCE:
                                             awesomeIcon = AwesomeIcon.UMBRELLA;

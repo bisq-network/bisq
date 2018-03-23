@@ -78,14 +78,18 @@ public class ProposalView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), ProposalDashboardView.class, AwesomeIcon.DASHBOARD);
-        make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"), MakeProposalView.class, AwesomeIcon.EDIT);
-        active = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"), ActiveProposalsView.class, AwesomeIcon.STACKEXCHANGE);
-        myVotes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.myVotes"), MyVotesView.class,
-                AwesomeIcon.LIST);
-        votes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.votes"), VotesView.class, AwesomeIcon
-                .LIST);
-        closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"), ClosedProposalsView.class, AwesomeIcon.LIST);
+        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
+                ProposalDashboardView.class, AwesomeIcon.DASHBOARD);
+        make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
+                MakeProposalView.class, AwesomeIcon.EDIT);
+        active = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"),
+                ActiveProposalsView.class, AwesomeIcon.LIST_UL);
+        myVotes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.myVotes"),
+                MyVotesView.class, AwesomeIcon.THUMBS_UP);
+        votes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.votes"),
+                VotesView.class, AwesomeIcon.THUMBS_UP_ALT);
+        closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"),
+                ClosedProposalsView.class, AwesomeIcon.LIST_ALT);
         leftVBox.getChildren().addAll(dashboard, make, active, myVotes, votes, closed);
     }
 
