@@ -1,6 +1,6 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 
 import javax.ws.rs.WebApplicationException;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public final class PaymentAccountHelper {
 
-    private static Map<String, PaymentAccountConverter> converters = new HashMap<>();
+    private static Map<String, PaymentAccountConverter<? extends io.bisq.core.payment.PaymentAccount, ? extends PaymentAccountPayload, ? extends PaymentAccount>> converters = new HashMap<>();
 
     static {
         converters.put(PaymentMethod.ALI_PAY_ID, new AliPayPaymentAccountConverter());
@@ -36,7 +36,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.WESTERN_UNION_ID, new WesternUnionPaymentAccountConverter());
     }
 
-    public static PaymentAccount toBusinessModel(io.bisq.api.model.payment.PaymentAccount rest) {
+    public static io.bisq.core.payment.PaymentAccount toBusinessModel(PaymentAccount rest) {
         final PaymentAccountConverter converter = converters.get(rest.paymentMethod);
         if (null != converter) {
             return converter.toBusinessModel(rest);
@@ -44,13 +44,23 @@ public final class PaymentAccountHelper {
         throw new WebApplicationException("Unsupported paymentMethod:" + rest.paymentMethod, 400);
     }
 
-    public static io.bisq.api.model.payment.PaymentAccount toRestModel(PaymentAccount business) {
-        final PaymentMethod paymentMethod = business.getPaymentMethod();
-        final PaymentAccountConverter converter = converters.get(paymentMethod.getId());
+    public static io.bisq.api.model.payment.PaymentAccount toRestModel(io.bisq.core.payment.PaymentAccount business) {
+        final String paymentMethodId = business.getPaymentMethod().getId();
+        final PaymentAccountConverter converter = converters.get(paymentMethodId);
         if (null != converter) {
             return converter.toRestModel(business);
         }
-        throw new IllegalArgumentException("Unsupported paymentMethod:" + paymentMethod);
+        throw new IllegalArgumentException("Unsupported paymentMethod:" + paymentMethodId);
     }
 
+    public static io.bisq.api.model.payment.PaymentAccount toRestModel(PaymentAccountPayload business) {
+        final String paymentMethodId = business.getPaymentMethodId();
+        final PaymentAccountConverter converter = converters.get(paymentMethodId);
+        if (null != converter) {
+            final PaymentAccount paymentAccount = converter.toRestModel(business);
+            paymentAccount.paymentDetails = business.getPaymentDetails();
+            return paymentAccount;
+        }
+        throw new IllegalArgumentException("Unsupported paymentMethod:" + paymentMethodId);
+    }
 }

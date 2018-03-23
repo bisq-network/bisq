@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.VenmoAccount;
+import io.bisq.core.payment.payload.VenmoAccountPayload;
 
-public class VenmoPaymentAccountConverter extends AbstractPaymentAccountConverter<VenmoAccount, VenmoPaymentAccount> {
+public class VenmoPaymentAccountConverter extends AbstractPaymentAccountConverter<VenmoAccount, VenmoAccountPayload, VenmoPaymentAccount> {
 
     @Override
     public VenmoAccount toBusinessModel(VenmoPaymentAccount rest) {
@@ -16,11 +17,19 @@ public class VenmoPaymentAccountConverter extends AbstractPaymentAccountConverte
 
     @Override
     public VenmoPaymentAccount toRestModel(VenmoAccount business) {
+        final VenmoPaymentAccount rest = toRestModel((VenmoAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public VenmoPaymentAccount toRestModel(VenmoAccountPayload business) {
         final VenmoPaymentAccount rest = new VenmoPaymentAccount();
         rest.holderName = business.getHolderName();
         rest.venmoUserName = business.getVenmoUserName();
         toRestModel(rest, business);
         return rest;
+
     }
 
 }

@@ -1,6 +1,10 @@
 package io.bisq.api;
 
+import io.bisq.api.model.payment.SepaPaymentAccount;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
+import io.restassured.response.Response;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
@@ -10,7 +14,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
 @RunWith(Arquillian.class)
 public class TradeResourceIT {
@@ -71,60 +75,157 @@ public class TradeResourceIT {
                 .extract().jsonPath().getString("trades[0].id");
     }
 
-    @Ignore
     @InSequence(1)
+    @Test
+    public void getTrades_returnsTrade() throws Exception {
+        final int alicePort = getAlicePort();
+
+        final SepaPaymentAccount alicePaymentAccount = OfferResourceIT.alicePaymentAccount;
+        final SepaPaymentAccount bobPaymentAccount = OfferResourceIT.bobPaymentAccount;
+
+        final Response response = given().
+                port(getBobPort()).
+//
+        when().
+                        get("/api/v1/trades");
+        System.out.println(response.asString());
+        response.
+//
+        then().
+                statusCode(200)
+                .and().body("trades[0].id", isA(String.class)).
+
+                and().body("trades[0].offer.id", isA(String.class)).
+                and().body("trades[0].offer.acceptedCountryCodes", equalTo(alicePaymentAccount.acceptedCountries)).
+                and().body("trades[0].offer.amount", equalTo(1)).
+                and().body("trades[0].offer.arbitratorNodeAddresses", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
+                and().body("trades[0].offer.baseCurrencyCode", equalTo("BTC")).
+                and().body("trades[0].offer.bankId", equalTo(alicePaymentAccount.bic)).
+                and().body("trades[0].offer.blockHeightAtOfferCreation", isA(Integer.class)).
+                and().body("trades[0].offer.buyerSecurityDeposit", equalTo(1000000)).
+                and().body("trades[0].offer.counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
+                and().body("trades[0].offer.countryCode", equalTo(alicePaymentAccount.countryCode)).
+                and().body("trades[0].offer.currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
+                and().body("trades[0].offer.date", isA(Long.class)).
+                and().body("trades[0].offer.direction", equalTo(OfferPayload.Direction.BUY.name())).
+                and().body("trades[0].offer.id", isA(String.class)).
+                and().body("trades[0].offer.isCurrencyForMakerFeeBtc", equalTo(true)).
+                and().body("trades[0].offer.isPrivateOffer", equalTo(false)).
+                and().body("trades[0].offer.lowerClosePrice", equalTo(0)).
+                and().body("trades[0].offer.makerFee", equalTo(5000)).
+                and().body("trades[0].offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
+                and().body("trades[0].offer.marketPriceMargin", equalTo(10f)).
+                and().body("trades[0].offer.maxTradeLimit", equalTo(25000000)).
+                and().body("trades[0].offer.maxTradePeriod", equalTo(518400000)).
+                and().body("trades[0].offer.minAmount", equalTo(1)).
+                and().body("trades[0].offer.offerFeePaymentTxId", isA(String.class)).
+                and().body("trades[0].offer.ownerNodeAddress", equalTo(ApiTestHelper.getP2PNetworkStatus(alicePort).address)).
+                and().body("trades[0].offer.paymentMethodId", equalTo(alicePaymentAccount.paymentMethod)).
+                and().body("trades[0].offer.price", equalTo(10)).
+                and().body("trades[0].offer.protocolVersion", equalTo(1)).
+                and().body("trades[0].offer.sellerSecurityDeposit", equalTo(300000)).
+                and().body("trades[0].offer.state", equalTo(Offer.State.AVAILABLE.name())).
+                and().body("trades[0].offer.txFee", equalTo(6000)).
+                and().body("trades[0].offer.upperClosePrice", equalTo(0)).
+                and().body("trades[0].offer.useAutoClose", equalTo(false)).
+                and().body("trades[0].offer.useMarketBasedPrice", equalTo(false)).
+                and().body("trades[0].offer.useReOpenAfterAutoClose", equalTo(false)).
+                and().body("trades[0].offer.versionNr", isA(String.class)).
+
+                and().body("trades[0].buyerPaymentAccount.paymentMethod", equalTo(alicePaymentAccount.paymentMethod)).
+                and().body("trades[0].buyerPaymentAccount.paymentDetails", isA(String.class)).
+                and().body("trades[0].buyerPaymentAccount.countryCode", equalTo(alicePaymentAccount.countryCode)).
+                and().body("trades[0].buyerPaymentAccount.holderName", equalTo(alicePaymentAccount.holderName)).
+                and().body("trades[0].buyerPaymentAccount.bic", equalTo(alicePaymentAccount.bic)).
+                and().body("trades[0].buyerPaymentAccount.iban", equalTo(alicePaymentAccount.iban)).
+                and().body("trades[0].buyerPaymentAccount.acceptedCountries", equalTo(alicePaymentAccount.acceptedCountries)).
+
+                and().body("trades[0].sellerPaymentAccount.paymentMethod", equalTo(bobPaymentAccount.paymentMethod)).
+                and().body("trades[0].sellerPaymentAccount.paymentDetails", isA(String.class)).
+                and().body("trades[0].sellerPaymentAccount.countryCode", equalTo(bobPaymentAccount.countryCode)).
+                and().body("trades[0].sellerPaymentAccount.holderName", equalTo(bobPaymentAccount.holderName)).
+                and().body("trades[0].sellerPaymentAccount.bic", equalTo(bobPaymentAccount.bic)).
+                and().body("trades[0].sellerPaymentAccount.iban", equalTo(bobPaymentAccount.iban)).
+                and().body("trades[0].sellerPaymentAccount.acceptedCountries", equalTo(bobPaymentAccount.acceptedCountries)).
+
+                and().body("trades[0].isCurrencyForTakerFeeBtc", equalTo(true)).
+                and().body("trades[0].txFee", isA(Integer.class)).
+                and().body("trades[0].takerFee", isA(Integer.class)).
+                and().body("trades[0].takeOfferDate", isA(Long.class)).
+                and().body("trades[0].takerFeeTxId", isA(String.class)).
+                and().body("trades[0].payoutTxId", isEmptyOrNullString()).
+                and().body("trades[0].tradeAmount", equalTo(1)).
+                and().body("trades[0].tradePrice", equalTo(10)).
+                and().body("trades[0].state", isOneOf(ApiTestHelper.toString(Trade.State.values()))).
+                and().body("trades[0].disputeState", equalTo(Trade.DisputeState.NO_DISPUTE.name())).
+                and().body("trades[0].tradePeriodState", equalTo(Trade.TradePeriodState.FIRST_HALF.name())).
+                and().body("trades[0].arbitratorBtcPubKey", isA(String.class)).
+                and().body("trades[0].contractHash", isA(String.class)).
+                and().body("trades[0].mediatorNodeAddress", isA(String.class)).
+                and().body("trades[0].takerContractSignature", isA(String.class)).
+                and().body("trades[0].makerContractSignature", isEmptyOrNullString()).
+                and().body("trades[0].arbitratorNodeAddress", isA(String.class)).
+                and().body("trades[0].tradingPeerNodeAddress", isA(String.class)).
+                and().body("trades[0].takerPaymentAccountId", equalTo(bobPaymentAccount.id)).
+                and().body("trades[0].counterCurrencyTxId", isEmptyOrNullString())
+        ;
+    }
+
+
+    @Ignore
+    @InSequence(2)
     @Test
     public void paymentStarted_invokedBySeller_returnsXXX() throws Exception {
 
     }
 
-    @InSequence(1)
+    @InSequence(2)
     @Test
     public void paymentStarted_missingId_returns404() throws Exception {
         paymentStarted_template("", 404);
     }
 
 
-    @InSequence(1)
+    @InSequence(2)
     @Test
     public void paymentStarted_tradeDoesNotExist_returns404() throws Exception {
         paymentStarted_template(tradeId + "1", 404);
     }
 
 
-    @InSequence(1)
+    @InSequence(2)
     @Test
     public void paymentStarted_beforeBlockGenerated_returns422() throws Exception {
         paymentStarted_template(tradeId, 422);
     }
 
-    @InSequence(2)
+    @InSequence(3)
     @Test
     public void generateBitcoinBlock() {
         ApiTestHelper.generateBlocks(bitcoin, 1);
     }
 
 
-    @InSequence(3)
+    @InSequence(4)
     @Test
     public void paymentReceived_beforePaymentStarted_returns422() throws Exception {
         paymentReceived_template(tradeId, 422);
     }
 
-    @InSequence(4)
+    @InSequence(5)
     @Test
     public void paymentStarted_tradeExists_returns200() throws Exception {
         paymentStarted_template(tradeId, 200);
         assertTradeState(tradeId, Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
     }
 
-    @InSequence(4)
+    @InSequence(5)
     @Test
     public void paymentReceived_tradeDoesNotExist_returns404() throws Exception {
         paymentReceived_template(tradeId + "1", 404);
     }
 
-    @InSequence(5)
+    @InSequence(6)
     @Test
     public void paymentReceived_tradeExists_returns200() throws Exception {
         paymentReceived_template(tradeId, 200);

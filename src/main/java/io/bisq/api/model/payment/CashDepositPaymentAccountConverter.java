@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import io.bisq.core.payment.CashDepositAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
 
-public class CashDepositPaymentAccountConverter extends AbstractPaymentAccountConverter<CashDepositAccount, CashDepositPaymentAccount> {
+public class CashDepositPaymentAccountConverter extends AbstractPaymentAccountConverter<CashDepositAccount, CashDepositAccountPayload, CashDepositPaymentAccount> {
 
     @Override
     public CashDepositAccount toBusinessModel(CashDepositPaymentAccount rest) {
@@ -26,18 +26,24 @@ public class CashDepositPaymentAccountConverter extends AbstractPaymentAccountCo
 
     @Override
     public CashDepositPaymentAccount toRestModel(CashDepositAccount business) {
+        final CashDepositPaymentAccount rest = toRestModel((CashDepositAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public CashDepositPaymentAccount toRestModel(CashDepositAccountPayload business) {
         final CashDepositPaymentAccount rest = new CashDepositPaymentAccount();
-        final CashDepositAccountPayload payload = (CashDepositAccountPayload) business.getPaymentAccountPayload();
         rest.requirements = business.getRequirements();
-        rest.accountNr = payload.getAccountNr();
-        rest.accountType = payload.getAccountType();
-        rest.bankId = payload.getBankId();
-        rest.bankName = payload.getBankName();
-        rest.branchId = payload.getBranchId();
-        rest.countryCode = payload.getCountryCode();
-        rest.holderEmail = payload.getHolderEmail();
-        rest.holderName = payload.getHolderName();
-        rest.holderTaxId = payload.getHolderTaxId();
+        rest.accountNr = business.getAccountNr();
+        rest.accountType = business.getAccountType();
+        rest.bankId = business.getBankId();
+        rest.bankName = business.getBankName();
+        rest.branchId = business.getBranchId();
+        rest.countryCode = business.getCountryCode();
+        rest.holderEmail = business.getHolderEmail();
+        rest.holderName = business.getHolderName();
+        rest.holderTaxId = business.getHolderTaxId();
         toRestModel(rest, business);
         return rest;
     }

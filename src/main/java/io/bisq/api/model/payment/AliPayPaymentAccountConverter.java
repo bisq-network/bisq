@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.AliPayAccount;
+import io.bisq.core.payment.payload.AliPayAccountPayload;
 
-public class AliPayPaymentAccountConverter extends AbstractPaymentAccountConverter<AliPayAccount, AliPayPaymentAccount> {
+public class AliPayPaymentAccountConverter extends AbstractPaymentAccountConverter<AliPayAccount, AliPayAccountPayload, AliPayPaymentAccount> {
 
     @Override
     public AliPayAccount toBusinessModel(AliPayPaymentAccount rest) {
@@ -15,6 +16,13 @@ public class AliPayPaymentAccountConverter extends AbstractPaymentAccountConvert
 
     @Override
     public AliPayPaymentAccount toRestModel(AliPayAccount business) {
+        final AliPayPaymentAccount rest = toRestModel((AliPayAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public AliPayPaymentAccount toRestModel(AliPayAccountPayload business) {
         final AliPayPaymentAccount rest = new AliPayPaymentAccount();
         rest.accountNr = business.getAccountNr();
         toRestModel(rest, business);

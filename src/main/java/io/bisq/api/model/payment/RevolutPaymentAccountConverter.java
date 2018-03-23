@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.RevolutAccount;
+import io.bisq.core.payment.payload.RevolutAccountPayload;
 
-public class RevolutPaymentAccountConverter extends AbstractPaymentAccountConverter<RevolutAccount, RevolutPaymentAccount> {
+public class RevolutPaymentAccountConverter extends AbstractPaymentAccountConverter<RevolutAccount, RevolutAccountPayload, RevolutPaymentAccount> {
 
     @Override
     public RevolutAccount toBusinessModel(RevolutPaymentAccount rest) {
@@ -15,10 +16,18 @@ public class RevolutPaymentAccountConverter extends AbstractPaymentAccountConver
 
     @Override
     public RevolutPaymentAccount toRestModel(RevolutAccount business) {
+        final RevolutPaymentAccount rest = toRestModel((RevolutAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public RevolutPaymentAccount toRestModel(RevolutAccountPayload business) {
         final RevolutPaymentAccount rest = new RevolutPaymentAccount();
         rest.accountId = business.getAccountId();
         toRestModel(rest, business);
         return rest;
+
     }
 
 }

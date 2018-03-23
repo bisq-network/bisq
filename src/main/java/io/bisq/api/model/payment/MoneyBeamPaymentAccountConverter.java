@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.MoneyBeamAccount;
+import io.bisq.core.payment.payload.MoneyBeamAccountPayload;
 
-public class MoneyBeamPaymentAccountConverter extends AbstractPaymentAccountConverter<MoneyBeamAccount, MoneyBeamPaymentAccount> {
+public class MoneyBeamPaymentAccountConverter extends AbstractPaymentAccountConverter<MoneyBeamAccount, MoneyBeamAccountPayload, MoneyBeamPaymentAccount> {
 
     @Override
     public MoneyBeamAccount toBusinessModel(MoneyBeamPaymentAccount rest) {
@@ -15,6 +16,13 @@ public class MoneyBeamPaymentAccountConverter extends AbstractPaymentAccountConv
 
     @Override
     public MoneyBeamPaymentAccount toRestModel(MoneyBeamAccount business) {
+        final MoneyBeamPaymentAccount rest = toRestModel((MoneyBeamAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public MoneyBeamPaymentAccount toRestModel(MoneyBeamAccountPayload business) {
         final MoneyBeamPaymentAccount rest = new MoneyBeamPaymentAccount();
         rest.accountId = business.getAccountId();
         toRestModel(rest, business);

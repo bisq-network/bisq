@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import io.bisq.core.payment.PopmoneyAccount;
 import io.bisq.core.payment.payload.PopmoneyAccountPayload;
 
-public class PopmoneyPaymentAccountConverter extends AbstractPaymentAccountConverter<PopmoneyAccount, PopmoneyPaymentAccount> {
+public class PopmoneyPaymentAccountConverter extends AbstractPaymentAccountConverter<PopmoneyAccount, PopmoneyAccountPayload, PopmoneyPaymentAccount> {
 
     @Override
     public PopmoneyAccount toBusinessModel(PopmoneyPaymentAccount rest) {
@@ -17,12 +17,19 @@ public class PopmoneyPaymentAccountConverter extends AbstractPaymentAccountConve
 
     @Override
     public PopmoneyPaymentAccount toRestModel(PopmoneyAccount business) {
-        final PopmoneyPaymentAccount rest = new PopmoneyPaymentAccount();
-        final PopmoneyAccountPayload payload = (PopmoneyAccountPayload) business.getPaymentAccountPayload();
-        rest.accountId = payload.getAccountId();
-        rest.holderName = payload.getHolderName();
+        final PopmoneyPaymentAccount rest = toRestModel((PopmoneyAccountPayload) business.getPaymentAccountPayload());
         toRestModel(rest, business);
         return rest;
+    }
+
+    @Override
+    public PopmoneyPaymentAccount toRestModel(PopmoneyAccountPayload business) {
+        final PopmoneyPaymentAccount rest = new PopmoneyPaymentAccount();
+        rest.accountId = business.getAccountId();
+        rest.holderName = business.getHolderName();
+        toRestModel(rest, business);
+        return rest;
+
     }
 
 }

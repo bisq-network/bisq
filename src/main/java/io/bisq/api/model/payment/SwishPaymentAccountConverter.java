@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import io.bisq.core.payment.SwishAccount;
 import io.bisq.core.payment.payload.SwishAccountPayload;
 
-public class SwishPaymentAccountConverter extends AbstractPaymentAccountConverter<SwishAccount, SwishPaymentAccount> {
+public class SwishPaymentAccountConverter extends AbstractPaymentAccountConverter<SwishAccount, SwishAccountPayload, SwishPaymentAccount> {
 
     @Override
     public SwishAccount toBusinessModel(SwishPaymentAccount rest) {
@@ -17,12 +17,19 @@ public class SwishPaymentAccountConverter extends AbstractPaymentAccountConverte
 
     @Override
     public SwishPaymentAccount toRestModel(SwishAccount business) {
-        final SwishPaymentAccount rest = new SwishPaymentAccount();
-        final SwishAccountPayload payload = (SwishAccountPayload) business.getPaymentAccountPayload();
-        rest.mobileNr = payload.getMobileNr();
-        rest.holderName = payload.getHolderName();
+        final SwishPaymentAccount rest = toRestModel((SwishAccountPayload) business.getPaymentAccountPayload());
         toRestModel(rest, business);
         return rest;
+    }
+
+    @Override
+    public SwishPaymentAccount toRestModel(SwishAccountPayload business) {
+        final SwishPaymentAccount rest = new SwishPaymentAccount();
+        rest.mobileNr = business.getMobileNr();
+        rest.holderName = business.getHolderName();
+        toRestModel(rest, business);
+        return rest;
+
     }
 
 }

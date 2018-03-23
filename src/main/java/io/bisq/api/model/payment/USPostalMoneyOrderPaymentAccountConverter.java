@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.USPostalMoneyOrderAccount;
+import io.bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 
-public class USPostalMoneyOrderPaymentAccountConverter extends AbstractPaymentAccountConverter<USPostalMoneyOrderAccount, USPostalMoneyOrderPaymentAccount> {
+public class USPostalMoneyOrderPaymentAccountConverter extends AbstractPaymentAccountConverter<USPostalMoneyOrderAccount, USPostalMoneyOrderAccountPayload, USPostalMoneyOrderPaymentAccount> {
 
     @Override
     public USPostalMoneyOrderAccount toBusinessModel(USPostalMoneyOrderPaymentAccount rest) {
@@ -16,6 +17,13 @@ public class USPostalMoneyOrderPaymentAccountConverter extends AbstractPaymentAc
 
     @Override
     public USPostalMoneyOrderPaymentAccount toRestModel(USPostalMoneyOrderAccount business) {
+        final USPostalMoneyOrderPaymentAccount rest = toRestModel((USPostalMoneyOrderAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public USPostalMoneyOrderPaymentAccount toRestModel(USPostalMoneyOrderAccountPayload business) {
         final USPostalMoneyOrderPaymentAccount rest = new USPostalMoneyOrderPaymentAccount();
         rest.holderName = business.getHolderName();
         rest.postalAddress = business.getPostalAddress();

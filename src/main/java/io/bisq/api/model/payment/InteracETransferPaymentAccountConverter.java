@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.InteracETransferAccount;
+import io.bisq.core.payment.payload.InteracETransferAccountPayload;
 
-public class InteracETransferPaymentAccountConverter extends AbstractPaymentAccountConverter<InteracETransferAccount, InteracETransferPaymentAccount> {
+public class InteracETransferPaymentAccountConverter extends AbstractPaymentAccountConverter<InteracETransferAccount, InteracETransferAccountPayload, InteracETransferPaymentAccount> {
 
     @Override
     public InteracETransferAccount toBusinessModel(InteracETransferPaymentAccount rest) {
@@ -18,6 +19,13 @@ public class InteracETransferPaymentAccountConverter extends AbstractPaymentAcco
 
     @Override
     public InteracETransferPaymentAccount toRestModel(InteracETransferAccount business) {
+        final InteracETransferPaymentAccount rest = toRestModel((InteracETransferAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public InteracETransferPaymentAccount toRestModel(InteracETransferAccountPayload business) {
         final InteracETransferPaymentAccount rest = new InteracETransferPaymentAccount();
         rest.answer = business.getAnswer();
         rest.question = business.getQuestion();

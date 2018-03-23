@@ -1,8 +1,9 @@
 package io.bisq.api.model.payment;
 
 import io.bisq.core.payment.OKPayAccount;
+import io.bisq.core.payment.payload.OKPayAccountPayload;
 
-public class OKPayPaymentAccountConverter extends AbstractPaymentAccountConverter<OKPayAccount, OKPayPaymentAccount> {
+public class OKPayPaymentAccountConverter extends AbstractPaymentAccountConverter<OKPayAccount, OKPayAccountPayload, OKPayPaymentAccount> {
 
     @Override
     public OKPayAccount toBusinessModel(OKPayPaymentAccount rest) {
@@ -15,6 +16,13 @@ public class OKPayPaymentAccountConverter extends AbstractPaymentAccountConverte
 
     @Override
     public OKPayPaymentAccount toRestModel(OKPayAccount business) {
+        final OKPayPaymentAccount rest = toRestModel((OKPayAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public OKPayPaymentAccount toRestModel(OKPayAccountPayload business) {
         final OKPayPaymentAccount rest = new OKPayPaymentAccount();
         rest.accountNr = business.getAccountNr();
         toRestModel(rest, business);

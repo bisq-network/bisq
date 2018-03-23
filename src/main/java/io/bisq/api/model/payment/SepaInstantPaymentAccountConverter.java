@@ -1,12 +1,12 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.SepaInstantAccount;
+import io.bisq.core.payment.payload.SepaInstantAccountPayload;
 
 import java.util.List;
 
-public class SepaInstantPaymentAccountConverter extends AbstractPaymentAccountConverter<SepaInstantAccount, SepaInstantPaymentAccount> {
+public class SepaInstantPaymentAccountConverter extends AbstractPaymentAccountConverter<SepaInstantAccount, SepaInstantAccountPayload, SepaInstantPaymentAccount> {
 
     @Override
     public SepaInstantAccount toBusinessModel(SepaInstantPaymentAccount rest) {
@@ -25,18 +25,24 @@ public class SepaInstantPaymentAccountConverter extends AbstractPaymentAccountCo
 
     @Override
     public SepaInstantPaymentAccount toRestModel(SepaInstantAccount business) {
+        final SepaInstantPaymentAccount rest = toRestModel((SepaInstantAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public SepaInstantPaymentAccount toRestModel(SepaInstantAccountPayload business) {
         final SepaInstantPaymentAccount rest = new SepaInstantPaymentAccount();
         rest.iban = business.getIban();
         rest.bic = business.getBic();
-        final Country country = business.getCountry();
-        if (null != country)
-            rest.countryCode = country.code;
+        rest.countryCode = business.getCountryCode();
         rest.holderName = business.getHolderName();
         final List<String> tradeCurrencies = business.getAcceptedCountryCodes();
         if (null != tradeCurrencies)
             rest.acceptedCountries.addAll(tradeCurrencies);
         toRestModel(rest, business);
         return rest;
+
     }
 
 }

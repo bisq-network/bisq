@@ -5,7 +5,7 @@ import io.bisq.core.payment.payload.SpecificBanksAccountPayload;
 
 import java.util.List;
 
-public class SpecificBanksAccountPaymentAccountConverter extends AbstractPaymentAccountConverter<SpecificBanksAccount, SpecificBanksAccountPaymentAccount> {
+public class SpecificBanksAccountPaymentAccountConverter extends AbstractPaymentAccountConverter<SpecificBanksAccount, SpecificBanksAccountPayload, SpecificBanksAccountPaymentAccount> {
 
     @Override
     public SpecificBanksAccount toBusinessModel(SpecificBanksAccountPaymentAccount rest) {
@@ -27,21 +27,28 @@ public class SpecificBanksAccountPaymentAccountConverter extends AbstractPayment
 
     @Override
     public SpecificBanksAccountPaymentAccount toRestModel(SpecificBanksAccount business) {
+        final SpecificBanksAccountPaymentAccount rest = toRestModel((SpecificBanksAccountPayload) business.getPaymentAccountPayload());
+        toRestModel(rest, business);
+        return rest;
+    }
+
+    @Override
+    public SpecificBanksAccountPaymentAccount toRestModel(SpecificBanksAccountPayload business) {
         final SpecificBanksAccountPaymentAccount rest = new SpecificBanksAccountPaymentAccount();
-        final SpecificBanksAccountPayload payload = (SpecificBanksAccountPayload) business.getPaymentAccountPayload();
-        rest.accountNr = payload.getAccountNr();
-        rest.accountType = payload.getAccountType();
-        rest.bankId = payload.getBankId();
-        rest.bankName = payload.getBankName();
-        rest.branchId = payload.getBranchId();
-        rest.countryCode = payload.getCountryCode();
-        rest.holderName = payload.getHolderName();
-        rest.holderTaxId = payload.getHolderTaxId();
+        rest.accountNr = business.getAccountNr();
+        rest.accountType = business.getAccountType();
+        rest.bankId = business.getBankId();
+        rest.bankName = business.getBankName();
+        rest.branchId = business.getBranchId();
+        rest.countryCode = business.getCountryCode();
+        rest.holderName = business.getHolderName();
+        rest.holderTaxId = business.getHolderTaxId();
         final List<String> acceptedBanks = business.getAcceptedBanks();
         if (null != acceptedBanks)
             rest.acceptedBanks.addAll(acceptedBanks);
         toRestModel(rest, business);
         return rest;
+
     }
 
 }
