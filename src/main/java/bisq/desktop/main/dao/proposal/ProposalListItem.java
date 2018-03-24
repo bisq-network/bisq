@@ -176,6 +176,10 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
                 break;
             case BREAK3:
                 break;
+            case ISSUANCE:
+                break;
+            case BREAK4:
+                break;
         }
         actionButton.setManaged(actionButton.isVisible());
 

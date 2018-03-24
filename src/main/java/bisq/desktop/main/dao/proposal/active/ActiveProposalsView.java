@@ -68,6 +68,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
@@ -136,7 +138,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                         }
 
                         @Override
-                        public void onFailure(Throwable t) {
+                        public void onFailure(@NotNull Throwable t) {
                             //TODO
                         }
                     });
@@ -302,6 +304,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 case VOTE_REVEAL:
                     break;
                 case BREAK3:
+                    break;
+                case ISSUANCE:
+                    break;
+                case BREAK4:
                     break;
                 case UNDEFINED:
                 default:
