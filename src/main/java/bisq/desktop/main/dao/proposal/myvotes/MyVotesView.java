@@ -131,7 +131,7 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = voteService.getVoteList().stream()
+        List<VoteListItem> items = voteService.getMyVotesList().stream()
                 .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqNodeProvider, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
@@ -196,7 +196,7 @@ public class MyVotesView extends BaseProposalView {
     @Override
     protected void updateProposalList() {
         if (selectedVoteListItem != null)
-            doUpdateProposalList(selectedVoteListItem.getVote().getProposalList().getList());
+            doUpdateProposalList(selectedVoteListItem.getMyVote().getProposalList().getList());
     }
 
 
@@ -223,7 +223,7 @@ public class MyVotesView extends BaseProposalView {
                             public void updateItem(final VoteListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(new Date(item.getVote()
+                                    setText(bsqFormatter.formatDateTime(new Date(item.getMyVote()
                                             .getDate())));
                                 else
                                     setText("");
@@ -231,7 +231,7 @@ public class MyVotesView extends BaseProposalView {
                         };
                     }
                 });
-        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getVote().getDate()));
+        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getMyVote().getDate()));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
@@ -251,7 +251,7 @@ public class MyVotesView extends BaseProposalView {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    ProposalList proposalList = item.getVote().getProposalList();
+                                    ProposalList proposalList = item.getMyVote().getProposalList();
                                     HyperlinkWithIcon field = new HyperlinkWithIcon(Res.get("dao.proposal.myVotes.showProposalList"), AwesomeIcon.INFO_SIGN);
                                     field.setOnAction(event -> onShowProposalList(proposalList));
                                     field.setTooltip(new Tooltip(Res.get("dao.proposal.myVotes.tooltip.showProposalList")));
@@ -305,7 +305,7 @@ public class MyVotesView extends BaseProposalView {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String txId = item.getVote().getTxId();
+                                    String txId = item.getMyVote().getTxId();
                                     HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(txId, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> {
                                         if (txId != null)
@@ -320,7 +320,7 @@ public class MyVotesView extends BaseProposalView {
                         };
                     }
                 });
-        txColumn.setComparator(Comparator.comparing(o2 -> o2.getVote().getBlindVote().getTxId()));
+        txColumn.setComparator(Comparator.comparing(o2 -> o2.getMyVote().getBlindVote().getTxId()));
         tableView.getColumns().add(txColumn);
 
         TableColumn<VoteListItem, VoteListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
@@ -359,7 +359,7 @@ public class MyVotesView extends BaseProposalView {
     protected void createProposalColumns(TableView<ProposalListItem> tableView) {
         super.createProposalColumns(tableView);
 
-        TableColumn<ProposalListItem, ProposalListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.myVotes.vote"));
+        TableColumn<ProposalListItem, ProposalListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.votes.header"));
         actionColumn.setMinWidth(50);
         actionColumn.setMaxWidth(actionColumn.getMinWidth());
 

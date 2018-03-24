@@ -27,7 +27,7 @@ import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxOutput;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
-import bisq.core.dao.vote.Vote;
+import bisq.core.dao.vote.MyVote;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public class VoteListItem implements BsqNode.BsqBlockChainListener {
     @Getter
-    private final Vote vote;
+    private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BsqFormatter bsqFormatter;
@@ -73,12 +73,12 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
     @Getter
     private StringProperty stakeAsStringProperty = new SimpleStringProperty("");
 
-    VoteListItem(Vote vote,
+    VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
                  ReadableBsqBlockChain readableBsqBlockChain,
                  BsqNodeProvider bsqNodeProvider,
                  BsqFormatter bsqFormatter) {
-        this.vote = vote;
+        this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.bsqFormatter = bsqFormatter;
@@ -105,7 +105,7 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
 
     private void setupConfidence() {
         calculateStake();
-        final Tx tx = readableBsqBlockChain.getTxMap().get(vote.getBlindVote().getTxId());
+        final Tx tx = readableBsqBlockChain.getTxMap().get(myVote.getBlindVote().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
@@ -143,7 +143,7 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
 
     private void calculateStake() {
         if (stake == 0) {
-            String txId = vote.getTxId();
+            String txId = myVote.getTxId();
             stake = readableBsqBlockChain.getLockedForVoteTxOutputs().stream()
                     .filter(txOutput -> txOutput.getTxId().equals(txId))
                     .filter(txOutput -> txOutput.getIndex() == 0)

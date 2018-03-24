@@ -172,13 +172,13 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
 
     private void createVoteView() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.vote.header"),
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.votes.header"),
                 Layout.GROUP_DISTANCE - 20);
         final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, gridRow,
-                Res.getWithCol("dao.proposal.vote.stake"), Layout
+                Res.getWithCol("dao.proposal.myVote.stake"), Layout
                         .FIRST_ROW_AND_GROUP_DISTANCE - 20);
         stakeInputTextField = tuple2.second;
-        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proposal.vote.button"));
+        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proposal.myVote.button"));
 
         voteViewItems.add(titledGroupBg);
         voteViewItems.add(tuple2.first);
@@ -198,7 +198,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance) {
-        stakeInputTextField.setPromptText(Res.get("dao.proposal.vote.stake.prompt",
+        stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
                 bsqFormatter.formatCoinWithCode(confirmedBalance)));
     }
 
@@ -278,9 +278,9 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     if (acceptButton == null) {
                         Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
                                         .incrementAndGetGridRow(),
-                                Res.get("dao.proposal.vote.accept"),
-                                Res.get("dao.proposal.vote.reject"),
-                                Res.get("dao.proposal.vote.cancelVote"));
+                                Res.get("dao.proposal.myVote.accept"),
+                                Res.get("dao.proposal.myVote.reject"),
+                                Res.get("dao.proposal.myVote.cancelVote"));
                         acceptButton = tuple.first;
                         acceptButton.setDefaultButton(false);
                         rejectButton = tuple.second;
