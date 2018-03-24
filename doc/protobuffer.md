@@ -1,8 +1,10 @@
 # Protobuffer FAQ
 
+NOTE: this doc is out of date and should probably be deleted. Protobuffer stuff is all managed in bisq-core now, not bisq-desktop.
+
 ## Installation
 
-Protobuffer is installed automatically via the maven build.
+Protobuffer is installed automatically via the Gradle build.
 
 ## Why protobuffer?
 
@@ -17,10 +19,10 @@ There are a number of reasons why protobuffer was chosen, here are some of them:
 
 All classes in the 'wire' module. This module contains the following classes:
 
-* classes sent over the wire (P2P network) 
+* classes sent over the wire (P2P network)
 * classes serialized to disk
 
-## Where are the protobuffer related files? 
+## Where are the protobuffer related files?
 
 The protobuffer schema file(s), generated classes and domain classes are in the 'wire' module.
 Look for *.proto for the schema files.
@@ -40,8 +42,8 @@ Read this very carefully:
 
 https://developers.google.com/protocol-buffers/docs/proto3#default
 
-## How to handle Enums 
- 
+## How to handle Enums
+
 For Java -> Protobuffer, you should extract the name from the Java enum:
 
     .setContext(PB.AddressEntry.Context.valueOf(context.name()))
@@ -50,8 +52,8 @@ For Protobuffer -> Java, use the ProtoUtil helper method 'enumFromProto' to avoi
 
     ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
 
-## How to handle Date 
- 
+## How to handle Date
+
 For Java -> Protobuffer, you should extract the name from the Java enum:
 
     .setDate(date.getTime())
@@ -59,7 +61,7 @@ For Java -> Protobuffer, you should extract the name from the Java enum:
 For Protobuffer -> Java, do the opposite:
 
     Date date = new Date(PB.bla.getDate());
-  
+
 # Other Stuff
 
 ## Frameworks
@@ -68,35 +70,6 @@ For Protobuffer -> Java, do the opposite:
 https://ruedigermoeller.github.io/fast-serialization/
 -
 
-## Protobuffer Setup
-
-### installing 
-
-* Install the latest protobuffer release on your machine (3.3.0 at the time of writing):
-https://github.com/google/protobuf/releases
-
-* Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
-Go to Help > Edit custom properties => paste the following line:
-idea.max.intellisense.filesize=12500
-Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configured-limit-2560000-code-insight-features-not-availabl
-
-In IntelliJ 14 you need to edit the idea.properties in the app container:
-/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
-
-### maven plugin vs ant plugin
-
-* Bitcoinj uses an ant plugin to call the 'protoc' executable.
-This was tried but didn't work, although command-line invocation with the same params worked.
-
-* There is also a protobuf maven plugin
-This worked immediately + is executed automatically when doing 'mvn clean install'.
-Output is in target/generated-sources which avoids the temptation of checking in generated classes.
-
-### multiple different messages in one stream
-
-In order to support this, we need to use .writeDelimitedTo(outputstream) and parseDelimitedFrom(inputstream).
-The writeDelimited writes a length varint before the object, allowing the parseDelimited to know the extent of the message. 
-              
 ## Checklist and conventions
 
 ### Code style
@@ -120,7 +93,7 @@ The writeDelimited writes a length varint before the object, allowing the parseD
 * Enum in PB definition file needs an additional first entry with PB_ERROR in case of multiple enums in one message add postfix of enum (PB_ERROR_REASON = 0;)
 * When serializing a custom type use the toProto and fromProto methods in the class of that type.
 * Use the ProtoResolver classes for switching between different message cases. Pass the reference to the resolver if needed in fromProto
-* For abstract super classes use a getBuilder method for handling the fields in that super class (e.g. PaymentAccountPayload) 
+* For abstract super classes use a getBuilder method for handling the fields in that super class (e.g. PaymentAccountPayload)
 * Use Payload as postfix for objects which are used in Envelopes or other Payloads if it helps to distinguish between the domain object and the value object (e.g. UserPayload)
 * Separate network and persistable domains if possible
 
@@ -140,22 +113,22 @@ The writeDelimited writes a length varint before the object, allowing the parseD
             CoreNetworkProtoResolver implements NetworkProtoResolver: Implements switches for network messages
         PersistableProtoResolver extends ProtoResolver: Marker interface
             CorePersistableProtoResolver implements NetworkProtoResolver: Implements switches for persistable messages
-                    
-            
-        
+
+
+
 ### Check list
-* Treat nullable fields correctly in the toProto and fromProto methods. 
+* Treat nullable fields correctly in the toProto and fromProto methods.
     PB does not support null values but use default implementation for not set fields.
-    Depending on the type there is: isEmpty (string, collections) or has[Propertyname] 
+    Depending on the type there is: isEmpty (string, collections) or has[Propertyname]
 * If using @EqualsAndHashCode or @Data/@Value make sure to use callSuper=true if the class is extending another class
 * If collections are modifiable take care to wrap the result of PB to a modifiable collection. PB delivers unmodifiable collections
-* For network envelopes use NetworkEnvelope.getDefaultBuilder() which includes the P2PMessageVersion. 
+* For network envelopes use NetworkEnvelope.getDefaultBuilder() which includes the P2PMessageVersion.
     Store the messageVersion in all NetworkEnvelope instances
 
 
 
 // TODO update, outdated...
-## Actually transformed subtypes of Message 
+## Actually transformed subtypes of Message
 
 ```
 I Message (io.bisq.p2p)

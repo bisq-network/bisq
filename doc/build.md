@@ -1,18 +1,18 @@
 Building From Source
 ====================
 
-This guide will walk you through the process of building bisq from source.
+This guide will walk you through the process of building Bisq from source.
 
-> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bisq-network/exchange/releases), where you'll find installers for Windows, Linux and Mac OS X._
+> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bisq-network/bisq-desktop/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
-There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
+There is an install script (2 parts) for setup (JDK, Git, Bitcoinj, Bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
 
 System requirements
 -------------
 
-The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u131 or better (as well as maven and git).
+The prerequisite for building Bisq is installing the Java Development Kit (JDK), version 8u131 or better (as well as Git).
 
-    $ sudo apt-get install openjdk-8-jdk maven git
+    $ sudo apt-get install openjdk-8-jdk git
 
 In Debian/Ubuntu with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
@@ -30,7 +30,7 @@ You can use either OpenJDK or Oracle JDK.
 
 **To install OpenJDK use:**
 
-    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+    $ sudo apt-get install openjdk-8-jdk libopenjfx-java
 
 Unfortunately, Ubuntu 14.04 & Linux Mint 17.3 are missing OpenJdk 8 and OpenJFX, so this might be useful:
 
@@ -80,35 +80,19 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-### Protobuf
-Note that Bisq use protobuf during maven build. Installation is done via the maven build.
-
-### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
-Go to Help > Edit custom properties => paste the following line:
-idea.max.intellisense.filesize=12500
-Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configured-limit-2560000-code-insight-features-not-availabl
-
-At IntelliJ 14 you need to edit the idea.properties in the app container:
-/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties
-
-### 2.2 If using Intellij install the Lombok plugin
+### If using Intellij install the Lombok plugin
 https://plugins.jetbrains.com/plugin/6317-lombok-plugin
 
-Build bisq
+Build Bisq
 -----------------
 
-### 1. Build final bisq jar
+    $ git clone https://github.com/bisq-network/bisq-desktop.git
+    $ cd bisq-desktop
+    $ ./gradlew build
 
-Now we have all prepared to build the correct bisq jar.
+When the build completes, run Bisq with the following script:
 
-    $ git clone https://github.com/bisq-network/exchange.git exchange
-    $ cd exchange
-    $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
-
-When the build completes, you will find an executable jar: `target/shaded.jar` and a ./lib directory.
-To run it use:
-
-    $ java -jar target/shaded.jar
+    $ ./build/app/bin/bisq-desktop
 
 Build binaries
 -----------------
@@ -120,22 +104,22 @@ DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and
 use dedicated program arguments for the bisq node.
-See https://github.com/bisq-network/exchange/blob/master/doc/rpc.md for more details.
+See https://github.com/bisq-network/bisq-desktop/blob/master/doc/rpc.md for more details.
 
 
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bisq-network/exchange/wiki/4.3.-Testing-Bisq-with-Testnet)
-and how to use [regtest](https://github.com/bisq-network/exchange/wiki/4.2.1.-How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bisq-network/bisq-desktop/wiki/4.3.-Testing-Bisq-with-Testnet)
+and how to use [regtest](https://github.com/bisq-network/bisq-desktop/wiki/4.2.1.-How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
-    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-    $ java -jar target/shaded.jar --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
+    $ bisq-desktop --baseCurrencyNetwork=BTC_REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Running local seed node with Tor and RegTest
@@ -147,4 +131,4 @@ See the documentation at https://github.com/bisq-network/bisq-seednode
 Problems?
 ---------
 
-If the instructions above don't work for you, please [raise an issue](https://github.com/bisq-network/exchange/issues/new?labels=%5Bbuild%5D). Thanks!
+If the instructions above don't work for you, please [raise an issue](https://github.com/bisq-network/bisq-desktop/issues/new?labels=%5Bbuild%5D). Thanks!

@@ -12,12 +12,10 @@ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 
 echo "Install bisq"
 cd ~/bisq
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+./gradlew build
 cd ..
 mkdir .local
 mkdir .local/share
 
-echo "Start bisq"
-java -jar ~/bisq/target/shaded.jar
-
-
+echo "Start Bisq"
+./build/app/bin/bisq-desktop
