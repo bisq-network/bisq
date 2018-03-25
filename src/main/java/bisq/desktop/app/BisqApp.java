@@ -48,7 +48,8 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoManager;
-import bisq.core.dao.proposal.ProposalCollectionsManager;
+import bisq.core.dao.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.VoteService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -198,7 +199,8 @@ public class BisqApp extends Application {
                 Capabilities.Capability.TRADE_STATISTICS.ordinal(),
                 Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
                 Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
-                Capabilities.Capability.COMP_REQUEST.ordinal()
+                Capabilities.Capability.COMP_REQUEST.ordinal(),
+                Capabilities.Capability.VOTE.ordinal()
         )));
     }
 
@@ -227,7 +229,8 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
             persistedDataHosts.add(injector.getInstance(DisputeManager.class));
             persistedDataHosts.add(injector.getInstance(P2PService.class));
-            persistedDataHosts.add(injector.getInstance(ProposalCollectionsManager.class));
+            persistedDataHosts.add(injector.getInstance(ProposalCollectionsService.class));
+            persistedDataHosts.add(injector.getInstance(VoteService.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.forEach(e -> {

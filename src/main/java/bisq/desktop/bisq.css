@@ -355,9 +355,14 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-red-soft;
 }
 
-.dao-tx-type-default-icon,
-.dao-tx-type-default-icon:hover {
-    -fx-text-fill: -bs-grey;
+.dao-tx-type-vote-icon,
+.dao-tx-type-vote-icon:hover {
+    -fx-text-fill: -bs-bg-blue1;
+}
+
+.dao-tx-type-vote-reveal-icon,
+.dao-tx-type-vote-reveal-icon:hover {
+    -fx-text-fill: -bs-bg-green2;
 }
 
 .dao-tx-type-issuance-icon,

@@ -539,7 +539,7 @@ public class GUIUtil {
             childByRowMap.get(rowIndex).add(child);
         });
 
-        for (int i = start; i < end; i++) {
+        for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end, childByRowMap.size()); i++) {
             childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
         }
     }

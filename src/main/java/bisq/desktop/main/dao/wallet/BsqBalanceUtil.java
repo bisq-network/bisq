@@ -42,7 +42,8 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class BsqBalanceUtil implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
-    private TextField availableBalanceTextField, unverifiedBalanceTextField, totalBalanceTextField;
+    private TextField confirmedBalanceTextField, pendingBalanceTextField, lockedForVoteBalanceTextField,
+            totalBalanceTextField;
 
     @Inject
     private BsqBalanceUtil(BsqWalletService bsqWalletService,
@@ -52,27 +53,37 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public int addGroup(GridPane gridPane, int gridRow) {
-        addTitledGroupBg(gridPane, gridRow, 3, Res.get("shared.balance"));
-        availableBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
+        addTitledGroupBg(gridPane, gridRow, 4, Res.get("shared.balance"));
+        confirmedBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
-        availableBalanceTextField.setMouseTransparent(false);
-        availableBalanceTextField.setMaxWidth(150);
-        availableBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+        confirmedBalanceTextField.setMouseTransparent(false);
+        confirmedBalanceTextField.setMaxWidth(150);
+        confirmedBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
-        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
-        unverifiedBalanceTextField.setMouseTransparent(false);
-        unverifiedBalanceTextField.setMaxWidth(availableBalanceTextField.getMaxWidth());
-        unverifiedBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+        pendingBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
+        pendingBalanceTextField.setMouseTransparent(false);
+        pendingBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
+        pendingBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+
+        lockedForVoteBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared" +
+                ".lockedForVoteBalance")).second;
+        lockedForVoteBalanceTextField.setMouseTransparent(false);
+        lockedForVoteBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
+        lockedForVoteBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
         totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
-        totalBalanceTextField.setMaxWidth(availableBalanceTextField.getMaxWidth());
+        totalBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
         totalBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+
         return gridRow;
     }
 
     public void activate() {
-        updateAvailableBalance(bsqWalletService.getAvailableBalance(), bsqWalletService.getUnverifiedBalance());
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockedInBondsBalance());
         bsqWalletService.addBsqBalanceListener(this);
     }
 
@@ -80,10 +91,16 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         bsqWalletService.removeBsqBalanceListener(this);
     }
 
+
     @Override
-    public void updateAvailableBalance(Coin availableBalance, Coin unverifiedBalance) {
-        availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
-        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance.add(unverifiedBalance)));
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockedInBondsBalance) {
+        confirmedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(confirmedBalance));
+        pendingBalanceTextField.setText(bsqFormatter.formatCoinWithCode(pendingBalance));
+        lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
+        final Coin total = confirmedBalance.add(pendingBalance).add(lockedForVotingBalance).add(lockedInBondsBalance);
+        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(total));
     }
 }

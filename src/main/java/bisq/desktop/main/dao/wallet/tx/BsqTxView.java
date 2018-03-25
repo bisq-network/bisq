@@ -33,13 +33,13 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -78,7 +78,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
 
     TableView<BsqTxListItem> tableView;
     private Pane rootParent;
@@ -98,8 +98,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
-    private BsqBlockChainListener bsqBlockChainListener;
-    private BsqBalanceListener bsqBalanceListener;
+    private BsqNode.BsqBlockChainListener bsqBlockChainListener;
     private ProgressBar chainSyncIndicator;
     private ChangeListener<Number> chainHeightChangedListener;
 
@@ -162,7 +161,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqBlockChainListener = this::onChainHeightChanged;
         chainHeightChangedListener = (observable, oldValue, newValue) -> onChainHeightChanged();
@@ -172,7 +170,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
-        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
+        bsqWalletService.addBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().addListener(chainHeightChangedListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -195,7 +193,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
-        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
+        bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
         bsqNode.removeBsqBlockChainListener(bsqBlockChainListener);
 
@@ -203,6 +201,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
+    }
+
+    @Override
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockedInBondsBalance) {
+        updateList();
     }
 
     private void onChainHeightChanged() {
@@ -515,12 +521,16 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             style = "dao-tx-type-default-icon";
                                             break;
                                         case COMPENSATION_REQUEST:
-                                            awesomeIcon = AwesomeIcon.PAPERCLIP;
+                                            awesomeIcon = AwesomeIcon.FILE;
                                             style = "dao-tx-type-fee-icon";
                                             break;
                                         case VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
-                                            style = "dao-tx-type-default-icon";
+                                            style = "dao-tx-type-vote-icon";
+                                            break;
+                                        case VOTE_REVEAL:
+                                            awesomeIcon = AwesomeIcon.LIGHTBULB;
+                                            style = "dao-tx-type-vote-reveal-icon";
                                             break;
                                         case ISSUANCE:
                                             awesomeIcon = AwesomeIcon.UMBRELLA;
@@ -558,6 +568,5 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
         }
     }
-
 }
 

@@ -97,7 +97,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
     private SeparatedPhaseBars createSeparatedPhaseBars() {
         phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.COMPENSATION_REQUESTS, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.PROPOSAL, true),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK1, false),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.OPEN_FOR_VOTING, true),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK2, false),

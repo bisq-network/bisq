@@ -27,7 +27,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainListener;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.locale.Res;
@@ -58,7 +57,7 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BsqBlockChainListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BsqNode.BsqBlockChainListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqNode bsqNode;

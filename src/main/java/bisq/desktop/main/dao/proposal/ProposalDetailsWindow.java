@@ -60,8 +60,8 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
         proposalDisplay.createAllFields(Res.get("dao.proposal.details"), 1, Layout.GROUP_DISTANCE,
                 proposalPayload.getType(), false, true);
 
-        proposalDisplay.setAllFieldsEditable(false);
-        proposalDisplay.fillWithData(proposalPayload);
+        proposalDisplay.setEditable(false);
+        proposalDisplay.applyProposalPayload(proposalPayload);
 
         closeButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.close"));
         closeButton.setOnAction(e -> doClose());
