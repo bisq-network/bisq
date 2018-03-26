@@ -19,6 +19,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.*;
 import io.bisq.core.payment.AccountAgeWitnessService;
@@ -44,6 +45,7 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
+import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -430,14 +432,69 @@ public class BisqProxy {
 
 
     public WalletTransactionList getWalletTransactions() {
-        boolean includeDeadTransactions = true;
-        Set<Transaction> transactions = btcWalletService.getTransactions(includeDeadTransactions);
+        final Wallet wallet = walletsSetup.getBtcWallet();
+        Set<Transaction> transactions = btcWalletService.getTransactions(true);
 
         WalletTransactionList walletTransactions = new WalletTransactionList();
 
-        for (Transaction t : transactions) {
-            walletTransactions.transactions.add(new WalletTransaction(t, walletsSetup.getBtcWallet()));
+        for (Transaction transaction : transactions) {
+            final Coin valueSentFromMe = transaction.getValueSentFromMe(wallet);
+            final Coin valueSentToMe = transaction.getValueSentToMe(wallet);
+            boolean received = false;
+            String addressString = null;
+
+            if (valueSentToMe.isZero()) {
+                for (TransactionOutput output : transaction.getOutputs()) {
+                    if (!btcWalletService.isTransactionOutputMine(output)) {
+                        received = false;
+                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                            addressString = WalletService.getAddressStringFromOutput(output);
+                            break;
+                        }
+                    }
+                }
+            } else if (valueSentFromMe.isZero()) {
+                received = true;
+                for (TransactionOutput output : transaction.getOutputs()) {
+                    if (btcWalletService.isTransactionOutputMine(output) &&
+                            WalletService.isOutputScriptConvertibleToAddress(output)) {
+                        addressString = WalletService.getAddressStringFromOutput(output);
+                        break;
+                    }
+                }
+            } else {
+                boolean outgoing = false;
+                for (TransactionOutput output : transaction.getOutputs()) {
+                    if (!btcWalletService.isTransactionOutputMine(output)) {
+                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                            addressString = WalletService.getAddressStringFromOutput(output);
+                            outgoing = !(BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output));
+                            break;
+                        }
+                    }
+                }
+
+                if (outgoing) {
+                    received = false;
+                }
+            }
+            final TransactionConfidence confidence = transaction.getConfidence();
+            int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
+
+            final WalletTransaction walletTransaction = new WalletTransaction();
+            walletTransaction.updateTime = transaction.getUpdateTime().getTime();
+            walletTransaction.hash = transaction.getHashAsString();
+            walletTransaction.fee = (transaction.getFee() == null) ? -1 : transaction.getFee().value;
+            walletTransaction.value = transaction.getValue(wallet).value;
+            walletTransaction.valueSentFromMe = valueSentFromMe.value;
+            walletTransaction.valueSentToMe = valueSentToMe.value;
+            walletTransaction.confirmations = confirmations;
+            walletTransaction.inbound = received;
+            walletTransaction.address = addressString;
+
+            walletTransactions.transactions.add(walletTransaction);
         }
+        walletTransactions.total = walletTransactions.transactions.size();
         return walletTransactions;
     }
 
