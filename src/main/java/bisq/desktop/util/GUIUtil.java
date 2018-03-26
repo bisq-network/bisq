@@ -65,12 +65,15 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Orientation;
 
@@ -97,6 +100,9 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 @Slf4j
 public class GUIUtil {
@@ -542,5 +548,13 @@ public class GUIUtil {
         for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end, childByRowMap.size()); i++) {
             childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
         }
+    }
+
+    public static Text addMaterialDesignIcon(GlyphIcons icon, Label label) {
+        final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon);
+        textIcon.setOpacity(0.7);
+        label.setContentDisplay(ContentDisplay.LEFT);
+        label.setGraphic(textIcon);
+        return textIcon;
     }
 }

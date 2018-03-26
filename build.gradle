@@ -30,6 +30,7 @@ repositories {
     jcenter()
     maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+    maven { url 'https://dl.bintray.com/jerady/maven' }
 }
 
 dependencies {
@@ -40,6 +41,9 @@ dependencies {
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
     compile 'de.jensd:fontawesomefx:8.0.0'
+    compile 'de.jensd:fontawesomefx-commons:8.15'
+    compile 'de.jensd:fontawesomefx-controls:8.15'
+    compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compileOnly 'org.projectlombok:lombok:1.16.16'
     annotationProcessor 'org.projectlombok:lombok:1.16.16'
