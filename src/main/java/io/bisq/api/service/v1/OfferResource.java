@@ -75,7 +75,7 @@ public class OfferResource {
                 PriceType.PERCENTAGE.equals(offer.priceType),
                 offer.percentageFromMarketPrice,
                 offer.marketPair,
-                offer.fixedPrice);
+                offer.fixedPrice, offer.buyerSecurityDeposit);
         completableFuture.thenApply(response -> asyncResponse.resume(new OfferDetail(response)))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();

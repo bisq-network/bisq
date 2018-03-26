@@ -49,8 +49,7 @@ public class OfferResourceIT {
     public static SepaPaymentAccount bobPaymentAccount;
     private static String bobIncompatiblePaymentAccountId;
     private static String tradeCurrency;
-    private static String tradePaymentMethodCountry;
-    private static String createdOfferId;
+    public static OfferDetail createdOffer;
 
     @InSequence
     @Test
@@ -67,7 +66,7 @@ public class OfferResourceIT {
 
         sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         tradeCurrency = sepaAccountToCreate.selectedTradeCurrency;
-        tradePaymentMethodCountry = sepaAccountToCreate.countryCode;
+        final String tradePaymentMethodCountry = sepaAccountToCreate.countryCode;
         alicePaymentAccount = ApiTestHelper.createPaymentAccount(alicePort, sepaAccountToCreate).extract().as(SepaPaymentAccount.class);
 
         sepaAccountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload(tradeCurrency, tradePaymentMethodCountry);
@@ -172,7 +171,7 @@ public class OfferResourceIT {
 
         final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
 
-        createdOfferId = given().
+        createdOffer = given().
                 port(alicePort).
                 body(offer).
                 contentType(ContentType.JSON).
@@ -188,7 +187,7 @@ public class OfferResourceIT {
                         and().body("baseCurrencyCode", equalTo("BTC")).
                         and().body("bankId", equalTo(alicePaymentAccount.bic)).
                         and().body("blockHeightAtOfferCreation", isA(Integer.class)).
-                        and().body("buyerSecurityDeposit", equalTo(1000000)).
+                        and().body("buyerSecurityDeposit", equalTo(offer.buyerSecurityDeposit.intValue())).
                         and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                         and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
                         and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
@@ -217,7 +216,7 @@ public class OfferResourceIT {
                         and().body("useMarketBasedPrice", equalTo(false)).
                         and().body("useReOpenAfterAutoClose", equalTo(false)).
                         and().body("versionNr", isA(String.class)).
-                        extract().jsonPath().getString("id");
+                        extract().as(OfferDetail.class);
     }
 
     @InSequence(6)
@@ -241,7 +240,7 @@ public class OfferResourceIT {
                 and().body("offers[0].baseCurrencyCode", equalTo("BTC")).
                 and().body("offers[0].bankId", equalTo(alicePaymentAccount.bic)).
                 and().body("offers[0].blockHeightAtOfferCreation", isA(Integer.class)).
-                and().body("offers[0].buyerSecurityDeposit", equalTo(1000000)).
+                and().body("offers[0].buyerSecurityDeposit", isA(Integer.class)).
                 and().body("offers[0].counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                 and().body("offers[0].countryCode", equalTo(alicePaymentAccount.countryCode)).
                 and().body("offers[0].currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
@@ -299,35 +298,35 @@ public class OfferResourceIT {
     @Test
     public void takeOffer_validPayloadButNoFunds_returns427status() throws Exception {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
-        takeOffer_template(createdOfferId, payload, 427);
+        takeOffer_template(createdOffer.id, payload, 427);
     }
 
     @InSequence(7)
     @Test
     public void takeOffer_paymentAccountIdMissing_returns422status() throws Exception {
         final TakeOffer payload = new TakeOffer(null, "1");
-        takeOffer_template(createdOfferId, payload, 422);
+        takeOffer_template(createdOffer.id, payload, 422);
     }
 
     @InSequence(7)
     @Test
     public void takeOffer_amountMissing_returns422() throws Exception {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, null);
-        takeOffer_template(createdOfferId, payload, 422);
+        takeOffer_template(createdOffer.id, payload, 422);
     }
 
     @InSequence(7)
     @Test
     public void takeOffer_paymentAccountNotFound_returns425() throws Exception {
         final TakeOffer payload = new TakeOffer("non-existing-account", "1");
-        takeOffer_template(createdOfferId, payload, 425);
+        takeOffer_template(createdOffer.id, payload, 425);
     }
 
     @InSequence(7)
     @Test
     public void takeOffer_incompatiblePaymentAccount_returns423() throws Exception {
         final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, "1");
-        takeOffer_template(createdOfferId, payload, 423);
+        takeOffer_template(createdOffer.id, payload, 423);
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
@@ -336,7 +335,7 @@ public class OfferResourceIT {
     public void takeOffer_noArbitratorSelected_returns424() throws Exception {
         ApiTestHelper.deselectAllArbitrators(getBobPort());
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
-        takeOffer_template(createdOfferId, payload, 423);
+        takeOffer_template(createdOffer.id, payload, 423);
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
@@ -345,7 +344,7 @@ public class OfferResourceIT {
     public void takeOffer_noOverlappingArbitrator_returnsXXX() throws Exception {
         final int bobPort = getBobPort();
         ApiTestHelper.registerArbitrator(getAlicePort());
-        final OfferDetail offer = ApiTestHelper.getOfferById(bobPort, createdOfferId);
+        final OfferDetail offer = ApiTestHelper.getOfferById(bobPort, createdOffer.id);
         final List<String> arbitrators = ApiTestHelper.getAcceptedArbitrators(bobPort);
         arbitrators.removeAll(offer.arbitratorNodeAddresses);
         Assert.assertThat(arbitrators.size(), greaterThan(0));
@@ -353,7 +352,7 @@ public class OfferResourceIT {
         ApiTestHelper.selectArbitrator(bobPort, arbitrators.get(0));
 
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
-        takeOffer_template(createdOfferId, payload, 0);
+        takeOffer_template(createdOffer.id, payload, 0);
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
@@ -361,7 +360,7 @@ public class OfferResourceIT {
     @Test
     public void selectSameArbitratorAsInOffer() throws Exception {
         final int bobPort = getBobPort();
-        final OfferDetail offer = ApiTestHelper.getOfferById(bobPort, createdOfferId);
+        final OfferDetail offer = ApiTestHelper.getOfferById(bobPort, createdOffer.id);
         Assert.assertThat(offer.arbitratorNodeAddresses.size(), greaterThan(0));
         ApiTestHelper.selectArbitrator(bobPort, offer.arbitratorNodeAddresses.get(0));
     }
@@ -409,7 +408,7 @@ public class OfferResourceIT {
                 and().body("offer.baseCurrencyCode", equalTo("BTC")).
                 and().body("offer.bankId", equalTo(alicePaymentAccount.bic)).
                 and().body("offer.blockHeightAtOfferCreation", isA(Integer.class)).
-                and().body("offer.buyerSecurityDeposit", equalTo(1000000)).
+                and().body("offer.buyerSecurityDeposit", isA(Integer.class)).
                 and().body("offer.counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                 and().body("offer.countryCode", equalTo(alicePaymentAccount.countryCode)).
                 and().body("offer.currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
@@ -474,6 +473,7 @@ public class OfferResourceIT {
         offer.priceType = PriceType.FIXED;
         offer.accountId = paymentAccountId;
         offer.percentageFromMarketPrice = 10.0;
+        offer.buyerSecurityDeposit = 123456L;
         return offer;
     }
 

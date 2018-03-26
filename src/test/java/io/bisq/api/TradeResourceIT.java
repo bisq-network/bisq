@@ -4,7 +4,6 @@ import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
-import io.restassured.response.Response;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
@@ -83,13 +82,11 @@ public class TradeResourceIT {
         final SepaPaymentAccount alicePaymentAccount = OfferResourceIT.alicePaymentAccount;
         final SepaPaymentAccount bobPaymentAccount = OfferResourceIT.bobPaymentAccount;
 
-        final Response response = given().
+        given().
                 port(getBobPort()).
 //
         when().
-                        get("/api/v1/trades");
-        System.out.println(response.asString());
-        response.
+                get("/api/v1/trades").
 //
         then().
                 statusCode(200)
@@ -102,7 +99,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.baseCurrencyCode", equalTo("BTC")).
                 and().body("trades[0].offer.bankId", equalTo(alicePaymentAccount.bic)).
                 and().body("trades[0].offer.blockHeightAtOfferCreation", isA(Integer.class)).
-                and().body("trades[0].offer.buyerSecurityDeposit", equalTo(1000000)).
+                and().body("trades[0].offer.buyerSecurityDeposit", equalTo((int) OfferResourceIT.createdOffer.buyerSecurityDeposit)).
                 and().body("trades[0].offer.counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                 and().body("trades[0].offer.countryCode", equalTo(alicePaymentAccount.countryCode)).
                 and().body("trades[0].offer.currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).

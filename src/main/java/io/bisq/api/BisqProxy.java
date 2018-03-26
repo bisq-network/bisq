@@ -215,8 +215,7 @@ public class BisqProxy {
     }
 
     public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) {
-//TODO add security deposit parameter
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
@@ -226,7 +225,7 @@ public class BisqProxy {
         final OfferBuilder offerBuilder = injector.getInstance(OfferBuilder.class);
         final Offer offer;
         try {
-            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice);
+            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
         } catch (Exception e) {
             return failFuture(futureResult, e);
         }

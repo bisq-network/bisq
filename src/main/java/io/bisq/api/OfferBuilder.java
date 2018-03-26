@@ -55,7 +55,7 @@ public class OfferBuilder {
     }
 
     public Offer build(String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
-                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice) throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
+                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
         final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
             throw new NoAcceptedArbitratorException("No arbitrator has been chosen");
@@ -63,7 +63,7 @@ public class OfferBuilder {
 
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
-                throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
+            throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
             throw new ValidationException("When choosing FIXED price, fill in fixed_price with a price > 0");
         }
@@ -119,6 +119,9 @@ public class OfferBuilder {
 
         // TODO dummy values in this constructor !!!
         Coin coinAmount = Coin.valueOf(amount.longValueExact());
+        if (null == buyerSecurityDeposit) {
+            buyerSecurityDeposit = preferences.getBuyerSecurityDepositAsCoin().value;
+        }
         OfferPayload offerPayload = new OfferPayload(
                 null == offerId ? UUID.randomUUID().toString() : offerId,
                 new Date().getTime(),
@@ -146,7 +149,7 @@ public class OfferBuilder {
                 feeService.getTxFee(600).value, // default also used in code CreateOfferDataModel
                 getMakerFee(coinAmount, marketPriceMargin).value,
                 preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
-                preferences.getBuyerSecurityDepositAsCoin().value,
+                buyerSecurityDeposit,
                 Restrictions.getSellerSecurityDeposit().value,
                 maxTradeLimit,
                 maxTradePeriod,
