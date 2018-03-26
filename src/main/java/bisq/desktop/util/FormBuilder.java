@@ -82,6 +82,7 @@ import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
+    public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1192,8 +1193,8 @@ public class FormBuilder {
     // Icons
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Text getIcon(GlyphIcons icon, String iconSize, Label label) {
-        if (icon.fontFamily().equals("'Material Design Icons'")) {
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
             textIcon.setOpacity(0.7);
             label.setContentDisplay(ContentDisplay.LEFT);
@@ -1204,8 +1205,22 @@ public class FormBuilder {
         }
     }
 
-    public static Text getSmallIcon(GlyphIcons icon, Label label) {
-        return getIcon(icon, "0.769em", label);
+    public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
+        return getIconForLabel(icon, "0.769em", label);
+    }
+
+    public static Button getIconButton(GlyphIcons icon) {
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            final Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "","2em", null, ContentDisplay.CENTER);
+            textIcon.setId("icon-button");
+            textIcon.getGraphic().getStyleClass().add("highlight");
+            textIcon.setPrefWidth(20);
+            textIcon.setPrefHeight(20);
+            textIcon.setPadding(new Insets(0));
+            return textIcon;
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
     }
 
 }

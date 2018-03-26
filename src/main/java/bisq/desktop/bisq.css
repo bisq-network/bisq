@@ -133,10 +133,12 @@ bg color of non edit textFields: fafafa
 
 .highlight, .highlight-static {
     -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
 }
 
 .highlight:hover {
     -fx-text-fill: -bs-black;
+    -fx-fill: -bs-black;
 }
 
 .info {
@@ -296,6 +298,7 @@ bg color of non edit textFields: fafafa
 
 .hidden-icon-button {
     -fx-background-color: transparent;
+    -fx-cursor: hand;
 }
 
 #icon-button {
