@@ -715,10 +715,14 @@ public class BSFormatter {
     }
 
     public String getPriceWithCurrencyCode(String currencyCode) {
+        return getPriceWithCurrencyCode(currencyCode, "shared.priceInCurForCur");
+    }
+
+    public String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return Res.get("shared.priceInCurForCur", Res.getBaseCurrencyCode(), currencyCode);
+            return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
         else
-            return Res.get("shared.priceInCurForCur", currencyCode, Res.getBaseCurrencyCode());
+            return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
     }
 
     public Locale getLocale() {
