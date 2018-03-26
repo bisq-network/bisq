@@ -35,6 +35,8 @@ import io.bisq.core.trade.protocol.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
+import io.bisq.gui.util.validation.AltCoinAddressValidator;
+import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.application.Platform;
@@ -137,6 +139,19 @@ public class BisqProxy {
     }
 
     public PaymentAccount addPaymentAccount(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof CryptoCurrencyAccount) {
+            final CryptoCurrencyAccount cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
+            final TradeCurrency tradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
+            if (null == tradeCurrency) {
+                throw new ValidationException("There must be exactly one trade currency");
+            }
+            final AltCoinAddressValidator altCoinAddressValidator = new AltCoinAddressValidator();
+            altCoinAddressValidator.setCurrencyCode(tradeCurrency.getCode());
+            final InputValidator.ValidationResult validationResult = altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress());
+            if (!validationResult.isValid) {
+                throw new ValidationException(validationResult.errorMessage);
+            }
+        }
         user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
