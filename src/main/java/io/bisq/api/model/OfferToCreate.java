@@ -37,4 +37,6 @@ public class OfferToCreate {
     @Min(0)
     public BigDecimal minAmount;
 
+    @Min(0)
+    public Long buyerSecurityDeposit;
 }
