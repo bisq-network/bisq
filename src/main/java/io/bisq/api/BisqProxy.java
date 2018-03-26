@@ -43,10 +43,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -444,12 +441,19 @@ public class BisqProxy {
         return walletTransactions;
     }
 
-    public List<WalletAddress> getWalletAddresses() {
-        return user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
-                .map(paymentAccount -> (CryptoCurrencyAccount) paymentAccount)
-                .map(paymentAccount -> new WalletAddress(((CryptoCurrencyAccount) paymentAccount).getId(), paymentAccount.getPaymentMethod().toString(), ((CryptoCurrencyAccount) paymentAccount).getAddress()))
+    public WalletAddressList getWalletAddresses() {
+        final List<WalletAddress> walletAddresses = btcWalletService.getAddressEntryListAsImmutableList().stream()
+                .map(entry -> {
+                    final Coin balance = btcWalletService.getBalanceForAddress(entry.getAddress());
+                    final TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(entry.getAddress());
+                    final int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
+                    return new WalletAddress(entry.getAddressString(), balance.getValue(), confirmations, entry.getContext(), entry.getOfferId());
+                })
                 .collect(toList());
+        final WalletAddressList walletAddressList = new WalletAddressList();
+        walletAddressList.walletAddresses = walletAddresses;
+        walletAddressList.total = walletAddresses.size();
+        return walletAddressList;
     }
 
     public CompletableFuture<Void> paymentStarted(String tradeId) {

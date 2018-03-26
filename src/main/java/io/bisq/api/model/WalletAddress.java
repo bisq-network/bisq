@@ -1,14 +1,21 @@
 package io.bisq.api.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.bisq.core.btc.AddressEntry;
 import lombok.AllArgsConstructor;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @AllArgsConstructor
 public class WalletAddress {
-    @JsonProperty
-    private String id;
-    @JsonProperty
-    private String paymentMethod;
-    @JsonProperty
-    private String address;
+
+    public String address;
+
+    public long balance;
+
+    public int confirmations;
+
+    public AddressEntry.Context context;
+
+    public String offerId;
+
 }

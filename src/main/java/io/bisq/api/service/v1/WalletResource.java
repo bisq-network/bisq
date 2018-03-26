@@ -2,7 +2,7 @@ package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
 import io.bisq.api.BisqProxyResult;
-import io.bisq.api.model.WalletAddress;
+import io.bisq.api.model.WalletAddressList;
 import io.bisq.api.model.WalletDetails;
 import io.bisq.api.model.WalletTransactionList;
 import io.bisq.api.service.ResourceHelper;
@@ -13,7 +13,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
 import java.util.Optional;
 
 
@@ -41,7 +40,7 @@ public class WalletResource {
     @ApiOperation("Get wallet addresses")
     @GET
     @Path("/addresses")
-    public Collection<WalletAddress> getAddresses() {
+    public WalletAddressList getAddresses() {
         return bisqProxy.getWalletAddresses();
     }
 
