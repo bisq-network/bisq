@@ -126,6 +126,10 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 @FxmlView
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
@@ -1086,6 +1090,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Res.get("shared.distanceInPercent"));
         percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
         percentagePriceDescription.setPrefWidth(200);
+
+        getSmallIcon(MaterialDesignIcon.CHART_LINE, percentagePriceDescription);
+
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
         // Fixed/Percentage toggle
@@ -1194,6 +1201,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(priceCurrencyLabel);
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, "");
         priceDescriptionLabel = priceInputBoxTuple.first;
+
+        getSmallIcon(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;
 
