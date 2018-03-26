@@ -207,7 +207,7 @@ bg color of non edit textFields: fafafa
 }
 
 .default-text {
-    -fx-font-size: 1em;
+    -fx-font-size: 13;
 }
 
 /* Splash */
