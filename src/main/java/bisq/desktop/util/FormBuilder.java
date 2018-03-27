@@ -78,11 +78,13 @@ import org.slf4j.LoggerFactory;
 
 
 import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.fontawesome.utils.FontAwesomeIconFactory;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
     public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
+    public static final String FONTAWESOME_ICONS = "FontAwesome";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1207,6 +1209,20 @@ public class FormBuilder {
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
         return getIconForLabel(icon, "0.769em", label);
+    }
+
+    public static Text getIcon(GlyphIcons icon) {
+        Text textIcon;
+
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            textIcon = MaterialDesignIconFactory.get().createIcon(icon);
+        } else if (icon.fontFamily().equals(FONTAWESOME_ICONS)) {
+            textIcon = FontAwesomeIconFactory.get().createIcon(icon);
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
+
+        return textIcon;
     }
 
     public static Button getIconButton(GlyphIcons icon) {
