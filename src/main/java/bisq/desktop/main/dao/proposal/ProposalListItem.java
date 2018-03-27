@@ -149,7 +149,7 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
                 break;
             case BREAK1:
                 break;
-            case OPEN_FOR_VOTING:
+            case BLIND_VOTE:
                 if (!isTxInPastCycle) {
                     actionNode = actionButtonIconView;
                     actionButton.setVisible(false);
