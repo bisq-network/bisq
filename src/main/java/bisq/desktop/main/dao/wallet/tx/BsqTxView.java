@@ -290,7 +290,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                     final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
                     final int blockHeight = tx.getBlockHeight();
                     final int issuanceBlockHeight = daoPeriodService.getAbsoluteStartBlockOfPhase(blockHeight, DaoPeriodService.Phase.ISSUANCE);
-                    log.error("blockHeight {}, issuanceBlockHeight={}", blockHeight, issuanceBlockHeight);
                     final long blockTimeInSec = readableBsqBlockChain.getBlockTime(issuanceBlockHeight);
 
                     long inputValue = tx.getInputs().stream()
