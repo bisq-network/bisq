@@ -27,6 +27,7 @@ import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
@@ -1101,6 +1102,22 @@ public class FormBuilder {
         HBox box = new HBox();
         box.getChildren().addAll(input, currency);
         return new Tuple3<>(box, input, currency);
+    }
+
+    public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueCurrencyBoxWithInfo(String promptText) {
+        InfoInputTextField infoInputTextField = new InfoInputTextField();
+        InputTextField input = infoInputTextField.getTextField();
+        input.setPrefWidth(170);
+        input.setAlignment(Pos.CENTER_RIGHT);
+        input.setId("text-input-with-currency-text-field");
+        input.setPromptText(promptText);
+
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        currency.setId("currency-info-label");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(infoInputTextField, currency);
+        return new Tuple3<>(box, infoInputTextField, currency);
     }
 
     public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
