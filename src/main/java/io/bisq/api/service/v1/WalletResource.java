@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.Optional;
 
@@ -40,8 +41,8 @@ public class WalletResource {
     @ApiOperation("Get wallet addresses")
     @GET
     @Path("/addresses")
-    public WalletAddressList getAddresses() {
-        return bisqProxy.getWalletAddresses();
+    public WalletAddressList getAddresses(@QueryParam("purpose") BisqProxy.WalletAddressPurpose purpose) {
+        return bisqProxy.getWalletAddresses(purpose);
     }
 
     @ApiOperation("Get wallet transactions")
@@ -55,4 +56,6 @@ public class WalletResource {
     public BtcWalletResource getBtcWalletResource() {
         return new BtcWalletResource(bisqProxy);
     }
+
+
 }

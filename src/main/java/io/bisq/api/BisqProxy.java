@@ -433,75 +433,94 @@ public class BisqProxy {
 
     public WalletTransactionList getWalletTransactions() {
         final Wallet wallet = walletsSetup.getBtcWallet();
-        Set<Transaction> transactions = btcWalletService.getTransactions(true);
-
         WalletTransactionList walletTransactions = new WalletTransactionList();
-
-        for (Transaction transaction : transactions) {
-            final Coin valueSentFromMe = transaction.getValueSentFromMe(wallet);
-            final Coin valueSentToMe = transaction.getValueSentToMe(wallet);
-            boolean received = false;
-            String addressString = null;
-
-            if (valueSentToMe.isZero()) {
-                for (TransactionOutput output : transaction.getOutputs()) {
-                    if (!btcWalletService.isTransactionOutputMine(output)) {
-                        received = false;
-                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                            addressString = WalletService.getAddressStringFromOutput(output);
-                            break;
-                        }
-                    }
-                }
-            } else if (valueSentFromMe.isZero()) {
-                received = true;
-                for (TransactionOutput output : transaction.getOutputs()) {
-                    if (btcWalletService.isTransactionOutputMine(output) &&
-                            WalletService.isOutputScriptConvertibleToAddress(output)) {
-                        addressString = WalletService.getAddressStringFromOutput(output);
-                        break;
-                    }
-                }
-            } else {
-                boolean outgoing = false;
-                for (TransactionOutput output : transaction.getOutputs()) {
-                    if (!btcWalletService.isTransactionOutputMine(output)) {
-                        if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                            addressString = WalletService.getAddressStringFromOutput(output);
-                            outgoing = !(BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output));
-                            break;
-                        }
-                    }
-                }
-
-                if (outgoing) {
-                    received = false;
-                }
-            }
-            final TransactionConfidence confidence = transaction.getConfidence();
-            int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
-
-            final WalletTransaction walletTransaction = new WalletTransaction();
-            walletTransaction.updateTime = transaction.getUpdateTime().getTime();
-            walletTransaction.hash = transaction.getHashAsString();
-            walletTransaction.fee = (transaction.getFee() == null) ? -1 : transaction.getFee().value;
-            walletTransaction.value = transaction.getValue(wallet).value;
-            walletTransaction.valueSentFromMe = valueSentFromMe.value;
-            walletTransaction.valueSentToMe = valueSentToMe.value;
-            walletTransaction.confirmations = confirmations;
-            walletTransaction.inbound = received;
-            walletTransaction.address = addressString;
-
-            walletTransactions.transactions.add(walletTransaction);
-        }
+        walletTransactions.transactions.addAll(btcWalletService.getTransactions(true)
+                .stream()
+                .map(transaction -> toWalletTransaction(wallet, transaction))
+                .collect(Collectors.toList()));
         walletTransactions.total = walletTransactions.transactions.size();
         return walletTransactions;
     }
 
-    public WalletAddressList getWalletAddresses() {
-        final List<WalletAddress> walletAddresses = btcWalletService.getAddressEntryListAsImmutableList().stream()
+    @NotNull
+    private WalletTransaction toWalletTransaction(Wallet wallet, Transaction transaction) {
+        final Coin valueSentFromMe = transaction.getValueSentFromMe(wallet);
+        final Coin valueSentToMe = transaction.getValueSentToMe(wallet);
+        boolean received = false;
+        String addressString = null;
+
+        if (valueSentToMe.isZero()) {
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (!btcWalletService.isTransactionOutputMine(output)) {
+                    received = false;
+                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                        addressString = WalletService.getAddressStringFromOutput(output);
+                        break;
+                    }
+                }
+            }
+        } else if (valueSentFromMe.isZero()) {
+            received = true;
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (btcWalletService.isTransactionOutputMine(output) &&
+                        WalletService.isOutputScriptConvertibleToAddress(output)) {
+                    addressString = WalletService.getAddressStringFromOutput(output);
+                    break;
+                }
+            }
+        } else {
+            boolean outgoing = false;
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (!btcWalletService.isTransactionOutputMine(output)) {
+                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                        addressString = WalletService.getAddressStringFromOutput(output);
+                        outgoing = !(BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output));
+                        break;
+                    }
+                }
+            }
+
+            if (outgoing) {
+                received = false;
+            }
+        }
+        final TransactionConfidence confidence = transaction.getConfidence();
+        int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
+
+        final WalletTransaction walletTransaction = new WalletTransaction();
+        walletTransaction.updateTime = transaction.getUpdateTime().getTime();
+        walletTransaction.hash = transaction.getHashAsString();
+        walletTransaction.fee = (transaction.getFee() == null) ? -1 : transaction.getFee().value;
+        walletTransaction.value = transaction.getValue(wallet).value;
+        walletTransaction.valueSentFromMe = valueSentFromMe.value;
+        walletTransaction.valueSentToMe = valueSentToMe.value;
+        walletTransaction.confirmations = confirmations;
+        walletTransaction.inbound = received;
+        walletTransaction.address = addressString;
+        return walletTransaction;
+    }
+
+    public WalletAddressList getWalletAddresses(WalletAddressPurpose purpose) {
+        final Stream<AddressEntry> addressEntryStream;
+        if (WalletAddressPurpose.SEND_FUNDS.equals(purpose)) {
+            addressEntryStream = tradeManager.getAddressEntriesForAvailableBalanceStream();
+        } else if (WalletAddressPurpose.RESERVED_FUNDS.equals(purpose)) {
+            addressEntryStream = getReservedFundsAddressEntryStream();
+        } else if (WalletAddressPurpose.LOCKED_FUNDS.equals(purpose)) {
+            addressEntryStream = getLockedFundsAddressEntryStream();
+        } else if (WalletAddressPurpose.RECEIVE_FUNDS.equals(purpose)) {
+            addressEntryStream = btcWalletService.getAvailableAddressEntries().stream();
+        } else {
+            addressEntryStream = btcWalletService.getAddressEntryListAsImmutableList().stream();
+        }
+        final List<WalletAddress> walletAddresses = addressEntryStream
                 .map(entry -> {
-                    final Coin balance = btcWalletService.getBalanceForAddress(entry.getAddress());
+                    final Coin balance;
+                    if (AddressEntry.Context.MULTI_SIG.equals(entry.getContext())) {
+                        balance = entry.getCoinLockedInMultiSig();
+                    } else {
+                        balance = btcWalletService.getBalanceForAddress(entry.getAddress());
+                    }
                     final TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(entry.getAddress());
                     final int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
                     return new WalletAddress(entry.getAddressString(), balance.getValue(), confirmations, entry.getContext(), entry.getOfferId());
@@ -511,6 +530,24 @@ public class BisqProxy {
         walletAddressList.walletAddresses = walletAddresses;
         walletAddressList.total = walletAddresses.size();
         return walletAddressList;
+    }
+
+    private Stream<AddressEntry> getLockedFundsAddressEntryStream() {
+        return tradeManager.getLockedTradesStream()
+                .map(trade -> {
+                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                    return addressEntryOptional.isPresent() ? addressEntryOptional.get() : null;
+                })
+                .filter(e -> e != null);
+    }
+
+    private Stream<AddressEntry> getReservedFundsAddressEntryStream() {
+        return openOfferManager.getObservableList().stream()
+                .map(openOffer -> {
+                    Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                    return addressEntryOptional.isPresent() ? addressEntryOptional.get() : null;
+                })
+                .filter(e -> e != null);
     }
 
     public CompletableFuture<Void> paymentStarted(String tradeId) {
@@ -658,5 +695,12 @@ public class BisqProxy {
         if (null != address)
             p2PNetworkStatus.address = address.getFullAddress();
         return p2PNetworkStatus;
+    }
+
+    public enum WalletAddressPurpose {
+        LOCKED_FUNDS,
+        RECEIVE_FUNDS,
+        RESERVED_FUNDS,
+        SEND_FUNDS
     }
 }
