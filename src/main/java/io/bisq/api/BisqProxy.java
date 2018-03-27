@@ -1,6 +1,7 @@
 package io.bisq.api;
 
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Injector;
 import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccountHelper;
@@ -8,14 +9,13 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.locale.*;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.AddressEntryException;
+import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -37,6 +37,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
+import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -530,6 +531,78 @@ public class BisqProxy {
         walletAddressList.walletAddresses = walletAddresses;
         walletAddressList.total = walletAddresses.size();
         return walletAddressList;
+    }
+
+    public void withdrawFunds(Set<String> sourceAddresses, Coin amountAsCoin, boolean feeExcluded, String targetAddress) throws AddressEntryException, InsufficientFundsException, AmountTooLowException {
+        Coin sendersAmount;
+        // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
+        Transaction feeEstimationTransaction;
+        try {
+            feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(sourceAddresses, amountAsCoin);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("dust limit")) {
+                throw new AmountTooLowException(e.getMessage());
+            }
+            throw e;
+        }
+        if (feeExcluded && feeEstimationTransaction != null) {
+            sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
+            feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(sourceAddresses, sendersAmount);
+        }
+        checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
+        Coin fee = feeEstimationTransaction.getFee();
+        sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
+        Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
+
+        final Coin totalAvailableAmountOfSelectedItems = sourceAddresses.stream()
+                .filter(address -> null != address)
+                .map(address -> btcWalletService.getAddressEntryListAsImmutableList().stream().filter(addressEntry -> address.equals(addressEntry.getAddressString())).findFirst().orElse(null))
+                .filter(item -> null != item)
+                .map(address -> btcWalletService.getBalanceForAddress(address.getAddress()))
+                .reduce(Coin.ZERO, Coin::add);
+
+        if (!sendersAmount.isPositive())
+            throw new ValidationException("Senders amount must be positive");
+        if (!new BtcAddressValidator().validate(targetAddress).isValid)
+            throw new ValidationException("Invalid target address");
+        if (sourceAddresses.isEmpty())
+            throw new ValidationException("List of source addresses must not be empty");
+        if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0)
+            throw new InsufficientFundsException("Not enough funds in selected addresses");
+
+        if (receiverAmount.isPositive()) {
+            try {
+//                TODO return completable future
+                btcWalletService.sendFundsForMultipleAddresses(sourceAddresses, targetAddress, amountAsCoin, fee, null, null, new FutureCallback<Transaction>() {
+                    @Override
+                    public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                        if (transaction != null) {
+                            log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                        } else {
+                            log.error("onWithdraw transaction is null");
+                        }
+
+                        List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
+                        trades.stream()
+                                .filter(Trade::isPayoutPublished)
+                                .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                        .ifPresent(addressEntry -> {
+                                            if (btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                tradeManager.addTradeToClosedTrades(trade);
+                                        }));
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        log.error("onWithdraw onFailure");
+                    }
+                });
+            } catch (org.bitcoinj.core.InsufficientMoneyException e) {
+                throw new InsufficientFundsException(e.getMessage());
+            }
+        } else {
+            throw new AmountTooLowException(Res.get("portfolio.pending.step5_buyer.amountTooLow"));
+        }
     }
 
     private Stream<AddressEntry> getLockedFundsAddressEntryStream() {
