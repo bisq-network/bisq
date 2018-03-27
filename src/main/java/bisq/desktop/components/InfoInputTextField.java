@@ -2,11 +2,13 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.text.Text;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -15,16 +17,14 @@ import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.getIcon;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-
 public class InfoInputTextField extends AnchorPane {
 
     private final StringProperty text = new SimpleStringProperty();
 
     private final InputTextField textField;
-    private final Text infoIcon;
-    private final Text warningIcon;
-    private Text currentIcon;
+    private final Label infoIcon;
+    private final Label warningIcon;
+    private Label currentIcon;
     private PopOver popover;
     private boolean hidePopover;
 
@@ -33,12 +33,12 @@ public class InfoInputTextField extends AnchorPane {
 
         textField = new InputTextField();
 
-        infoIcon = getIcon(FontAwesomeIcon.INFO_CIRCLE);
-        infoIcon.setLayoutY(18);
+        infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
+        infoIcon.setLayoutY(3);
         infoIcon.getStyleClass().addAll("icon", "info");
 
-        warningIcon = getIcon(FontAwesomeIcon.WARNING);
-        warningIcon.setLayoutY(18);
+        warningIcon = getIcon(AwesomeIcon.WARNING_SIGN);
+        warningIcon.setLayoutY(3);
         warningIcon.getStyleClass().addAll("icon", "warning");
 
         AnchorPane.setLeftAnchor(infoIcon, 7.0);

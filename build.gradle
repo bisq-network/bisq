@@ -43,7 +43,6 @@ dependencies {
     compile 'de.jensd:fontawesomefx:8.0.0'
     compile 'de.jensd:fontawesomefx-commons:8.15'
     compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
-    compile 'de.jensd:fontawesomefx-fontawesome:4.7.0-5'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compileOnly 'org.projectlombok:lombok:1.16.16'
     annotationProcessor 'org.projectlombok:lombok:1.16.16'

@@ -42,6 +42,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Node;
@@ -79,7 +80,6 @@ import org.slf4j.LoggerFactory;
 
 
 import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.fontawesome.utils.FontAwesomeIconFactory;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 public class FormBuilder {
@@ -1232,14 +1232,18 @@ public class FormBuilder {
         Text textIcon;
 
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
-            textIcon = MaterialDesignIconFactory.get().createIcon(icon);
-        } else if (icon.fontFamily().equals(FONTAWESOME_ICONS)) {
-            textIcon = FontAwesomeIconFactory.get().createIcon(icon);
+            textIcon = MaterialDesignIconFactory.get().createIcon(icon, "1.231em");
         } else {
             throw new IllegalArgumentException("Not supported icon type");
         }
 
         return textIcon;
+    }
+
+    public static Label getIcon(AwesomeIcon icon) {
+        final Label label = new Label();
+        AwesomeDude.setIcon(label, icon);
+        return label;
     }
 
     public static Button getIconButton(GlyphIcons icon) {
