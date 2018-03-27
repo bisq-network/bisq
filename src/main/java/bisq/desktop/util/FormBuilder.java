@@ -27,6 +27,7 @@ import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
@@ -41,6 +42,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Node;
@@ -83,6 +85,7 @@ import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
     public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
+    public static final String FONTAWESOME_ICONS = "FontAwesome";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1101,6 +1104,22 @@ public class FormBuilder {
         return new Tuple3<>(box, input, currency);
     }
 
+    public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueCurrencyBoxWithInfo(String promptText) {
+        InfoInputTextField infoInputTextField = new InfoInputTextField();
+        InputTextField input = infoInputTextField.getTextField();
+        input.setPrefWidth(170);
+        input.setAlignment(Pos.CENTER_RIGHT);
+        input.setId("text-input-with-currency-text-field");
+        input.setPromptText(promptText);
+
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        currency.setId("currency-info-label");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(infoInputTextField, currency);
+        return new Tuple3<>(box, infoInputTextField, currency);
+    }
+
     public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
         TextField textField = new InputTextField();
         textField.setPrefWidth(190);
@@ -1207,6 +1226,24 @@ public class FormBuilder {
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
         return getIconForLabel(icon, "0.769em", label);
+    }
+
+    public static Text getIcon(GlyphIcons icon) {
+        Text textIcon;
+
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            textIcon = MaterialDesignIconFactory.get().createIcon(icon, "1.231em");
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
+
+        return textIcon;
+    }
+
+    public static Label getIcon(AwesomeIcon icon) {
+        final Label label = new Label();
+        AwesomeDude.setIcon(label, icon);
+        return label;
     }
 
     public static Button getIconButton(GlyphIcons icon) {

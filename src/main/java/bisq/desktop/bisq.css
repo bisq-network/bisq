@@ -143,23 +143,17 @@ bg color of non edit textFields: fafafa
 
 .info {
     -fx-text-fill: -bs-green;
+    -fx-fill: -bs-green;
 }
 
 .info:hover {
     -fx-text-fill: -bs-grey;
+    -fx-fill: -bs-grey;
 }
 
 .headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 1.692em;
-}
-
-.info {
-    -fx-text-fill: -bs-green;
-}
-
-.info:hover {
-    -fx-text-fill: -bs-grey;
 }
 
 .warning-box {
@@ -170,6 +164,12 @@ bg color of non edit textFields: fafafa
 
 .warning {
     -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warning:hover {
+    -fx-text-fill: -bs-grey;
+    -fx-fill: -bs-grey;
 }
 
 .zero-decimals {

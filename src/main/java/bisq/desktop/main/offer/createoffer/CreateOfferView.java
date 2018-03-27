@@ -26,6 +26,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
@@ -163,7 +164,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener;
-    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener;
+    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener, marketPriceMarginListener;
     private ChangeListener<Number> marketPriceAvailableListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
@@ -172,6 +173,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
+    private InfoInputTextField marketBasedPriceInfoInputTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -713,6 +715,45 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 walletFundedNotification.show();
             }
         };
+
+        marketPriceMarginListener = (observable, oldValue, newValue) -> {
+            if (marketBasedPriceInfoInputTextField != null) {
+                String tooltip;
+                if (newValue.equals("0.00")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.info.sellAtMarketPrice");
+                    } else {
+                        tooltip = Res.get("createOffer.info.buyAtMarketPrice");
+                    }
+                    final Label atMarketPriceLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForInfoPopOver(atMarketPriceLabel);
+                } else if (newValue.contains("-")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.warning.sellBelowMarketPrice", newValue.substring(1));
+                    } else {
+                        tooltip = Res.get("createOffer.warning.buyAboveMarketPrice", newValue.substring(1));
+                    }
+                    final Label negativePercentageLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForWarningPopOver(negativePercentageLabel);
+                } else if (!newValue.equals("")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.info.sellAboveMarketPrice", newValue);
+                    } else {
+                        tooltip = Res.get("createOffer.info.buyBelowMarketPrice", newValue);
+                    }
+                    final Label positivePercentageLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForInfoPopOver(positivePercentageLabel);
+                }
+            }
+        };
+    }
+
+    private Label createPopoverLabel(String text) {
+        final Label label = new Label(text);
+        label.setPrefWidth(300);
+        label.setWrapText(true);
+        label.setPadding(new Insets(10));
+        return label;
     }
 
     private void updateMarketPriceAvailable() {
@@ -731,6 +772,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addListeners() {
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.addListener(marketPriceAvailableListener);
+        model.marketPriceMargin.addListener(marketPriceMarginListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -757,6 +799,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void removeListeners() {
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.removeListener(marketPriceAvailableListener);
+        model.marketPriceMargin.removeListener(marketPriceMarginListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -1076,9 +1119,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setMaxWidth(14);
 
         // price as percent
-        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = getEditableValueCurrencyBox(Res.get("createOffer.price.prompt"));
+        Tuple3<HBox, InfoInputTextField, Label> priceAsPercentageTuple = getEditableValueCurrencyBoxWithInfo(Res.get("createOffer.price.prompt"));
+
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
-        marketBasedPriceTextField = priceAsPercentageTuple.second;
+        marketBasedPriceInfoInputTextField = priceAsPercentageTuple.second;
+        marketBasedPriceTextField = marketBasedPriceInfoInputTextField.getTextField();
         marketBasedPriceTextField.setPrefWidth(200);
         editOfferElements.add(marketBasedPriceTextField);
         marketBasedPriceLabel = priceAsPercentageTuple.third;
