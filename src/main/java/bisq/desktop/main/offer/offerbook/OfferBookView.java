@@ -148,7 +148,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(20, 25, 5, 25));
 
-        addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
+        addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
 
         final Tuple3<HBox, AutoTooltipLabel, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
         final HBox filterBox = filterBoxTuple.first;
