@@ -364,6 +364,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
     }
 
+    String getAbsolutePriceMargin(Offer offer) {
+        return formatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
+    }
+
     private String formatPrice(Offer offer, boolean decimalAligned) {
         return formatter.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
     }
