@@ -716,7 +716,7 @@ textfield */
 }
 
 /* Open Offer */
-.offer-disabled {
+.offer-disabled .label {
     -fx-text-fill: -bs-light-grey;
 }
 
