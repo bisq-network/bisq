@@ -45,6 +45,8 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -67,6 +69,8 @@ import javafx.util.Callback;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -136,7 +140,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                         }
 
                         @Override
-                        public void onFailure(Throwable t) {
+                        public void onFailure(@NotNull Throwable t) {
                             //TODO
                         }
                     });
@@ -152,6 +156,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 } catch (InsufficientMoneyException e1) {
                     e1.printStackTrace();
                 } catch (ChangeBelowDustException e1) {
+                    e1.printStackTrace();
+                } catch (InvalidProtocolBufferException e1) {
                     e1.printStackTrace();
                 }
             });
@@ -249,7 +255,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     protected void onPhaseChanged(DaoPeriodService.Phase phase) {
         super.onPhaseChanged(phase);
 
-        changeVoteViewItemsVisibility(phase == DaoPeriodService.Phase.OPEN_FOR_VOTING);
+        changeVoteViewItemsVisibility(phase == DaoPeriodService.Phase.BLIND_VOTE);
 
         if (removeButton != null) {
             removeButton.setManaged(false);
@@ -274,7 +280,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     break;
                 case BREAK1:
                     break;
-                case OPEN_FOR_VOTING:
+                case BLIND_VOTE:
                     if (acceptButton == null) {
                         Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
                                         .incrementAndGetGridRow(),
@@ -302,6 +308,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 case VOTE_REVEAL:
                     break;
                 case BREAK3:
+                    break;
+                case ISSUANCE:
+                    break;
+                case BREAK4:
                     break;
                 case UNDEFINED:
                 default:

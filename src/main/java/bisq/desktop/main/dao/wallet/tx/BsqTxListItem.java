@@ -25,7 +25,6 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.locale.Res;
 
@@ -66,7 +65,7 @@ class BsqTxListItem {
     @Getter
     private final String direction;
     @Getter
-    private final Coin amount;
+    private Coin amount;
     @Getter
     private boolean received;
     @Getter
@@ -84,17 +83,17 @@ class BsqTxListItem {
                          BtcWalletService btcWalletService,
                          Optional<TxType> txTypeOptional,
                          boolean isBurnedBsqTx,
-                         BsqBlockChain bsqBlockChain,
+                         Date date,
                          BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.txTypeOptional = txTypeOptional;
         this.isBurnedBsqTx = isBurnedBsqTx;
+        this.date = date;
         this.bsqFormatter = bsqFormatter;
 
         txId = transaction.getHashAsString();
-        date = transaction.getUpdateTime();
 
         setupConfidence(bsqWalletService);
 
@@ -179,6 +178,10 @@ class BsqTxListItem {
             return txTypeOptional.get();
         else
             return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
+    }
+
+    public void setAmount(Coin amount) {
+        this.amount = amount;
     }
 }
 

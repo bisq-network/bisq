@@ -32,7 +32,11 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.DaoPeriodService;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.blockchain.vo.TxOutput;
+import bisq.core.dao.blockchain.vo.TxOutputType;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
@@ -73,8 +77,9 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -85,7 +90,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final BsqBlockChain bsqBlockChain;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
+    private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqNode bsqNode;
@@ -108,16 +114,20 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
+    private BsqTxView(BsqFormatter bsqFormatter,
+                      BsqWalletService bsqWalletService,
                       BsqNodeProvider bsqNodeProvider,
                       Preferences preferences,
-                      BsqBlockChain bsqBlockChain,
-                      BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
+                      ReadableBsqBlockChain readableBsqBlockChain,
+                      DaoPeriodService daoPeriodService,
+                      BtcWalletService btcWalletService,
+                      BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqNode = bsqNodeProvider.getBsqNode();
         this.preferences = preferences;
-        this.bsqBlockChain = bsqBlockChain;
+        this.readableBsqBlockChain = readableBsqBlockChain;
+        this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -213,7 +223,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void onChainHeightChanged() {
         final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
-        final int bsqBlockChainHeight = bsqBlockChain.getChainHeadHeight();
+        final int bsqBlockChainHeight = readableBsqBlockChain.getChainHeadHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
@@ -242,16 +252,65 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         // copy list to avoid ConcurrentModificationException
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
-        Set<BsqTxListItem> items = walletTransactions.stream()
+        List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> new BsqTxListItem(transaction,
                         bsqWalletService,
                         btcWalletService,
-                        bsqBlockChain.getTxType(transaction.getHashAsString()),
-                        bsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
-                        bsqBlockChain,
+                        readableBsqBlockChain.getTxType(transaction.getHashAsString()),
+                        readableBsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
+                        transaction.getUpdateTime(),
                         bsqFormatter)
                 )
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
+
+        List<BsqTxListItem> issuanceTxList = new ArrayList<>();
+        items.stream()
+                .filter(item -> item.getTxType() == TxType.COMPENSATION_REQUEST)
+                .peek(item -> {
+                    final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
+                    long changeValue = tx.getOutputs().get(0).getValue();
+                    long inputValue = tx.getInputs().stream()
+                            .filter(input -> input.getConnectedTxOutput() != null)
+                            .mapToLong(input -> input.getConnectedTxOutput().getValue())
+                            .sum();
+                    long fee = inputValue - changeValue;
+                    item.setAmount(Coin.valueOf(fee));
+                })
+                .filter(item -> {
+                    final Optional<Tx> optionalTx = readableBsqBlockChain.getTx(item.getTxId());
+                    if (optionalTx.isPresent()) {
+                        final List<TxOutput> outputs = optionalTx.get().getOutputs();
+                        if (!outputs.isEmpty()) {
+                            return outputs.get(0).getTxOutputType() == TxOutputType.BSQ_OUTPUT;
+                        }
+                    }
+                    return false;
+                })
+                .forEach(item -> {
+                    final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
+                    final int blockHeight = tx.getBlockHeight();
+                    final int issuanceBlockHeight = daoPeriodService.getAbsoluteStartBlockOfPhase(blockHeight, DaoPeriodService.Phase.ISSUANCE);
+                    log.error("blockHeight {}, issuanceBlockHeight={}", blockHeight, issuanceBlockHeight);
+                    final long blockTimeInSec = readableBsqBlockChain.getBlockTime(issuanceBlockHeight);
+
+                    long inputValue = tx.getInputs().stream()
+                            .filter(input -> input.getConnectedTxOutput() != null)
+                            .mapToLong(input -> input.getConnectedTxOutput().getValue())
+                            .sum();
+                    long issuanceValue = tx.getOutputs().get(1).getValue();
+
+                    final BsqTxListItem issuanceItem = new BsqTxListItem(item.getTransaction(),
+                            bsqWalletService,
+                            btcWalletService,
+                            Optional.of(TxType.ISSUANCE),
+                            item.isBurnedBsqTx(),
+                            new Date(blockTimeInSec * 1000),
+                            bsqFormatter);
+                    issuanceItem.setAmount(Coin.valueOf(issuanceValue));
+                    issuanceTxList.add(issuanceItem);
+
+                });
+        items.addAll(issuanceTxList);
         observableList.setAll(items);
     }
 
@@ -533,7 +592,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             style = "dao-tx-type-vote-reveal-icon";
                                             break;
                                         case ISSUANCE:
-                                            awesomeIcon = AwesomeIcon.UMBRELLA;
+                                            awesomeIcon = AwesomeIcon.MONEY;
                                             style = "dao-tx-type-issuance-icon";
                                             break;
                                         default:
