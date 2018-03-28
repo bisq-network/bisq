@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -67,6 +68,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -98,9 +100,16 @@ import javafx.util.StringConverter;
 import java.util.Comparator;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.getIcon;
+
+
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
@@ -608,7 +617,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                     priceChangedListener = null;
                                                 }
                                                 offerBookListItem = null;
-                                                setText("");
+                                                setGraphic(null);
                                                 getTableView().sceneProperty().removeListener(sceneChangeListener);
                                                 sceneChangeListener = null;
                                             }
@@ -621,12 +630,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (priceChangedListener == null) {
                                         priceChangedListener = (observable, oldValue, newValue) -> {
                                             if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
-                                                setText(model.getPrice(offerBookListItem));
+                                                setGraphic(getPriceLabel(model.getPrice(offerBookListItem), offerBookListItem));
                                             }
                                         };
                                         model.priceFeedService.updateCounterProperty().addListener(priceChangedListener);
                                     }
-                                    setText(item.getOffer().getPrice() == null ? Res.get("shared.na") : model.getPrice(item));
+                                    setGraphic(getPriceLabel(item.getOffer().getPrice() == null ? Res.get("shared.na") : model.getPrice(item), item));
                                 } else {
                                     if (priceChangedListener != null) {
                                         model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
@@ -637,8 +646,46 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         sceneChangeListener = null;
                                     }
                                     this.offerBookListItem = null;
-                                    setText("");
+                                    setGraphic(null);
                                 }
+                            }
+
+                            @NotNull
+                            private AutoTooltipLabel getPriceLabel(String priceString, OfferBookListItem item) {
+                                final Offer offer = item.getOffer();
+                                final MaterialDesignIcon icon = offer.isUseMarketBasedPrice() ? MaterialDesignIcon.CHART_LINE : MaterialDesignIcon.LOCK;
+
+                                String info;
+
+                                if (offer.isUseMarketBasedPrice()) {
+                                    if (offer.getMarketPriceMargin() == 0) {
+                                        if (offer.isBuyOffer()) {
+                                            info = Res.get("offerbook.info.sellAtMarketPrice");
+                                        } else {
+                                            info = Res.get("offerbook.info.buyAtMarketPrice");
+                                        }
+                                    } else if (offer.getMarketPriceMargin() > 0) {
+                                        if (offer.isBuyOffer()) {
+                                            info = Res.get("offerbook.info.sellBelowMarketPrice", model.getAbsolutePriceMargin(offer));
+                                        } else {
+                                            info = Res.get("offerbook.info.buyAboveMarketPrice", model.getAbsolutePriceMargin(offer));
+                                        }
+                                    } else {
+                                        if (offer.isBuyOffer()) {
+                                            info = Res.get("offerbook.info.sellAboveMarketPrice", model.getAbsolutePriceMargin(offer));
+                                        } else {
+                                            info = Res.get("offerbook.info.buyBelowMarketPrice", model.getAbsolutePriceMargin(offer));
+                                        }
+                                    }
+                                } else {
+                                    if (offer.isBuyOffer()) {
+                                        info = Res.get("offerbook.info.sellAtFixedPrice");
+                                    } else {
+                                        info = Res.get("offerbook.info.buyAtFixedPrice");
+                                    }
+                                }
+
+                                return new InfoAutoTooltipLabel(priceString, icon, ContentDisplay.RIGHT, info);
                             }
                         };
                     }
