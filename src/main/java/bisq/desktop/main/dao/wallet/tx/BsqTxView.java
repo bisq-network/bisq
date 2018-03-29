@@ -298,6 +298,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             .sum();
                     long issuanceValue = tx.getOutputs().get(1).getValue();
 
+                    //TODO not good solution to just use a view specific TxType
                     final BsqTxListItem issuanceItem = new BsqTxListItem(item.getTransaction(),
                             bsqWalletService,
                             btcWalletService,
