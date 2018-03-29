@@ -23,10 +23,10 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressTextField;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
@@ -82,8 +82,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -104,6 +102,7 @@ import javafx.geometry.VPos;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
 import javafx.event.ActionEvent;
@@ -126,6 +125,10 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 @FxmlView
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
@@ -140,8 +143,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
-    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
-    private ToggleButton fixedPriceButton, useMarketBasedPriceButton;
+    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
     private InputTextField buyerSecurityDepositInputTextField, amountTextField, minAmountTextField,
             fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
     private TextField currencyTextField;
@@ -151,19 +153,18 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
             priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription;
+            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
     private VBox fixedPriceBox, percentagePriceBox;
-    private HBox fundingHBox, firstRowHBox, secondRowHBox, toggleButtonsHBox,
-            buyerSecurityDepositValueCurrencyBox;
+    private HBox fundingHBox, firstRowHBox, secondRowHBox, buyerSecurityDepositValueCurrencyBox;
 
     private Subscription isWaitingForFundsSubscription, balanceSubscription, cancelButton2StyleSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener;
-    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener;
+    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener, marketPriceMarginListener;
     private ChangeListener<Number> marketPriceAvailableListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
@@ -172,6 +173,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
+    private InfoInputTextField marketBasedPriceInfoInputTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -525,7 +527,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
         xLabel.setText("x");
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
         amountTextField.textProperty().bindBidirectional(model.amount);
@@ -713,6 +715,45 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 walletFundedNotification.show();
             }
         };
+
+        marketPriceMarginListener = (observable, oldValue, newValue) -> {
+            if (marketBasedPriceInfoInputTextField != null) {
+                String tooltip;
+                if (newValue.equals("0.00")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.info.sellAtMarketPrice");
+                    } else {
+                        tooltip = Res.get("createOffer.info.buyAtMarketPrice");
+                    }
+                    final Label atMarketPriceLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForInfoPopOver(atMarketPriceLabel);
+                } else if (newValue.contains("-")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.warning.sellBelowMarketPrice", newValue.substring(1));
+                    } else {
+                        tooltip = Res.get("createOffer.warning.buyAboveMarketPrice", newValue.substring(1));
+                    }
+                    final Label negativePercentageLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForWarningPopOver(negativePercentageLabel);
+                } else if (!newValue.equals("")) {
+                    if (model.isSellOffer()) {
+                        tooltip = Res.get("createOffer.info.sellAboveMarketPrice", newValue);
+                    } else {
+                        tooltip = Res.get("createOffer.info.buyBelowMarketPrice", newValue);
+                    }
+                    final Label positivePercentageLabel = createPopoverLabel(tooltip);
+                    marketBasedPriceInfoInputTextField.setContentForInfoPopOver(positivePercentageLabel);
+                }
+            }
+        };
+    }
+
+    private Label createPopoverLabel(String text) {
+        final Label label = new Label(text);
+        label.setPrefWidth(300);
+        label.setWrapText(true);
+        label.setPadding(new Insets(10));
+        return label;
     }
 
     private void updateMarketPriceAvailable() {
@@ -721,8 +762,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             boolean isMarketPriceAvailable = marketPriceAvailableValue == 1;
             percentagePriceBox.setVisible(isMarketPriceAvailable);
             percentagePriceBox.setManaged(isMarketPriceAvailable);
-            toggleButtonsHBox.setVisible(isMarketPriceAvailable);
-            toggleButtonsHBox.setManaged(isMarketPriceAvailable);
+            priceTypeToggleButton.setVisible(isMarketPriceAvailable);
+            priceTypeToggleButton.setManaged(isMarketPriceAvailable);
             boolean fixedPriceSelected = !model.dataModel.getUseMarketBasedPrice().get() || !isMarketPriceAvailable;
             updatePriceToggleButtons(fixedPriceSelected);
         }
@@ -731,6 +772,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addListeners() {
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.addListener(marketPriceAvailableListener);
+        model.marketPriceMargin.addListener(marketPriceMarginListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -757,6 +799,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void removeListeners() {
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.removeListener(marketPriceAvailableListener);
+        model.marketPriceMargin.removeListener(marketPriceMarginListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -1076,9 +1119,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setMaxWidth(14);
 
         // price as percent
-        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = getEditableValueCurrencyBox(Res.get("createOffer.price.prompt"));
+        Tuple3<HBox, InfoInputTextField, Label> priceAsPercentageTuple = getEditableValueCurrencyBoxWithInfo(Res.get("createOffer.price.prompt"));
+
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
-        marketBasedPriceTextField = priceAsPercentageTuple.second;
+        marketBasedPriceInfoInputTextField = priceAsPercentageTuple.second;
+        marketBasedPriceTextField = marketBasedPriceInfoInputTextField.getTextField();
+        marketBasedPriceTextField.setPrefWidth(200);
         editOfferElements.add(marketBasedPriceTextField);
         marketBasedPriceLabel = priceAsPercentageTuple.third;
         editOfferElements.add(marketBasedPriceLabel);
@@ -1086,32 +1132,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Res.get("shared.distanceInPercent"));
         percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
         percentagePriceDescription.setPrefWidth(200);
+
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription);
+
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
         // Fixed/Percentage toggle
-        ToggleGroup toggleGroup = new ToggleGroup();
-        fixedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.fixed"));
-        editOfferElements.add(fixedPriceButton);
-        fixedPriceButton.setId("toggle-price-left");
-        fixedPriceButton.setToggleGroup(toggleGroup);
-        fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            updatePriceToggleButtons(newValue);
-        });
+        priceTypeToggleButton = getIconButton(MaterialDesignIcon.SWAP_VERTICAL);
+        editOfferElements.add(priceTypeToggleButton);
 
-        useMarketBasedPriceButton = new AutoTooltipToggleButton(Res.get("createOffer.percentage"));
-        editOfferElements.add(useMarketBasedPriceButton);
-        useMarketBasedPriceButton.setId("toggle-price-right");
-        useMarketBasedPriceButton.setToggleGroup(toggleGroup);
-        useMarketBasedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            updatePriceToggleButtons(!newValue);
+        priceTypeToggleButton.setOnAction((actionEvent) -> {
+            updatePriceToggleButtons(model.dataModel.getUseMarketBasedPrice().getValue());
         });
-
-        toggleButtonsHBox = new HBox();
-        toggleButtonsHBox.setPadding(new Insets(16, 0, 0, 0));
-        toggleButtonsHBox.getChildren().addAll(fixedPriceButton, useMarketBasedPriceButton);
 
         // =
-        Label resultLabel = new AutoTooltipLabel("=");
+        resultLabel = new AutoTooltipLabel("=");
         resultLabel.setFont(Font.font("Helvetica-Bold", 20));
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
@@ -1130,7 +1165,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         firstRowHBox = new HBox();
         firstRowHBox.setSpacing(5);
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
-        firstRowHBox.getChildren().addAll(amountBox, xLabel, percentagePriceBox, toggleButtonsHBox, resultLabel, volumeBox);
+        firstRowHBox.getChildren().addAll(amountBox, xLabel, percentagePriceBox, priceTypeToggleButton, resultLabel, volumeBox);
         GridPane.setRowIndex(firstRowHBox, gridRow);
         GridPane.setColumnIndex(firstRowHBox, 1);
         GridPane.setMargin(firstRowHBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
@@ -1144,23 +1179,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         if (marketPriceAvailable == 1) {
             model.dataModel.setUseMarketBasedPrice(!fixedPriceSelected);
-
-            if (!fixedPriceButton.isSelected() && fixedPriceSelected)
-                fixedPriceButton.setSelected(true);
-            if (useMarketBasedPriceButton.isSelected() && !fixedPriceSelected)
-                useMarketBasedPriceButton.setSelected(false);
         }
 
-        fixedPriceButton.setMouseTransparent(fixedPriceSelected);
-        useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
-
-        fixedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
-        useMarketBasedPriceButton.getStyleClass().removeAll("toggle-button-active", "toggle-button-inactive");
-
-        fixedPriceButton.getStyleClass().add(fixedPriceSelected ?
-                "toggle-button-active" : "toggle-button-inactive");
-        useMarketBasedPriceButton.getStyleClass().add(!fixedPriceSelected ?
-                "toggle-button-active" : "toggle-button-inactive");
+        percentagePriceBox.setDisable(fixedPriceSelected);
+        fixedPriceBox.setDisable(!fixedPriceSelected);
 
         if (fixedPriceSelected) {
             if (firstRowHBox.getChildren().contains(percentagePriceBox))
@@ -1189,11 +1211,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Res.get("createOffer.price.prompt"));
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         fixedPriceTextField = priceValueCurrencyBoxTuple.second;
+        fixedPriceTextField.setPrefWidth(200);
         editOfferElements.add(fixedPriceTextField);
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
         editOfferElements.add(priceCurrencyLabel);
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, "");
         priceDescriptionLabel = priceInputBoxTuple.first;
+
+        priceDescriptionLabel.setPrefWidth(200);
+
+        getSmallIconForLabel(MaterialDesignIcon.LOCK, priceDescriptionLabel);
+
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;
 
@@ -1220,7 +1248,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         secondRowHBox = new HBox();
         secondRowHBox.setSpacing(5);
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
-        secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, fixedPriceBox);
+        secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, fixedPriceBox, priceTypeToggleButton);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 1);
         GridPane.setMargin(secondRowHBox, new Insets(0, 10, 0, 0));

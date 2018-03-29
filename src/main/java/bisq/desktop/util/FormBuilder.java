@@ -27,6 +27,7 @@ import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
@@ -41,12 +42,14 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -61,6 +64,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -73,8 +77,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
+
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
+    public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
+    public static final String FONTAWESOME_ICONS = "FontAwesome";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1093,6 +1104,22 @@ public class FormBuilder {
         return new Tuple3<>(box, input, currency);
     }
 
+    public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueCurrencyBoxWithInfo(String promptText) {
+        InfoInputTextField infoInputTextField = new InfoInputTextField();
+        InputTextField input = infoInputTextField.getTextField();
+        input.setPrefWidth(170);
+        input.setAlignment(Pos.CENTER_RIGHT);
+        input.setId("text-input-with-currency-text-field");
+        input.setPromptText(promptText);
+
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        currency.setId("currency-info-label");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(infoInputTextField, currency);
+        return new Tuple3<>(box, infoInputTextField, currency);
+    }
+
     public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
         TextField textField = new InputTextField();
         textField.setPrefWidth(190);
@@ -1180,4 +1207,57 @@ public class FormBuilder {
                 .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
                 .forEach(e -> gridPane.getChildren().remove(e));
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Icons
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
+            textIcon.setOpacity(0.7);
+            label.setContentDisplay(ContentDisplay.LEFT);
+            label.setGraphic(textIcon);
+            return textIcon;
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
+    }
+
+    public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
+        return getIconForLabel(icon, "0.769em", label);
+    }
+
+    public static Text getIcon(GlyphIcons icon) {
+        Text textIcon;
+
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            textIcon = MaterialDesignIconFactory.get().createIcon(icon, "1.231em");
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
+
+        return textIcon;
+    }
+
+    public static Label getIcon(AwesomeIcon icon) {
+        final Label label = new Label();
+        AwesomeDude.setIcon(label, icon);
+        return label;
+    }
+
+    public static Button getIconButton(GlyphIcons icon) {
+        if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
+            final Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "","2em", null, ContentDisplay.CENTER);
+            textIcon.setId("icon-button");
+            textIcon.getGraphic().getStyleClass().add("highlight");
+            textIcon.setPrefWidth(20);
+            textIcon.setPrefHeight(20);
+            textIcon.setPadding(new Insets(0));
+            return textIcon;
+        } else {
+            throw new IllegalArgumentException("Not supported icon type");
+        }
+    }
+
 }
