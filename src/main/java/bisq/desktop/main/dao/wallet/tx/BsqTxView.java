@@ -430,7 +430,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                     break;
                                                 case PAY_TRADE_FEE:
                                                 case COMPENSATION_REQUEST:
-                                                case VOTE:
+                                                case BLIND_VOTE:
                                                     break;
                                                 case ISSUANCE:
                                                     break;
@@ -583,7 +583,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             awesomeIcon = AwesomeIcon.FILE;
                                             style = "dao-tx-type-fee-icon";
                                             break;
-                                        case VOTE:
+                                        case BLIND_VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
                                             style = "dao-tx-type-vote-icon";
                                             break;
