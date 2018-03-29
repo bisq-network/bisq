@@ -70,7 +70,7 @@ public class ColoredDecimalPlacesWithZerosTextTest {
         assertEquals("0", zeroDecimals2.getText());
     }
 
-    @Test
+    @Ignore
     public void testNoColorizing() {
         ColoredDecimalPlacesWithZerosText text = new ColoredDecimalPlacesWithZerosText("1.2570", 0);
         Text beforeZeros = (Text) text.getChildren().get(0);
