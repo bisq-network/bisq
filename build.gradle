@@ -98,6 +98,7 @@ dependencyVerification {
             'org.jetbrains.kotlin:kotlin-stdlib-jdk7:bd8cd4e3ef391cd468434747b7939c49e80f8bf4ae10355a65382bfb54fd633c',
             'org.jetbrains.kotlin:kotlin-stdlib:e1c39d27f23a7fe2d3e4ac65e80a53e98fdcf60e07de9d53b8b841c5944fc810',
             'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
+            'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
             'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
             'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
             'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
