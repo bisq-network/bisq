@@ -290,7 +290,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                     final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
                     final int blockHeight = tx.getBlockHeight();
                     final int issuanceBlockHeight = daoPeriodService.getAbsoluteStartBlockOfPhase(blockHeight, DaoPeriodService.Phase.ISSUANCE);
-                    log.error("blockHeight {}, issuanceBlockHeight={}", blockHeight, issuanceBlockHeight);
                     final long blockTimeInSec = readableBsqBlockChain.getBlockTime(issuanceBlockHeight);
 
                     long inputValue = tx.getInputs().stream()
@@ -299,6 +298,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             .sum();
                     long issuanceValue = tx.getOutputs().get(1).getValue();
 
+                    //TODO not good solution to just use a view specific TxType
                     final BsqTxListItem issuanceItem = new BsqTxListItem(item.getTransaction(),
                             bsqWalletService,
                             btcWalletService,
@@ -430,7 +430,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                     break;
                                                 case PAY_TRADE_FEE:
                                                 case COMPENSATION_REQUEST:
-                                                case VOTE:
+                                                case BLIND_VOTE:
                                                     break;
                                                 case ISSUANCE:
                                                     break;
@@ -583,7 +583,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             awesomeIcon = AwesomeIcon.FILE;
                                             style = "dao-tx-type-fee-icon";
                                             break;
-                                        case VOTE:
+                                        case BLIND_VOTE:
                                             awesomeIcon = AwesomeIcon.THUMBS_UP;
                                             style = "dao-tx-type-vote-icon";
                                             break;

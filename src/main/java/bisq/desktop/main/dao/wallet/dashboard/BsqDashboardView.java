@@ -151,9 +151,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void onBsqBlockChainChanged() {
-        issuedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(bsqBlockChain.getIssuedAmount()));
+        issuedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(bsqBlockChain.getIssuedAmountAtGenesis()));
         final Coin burntFee = bsqBlockChain.getTotalBurntFee();
-        final Coin availableAmount = bsqBlockChain.getIssuedAmount().subtract(burntFee);
+        final Coin availableAmount = bsqBlockChain.getIssuedAmountAtGenesis().subtract(burntFee);
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
         allTxTextField.setText(String.valueOf(bsqBlockChain.getTransactions().size()));
@@ -163,7 +163,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updatePrice() {
-        final Coin issuedAmount = bsqBlockChain.getIssuedAmount();
+        final Coin issuedAmount = bsqBlockChain.getIssuedAmountAtGenesis();
         final MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
         if (bsqMarketPrice != null) {
             long bsqPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
