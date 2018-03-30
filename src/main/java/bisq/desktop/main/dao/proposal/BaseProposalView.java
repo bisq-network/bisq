@@ -391,7 +391,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
                         };
                     }
                 });
-        uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getProposalPayload().getUid()));
+        uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
         tableView.getColumns().add(uidColumn);
     }
 
