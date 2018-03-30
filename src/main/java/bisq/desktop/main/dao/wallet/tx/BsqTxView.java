@@ -263,17 +263,28 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 )
                 .collect(Collectors.toList());
 
+        items.addAll(getCompensationRequestTxListItems(items));
+
+        observableList.setAll(items);
+    }
+
+    // We add manually a modified copy of the compensation request tx if it has become an issuance tx
+    // It is a bit weird to have one tx displayed 2 times but I think it is better to show both aspects
+    // separately. First the compensation request tx with the fee then after voting the issuance.
+    private List<BsqTxListItem> getCompensationRequestTxListItems(List<BsqTxListItem> items) {
         List<BsqTxListItem> issuanceTxList = new ArrayList<>();
         items.stream()
                 .filter(item -> item.getTxType() == TxType.COMPENSATION_REQUEST)
                 .peek(item -> {
                     final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
+                    // We have mandatory BSQ change at output 0
                     long changeValue = tx.getOutputs().get(0).getValue();
                     long inputValue = tx.getInputs().stream()
                             .filter(input -> input.getConnectedTxOutput() != null)
                             .mapToLong(input -> input.getConnectedTxOutput().getValue())
                             .sum();
-                    long fee = inputValue - changeValue;
+                    // We want to show fee as negative number
+                    long fee = changeValue - inputValue;
                     item.setAmount(Coin.valueOf(fee));
                 })
                 .filter(item -> {
@@ -290,15 +301,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                     final Tx tx = readableBsqBlockChain.getTx(item.getTxId()).get();
                     final int blockHeight = tx.getBlockHeight();
                     final int issuanceBlockHeight = daoPeriodService.getAbsoluteStartBlockOfPhase(blockHeight, DaoPeriodService.Phase.ISSUANCE);
+                    // We use the time of the block height of the start of the issuance period
                     final long blockTimeInSec = readableBsqBlockChain.getBlockTime(issuanceBlockHeight);
-
-                    long inputValue = tx.getInputs().stream()
-                            .filter(input -> input.getConnectedTxOutput() != null)
-                            .mapToLong(input -> input.getConnectedTxOutput().getValue())
-                            .sum();
-                    long issuanceValue = tx.getOutputs().get(1).getValue();
-
-                    //TODO not good solution to just use a view specific TxType
                     final BsqTxListItem issuanceItem = new BsqTxListItem(item.getTransaction(),
                             bsqWalletService,
                             btcWalletService,
@@ -306,12 +310,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             item.isBurnedBsqTx(),
                             new Date(blockTimeInSec * 1000),
                             bsqFormatter);
+
+                    // On output 1 we have the issuance candidate
+                    long issuanceValue = tx.getOutputs().get(1).getValue();
                     issuanceItem.setAmount(Coin.valueOf(issuanceValue));
                     issuanceTxList.add(issuanceItem);
 
                 });
-        items.addAll(issuanceTxList);
-        observableList.setAll(items);
+        return issuanceTxList;
     }
 
     private void layout() {
@@ -319,7 +325,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     }
 
     private void addDateColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.dateTime"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
         column.setMaxWidth(column.getMinWidth() + 20);
@@ -353,7 +359,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     }
 
     private void addTxIdColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn(Res.get("shared.txId"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
@@ -416,31 +422,15 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             if (field != null)
                                                 field.setOnAction(null);
 
-                                            switch (txType) {
-                                                case UNDEFINED_TX_TYPE:
-                                                case UNVERIFIED:
-                                                    break;
-                                                case INVALID:
-                                                    break;
-                                                case GENESIS:
-                                                    break;
-                                                case TRANSFER_BSQ:
-                                                    if (item.getAmount().isZero())
-                                                        labelString = Res.get("funds.tx.direction.self");
-                                                    break;
-                                                case PAY_TRADE_FEE:
-                                                case COMPENSATION_REQUEST:
-                                                case BLIND_VOTE:
-                                                    break;
-                                                case ISSUANCE:
-                                                    break;
-                                                default:
-                                                    break;
+                                            if (txType == TxType.TRANSFER_BSQ) {
+                                                if (item.getAmount().isZero())
+                                                    labelString = Res.get("funds.tx.direction.self");
                                             }
 
                                             label = new AutoTooltipLabel(labelString);
                                             setGraphic(label);
                                         } else {
+                                            // Received
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
                                                     AwesomeIcon.EXTERNAL_LINK, item.isReceived());
