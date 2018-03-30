@@ -23,15 +23,15 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.node.BsqNode;
-import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.BooleanVoteResult;
+import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.VoteResult;
+import bisq.core.dao.vote.proposal.Proposal;
+import bisq.core.dao.vote.proposal.ProposalCollectionsService;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;

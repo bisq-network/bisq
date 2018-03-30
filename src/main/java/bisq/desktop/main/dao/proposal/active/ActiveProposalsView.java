@@ -31,13 +31,13 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
-import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsService;
-import bisq.core.dao.vote.BlindVoteService;
 import bisq.core.dao.vote.BooleanVoteResult;
+import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.proposal.Proposal;
+import bisq.core.dao.vote.proposal.ProposalCollectionsService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.CryptoException;

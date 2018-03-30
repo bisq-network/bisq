@@ -32,7 +32,6 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxOutput;
@@ -40,6 +39,7 @@ import bisq.core.dao.blockchain.vo.TxOutputType;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 

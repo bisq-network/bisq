@@ -28,11 +28,11 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.proposal.ProposalPayload;
-import bisq.core.dao.proposal.ProposalType;
-import bisq.core.dao.proposal.compensation.CompensationRequestPayload;
-import bisq.core.dao.proposal.compensation.consensus.Restrictions;
-import bisq.core.dao.proposal.consensus.ProposalConsensus;
+import bisq.core.dao.vote.proposal.ProposalPayload;
+import bisq.core.dao.vote.proposal.ProposalType;
+import bisq.core.dao.vote.proposal.compensation.CompensationRequestPayload;
+import bisq.core.dao.vote.proposal.compensation.consensus.Restrictions;
+import bisq.core.dao.vote.proposal.consensus.ProposalConsensus;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
