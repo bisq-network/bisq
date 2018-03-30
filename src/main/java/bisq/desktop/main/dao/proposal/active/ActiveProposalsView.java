@@ -30,7 +30,6 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.ChangeBelowDustException;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.dao.DaoPeriodService;
 import bisq.core.dao.blockchain.BsqBlockChain;
@@ -65,6 +64,8 @@ import javafx.scene.control.TableView;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -155,9 +156,9 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     e1.printStackTrace();
                 } catch (InsufficientMoneyException e1) {
                     e1.printStackTrace();
-                } catch (ChangeBelowDustException e1) {
-                    e1.printStackTrace();
                 } catch (InvalidProtocolBufferException e1) {
+                    e1.printStackTrace();
+                } catch (IOException e1) {
                     e1.printStackTrace();
                 }
             });

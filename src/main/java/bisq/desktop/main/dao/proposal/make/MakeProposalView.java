@@ -29,7 +29,6 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.ChangeBelowDustException;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
@@ -217,13 +216,12 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
-        } catch (ChangeBelowDustException e) {
-            //TODO
-            e.printStackTrace();
         }
     }
 
-    private Proposal createProposal(ProposalType type) throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException, WalletException, ChangeBelowDustException {
+    private Proposal createProposal(ProposalType type)
+            throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException,
+            WalletException {
         switch (type) {
             case COMPENSATION_REQUEST:
                 CompensationRequestPayload compensationRequestPayload = compensationRequestService.getNewCompensationRequestPayload(
