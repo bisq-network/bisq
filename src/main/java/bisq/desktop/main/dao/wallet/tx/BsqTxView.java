@@ -141,7 +141,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         addDateColumn();
         addTxIdColumn();
-        addAddressColumn();
+        addInformationColumn();
         addAmountColumn();
         addConfidenceColumn();
         addTxTypeColumn();
@@ -395,8 +395,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         tableView.getColumns().add(column);
     }
 
-    private void addAddressColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.address"));
+    private void addInformationColumn() {
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.information"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
