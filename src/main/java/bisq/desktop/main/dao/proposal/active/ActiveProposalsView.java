@@ -36,8 +36,8 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.proposal.Proposal;
 import bisq.core.dao.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.BlindVoteService;
 import bisq.core.dao.vote.BooleanVoteResult;
-import bisq.core.dao.vote.VoteService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.CryptoException;
@@ -83,7 +83,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
-    private final VoteService voteService;
+    private final BlindVoteService blindVoteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
@@ -97,14 +97,14 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     @Inject
     private ActiveProposalsView(ProposalCollectionsService voteRequestManger,
                                 DaoPeriodService daoPeriodService,
-                                VoteService voteService,
+                                BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
                                 BsqBlockChain bsqBlockChain,
                                 BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                                 BsqFormatter bsqFormatter) {
         super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
                 bsqFormatter);
-        this.voteService = voteService;
+        this.blindVoteService = blindVoteService;
     }
 
     @Override
@@ -134,7 +134,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 // TODO verify stake
                 //TODO show popup
                 try {
-                    voteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
+                    blindVoteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(@Nullable Transaction result) {
                             //TODO
