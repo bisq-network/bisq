@@ -27,8 +27,8 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalCollectionsService;
@@ -67,12 +67,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public abstract class BaseProposalView extends ActivatableView<GridPane, Void> implements BsqNode.BsqBlockChainListener {
+public abstract class BaseProposalView extends ActivatableView<GridPane, Void> implements BsqBlockChain.Listener {
 
     protected final ProposalCollectionsService proposalCollectionsService;
-    protected final BsqBlockChain bsqBlockChain;
+    protected final ReadableBsqBlockChain readableBsqBlockChain;
     protected final BsqWalletService bsqWalletService;
-    protected final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     protected final BsqFormatter bsqFormatter;
 
     protected final ObservableList<ProposalListItem> proposalListItems = FXCollections.observableArrayList();
@@ -99,14 +98,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     @Inject
     protected BaseProposalView(ProposalCollectionsService proposalCollectionsService,
                                BsqWalletService bsqWalletService,
-                               BsqBlockChain bsqBlockChain,
-                               BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
+                               ReadableBsqBlockChain readableBsqBlockChain,
                                DaoPeriodService daoPeriodService,
                                BsqFormatter bsqFormatter) {
         this.proposalCollectionsService = proposalCollectionsService;
         this.bsqWalletService = bsqWalletService;
-        this.bsqBlockChain = bsqBlockChain;
-        this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.daoPeriodService = daoPeriodService;
         this.bsqFormatter = bsqFormatter;
     }
@@ -128,7 +125,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
         daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
-        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
+        readableBsqBlockChain.addListener(this);
         proposalCollectionsService.getAllProposals().addListener(proposalListChangeListener);
 
         onPhaseChanged(daoPeriodService.getPhaseProperty().get());
@@ -144,7 +141,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         selectedProposalSubscription.unsubscribe();
 
         daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
-        bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
+        readableBsqBlockChain.removeListener(this);
         proposalCollectionsService.getAllProposals().removeListener(proposalListChangeListener);
 
         sortedList.comparatorProperty().unbind();
@@ -156,11 +153,11 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // BsqBlockChain.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBsqBlockChainChanged() {
+    public void onBlockAdded(BsqBlock bsqBlock) {
         // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
         //UserThread.execute(this::updateList);
     }
@@ -259,8 +256,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
                         proposalCollectionsService,
                         daoPeriodService,
                         bsqWalletService,
-                        bsqBlockChain,
-                        bsqBlockChainChangeDispatcher,
+                        readableBsqBlockChain,
                         bsqFormatter))
                 .collect(Collectors.toSet()));
 

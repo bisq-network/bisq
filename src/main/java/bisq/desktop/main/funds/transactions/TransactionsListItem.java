@@ -26,7 +26,7 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -80,7 +80,7 @@ class TransactionsListItem {
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Optional<Tradable> tradableOptional,
-                                BsqBlockChain bsqBlockChain,
+                                ReadableBsqBlockChain readableBsqBlockChain,
                                 BSFormatter formatter) {
         this.formatter = formatter;
         txId = transaction.getHashAsString();
@@ -130,7 +130,7 @@ class TransactionsListItem {
                             txFeeForBsqPayment = true;
 
                             //
-                            final Optional<TxType> txTypeOptional = bsqBlockChain.getTxType(txId);
+                            final Optional<TxType> txTypeOptional = readableBsqBlockChain.getTxType(txId);
                             if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
                                 details = Res.get("funds.tx.proposal");
                         } else {

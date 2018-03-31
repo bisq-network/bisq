@@ -32,13 +32,13 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxOutput;
 import bisq.core.dao.blockchain.vo.TxOutputType;
 import bisq.core.dao.blockchain.vo.TxType;
-import bisq.core.dao.node.BsqNode;
-import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -83,9 +83,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqBlockChain.Listener {
 
-    TableView<BsqTxListItem> tableView;
+    private TableView<BsqTxListItem> tableView;
     private Pane rootParent;
 
     private final BsqFormatter bsqFormatter;
@@ -94,7 +94,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final BsqNode bsqNode;
     private final Preferences preferences;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
@@ -104,7 +103,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
-    private BsqNode.BsqBlockChainListener bsqBlockChainListener;
     private ProgressBar chainSyncIndicator;
     private ChangeListener<Number> chainHeightChangedListener;
 
@@ -116,7 +114,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
-                      BsqNodeProvider bsqNodeProvider,
                       Preferences preferences,
                       ReadableBsqBlockChain readableBsqBlockChain,
                       DaoPeriodService daoPeriodService,
@@ -124,7 +121,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.bsqNode = bsqNodeProvider.getBsqNode();
         this.preferences = preferences;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.daoPeriodService = daoPeriodService;
@@ -172,7 +168,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         walletBsqTransactionsListener = change -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
-        bsqBlockChainListener = this::onChainHeightChanged;
         chainHeightChangedListener = (observable, oldValue, newValue) -> onChainHeightChanged();
     }
 
@@ -186,7 +181,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        bsqNode.addBsqBlockChainListener(bsqBlockChainListener);
+        readableBsqBlockChain.addListener(this);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -205,13 +200,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
-        bsqNode.removeBsqBlockChainListener(bsqBlockChainListener);
+        readableBsqBlockChain.removeListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
     }
+
 
     @Override
     public void onUpdateBalances(Coin confirmedBalance,
@@ -220,6 +216,17 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                  Coin lockedInBondsBalance) {
         updateList();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBlockChain.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBlockAdded(BsqBlock bsqBlock) {
+        onChainHeightChanged();
+    }
+
 
     private void onChainHeightChanged() {
         final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();

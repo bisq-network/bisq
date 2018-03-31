@@ -31,8 +31,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
@@ -99,10 +98,9 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 DaoPeriodService daoPeriodService,
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
-                                BsqBlockChain bsqBlockChain,
-                                BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
+                                ReadableBsqBlockChain readableBsqBlockChain,
                                 BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoPeriodService,
                 bsqFormatter);
         this.blindVoteService = blindVoteService;
     }

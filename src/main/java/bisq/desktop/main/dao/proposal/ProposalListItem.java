@@ -23,10 +23,10 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
+import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
-import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.VoteResult;
@@ -54,14 +54,13 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalListItem implements BsqNode.BsqBlockChainListener {
+public class ProposalListItem implements BsqBlockChain.Listener {
     @Getter
     private final Proposal proposal;
     private final ProposalCollectionsService proposalCollectionsService;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
-    private final BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     private final ChangeListener<VoteResult> voteResultChangeListener;
@@ -85,14 +84,12 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
                      DaoPeriodService daoPeriodService,
                      BsqWalletService bsqWalletService,
                      ReadableBsqBlockChain readableBsqBlockChain,
-                     BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.proposalCollectionsService = proposalCollectionsService;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
-        this.bsqBlockChainChangeDispatcher = bsqBlockChainChangeDispatcher;
         this.bsqFormatter = bsqFormatter;
 
 
@@ -111,7 +108,7 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        bsqBlockChainChangeDispatcher.addBsqBlockChainListener(this);
+        readableBsqBlockChain.addListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, proposal.getVoteResult());
@@ -188,10 +185,17 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
         //actionButtonIconView.setManaged(actionButtonIconView.isVisible());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBlockChain.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public void onBsqBlockChainChanged() {
+    public void onBlockAdded(BsqBlock bsqBlock) {
+        //TODO do we want that here???
         setupConfidence();
     }
+
 
     private void setupConfidence() {
         final Tx tx = readableBsqBlockChain.getTxMap().get(proposal.getProposalPayload().getTxId());
@@ -238,7 +242,7 @@ public class ProposalListItem implements BsqNode.BsqBlockChainListener {
     }
 
     public void cleanup() {
-        bsqBlockChainChangeDispatcher.removeBsqBlockChainListener(this);
+        readableBsqBlockChain.removeListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);

@@ -22,11 +22,11 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxOutput;
-import bisq.core.dao.node.BsqNode;
-import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.vote.MyVote;
 import bisq.core.locale.Res;
 
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class VoteListItem implements BsqNode.BsqBlockChainListener {
+public class VoteListItem implements BsqBlockChain.Listener {
     @Getter
     private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
@@ -76,7 +76,6 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
     VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
                  ReadableBsqBlockChain readableBsqBlockChain,
-                 BsqNodeProvider bsqNodeProvider,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;
@@ -89,7 +88,7 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
         txConfidenceIndicator.setProgress(-1);
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
-        bsqNodeProvider.getBsqNode().addBsqBlockChainListener(this);
+        readableBsqBlockChain.addListener(this);
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
@@ -97,11 +96,17 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
         calculateStake();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBlockChain.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public void onBsqBlockChainChanged() {
+    public void onBlockAdded(BsqBlock bsqBlock) {
+        //TODO do we want that here???
         setupConfidence();
-        calculateStake();
     }
+
 
     private void setupConfidence() {
         calculateStake();
@@ -162,9 +167,9 @@ public class VoteListItem implements BsqNode.BsqBlockChainListener {
 
     public void cleanup() {
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
+        readableBsqBlockChain.removeListener(this);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
-
     }
 
     private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
