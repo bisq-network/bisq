@@ -37,7 +37,6 @@ import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
-import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -75,6 +74,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +89,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
-    private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -114,14 +113,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
                       ReadableBsqBlockChain readableBsqBlockChain,
-                      DaoPeriodService daoPeriodService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.readableBsqBlockChain = readableBsqBlockChain;
-        this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -305,7 +302,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                     }
                 });
         tableView.getColumns().add(column);
-        column.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+        column.setComparator(Comparator.comparing(BsqTxListItem::getDate));
         column.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(column);
     }

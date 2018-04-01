@@ -28,11 +28,11 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.vote.proposal.ProposalConsensus;
 import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalType;
+import bisq.core.dao.vote.proposal.compensation.CompensationRequestConsensus;
 import bisq.core.dao.vote.proposal.compensation.CompensationRequestPayload;
-import bisq.core.dao.vote.proposal.compensation.consensus.Restrictions;
-import bisq.core.dao.vote.proposal.consensus.ProposalConsensus;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -136,7 +136,7 @@ public class ProposalDisplay {
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                 //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
                 //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
-                bsqValidator.setMinValue(Restrictions.getMinCompensationRequestAmount());
+                bsqValidator.setMinValue(CompensationRequestConsensus.getMinCompensationRequestAmount());
                 Objects.requireNonNull(requestedBsqTextField).setValidator(bsqValidator);
             }
             // TODO validator, addressTF

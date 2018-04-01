@@ -34,11 +34,11 @@ import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.proposal.ProposalConsensus;
 import bisq.core.dao.vote.proposal.ProposalType;
-import bisq.core.dao.vote.proposal.compensation.CompensationAmountException;
+import bisq.core.dao.vote.proposal.ValidationException;
 import bisq.core.dao.vote.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.vote.proposal.compensation.CompensationRequestService;
-import bisq.core.dao.vote.proposal.consensus.ProposalConsensus;
 import bisq.core.dao.vote.proposal.generic.GenericProposalPayload;
 import bisq.core.dao.vote.proposal.generic.GenericProposalService;
 import bisq.core.locale.Res;
@@ -66,6 +66,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
+
+import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -175,33 +177,31 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             Coin miningFee = Objects.requireNonNull(tx).getFee();
             int txSize = tx.bitcoinSerialize().length;
 
-            validateInputs();
-
             new Popup<>().headLine(Res.get("dao.proposal.create.confirm"))
                     .confirmation(Res.get("dao.proposal.create.confirm.info",
-                            bsqFormatter.formatCoinWithCode(
-                                    ProposalConsensus.getCreateCompensationRequestFee(readableBsqBlockChain)),
+                            bsqFormatter.formatCoinWithCode(ProposalConsensus.getFee(readableBsqBlockChain)),
                             btcFormatter.formatCoinWithCode(miningFee),
                             CoinUtil.getFeePerByte(miningFee, txSize),
-                            (txSize / 1000d)))
+                            txSize / 1000d))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
-                        proposalCollectionsService.publishProposal(proposal, new FutureCallback<Transaction>() {
-                            @Override
-                            public void onSuccess(@Nullable Transaction transaction) {
-                                proposalDisplay.clearForm();
+                        proposalCollectionsService.publishProposal(proposal,
+                                new FutureCallback<Transaction>() {
+                                    @Override
+                                    public void onSuccess(@Nullable Transaction transaction) {
+                                        proposalDisplay.clearForm();
 
-                                proposalTypeComboBox.getSelectionModel().clearSelection();
+                                        proposalTypeComboBox.getSelectionModel().clearSelection();
 
-                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                            }
+                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                    }
 
-                            @Override
-                            public void onFailure(@NotNull Throwable t) {
-                                log.error(t.toString());
-                                new Popup<>().warning(t.toString()).show();
-                            }
-                        });
+                                    @Override
+                                    public void onFailure(@NotNull Throwable t) {
+                                        log.error(t.toString());
+                                        new Popup<>().warning(t.toString()).show();
+                                    }
+                                });
                     })
                     .closeButtonText(Res.get("shared.cancel"))
                     .show();
@@ -209,10 +209,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
             new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
                     formatter.formatCoinWithCode(e.missing))).show();
-        } catch (CompensationAmountException e) {
-            new Popup<>().warning(Res.get("validation.bsq.amountBelowMinAmount",
-                    bsqFormatter.formatCoinWithCode(e.required))).show();
-        } catch (TransactionVerificationException | WalletException e) {
+        } catch (ValidationException e) {
+            String message;
+            if (e.getMinRequestAmount() != null) {
+                message = Res.get("validation.bsq.amountBelowMinAmount",
+                        bsqFormatter.formatCoinWithCode(e.getMinRequestAmount()));
+            } else {
+                message = e.getMessage();
+            }
+            new Popup<>().warning(message).show();
+        } catch (TransactionVerificationException | WalletException | IOException e) {
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
@@ -220,25 +226,28 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     }
 
     private Proposal createProposal(ProposalType type)
-            throws InsufficientMoneyException, TransactionVerificationException, CompensationAmountException,
-            WalletException {
+            throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
+            WalletException, IOException {
+
+        validateInputs();
+
         switch (type) {
             case COMPENSATION_REQUEST:
-                CompensationRequestPayload compensationRequestPayload = compensationRequestService.getNewCompensationRequestPayload(
+                CompensationRequestPayload compensationRequestPayload = compensationRequestService.getCompensationRequestPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
                         Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
-                return compensationRequestService.prepareCompensationRequest(compensationRequestPayload);
+                return compensationRequestService.getCompensationRequest(compensationRequestPayload);
             case GENERIC:
-                GenericProposalPayload genericProposalPayload = genericProposalService.getNewGenericProposalPayload(
+                GenericProposalPayload genericProposalPayload = genericProposalService.getGenericProposalPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());
-                return genericProposalService.prepareGenericProposal(genericProposalPayload);
+                return genericProposalService.getGenericProposal(genericProposalPayload);
             case CHANGE_PARAM:
                 //TODO
                 return null;
