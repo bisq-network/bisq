@@ -31,8 +31,8 @@ import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.proposal.ProposalPayload;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
 @FxmlView
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> implements BsqBlockChain.Listener {
 
-    protected final ProposalCollectionsService proposalCollectionsService;
+    protected final ProposalService proposalService;
     protected final ReadableBsqBlockChain readableBsqBlockChain;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
@@ -96,12 +96,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected BaseProposalView(ProposalCollectionsService proposalCollectionsService,
+    protected BaseProposalView(ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                ReadableBsqBlockChain readableBsqBlockChain,
                                DaoPeriodService daoPeriodService,
                                BsqFormatter bsqFormatter) {
-        this.proposalCollectionsService = proposalCollectionsService;
+        this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.daoPeriodService = daoPeriodService;
@@ -126,7 +126,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
         daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
         readableBsqBlockChain.addListener(this);
-        proposalCollectionsService.getAllProposals().addListener(proposalListChangeListener);
+        proposalService.getAllProposals().addListener(proposalListChangeListener);
 
         onPhaseChanged(daoPeriodService.getPhaseProperty().get());
 
@@ -142,7 +142,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
         daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
         readableBsqBlockChain.removeListener(this);
-        proposalCollectionsService.getAllProposals().removeListener(proposalListChangeListener);
+        proposalService.getAllProposals().removeListener(proposalListChangeListener);
 
         sortedList.comparatorProperty().unbind();
 
@@ -253,7 +253,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
         proposalListItems.setAll(list.stream()
                 .map(proposal -> new ProposalListItem(proposal,
-                        proposalCollectionsService,
+                        proposalService,
                         daoPeriodService,
                         bsqWalletService,
                         readableBsqBlockChain,

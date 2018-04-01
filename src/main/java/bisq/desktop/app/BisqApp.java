@@ -49,7 +49,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoManager;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
-import bisq.core.dao.vote.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -229,7 +229,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
             persistedDataHosts.add(injector.getInstance(DisputeManager.class));
             persistedDataHosts.add(injector.getInstance(P2PService.class));
-            persistedDataHosts.add(injector.getInstance(ProposalCollectionsService.class));
+            persistedDataHosts.add(injector.getInstance(ProposalService.class));
             persistedDataHosts.add(injector.getInstance(BlindVoteService.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor

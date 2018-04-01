@@ -31,7 +31,7 @@ import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.VoteResult;
 import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BsqBlockChain.Listener {
     @Getter
     private final Proposal proposal;
-    private final ProposalCollectionsService proposalCollectionsService;
+    private final ProposalService proposalService;
     private final DaoPeriodService daoPeriodService;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
@@ -80,13 +80,13 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     private Node actionNode;
 
     ProposalListItem(Proposal proposal,
-                     ProposalCollectionsService proposalCollectionsService,
+                     ProposalService proposalService,
                      DaoPeriodService daoPeriodService,
                      BsqWalletService bsqWalletService,
                      ReadableBsqBlockChain readableBsqBlockChain,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
-        this.proposalCollectionsService = proposalCollectionsService;
+        this.proposalService = proposalService;
         this.daoPeriodService = daoPeriodService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
@@ -131,7 +131,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalCollectionsService.isMine(proposal)) {
+                if (proposalService.isMine(proposal)) {
                     actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));

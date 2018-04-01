@@ -34,8 +34,8 @@ import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.VoteResult;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
-import bisq.core.dao.vote.proposal.ProposalCollectionsService;
 import bisq.core.dao.vote.proposal.ProposalList;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -87,7 +87,7 @@ public class MyVotesView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyVotesView(ProposalCollectionsService voteRequestManger,
+    private MyVotesView(ProposalService voteRequestManger,
                         DaoPeriodService daoPeriodService,
                         BlindVoteService blindVoteService,
                         BsqWalletService bsqWalletService,

@@ -36,7 +36,7 @@ import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalCollectionsService;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.CryptoException;
@@ -94,7 +94,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(ProposalCollectionsService voteRequestManger,
+    private ActiveProposalsView(ProposalService voteRequestManger,
                                 DaoPeriodService daoPeriodService,
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
@@ -267,7 +267,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
-                    if (proposalCollectionsService.isMine(proposal)) {
+                    if (proposalService.isMine(proposal)) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
                             removeButton.setOnAction(event -> onRemove());
@@ -326,12 +326,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(proposalCollectionsService.getActiveProposals());
+        doUpdateProposalList(proposalService.getActiveProposals());
     }
 
     private void updateStateAfterVote() {
         hideProposalDisplay();
-        proposalCollectionsService.persist();
+        proposalService.persist();
         proposalTableView.getSelectionModel().clearSelection();
     }
 
@@ -343,7 +343,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onRemove() {
-        if (proposalCollectionsService.removeProposal(selectedProposalListItem.getProposal()))
+        if (proposalService.removeProposal(selectedProposalListItem.getProposal()))
             hideProposalDisplay();
         else
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
