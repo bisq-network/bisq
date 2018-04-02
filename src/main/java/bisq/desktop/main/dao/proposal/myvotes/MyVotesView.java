@@ -29,16 +29,13 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoPeriodService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.node.BsqNodeProvider;
-import bisq.core.dao.proposal.ProposalCollectionsService;
-import bisq.core.dao.proposal.ProposalList;
 import bisq.core.dao.vote.BooleanVoteResult;
+import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.dao.vote.VoteResult;
-import bisq.core.dao.vote.VoteService;
+import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.proposal.ProposalList;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -74,10 +71,8 @@ import java.util.stream.Collectors;
 
 @FxmlView
 public class MyVotesView extends BaseProposalView {
-
-    private final VoteService voteService;
+    private final BlindVoteService blindVoteService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
-    private final BsqNodeProvider bsqNodeProvider;
     private final Preferences preferences;
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
@@ -92,21 +87,17 @@ public class MyVotesView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyVotesView(ProposalCollectionsService voteRequestManger,
+    private MyVotesView(ProposalService voteRequestManger,
                         DaoPeriodService daoPeriodService,
-                        VoteService voteService,
+                        BlindVoteService blindVoteService,
                         BsqWalletService bsqWalletService,
-                        BsqBlockChain bsqBlockChain,
-                        BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
                         ReadableBsqBlockChain readableBsqBlockChain,
-                        BsqNodeProvider bsqNodeProvider,
                         Preferences preferences,
                         BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoPeriodService,
                 bsqFormatter);
-        this.voteService = voteService;
+        this.blindVoteService = blindVoteService;
         this.readableBsqBlockChain = readableBsqBlockChain;
-        this.bsqNodeProvider = bsqNodeProvider;
         this.preferences = preferences;
     }
 
@@ -131,8 +122,8 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = voteService.getMyVotesList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqNodeProvider, bsqFormatter))
+        List<VoteListItem> items = blindVoteService.getMyVotesList().stream()
+                .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }

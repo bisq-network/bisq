@@ -25,6 +25,7 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.locale.Res;
 
@@ -38,57 +39,41 @@ import javafx.scene.control.Tooltip;
 import java.util.Date;
 import java.util.Optional;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-@ToString
-@Slf4j
-@EqualsAndHashCode
+@Data
 class BsqTxListItem {
-    @Getter
     private final Transaction transaction;
-    private BsqWalletService bsqWalletService;
-    private BtcWalletService btcWalletService;
-    @Getter
-    private final Date date;
-    @Getter
+    private final Optional<Tx> optionalTx;
+    private final BsqWalletService bsqWalletService;
+    private final BtcWalletService btcWalletService;
+    private Date date;
     private final String txId;
-    @Getter
     private int confirmations = 0;
-    @Getter
     private final String address;
-    @Getter
     private final String direction;
-    @Getter
     private Coin amount;
-    @Getter
     private boolean received;
-    @Getter
-    private Optional<TxType> txTypeOptional;
-    @Getter
     private boolean isBurnedBsqTx;
     private BsqFormatter bsqFormatter;
-    @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
-
     private TxConfidenceListener txConfidenceListener;
+    private boolean issuanceTx;
 
-    public BsqTxListItem(Transaction transaction,
-                         BsqWalletService bsqWalletService,
-                         BtcWalletService btcWalletService,
-                         Optional<TxType> txTypeOptional,
-                         boolean isBurnedBsqTx,
-                         Date date,
-                         BsqFormatter bsqFormatter) {
+    BsqTxListItem(Transaction transaction,
+                  Optional<Tx> optionalTx,
+                  BsqWalletService bsqWalletService,
+                  BtcWalletService btcWalletService,
+                  boolean isBurnedBsqTx,
+                  Date date,
+                  BsqFormatter bsqFormatter) {
         this.transaction = transaction;
+        this.optionalTx = optionalTx;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.txTypeOptional = txTypeOptional;
         this.isBurnedBsqTx = isBurnedBsqTx;
         this.date = date;
         this.bsqFormatter = bsqFormatter;
@@ -174,8 +159,8 @@ class BsqTxListItem {
     }
 
     public TxType getTxType() {
-        if (txTypeOptional.isPresent())
-            return txTypeOptional.get();
+        if (optionalTx.isPresent())
+            return optionalTx.get().getTxType();
         else
             return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
     }

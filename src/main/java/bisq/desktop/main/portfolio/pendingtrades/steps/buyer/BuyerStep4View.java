@@ -211,7 +211,7 @@ public class BuyerStep4View extends TradeStepView {
                 } else {
                     if (toAddresses.isEmpty()) {
                         validateWithdrawAddress();
-                    } else if (Restrictions.isAboveDust(amount, fee)) {
+                    } else if (Restrictions.isAboveDust(receiverAmount)) {
                         BSFormatter formatter = model.btcFormatter;
                         int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                         double feePerByte = CoinUtil.getFeePerByte(fee, txSize);

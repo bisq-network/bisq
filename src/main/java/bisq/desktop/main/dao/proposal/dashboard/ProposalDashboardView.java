@@ -23,7 +23,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoPeriodService;
+import bisq.core.dao.vote.DaoPeriodService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;

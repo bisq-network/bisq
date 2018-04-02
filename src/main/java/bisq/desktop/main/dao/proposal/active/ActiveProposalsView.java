@@ -30,15 +30,13 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.ChangeBelowDustException;
 import bisq.core.btc.wallet.InsufficientBsqException;
-import bisq.core.dao.DaoPeriodService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.BsqBlockChainChangeDispatcher;
-import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.ProposalCollectionsService;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.vote.BooleanVoteResult;
-import bisq.core.dao.vote.VoteService;
+import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.proposal.Proposal;
+import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.CryptoException;
@@ -66,6 +64,8 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -82,7 +82,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
-    private final VoteService voteService;
+    private final BlindVoteService blindVoteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
@@ -94,16 +94,15 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(ProposalCollectionsService voteRequestManger,
+    private ActiveProposalsView(ProposalService voteRequestManger,
                                 DaoPeriodService daoPeriodService,
-                                VoteService voteService,
+                                BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
-                                BsqBlockChain bsqBlockChain,
-                                BsqBlockChainChangeDispatcher bsqBlockChainChangeDispatcher,
+                                ReadableBsqBlockChain readableBsqBlockChain,
                                 BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, bsqBlockChain, bsqBlockChainChangeDispatcher, daoPeriodService,
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoPeriodService,
                 bsqFormatter);
-        this.voteService = voteService;
+        this.blindVoteService = blindVoteService;
     }
 
     @Override
@@ -133,7 +132,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 // TODO verify stake
                 //TODO show popup
                 try {
-                    voteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
+                    blindVoteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(@Nullable Transaction result) {
                             //TODO
@@ -155,9 +154,9 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     e1.printStackTrace();
                 } catch (InsufficientMoneyException e1) {
                     e1.printStackTrace();
-                } catch (ChangeBelowDustException e1) {
-                    e1.printStackTrace();
                 } catch (InvalidProtocolBufferException e1) {
+                    e1.printStackTrace();
+                } catch (IOException e1) {
                     e1.printStackTrace();
                 }
             });
@@ -268,7 +267,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
-                    if (proposalCollectionsService.isMine(proposal)) {
+                    if (proposalService.isMine(proposal)) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
                             removeButton.setOnAction(event -> onRemove());
@@ -327,12 +326,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(proposalCollectionsService.getActiveProposals());
+        doUpdateProposalList(proposalService.getActiveProposals());
     }
 
     private void updateStateAfterVote() {
         hideProposalDisplay();
-        proposalCollectionsService.persist();
+        proposalService.persist();
         proposalTableView.getSelectionModel().clearSelection();
     }
 
@@ -344,7 +343,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onRemove() {
-        if (proposalCollectionsService.removeProposal(selectedProposalListItem.getProposal()))
+        if (proposalService.removeProposal(selectedProposalListItem.getProposal()))
             hideProposalDisplay();
         else
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();

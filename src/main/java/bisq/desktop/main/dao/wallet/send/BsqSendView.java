@@ -37,6 +37,7 @@ import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.util.CoinUtil;
@@ -68,6 +69,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
+    private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
@@ -91,6 +93,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService,
                         BtcWalletService btcWalletService,
+                        WalletsManager walletsManager,
                         WalletsSetup walletsSetup,
                         P2PService p2PService,
                         BsqFormatter bsqFormatter,
@@ -101,6 +104,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.bsqFormatter = bsqFormatter;
@@ -155,12 +159,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     bsqFormatter.formatCoinWithCode(receiverAmount)))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                bsqWalletService.commitTx(txWithBtcFee);
-                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                // if it gets committed 2 times
-                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-
-                                bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                walletsManager.publishAndCommitBsqTx(txWithBtcFee, new FutureCallback<Transaction>() {
                                     @Override
                                     public void onSuccess(@Nullable Transaction transaction) {
                                         if (transaction != null) {
@@ -173,7 +172,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                         log.error(t.toString());
                                         new Popup<>().warning(t.toString());
                                     }
-                                }, 15);
+                                });
 
                                 receiversAddressInputTextField.setText("");
                                 amountInputTextField.setText("");

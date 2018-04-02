@@ -21,7 +21,7 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
+import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.trade.Tradable;
 
 import org.bitcoinj.core.Transaction;
@@ -35,15 +35,15 @@ import javax.annotation.Nullable;
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final BsqBlockChain bsqBlockChain;
+    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BSFormatter formatter;
 
     @Inject
     TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                               BsqBlockChain bsqBlockChain, BSFormatter formatter) {
+                               ReadableBsqBlockChain readableBsqBlockChain, BSFormatter formatter) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.bsqBlockChain = bsqBlockChain;
+        this.readableBsqBlockChain = readableBsqBlockChain;
         this.formatter = formatter;
     }
 
@@ -51,6 +51,6 @@ public class TransactionListItemFactory {
         Optional<Tradable> maybeTradable = Optional.ofNullable(tradable)
                 .map(TransactionAwareTradable::asTradable);
 
-        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable, bsqBlockChain, formatter);
+        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable, readableBsqBlockChain, formatter);
     }
 }
