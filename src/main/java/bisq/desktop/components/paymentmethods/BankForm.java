@@ -92,15 +92,19 @@ abstract class BankForm extends PaymentMethodForm {
             nrRows++;
         if (BankUtil.isAccountTypeRequired(countryCode))
             nrRows++;
+        if (BankUtil.isNationalAccountIdRequired(countryCode))
+            nrRows++;
 
         String bankNameLabel = BankUtil.getBankNameLabel(countryCode);
         String bankIdLabel = BankUtil.getBankIdLabel(countryCode);
         String branchIdLabel = BankUtil.getBranchIdLabel(countryCode);
+        String nationalAccountIdLabel = BankUtil.getNationalAccountIdLabel(countryCode);
         String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
         String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode);
 
 
         boolean accountNrAccountTypeCombined = false;
+        boolean nationalAccountIdAccountNrCombined = false;
         boolean bankNameBankIdCombined = false;
         boolean bankIdBranchIdCombined = false;
         boolean bankNameBranchIdCombined = false;
@@ -113,32 +117,41 @@ abstract class BankForm extends PaymentMethodForm {
                 nrRows--;
 
             if (nrRows > 2) {
-                // Next we try BankName + BankId
-                bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
-                if (bankNameBankIdCombined)
+
+                nationalAccountIdAccountNrCombined = BankUtil.isAccountNrRequired(countryCode) &&
+                        BankUtil.isNationalAccountIdRequired(countryCode);
+
+                if (nationalAccountIdAccountNrCombined)
                     nrRows--;
 
                 if (nrRows > 2) {
-                    // Next we try BankId + BranchId
-                    bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
-                    if (bankIdBranchIdCombined)
+                    // Next we try BankName + BankId
+                    bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
+                    if (bankNameBankIdCombined)
                         nrRows--;
 
                     if (nrRows > 2) {
                         // Next we try BankId + BranchId
-                        bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
-                                BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
-                        if (bankNameBranchIdCombined)
+                        bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
+                        if (bankIdBranchIdCombined)
                             nrRows--;
 
                         if (nrRows > 2) {
-                            branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined && !accountNrAccountTypeCombined &&
-                                    BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
-                            if (branchIdAccountNrCombined)
+                            // Next we try BankId + BranchId
+                            bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
+                                    BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
+                            if (bankNameBranchIdCombined)
                                 nrRows--;
 
-                            if (nrRows > 2)
-                                log.warn("We still have too many rows....");
+                            if (nrRows > 2) {
+                                branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined && !accountNrAccountTypeCombined &&
+                                        BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
+                                if (branchIdAccountNrCombined)
+                                    nrRows--;
+
+                                if (nrRows > 2)
+                                    log.warn("We still have too many rows....");
+                            }
                         }
                     }
                 }
@@ -189,26 +202,33 @@ abstract class BankForm extends PaymentMethodForm {
                     data.getAccountNr() + " / " + data.getAccountType());
         }
 
-        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && BankUtil.isAccountNrRequired(countryCode))
+        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && !nationalAccountIdAccountNrCombined &&
+                BankUtil.isAccountNrRequired(countryCode))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
 
         if (!accountNrAccountTypeCombined && BankUtil.isAccountTypeRequired(countryCode))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
 
+        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && nationalAccountIdAccountNrCombined)
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    nationalAccountIdLabel.substring(0, nationalAccountIdLabel.length() - 1) + " / " +
+                            accountNrLabel.substring(0, accountNrLabel.length() - 1), data.getNationalAccountId() +
+                            " / " + data.getAccountNr());
+
         return gridRow;
     }
 
     protected final BankAccountPayload bankAccountPayload;
-    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
+    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField,
+            holderIdInputTextField, nationalAccountIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
-    private Label bankIdLabel;
-    private Label branchIdLabel;
-    private Label accountNrLabel;
+    private Label bankIdLabel, branchIdLabel, accountNrLabel, nationalAccountIdLabel;
     private Tuple2<Label, InputTextField> bankIdTuple;
     private Tuple2<Label, InputTextField> accountNrTuple;
     private Tuple2<Label, InputTextField> branchIdTuple;
     private Tuple2<Label, InputTextField> bankNameTuple;
+    private Tuple2<Label, InputTextField> nationalAccountIdTuple;
     private Tuple2<Label, ComboBox> accountTypeTuple;
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
@@ -252,6 +272,10 @@ abstract class BankForm extends PaymentMethodForm {
         if (BankUtil.isBranchIdRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
                     bankAccountPayload.getBranchId()).second.setMouseTransparent(false);
+
+        if (BankUtil.isNationalAccountIdRequired(countryCode))
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(countryCode),
+                    bankAccountPayload.getNationalAccountId()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountNrRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
@@ -315,12 +339,14 @@ abstract class BankForm extends PaymentMethodForm {
 
                 bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
                 branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
+                nationalAccountIdLabel.setText(BankUtil.getNationalAccountIdLabel(countryCode));
                 accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
                 accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
 
                 bankNameInputTextField.setText("");
                 bankIdInputTextField.setText("");
                 branchIdInputTextField.setText("");
+                nationalAccountIdInputTextField.setText("");
                 accountNrInputTextField.setText("");
                 accountTypeComboBox.getSelectionModel().clearSelection();
                 accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
@@ -369,6 +395,11 @@ abstract class BankForm extends PaymentMethodForm {
                     holderIdLabel.setManaged(requiresHolderId);
                 }
 
+                boolean nationalAccountIdRequired = BankUtil.isNationalAccountIdRequired(countryCode);
+                nationalAccountIdTuple.first.setVisible(nationalAccountIdRequired);
+                nationalAccountIdTuple.first.setManaged(nationalAccountIdRequired);
+                nationalAccountIdInputTextField.setVisible(nationalAccountIdRequired);
+                nationalAccountIdInputTextField.setManaged(nationalAccountIdRequired);
 
                 boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
                 bankNameTuple.first.setVisible(bankNameRequired);
@@ -453,6 +484,16 @@ abstract class BankForm extends PaymentMethodForm {
         addAcceptedBanksForAddAccount();
 
         addHolderNameAndId();
+
+        nationalAccountIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(""));
+        nationalAccountIdLabel = nationalAccountIdTuple.first;
+        nationalAccountIdInputTextField = nationalAccountIdTuple.second;
+
+        nationalAccountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            bankAccountPayload.setNationalAccountId(newValue);
+            updateFromInputs();
+
+        });
 
         bankNameTuple = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
         bankNameInputTextField = bankNameTuple.second;
@@ -571,6 +612,16 @@ abstract class BankForm extends PaymentMethodForm {
                 accountNameTextField.setText(method.concat(": ").concat(bankId).concat(", ").concat(accountNr));
             else
                 accountNameTextField.setText(method.concat(": ").concat(accountNr));
+
+            if (BankUtil.isNationalAccountIdRequired(countryCode)) {
+                String nationalAccountId = nationalAccountIdInputTextField.getText();
+
+                if (countryCode.equals("AR") && nationalAccountId.length() == 22) {
+                    branchIdInputTextField.setText(nationalAccountId.substring(3,7));
+                    accountNrInputTextField.setText(nationalAccountId.substring(8,21));
+                }
+            }
+
         }
     }
 
