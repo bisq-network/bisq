@@ -27,11 +27,11 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
-import bisq.core.dao.vote.BooleanVoteResult;
 import bisq.core.dao.vote.DaoPeriodService;
-import bisq.core.dao.vote.VoteResult;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
+import bisq.core.dao.vote.result.BooleanVoteResult;
+import bisq.core.dao.vote.result.VoteResult;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
