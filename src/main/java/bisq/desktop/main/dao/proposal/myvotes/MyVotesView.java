@@ -31,7 +31,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.vote.PeriodService;
-import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.dao.vote.result.BooleanVoteResult;
@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 
 @FxmlView
 public class MyVotesView extends BaseProposalView {
-    private final BlindVoteService blindVoteService;
+    private final MyVoteService myVoteService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
     private final Preferences preferences;
 
@@ -89,14 +89,14 @@ public class MyVotesView extends BaseProposalView {
     @Inject
     private MyVotesView(ProposalService voteRequestManger,
                         PeriodService periodService,
-                        BlindVoteService blindVoteService,
+                        MyVoteService myVoteService,
                         BsqWalletService bsqWalletService,
                         ReadableBsqBlockChain readableBsqBlockChain,
                         Preferences preferences,
                         BsqFormatter bsqFormatter) {
         super(voteRequestManger, bsqWalletService, readableBsqBlockChain, periodService,
                 bsqFormatter);
-        this.blindVoteService = blindVoteService;
+        this.myVoteService = myVoteService;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.preferences = preferences;
     }
@@ -122,7 +122,7 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = blindVoteService.getMyVotesList().stream()
+        List<VoteListItem> items = myVoteService.getMyVotesList().stream()
                 .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
