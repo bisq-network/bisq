@@ -6,6 +6,7 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.hamcrest.Matcher;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.junit.Ignore;
@@ -19,22 +20,22 @@ import static org.hamcrest.Matchers.*;
 public class TradeResourceIT {
 
     @DockerContainer
-    Container alice;
+    private Container alice;
 
     @DockerContainer
-    Container bob;
+    private Container bob;
 
     @DockerContainer
-    Container arbitrator;
+    private Container arbitrator;
 
     @SuppressWarnings("unused")
     @DockerContainer(order = 4)
-    Container seedNode;
+    private Container seedNode;
 
     @DockerContainer
-    Container bitcoin;
+    private Container bitcoin;
 
-    OfferResourceIT offerResourceIT = new OfferResourceIT();
+    private OfferResourceIT offerResourceIT = new OfferResourceIT();
 
     private static String tradeId;
 
@@ -76,7 +77,7 @@ public class TradeResourceIT {
 
     @InSequence(1)
     @Test
-    public void getTrades_returnsTrade() throws Exception {
+    public void getTrades_returnsTrade() {
         final int alicePort = getAlicePort();
 
         final SepaPaymentAccount alicePaymentAccount = OfferResourceIT.alicePaymentAccount;
@@ -94,7 +95,7 @@ public class TradeResourceIT {
 
                 and().body("trades[0].offer.id", isA(String.class)).
                 and().body("trades[0].offer.acceptedCountryCodes", equalTo(alicePaymentAccount.acceptedCountries)).
-                and().body("trades[0].offer.amount", equalTo(1)).
+                and().body("trades[0].offer.amount", equalTo(6250000)).
                 and().body("trades[0].offer.arbitratorNodeAddresses", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
                 and().body("trades[0].offer.baseCurrencyCode", equalTo("BTC")).
                 and().body("trades[0].offer.bankId", equalTo(alicePaymentAccount.bic)).
@@ -109,12 +110,12 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.isCurrencyForMakerFeeBtc", equalTo(true)).
                 and().body("trades[0].offer.isPrivateOffer", equalTo(false)).
                 and().body("trades[0].offer.lowerClosePrice", equalTo(0)).
-                and().body("trades[0].offer.makerFee", equalTo(5000)).
+                and().body("trades[0].offer.makerFee", equalTo(12500)).
                 and().body("trades[0].offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("trades[0].offer.marketPriceMargin", equalTo(10f)).
                 and().body("trades[0].offer.maxTradeLimit", equalTo(25000000)).
                 and().body("trades[0].offer.maxTradePeriod", equalTo(518400000)).
-                and().body("trades[0].offer.minAmount", equalTo(1)).
+                and().body("trades[0].offer.minAmount", equalTo(6250000)).
                 and().body("trades[0].offer.offerFeePaymentTxId", isA(String.class)).
                 and().body("trades[0].offer.ownerNodeAddress", equalTo(ApiTestHelper.getP2PNetworkStatus(alicePort).address)).
                 and().body("trades[0].offer.paymentMethodId", equalTo(alicePaymentAccount.paymentMethod)).
@@ -151,7 +152,7 @@ public class TradeResourceIT {
                 and().body("trades[0].takeOfferDate", isA(Long.class)).
                 and().body("trades[0].takerFeeTxId", isA(String.class)).
                 and().body("trades[0].payoutTxId", isEmptyOrNullString()).
-                and().body("trades[0].tradeAmount", equalTo(1)).
+                and().body("trades[0].tradeAmount", equalTo(6250000)).
                 and().body("trades[0].tradePrice", equalTo(10)).
                 and().body("trades[0].state", isOneOf(ApiTestHelper.toString(Trade.State.values()))).
                 and().body("trades[0].disputeState", equalTo(Trade.DisputeState.NO_DISPUTE.name())).
@@ -172,27 +173,27 @@ public class TradeResourceIT {
     @Ignore
     @InSequence(2)
     @Test
-    public void paymentStarted_invokedBySeller_returnsXXX() throws Exception {
+    public void paymentStarted_invokedBySeller_returnsXXX() {
 
     }
 
     @InSequence(2)
     @Test
-    public void paymentStarted_missingId_returns404() throws Exception {
+    public void paymentStarted_missingId_returns404() {
         paymentStarted_template("", 404);
     }
 
 
     @InSequence(2)
     @Test
-    public void paymentStarted_tradeDoesNotExist_returns404() throws Exception {
+    public void paymentStarted_tradeDoesNotExist_returns404() {
         paymentStarted_template(tradeId + "1", 404);
     }
 
 
     @InSequence(2)
     @Test
-    public void paymentStarted_beforeBlockGenerated_returns422() throws Exception {
+    public void paymentStarted_beforeBlockGenerated_returns422() {
         paymentStarted_template(tradeId, 422);
     }
 
@@ -205,29 +206,79 @@ public class TradeResourceIT {
 
     @InSequence(4)
     @Test
-    public void paymentReceived_beforePaymentStarted_returns422() throws Exception {
+    public void paymentReceived_beforePaymentStarted_returns422() {
         paymentReceived_template(tradeId, 422);
     }
 
     @InSequence(5)
     @Test
-    public void paymentStarted_tradeExists_returns200() throws Exception {
+    public void paymentStarted_tradeExists_returns200() {
         paymentStarted_template(tradeId, 200);
         assertTradeState(tradeId, Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
     }
 
     @InSequence(5)
     @Test
-    public void paymentReceived_tradeDoesNotExist_returns404() throws Exception {
+    public void paymentReceived_tradeDoesNotExist_returns404() {
         paymentReceived_template(tradeId + "1", 404);
     }
 
     @InSequence(6)
     @Test
+    public void moveFundsToBisqWallet_beforeTradeComplete_returns422() {
+        final String unknownTradeId = tradeId;
+        moveFundsToBisqWallet_template(getAlicePort(), unknownTradeId, 422);
+    }
+
+    @InSequence(7)
+    @Test
     public void paymentReceived_tradeExists_returns200() throws Exception {
         paymentReceived_template(tradeId, 200);
         ApiTestHelper.waitForP2PMsgPropagation();
         assertTradeState(tradeId, Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
+    }
+
+    @InSequence(8)
+    @Test
+    public void moveFundsToBisqWallet_tradeNotFound_returns404() {
+        final String unknownTradeId = tradeId + tradeId;
+        moveFundsToBisqWallet_template(getAlicePort(), unknownTradeId, 404);
+        assertTradeNotFound(getAlicePort(), unknownTradeId);
+    }
+
+    @InSequence(8)
+    @Test
+    public void moveFundsToBisqWallet_tradeExists_returns200() {
+        moveFundsToBisqWallet_template(getAlicePort(), tradeId, 204);
+        moveFundsToBisqWallet_template(getBobPort(), tradeId, 204);
+        assertTradeNotFound(getBobPort(), tradeId);
+        assertTradeNotFound(getAlicePort(), tradeId);
+        assertWalletBalance(getAlicePort(), greaterThan(100000000));
+        assertWalletBalance(getBobPort(), lessThan((int) (100000000 - OfferResourceIT.createdOffer.amount)));
+    }
+
+    private void assertWalletBalance(int apiPort, Matcher matcher) {
+        given().
+                port(apiPort).
+//
+        when().
+                get("/api/v1/wallet").
+//
+        then().
+                statusCode(200).
+                and().body("availableBalance", matcher)
+        ;
+    }
+
+    private void assertTradeNotFound(int apiPort, String tradeId) {
+        given().
+                port(apiPort).
+//
+        when().
+                get("/api/v1/trades/" + tradeId).
+//
+        then().
+                statusCode(404);
     }
 
     private void assertTradeState(String tradeId, Trade.State state) {
@@ -260,6 +311,18 @@ public class TradeResourceIT {
 //
         when().
                 post("/api/v1/trades/" + tradeId + "/payment-received").
+//
+        then().
+                statusCode(expectedStatusCode)
+        ;
+    }
+
+    private void moveFundsToBisqWallet_template(int apiPort, String tradeId, int expectedStatusCode) {
+        given().
+                port(apiPort).
+//
+        when().
+                post("/api/v1/trades/" + tradeId + "/move-funds-to-bisq-wallet").
 //
         then().
                 statusCode(expectedStatusCode)

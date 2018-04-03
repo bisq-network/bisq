@@ -378,7 +378,7 @@ public class BisqProxy {
         Coin availableBalance = btcWalletService.getAvailableBalance();
         Coin reservedBalance = updateReservedBalance();
         Coin lockedBalance = updateLockedBalance();
-        return new BisqProxyResult<>(new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString(), lockedBalance.toPlainString()));
+        return new BisqProxyResult<>(new WalletDetails(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue()));
     }
 
     // TODO copied from MainViewModel - refactor !
@@ -493,6 +493,9 @@ public class BisqProxy {
 
     public void moveFundsToBisqWallet(String tradeId) {
         final Trade trade = getTrade(tradeId);
+        final Trade.State tradeState = trade.getState();
+        if (!Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG.equals(tradeState) && !Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG.equals(tradeState))
+            throw new ValidationException("Trade is not in the correct state to transfer funds out: " + tradeState);
         btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         // TODO do we need to handle this ui stuff? --> handleTradeCompleted();
         tradeManager.addTradeToClosedTrades(trade);
