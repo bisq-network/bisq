@@ -47,7 +47,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.DaoManager;
+import bisq.core.dao.DaoSetup;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
@@ -478,7 +478,7 @@ public class BisqApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(DaoManager.class).shutDown();
+                injector.getInstance(DaoSetup.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
