@@ -1,14 +1,12 @@
 package io.bisq.api.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class WalletDetails {
-    @JsonProperty
-    private String available_balance;
-    @JsonProperty
-    private String reserved_balance;
-    @JsonProperty
-    private String locked_balance;
+
+    public long availableBalance;
+    public long reservedBalance;
+    public long lockedBalance;
+
 }
