@@ -29,7 +29,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalService;
@@ -84,9 +84,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     protected GridPane detailsGridPane, gridPane;
     protected ProposalListItem selectedProposalListItem;
     protected ListChangeListener<Proposal> proposalListChangeListener;
-    protected ChangeListener<DaoPeriodService.Phase> phaseChangeListener;
-    protected final DaoPeriodService daoPeriodService;
-    protected DaoPeriodService.Phase currentPhase;
+    protected ChangeListener<PeriodService.Phase> phaseChangeListener;
+    protected final PeriodService periodService;
+    protected PeriodService.Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
 
@@ -99,12 +99,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     protected BaseProposalView(ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                ReadableBsqBlockChain readableBsqBlockChain,
-                               DaoPeriodService daoPeriodService,
+                               PeriodService periodService,
                                BsqFormatter bsqFormatter) {
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
-        this.daoPeriodService = daoPeriodService;
+        this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -121,14 +121,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), this::onPhaseChanged);
+        phaseSubscription = EasyBind.subscribe(periodService.getPhaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
-        daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
+        periodService.getPhaseProperty().addListener(phaseChangeListener);
         readableBsqBlockChain.addListener(this);
         proposalService.getAllProposals().addListener(proposalListChangeListener);
 
-        onPhaseChanged(daoPeriodService.getPhaseProperty().get());
+        onPhaseChanged(periodService.getPhaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -140,7 +140,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
+        periodService.getPhaseProperty().removeListener(phaseChangeListener);
         readableBsqBlockChain.removeListener(this);
         proposalService.getAllProposals().removeListener(proposalListChangeListener);
 
@@ -234,7 +234,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
             hideProposalDisplay();
     }
 
-    protected void onPhaseChanged(DaoPeriodService.Phase phase) {
+    protected void onPhaseChanged(PeriodService.Phase phase) {
         if (!phase.equals(this.currentPhase)) {
             this.currentPhase = phase;
             onSelectProposal(selectedProposalListItem);
@@ -254,7 +254,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         proposalListItems.setAll(list.stream()
                 .map(proposal -> new ProposalListItem(proposal,
                         proposalService,
-                        daoPeriodService,
+                        periodService,
                         bsqWalletService,
                         readableBsqBlockChain,
                         bsqFormatter))

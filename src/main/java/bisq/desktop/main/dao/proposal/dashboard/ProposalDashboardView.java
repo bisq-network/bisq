@@ -23,7 +23,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -48,8 +48,8 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private final BsqWalletService bsqWalletService;
-    private final DaoPeriodService daoPeriodService;
-    private DaoPeriodService.Phase currentPhase;
+    private final PeriodService periodService;
+    private PeriodService.Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
     private int gridRow = 0;
@@ -61,9 +61,9 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(DaoPeriodService daoPeriodService,
+    private ProposalDashboardView(PeriodService periodService,
                                   BsqWalletService bsqWalletService) {
-        this.daoPeriodService = daoPeriodService;
+        this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
     }
 
@@ -97,14 +97,14 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
     private SeparatedPhaseBars createSeparatedPhaseBars() {
         phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.PROPOSAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK1, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BLIND_VOTE, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK2, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.VOTE_REVEAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.ISSUANCE, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPeriodService.Phase.BREAK4, false));
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.PROPOSAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK1, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BLIND_VOTE, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK2, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.VOTE_REVEAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK3, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.ISSUANCE, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK4, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }
 
@@ -114,7 +114,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
         bsqWalletService.getChainHeightProperty().addListener(chainHeightChangeListener);
 
-        phaseSubscription = EasyBind.subscribe(daoPeriodService.getPhaseProperty(), phase -> {
+        phaseSubscription = EasyBind.subscribe(periodService.getPhaseProperty(), phase -> {
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
             }
@@ -141,8 +141,8 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
     private void onChainHeightChanged(int height) {
         phaseBarsItems.forEach(item -> {
-            int startBlock = daoPeriodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
-            int endBlock = daoPeriodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
+            int startBlock = periodService.getAbsoluteStartBlockOfPhase(height, item.getPhase());
+            int endBlock = periodService.getAbsoluteEndBlockOfPhase(height, item.getPhase());
             item.setStartAndEnd(startBlock, endBlock);
             double progress = 0;
             if (height >= startBlock && height <= endBlock) {

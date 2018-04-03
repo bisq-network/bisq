@@ -30,7 +30,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
 import bisq.core.dao.vote.proposal.ProposalService;
@@ -88,13 +88,13 @@ public class MyVotesView extends BaseProposalView {
 
     @Inject
     private MyVotesView(ProposalService voteRequestManger,
-                        DaoPeriodService daoPeriodService,
+                        PeriodService periodService,
                         BlindVoteService blindVoteService,
                         BsqWalletService bsqWalletService,
                         ReadableBsqBlockChain readableBsqBlockChain,
                         Preferences preferences,
                         BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoPeriodService,
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, periodService,
                 bsqFormatter);
         this.blindVoteService = blindVoteService;
         this.readableBsqBlockChain = readableBsqBlockChain;

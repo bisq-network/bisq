@@ -23,7 +23,7 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.ProposalService;
 
 import javax.inject.Inject;
@@ -37,11 +37,11 @@ public class ClosedProposalsView extends BaseProposalView {
 
     @Inject
     private ClosedProposalsView(ProposalService proposalService,
-                                DaoPeriodService daoPeriodService,
+                                PeriodService periodService,
                                 BsqWalletService bsqWalletService,
                                 ReadableBsqBlockChain readableBsqBlockChain,
                                 BsqFormatter bsqFormatter) {
-        super(proposalService, bsqWalletService, readableBsqBlockChain, daoPeriodService, bsqFormatter);
+        super(proposalService, bsqWalletService, readableBsqBlockChain, periodService, bsqFormatter);
     }
 
     @Override

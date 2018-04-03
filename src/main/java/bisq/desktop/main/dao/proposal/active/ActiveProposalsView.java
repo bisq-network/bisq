@@ -32,7 +32,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
@@ -95,12 +95,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Inject
     private ActiveProposalsView(ProposalService voteRequestManger,
-                                DaoPeriodService daoPeriodService,
+                                PeriodService periodService,
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
                                 ReadableBsqBlockChain readableBsqBlockChain,
                                 BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoPeriodService,
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, periodService,
                 bsqFormatter);
         this.blindVoteService = blindVoteService;
     }
@@ -231,7 +231,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 cancelVoteButton = null;
             }
 
-            onPhaseChanged(daoPeriodService.getPhaseProperty().get());
+            onPhaseChanged(periodService.getPhaseProperty().get());
         }
     }
 
@@ -251,10 +251,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     @Override
-    protected void onPhaseChanged(DaoPeriodService.Phase phase) {
+    protected void onPhaseChanged(PeriodService.Phase phase) {
         super.onPhaseChanged(phase);
 
-        changeVoteViewItemsVisibility(phase == DaoPeriodService.Phase.BLIND_VOTE);
+        changeVoteViewItemsVisibility(phase == PeriodService.Phase.BLIND_VOTE);
 
         if (removeButton != null) {
             removeButton.setManaged(false);
@@ -263,7 +263,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         }
         if (selectedProposalListItem != null &&
                 proposalDisplay != null &&
-                !daoPeriodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId())) {
+                !periodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId())) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
