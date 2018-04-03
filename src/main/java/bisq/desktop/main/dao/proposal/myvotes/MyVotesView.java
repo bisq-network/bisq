@@ -122,7 +122,7 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = myVoteService.getMyVotesList().stream()
+        List<VoteListItem> items = myVoteService.getMyVoteList().stream()
                 .map(vote -> new VoteListItem(vote, bsqWalletService, readableBsqBlockChain, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
