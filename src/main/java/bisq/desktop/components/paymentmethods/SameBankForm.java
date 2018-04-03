@@ -53,17 +53,6 @@ public class SameBankForm extends BankForm {
     }
 
     @Override
-    protected void addHolderNameAndId() {
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
-        holderNameInputTextField = tuple.second;
-        holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setHolderName(newValue);
-            updateFromInputs();
-        });
-    }
-
-    @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && inputValidator.validate(bankAccountPayload.getHolderName()).isValid
