@@ -527,6 +527,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             awesomeIcon = AwesomeIcon.TICKET;
                                             style = "dao-tx-type-default-icon";
                                             break;
+                                        case PROPOSAL:
                                         case COMPENSATION_REQUEST:
                                             if (item.getOptionalTx().isPresent() && item.getOptionalTx().get().isIssuanceTx()) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
