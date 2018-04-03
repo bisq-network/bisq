@@ -256,9 +256,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                 return null;
             default:
                 final String msg = "Undefined ProposalType " + selectedProposalType;
-                log.error(msg);
-                if (DevEnv.isDevMode())
-                    throw new RuntimeException(msg);
+                DevEnv.logErrorAndThrowIfDevMode(msg);
                 return null;
         }
     }
