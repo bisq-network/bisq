@@ -1,11 +1,13 @@
 package io.bisq.api;
 
 import com.github.javafaker.Faker;
-import io.bisq.api.model.*;
+import io.bisq.api.model.ArbitratorList;
+import io.bisq.api.model.OfferDetail;
+import io.bisq.api.model.P2PNetworkStatus;
+import io.bisq.api.model.WalletDetails;
 import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.common.locale.CountryUtil;
-import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
@@ -146,16 +148,11 @@ public final class ApiTestHelper {
     }
 
     public static String getAvailableBtcWalletAddress(int apiPort) {
-        final CreateBtcWalletAddress payload = new CreateBtcWalletAddress();
-        payload.context = AddressEntry.Context.AVAILABLE;
-        payload.unused = true;
         return given().
                 port(apiPort).
 //
         when().
-                        body(payload).
-                        contentType(ContentType.JSON).
-                        post("/api/v1/wallet/btc/addresses").
+                        post("/api/v1/wallet/addresses").
 //
         then().
                         statusCode(200)

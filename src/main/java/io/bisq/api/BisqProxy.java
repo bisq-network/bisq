@@ -745,8 +745,8 @@ public class BisqProxy {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
     }
 
-    public WalletAddress getOrCreateBtcWalletAddresses(AddressEntry.Context context, boolean unused) {
-        final AddressEntry entry = unused ? btcWalletService.getOrCreateUnusedAddressEntry(context) : btcWalletService.getOrCreateAddressEntry(context);
+    public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
+        final AddressEntry entry = btcWalletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
         return convertAddressEntryToWalletAddress(entry, btcWalletService);
     }
 
