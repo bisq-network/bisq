@@ -515,17 +515,7 @@ public class BisqProxy {
             addressEntryStream = btcWalletService.getAddressEntryListAsImmutableList().stream();
         }
         final List<WalletAddress> walletAddresses = addressEntryStream
-                .map(entry -> {
-                    final Coin balance;
-                    if (AddressEntry.Context.MULTI_SIG.equals(entry.getContext())) {
-                        balance = entry.getCoinLockedInMultiSig();
-                    } else {
-                        balance = btcWalletService.getBalanceForAddress(entry.getAddress());
-                    }
-                    final TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(entry.getAddress());
-                    final int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
-                    return new WalletAddress(entry.getAddressString(), balance.getValue(), confirmations, entry.getContext(), entry.getOfferId());
-                })
+                .map(entry -> convertAddressEntryToWalletAddress(entry, btcWalletService))
                 .collect(toList());
         final WalletAddressList walletAddressList = new WalletAddressList();
         walletAddressList.walletAddresses = walletAddresses;
@@ -755,11 +745,9 @@ public class BisqProxy {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
     }
 
-    public AddressEntry getOrCreateBtcWalletAddresses(AddressEntry.Context context, boolean unused) {
-        if (unused) {
-            return btcWalletService.getOrCreateUnusedAddressEntry(context);
-        }
-        return btcWalletService.getOrCreateAddressEntry(context);
+    public WalletAddress getOrCreateBtcWalletAddresses(AddressEntry.Context context, boolean unused) {
+        final AddressEntry entry = unused ? btcWalletService.getOrCreateUnusedAddressEntry(context) : btcWalletService.getOrCreateAddressEntry(context);
+        return convertAddressEntryToWalletAddress(entry, btcWalletService);
     }
 
     public P2PNetworkStatus getP2PNetworkStatus() {
@@ -775,5 +763,18 @@ public class BisqProxy {
         RECEIVE_FUNDS,
         RESERVED_FUNDS,
         SEND_FUNDS
+    }
+
+    @NotNull
+    private static WalletAddress convertAddressEntryToWalletAddress(AddressEntry entry, BtcWalletService btcWalletService) {
+        final Coin balance;
+        if (AddressEntry.Context.MULTI_SIG.equals(entry.getContext())) {
+            balance = entry.getCoinLockedInMultiSig();
+        } else {
+            balance = btcWalletService.getBalanceForAddress(entry.getAddress());
+        }
+        final TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(entry.getAddress());
+        final int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
+        return new WalletAddress(entry.getAddressString(), balance.getValue(), confirmations, entry.getContext(), entry.getOfferId());
     }
 }

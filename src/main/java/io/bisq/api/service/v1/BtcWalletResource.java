@@ -1,9 +1,8 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
-import io.bisq.api.model.BtcWalletAddress;
 import io.bisq.api.model.CreateBtcWalletAddress;
-import io.bisq.core.btc.AddressEntry;
+import io.bisq.api.model.WalletAddress;
 import io.swagger.annotations.ApiOperation;
 
 import javax.validation.Valid;
@@ -18,18 +17,15 @@ public class BtcWalletResource {
 
     private final BisqProxy bisqProxy;
 
-    public BtcWalletResource(BisqProxy bisqProxy) {
+    BtcWalletResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 
     @ApiOperation("Get or create wallet addresses")
     @POST
     @Path("/addresses")
-    public BtcWalletAddress getOrCreateBtcWalletAddresses(@Valid CreateBtcWalletAddress payload) {
-        final AddressEntry addressEntry = bisqProxy.getOrCreateBtcWalletAddresses(payload.context, payload.unused);
-        final BtcWalletAddress btcWalletAddress = new BtcWalletAddress();
-        btcWalletAddress.address = addressEntry.getAddressString();
-        return btcWalletAddress;
+    public WalletAddress getOrCreateBtcWalletAddresses(@Valid CreateBtcWalletAddress payload) {
+        return bisqProxy.getOrCreateBtcWalletAddresses(payload.context, payload.unused);
     }
 
 }
