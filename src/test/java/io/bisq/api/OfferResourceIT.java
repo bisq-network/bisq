@@ -199,7 +199,7 @@ public class OfferResourceIT {
                         and().body("lowerClosePrice", equalTo(0)).
                         and().body("makerFee", equalTo(12500)).
                         and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
-                        and().body("marketPriceMargin", equalTo(10f)).
+                        and().body("marketPriceMargin", equalTo(0f)).
                         and().body("maxTradeLimit", equalTo(25000000)).
                         and().body("maxTradePeriod", equalTo(518400000)).
                         and().body("minAmount", equalTo(6250000)).
@@ -252,7 +252,7 @@ public class OfferResourceIT {
                 and().body("offers[0].lowerClosePrice", equalTo(0)).
                 and().body("offers[0].makerFee", equalTo(12500)).
                 and().body("offers[0].makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
-                and().body("offers[0].marketPriceMargin", equalTo(10f)).
+                and().body("offers[0].marketPriceMargin", equalTo(0f)).
                 and().body("offers[0].maxTradeLimit", equalTo(25000000)).
                 and().body("offers[0].maxTradePeriod", equalTo(518400000)).
                 and().body("offers[0].minAmount", equalTo(6250000)).
@@ -420,7 +420,7 @@ public class OfferResourceIT {
                 and().body("offer.lowerClosePrice", equalTo(0)).
                 and().body("offer.makerFee", equalTo(12500)).
                 and().body("offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
-                and().body("offer.marketPriceMargin", equalTo(10f)).
+                and().body("offer.marketPriceMargin", equalTo(0f)).
                 and().body("offer.maxTradeLimit", equalTo(25000000)).
                 and().body("offer.maxTradePeriod", equalTo(518400000)).
                 and().body("offer.minAmount", equalTo(6250000)).
@@ -472,7 +472,7 @@ public class OfferResourceIT {
         offer.marketPair = "BTC_" + tradeCurrency;
         offer.priceType = PriceType.FIXED;
         offer.accountId = paymentAccountId;
-        offer.percentageFromMarketPrice = 10.0;
+//        offer.percentageFromMarketPrice = 10.0;
         offer.buyerSecurityDeposit = 123456L;
         return offer;
     }

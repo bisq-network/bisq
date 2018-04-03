@@ -67,6 +67,8 @@ public class OfferBuilder {
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
             throw new ValidationException("When choosing FIXED price, fill in fixed_price with a price > 0");
         }
+        if (null == marketPriceMargin)
+            marketPriceMargin = 0d;
         // fix marketPair if it's lowercase
         marketPair = marketPair.toUpperCase();
 

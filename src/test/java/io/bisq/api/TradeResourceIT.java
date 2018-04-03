@@ -112,7 +112,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.lowerClosePrice", equalTo(0)).
                 and().body("trades[0].offer.makerFee", equalTo(12500)).
                 and().body("trades[0].offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
-                and().body("trades[0].offer.marketPriceMargin", equalTo(10f)).
+                and().body("trades[0].offer.marketPriceMargin", equalTo(0f)).
                 and().body("trades[0].offer.maxTradeLimit", equalTo(25000000)).
                 and().body("trades[0].offer.maxTradePeriod", equalTo(518400000)).
                 and().body("trades[0].offer.minAmount", equalTo(6250000)).
