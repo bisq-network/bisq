@@ -126,7 +126,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
         periodService.getPhaseProperty().addListener(phaseChangeListener);
         readableBsqBlockChain.addListener(this);
-        proposalService.getAllProposals().addListener(proposalListChangeListener);
+        proposalService.getObservableList().addListener(proposalListChangeListener);
 
         onPhaseChanged(periodService.getPhaseProperty().get());
 
@@ -142,7 +142,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
         periodService.getPhaseProperty().removeListener(phaseChangeListener);
         readableBsqBlockChain.removeListener(this);
-        proposalService.getAllProposals().removeListener(proposalListChangeListener);
+        proposalService.getObservableList().removeListener(proposalListChangeListener);
 
         sortedList.comparatorProperty().unbind();
 

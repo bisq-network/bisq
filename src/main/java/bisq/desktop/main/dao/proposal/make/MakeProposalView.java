@@ -55,8 +55,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.GridPane;
@@ -71,10 +69,6 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Objects;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
@@ -186,22 +180,12 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
                         proposalService.publishProposal(proposal,
-                                new FutureCallback<Transaction>() {
-                                    @Override
-                                    public void onSuccess(@Nullable Transaction transaction) {
-                                        proposalDisplay.clearForm();
-
-                                        proposalTypeComboBox.getSelectionModel().clearSelection();
-
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    }
-
-                                    @Override
-                                    public void onFailure(@NotNull Throwable t) {
-                                        log.error(t.toString());
-                                        new Popup<>().warning(t.toString()).show();
-                                    }
-                                });
+                                () -> {
+                                    proposalDisplay.clearForm();
+                                    proposalTypeComboBox.getSelectionModel().clearSelection();
+                                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                },
+                                errorMessage -> new Popup<>().warning(errorMessage).show());
                     })
                     .closeButtonText(Res.get("shared.cancel"))
                     .show();
