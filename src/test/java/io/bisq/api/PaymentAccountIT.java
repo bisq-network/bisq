@@ -998,7 +998,9 @@ public class PaymentAccountIT {
                 post("/api/v1/payment-accounts").
 //
         then().
-                statusCode(400)
+                statusCode(422).
+                and().body("errors.size()", equalTo(1)).
+                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, FASTER_PAYMENTS, INTERAC_E_TRANSFER, MONEY_BEAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
         ;
     }
 
