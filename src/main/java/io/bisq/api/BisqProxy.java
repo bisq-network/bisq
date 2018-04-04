@@ -13,10 +13,7 @@ import io.bisq.common.locale.*;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.AddressEntryException;
-import io.bisq.core.btc.InsufficientFundsException;
-import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.*;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
@@ -761,6 +758,15 @@ public class BisqProxy {
         p2PNetworkStatus.totalSentBytes = Statistic.totalSentBytesProperty().get();
         p2PNetworkStatus.totalReceivedBytes = Statistic.totalReceivedBytesProperty().get();
         return p2PNetworkStatus;
+    }
+
+    public BitcoinNetworkStatus getBitcoinNetworkStatus() {
+        final BitcoinNetworkStatus networkStatus = new BitcoinNetworkStatus();
+        networkStatus.peers = walletsSetup.connectedPeersProperty().get().stream().map(peer -> peer.getAddress().toString()).collect(Collectors.toList());
+        networkStatus.useTorForBitcoinJ = preferences.getUseTorForBitcoinJ();
+        networkStatus.bitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        networkStatus.bitcoinNodes = preferences.getBitcoinNodes();
+        return networkStatus;
     }
 
     public enum WalletAddressPurpose {

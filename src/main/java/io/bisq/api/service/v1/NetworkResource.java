@@ -1,6 +1,7 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
+import io.bisq.api.model.BitcoinNetworkStatus;
 import io.bisq.api.model.P2PNetworkStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,6 +20,13 @@ public class NetworkResource {
 
     public NetworkResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
+    }
+
+    @ApiOperation(value = "Get Bitcoin network status")
+    @GET
+    @Path("/bitcoin/status")
+    public BitcoinNetworkStatus getBitcoinNetworkStatus() {
+        return bisqProxy.getBitcoinNetworkStatus();
     }
 
     @ApiOperation(value = "Get P2P network status")
