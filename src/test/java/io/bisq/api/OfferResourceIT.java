@@ -10,7 +10,6 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
-import io.swagger.util.Json;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
@@ -94,7 +93,6 @@ public class OfferResourceIT {
     }
 
     private ValidatableResponse createOffer_template(OfferToCreate offer, int expectedStatusCode) {
-        Json.prettyPrint(offer);
         return given().
                 port(getAlicePort()).
                 body(offer).
@@ -300,7 +298,7 @@ public class OfferResourceIT {
                         and().body("protocolVersion", equalTo(1)).
                         and().body("sellerSecurityDeposit", equalTo(300000)).
                         and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
-                        and().body("txFee", equalTo(6000)).
+                        and().body("txFee", isA(Integer.class)).
                         and().body("upperClosePrice", equalTo(0)).
                         and().body("useAutoClose", equalTo(false)).
                         and().body("useMarketBasedPrice", equalTo(false)).
@@ -353,7 +351,7 @@ public class OfferResourceIT {
                 and().body("offers[0].protocolVersion", equalTo(1)).
                 and().body("offers[0].sellerSecurityDeposit", equalTo(300000)).
                 and().body("offers[0].state", isA(String.class)).
-                and().body("offers[0].txFee", equalTo(6000)).
+                and().body("offers[0].txFee", isA(Integer.class)).
                 and().body("offers[0].upperClosePrice", equalTo(0)).
                 and().body("offers[0].useAutoClose", equalTo(false)).
                 and().body("offers[0].useMarketBasedPrice", equalTo(false)).
@@ -411,7 +409,7 @@ public class OfferResourceIT {
                         and().body("protocolVersion", equalTo(1)).
                         and().body("sellerSecurityDeposit", equalTo(300000)).
                         and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
-                        and().body("txFee", equalTo(6000)).
+                and().body("txFee", isA(Integer.class)).
                         and().body("upperClosePrice", equalTo(0)).
                         and().body("useAutoClose", equalTo(false)).
                         and().body("useMarketBasedPrice", equalTo(true)).
@@ -578,7 +576,7 @@ public class OfferResourceIT {
                 and().body("offer.protocolVersion", equalTo(1)).
                 and().body("offer.sellerSecurityDeposit", equalTo(300000)).
                 and().body("offer.state", equalTo(Offer.State.AVAILABLE.name())).
-                and().body("offer.txFee", equalTo(6000)).
+                and().body("offer.txFee", isA(Integer.class)).
                 and().body("offer.upperClosePrice", equalTo(0)).
                 and().body("offer.useAutoClose", equalTo(false)).
                 and().body("offer.useMarketBasedPrice", equalTo(false)).

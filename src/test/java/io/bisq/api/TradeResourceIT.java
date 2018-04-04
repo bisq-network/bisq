@@ -123,7 +123,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.protocolVersion", equalTo(1)).
                 and().body("trades[0].offer.sellerSecurityDeposit", equalTo(300000)).
                 and().body("trades[0].offer.state", equalTo(Offer.State.AVAILABLE.name())).
-                and().body("trades[0].offer.txFee", equalTo(6000)).
+                and().body("trades[0].offer.txFee", isA(Integer.class)).
                 and().body("trades[0].offer.upperClosePrice", equalTo(0)).
                 and().body("trades[0].offer.useAutoClose", equalTo(false)).
                 and().body("trades[0].offer.useMarketBasedPrice", equalTo(false)).

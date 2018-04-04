@@ -6,13 +6,16 @@ import io.bisq.network.p2p.network.Statistic;
 
 public class P2PNetworkConnection {
 
-    public final String nodeAddress;
-    public final long sentBytes;
-    public final long receivedBytes;
-    public final Connection.PeerType peerType;
-    public final boolean outbound;
-    public final long creationDate;
-    public final int roundTripTime;
+    public String nodeAddress;
+    public long sentBytes;
+    public long receivedBytes;
+    public Connection.PeerType peerType;
+    public boolean outbound;
+    public long creationDate;
+    public int roundTripTime;
+
+    public P2PNetworkConnection() {
+    }
 
     public P2PNetworkConnection(Connection connection) {
         final Statistic statistic = connection.getStatistic();
