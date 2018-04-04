@@ -51,37 +51,4 @@ public class SameBankForm extends BankForm {
                         GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter, closeHandler);
     }
-
-    @Override
-    public void updateAllInputsValid() {
-        boolean result = isAccountNameValid()
-                && inputValidator.validate(bankAccountPayload.getHolderName()).isValid
-                && paymentAccount.getSingleTradeCurrency() != null
-                && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
-
-        final String countryCode = bankAccountPayload.getCountryCode();
-        if (countryCode != null) {
-            if (BankUtil.isBankNameRequired(countryCode))
-                result = result && inputValidator.validate(bankAccountPayload.getBankName()).isValid;
-
-            if (BankUtil.isBankIdRequired(countryCode))
-                result = result && inputValidator.validate(bankAccountPayload.getBankId()).isValid;
-
-            if (BankUtil.isBranchIdRequired(countryCode))
-                result = result && inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
-
-            if (BankUtil.isAccountNrRequired(countryCode))
-                result = result && inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
-        }
-        allInputsValid.set(result);
-    }
-
-    @Override
-    protected void addHolderNameAndIdForDisplayAccount() {
-        Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
-        TextField holderNameTextField = tuple.second;
-        holderNameTextField.setMinWidth(300);
-        holderNameTextField.setText(bankAccountPayload.getHolderName());
-    }
-
 }
