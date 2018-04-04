@@ -25,6 +25,6 @@ public class NationalAccountIdValidatorTest {
         assertTrue(validator.validate("2850590940090418135201").isValid);
         final String wrongNationalAccountId = "285059094009041813520";
         assertFalse(validator.validate(wrongNationalAccountId).isValid);
-        assertEquals("Número de CBU must consist of 22 numbers.", validator.validate(wrongNationalAccountId).errorMessage);
+        assertEquals("CBU number must consist of 22 numbers.", validator.validate(wrongNationalAccountId).errorMessage);
     }
 }
