@@ -225,11 +225,8 @@ abstract class BankForm extends PaymentMethodForm {
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
     private Label bankIdLabel, branchIdLabel, accountNrLabel, nationalAccountIdLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple;
-    private Tuple2<Label, InputTextField> accountNrTuple;
-    private Tuple2<Label, InputTextField> branchIdTuple;
-    private Tuple2<Label, InputTextField> bankNameTuple;
-    private Tuple2<Label, InputTextField> nationalAccountIdTuple;
+    private Tuple2<Label, InputTextField> bankIdTuple, accountNrTuple, branchIdTuple,
+            bankNameTuple, nationalAccountIdTuple;
     private Tuple2<Label, ComboBox> accountTypeTuple;
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
