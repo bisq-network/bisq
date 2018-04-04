@@ -59,6 +59,12 @@ public final class BranchIdValidator extends BankValidator {
                     return super.validate(input);
                 else
                     return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
+            case "AR":
+                length = 4;
+                if(isNumberWithFixedLength(input, length))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             default:
                 return super.validate(input);
         }
